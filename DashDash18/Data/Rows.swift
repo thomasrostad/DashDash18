@@ -163,3 +163,178 @@ nonisolated struct CourseHoleRecord: Codable, Equatable, Sendable {
         case lengthM = "length_m"
     }
 }
+
+// MARK: - Runder (fase 4–5)
+
+nonisolated enum RoundStatus: String, Codable, Sendable {
+    /// Kladd: bare arrangøren ser den.
+    case draft
+    case active
+    case locked
+}
+
+nonisolated struct RoundRow: Codable, Equatable, Identifiable, Sendable {
+    let id: UUID
+    let clubID: UUID
+    var eventID: UUID
+    var courseID: UUID?
+    var roundNo: Int
+    var name: String?
+    var status: RoundStatus
+    var holeCount: Int
+    /// 1, eller 10 for «siste ni» på en 18-hullsbane.
+    var firstHole: Int
+    var teeTime: String?
+    /// Id fra konkurranseform-katalogen i GolfgutuCore.
+    var format: String
+    var handicapAllowance: Double
+    var externalHandicap: Bool
+    var weight: Double
+    var ldEnabled: Bool
+    var ldHoleIndex: Int?
+    var kpEnabled: Bool
+    var kpHoleIndex: Int?
+    /// `common`, `net_par` eller `zero`.
+    var cutRule: String?
+    var cutAfter: Int?
+    var parConfirmedBy: UUID?
+    var parConfirmedAt: Date?
+    var startedAt: Date?
+    var lockedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case clubID = "club_id"
+        case eventID = "event_id"
+        case courseID = "course_id"
+        case roundNo = "round_no"
+        case name
+        case status
+        case holeCount = "hole_count"
+        case firstHole = "first_hole"
+        case teeTime = "tee_time"
+        case format
+        case handicapAllowance = "handicap_allowance"
+        case externalHandicap = "external_handicap"
+        case weight
+        case ldEnabled = "ld_enabled"
+        case ldHoleIndex = "ld_hole_index"
+        case kpEnabled = "kp_enabled"
+        case kpHoleIndex = "kp_hole_index"
+        case cutRule = "cut_rule"
+        case cutAfter = "cut_after"
+        case parConfirmedBy = "par_confirmed_by"
+        case parConfirmedAt = "par_confirmed_at"
+        case startedAt = "started_at"
+        case lockedAt = "locked_at"
+    }
+}
+
+/// Overstyring av ett hull for én runde. `holeIndex` er rundens 0-baserte hull.
+nonisolated struct RoundHoleRow: Codable, Equatable, Sendable {
+    let roundID: UUID
+    var holeIndex: Int
+    var par: Int?
+    var strokeIndex: Int?
+    var lengthM: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case roundID = "round_id"
+        case holeIndex = "hole_index"
+        case par
+        case strokeIndex = "stroke_index"
+        case lengthM = "length_m"
+    }
+}
+
+/// Deltaker i runden med frosset handicap, bås, markør og lag.
+nonisolated struct RoundPlayerRow: Codable, Equatable, Sendable {
+    let roundID: UUID
+    let memberID: UUID
+    let clubID: UUID
+    var handicapIndex: Double?
+    var seedGroup: Int?
+    var playingHandicap: Int?
+    var bayNo: Int?
+    var isMarker: Bool
+    var teamNo: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case roundID = "round_id"
+        case memberID = "member_id"
+        case clubID = "club_id"
+        case handicapIndex = "handicap_index"
+        case seedGroup = "seed_group"
+        case playingHandicap = "playing_handicap"
+        case bayNo = "bay_no"
+        case isMarker = "is_marker"
+        case teamNo = "team_no"
+    }
+}
+
+nonisolated struct RoundMatchRow: Codable, Equatable, Sendable {
+    let roundID: UUID
+    var matchNo: Int
+    var playerA: UUID?
+    var playerB: UUID?
+    var playerC: UUID?
+    var teamA: Int?
+    var teamB: Int?
+    /// `a`, `b`, `halved` eller nil (regnes fra hullene).
+    var result: String?
+
+    enum CodingKeys: String, CodingKey {
+        case roundID = "round_id"
+        case matchNo = "match_no"
+        case playerA = "player_a"
+        case playerB = "player_b"
+        case playerC = "player_c"
+        case teamA = "team_a"
+        case teamB = "team_b"
+        case result
+    }
+}
+
+/// Brutto slag. Ingen rad = hullet er ikke ført. Poeng regnes i appen.
+nonisolated struct HoleScoreRow: Codable, Equatable, Sendable {
+    let roundID: UUID
+    let memberID: UUID
+    var holeIndex: Int
+    var strokes: Int
+    var recordedAt: Date?
+    var updatedBy: UUID?
+    var updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case roundID = "round_id"
+        case memberID = "member_id"
+        case holeIndex = "hole_index"
+        case strokes
+        case recordedAt = "recorded_at"
+        case updatedBy = "updated_by"
+        case updatedAt = "updated_at"
+    }
+}
+
+nonisolated enum SideClaimKind: String, Codable, Sendable {
+    case drive
+    case kp
+}
+
+nonisolated struct SideClaimRow: Codable, Equatable, Identifiable, Sendable {
+    let id: UUID
+    let roundID: UUID
+    let memberID: UUID
+    var kind: SideClaimKind
+    var meters: Double
+    var holeIndex: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case roundID = "round_id"
+        case memberID = "member_id"
+        case kind
+        case meters
+        case holeIndex = "hole_index"
+    }
+}

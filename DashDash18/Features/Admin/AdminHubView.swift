@@ -4,6 +4,11 @@ import SwiftUI
 struct AdminHubView: View {
     var body: some View {
         List {
+            Section("Kvelden") {
+                NavigationLink { RundeAdminView() } label: {
+                    Label("Runder", systemImage: "flag.2.crossed")
+                }
+            }
             Section("Sesongen") {
                 NavigationLink { SesongAdminView() } label: {
                     Label("Sesong og regler", systemImage: "list.number")
