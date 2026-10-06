@@ -56,7 +56,7 @@ Arbeidsmåte:
 ## Tester
 
 - Swift Testing (`import Testing`, `@Test`, `#expect`), ikke XCTest.
-- Enhetstester i `DashDash18Tests/`, UI-tester i `DashDash18UITests/`.
+- Regelmotor-tester i `Packages/GolfgutuCore/Tests/` (kjøres med `swift test`). App-tester i `DashDash18Tests/`, UI-tester i `DashDash18UITests/`.
 - Kjør testene etter endringer i spillogikk.
 
 ## Språk
@@ -69,6 +69,8 @@ Arbeidsmåte:
 - `DashDash18/` – appkode
 - `DashDash18Tests/`, `DashDash18UITests/`
 - `DashDash18.xcodeproj`
+- `Packages/GolfgutuCore/` – regelmotoren som lokal Swift-pakke (ren Swift, Swift Testing, JSON-fixtures). Testes med `swift test`
+- `DashDash18/Config/Supabase-*.plist` – miljøkonfig, ikke i git
 - `sql/` – migreringer for den nye Supabase-en (opprettes ved første migrering)
 - `referanse/` – skrivebeskyttet, ikke i git (inneholder nøkler)
 - `SPEC.md` – kartlegging av PWA-en

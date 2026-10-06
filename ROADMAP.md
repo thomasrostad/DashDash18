@@ -10,10 +10,10 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 1 – Grunnmur, ny Supabase og innlogging (ikke startet) |
-| **Sist gjort** | Plan revidert: egen Supabase for appen (B4), regelsett styrt fra admin-panel (B12), iPhone først (B13). |
-| **Neste oppgave** | Fase 1, oppgave 1: sette deployment target til iOS 26.0 og Swift 6-språkmodus i Xcode. |
-| **Venter på deg** | Opprette to nye Supabase-prosjekter (test og prod) og gi meg test-URL og publishable key. Godkjenne skjema-SQL (fase 1, oppgave 5). |
+| **Nåværende fase** | Fase 1 (pågår) og fase 2 (pågår parallelt) |
+| **Sist gjort** | Fase 1: iOS 26.0 og Swift 6 i alle targets, `supabase-swift` lagt til, test-konfig for ny Supabase (`tsekialrxuhrugscosgi`). Bygg og 4 tester grønne. |
+| **Neste oppgave** | Parallelt med agenter: fase 1 oppgave 2 (app-skall, meg), fase 1 oppgave 5 (skjema v1 som utkast), fase 2 (regelmotor i `Packages/GolfgutuCore`). |
+| **Venter på deg** | Slå av *Confirm email* i Supabase. Godkjenne skjema-SQL når utkastet er klart. Legge til den lokale pakken i Xcode når regelmotoren er klar. |
 
 ---
 
@@ -42,10 +42,10 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Logge inn i appen mot en ny, egen test-database med Apple, Google eller e-postkode.
 
-- [ ] Sette deployment target til iOS 26.0 og Swift 6-språkmodus i Xcode (B7). Ikke via `project.pbxproj`.
+- [x] Sette deployment target til iOS 26.0 og Swift 6-språkmodus i Xcode (B7). Ikke via `project.pbxproj`.
 - [ ] Rydde malkoden (`Item.swift`, mal-`ContentView`) og opprette mappestrukturen.
-- [ ] Legge til `supabase-swift` via Swift Package Manager i Xcode.
-- [ ] Miljøkonfig for test og prod i filer som ikke sjekkes inn, med tydelig visning av miljø i appen.
+- [x] Legge til `supabase-swift` via Swift Package Manager i Xcode (2.55.3, koblet til target DashDash18).
+- [ ] Miljøkonfig for test og prod i filer som ikke sjekkes inn, med tydelig visning av miljø i appen. *(Test-konfig ligger i `DashDash18/Config/Supabase-Test.plist`, utenfor git. Lesing og visning i appen gjenstår.)*
 - [ ] **Skjema v1** for kjernen (SQL i `sql/`, til godkjenning): klubb/tropp, medlemmer og roller, sesong med regelsett (B12), kveld, påmelding, bane og hull, runde, deltakere, bås og markør, lag, match, score. Med RLS og grants, også anon-revoke.
 - [ ] Kjøre skjemaet på test etter godkjenning, med kontrollspørringer.
 - [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først.
@@ -343,6 +343,9 @@ Status: **Tatt** (av deg, eller av meg etter fullmakt), **Utsatt** eller **Åpen
 4. Appen testes mot test.
 5. Prod først etter ny godkjenning.
 6. Anon-fella fra PWA-en: `revoke execute … from anon` etter hver `create or replace`, og sjekk returnerte rader (SPEC 3.2).
+
+### B14 – Regelmotoren som lokal Swift-pakke · Tatt (meg)
+Spillogikken bygges i `Packages/GolfgutuCore`, en lokal Swift-pakke uten SwiftUI og nettverk, med Swift Testing og JSON-fixtures. Den testes med `swift test` uten Xcode, kan bygges parallelt med appen, og deles senere med widgets, Live Activity og Watch. Pakken legges til i Xcode-prosjektet av brukeren (*Add Local…*).
 
 ### B6 – Lokal lagring · Tatt (meg)
 **SwiftData** for cache og utboks. Domenelogikken ligger i rene Swift-typer utenfor.
