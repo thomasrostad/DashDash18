@@ -11,8 +11,8 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | | |
 |---|---|
 | **Nåværende fase** | Fase 3 (nesten ferdig) og fase 4 (påmelding ferdig, oppsett av kveld gjenstår). |
-| **Sist gjort** | Fire agenter: tropp, baner, sesong og regler, terminliste og påmelding. Alt slått sammen, enhetstester grønne. Kartlegging av banedata (B15). |
-| **Neste oppgave** | Brukeren prøver arrangørsiden på telefon. Godkjenning av SQL 002/004/005. Deretter fase 4: oppsett av kveld (kladd, båser, markør) og fase 5: føring. |
+| **Sist gjort** | Fase 4 runde-oppsett og fase 5 utboks slått sammen. RPC-ene fra 002/004/005 i bruk. Enhetstester grønne. |
+| **Neste oppgave** | Slå sammen føring (fase 5). Knytte utboksen til bruker. SQL 006 (+ 007) til godkjenning. Prøvekveld på test. |
 | **Venter på deg** | Test av arrangørsiden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. Baneverdier (CR) senere. |
 
 ---
@@ -131,10 +131,10 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 - [ ] Påmelding: Kommer / Usikker / Kommer ikke + kommentar, angre, purring av de som ikke har svart. *(06.10: svar og kommentar ferdig. Angre og purring gjenstår.)*
 - [x] Kveld-skjerm, rolig: neste kveld, påmeldte, sosialkomité. *(06.10.)*
-- [ ] Start runde-veiviser i tre steg: bane og tid, hvem og båser, oppsett. Lagre som kladd, rediger kladd, start (blokkert hvis en runde går).
-- [ ] Båser og markør (`foreslaatteBaaser`), matcher for hånd, lag, forslag om form (`oppsettForAntall`, `formerSomPasser`), `trekkMatcher`.
+- [x] Start runde-veiviser i tre steg: bane og tid, hvem og båser, oppsett. Lagre som kladd, rediger kladd, start (blokkert hvis en runde går). *(06.10. Ikke prøvd mot database.)*
+- [x] Båser og markør (`foreslaatteBaaser`), matcher for hånd, lag, forslag om form (`oppsettForAntall`, `formerSomPasser`), `trekkMatcher`. *(06.10: trekning på navn til tabellen finnes, fase 6.)*
 - [ ] Forslag til LD- og KP-hull. Par-bekreftelse før føring.
-- [ ] Flere runder samme kveld.
+- [x] Flere runder samme kveld. *(06.10.)*
 
 **Ferdig når:**
 - Fem test-spillere melder seg på fra egne telefoner (eller simulator), og jeg ser svarene.
@@ -160,7 +160,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [ ] Skriverett (`kanFore`) i appen og i RLS: arrangør, markør for egen bås, ellers seg selv.
 - [ ] Lagring av et hull for hele båsen i én RPC (atomisk, idempotent).
 - [ ] Seer-modus for ikke-markør. Følg båsens hull, sol-stripe.
-- [ ] Lokal lagring med SwiftData (B6): cache og utboks. Hull i kø sendes i rekkefølge med nye forsøk, også etter at appen er drept.
+- [x] Lokal lagring med SwiftData (B6): cache og utboks. Hull i kø sendes i rekkefølge med nye forsøk, også etter at appen er drept. *(06.10: utboks med kø, komprimering, backoff. Ikke prøvd i flymodus.)*
 - [ ] Realtime og henting på nytt når appen blir aktiv.
 - [ ] Scorekort Ut/Inn. Feiring (birdie, eagle, albatross, hole in one) med redusert-bevegelse-støtte.
 - [ ] TestFlight-oppsett og første bygg til noen i gjengen (B1).
