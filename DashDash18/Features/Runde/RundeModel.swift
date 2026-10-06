@@ -1,0 +1,241 @@
+import Foundation
+import GolfgutuCore
+import Observation
+import Supabase
+
+/// Kveld-skjermen under spill: runden som går, hullkortet for båsen og «Bayen nå».
+/// Lagring går gjennom `ScoreSubmitting` (aldri rett til `save_hole`).
+@Observable
+final class RundeModel {
+    enum LoadState: Equatable {
+        /// Første henting pågår.
+        case checking
+        /// Ingen runde går.
+        case none
+        case loaded
+        case failed(String)
+    }
+
+    private(set) var state: LoadState = .checking
+    /// Runden slik serveren har den.
+    private(set) var snapshot: RoundSnapshot?
+    /// Runden slik den vises: serveren pluss hull som ligger i kø.
+    private(set) var game: RoundGame?
+    var currentHole = 0
+    private(set) var drafts = HoleDrafts()
+    private(set) var pendingHoles: Set<Int> = []
+    private(set) var isSaving = false
+    var saveError: String?
+    var celebration: Celebration?
+    /// Realtime-kanalen er oppe. Når den ikke er det, henter skjermen hvert 30. sekund.
+    private(set) var isLive = false
+
+    var submitter: (any ScoreSubmitting)?
+
+    private let context: ClubContext
+    private var queued: [QueuedHole] = []
+    private var placedRound: UUID?
+    private var isLoading = false
+    private var reloadAgain = false
+    private var channel: RealtimeChannelV2?
+    private var channelRound: UUID?
+    private var listenTasks: [Task<Void, Never>] = []
+
+    init(context: ClubContext) {
+        self.context = context
+    }
+
+    private var client: SupabaseClient { context.client }
+
+    var viewer: Viewer { Viewer(memberID: context.memberID, isOrganizer: context.isOrganizer) }
+    var hasRound: Bool { game != nil }
+
+    var card: HoleCard? {
+        guard let game, game.holes.indices.contains(currentHole),
+              !game.cardPlayers(for: viewer).isEmpty else { return nil }
+        return game.card(hole: currentHole, drafts: drafts, viewer: viewer)
+    }
+
+    /// Par-bekreftelsen tar plassen til hullkortet til noen har bekreftet.
+    var needsParConfirmation: Bool { snapshot?.round.parConfirmedAt == nil }
+    /// Bare arrangøren kan skrive `rounds` i dag (se sql/007_foring.sql for markøren).
+    var canConfirmPar: Bool { context.isOrganizer }
+
+    // MARK: Henting
+
+    /// Henter runden som går, eller finner at ingen gjør det. Kommer et nytt kall mens
+    /// en henting pågår (realtime gir flere hendelser per hull), kjøres én til etterpå.
+    func load() async {
+        if isLoading { reloadAgain = true; return }
+        isLoading = true
+        defer { isLoading = false }
+        repeat {
+            reloadAgain = false
+            await fetch()
+        } while reloadAgain
+    }
+
+    private func fetch() async {
+        do {
+            guard let fresh = try await RundeQueries.activeRound(client: client, clubID: context.clubID) else {
+                snapshot = nil
+                game = nil
+                state = .none
+                await stopRealtime()
+                return
+            }
+            let before = followingBay
+            snapshot = fresh
+            rebuild()
+            place(following: before)
+            state = .loaded
+            await startRealtime(roundID: fresh.round.id)
+        } catch {
+            // Behold det som vises når en oppfrisking feiler.
+            if snapshot != nil { return }
+            state = .failed(DataError.from(error).message)
+        }
+    }
+
+    private func rebuild() {
+        guard let snapshot else { game = nil; return }
+        pendingHoles = submitter?.pendingHoles(roundID: snapshot.round.id) ?? []
+        // Hull som er bekreftet av serveren, trenger ikke ligge oppå lenger.
+        queued.removeAll { !pendingHoles.contains($0.hole) }
+        game = RoundGame(snapshot.overlaying(queued))
+    }
+
+    /// `folgerBaasen`: står kortet på båsens hull før hentingen?
+    private var followingBay: Bool {
+        guard let game else { return false }
+        return currentHole == game.bayHole(for: viewer)
+    }
+
+    /// `plasserHull`: første gang en runde lastes, står kortet på båsens hull. Sto du på
+    /// båsens hull, følger du med. Har du gått til et annet hull for å se, blir du der.
+    private func place(following: Bool) {
+        guard let game else { return }
+        if placedRound != game.roundID {
+            placedRound = game.roundID
+            drafts = HoleDrafts()
+            queued = []
+            currentHole = game.bayHole(for: viewer)
+        } else if following {
+            currentHole = game.bayHole(for: viewer)
+        }
+        currentHole = min(max(0, currentHole), game.holeCount - 1)
+    }
+
+    // MARK: Realtime
+
+    private func startRealtime(roundID: UUID) async {
+        guard channelRound != roundID else { return }
+        await stopRealtime()
+        let channel = client.channel("runde-\(roundID.uuidString)")
+        let changes = channel.postgresChange(AnyAction.self, schema: "public", table: "hole_scores",
+                                             filter: .eq("round_id", value: roundID))
+        let statuses = channel.statusChange
+        self.channel = channel
+        channelRound = roundID
+        listenTasks = [
+            Task { [weak self] in
+                for await status in statuses {
+                    self?.isLive = status == .subscribed
+                }
+            },
+            Task { [weak self] in
+                for await _ in changes {
+                    await self?.load()
+                }
+            },
+            Task {
+                try? await channel.subscribeWithError()
+            },
+        ]
+    }
+
+    func stopRealtime() async {
+        listenTasks.forEach { $0.cancel() }
+        listenTasks = []
+        if let channel { await client.removeChannel(channel) }
+        channel = nil
+        channelRound = nil
+        isLive = false
+    }
+
+    // MARK: Føring
+
+    func goTo(hole: Int) {
+        guard let game, (0..<game.holeCount).contains(hole) else { return }
+        currentHole = hole
+        saveError = nil
+    }
+
+    /// − og +: justerer og bekrefter samtidig.
+    func step(_ delta: Int, member: UUID) {
+        guard let card, let row = card.rows.first(where: { $0.memberID == member }), row.editable else { return }
+        drafts[currentHole, member] = StrokeInput.clamp(row.value + delta)
+    }
+
+    /// Trykk på tallet bekrefter det som står (par når ingenting er ført).
+    func confirm(member: UUID) {
+        guard let card, let row = card.rows.first(where: { $0.memberID == member }), row.editable else { return }
+        drafts[currentHole, member] = row.value
+    }
+
+    /// «Lagre hull N → hull N+1»: alle radene i én innsending, med tastetiden.
+    func saveCurrentHole() async {
+        guard let game, let submitter, !isSaving, let card, case .save(_, true, _) = card.action else { return }
+        let hole = currentHole
+        guard let submission = game.submission(hole: hole, drafts: drafts, viewer: viewer, recordedAt: Date()) else {
+            drafts.clear(hole: hole)
+            advance(from: hole)
+            return
+        }
+        let onCard = Set(game.cardPlayers(for: viewer))
+        let fresh = submission.entries.compactMap { e -> (member: UUID, strokes: Int)? in
+            guard onCard.contains(e.memberID), game.scores(e.memberID)[hole] == nil, let s = e.strokes else { return nil }
+            return (e.memberID, s)
+        }
+
+        isSaving = true
+        saveError = nil
+        defer { isSaving = false }
+        do {
+            let outcome = try await submitter.submit(submission)
+            switch outcome {
+            case .saved(let rows):
+                snapshot?.apply(saved: rows, hole: hole, members: submission.entries.map(\.memberID))
+            case .queued:
+                queued.removeAll { $0.hole == hole }
+                queued.append(QueuedHole(hole: hole, entries: submission.entries))
+            }
+            drafts.clear(hole: hole)
+            rebuild()
+            if let updated = self.game {
+                celebration = updated.celebration(hole: hole, saved: fresh)
+            }
+            advance(from: hole)
+        } catch {
+            saveError = "Hull \(game.holeNumber(hole)) ble ikke lagret: \(DataError.from(error).message) Prøv igjen."
+        }
+    }
+
+    private func advance(from hole: Int) {
+        guard let game else { return }
+        currentHole = min(game.holeCount - 1, hole + 1)
+    }
+
+    // MARK: Par
+
+    /// «Stemmer · start føringen» (arrangør).
+    func confirmPar() async throws(DataError) {
+        guard let round = snapshot?.round, canConfirmPar else { return }
+        do {
+            try await RundeQueries.confirmPar(client: client, roundID: round.id, memberID: context.memberID)
+        } catch {
+            throw DataError.from(error)
+        }
+        await load()
+    }
+}
