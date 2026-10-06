@@ -157,6 +157,26 @@ nonisolated struct HoleDrafts: Equatable, Sendable {
     }
 }
 
+// MARK: - Par-bekreftelsen
+
+nonisolated extension RoundGame {
+    /// Kan `viewer` bekrefte parene? Samme regel som `confirm_round_par`: arrangøren alltid;
+    /// ellers en markør i runden, og bare mens den går.
+    func canConfirmPar(_ viewer: Viewer) -> Bool {
+        if viewer.isOrganizer { return true }
+        guard status == .active else { return false }
+        return snapshot.players.contains { $0.memberID == viewer.memberID && $0.isMarker }
+    }
+}
+
+/// Feilene fra `confirm_round_par` på norsk.
+nonisolated enum ParConfirmation {
+    static func error(_ error: DataError) -> DataError {
+        // 55000 («Runden er ikke i gang») kommer med serverens tekst som `.invalid`.
+        error == .notAllowed ? .invalid("Bare arrangøren eller en markør kan bekrefte parene.") : error
+    }
+}
+
 // MARK: - Hullkortet
 
 /// Det hullkortet viser for ett hull. Regnes av `RoundGame.card`.

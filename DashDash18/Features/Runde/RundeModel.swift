@@ -58,8 +58,8 @@ final class RundeModel {
 
     /// Par-bekreftelsen tar plassen til hullkortet til noen har bekreftet.
     var needsParConfirmation: Bool { snapshot?.round.parConfirmedAt == nil }
-    /// Bare arrangøren kan skrive `rounds` i dag (se sql/007_foring.sql for markøren).
-    var canConfirmPar: Bool { context.isOrganizer }
+    /// Arrangøren, eller en markør i runden som går (`confirm_round_par`).
+    var canConfirmPar: Bool { game?.canConfirmPar(viewer) ?? context.isOrganizer }
 
     // MARK: Henting
 
@@ -236,13 +236,13 @@ final class RundeModel {
 
     // MARK: Par
 
-    /// «Stemmer · start føringen» (arrangør).
+    /// «Stemmer · start føringen» (arrangør eller markør).
     func confirmPar() async throws(DataError) {
         guard let round = snapshot?.round, canConfirmPar else { return }
         do {
-            try await RundeQueries.confirmPar(client: client, roundID: round.id, memberID: context.memberID)
+            try await RundeQueries.confirmPar(client: client, roundID: round.id)
         } catch {
-            throw DataError.from(error)
+            throw ParConfirmation.error(DataError.from(error))
         }
         await load()
     }

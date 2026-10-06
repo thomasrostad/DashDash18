@@ -90,18 +90,16 @@ enum RundeQueries {
         return active.first?.rules ?? .golfgutu
     }
 
-    /// Arrangøren bekrefter at par stemmer med skjermen. Sjekker raden tilbake.
-    static func confirmPar(client: SupabaseClient, roundID: UUID, memberID: UUID) async throws {
-        struct Confirm: Encodable {
-            let par_confirmed_by: UUID
-            let par_confirmed_at: Date
-        }
-        let rows: [RoundRow] = try await client.from("rounds")
-            .update(Confirm(par_confirmed_by: memberID, par_confirmed_at: Date()))
-            .eq("id", value: roundID)
-            .select(roundColumns)
+    /// Par stemmer med skjermen: `confirm_round_par` (sql/007_foring.sql). Arrangøren, eller en
+    /// markør i en runde som går. Svarer med tidspunktet; var den bekreftet, står den første.
+    /// 42501 = ikke markør eller arrangør, 55000 = runden er ikke i gang.
+    @discardableResult
+    static func confirmPar(client: SupabaseClient, roundID: UUID) async throws -> String {
+        struct Params: Encodable { let p_round_id: UUID }
+        let confirmedAt: String = try await client
+            .rpc("confirm_round_par", params: Params(p_round_id: roundID))
             .execute().value
-        guard rows.first?.parConfirmedAt != nil else { throw DataError.notAllowed }
+        return confirmedAt
     }
 
     // MARK: Longest drive og nærmest pinnen
