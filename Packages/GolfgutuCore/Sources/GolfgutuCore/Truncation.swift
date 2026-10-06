@@ -6,14 +6,11 @@ public enum Truncation {
     public enum Rule: String, Codable, Sendable, CaseIterable {
         /// Bare hullene alle rakk teller.
         case common = "felles"
-        /// Uspilte hull gir netto par (2 poeng).
+        /// Uspilte hull gir netto par (Golfgutu: 2 poeng).
         case netPar = "nettopar"
         /// Uspilte hull gir 0 poeng. Strengen «null» er en gyldig, valgt regel.
         case zero = "null"
     }
-
-    /// Stableford: netto par er alltid 2 poeng (`POENG_NETTO_PAR`).
-    public static let netParPoints = 2
 
     /// `avkortRegel`: regelen på runden, eller `nil` når runden ikke er avkortet.
     public static func rule(_ round: Round) -> Rule? {
@@ -34,9 +31,9 @@ public enum Truncation {
         return min(count, JS.roundInt(after))
     }
 
-    /// `poengForTomtHull`: 2 med `nettopar`, ellers 0.
-    public static func pointsForEmptyHole(_ round: Round) -> Int {
-        rule(round) == .netPar ? netParPoints : 0
+    /// `poengForTomtHull`: poeng for netto par (`POENG_NETTO_PAR`, Golfgutu 2) med `nettopar`, ellers 0.
+    public static func pointsForEmptyHole(_ round: Round, rules: Ruleset = .golfgutu) -> Int {
+        rule(round) == .netPar ? rules.scoring.netParPoints : 0
     }
 
     /// `lavesteFellesHull`: så langt alle som har begynt har kommet, talt som sammenhengende
@@ -75,7 +72,7 @@ public enum Truncation {
     /// `avkortingenKoster`: summen per spiller før og etter en tenkt avkorting, for spillerne
     /// i troppen som har ført noe. Sortert på endring, størst tap først (stabil på troppens rekkefølge).
     public static func cost(of round: Round, after: Double, rule: Rule?, roster: [Player],
-                            groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Cost {
+                            rules: Ruleset = .golfgutu) -> Cost {
         var draft = round
         draft.avkortetEtter = after.isFinite ? JS.round(after) : nil
         draft.avkortRegel = rule?.rawValue
@@ -83,9 +80,9 @@ public enum Truncation {
         var changes: [(index: Int, change: Change)] = []
         for (index, player) in roster.enumerated() {
             guard let scores = round.holeScores[player.id], !scores.isEmpty else { continue }
-            let hcp = Handicap.effective(for: player, in: round, roster: roster, groups: groups)
-            let before = Scoring.points(from: scores, in: round, handicap: hcp)
-            let afterPoints = Scoring.points(from: scores, in: draft, handicap: hcp)
+            let hcp = Handicap.effective(for: player, in: round, roster: roster, rules: rules)
+            let before = Scoring.points(from: scores, in: round, handicap: hcp, rules: rules)
+            let afterPoints = Scoring.points(from: scores, in: draft, handicap: hcp, rules: rules)
             if before != afterPoints {
                 changes.append((index, Change(playerID: player.id, before: before, after: afterPoints)))
             }

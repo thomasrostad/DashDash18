@@ -6,14 +6,14 @@ public enum Triangle {
     /// regelsettet. Delt plass deler summen av plassene, så summen er alltid den samme.
     /// `nil` når matchen ikke er en trekant, eller når en av de tre ikke har ført noe.
     public static func points(_ match: Match, in round: Round, roster: [Player],
-                              groups: [SeedingGroup] = SeedingGroup.golfgutu,
-                              placePoints: [Double] = Ruleset.golfgutuTrianglePoints) -> [String: Double]? {
+                              rules: Ruleset = .golfgutu) -> [String: Double]? {
+        let placePoints = rules.table.trianglePoints
         guard match.isTriangle, let a = match.playerA, let b = match.playerB, let c = match.playerC else { return nil }
         let ids = [a, b, c]
         var totals: [Int] = []
         for pid in ids {
             guard let scores = round.holeScores[pid], !scores.isEmpty else { return nil }
-            totals.append(Scoring.roundNetTotal(round, player: roster.first { $0.id == pid }, roster: roster, groups: groups))
+            totals.append(Scoring.roundNetTotal(round, player: roster.first { $0.id == pid }, roster: roster, rules: rules))
         }
         // Høyest først. Ved likt beholdes rekkefølgen A, B, C (JS-sorteringen er stabil).
         let ranked = ids.indices.sorted { totals[$0] != totals[$1] ? totals[$0] > totals[$1] : $0 < $1 }

@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "evenings": 5,
+  "scoring": { "netParPoints": 2, "minimumPoints": 0 },
+  "table": {
+    "matchPoints": { "win": 3, "draw": 1, "loss": 0 },
+    "trianglePoints": [3, 1, 0],
+    "counting": { "unit": "evening", "best": 3 },
+    "stablefordCounting": { "unit": "evening", "best": 3 },
+    "tiebreaks": ["stableford", "holeDifference"],
+    "roundingStep": null
+  },
+  "sidePrizes": {
+    "longestDrive": { "enabled": false, "points": 0 },
+    "closestToPin": { "enabled": false, "points": 0 },
+    "splitTies": true
+  },
+  "handicap": {
+    "allowanceOverride": 1,
+    "seedingGroups": [],
+    "externalHandicap": false
+  },
+  "formats": {
+    "defaultFormID": "stableford",
+    "allowedFormIDs": ["stableford", "match", "fourball", "scramble-2"],
+    "maxPerBay": 4,
+    "matchStrokes": "lowestFromScratch"
+  }
+}

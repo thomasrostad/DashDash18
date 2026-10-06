@@ -1,0 +1,18 @@
+{
+  "allowanceOverride": null,
+  "seedingGroups": [
+    { "number": 1, "handicap": 0, "name": "Gruppe 1" },
+    { "number": 2, "handicap": 5, "name": "Gruppe 2" },
+    { "number": 3, "handicap": 10, "name": "Gruppe 3" }
+  ],
+  "externalHandicap": false,
+  "defaultFormID": "stableford",
+  "maxPerBay": 4,
+  "evenings": 7,
+  "countingEvenings": null,
+  "stablefordCountingEvenings": 5,
+  "matchPoints": { "win": 1, "draw": 0.5, "loss": 0 },
+  "sidePrizes": { "enabled": true, "points": 1 },
+  "trianglePoints": [1, 0.5, 0],
+  "tiebreaks": ["holeDifference", "stableford"]
+}

@@ -216,12 +216,12 @@ struct SeasonTests {
         for a in fil.annetRegelsett {
             var r = Ruleset.golfgutu
             let k = a.konstanter
-            if let w = k.POENG_SEIER { r.matchPoints.win = w }
-            if let d = k.POENG_DELT { r.matchPoints.draw = d }
-            if let l = k.POENG_TAP { r.matchPoints.loss = l }
-            if let n = k.TELLENDE_MATCHER { r.countingEvenings = n }
-            if let n = k.TELLENDE_RUNDER { r.stablefordCountingEvenings = n }
-            if let t = k.TREKANT_POENG { r.trianglePoints = t }
+            if let w = k.POENG_SEIER { r.table.matchPoints.win = w }
+            if let d = k.POENG_DELT { r.table.matchPoints.draw = d }
+            if let l = k.POENG_TAP { r.table.matchPoints.loss = l }
+            if let n = k.TELLENDE_MATCHER { r.table.counting = .init(unit: .match, best: n) }
+            if let n = k.TELLENDE_RUNDER { r.table.stablefordCounting = .init(unit: .round, best: n) }
+            if let t = k.TREKANT_POENG { r.table.trianglePoints = t }
             sjekk(a.sak, ruleset: r, a.sak.navn)
         }
     }
@@ -233,7 +233,7 @@ struct SeasonTests {
         #expect(golfgutu.jacketBoard().map(\.total) == [5, 2])
 
         var tre = Ruleset.golfgutu
-        tre.countingEvenings = 3
+        tre.table.counting = .init(unit: .match, best: 3)
         let s3 = Season(players: sak.spillere, rounds: sak.runder, ruleset: tre)
         // Anders: tre knepne seire teller (3 poeng, +3); Bjørn: to store seire og ett knepent tap (2, +35).
         #expect(s3.matchTotals(for: "a") == Season.MatchSum(points: 3, holes: 3, matches: 3))
@@ -242,17 +242,31 @@ struct SeasonTests {
         #expect(s3.jacketBoard().first { $0.player.id == "a" }?.played == 7)
 
         var to = Ruleset.golfgutu
-        to.matchPoints = .init(win: 2, draw: 1, loss: 0)
+        to.table.matchPoints = .init(win: 2, draw: 1, loss: 0)
         #expect(Season(players: sak.spillere, rounds: sak.runder, ruleset: to).jacketBoard().map(\.total) == [10, 4])
 
         // Sidepremier av, eller 2 poeng per premie (ingen PWA-konstant; utledet: 2 · 1/2 delt).
         let lik = try #require(fil.saker.first { $0.navn == "lik lengde deler" })
         var av = Ruleset.golfgutu
-        av.sidePrizes.enabled = false
+        av.sidePrizes.longestDrive.enabled = false
+        av.sidePrizes.closestToPin.enabled = false
         #expect(Season(players: lik.spillere, rounds: lik.runder, claims: lik.claims, ruleset: av).sidePrizePoints(for: "a") == 0)
         var dobbel = Ruleset.golfgutu
-        dobbel.sidePrizes.points = 2
+        dobbel.sidePrizes.longestDrive.points = 2
+        dobbel.sidePrizes.closestToPin.points = 2
         #expect(Season(players: lik.spillere, rounds: lik.runder, claims: lik.claims, ruleset: dobbel).sidePrizePoints(for: "a") == 1)
+        // Uten deling får begge på delt førsteplass fullt poeng; premie av for én type påvirker bare den.
+        var hel = Ruleset.golfgutu
+        hel.sidePrizes.splitTies = false
+        let helSesong = Season(players: lik.spillere, rounds: lik.runder, claims: lik.claims, ruleset: hel)
+        #expect(helSesong.sidePrizePoints(for: "a") == 1 && helSesong.sidePrizePoints(for: "c") == 1)
+        let typer = Set(Season(players: lik.spillere, rounds: lik.runder, claims: lik.claims).sidePrizeResults(for: "a").map(\.kind))
+        for kind in typer {
+            var en = Ruleset.golfgutu
+            en.sidePrizes[kind].enabled = false
+            #expect(!Season(players: lik.spillere, rounds: lik.runder, claims: lik.claims, ruleset: en)
+                .sidePrizeResults(for: "a").contains { $0.kind == kind })
+        }
     }
 
     /// Tiebreak-rekkefølgen fra regelsettet. Egen (utledet fra fixturen): Anders vinner duellen (hull +2)
@@ -261,20 +275,100 @@ struct SeasonTests {
     @Test func tiebreakFraRegelsettet() throws {
         let sak = try #require(fil.saker.first { $0.navn == "duellen og stablefordet rangerer motsatt" })
         var r = Ruleset.golfgutu
-        r.matchPoints = .init(win: 0, draw: 0, loss: 0)
+        r.table.matchPoints = .init(win: 0, draw: 0, loss: 0)
         #expect(Season(players: sak.spillere, rounds: sak.runder, ruleset: r).jacketBoard().map(\.player.id) == ["a", "b"])
-        r.tiebreaks = [.stableford, .holeDifference]
+        r.table.tiebreaks = [.stableford, .holeDifference]
         #expect(Season(players: sak.spillere, rounds: sak.runder, ruleset: r).jacketBoard().map(\.player.id) == ["b", "a"])
-        r.tiebreaks = []
+        r.table.tiebreaks = []
         // Bare navn: Anders før Bjørn.
         #expect(Season(players: sak.spillere, rounds: sak.runder, ruleset: r).jacketBoard().map(\.player.id) == ["a", "b"])
+    }
+
+    struct EgenSak { let spillere: [Player]; let runder: [Round]; let claims: [SideClaim] }
+
+    /// Egen sak for kvelds-telling: to runder samme kveld (d1), så d2 og d3. Manuelle resultater,
+    /// ett hull ført på standardbanen (hull 1 er par 4, handicap 0, så 4 slag = 2 poeng).
+    /// Anders: slår Bjørn to ganger på d1, taper d2, delt d3. Bjørn tar longest drive i første runde.
+    /// Utledet for hånd:
+    /// - tabellpoeng per kveld, Anders: d1 2, d2 0, d3 0,5. Bjørn: d1 0 + LD 1, d2 1, d3 0,5.
+    /// - stableford per runde, Anders: 2, 2, 1, 2 (kveld: 4, 1, 2). Bjørn: 1, 1, 3, 2 (kveld: 2, 3, 2).
+    func toRunderSammeKveld() -> EgenSak {
+        let spillere = [Player(id: "a", name: "Anders"), Player(id: "b", name: "Bjørn")]
+        func runde(_ id: String, _ dato: String, _ resultat: Match.Result, _ a: Int, _ b: Int) -> Round {
+            Round(id: id, holeScores: ["a": [0: a], "b": [0: b]],
+                  matches: [Match(matchNo: 1, playerA: "a", playerB: "b", result: resultat)], date: dato)
+        }
+        let runder = [runde("r1", "2026-05-04", .a, 4, 5), runde("r2", "2026-05-04", .a, 4, 5),
+                      runde("r3", "2026-05-11", .b, 5, 3), runde("r4", "2026-05-18", .halved, 4, 4)]
+        let claims = [SideClaim(kind: .drive, playerId: "b", roundId: "r1", meters: 250)]
+        return EgenSak(spillere: spillere, runder: runder, claims: claims)
+    }
+
+    @Test func kveldsTellingMedToRunderPaaEnKveld() {
+        let sak = toRunderSammeKveld()
+        func sesong(_ endre: (inout Ruleset) -> Void) -> Season {
+            var r = Ruleset.golfgutu
+            endre(&r)
+            return Season(players: sak.spillere, rounds: sak.runder, claims: sak.claims, ruleset: r)
+        }
+        func total(_ s: Season, _ id: String) -> Double? { s.jacketBoard().first { $0.player.id == id }?.total }
+
+        // Golfgutu: alt teller. Anders 1 + 1 + 0 + 0,5; Bjørn 0 + 0 + 1 + 0,5 + LD 1.
+        let alle = sesong { _ in }
+        #expect(total(alle, "a") == 2.5 && total(alle, "b") == 2.5)
+        // Kveld uten «beste N» gir det samme som Golfgutu.
+        let kveldAlle = sesong { $0.table.counting = .init(unit: .evening) }
+        #expect(kveldAlle.jacketBoard() == alle.jacketBoard())
+
+        // Beste kveld: Anders d1 (begge seirene, 2). Bjørn d1 (LD 1) og d2 (1) står likt; den tidligste teller.
+        let beste1 = sesong { $0.table.counting = .init(unit: .evening, best: 1) }
+        #expect(total(beste1, "a") == 2)
+        #expect(beste1.matchResults(for: "a").counting.map(\.roundID) == ["r1", "r2"])
+        #expect(beste1.matchResults(for: "a").dropped.count == 2)
+        #expect(total(beste1, "b") == 1)
+        #expect(beste1.tableSelection(for: "b").sidePrizes.counting.count == 1)
+        #expect(beste1.matchResults(for: "b").counting.map(\.roundID) == ["r1", "r2"])
+        // Spilte matcher teller med de strøkne.
+        #expect(beste1.jacketBoard().first { $0.player.id == "a" }?.played == 4)
+
+        // Beste match (PWA-ens TELLENDE_MATCHER = 1): bare én av seirene på d1; sidepremien strykes aldri.
+        let match1 = sesong { $0.table.counting = .init(unit: .match, best: 1) }
+        #expect(total(match1, "a") == 1)
+        #expect(total(match1, "b") == 2)
+
+        // Beste to kvelder: Anders d1 + d3 = 2,5; Bjørn d1 + d2 = 2 (d3 strøket).
+        let beste2 = sesong { $0.table.counting = .init(unit: .evening, best: 2) }
+        #expect(total(beste2, "a") == 2.5)
+        #expect(total(beste2, "b") == 2)
+        #expect(beste2.matchResults(for: "b").dropped.map(\.roundID) == ["r4"])
+
+        // Beste runde (ikke kveld): Anders én seier, 1.
+        #expect(total(sesong { $0.table.counting = .init(unit: .round, best: 1) }, "a") == 1)
+
+        // Stablefordsummen. Golfgutu (beste 5 runder): alle fire. Beste 2 runder: Anders 4, Bjørn 5.
+        #expect(alle.stablefordTotal(for: "a") == 7 && alle.stablefordTotal(for: "b") == 7)
+        let runder2 = sesong { $0.table.stablefordCounting = .init(unit: .round, best: 2) }
+        #expect(runder2.stablefordTotal(for: "a") == 4 && runder2.stablefordTotal(for: "b") == 5)
+        // Beste kveld: Anders d1 (4, begge rundene), Bjørn d2 (3).
+        let kveld1 = sesong { $0.table.stablefordCounting = .init(unit: .evening, best: 1) }
+        #expect(kveld1.stablefordTotal(for: "a") == 4)
+        #expect(kveld1.countingRounds(for: "a").counting.map(\.roundID) == ["r1", "r2"])
+        #expect(kveld1.stablefordTotal(for: "b") == 3)
+        // Beste to kvelder: Anders d1 + d3 = 6; Bjørn d2 + d1 (likt med d3, den tidligste) = 5.
+        let kveld2 = sesong { $0.table.stablefordCounting = .init(unit: .evening, best: 2) }
+        #expect(kveld2.stablefordTotal(for: "a") == 6)
+        #expect(kveld2.stablefordTotal(for: "b") == 5)
+        #expect(kveld2.countingRounds(for: "b").dropped.map(\.roundID) == ["r4"])
+        // Alle kvelder = alle runder.
+        let kveldAlleSF = sesong { $0.table.stablefordCounting = .init(unit: .evening) }
+        #expect(kveldAlleSF.stablefordTotal(for: "a") == 7)
     }
 
     /// Stablefordsummen med alle runder (`nil`) i stedet for beste 5.
     @Test func alleRunderTellerIStablefordsummen() throws {
         let sak = try #require(fil.saker.first { $0.navn == "de to svakeste strykes" })
         var r = Ruleset.golfgutu
-        r.stablefordCountingEvenings = nil
+        r.table.stablefordCounting.best = nil
         // Utledet: 30 + 28 + 26 + 24 + 22 + 20 + 18 = 168.
         #expect(Season(players: sak.spillere, rounds: sak.runder, ruleset: r).stablefordTotal(for: "a") == 168)
     }

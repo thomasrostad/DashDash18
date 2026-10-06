@@ -143,6 +143,10 @@ struct MatchTests {
         #expect(MatchPlay.sideHandicap(["g3", "g1"], in: ps.runde, roster: ps.spillere) == 5)
         let sd = try sak("gruppe 2 mot gruppe 3")
         #expect(MatchPlay.strokeOffset(for: sd.runde.matches[0], in: sd.runde, roster: sd.spillere) == 5)
+        // Egen: med fullt handicap i regelsettet trekkes ingenting fra.
+        var full = Ruleset.golfgutu
+        full.formats.matchStrokes = .fullHandicap
+        #expect(MatchPlay.strokeOffset(for: sd.runde.matches[0], in: sd.runde, roster: sd.spillere, rules: full) == 0)
     }
 
     /// Alle grenene i `matchTekst` og `matchStillingKort`, med eksakt tekst fra db-nytt.js.
