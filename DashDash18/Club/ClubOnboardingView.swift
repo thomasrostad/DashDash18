@@ -65,10 +65,31 @@ struct PendingMembershipView: View {
 
 struct SignOutButton: View {
     @Environment(AuthModel.self) private var auth
+    @Environment(OutboxStatus.self) private var outbox
+    @State private var confirming = false
 
     var body: some View {
-        Button("Logg ut") {
-            Task { await auth.signOut() }
+        Button("Logg ut", role: .destructive) {
+            if outbox.pendingCount > 0 {
+                confirming = true
+            } else {
+                Task { await auth.signOut() }
+            }
         }
+        .confirmationDialog(
+            SignOutButton.warning(pending: outbox.pendingCount),
+            isPresented: $confirming,
+            titleVisibility: .visible
+        ) {
+            Button("Logg ut likevel", role: .destructive) {
+                Task { await auth.signOut() }
+            }
+        }
+    }
+
+    /// Hull i kø sendes bare når den samme logger inn igjen (utboksen er knyttet til bruker).
+    nonisolated static func warning(pending: Int) -> String {
+        let hull = pending == 1 ? "1 hull er" : "\(pending) hull er"
+        return "\(hull) ikke sendt ennå. De sendes neste gang du logger inn på denne telefonen."
     }
 }

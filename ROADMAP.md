@@ -12,7 +12,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 |---|---|
 | **Nåværende fase** | Fase 5 (prøvekveld på test gjenstår). Fase 3–4 i hovedsak ferdig. |
 | **Sist gjort** | Føring per bås slått sammen: hullkort, seer-modus, scorekort, feiring, realtime, lagring via utboksen. Enhetstester grønne (243). Ikke prøvd mot database. |
-| **Neste oppgave** | Prøvekveld på test (brukeren). Knytte utboksen til bruker. SQL 006 (start_round) og 007 (confirm_round_par) til godkjenning. TestFlight. |
+| **Neste oppgave** | Prøvekveld på test (brukeren). SQL 006 (start_round) og 007 (confirm_round_par) til godkjenning. TestFlight. |
 | **Venter på deg** | Test av arrangørsiden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. Baneverdier (CR) senere. |
 
 ---

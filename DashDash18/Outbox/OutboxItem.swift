@@ -23,9 +23,13 @@ final class OutboxItem {
     var lastError: String?
     var stateRaw: String
     var createdAt: Date
+    /// Hvem som tastet hullet. Køen sendes bare når den samme er innlogget, så hull
+    /// ikke sendes (og avvises) i en annens navn. Nil = fra før feltet fantes.
+    var userID: UUID?
 
-    init(submission: HoleSubmission, createdAt: Date) throws {
+    init(submission: HoleSubmission, createdAt: Date, userID: UUID? = nil) throws {
         id = UUID()
+        self.userID = userID
         roundID = submission.roundID
         holeIndex = submission.holeIndex
         entriesData = try JSONEncoder().encode(submission.entries)

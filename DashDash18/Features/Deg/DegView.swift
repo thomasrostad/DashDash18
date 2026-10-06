@@ -4,7 +4,6 @@ struct DegView: View {
     let config: AppConfig
     let user: AuthUser
     let membership: Membership
-    @Environment(AuthModel.self) private var auth
     @Environment(ClubModel.self) private var club
 
     var body: some View {
@@ -39,9 +38,7 @@ struct DegView: View {
             }
             Section("Konto") {
                 LabeledContent("Logget inn som", value: user.email ?? "ukjent e-post")
-                Button("Logg ut", role: .destructive) {
-                    Task { await auth.signOut() }
-                }
+                SignOutButton()
             }
             Section("Om appen") {
                 LabeledContent("Miljø", value: config.environment.displayName)

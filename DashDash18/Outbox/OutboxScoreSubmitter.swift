@@ -29,6 +29,8 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
     /// Feil på rad uten kontakt. Styrer backoff, nullstilles ved suksess og når nettet kommer.
     private(set) var consecutiveFailures = 0
     private var retryTask: Task<Void, Never>?
+    /// Den innloggede. Nye hull merkes med den, og bare dens hull sendes.
+    private(set) var currentUserID: UUID?
     private var networkTask: Task<Void, Never>?
 
     init(
@@ -67,8 +69,13 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
 
     /// Starter automatisk sending: nå, når nettet kommer tilbake og med backoff.
     /// Kalles når brukeren er innlogget (serveren avviser alt fra uinnloggede).
-    func start() {
-        guard !isRunning else { return }
+    func start(userID: UUID? = nil) {
+        currentUserID = userID
+        refreshStatus()
+        guard !isRunning else {
+            Task { await flush() }
+            return
+        }
         isRunning = true
         networkTask = Task { [weak self, network] in
             var wasAvailable: Bool?
@@ -87,6 +94,8 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
     /// Stopper automatisk sending (f.eks. ved utlogging). Køen beholdes.
     func stop() {
         isRunning = false
+        currentUserID = nil
+        refreshStatus()
         networkTask?.cancel()
         networkTask = nil
         retryTask?.cancel()
@@ -117,7 +126,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         let descriptor = FetchDescriptor<OutboxItem>(
             predicate: #Predicate { $0.roundID == roundID && $0.stateRaw == pending }
         )
-        return Set(((try? context.fetch(descriptor)) ?? []).map(\.holeIndex))
+        return Set(((try? context.fetch(descriptor)) ?? []).filter(belongsToCurrentUser).map(\.holeIndex))
     }
 
     // MARK: - Sending av køen
@@ -148,7 +157,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
             predicate: #Predicate { $0.stateRaw == rejected },
             sortBy: [SortDescriptor(\.recordedAt), SortDescriptor(\.createdAt)]
         )
-        return (try? context.fetch(descriptor)) ?? []
+        return ((try? context.fetch(descriptor)) ?? []).filter(belongsToCurrentUser)
     }
 
     // MARK: - Internt
@@ -194,7 +203,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         let compacted = HoleSubmission(
             roundID: roundID, holeIndex: holeIndex, entries: newEntries, recordedAt: submission.recordedAt
         )
-        guard let item = try? OutboxItem(submission: compacted, createdAt: clock.now) else { return nil }
+        guard let item = try? OutboxItem(submission: compacted, createdAt: clock.now, userID: currentUserID) else { return nil }
         context.insert(item)
         save()
         refreshStatus()
@@ -316,7 +325,12 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
             predicate: #Predicate { $0.stateRaw == pending },
             sortBy: [SortDescriptor(\.recordedAt), SortDescriptor(\.createdAt)]
         )
-        return ((try? context.fetch(descriptor)) ?? []).map(\.id)
+        return ((try? context.fetch(descriptor)) ?? []).filter(belongsToCurrentUser).map(\.id)
+    }
+
+    /// Hull uten bruker (fra før feltet fantes) regnes som den innloggedes.
+    private func belongsToCurrentUser(_ item: OutboxItem) -> Bool {
+        item.userID == nil || item.userID == currentUserID
     }
 
     private func item(_ id: UUID) -> OutboxItem? {
@@ -334,7 +348,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
     }
 
     private func refreshStatus() {
-        let items = (try? context.fetch(FetchDescriptor<OutboxItem>())) ?? []
+        let items = ((try? context.fetch(FetchDescriptor<OutboxItem>())) ?? []).filter(belongsToCurrentUser)
         struct Hole: Hashable { let round: UUID, hole: Int }
         let pending = Set(items.filter { $0.state == .pending }.map { Hole(round: $0.roundID, hole: $0.holeIndex) })
         let rejected = Set(items.filter { $0.state == .rejected }.map { Hole(round: $0.roundID, hole: $0.holeIndex) })

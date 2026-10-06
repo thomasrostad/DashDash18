@@ -16,11 +16,12 @@ struct AppRoot: View {
             case .signedIn(let user):
                 ClubGate(services: services, user: user)
                     .task(id: user.id) { await services.club.load(userID: user.id) }
-                    .task(id: user.id) { services.outbox.start() }
+                    .task(id: user.id) { services.outbox.start(userID: user.id) }
             }
         }
         .environment(services.auth)
         .environment(services.club)
+        .environment(services.outbox.status)
         .task { await services.auth.observe() }
         .onChange(of: services.auth.state) { _, state in
             if state == .signedOut {

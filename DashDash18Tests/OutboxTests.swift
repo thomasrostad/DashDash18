@@ -250,6 +250,37 @@ struct OutboxTests {
         restarted.stop()
     }
 
+    @Test func koenErKnyttetTilBruker() async throws {
+        let thomas = UUID(), per = UUID()
+        sender.mode = .offline
+        do {
+            let outbox = makeOutbox()
+            outbox.start(userID: thomas)
+            #expect(try await outbox.submit(hole(2, [(anna, 4)])) == .queued)
+            outbox.stop()
+        }
+        // En annen logger inn på samme telefon: Thomas sine hull vises ikke og sendes ikke.
+        sender.mode = .ok
+        let outbox = makeOutbox()
+        outbox.start(userID: per)
+        await waitUntil { !sender.calls.isEmpty }
+        #expect(sender.saved.isEmpty)
+        #expect(outbox.pendingHoles(roundID: roundID).isEmpty)
+        #expect(outbox.status.pendingCount == 0)
+        outbox.stop()
+
+        // Thomas logger inn igjen: hullet sendes.
+        outbox.start(userID: thomas)
+        await waitUntil { !sender.saved.isEmpty }
+        #expect(sender.saved.map(\.holeIndex) == [2])
+        outbox.stop()
+    }
+
+    @Test func advarselVedUtlogging() {
+        #expect(SignOutButton.warning(pending: 1) == "1 hull er ikke sendt ennå. De sendes neste gang du logger inn på denne telefonen.")
+        #expect(SignOutButton.warning(pending: 3).hasPrefix("3 hull er ikke sendt"))
+    }
+
     @Test func backoffTider() {
         let backoff = OutboxBackoff()
         let seconds = (1...9).map { backoff.delay(afterFailures: $0) }
