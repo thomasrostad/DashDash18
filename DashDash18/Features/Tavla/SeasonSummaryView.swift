@@ -14,81 +14,79 @@ struct SeasonSummaryView: View {
             }
         }
         .navigationTitle(standings.seasonName)
-        .navigationBarTitleDisplayMode(.inline)
+        .ddNavigationChrome()
     }
 
     private func content(_ s: SeasonSummary) -> some View {
-        List {
-            Section {
-                VStack(alignment: .leading, spacing: 6) {
-                    Label("Mester", systemImage: "trophy.fill")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.green)
-                    Text(s.champion.name)
-                        .font(.largeTitle.bold())
-                    Text(([s.championLine, "\(standings.points(s.champion.total)) poeng"].compactMap { $0 }
-                          + [s.championBasis]).joined(separator: " · "))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
+                DDJacketHero(
+                    eyebrow: "\(standings.seasonName) · mester",
+                    title: s.champion.name,
+                    subtitle: ([s.championLine, "\(standings.points(s.champion.total)) poeng"].compactMap { $0 }
+                               + [s.championBasis]).joined(separator: " · ")
+                )
+                .accessibilityElement(children: .combine)
+                .padding(.bottom, DDSpacing.m)
+
+                DDSectionLabel("Pallen")
+                placeCard(s.podium)
+
+                if !s.rest.isEmpty {
+                    DDSectionLabel("Resten av feltet")
+                        .padding(.top, DDSpacing.l)
+                    placeCard(s.rest)
                 }
-                .padding(.vertical, 6)
-            }
 
-            Section("Pallen") {
-                ForEach(s.podium) { row in
-                    placeRow(row)
+                DDSectionLabel("Sesongen i tall")
+                    .padding(.top, DDSpacing.l)
+                VStack(alignment: .leading, spacing: 12) {
+                    DDStatRow(label: "Kvelder spilt", value: "\(s.eveningsPlayed) / \(s.eveningsTotal)")
+                    if let h = s.bestRound { highlight("Sesongens runde", h) }
+                    if let h = s.mostBirdies { highlight("Flest birdies", h) }
+                    if let h = s.longestDrive { highlight("Lengste drive", h) }
                 }
-            }
+                .ddCard(.stat)
 
-            if !s.rest.isEmpty {
-                Section("Resten av feltet") {
-                    ForEach(s.rest) { row in
-                        placeRow(row)
-                    }
-                }
-            }
-
-            Section("Sesongen i tall") {
-                TavlaStatRow(label: "Kvelder spilt", value: "\(s.eveningsPlayed) / \(s.eveningsTotal)")
-                if let h = s.bestRound { highlight("Sesongens runde", h) }
-                if let h = s.mostBirdies { highlight("Flest birdies", h) }
-                if let h = s.longestDrive { highlight("Lengste drive", h) }
-            }
-
-            Section {
                 Text("Takk for sesongen.")
+                    .font(.ddCallout)
+                    .foregroundStyle(Color.ddInkSecondary)
                     .frame(maxWidth: .infinity)
-                    .foregroundStyle(.secondary)
-                    .listRowBackground(Color.clear)
+                    .padding(.top, DDSpacing.xl)
             }
+            .padding(.horizontal, DDSpacing.gutter)
+            .padding(.vertical, DDSpacing.l)
         }
     }
 
-    private func placeRow(_ row: TavlaStandings.Row) -> some View {
-        HStack {
-            Text("\(row.place).")
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .frame(minWidth: 28, alignment: .trailing)
-            Text(row.name)
-                .fontWeight(row.place == 1 ? .semibold : .regular)
-            if row.isMe {
-                Text("DEG")
-                    .font(.caption2.bold())
-                    .foregroundStyle(Color.accentColor)
+    private func placeCard(_ rows: [TavlaStandings.Row]) -> some View {
+        VStack(spacing: 0) {
+            ForEach(rows) { row in
+                DDRankRow(place: "\(row.place).", name: row.name, isMe: row.isMe) {
+                    DDRankValue("\(standings.points(row.total)) p", emphasized: row.place == 1)
+                }
+                if row.id != rows.last?.id { DDDivider() }
             }
-            Spacer()
-            Text("\(standings.points(row.total)) p")
-                .monospacedDigit()
         }
+        .ddCard(padding: DDSpacing.l)
     }
 
     private func highlight(_ label: String, _ h: SeasonSummary.Highlight) -> some View {
-        LabeledContent {
-            Text(h.value).monospacedDigit()
-        } label: {
-            Text(label)
-            Text([h.name, h.detail].compactMap { $0 }.joined(separator: " · "))
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                    .font(.ddCallout)
+                    .foregroundStyle(Color.ddStatText)
+                Text([h.name, h.detail].compactMap { $0 }.joined(separator: " · "))
+                    .font(.ddCaption)
+                    .foregroundStyle(Color.ddStatSecondary)
+            }
+            Spacer(minLength: 8)
+            Text(h.value)
+                .font(.dd(.sans, size: 15, weight: .medium, relativeTo: .callout))
+                .monospacedDigit()
+                .foregroundStyle(Color.ddYellow)
         }
+        .accessibilityElement(children: .combine)
     }
 }

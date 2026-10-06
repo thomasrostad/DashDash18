@@ -16,58 +16,94 @@ struct PlayerProfileView: View {
             }
         }
         .navigationTitle(standings.row(memberID)?.name ?? "Spiller")
-        .navigationBarTitleDisplayMode(.inline)
+        .ddNavigationChrome()
     }
 
     private func content(_ p: PlayerProfile) -> some View {
-        List {
-            Section {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(standings.points(p.row.total)) poeng · \(p.row.place). plass")
-                        .font(.title2.weight(.semibold).monospacedDigit())
-                    if let basis = p.basis(standings) {
-                        Text(basis)
-                            .font(.subheadline.monospacedDigit())
-                            .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
+                ProfileHeader(profile: p, standings: standings)
+                    .padding(.bottom, DDSpacing.s)
+
+                DDSectionLabel("Sesongen")
+                DDTileGrid([
+                    DDStatTile("Stableford", value: "\(p.stablefordTotal)", highlight: true),
+                    DDStatTile("Runder", value: "\(p.roundsPlayed)"),
+                    DDStatTile("Snitt / runde", value: p.average.map { RuleFormat.number($0) } ?? "—"),
+                    DDStatTile("Beste runde", value: p.best.map(String.init) ?? "—"),
+                    DDStatTile("Birdies", value: "\(p.birdies)"),
+                    DDStatTile("Lengste drive", value: p.longestDrive.map(SidePrizes.formatMeters) ?? "—"),
+                ])
+
+                if let text = p.headToHeadText(name: p.row.name) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        DDInfoStripe(tone: .earth) {
+                            HStack(alignment: .firstTextBaseline) {
+                                Text("Mot deg i sesongen")
+                                Spacer(minLength: 8)
+                                Text(text)
+                                    .font(.ddBodyEmphasis)
+                                    .monospacedDigit()
+                            }
+                        }
+                        .accessibilityElement(children: .combine)
+                        DDFooter("Runder der dere begge har poeng, på stableford.")
+                            .padding(.horizontal, 2)
                     }
+                    .padding(.top, DDSpacing.m)
                 }
-                .padding(.vertical, 4)
-            }
 
-            Section("Sesongen") {
-                TavlaStatRow(label: "Stableford", value: "\(p.stablefordTotal)")
-                TavlaStatRow(label: "Runder", value: "\(p.roundsPlayed)")
-                TavlaStatRow(label: "Snitt per runde", value: p.average.map { RuleFormat.number($0) } ?? "—")
-                TavlaStatRow(label: "Beste runde", value: p.best.map(String.init) ?? "—")
-                TavlaStatRow(label: "Birdies", value: "\(p.birdies)")
-                TavlaStatRow(label: "Lengste drive", value: p.longestDrive.map(SidePrizes.formatMeters) ?? "—")
-            }
-
-            if let text = p.headToHeadText(name: p.row.name) {
-                Section {
-                    TavlaStatRow(label: "Mot deg i sesongen", value: text)
-                } footer: {
-                    Text("Runder der dere begge har poeng, på stableford.")
+                DDSectionLabel("Runde for runde") {
+                    Text("plass · duell · stableford").ddEyebrow()
                 }
-            }
-
-            Section {
+                .padding(.top, DDSpacing.l)
                 if p.rounds.isEmpty {
                     Text("Poengene dukker opp her etter første runde.")
-                        .foregroundStyle(.secondary)
+                        .font(.ddCallout)
+                        .foregroundStyle(Color.ddInkSecondary)
+                        .frame(maxWidth: .infinity)
+                        .ddCard(.empty)
                 } else {
-                    ForEach(p.rounds) { line in
-                        RoundLineView(line: line, standings: standings)
+                    VStack(spacing: 0) {
+                        ForEach(p.rounds) { line in
+                            RoundLineView(line: line, standings: standings)
+                            if line.id != p.rounds.last?.id { DDDivider() }
+                        }
                     }
-                }
-            } header: {
-                HStack {
-                    Text("Runde for runde")
-                    Spacer()
-                    Text("duell · stableford")
+                    .ddCard(padding: DDSpacing.l)
                 }
             }
+            .padding(.horizontal, DDSpacing.gutter)
+            .padding(.vertical, DDSpacing.l)
         }
+    }
+}
+
+/// Avatar, poeng og plass øverst på profilen.
+private struct ProfileHeader: View {
+    let profile: PlayerProfile
+    let standings: TavlaStandings
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 14) {
+            DDAvatar(name: profile.row.name, size: 52)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(standings.points(profile.row.total)) poeng")
+                    .font(.ddTitle)
+                    .monospacedDigit()
+                    .foregroundStyle(Color.ddForestInk)
+                if let basis = profile.basis(standings) {
+                    Text(basis)
+                        .font(.ddCallout)
+                        .monospacedDigit()
+                        .foregroundStyle(Color.ddInkSecondary)
+                }
+            }
+            Spacer(minLength: 8)
+            DDPill("\(profile.row.place). plass", tone: .sun)
+                .fixedSize()
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -77,38 +113,31 @@ private struct RoundLineView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(line.title)
+                    .font(.ddBody)
+                    .foregroundStyle(Color.ddInk)
                 if line.isOngoing {
-                    Text("Pågår")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+                    DDPill("Pågår", tone: .live)
+                        .fixedSize()
                 }
             }
-            Spacer()
+            Spacer(minLength: 8)
             Text("\(line.place).")
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
+                .font(.ddMonoSmall)
+                .monospacedDigit()
+                .foregroundStyle(Color.ddInkSecondary)
             Text(line.duel.map(standings.points) ?? "—")
-                .font(.body.monospacedDigit().weight(.medium))
+                .font(.ddNumber)
+                .monospacedDigit()
                 .frame(minWidth: 34, alignment: .trailing)
             Text("\(line.stableford)")
-                .font(.body.monospacedDigit())
-                .foregroundStyle(.secondary)
+                .font(.ddBody)
+                .monospacedDigit()
+                .foregroundStyle(Color.ddInkSecondary)
                 .frame(minWidth: 34, alignment: .trailing)
         }
+        .padding(.vertical, 12)
         .accessibilityElement(children: .combine)
-    }
-}
-
-struct TavlaStatRow: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        LabeledContent(label) {
-            Text(value)
-                .monospacedDigit()
-        }
     }
 }

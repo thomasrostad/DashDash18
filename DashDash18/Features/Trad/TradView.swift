@@ -30,7 +30,7 @@ private struct TradContent: View {
                 TradComposer(model: model, focused: $composerFocused, photoItem: $photoItem)
             }
             .navigationTitle("Kveldens tråd")
-            .navigationBarTitleDisplayMode(.inline)
+            .ddNavigationChrome()
             .task { await model.load() }
             .onAppear {
                 model.isVisible = true
@@ -82,7 +82,7 @@ private struct TradContent: View {
     private var messageList: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 10) {
+                LazyVStack(spacing: 12) {
                     ForEach(model.items) { item in
                         TradBubble(item: item, model: model)
                             .id(item.id)
@@ -100,8 +100,8 @@ private struct TradContent: View {
                             }
                     }
                 }
-                .padding(.horizontal)
-                .padding(.vertical, 12)
+                .padding(.horizontal, DDSpacing.gutter)
+                .padding(.vertical, DDSpacing.l)
             }
             .defaultScrollAnchor(.bottom)
             .scrollDismissesKeyboard(.interactively)
@@ -125,7 +125,7 @@ private struct TradContent: View {
                 Text(message)
             } actions: {
                 Button("Prøv igjen") { Task { await model.load() } }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.dd(.primary))
             }
         case .loaded:
             if model.items.isEmpty {
@@ -146,27 +146,30 @@ private struct TradBubble: View {
     let model: TradModel
 
     var body: some View {
-        HStack {
-            if item.isMine { Spacer(minLength: 48) }
+        HStack(alignment: .bottom, spacing: 8) {
+            if item.isMine {
+                Spacer(minLength: 48)
+            } else {
+                DDAvatar(name: item.author, size: 30)
+            }
             VStack(alignment: item.isMine ? .trailing : .leading, spacing: 4) {
                 if !item.isMine {
                     Text(item.author)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(.dd(.sans, size: 13, weight: .semibold, relativeTo: .caption))
+                        .foregroundStyle(Color.ddForestInk)
+                        .padding(.horizontal, 4)
                 }
                 if let path = item.message.imagePath {
                     TradImageView(path: path, author: item.author, model: model)
                 }
                 if !item.message.body.isEmpty {
                     Text(attributedBody)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(item.isMine ? Color.accentColor.opacity(0.2) : Color(.secondarySystemBackground),
-                                    in: .rect(cornerRadius: 16))
+                        .ddBubble(mine: item.isMine)
                 }
                 Text(item.isPending ? "Sender …" : TradTimeLabel.text(for: item.message.createdAt, now: Date()))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.dd(.sans, size: 12, relativeTo: .caption2))
+                    .foregroundStyle(Color.ddInkSecondary)
+                    .padding(.horizontal, 4)
             }
             .opacity(item.isPending ? 0.6 : 1)
             if !item.isMine { Spacer(minLength: 48) }
@@ -180,8 +183,9 @@ private struct TradBubble: View {
         for segment in model.directory.segments(of: item.message.body, mentions: item.message.mentions) {
             var part = AttributedString(segment.text)
             if let id = segment.mention {
-                part.font = .body.weight(.semibold)
-                if id == model.viewerID { part.foregroundColor = .accentColor }
+                part.font = Font.ddBodyEmphasis
+                // Ditt eget navn i gult på grønn boble, rust på hvit (begge over 4,5:1).
+                if id == model.viewerID { part.foregroundColor = item.isMine ? Color.ddYellow : Color.ddRustText }
             }
             result += part
         }
@@ -208,7 +212,7 @@ private struct TradImageView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(maxWidth: 240, maxHeight: 300)
-                    .clipShape(.rect(cornerRadius: 16))
+                    .clipShape(.rect(cornerRadius: 20, style: .continuous))
                     .onTapGesture { showsFull = true }
                     .accessibilityLabel("Bilde fra \(author)")
                     .accessibilityAddTraits(.isButton)
@@ -234,10 +238,10 @@ private struct TradImageView: View {
 
     private func placeholder(_ content: some View) -> some View {
         content
-            .font(.footnote)
-            .foregroundStyle(.secondary)
+            .font(.ddCaption)
+            .foregroundStyle(Color.ddInkSecondary)
             .frame(width: 200, height: 150)
-            .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 16))
+            .background(Color.ddEarth, in: .rect(cornerRadius: 20, style: .continuous))
     }
 }
 
@@ -257,6 +261,7 @@ private struct TradFullImage: View {
                         Button("Lukk") { dismiss() }
                     }
                 }
+                .toolbarColorScheme(.dark, for: .navigationBar)
         }
     }
 }
@@ -280,7 +285,7 @@ private struct TradComposer: View {
                                 model.insertMention(suggestion.handle)
                                 focused.wrappedValue = true
                             }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(.dd(.secondary, compact: true))
                             .accessibilityHint(suggestion.name)
                         }
                     }
@@ -289,7 +294,7 @@ private struct TradComposer: View {
             if model.isPreparingImage {
                 HStack {
                     ProgressView()
-                    Text("Gjør klar bildet …").font(.footnote).foregroundStyle(.secondary)
+                    Text("Gjør klar bildet …").font(.ddCaption).foregroundStyle(Color.ddInkSecondary)
                     Spacer()
                 }
             } else if let attachment = model.attachment, let preview = UIImage(data: attachment.data) {
@@ -298,10 +303,10 @@ private struct TradComposer: View {
                         .resizable()
                         .scaledToFill()
                         .frame(width: 64, height: 64)
-                        .clipShape(.rect(cornerRadius: 10))
+                        .clipShape(.rect(cornerRadius: 14, style: .continuous))
                         .accessibilityLabel("Bildet som legges ved")
                     Button("Fjern", role: .destructive) { model.removeAttachment() }
-                        .font(.footnote)
+                        .buttonStyle(.dd(.danger, compact: true))
                     Spacer()
                 }
             }
@@ -309,37 +314,102 @@ private struct TradComposer: View {
                 // Bare bildebiblioteket nå. Kamera kommer i fase 8 (trenger NSCameraUsageDescription).
                 PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
                     Image(systemName: "photo")
-                        .font(.title3)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 44, height: 44)
                 }
+                // Utenfor etiketten: den er en Sendable-closure og kan ikke lese fargene.
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(Color.ddForestInk)
+                .glassEffect(.regular.interactive(), in: .circle)
                 .disabled(model.isSending || model.isPreparingImage)
                 .accessibilityLabel("Legg ved bilde")
 
                 TextField("Skriv til kvelden …", text: $model.draft, axis: .vertical)
                     .lineLimit(1...5)
                     .focused(focused)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: 18))
+                    .font(.ddBody)
+                    .foregroundStyle(Color.ddInk)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 11)
+                    .frame(minHeight: 44)
+                    .background(Color.ddCard, in: .rect(cornerRadius: 22, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .strokeBorder(Color.ddHairline, lineWidth: 1)
+                    }
 
                 Button {
                     Task { await model.send() }
                 } label: {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.title)
+                    Image(systemName: "arrow.up")
                 }
+                .buttonStyle(DDSendButtonStyle())
                 .disabled(!model.canSend)
                 .accessibilityLabel("Send")
             }
             if let left = model.remainingCharacters {
                 Text(left >= 0 ? "\(left) tegn igjen" : "\(-left) tegn for mye")
-                    .font(.caption2)
-                    .foregroundStyle(left >= 0 ? Color.secondary : Color.red)
+                    .font(.dd(.sans, size: 12, relativeTo: .caption2))
+                    .foregroundStyle(left >= 0 ? Color.ddInkSecondary : Color.ddError)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(.bar)
+        .padding(.horizontal, DDSpacing.l)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
+        .background {
+            Color.ddBackground
+                .overlay(alignment: .top) { DDDivider() }
+                .ignoresSafeArea(edges: .bottom)
+        }
     }
 }
+
+// MARK: - Skjermprøve
+
+#if DEBUG
+/// Tråden med oppdiktede meldinger, uten nett (`-DDDesignScreen trad`).
+struct TradSampleScreen: View {
+    var body: some View {
+        NavigationStack {
+            TradContent(model: TradModel(eventID: SampleTradBackend.event, clubID: SampleTradBackend.club,
+                                         viewer: SampleTradBackend.thomas, isOrganizer: false,
+                                         backend: SampleTradBackend()))
+        }
+    }
+}
+
+private struct SampleTradBackend: TradBackend {
+    static let club = UUID(), event = UUID(), thomas = UUID(), kare = UUID(), ola = UUID()
+
+    func messages(eventID: UUID) async throws -> [ThreadMessageRow] {
+        let now = Date.now
+        func m(_ who: UUID, _ text: String, _ minutes: Double, mentions: [UUID] = []) -> ThreadMessageRow {
+            ThreadMessageRow(id: UUID(), clubID: Self.club, eventID: Self.event, memberID: who, body: text,
+                             mentions: mentions, imagePath: nil, createdAt: now.addingTimeInterval(-minutes * 60))
+        }
+        return [
+            m(Self.kare, "Blir litt sen, starter dere uten meg?", 42),
+            m(Self.thomas, "Vi venter ved båsen 👍", 40),
+            m(Self.ola, "@Thomas tar du med ekstra baller?", 12, mentions: [Self.thomas]),
+            m(Self.thomas, "Klart det. Ses 17:00.", 5),
+        ]
+    }
+
+    func members(clubID: UUID) async throws -> [ClubMemberRow] {
+        [(Self.thomas, "Thomas"), (Self.kare, "Kåre"), (Self.ola, "Ola")].map { id, name in
+            ClubMemberRow(id: id, clubID: Self.club, userID: nil, displayName: name, handicapIndex: nil, seedGroup: nil,
+                          isOrganizer: false, isTreasurer: false, status: .active, avatarPath: nil)
+        }
+    }
+
+    func insert(_ message: ThreadMessageInsert) async throws -> ThreadMessageRow {
+        ThreadMessageRow(id: message.id, clubID: message.clubID, eventID: message.eventID, memberID: message.memberID,
+                         body: message.body, mentions: message.mentions, imagePath: message.imagePath, createdAt: .now)
+    }
+
+    func delete(messageID: UUID) async throws -> Bool { true }
+    func uploadImage(path: String, jpeg: Data) async throws {}
+    func removeImages(paths: [String]) async throws {}
+    func signedURLs(paths: [String], expiresIn: Int) async throws -> [String: URL] { [:] }
+}
+#endif

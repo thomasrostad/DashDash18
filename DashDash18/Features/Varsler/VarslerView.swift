@@ -12,6 +12,8 @@ struct VarslerView: View {
         } else {
             ContentUnavailableView("Ingen klubb", systemImage: "bell.slash",
                                    description: Text("Velg en klubb for å se varslene."))
+                .navigationTitle("Varsler")
+                .ddNavigationChrome()
         }
     }
 }
@@ -24,6 +26,7 @@ struct VarslerContent: View {
     var body: some View {
         content
             .navigationTitle("Varsler")
+            .ddNavigationChrome()
             .toolbar {
                 if model.isOrganizer {
                     ToolbarItem(placement: .primaryAction) {
@@ -63,7 +66,7 @@ struct VarslerContent: View {
                 Text(message)
             } actions: {
                 Button("Prøv igjen") { Task { await model.load() } }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.dd(.primary))
             }
         case .loaded:
             let sections = model.sections()
@@ -71,9 +74,9 @@ struct VarslerContent: View {
                 ContentUnavailableView("Ingenting ennå", systemImage: "bell",
                                        description: Text("Varslene dukker opp her når det skjer noe i klubben."))
             } else {
-                List {
+                DDList {
                     ForEach(sections) { section in
-                        Section(section.title) {
+                        DDSection(section.title) {
                             ForEach(section.items) { item in
                                 ActivityRowView(item: item, model: model)
                             }
@@ -92,17 +95,14 @@ struct ActivityRowView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: item.display.symbol)
-                .font(.body)
-                .foregroundStyle(.tint)
-                .frame(width: 28, height: 28)
-                .background(.tint.opacity(0.12), in: .rect(cornerRadius: 8))
-                .accessibilityHidden(true)
+            DDIconTile(systemImage: item.display.symbol)
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(item.display.text)
-                    .font(.subheadline)
+                    .font(item.isUnread ? .ddBodyEmphasis : .ddBody)
+                    .foregroundStyle(Color.ddInk)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 7)
                 if !item.chips.isEmpty {
                     ReactionChipsView(chips: item.chips) { reaction in
                         Task { await model.toggle(reaction, on: item.id) }
@@ -113,17 +113,17 @@ struct ActivityRowView: View {
 
             VStack(alignment: .trailing, spacing: 6) {
                 Text(item.time)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .font(.ddMonoSmall)
+                    .monospacedDigit()
+                    .foregroundStyle(Color.ddInkSecondary)
                 if item.isUnread {
-                    Circle()
-                        .fill(.tint)
-                        .frame(width: 8, height: 8)
+                    DDUnreadDot()
                         .accessibilityLabel("Ulest")
                 }
             }
+            .padding(.top, 9)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 6)
         .accessibilityElement(children: .combine)
         .contextMenu {
             ForEach(ActivityReaction.allCases, id: \.self) { reaction in
@@ -155,14 +155,7 @@ struct ReactionChipsView: View {
                 Button {
                     onTap(chip.reaction)
                 } label: {
-                    HStack(spacing: 3) {
-                        Text(chip.reaction.rawValue)
-                        Text("\(chip.count)").font(.caption.monospacedDigit())
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(chip.isMine ? AnyShapeStyle(.tint.opacity(0.2)) : AnyShapeStyle(.quaternary),
-                                in: .capsule)
+                    DDReactionChip(emoji: chip.reaction.rawValue, count: chip.count, isMine: chip.isMine)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(chip.reaction.accessibilityName), \(chip.count): \(NorwegianList.join(chip.names))")
@@ -183,16 +176,16 @@ struct AnnouncementSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            DDForm {
                 Section {
                     TextField("Beskjed", text: $text, axis: .vertical)
                         .lineLimit(3...8)
                 } footer: {
-                    Text("Går til alle i klubben. \(cleaned.count) av \(ActivityText.announcementMaxLength) tegn.")
+                    DDFooter("Går til alle i klubben. \(cleaned.count) av \(ActivityText.announcementMaxLength) tegn.")
                 }
             }
             .navigationTitle("Melding til alle")
-            .navigationBarTitleDisplayMode(.inline)
+            .ddNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Avbryt") { dismiss() }
@@ -225,15 +218,13 @@ struct VarslerBell: View {
         NavigationLink {
             VarslerView(badge: badge)
         } label: {
-            Image(systemName: badge.count > 0 ? "bell.badge" : "bell")
+            // Bjella med rust tallmerke (PWA-ens bjelle i headeren). Fargen følger verktøylinja.
+            Image(systemName: "bell")
                 .overlay(alignment: .topTrailing) {
                     if let label = badge.label {
-                        Text(label)
-                            .font(.caption2.bold().monospacedDigit())
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 4)
-                            .background(.red, in: .capsule)
-                            .offset(x: 10, y: -8)
+                        DDCountBadge(label)
+                            .fixedSize()
+                            .offset(x: 10, y: -9)
                     }
                 }
         }
@@ -294,3 +285,23 @@ private enum VarslerPreviewData {
             }
     }
 }
+
+#if DEBUG
+/// Varsler og bjella med oppdiktede linjer (`-DDDesignScreen varsler`).
+struct VarslerSampleScreen: View {
+    var body: some View {
+        NavigationStack {
+            VarslerContent(model: VarslerModel(
+                preview: VarslerPreviewData.rows, reactions: VarslerPreviewData.reactions,
+                names: VarslerPreviewData.names, me: VarslerPreviewData.thomas, isOrganizer: true,
+                seenAt: Date.now.addingTimeInterval(-30 * 60)))
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    VarslerBell(badge: UnreadBadge(clubID: VarslerPreviewData.club, me: VarslerPreviewData.thomas,
+                                                   count: 3))
+                }
+            }
+        }
+    }
+}
+#endif

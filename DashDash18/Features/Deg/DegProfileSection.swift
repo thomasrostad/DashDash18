@@ -23,10 +23,12 @@ struct DegProfileSection: View {
                     Button("Lagre") {
                         Task { await save() }
                     }
+                    .buttonStyle(.dd(.primary, fullWidth: true, compact: true))
                     .disabled(model.isSaving)
                 } else if let savedMessage {
                     Label(savedMessage, systemImage: "checkmark.circle")
-                        .foregroundStyle(.secondary)
+                        .font(.ddCallout)
+                        .foregroundStyle(Color.ddLimeInk)
                 }
             } else if model.isLoading {
                 ProgressView()
@@ -34,11 +36,12 @@ struct DegProfileSection: View {
                 Button("Last inn på nytt") {
                     Task { await model.load() }
                 }
+                .fontWeight(.medium)
             }
         } header: {
-            Text("Navn og handicap")
+            DDHeader("Navn og handicap")
         } footer: {
-            Text("Komma eller punktum. Plusshandicap skrives med «+», f.eks. +2,3.")
+            DDFooter("Komma eller punktum. Plusshandicap skrives med «+», f.eks. +2,3.")
         }
         .task {
             if model.row == nil { await model.load() }

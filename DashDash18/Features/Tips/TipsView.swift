@@ -23,7 +23,7 @@ private struct TipsContent: View {
     var body: some View {
         content
             .navigationTitle("Tippekupongen")
-            .navigationBarTitleDisplayMode(.inline)
+            .ddNavigationChrome()
             .task { await model.load() }
             .refreshable { await model.load() }
             .onChange(of: scenePhase) { _, phase in
@@ -44,11 +44,11 @@ private struct TipsContent: View {
                 Text(message)
             } actions: {
                 Button("Prøv igjen") { Task { await model.load() } }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.dd(.primary))
             }
         case .loaded:
             if let board = model.board {
-                List {
+                DDList {
                     TipsHeader(board: board)
                     switch board.phase {
                     case .open:
@@ -73,22 +73,30 @@ private struct TipsHeader: View {
 
     var body: some View {
         Section {
-            VStack(alignment: .leading, spacing: 6) {
+            // Grønt hero-kort øverst, som kveldskortet i PWA-en.
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Tippekupongen").ddEyebrow(color: .ddGold)
                 Text(EveningDates.longText(board.event.eventDate, capitalized: true))
-                    .font(.title2.bold())
+                    .font(.ddTitle)
                 Text(board.statusText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                HStack {
+                    .font(.ddCallout)
+                    .foregroundStyle(Color.ddOnDark.opacity(0.8))
+                DDDivider(onDark: true)
+                    .padding(.vertical, 4)
+                HStack(alignment: .firstTextBaseline) {
                     Text(board.stakeText)
-                    Spacer()
-                    Text(board.potText).monospacedDigit()
+                        .font(.ddCallout)
+                    Spacer(minLength: 8)
+                    Text(board.potText)
+                        .font(.ddNumber)
+                        .monospacedDigit()
+                        .foregroundStyle(Color.ddGold)
                 }
-                .font(.footnote)
-                .padding(.top, 4)
             }
-            .padding(.vertical, 4)
+            .foregroundStyle(Color.ddOnDark)
+            .padding(.vertical, 10)
             .accessibilityElement(children: .combine)
+            .listRowBackground(Color.ddHeroCard)
         }
     }
 }
@@ -108,37 +116,41 @@ private struct TipsFormSections: View {
             Section {
                 answerControl(q)
             } header: {
-                Text("\(index + 1) / \(TipsQuestion.allCases.count)")
+                DDHeader("\(index + 1) / \(TipsQuestion.allCases.count)")
             } footer: {
-                Text(q.subtitle)
+                DDFooter(q.subtitle)
             }
         }
         Section {
-            Button {
-                Task { await submit() }
-            } label: {
-                HStack {
-                    Spacer()
-                    if model.isSaving {
-                        ProgressView()
-                    } else {
-                        if saved != nil && !model.draft.isChanged(from: saved) {
-                            Image(systemName: "checkmark")
+            VStack(spacing: 10) {
+                Button {
+                    Task { await submit() }
+                } label: {
+                    HStack(spacing: 8) {
+                        if model.isSaving {
+                            ProgressView()
+                        } else {
+                            if saved != nil && !model.draft.isChanged(from: saved) {
+                                Image(systemName: "checkmark")
+                            }
+                            Text(model.draft.buttonTitle(saved: saved))
                         }
-                        Text(model.draft.buttonTitle(saved: saved)).bold()
                     }
-                    Spacer()
+                }
+                .buttonStyle(.dd(.primary, fullWidth: true))
+                .disabled(model.isSaving || !model.draft.canSubmit(saved: saved))
+                if saved != nil {
+                    Button("Trekk kupongen …", role: .destructive) { confirmWithdraw = true }
+                        .buttonStyle(.dd(.danger, fullWidth: true))
+                        .disabled(model.isSaving)
                 }
             }
-            .disabled(model.isSaving || !model.draft.canSubmit(saved: saved))
-            if saved != nil {
-                Button("Trekk kupongen …", role: .destructive) { confirmWithdraw = true }
-                    .disabled(model.isSaving)
-            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
-                if let error { Text(error).foregroundStyle(.red) }
-                Text(hint)
+                if let error { Text(error).ddErrorStyle() }
+                DDFooter(hint)
             }
         }
         .confirmationDialog("Trekke kupongen?", isPresented: $confirmWithdraw, titleVisibility: .visible) {
@@ -172,17 +184,27 @@ private struct TipsFormSections: View {
             }
             .pickerStyle(.navigationLink)
         case .yesNo, .overUnder:
-            VStack(alignment: .leading, spacing: 8) {
-                Text(board.title(q)).font(.headline)
-                Picker(board.title(q), selection: flagBinding(q)) {
-                    Text(q.kind == .yesNo ? "Ja" : "Over").tag(Bool?.some(true))
-                    Text(q.kind == .yesNo ? "Nei" : "Under").tag(Bool?.some(false))
+            VStack(alignment: .leading, spacing: 10) {
+                Text(board.title(q))
+                    .font(.ddBodyEmphasis)
+                    .foregroundStyle(Color.ddForestInk)
+                // To piller i stedet for systemets segmentvelger: valgt er grønn (golfee).
+                HStack(spacing: 8) {
+                    flagChoice(q, value: true, title: q.kind == .yesNo ? "Ja" : "Over")
+                    flagChoice(q, value: false, title: q.kind == .yesNo ? "Nei" : "Under")
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
             }
-            .padding(.vertical, 2)
+            .padding(.vertical, 4)
         }
+    }
+
+    private func flagChoice(_ q: TipsQuestion, value: Bool, title: String) -> some View {
+        let binding = flagBinding(q)
+        let selected = binding.wrappedValue == value
+        return Button(title) { binding.wrappedValue = value }
+            .buttonStyle(DDChoiceButtonStyle(selected: selected))
+            .accessibilityLabel("\(board.title(q)): \(title)")
+            .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private func playerBinding(_ q: TipsQuestion) -> Binding<UUID?> {
@@ -215,12 +237,12 @@ private struct TipsSubmittedSection: View {
 
     var body: some View {
         if !board.submitted.isEmpty || !board.missing.isEmpty {
-            Section("Levert · \(board.submitted.count)") {
+            DDSection("Levert · \(board.submitted.count)") {
                 Text(board.submitted.isEmpty ? "Ingen ennå." : board.nameList(board.submitted))
                 if !board.missing.isEmpty {
                     Text("Påmeldt, men ikke levert: \(board.nameList(board.missing))")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(.ddCaption)
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
             }
         }
@@ -238,44 +260,49 @@ private struct TipsSettingsSection: View {
 
     var body: some View {
         Section {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Innsats per kupong").font(.subheadline.weight(.semibold))
-                HStack {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Innsats per kupong")
+                    .font(.ddBodyEmphasis)
+                    .foregroundStyle(Color.ddForestInk)
+                HStack(spacing: 8) {
                     ForEach(board.rules.tips.stakeOptions, id: \.self) { n in
                         Button(n > 0 ? "\(n)" : "Æra") { save(stake: n, line: board.line) }
-                            .buttonStyle(.bordered)
-                            .tint(n == board.stake ? .accentColor : .secondary)
+                            .buttonStyle(DDChoiceButtonStyle(selected: n == board.stake))
                             .accessibilityAddTraits(n == board.stake ? .isSelected : [])
                     }
                 }
             }
             .padding(.vertical, 4)
-            HStack {
+            HStack(spacing: 10) {
                 Text("Linja")
+                    .font(.ddBodyEmphasis)
+                    .foregroundStyle(Color.ddForestInk)
                 Spacer()
                 Button {
                     save(stake: board.stake, line: board.line - board.rules.tips.lineStep)
                 } label: { Image(systemName: "minus") }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(DDStepperButtonStyle(kind: .minus, size: 44))
                     .disabled(fixed || !Tips.isValidLine(board.line - board.rules.tips.lineStep))
                     .accessibilityLabel("Senk linja")
                 Text(Tips.formatSigned(board.line, decimals: 1))
+                    .font(.ddNumberLarge)
                     .monospacedDigit()
                     .frame(minWidth: 56)
                 Button {
                     save(stake: board.stake, line: board.line + board.rules.tips.lineStep)
                 } label: { Image(systemName: "plus") }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(DDStepperButtonStyle(kind: .plus, size: 44))
                     .disabled(fixed || !Tips.isValidLine(board.line + board.rules.tips.lineStep))
                     .accessibilityLabel("Hev linja")
             }
+            .padding(.vertical, 4)
         } header: {
-            Text("Arrangør")
+            DDHeader("Arrangør")
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
-                if let error { Text(error).foregroundStyle(.red) }
-                Text(fixed ? "Står fast nå som noen har levert – de tippet på det som sto."
-                     : "Netto slag over par per ni hull. Kan endres til første kupong er levert.")
+                if let error { Text(error).ddErrorStyle() }
+                DDFooter(fixed ? "Står fast nå som noen har levert – de tippet på det som sto."
+                         : "Netto slag over par per ni hull. Kan endres til første kupong er levert.")
             }
         }
         .disabled(fixed || model.isSaving)
@@ -303,22 +330,27 @@ private struct TipsAllSections: View {
             }
         } else {
             ForEach(Array(TipsQuestion.allCases.enumerated()), id: \.element) { index, q in
-                Section("\(index + 1). \(board.title(q))") {
+                DDSection("\(index + 1). \(board.title(q))") {
                     ForEach(board.groups(q)) { g in
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 8) {
                                 if g.correct == true {
-                                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(Color.ddLimeInk)
+                                        .accessibilityLabel("Riktig")
                                 }
-                                Text(g.text).bold()
+                                Text(g.text)
+                                    .font(.ddBodyEmphasis)
+                                    .foregroundStyle(Color.ddForestInk)
                                 Spacer()
-                                Text("\(g.memberIDs.count) tips").font(.footnote).monospacedDigit()
-                                    .foregroundStyle(.secondary)
+                                DDChip("\(g.memberIDs.count) tips", tone: g.correct == true ? .lime : .earth, compact: true)
+                                    .monospacedDigit()
                             }
                             Text(g.memberIDs.map { $0 == board.me ? "deg" : board.shortName($0) }.joined(separator: ", "))
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
+                                .font(.ddCaption)
+                                .foregroundStyle(Color.ddInkSecondary)
                         }
+                        .padding(.vertical, 2)
                         .accessibilityElement(children: .combine)
                     }
                 }
@@ -338,36 +370,52 @@ private struct TipsFinishedSections: View {
                                        description: Text("Ingen leverte kupong til denne kvelden."))
             }
         } else {
-            Section("Tippekongen") {
-                HStack(spacing: 12) {
-                    Text("👑").font(.largeTitle)
-                    VStack(alignment: .leading) {
-                        Text(board.nameList(board.result.winners)).font(.title3.bold())
-                        Text(board.kingText).font(.footnote).foregroundStyle(.secondary)
+            Section {
+                HStack(spacing: 14) {
+                    Text("👑")
+                        .font(.system(size: 40))
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Tippekongen").ddEyebrow(color: .ddGold)
+                        Text(board.nameList(board.result.winners))
+                            .font(.ddTitle)
+                        Text(board.kingText)
+                            .font(.ddCallout)
+                            .foregroundStyle(Color.ddOnDark.opacity(0.8))
                     }
                 }
+                .foregroundStyle(Color.ddOnDark)
+                .padding(.vertical, 10)
                 .accessibilityElement(children: .combine)
+                .listRowBackground(Color.ddHeroCard)
             }
             Section {
                 ForEach(Array(board.result.rows.enumerated()), id: \.element.playerID) { i, row in
                     resultRow(row, showPlace: i == 0 || board.result.rows[i - 1].points != row.points)
                 }
             } header: {
-                Text("Resultatliste")
+                DDHeader("Resultatliste")
             } footer: {
-                Text("Merkene er spørsmål 1–5 i rekkefølge. Ett poeng per riktig svar"
-                     + (board.result.possible < TipsQuestion.allCases.count ? "; · er strøket og teller ikke for noen." : "."))
+                DDFooter("Merkene er spørsmål 1–5 i rekkefølge. Ett poeng per riktig svar"
+                         + (board.result.possible < TipsQuestion.allCases.count ? "; · er strøket og teller ikke for noen." : "."))
             }
-            Section("Fasit") {
+            DDSection("Fasit") {
                 ForEach(TipsQuestion.allCases) { q in
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(board.title(q)).font(.footnote).foregroundStyle(.secondary)
+                        Text(board.title(q))
+                            .font(.ddCaption)
+                            .foregroundStyle(Color.ddInkSecondary)
                         Text(board.answerKeyText(q))
+                            .font(.ddBodyEmphasis)
+                            .foregroundStyle(Color.ddForestInk)
                     }
+                    .accessibilityElement(children: .combine)
                 }
             }
             Section {
                 Button(showAll ? "Skjul hva alle tippet" : "Vis hva alle tippet") { showAll.toggle() }
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.ddForestInk)
             }
             if showAll { TipsAllSections(board: board) }
         }
@@ -376,24 +424,32 @@ private struct TipsFinishedSections: View {
     private func resultRow(_ row: TipsResult.Row, showPlace: Bool) -> some View {
         let id = UUID(uuidString: row.playerID)
         let isMe = id == board.me
-        return HStack {
+        return HStack(spacing: 10) {
             Text(showPlace ? "\(board.place(of: row))." : "")
-                .font(.footnote).monospacedDigit().foregroundStyle(.secondary)
+                .font(.ddMonoSmall).monospacedDigit().foregroundStyle(Color.ddInkSecondary)
                 .frame(width: 26, alignment: .leading)
             Text(board.shortName(row.playerID) + (board.result.winners.contains(row.playerID) ? " 👑" : ""))
-                .fontWeight(isMe ? .semibold : .regular)
+                .font(isMe ? .ddBodyEmphasis : .ddBody)
+                .foregroundStyle(Color.ddForestInk)
+            if isMe {
+                DDPill("Deg", tone: .gold).fixedSize()
+            }
             Spacer()
             HStack(spacing: 4) {
                 ForEach(TipsQuestion.allCases) { q in
                     let v = row.correct[q] ?? nil
                     Text(v == nil ? "·" : (v! ? "✓" : "✗"))
-                        .foregroundStyle(v == nil ? Color.secondary : (v! ? Color.green : Color.red))
+                        .foregroundStyle(v == nil ? Color.ddInkSecondary : (v! ? Color.ddLimeInk : Color.ddRustText))
                         .frame(width: 14)
                 }
             }
-            .font(.footnote.monospaced())
-            Text("\(row.points)").font(.body.monospacedDigit().weight(.medium)).frame(width: 28, alignment: .trailing)
+            .font(.dd(.mono, size: 13, weight: .semibold, relativeTo: .footnote))
+            Text("\(row.points)").font(.ddNumber).monospacedDigit().frame(width: 28, alignment: .trailing)
         }
+        .listRowBackground(ZStack {
+            Color.ddCard
+            if isMe { Color.ddYouRow }
+        })
         .accessibilityElement(children: .combine)
     }
 }
