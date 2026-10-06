@@ -19,6 +19,8 @@ enum AuthState: Equatable {
 final class AuthModel {
     private(set) var state: AuthState = .starting
     private let auth: AuthClient
+    /// Kjøres før utlogging, mens økten fortsatt finnes (push: fjern telefonen).
+    @ObservationIgnored var willSignOut: (() async -> Void)?
 
     init(client: SupabaseClient) {
         auth = client.auth
@@ -66,6 +68,7 @@ final class AuthModel {
 
     /// Lokal utlogging, som i PWA-en: en global utlogging kunne henge.
     func signOut() async {
+        await willSignOut?()
         try? await auth.signOut(scope: .local)
         state = .signedOut
     }

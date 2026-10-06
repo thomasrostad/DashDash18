@@ -25,6 +25,8 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 | `007_foring.sql` | `confirm_round_par` (markør eller arrangør bekrefter par) | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `008_sosialt.sql` | Aktivitet, reaksjoner, kveldens tråd, tippekupong, push-tokens (APNs), bøttene `avatars` og `thread` | Godkjent og kjørt på test 06.10.2026. Ikke prod |
 | `009_ledelse_en_gang.sql` | Unik indeks: ledelsesvarsel bare én gang per runde og sjekkpunkt | Forslag, ikke kjørt |
+| `010_push.sql` | Push (fase 8): `push_devices` (erstatter `push_tokens`), `push_preferences`, `clubs.push_disabled_categories`, `push_queue` med triggere, RPC-er for appen og senderen | Forslag, ikke kjørt. Se «Oversikt for godkjenning: 010» og `docs/push-oppsett.md` |
+| `lokal/010_prove.sql` | Lokal rolleprøve for 010. **Aldri mot Supabase.** | Hjelpefil |
 | `lokal/stub.sql`, `lokal/001_prove.sql` | Lokal syntaks- og rolleprøve. **Aldri mot Supabase.** | Hjelpefiler |
 | `lokal/stub_storage.sql`, `lokal/008_prove.sql` | Lokal Storage-etterligning og rolleprøve for 008. **Aldri mot Supabase.** | Hjelpefiler |
 
@@ -246,3 +248,43 @@ Kjørt mot en midlertidig, lokal Postgres 16.2 (pip-pakken `pgserver` i et virtu
 - `lokal/008_prove.sql` i en tom base etter 001 og 008: **102 av 102 ok**. Den dekker anon, ventende, annen klubb, spiller og arrangør for alle tabellene, vaktene, fristen rundt sommertid, låsen ved første score, overtakelse av enhet og sti-reglene i Storage.
 - Kontrollspørringene og rullebakken er kjørt med forventet svar, og 008 gikk inn igjen etter rullebakken.
 - **Forbehold:** ekte Supabase Storage, Realtime og PostgREST er ikke prøvd. På Supabase eier `supabase_storage_admin` `storage.objects`. Policyene opprettes som `postgres` i SQL Editor, slik PWA-ens `traad-bilder.sql` gjorde.
+
+
+---
+
+## Oversikt for godkjenning: 010 (push)
+
+> **Status 07.10.2026:** forslag, **ikke kjørt** noe sted utenom lokal Postgres. Krever 001 og 008. Oppsettet steg for steg står i `docs/push-oppsett.md`.
+
+### Tabellene
+
+| Tabell | Hva den er |
+|---|---|
+| `push_devices` | Én rad per telefon: innlogging, `device_id` (identifierForVendor), token (unikt, heks), miljø `sandbox`/`production`, bundle og `last_seen_at`. **Erstatter 008s `push_tokens`** (én rad per medlemskap). Eventuelle rader flyttes over, så fjernes `push_tokens` og `register_push_token`. |
+| `push_preferences` | Spillerens valg per medlemskap: `disabled_categories` (det som er AV) og `thread_mode` (`all`/`mentions`/`off`). Ingen rad = alt på, tråden `mentions`. |
+| `clubs.push_disabled_categories` | Arrangørens «Hva blir push» for hele klubben (PWA: `settings.push_av`). |
+| `push_queue` | Køen: én jobb per `activity`-linje eller trådmelding, fylt av triggere. Bare service_role. En Database Webhook på INSERT vekker `push-send`. |
+
+### Hvem kan hva
+
+- **anon:** ingenting.
+- **Spiller:** ser bare sin egen telefon og registrerer eller fjerner den via RPC. Leser, lager og endrer bare egne valg (aktivt medlemskap). Leser klubbens valg.
+- **Arrangør:** endrer `clubs.push_disabled_categories` med vanlig `clubs_update`. Ser hvem som har push via `push_status` (aldri tokens).
+- **Senderen (service_role i Edge Function):** tar jobber, henter alt for én jobb, merker den ferdig og sletter døde tokens.
+- «Melding til alle» kan ikke slås av, verken av klubben eller spilleren. Purring kan ikke slås av for klubben (PWA: ALLTID), men spilleren kan.
+
+### RPC-er
+
+| Funksjon | Hvem | Hva |
+|---|---|---|
+| `register_push_device(enhet, token, miljø, bundle)` | innlogget | Registrerer eller tar over telefonen i én transaksjon. Returnerer raden. |
+| `unregister_push_device(enhet)` | innlogget | Fjerner min telefon (logg ut). |
+| `push_status(klubb)` | arrangør | Medlem, har innlogging, antall telefoner, sist sett. |
+| `claim_push_jobs(n)` | service_role | Tar de neste jobbene (skip locked, høyst 5 forsøk, høyst en time gamle). |
+| `push_job_payload(jobb)` | service_role | Linja eller meldingen, klubbens valg og alle medlemmer med valg og telefoner, som jsonb. |
+| `finish_push_job(jobb, ok, resultat, feil, døde tokens)` | service_role | Ferdig eller prøv igjen, slett døde tokens, merk tråden `pushed_at`. |
+| `queue_evening_reminders(dager)` | service_role (pg_cron) | Påminnelse i aktivitetsloggen for kvelder om N dager (standard 7), én per kveld. |
+
+### Lokal sjekk av 010
+
+Lokal Postgres 16.2 (pgserver i scratch): `stub`, `stub_storage`, 001–009 og 010 **to ganger på rad** uten feil. `lokal/010_prove.sql`: **68 av 68 ok**. Flytting fra `push_tokens`, kontrollspørringene og rullebakken (og 010 på nytt etterpå) er prøvd. Webhooken, pg_cron, PostgREST og ekte APNs er ikke prøvd.

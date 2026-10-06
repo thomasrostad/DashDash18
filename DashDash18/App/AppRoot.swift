@@ -19,16 +19,19 @@ struct AppRoot: View {
                 ClubGate(services: services, user: user)
                     .task(id: user.id) { await services.club.load(userID: user.id) }
                     .task(id: user.id) { services.outbox.start(userID: user.id) }
+                    .task(id: user.id) { await services.push.start(userID: user.id) }
             }
         }
         .environment(services.auth)
         .environment(services.club)
         .environment(services.outbox.status)
+        .environment(services.push)
         .task { await services.auth.observe() }
         .onChange(of: services.auth.state) { _, state in
             if state == .signedOut {
                 services.club.reset()
                 services.outbox.stop()
+                services.push.stop()
             }
         }
         .onChange(of: scenePhase) { _, phase in
