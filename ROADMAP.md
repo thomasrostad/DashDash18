@@ -10,10 +10,10 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 1 (pågår). Fase 2 er ferdig. |
-| **Sist gjort** | Klubb og innmelding (lag klubb, bli med med kode). Alle tester grønne (enhet og UI). Pushet til GitHub. |
-| **Neste oppgave** | Brukeren prøver «Lag en ny klubb» på telefonen. Deretter Google-innlogging, så fase 3 (admin-panel). |
-| **Venter på deg** | Bekreft at Logg inn med Apple virker på telefonen. Svar på de fire regelsett-spørsmålene i `Packages/GolfgutuCore/REGELSETT.md`. |
+| **Nåværende fase** | Fase 3 (nesten ferdig) og fase 4 (påmelding ferdig, oppsett av kveld gjenstår). |
+| **Sist gjort** | Fire agenter: tropp, baner, sesong og regler, terminliste og påmelding. Alt slått sammen, enhetstester grønne. Kartlegging av banedata (B15). |
+| **Neste oppgave** | Brukeren prøver arrangørsiden på telefon. Godkjenning av SQL 002/004/005. Deretter fase 4: oppsett av kveld (kladd, båser, markør) og fase 5: føring. |
+| **Venter på deg** | SQL 002/004/005. CR = par for 7 baner? Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
 
@@ -50,7 +50,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Kjøre skjemaet på test etter godkjenning, med kontrollspørringer. *(10/10 ok, anon får 42501.)*
 - [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først. *(06.10: e-postkode prøvd på telefon via Resend fra `noreply@dashdash18.com`. Logg inn med Apple bygget og slått på i Supabase. Google gjenstår.)*
 - [x] Første innlogging: velg navn i troppen eller bli med som ny. Arrangør kan godkjenne og frigjøre. *(06.10: lag klubb, bli med med kode, ta ledig navn eller vent på godkjenning, Deg viser klubb/rolle/kode. Godkjenning i admin kommer i fase 3. «Lag en ny klubb» prøvd på telefon mot test 06.10.)*
-- [ ] Rolig Kveld-skjerm som viser «Ingen kveld satt opp» og hvem som er logget inn.
+- [x] Rolig Kveld-skjerm som viser «Ingen kveld satt opp» og hvem som er logget inn. *(Erstattet av Kveld-fanen med neste kveld og påmelding.)*
 
 **Ferdig når:**
 - Jeg logger inn på telefonen med Apple, logger ut, logger inn med Google og med e-postkode. Hver gang er jeg samme spiller (eller kan koble kontoene).
@@ -104,11 +104,11 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 **Mål:** Arrangøren kan sette opp en sesong i appen, med egne regler, egne spillere og egne baner.
 
 - [x] Regelsett-revisjon: alle regelverdier i regelmotoren leses fra `Ruleset` (CLAUDE.md «Ingen regelverdier i koden»), inkludert «beste N» som kvelder eller matcher. Golfgutu-oppsettet gir fortsatt samme svar som PWA-en. *(06.10: Ruleset v2, se `Packages/GolfgutuCore/REGELSETT.md`. 80 tester grønne.)*
-- [ ] Admin-panel (kun arrangør): Sesong og regelsett (start fra Golfgutu-oppsettet, endre antall kvelder, hva som teller, poengmodell, sidepremier, handicapmodell, tillatte former, maks per bås).
-- [ ] Tropp: legg til og fjern spillere uten tak på antall, handicapindeks, seeding, roller (arrangør, kasserer), frigjør innlogging.
-- [ ] Baner: liste, rediger par, indeks, lengde, CR og slope, bekreftet-status. Import av PWA-ens 18 baner fra referansens SQL-filer eller fra PWA-basen (lesing).
-- [ ] Terminliste: kvelder med dato, tid, sted, sosialkomité.
-- [ ] Skjema-tillegg ved behov (SQL til godkjenning).
+- [x] Admin-panel (kun arrangør): Sesong og regelsett (start fra Golfgutu-oppsettet, endre antall kvelder, hva som teller, poengmodell, sidepremier, handicapmodell, tillatte former, maks per bås). *(06.10: hele Ruleset v2, live validering, «Slik telles det». Ikke prøvd mot database.)*
+- [x] Tropp: legg til og fjern spillere uten tak på antall, handicapindeks, seeding, roller (arrangør, kasserer), frigjør innlogging. *(06.10: også godkjenn/avvis, arkiver. Ikke prøvd mot database.)*
+- [x] Baner: liste, rediger par, indeks, lengde, CR og slope, bekreftet-status. Import av PWA-ens 18 baner fra referansens SQL-filer eller fra PWA-basen (lesing). *(06.10: 18 Golfgutu-baner som JSON-import. CR-spørsmål åpent. Søk etter ekte baner: B15.)*
+- [x] Terminliste: kvelder med dato, tid, sted, sosialkomité. *(06.10: også trekning av sosialkomité.)*
+- [ ] Skjema-tillegg ved behov (SQL til godkjenning). *(Forslag klare, ikke kjørt: `sql/002_baner.sql`, `004_sesong.sql`, `005_kveld.sql`.)*
 
 **Ferdig når:**
 - Jeg setter opp en sesong med 5 kvelder og «beste 3 teller» for 9 spillere, og en med Golfgutu-oppsettet for 12. Begge lagres og vises riktig.
@@ -129,8 +129,8 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Spillerne melder seg på i appen, og arrangøren setter opp kvelden (kladd, båser, markører, form, lag, matcher) og starter den.
 
-- [ ] Påmelding: Kommer / Usikker / Kommer ikke + kommentar, angre, purring av de som ikke har svart.
-- [ ] Kveld-skjerm, rolig: neste kveld, påmeldte, sosialkomité.
+- [ ] Påmelding: Kommer / Usikker / Kommer ikke + kommentar, angre, purring av de som ikke har svart. *(06.10: svar og kommentar ferdig. Angre og purring gjenstår.)*
+- [x] Kveld-skjerm, rolig: neste kveld, påmeldte, sosialkomité. *(06.10.)*
 - [ ] Start runde-veiviser i tre steg: bane og tid, hvem og båser, oppsett. Lagre som kladd, rediger kladd, start (blokkert hvis en runde går).
 - [ ] Båser og markør (`foreslaatteBaaser`), matcher for hånd, lag, forslag om form (`oppsettForAntall`, `formerSomPasser`), `trekkMatcher`.
 - [ ] Forslag til LD- og KP-hull. Par-bekreftelse før føring.
