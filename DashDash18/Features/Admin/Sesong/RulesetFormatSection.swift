@@ -1,0 +1,59 @@
+import GolfgutuCore
+import SwiftUI
+
+/// Former og oppsett: standardform, tillatte former, maks per bås og slag i match.
+struct RulesetFormatSection: View {
+    @Binding var draft: RulesetDraft
+
+    var body: some View {
+        Section {
+            Picker("Standardform", selection: $draft.rules.formats.defaultFormID) {
+                ForEach(draft.rules.allowedForms) { Text($0.name).tag($0.id) }
+                if !draft.rules.allowedForms.contains(where: { $0.id == draft.rules.formats.defaultFormID }) {
+                    Text("\(CompetitionForm.form(id: draft.rules.formats.defaultFormID).name) (ikke tillatt)")
+                        .tag(draft.rules.formats.defaultFormID)
+                }
+            }
+            NavigationLink {
+                AllowedFormsView(draft: $draft)
+            } label: {
+                LabeledContent("Tillatte former",
+                               value: "\(draft.rules.allowedForms.count) av \(CompetitionForm.all.count)")
+            }
+            RuleStepper("Maks per bås", value: $draft.rules.formats.maxPerBay)
+            Picker("Slag i match", selection: $draft.rules.formats.matchStrokes) {
+                ForEach(Ruleset.MatchStrokes.allCases, id: \.self) { Text(RuleNames.title($0)).tag($0) }
+            }
+        } header: {
+            Text(RulesetSection.formats.title)
+        } footer: {
+            RuleSectionFooter(text: "Laveste fra scratch: den beste i matchen spiller uten slag, de andre får forskjellen.",
+                              issues: draft.issues(in: .formats))
+        }
+    }
+}
+
+/// Formene arrangøren kan velge når en runde settes opp.
+private struct AllowedFormsView: View {
+    @Binding var draft: RulesetDraft
+
+    var body: some View {
+        Form {
+            Section {
+                ForEach(CompetitionForm.all) { form in
+                    Toggle(isOn: Binding(get: { draft.isAllowed(form) }, set: { draft.setAllowed(form, $0) })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(form.name)
+                            Text(form.help)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            } footer: {
+                RuleSectionFooter(text: nil, issues: draft.issues(in: .formats))
+            }
+        }
+        .navigationTitle("Tillatte former")
+    }
+}

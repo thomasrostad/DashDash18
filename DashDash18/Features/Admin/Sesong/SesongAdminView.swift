@@ -1,9 +1,89 @@
+import GolfgutuCore
 import SwiftUI
 
-/// Plassholder. Erstattes av funksjonen i fase 3.
+/// Sesongene i klubben: aktiv, planlagte og ferdige. Herfra lages nye sesonger og regelsettet redigeres.
 struct SesongAdminView: View {
+    @Environment(\.clubContext) private var context
+
     var body: some View {
-        ContentUnavailableView("Sesong og regler", systemImage: "list.number", description: Text("Sesongen og regelsettet kommer her."))
+        if let context {
+            SesongListView(context: context)
+        } else {
+            ContentUnavailableView("Ingen klubb", systemImage: "list.number",
+                                   description: Text("Velg en klubb for å se sesongene."))
+                .navigationTitle("Sesong og regler")
+        }
+    }
+}
+
+private struct SesongListView: View {
+    @State private var model: SesongAdminModel
+    @State private var showsNewSeason = false
+
+    init(context: ClubContext) {
+        _model = State(initialValue: SesongAdminModel(context: context))
+    }
+
+    var body: some View {
+        content
             .navigationTitle("Sesong og regler")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Ny sesong", systemImage: "plus") { showsNewSeason = true }
+                }
+            }
+            .sheet(isPresented: $showsNewSeason) {
+                NavigationStack { NySesongView(model: model) }
+            }
+            .task { await model.load() }
+            .refreshable { await model.load() }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch model.loadState {
+        case .loading where model.seasons.isEmpty:
+            ProgressView()
+        case .failed(let error) where model.seasons.isEmpty:
+            ContentUnavailableView {
+                Label("Fikk ikke hentet sesongene", systemImage: "exclamationmark.triangle")
+            } description: {
+                Text(error.message)
+            } actions: {
+                Button("Prøv igjen") { Task { await model.load() } }
+            }
+        default:
+            if model.seasons.isEmpty {
+                ContentUnavailableView {
+                    Label("Ingen sesonger ennå", systemImage: "list.number")
+                } description: {
+                    Text("Lag den første sesongen. Golfgutu-oppsettet er en ferdig mal.")
+                } actions: {
+                    Button("Ny sesong") { showsNewSeason = true }
+                }
+            } else {
+                list
+            }
+        }
+    }
+
+    private var list: some View {
+        List {
+            ForEach(SeasonLifecycle.grouped(model.seasons), id: \.status) { group in
+                Section(SeasonLifecycle.title(group.status)) {
+                    ForEach(group.seasons) { season in
+                        NavigationLink {
+                            SesongDetailView(model: model, seasonID: season.id)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(season.name)
+                                Text(season.rules.evenings == 1 ? "1 kveld" : "\(season.rules.evenings) kvelder")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
