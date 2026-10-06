@@ -11,7 +11,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | | |
 |---|---|
 | **Nåværende fase** | Fase 1 (pågår). Fase 2 er ferdig. |
-| **Sist gjort** | Klubb og innmelding (lag klubb, bli med med kode). Enhetstester grønne. UI-tester ikke kjørt ferdig (simulatoren startet ikke). Pushet til GitHub. |
+| **Sist gjort** | Klubb og innmelding (lag klubb, bli med med kode). Alle tester grønne (enhet og UI). Pushet til GitHub. |
 | **Neste oppgave** | Brukeren prøver «Lag en ny klubb» på telefonen. Deretter Google-innlogging, så fase 3 (admin-panel). |
 | **Venter på deg** | Bekreft at Logg inn med Apple virker på telefonen. Svar på de fire regelsett-spørsmålene i `Packages/GolfgutuCore/REGELSETT.md`. |
 
