@@ -1,0 +1,164 @@
+import Foundation
+import Observation
+import Supabase
+
+/// Kveld-skjermen før runden: neste kveld, mitt svar og hvem som kommer.
+@Observable
+final class KveldModel {
+    enum LoadState: Equatable {
+        case loading
+        case loaded
+        case failed(String)
+    }
+
+    private(set) var state: LoadState = .loading
+    private(set) var event: EventRow?
+    private(set) var committee: [String] = []
+    private(set) var summary = SignupSummary(members: [], signups: [])
+    private(set) var mySignup: SignupRow?
+    private(set) var today = EveningDates.today()
+
+    private let context: ClubContext
+
+    init(context: ClubContext) {
+        self.context = context
+    }
+
+    private var client: SupabaseClient { context.client }
+    private var clubID: UUID { context.clubID }
+    var memberID: UUID { context.memberID }
+
+    var daysUntil: Int? {
+        event.flatMap { EveningDates.daysBetween(today, $0.eventDate) }
+    }
+
+    func load() async {
+        today = EveningDates.today()
+        do {
+            async let eventRows: [EventRow] = client.from("events")
+                .select("id, club_id, season_id, event_date, start_time, venue, note")
+                .eq("club_id", value: clubID)
+                .gte("event_date", value: today)
+                .order("event_date")
+                .execute().value
+            async let memberRows: [ClubMemberRow] = client.from("club_members")
+                .select(KveldQueries.memberColumns)
+                .eq("club_id", value: clubID)
+                .eq("status", value: MemberStatus.active.rawValue)
+                .execute().value
+
+            let events = try await eventRows
+            let members = KveldQueries.sortedByName(try await memberRows)
+
+            // Kvelden i dag er ferdig når alle rundene er låst. Kladder ser bare arrangøren.
+            var finished: Set<UUID> = []
+            let todays = events.filter { $0.eventDate == today }.map(\.id)
+            if !todays.isEmpty {
+                let rounds: [RoundStatusRow] = try await client.from("rounds")
+                    .select("event_id, status")
+                    .in("event_id", values: todays.map(\.uuidString))
+                    .execute().value
+                finished = NextEvening.finishedEventIDs(rounds: rounds.map { ($0.eventID, $0.status) })
+            }
+
+            guard let next = NextEvening.next(in: events, today: today, finished: finished) else {
+                event = nil
+                committee = []
+                mySignup = nil
+                summary = SignupSummary(members: members, signups: [])
+                state = .loaded
+                return
+            }
+
+            async let committeeRows: [EventCommitteeRow] = client.from("event_committee")
+                .select("event_id, member_id, club_id")
+                .eq("event_id", value: next.id)
+                .execute().value
+            async let signupRows: [SignupRow] = client.from("signups")
+                .select("event_id, member_id, club_id, status, comment")
+                .eq("event_id", value: next.id)
+                .execute().value
+
+            let committeeIDs = Set(try await committeeRows.map(\.memberID))
+            let signups = try await signupRows
+
+            event = next
+            committee = members.filter { committeeIDs.contains($0.id) }.map(\.displayName)
+            mySignup = signups.first { $0.memberID == memberID }
+            summary = SignupSummary(members: members, signups: signups)
+            state = .loaded
+        } catch {
+            if case .loaded = state { return }  // behold det som vises ved en feilet oppfrisking
+            state = .failed(DataError.from(error).message)
+        }
+    }
+
+    /// Svarer Kommer / Usikker / Kommer ikke. Kommentaren som står, beholdes.
+    func answer(_ status: SignupStatus) async throws(DataError) {
+        try await write(status: status, comment: mySignup?.comment)
+    }
+
+    /// Lagrer kommentaren med svaret som står.
+    func saveComment(_ text: String) async throws(DataError) {
+        guard let status = mySignup?.status else {
+            throw .invalid("Svar først, så kan du skrive en kommentar.")
+        }
+        try await write(status: status, comment: text)
+    }
+
+    private func write(status: SignupStatus, comment raw: String?) async throws(DataError) {
+        guard let event else { return }
+        let comment = SignupInput.cleanComment(raw ?? "")
+        guard SignupInput.needsWrite(current: mySignup, status: status, comment: comment) else { return }
+
+        let row = SignupUpsert(eventID: event.id, memberID: memberID, clubID: clubID, status: status, comment: comment)
+        do {
+            let saved: [SignupRow] = try await client.from("signups")
+                .upsert(row, onConflict: "event_id,member_id")
+                .select("event_id, member_id, club_id, status, comment")
+                .execute().value
+            guard let mine = saved.first else { throw DataError.notAllowed }
+            mySignup = mine
+        } catch {
+            throw DataError.from(error)
+        }
+        await load()
+    }
+}
+
+/// Raden som sendes til `signups`. Kommentaren sendes som null når den er tom, så den tømmes.
+nonisolated struct SignupUpsert: Encodable, Sendable {
+    let eventID: UUID
+    let memberID: UUID
+    let clubID: UUID
+    let status: SignupStatus
+    let comment: String?
+
+    enum CodingKeys: String, CodingKey {
+        case eventID = "event_id"
+        case memberID = "member_id"
+        case clubID = "club_id"
+        case status
+        case comment
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(eventID, forKey: .eventID)
+        try container.encode(memberID, forKey: .memberID)
+        try container.encode(clubID, forKey: .clubID)
+        try container.encode(status, forKey: .status)
+        try container.encode(comment, forKey: .comment)
+    }
+}
+
+/// Bare det Kveld trenger fra `rounds` for å se om kvelden er ferdig.
+nonisolated struct RoundStatusRow: Decodable, Sendable {
+    let eventID: UUID
+    let status: NextEvening.RoundStatus
+
+    enum CodingKeys: String, CodingKey {
+        case eventID = "event_id"
+        case status
+    }
+}
