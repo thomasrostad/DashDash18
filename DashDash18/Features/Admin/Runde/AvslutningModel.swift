@@ -106,18 +106,37 @@ enum EveningCloser {
         }
     }
 
-    /// Låser rundene én for én. Gir id-ene som ble låst.
+    /// Låser rundene én for én (de pågående, fra `games`). Gir id-ene som ble låst.
+    /// Hver runde som ble låst, logges som «Runde låst».
     static func lock(context: ClubContext, roundIDs: [UUID]) async -> Set<UUID> {
         var locked: Set<UUID> = []
+        let log = ActivityLog(client: context.client, clubID: context.clubID)
         for id in roundIDs {
             let rows: [RoundRow]? = try? await context.client.from("rounds")
                 .update(RoundStatusPatch(status: .locked))
                 .eq("id", value: id)
                 .select(RundeQueries.roundColumns)
                 .execute().value
-            if rows?.first?.status == .locked { locked.insert(id) }
+            guard let row = rows?.first, row.status == .locked else { continue }
+            locked.insert(id)
+            let name = await courseName(context: context, courseID: row.courseID)
+            if let event = RoundActivity.locked(row, courseName: name) {
+                await log.logQuietly(event, eventID: row.eventID, roundID: row.id)
+            }
         }
         return locked
+    }
+
+    /// Banens navn til «Runde låst». Feiler det, logges runden uten.
+    private static func courseName(context: ClubContext, courseID: UUID?) async -> String? {
+        struct Name: Decodable { let name: String }
+        guard let courseID else { return nil }
+        let rows: [Name]? = try? await context.client.from("courses")
+            .select("name")
+            .eq("id", value: courseID)
+            .limit(1)
+            .execute().value
+        return rows?.first?.name
     }
 }
 

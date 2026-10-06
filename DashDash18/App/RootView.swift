@@ -5,6 +5,10 @@ struct RootView: View {
     let user: AuthUser
     let membership: Membership
     @State private var selectedTab: AppTab = .kveld
+    @Environment(\.clubContext) private var context
+    /// Uleste til bjella, én per klubb (byttes når klubben byttes).
+    @State private var badge: UnreadBadge?
+    @State private var badgeClubID: UUID?
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -20,6 +24,11 @@ struct RootView: View {
                                         EnvironmentBadge(environment: config.environment)
                                     }
                                 }
+                                if let badge {
+                                    ToolbarItem(placement: .topBarTrailing) {
+                                        VarslerBell(badge: badge)
+                                    }
+                                }
                             }
                     }
                     // Knapper og lenker i innholdet er skoggrønne; rust er bare aktiv fane.
@@ -30,6 +39,15 @@ struct RootView: View {
         }
         // Aktiv fane i gult (golfee), mørk oker i lys modus så etiketten holder 4,5:1.
         .tint(Color.ddYellowText)
+        .task(id: context?.clubID) { makeBadge() }
+    }
+
+    /// Én `UnreadBadge` per klubbkontekst: samme klubb beholder den, en ny klubb får en ny.
+    private func makeBadge() {
+        guard let context else { badge = nil; badgeClubID = nil; return }
+        guard badgeClubID != context.clubID else { return }
+        badge = UnreadBadge(context: context)
+        badgeClubID = context.clubID
     }
 
     @ViewBuilder
