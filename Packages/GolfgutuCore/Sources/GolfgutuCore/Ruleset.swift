@@ -47,10 +47,14 @@ public struct Ruleset: Codable, Hashable, Sendable {
     public var stablefordCountingEvenings: Int?
     public var matchPoints: MatchPoints
     public var sidePrizes: SidePrizes
+    /// Poeng i en trekant etter plass (beste først). Delt plass deler summen av plassene.
+    /// Golfgutu: `[1, 0.5, 0]` (`TREKANT_POENG`), som gjør en trekant like mye verdt per mann som en duell.
+    public var trianglePoints: [Double]
 
     public init(allowanceOverride: Double? = nil, seedingGroups: [SeedingGroup], externalHandicap: Bool,
                 defaultFormID: String, maxPerBay: Int, evenings: Int, countingEvenings: Int?,
-                stablefordCountingEvenings: Int?, matchPoints: MatchPoints, sidePrizes: SidePrizes) {
+                stablefordCountingEvenings: Int?, matchPoints: MatchPoints, sidePrizes: SidePrizes,
+                trianglePoints: [Double] = Ruleset.golfgutuTrianglePoints) {
         self.allowanceOverride = allowanceOverride
         self.seedingGroups = seedingGroups
         self.externalHandicap = externalHandicap
@@ -61,6 +65,31 @@ public struct Ruleset: Codable, Hashable, Sendable {
         self.stablefordCountingEvenings = stablefordCountingEvenings
         self.matchPoints = matchPoints
         self.sidePrizes = sidePrizes
+        self.trianglePoints = trianglePoints
+    }
+
+    /// `TREKANT_POENG`.
+    public static let golfgutuTrianglePoints: [Double] = [1, 0.5, 0]
+
+    private enum CodingKeys: String, CodingKey {
+        case allowanceOverride, seedingGroups, externalHandicap, defaultFormID, maxPerBay, evenings,
+             countingEvenings, stablefordCountingEvenings, matchPoints, sidePrizes, trianglePoints
+    }
+
+    /// Felt som kom til etter første versjon av regelsettet får Golfgutu-verdien når de mangler.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        allowanceOverride = try c.decodeIfPresent(Double.self, forKey: .allowanceOverride)
+        seedingGroups = try c.decode([SeedingGroup].self, forKey: .seedingGroups)
+        externalHandicap = try c.decode(Bool.self, forKey: .externalHandicap)
+        defaultFormID = try c.decode(String.self, forKey: .defaultFormID)
+        maxPerBay = try c.decode(Int.self, forKey: .maxPerBay)
+        evenings = try c.decode(Int.self, forKey: .evenings)
+        countingEvenings = try c.decodeIfPresent(Int.self, forKey: .countingEvenings)
+        stablefordCountingEvenings = try c.decodeIfPresent(Int.self, forKey: .stablefordCountingEvenings)
+        matchPoints = try c.decode(MatchPoints.self, forKey: .matchPoints)
+        sidePrizes = try c.decode(SidePrizes.self, forKey: .sidePrizes)
+        trianglePoints = try c.decodeIfPresent([Double].self, forKey: .trianglePoints) ?? Ruleset.golfgutuTrianglePoints
     }
 
     /// Golfgutu-oppsettet: verdiene fra db-nytt.js og app-nytt.js.
