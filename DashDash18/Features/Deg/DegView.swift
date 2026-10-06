@@ -30,6 +30,13 @@ struct DegView: View {
                     }
                 }
             }
+            if membership.isOrganizer {
+                Section {
+                    NavigationLink { AdminHubView() } label: {
+                        Label("Arrangørsiden", systemImage: "slider.horizontal.3")
+                    }
+                }
+            }
             Section("Konto") {
                 LabeledContent("Logget inn som", value: user.email ?? "ukjent e-post")
                 Button("Logg ut", role: .destructive) {

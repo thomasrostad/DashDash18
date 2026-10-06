@@ -13,7 +13,7 @@ struct AppRoot: View {
             case .signedOut:
                 LoginView()
             case .signedIn(let user):
-                ClubGate(config: services.config, user: user)
+                ClubGate(services: services, user: user)
                     .task(id: user.id) { await services.club.load(userID: user.id) }
             }
         }
@@ -28,7 +28,7 @@ struct AppRoot: View {
 
 /// Etter innlogging: har du en aktiv klubb, får du appen. Ellers klubbvalg eller venting.
 struct ClubGate: View {
-    let config: AppConfig
+    let services: AppServices
     let user: AuthUser
     @Environment(ClubModel.self) private var club
 
@@ -41,7 +41,8 @@ struct ClubGate: View {
         case .pending(let membership):
             PendingMembershipView(membership: membership, user: user)
         case .active(let membership):
-            RootView(config: config, user: user, membership: membership)
+            RootView(config: services.config, user: user, membership: membership)
+                .environment(\.clubContext, ClubContext(client: services.client, user: user, membership: membership))
         case .failed(let error):
             ContentUnavailableView {
                 Label("Fikk ikke hentet klubben", systemImage: "wifi.exclamationmark")
