@@ -7,6 +7,8 @@ final class AppServices {
     let client: SupabaseClient
     let auth: AuthModel
     let club: ClubModel
+    /// Lagring av hull. Byttes til utboksen når den er på plass (fase 5).
+    let scoreSubmitter: any ScoreSubmitting
 
     init(config: AppConfig) {
         self.config = config
@@ -17,5 +19,6 @@ final class AppServices {
         )
         auth = AuthModel(client: client)
         club = ClubModel(client: client)
+        scoreSubmitter = DirectScoreSubmitter(client: client)
     }
 }

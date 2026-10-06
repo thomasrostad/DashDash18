@@ -43,6 +43,7 @@ struct ClubGate: View {
         case .active(let membership):
             RootView(config: services.config, user: user, membership: membership)
                 .environment(\.clubContext, ClubContext(client: services.client, user: user, membership: membership))
+                .environment(\.scoreSubmitter, services.scoreSubmitter)
         case .failed(let error):
             ContentUnavailableView {
                 Label("Fikk ikke hentet klubben", systemImage: "wifi.exclamationmark")
