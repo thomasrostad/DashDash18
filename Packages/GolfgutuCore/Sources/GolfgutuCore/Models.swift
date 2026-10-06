@@ -91,11 +91,13 @@ public struct Round: Codable, Hashable, Sendable {
     /// `felles`, `nettopar`, `null` (strengen) eller `nil` (ikke avkortet).
     public var avkortRegel: String?
     public var avkortetEtter: Double?
+    /// Rundens matcher (`round_matches`), i lagret rekkefølge.
+    public var matches: [Match]
 
     public init(id: String? = nil, gameType: String? = nil, holeCount: Int? = nil, holeStart: Int? = nil,
                 course: Course? = nil, holes: [Int: RoundHole]? = nil, hcpAllowance: Double? = nil,
                 hcpExtern: Bool = false, teams: [String: Int] = [:], holeScores: [String: HoleScores] = [:],
-                avkortRegel: String? = nil, avkortetEtter: Double? = nil) {
+                avkortRegel: String? = nil, avkortetEtter: Double? = nil, matches: [Match] = []) {
         self.id = id
         self.gameType = gameType
         self.holeCount = holeCount
@@ -108,11 +110,12 @@ public struct Round: Codable, Hashable, Sendable {
         self.holeScores = holeScores
         self.avkortRegel = avkortRegel
         self.avkortetEtter = avkortetEtter
+        self.matches = matches
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, gameType, holeCount, holeStart, course, holes, hcpAllowance, hcpExtern,
-             teams, holeScores, avkortRegel, avkortetEtter
+             teams, holeScores, avkortRegel, avkortetEtter, matches
     }
 
     public init(from decoder: Decoder) throws {
@@ -129,6 +132,7 @@ public struct Round: Codable, Hashable, Sendable {
         holeScores = try c.decodeIfPresent([String: HoleScores].self, forKey: .holeScores) ?? [:]
         avkortRegel = try c.decodeIfPresent(String.self, forKey: .avkortRegel)
         avkortetEtter = try c.decodeIfPresent(Double.self, forKey: .avkortetEtter)
+        matches = try c.decodeIfPresent([Match].self, forKey: .matches) ?? []
     }
 }
 
