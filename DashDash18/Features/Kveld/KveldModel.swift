@@ -17,6 +17,8 @@ final class KveldModel {
     private(set) var summary = SignupSummary(members: [], signups: [])
     private(set) var mySignup: SignupRow?
     private(set) var today = EveningDates.today()
+    /// Kveldens nummer i sesongen (plassen i terminlista), når det kan hentes.
+    private(set) var eveningNumber: Int?
 
     private let context: ClubContext
 
@@ -29,6 +31,14 @@ final class KveldModel {
     var memberID: UUID { context.memberID }
     var isOrganizer: Bool { context.isOrganizer }
     var clubContext: ClubContext { context }
+
+    /// Det «Legg i kalender» fyller inn for neste kveld.
+    var calendarEntry: CalendarEntry? {
+        event.flatMap {
+            KveldCalendar.entry(for: $0, tournament: context.membership.club.name,
+                                number: eveningNumber, committee: committee)
+        }
+    }
 
     var daysUntil: Int? {
         event.flatMap { EveningDates.daysBetween(today, $0.eventDate) }
@@ -67,6 +77,7 @@ final class KveldModel {
                 event = nil
                 committee = []
                 mySignup = nil
+                eveningNumber = nil
                 summary = SignupSummary(members: members, signups: [])
                 state = .loaded
                 return
@@ -81,8 +92,11 @@ final class KveldModel {
                 .eq("event_id", value: next.id)
                 .execute().value
 
+            async let number = fetchEveningNumber(of: next)
+
             let committeeIDs = Set(try await committeeRows.map(\.memberID))
             let signups = try await signupRows
+            eveningNumber = await number
 
             event = next
             committee = members.filter { committeeIDs.contains($0.id) }.map(\.displayName)
@@ -93,6 +107,16 @@ final class KveldModel {
             if case .loaded = state { return }  // behold det som vises ved en feilet oppfrisking
             state = .failed(DataError.from(error).message)
         }
+    }
+
+    /// Plassen i sesongens terminliste. Bare til kalenderen, så en feil gir nil og ikke en feilet skjerm.
+    private func fetchEveningNumber(of event: EventRow) async -> Int? {
+        guard let seasonID = event.seasonID else { return nil }
+        let rows: [EventDateRow]? = try? await client.from("events")
+            .select("event_date")
+            .eq("season_id", value: seasonID)
+            .execute().value
+        return rows.flatMap { KveldCalendar.number(of: event.eventDate, in: $0.map(\.eventDate)) }
     }
 
     /// Svarer Kommer / Usikker / Kommer ikke. Kommentaren som står, beholdes.
@@ -183,5 +207,14 @@ nonisolated struct RoundStatusRow: Decodable, Sendable {
     enum CodingKeys: String, CodingKey {
         case eventID = "event_id"
         case status
+    }
+}
+
+/// Bare datoen fra `events`, for å nummerere kveldene i sesongen.
+nonisolated struct EventDateRow: Decodable, Sendable {
+    let eventDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case eventDate = "event_date"
     }
 }
