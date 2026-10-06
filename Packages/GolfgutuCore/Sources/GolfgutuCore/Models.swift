@@ -93,11 +93,20 @@ public struct Round: Codable, Hashable, Sendable {
     public var avkortetEtter: Double?
     /// Rundens matcher (`round_matches`), i lagret rekkefølge.
     public var matches: [Match]
+    /// Longest drive er med i runden (`ld_aktiv`). Mangler feltet, er premien med.
+    public var ldEnabled: Bool
+    /// Nærmest pinnen er med i runden (`kp_aktiv`).
+    public var kpEnabled: Bool
+    /// Hullet for longest drive (0-basert). `nil`: forslaget brukes.
+    public var ldHoleIndex: Int?
+    /// Hullet for nærmest pinnen (0-basert). `nil`: forslaget brukes.
+    public var kpHoleIndex: Int?
 
     public init(id: String? = nil, gameType: String? = nil, holeCount: Int? = nil, holeStart: Int? = nil,
                 course: Course? = nil, holes: [Int: RoundHole]? = nil, hcpAllowance: Double? = nil,
                 hcpExtern: Bool = false, teams: [String: Int] = [:], holeScores: [String: HoleScores] = [:],
-                avkortRegel: String? = nil, avkortetEtter: Double? = nil, matches: [Match] = []) {
+                avkortRegel: String? = nil, avkortetEtter: Double? = nil, matches: [Match] = [],
+                ldEnabled: Bool = true, kpEnabled: Bool = true, ldHoleIndex: Int? = nil, kpHoleIndex: Int? = nil) {
         self.id = id
         self.gameType = gameType
         self.holeCount = holeCount
@@ -111,11 +120,16 @@ public struct Round: Codable, Hashable, Sendable {
         self.avkortRegel = avkortRegel
         self.avkortetEtter = avkortetEtter
         self.matches = matches
+        self.ldEnabled = ldEnabled
+        self.kpEnabled = kpEnabled
+        self.ldHoleIndex = ldHoleIndex
+        self.kpHoleIndex = kpHoleIndex
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, gameType, holeCount, holeStart, course, holes, hcpAllowance, hcpExtern,
-             teams, holeScores, avkortRegel, avkortetEtter, matches
+             teams, holeScores, avkortRegel, avkortetEtter, matches,
+             ldEnabled, kpEnabled, ldHoleIndex, kpHoleIndex
     }
 
     public init(from decoder: Decoder) throws {
@@ -133,6 +147,10 @@ public struct Round: Codable, Hashable, Sendable {
         avkortRegel = try c.decodeIfPresent(String.self, forKey: .avkortRegel)
         avkortetEtter = try c.decodeIfPresent(Double.self, forKey: .avkortetEtter)
         matches = try c.decodeIfPresent([Match].self, forKey: .matches) ?? []
+        ldEnabled = try c.decodeIfPresent(Bool.self, forKey: .ldEnabled) ?? true
+        kpEnabled = try c.decodeIfPresent(Bool.self, forKey: .kpEnabled) ?? true
+        ldHoleIndex = try c.decodeIfPresent(Int.self, forKey: .ldHoleIndex)
+        kpHoleIndex = try c.decodeIfPresent(Int.self, forKey: .kpHoleIndex)
     }
 }
 
