@@ -10,9 +10,9 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 3 (nesten ferdig) og fase 4 (påmelding ferdig, oppsett av kveld gjenstår). |
-| **Sist gjort** | Fase 4 runde-oppsett og fase 5 utboks slått sammen. RPC-ene fra 002/004/005 i bruk. Enhetstester grønne. |
-| **Neste oppgave** | Slå sammen føring (fase 5). Knytte utboksen til bruker. SQL 006 (+ 007) til godkjenning. Prøvekveld på test. |
+| **Nåværende fase** | Fase 5 (prøvekveld på test gjenstår). Fase 3–4 i hovedsak ferdig. |
+| **Sist gjort** | Føring per bås slått sammen: hullkort, seer-modus, scorekort, feiring, realtime, lagring via utboksen. Enhetstester grønne (243). Ikke prøvd mot database. |
+| **Neste oppgave** | Prøvekveld på test (brukeren). Knytte utboksen til bruker. SQL 006 (start_round) og 007 (confirm_round_par) til godkjenning. TestFlight. |
 | **Venter på deg** | Test av arrangørsiden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. Baneverdier (CR) senere. |
 
 ---
@@ -155,14 +155,14 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Markøren fører en hel runde for båsen sin på iPhone, også uten dekning, og alle ser det live.
 
-- [ ] Kveld-skjerm, spill: hullprikker, hullkort for hele båsen, «Bayen nå».
-- [ ] Hullkort: stepper, «N slag fått», regnestykket, score-merke, bekreft hver spiller, «Lagre hull» låst til alle er ført.
-- [ ] Skriverett (`kanFore`) i appen og i RLS: arrangør, markør for egen bås, ellers seg selv.
-- [ ] Lagring av et hull for hele båsen i én RPC (atomisk, idempotent).
-- [ ] Seer-modus for ikke-markør. Følg båsens hull, sol-stripe.
+- [x] Kveld-skjerm, spill: hullprikker, hullkort for hele båsen, «Bayen nå». *(06.10.)*
+- [x] Hullkort: stepper, «N slag fått», regnestykket, score-merke, bekreft hver spiller, «Lagre hull» låst til alle er ført. *(06.10.)*
+- [x] Skriverett (`kanFore`) i appen og i RLS: arrangør, markør for egen bås, ellers seg selv. *(06.10: følger can_score.)*
+- [x] Lagring av et hull for hele båsen i én RPC (atomisk, idempotent). *(save_hole via utboksen.)*
+- [x] Seer-modus for ikke-markør. Følg båsens hull, sol-stripe. *(06.10.)*
 - [x] Lokal lagring med SwiftData (B6): cache og utboks. Hull i kø sendes i rekkefølge med nye forsøk, også etter at appen er drept. *(06.10: utboks med kø, komprimering, backoff. Ikke prøvd i flymodus.)*
-- [ ] Realtime og henting på nytt når appen blir aktiv.
-- [ ] Scorekort Ut/Inn. Feiring (birdie, eagle, albatross, hole in one) med redusert-bevegelse-støtte.
+- [x] Realtime og henting på nytt når appen blir aktiv. *(06.10.)*
+- [x] Scorekort Ut/Inn. Feiring (birdie, eagle, albatross, hole in one) med redusert-bevegelse-støtte. *(06.10.)*
 - [ ] TestFlight-oppsett og første bygg til noen i gjengen (B1).
 - [ ] Prøvekveld: en kveld der minst én bås fører i appen ved siden av PWA-en.
 
