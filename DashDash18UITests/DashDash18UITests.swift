@@ -23,14 +23,13 @@ final class DashDash18UITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testFanene() throws {
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
+        for fane in ["Kveld", "Tavla", "Deg"] {
+            XCTAssertTrue(app.tabBars.buttons[fane].waitForExistence(timeout: 5), "Mangler fanen \(fane)")
+        }
     }
 
     @MainActor

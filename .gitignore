@@ -17,3 +17,6 @@ Secrets*.xcconfig
 
 # Supabase-konfig per miljø (ikke i git)
 DashDash18/Config/Supabase-*.plist
+
+# Claude Code (agent-worktrees, lokale innstillinger)
+.claude/

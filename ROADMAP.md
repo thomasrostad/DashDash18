@@ -11,8 +11,8 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | | |
 |---|---|
 | **Nåværende fase** | Fase 1 (pågår) og fase 2 (pågår parallelt) |
-| **Sist gjort** | Fase 1: iOS 26.0 og Swift 6 i alle targets, `supabase-swift` lagt til, test-konfig for ny Supabase (`tsekialrxuhrugscosgi`). Bygg og 4 tester grønne. |
-| **Neste oppgave** | Parallelt med agenter: fase 1 oppgave 2 (app-skall, meg), fase 1 oppgave 5 (skjema v1 som utkast), fase 2 (regelmotor i `Packages/GolfgutuCore`). |
+| **Sist gjort** | Fase 1: malkoden fjernet, app-skall med fanene Kveld, Tavla og Deg. Bygg og 5 tester grønne. |
+| **Neste oppgave** | Fase 1 oppgave 4: lese miljøkonfig og vise miljø i appen (meg). Parallelt med agenter: skjema v1 som utkast (fase 1 oppgave 5) og regelmotoren (fase 2). |
 | **Venter på deg** | Slå av *Confirm email* i Supabase. Godkjenne skjema-SQL når utkastet er klart. Legge til den lokale pakken i Xcode når regelmotoren er klar. |
 
 ---
@@ -43,7 +43,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 **Mål:** Logge inn i appen mot en ny, egen test-database med Apple, Google eller e-postkode.
 
 - [x] Sette deployment target til iOS 26.0 og Swift 6-språkmodus i Xcode (B7). Ikke via `project.pbxproj`.
-- [ ] Rydde malkoden (`Item.swift`, mal-`ContentView`) og opprette mappestrukturen.
+- [x] Rydde malkoden (`Item.swift`, mal-`ContentView`) og opprette mappestrukturen. *(App-skall med fanene Kveld, Tavla, Deg.)*
 - [x] Legge til `supabase-swift` via Swift Package Manager i Xcode (2.55.3, koblet til target DashDash18).
 - [ ] Miljøkonfig for test og prod i filer som ikke sjekkes inn, med tydelig visning av miljø i appen. *(Test-konfig ligger i `DashDash18/Config/Supabase-Test.plist`, utenfor git. Lesing og visning i appen gjenstår.)*
 - [ ] **Skjema v1** for kjernen (SQL i `sql/`, til godkjenning): klubb/tropp, medlemmer og roller, sesong med regelsett (B12), kveld, påmelding, bane og hull, runde, deltakere, bås og markør, lag, match, score. Med RLS og grants, også anon-revoke.
