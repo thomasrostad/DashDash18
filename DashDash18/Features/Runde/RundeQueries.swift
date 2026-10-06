@@ -41,7 +41,7 @@ enum RundeQueries {
             .select(scoreColumns)
             .eq("round_id", value: id).execute().value
         async let claims: [SideClaimRow] = client.from("side_claims")
-            .select("id, round_id, member_id, kind, meters, hole_index")
+            .select(claimColumns)
             .eq("round_id", value: id).execute().value
         async let members: [ClubMemberRow] = client.from("club_members")
             .select(KveldQueries.memberColumns)
@@ -104,7 +104,7 @@ enum RundeQueries {
 
     // MARK: Longest drive og nærmest pinnen
 
-    static let claimColumns = "id, round_id, member_id, kind, meters, hole_index"
+    static let claimColumns = "id, round_id, member_id, kind, meters, hole_index, created_at"
 
     /// «Meld inn» / «Oppdater»: én rad per runde, spiller og type (`side_claims_one_per_kind`).
     /// Finnes raden, oppdateres den; ellers settes den inn. Har noen andre satt inn i mellomtiden

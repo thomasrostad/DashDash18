@@ -75,14 +75,15 @@ nonisolated extension RoundGame {
         kind == .drive ? longestDriveHole : closestToPinHole
     }
 
-    /// Rundens innmeldinger som regelmotorens type. Sortert på navn først, så likt står fast
-    /// (databasen gir ikke tidspunktet med i dag).
+    /// Rundens innmeldinger som regelmotorens type, med `created_at` som `ts`: ved lik lengde står
+    /// den som meldte først øverst (som PWA-en). Sortert på navn først, så likt tidspunkt (eller
+    /// manglende) står fast.
     var coreSideClaims: [SideClaim] {
         snapshot.sideClaims
             .sorted { NorwegianSort.areInIncreasingOrder(name($0.memberID), name($1.memberID)) }
             .map { c in
                 SideClaim(id: c.id.uuidString, kind: c.kind.core, playerId: c.memberID.uuidString,
-                          roundId: c.roundID.uuidString, meters: c.meters, holeIndex: c.holeIndex)
+                          roundId: c.roundID.uuidString, meters: c.meters, holeIndex: c.holeIndex, ts: c.timestamp)
             }
     }
 

@@ -328,6 +328,9 @@ nonisolated struct SideClaimRow: Codable, Equatable, Identifiable, Sendable {
     var kind: SideClaimKind
     var meters: Double
     var holeIndex: Int?
+    /// Når innmeldingen ble opprettet. Avgjør rekkefølgen ved lik lengde (tidligst først, som PWA-ens `ts`).
+    /// Valgfri: spørringer som ikke ber om `created_at`, gir nil.
+    var createdAt: Date? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -336,5 +339,11 @@ nonisolated struct SideClaimRow: Codable, Equatable, Identifiable, Sendable {
         case kind
         case meters
         case holeIndex = "hole_index"
+        case createdAt = "created_at"
+    }
+
+    /// `created_at` som regelmotorens `ts`: ISO 8601 i UTC med millisekunder, så strengene sorteres i tidsrekkefølge.
+    var timestamp: String? {
+        createdAt?.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true))
     }
 }

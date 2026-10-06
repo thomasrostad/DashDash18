@@ -74,7 +74,9 @@ nonisolated struct TavlaStandings: Sendable {
             .sorted { NorwegianSort.areInIncreasingOrder($0.displayName, $1.displayName) }
             .map { m in Player(id: m.id.uuidString, name: m.displayName, handicap: m.handicapIndex, seedGroup: m.seedGroup) }
 
-        let season = Season(players: roster, rounds: rounds, claims: claims, ruleset: input.season.rules)
+        // Hver runde regnes med handicapet som ble frosset i den (som Kveld), ikke troppens tall i dag.
+        let season = Season(players: roster, rounds: rounds, claims: claims, ruleset: input.season.rules,
+                            playingHandicaps: TavlaStandings.playingHandicaps(snapshots))
         self.season = season
 
         let withPoints = rounds.indices.filter { !season.roundPoints($0).isEmpty }.map { rounds[$0] }
@@ -93,7 +95,21 @@ nonisolated struct TavlaStandings: Sendable {
 
     static func claim(_ row: SideClaimRow) -> SideClaim {
         SideClaim(id: row.id.uuidString, kind: row.kind == .drive ? .drive : .kp, playerId: row.memberID.uuidString,
-                  roundId: row.roundID.uuidString, meters: row.meters, holeIndex: row.holeIndex)
+                  roundId: row.roundID.uuidString, meters: row.meters, holeIndex: row.holeIndex, ts: row.timestamp)
+    }
+
+    /// Rundens frosne handicap per spiller, runde-id → spiller-id → slag: samme regel som Kveld
+    /// (`RoundGame.handicap`): `playing_handicap` når den er lagret, ellers `effectiveHandicap` med
+    /// rundens frosne indeks og seedede gruppe fra `round_players`.
+    static func playingHandicaps(_ snapshots: [RoundSnapshot]) -> [String: [String: Double]] {
+        var out: [String: [String: Double]] = [:]
+        for snapshot in snapshots {
+            let game = RoundGame(snapshot)
+            out[snapshot.round.id.uuidString] = Dictionary(
+                snapshot.players.map { ($0.memberID.uuidString, game.handicap($0.memberID)) },
+                uniquingKeysWith: { first, _ in first })
+        }
+        return out
     }
 
     var isEmpty: Bool { rows.isEmpty }
