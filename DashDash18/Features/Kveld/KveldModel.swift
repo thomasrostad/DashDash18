@@ -80,6 +80,7 @@ final class KveldModel {
                 eveningNumber = nil
                 summary = SignupSummary(members: members, signups: [])
                 state = .loaded
+                WidgetSnapshotPublisher.publish(nextEvening: nil, today: today)
                 return
             }
 
@@ -103,6 +104,7 @@ final class KveldModel {
             mySignup = signups.first { $0.memberID == memberID }
             summary = SignupSummary(members: members, signups: signups)
             state = .loaded
+            WidgetSnapshotPublisher.publish(nextEvening: next, today: today)
         } catch {
             if case .loaded = state { return }  // behold det som vises ved en feilet oppfrisking
             state = .failed(DataError.from(error).message)

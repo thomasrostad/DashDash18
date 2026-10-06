@@ -26,6 +26,7 @@ final class TavlaModel {
             let input = try await TavlaQueries.load(client: context.client, clubID: context.clubID)
             standings = input.map { TavlaStandings($0, me: context.memberID) }
             state = .loaded
+            WidgetSnapshotPublisher.publish(standings: standings)
         } catch is CancellationError {
             // Dra-ned avbrutt: behold det som vises.
         } catch {
