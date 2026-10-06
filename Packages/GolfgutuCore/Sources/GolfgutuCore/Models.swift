@@ -101,12 +101,19 @@ public struct Round: Codable, Hashable, Sendable {
     public var ldHoleIndex: Int?
     /// Hullet for nærmest pinnen (0-basert). `nil`: forslaget brukes.
     public var kpHoleIndex: Int?
+    /// Rundevekt (`multiplier`). 1 til vanlig, 2 på en dobbeltrunde. 0: kvelden teller ikke.
+    public var weight: Double
+    /// Kveldens dato, `YYYY-MM-DD`. To runder med samme dato er én kveld.
+    public var date: String?
+    /// Runden er låst (ferdig).
+    public var locked: Bool
 
     public init(id: String? = nil, gameType: String? = nil, holeCount: Int? = nil, holeStart: Int? = nil,
                 course: Course? = nil, holes: [Int: RoundHole]? = nil, hcpAllowance: Double? = nil,
                 hcpExtern: Bool = false, teams: [String: Int] = [:], holeScores: [String: HoleScores] = [:],
                 avkortRegel: String? = nil, avkortetEtter: Double? = nil, matches: [Match] = [],
-                ldEnabled: Bool = true, kpEnabled: Bool = true, ldHoleIndex: Int? = nil, kpHoleIndex: Int? = nil) {
+                ldEnabled: Bool = true, kpEnabled: Bool = true, ldHoleIndex: Int? = nil, kpHoleIndex: Int? = nil,
+                weight: Double = 1, date: String? = nil, locked: Bool = false) {
         self.id = id
         self.gameType = gameType
         self.holeCount = holeCount
@@ -124,12 +131,15 @@ public struct Round: Codable, Hashable, Sendable {
         self.kpEnabled = kpEnabled
         self.ldHoleIndex = ldHoleIndex
         self.kpHoleIndex = kpHoleIndex
+        self.weight = weight
+        self.date = date
+        self.locked = locked
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, gameType, holeCount, holeStart, course, holes, hcpAllowance, hcpExtern,
              teams, holeScores, avkortRegel, avkortetEtter, matches,
-             ldEnabled, kpEnabled, ldHoleIndex, kpHoleIndex
+             ldEnabled, kpEnabled, ldHoleIndex, kpHoleIndex, weight, date, locked
     }
 
     public init(from decoder: Decoder) throws {
@@ -151,6 +161,9 @@ public struct Round: Codable, Hashable, Sendable {
         kpEnabled = try c.decodeIfPresent(Bool.self, forKey: .kpEnabled) ?? true
         ldHoleIndex = try c.decodeIfPresent(Int.self, forKey: .ldHoleIndex)
         kpHoleIndex = try c.decodeIfPresent(Int.self, forKey: .kpHoleIndex)
+        weight = try c.decodeIfPresent(Double.self, forKey: .weight) ?? 1
+        date = try c.decodeIfPresent(String.self, forKey: .date)
+        locked = try c.decodeIfPresent(Bool.self, forKey: .locked) ?? false
     }
 }
 
