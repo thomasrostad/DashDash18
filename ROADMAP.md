@@ -10,10 +10,10 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 1 (pågår) og fase 2 (pågår parallelt) |
-| **Sist gjort** | Fase 1: malkoden fjernet, app-skall med fanene Kveld, Tavla og Deg. Bygg og 5 tester grønne. |
-| **Neste oppgave** | Fase 1 oppgave 4: lese miljøkonfig og vise miljø i appen (meg). Parallelt med agenter: skjema v1 som utkast (fase 1 oppgave 5) og regelmotoren (fase 2). |
-| **Venter på deg** | Slå av *Confirm email* i Supabase. Godkjenne skjema-SQL når utkastet er klart. Legge til den lokale pakken i Xcode når regelmotoren er klar. |
+| **Nåværende fase** | Fase 1 (pågår). Fase 2 er ferdig. |
+| **Sist gjort** | Miljøkonfig vist i appen. `GolfgutuCore` koblet til appen. Skjema v1 kjørt på test. App: 10 enhetstester og 3 UI-tester grønne. Pakken: 49 tester grønne. |
+| **Neste oppgave** | Fase 1 oppgave 7: innlogging med e-postkode (Apple og Google etterpå). |
+| **Venter på deg** | E-postmalen i Supabase skal vise koden (`{{ .Token }}`). |
 
 ---
 
@@ -45,9 +45,9 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Sette deployment target til iOS 26.0 og Swift 6-språkmodus i Xcode (B7). Ikke via `project.pbxproj`.
 - [x] Rydde malkoden (`Item.swift`, mal-`ContentView`) og opprette mappestrukturen. *(App-skall med fanene Kveld, Tavla, Deg.)*
 - [x] Legge til `supabase-swift` via Swift Package Manager i Xcode (2.55.3, koblet til target DashDash18).
-- [ ] Miljøkonfig for test og prod i filer som ikke sjekkes inn, med tydelig visning av miljø i appen. *(Test-konfig ligger i `DashDash18/Config/Supabase-Test.plist`, utenfor git. Lesing og visning i appen gjenstår.)*
-- [ ] **Skjema v1** for kjernen (SQL i `sql/`, til godkjenning): klubb/tropp, medlemmer og roller, sesong med regelsett (B12), kveld, påmelding, bane og hull, runde, deltakere, bås og markør, lag, match, score. Med RLS og grants, også anon-revoke.
-- [ ] Kjøre skjemaet på test etter godkjenning, med kontrollspørringer.
+- [x] Miljøkonfig for test og prod i filer som ikke sjekkes inn, med tydelig visning av miljø i appen. *(`Config/Supabase-<Miljø>.plist` utenfor git, `AppConfig` avviser feil miljø og hemmelig nøkkel, TEST-merke i verktøylinjen og miljø i Deg.)*
+- [x] **Skjema v1** for kjernen (SQL i `sql/`, til godkjenning): klubb/tropp, medlemmer og roller, sesong med regelsett (B12), kveld, påmelding, bane og hull, runde, deltakere, bås og markør, lag, match, score. Med RLS og grants, også anon-revoke. *(`sql/001_skjema_v1.sql`, godkjent 06.10.)*
+- [x] Kjøre skjemaet på test etter godkjenning, med kontrollspørringer. *(10/10 ok, anon får 42501.)*
 - [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først.
 - [ ] Første innlogging: velg navn i troppen eller bli med som ny. Arrangør kan godkjenne og frigjøre.
 - [ ] Rolig Kveld-skjerm som viser «Ingen kveld satt opp» og hvem som er logget inn.
@@ -72,14 +72,17 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Hele poeng- og handicaplogikken i Swift, styrt av regelsettet, med samme svar som PWA-en for Golfgutu-oppsettet.
 
-- [ ] Regelsett-modell (B12) med Golfgutu-oppsettet som ferdig mal.
-- [ ] Bane og hull: `courseForRound` med rang-strokeindex og start på hull 10, standard-par, lengdesjekk, `baneErKlar` (SPEC 4.1).
-- [ ] Handicap: `courseHandicap`, andel, seeding med valgfrie grupper, `banehandicap`, `lagGrunnlag`, `lagHandicap`, `effectiveHandicap`, ekstern handicap (Trackman), brutto (SPEC 4.2).
-- [ ] Slag og poeng: `handicapStrokesForHole`, `pointsForHole`, `scoreNameForHole`, `poengFraHull` (SPEC 4.3).
-- [ ] Former: `KONKURRANSEFORMER` som data, `formForRunde`, lagdeling og forslag (SPEC 4.4).
-- [ ] Avkorting: tre regler, `tellendeHull`, `lavesteFellesHull` (SPEC 4.5).
-- [ ] Avrunding som JS i én hjelper (`floor(x + 0.5)`, `rund2`) og norsk sortering (SPEC 4.0).
-- [ ] Testtall som JSON-fixtures (CLAUDE.md).
+- [x] Regelsett-modell (B12) med Golfgutu-oppsettet som ferdig mal. *(Minimal. Har også `stablefordCountingEvenings = 5` for tiebreak-paritet.)*
+- [x] Bane og hull: `courseForRound` med rang-strokeindex og start på hull 10, standard-par, lengdesjekk, `baneErKlar` (SPEC 4.1).
+- [x] Handicap: `courseHandicap`, andel, seeding med valgfrie grupper, `banehandicap`, `lagGrunnlag`, `lagHandicap`, `effectiveHandicap`, ekstern handicap (Trackman), brutto (SPEC 4.2).
+- [x] Slag og poeng: `handicapStrokesForHole`, `pointsForHole`, `scoreNameForHole`, `poengFraHull` (SPEC 4.3).
+- [x] Former: `KONKURRANSEFORMER` som data, `formForRunde`, lagdeling og forslag (SPEC 4.4).
+- [x] Avkorting: tre regler, `tellendeHull`, `lavesteFellesHull` (SPEC 4.5).
+- [x] Avrunding som JS i én hjelper (`floor(x + 0.5)`, `rund2`) og norsk sortering (SPEC 4.0).
+- [x] Testtall som JSON-fixtures (CLAUDE.md). *(Generert fra `db-nytt.js` i Node; bokstavelige tall fra PWA-testene kontrollert.)*
+- [x] Pakken lagt til i Xcode-prosjektet (bruker: *Add Local…*), og appen bygger med den.
+
+*Status 06.10: 49 tester i 7 suiter grønne med `swift test`. Avvik: par er `Int?` (JS godtar desimal/tekst; testen for par som tekst er hoppet over). Andel og `hcp_extern` for nye runder kommer fra `app-nytt.js`.*
 
 **Ferdig når:**
 - Alle Swift-tester for fasen er grønne, og hver PWA-test listet under har en tilsvarende test med samme tall.

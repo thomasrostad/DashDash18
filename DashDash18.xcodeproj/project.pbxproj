@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2CB42A133074F81B007ECDFB /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 2CB42A123074F81B007ECDFB /* Supabase */; };
+		2CB42A2D30750875007ECDFB /* GolfgutuCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2CB42A2C30750875007ECDFB /* GolfgutuCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2CB42A2D30750875007ECDFB /* GolfgutuCore in Frameworks */,
 				2CB42A133074F81B007ECDFB /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -126,6 +128,7 @@
 			name = DashDash18;
 			packageProductDependencies = (
 				2CB42A123074F81B007ECDFB /* Supabase */,
+				2CB42A2C30750875007ECDFB /* GolfgutuCore */,
 			);
 			productName = DashDash18;
 			productReference = 2CB429E13074DA5D007ECDFB /* DashDash18.app */;
@@ -211,6 +214,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				2CB42A103074F759007ECDFB /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				2CB42A2B30750875007ECDFB /* XCLocalSwiftPackageReference "Packages/GolfgutuCore" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2CB429E23074DA5D007ECDFB /* Products */;
@@ -420,8 +424,8 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -453,8 +457,8 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -600,6 +604,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		2CB42A2B30750875007ECDFB /* XCLocalSwiftPackageReference "Packages/GolfgutuCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/GolfgutuCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		2CB42A103074F759007ECDFB /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -618,6 +629,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2CB42A103074F759007ECDFB /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		2CB42A2C30750875007ECDFB /* GolfgutuCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GolfgutuCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

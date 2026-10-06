@@ -2,7 +2,7 @@
 
 Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikke. Den brukes bare som kilde for import i fase 9.
 
-> **Status 06.10.2026:** `001_skjema_v1.sql` er et **utkast til godkjenning**. Ingenting er kjørt mot Supabase.
+> **Status 06.10.2026:** `001_skjema_v1.sql` er **godkjent av brukeren og kjørt på test** (`tsekialrxuhrugscosgi`). Kontrollspørringene ga 10 av 10 ok, og uinnloggede forespørsler mot tabeller og RPC-er får 42501. Åpne spørsmål er besvart etter anbefalingene: markørens par-bekreftelse kommer som egen RPC i neste migrering, og `playing_handicap` lagres ved start. Ikke kjørt på prod.
 
 ## Prosess (ROADMAP B5)
 
@@ -17,7 +17,7 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 
 | Fil | Innhold | Status |
 |---|---|---|
-| `001_skjema_v1.sql` | Kjernen for fase 1–5 | Utkast, venter på godkjenning |
+| `001_skjema_v1.sql` | Kjernen for fase 1–5 | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `lokal/stub.sql`, `lokal/001_prove.sql` | Lokal syntaks- og rolleprøve. **Aldri mot Supabase.** | Hjelpefiler |
 
 Kommer senere, som egne filer: par-bekreftelse for markør (se åpne spørsmål), aktivitetslogg og varsler, tråd, tippekupong, push-tokens (APNs), Storage-bøtter for bilder, og poeng/veddemål (fase 10).

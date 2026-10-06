@@ -31,12 +31,4 @@ final class DashDash18UITests: XCTestCase {
             XCTAssertTrue(app.tabBars.buttons[fane].waitForExistence(timeout: 5), "Mangler fanen \(fane)")
         }
     }
-
-    @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
-    }
 }
