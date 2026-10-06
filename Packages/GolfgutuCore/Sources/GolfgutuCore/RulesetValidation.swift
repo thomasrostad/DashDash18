@@ -120,6 +120,14 @@ extension Ruleset {
         if !(tips.lineStep > 0) || tips.lineStep != tips.lineStep.rounded() {
             add("tips.lineStep", "Linja må flyttes i hele slag, så den blir stående på et halvt.")
         }
+
+        // Ledelsen underveis.
+        if leadCheckpoints.contains(where: { !(1...18).contains($0) }) {
+            add("leadCheckpoints", "Sjekkpunktene for ledelsen må være hull fra 1 til 18.")
+        }
+        if zip(leadCheckpoints, leadCheckpoints.dropFirst()).contains(where: { $0 >= $1 }) {
+            add("leadCheckpoints", "Sjekkpunktene for ledelsen må stå i stigende rekkefølge, uten like.")
+        }
         return issues
     }
 }

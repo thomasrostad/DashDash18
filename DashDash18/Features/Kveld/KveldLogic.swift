@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 
 /// Hvilken kveld som står for tur, som PWA-ens `upcomingSchedule()` / `nextScheduleEntry()`:
 /// første kveld med dato ≥ i dag (Oslo) som ikke er ferdig.
@@ -94,5 +95,89 @@ nonisolated enum SignupInput {
     static func needsWrite(current: SignupRow?, status: SignupStatus, comment: String?) -> Bool {
         guard let current else { return true }
         return current.status != status || cleanComment(current.comment ?? "") != comment
+    }
+}
+
+/// Purringen fra arrangøren (`renderPurring` / `handlePurr`): bare til dem som ikke har svart.
+nonisolated enum Nudge {
+    /// Aktive i troppen uten svar, i visningsrekkefølgen.
+    static func targets(_ summary: SignupSummary) -> [SignupSummary.Entry] { summary.notAnswered }
+
+    /// Knappen vises for arrangøren når noen mangler svar.
+    static func isOffered(isOrganizer: Bool, summary: SignupSummary) -> Bool {
+        isOrganizer && !targets(summary).isEmpty
+    }
+
+    /// «den ene» eller «de 4».
+    static func who(_ count: Int) -> String { count == 1 ? "den ene" : "de \(count)" }
+
+    /// «Purr de 4 som ikke har svart …»
+    static func buttonTitle(count: Int) -> String { "Purr \(who(count)) som ikke har svart …" }
+
+    /// «Purre på de 2 som ikke har svart? Anders, Bjørn.»
+    static func confirmMessage(names: [String]) -> String {
+        "Purre på \(who(names.count)) som ikke har svart? " + names.joined(separator: ", ") + "."
+    }
+
+    static let confirmButton = "Send purring"
+
+    /// «Purret på 4.»
+    static func doneText(count: Int) -> String { "Purret på \(count)." }
+}
+
+/// Teksten på kortet «Kveldens tråd».
+nonisolated enum KveldThreadStatus {
+    /// «Ingen meldinger ennå», «1 melding», «5 meldinger · 2 uleste».
+    static func subtitle(_ summary: TradSummary) -> String {
+        guard summary.count > 0 else { return "Ingen meldinger ennå" }
+        var text = summary.count == 1 ? "1 melding" : "\(summary.count) meldinger"
+        if summary.unread > 0 { text += " · " + unreadText(summary.unread) }
+        return text
+    }
+
+    /// Den siste meldingen: «Anders: Ses kl. 17».
+    static func lastLine(_ summary: TradSummary) -> String? {
+        summary.last.map { "\($0.author): \($0.preview)" }
+    }
+
+    /// Kort til knappen under spill: «2 uleste», ellers antall meldinger.
+    static func short(_ summary: TradSummary) -> String {
+        summary.unread > 0 ? unreadText(summary.unread) : "\(summary.count)"
+    }
+
+    static func unreadText(_ n: Int) -> String { n == 1 ? "1 ulest" : "\(n) uleste" }
+}
+
+/// Teksten på kortet «Tippekupongen»: åpen til fristen, låst, eller resultatet.
+nonisolated enum KveldTipsStatus {
+    /// - Parameters:
+    ///   - deadlineText: fristen slik kupongen skriver den («torsdag 8. oktober kl. 17:00»).
+    ///   - winners: tippekongen(e) som navneliste, tom til kvelden er ferdig.
+    static func text(phase: TipsBoard.Phase, deadlineText: String, hasMyCoupon: Bool, submitted: Int,
+                     winners: String, best: Int, possible: Int) -> String {
+        switch phase {
+        case .open:
+            return (hasMyCoupon ? "Levert · åpen til " : "Åpen til ") + deadlineText
+        case .locked:
+            return submitted == 0 ? "Låst · ingen leverte" : "Låst · \(submitted) levert"
+        case .finished:
+            guard !winners.isEmpty else { return "Resultat: ingen leverte" }
+            return "Resultat: \(winners) med \(best) av \(possible) riktige"
+        }
+    }
+
+    static func text(_ board: TipsBoard) -> String {
+        text(phase: board.phase, deadlineText: board.deadlineText, hasMyCoupon: board.myCoupon != nil,
+             submitted: board.submitted.count, winners: board.nameList(board.result.winners),
+             best: board.result.best, possible: board.result.possible)
+    }
+
+    /// Kort til knappen under spill.
+    static func short(_ phase: TipsBoard.Phase) -> String {
+        switch phase {
+        case .open: "Åpen"
+        case .locked: "Låst"
+        case .finished: "Resultat"
+        }
     }
 }

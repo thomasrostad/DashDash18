@@ -92,8 +92,17 @@ nonisolated struct RoundGame: Sendable {
             kpHoleIndex: r.kpHoleIndex,
             weight: r.weight,
             date: s.eventDate,
-            locked: r.status == .locked
+            locked: r.status == .locked,
+            playingHandicaps: frozenHandicaps(s)
         )
+    }
+
+    /// Spillehandicapet som ble frosset ved start (`round_players.playing_handicap`), per spiller.
+    /// Samme regel som `handicap(_:)`: lagret verdi er fasiten, og spillere uten får
+    /// `effectiveHandicap`. Da bruker match, trekant, avkorting og føringen samme tall.
+    static func frozenHandicaps(_ s: RoundSnapshot) -> [String: Double] {
+        Dictionary(s.players.compactMap { p in p.playingHandicap.map { (p.memberID.uuidString, Double($0)) } },
+                   uniquingKeysWith: { first, _ in first })
     }
 
     /// Banen med hull fra `course_holes`. Hullene tas bare med når de er 9 eller 18

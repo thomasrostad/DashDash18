@@ -19,9 +19,13 @@ public struct Ruleset: Hashable, Sendable {
     public var formats: FormatRules
     /// Tippekupongen: frist, innsats og linje når kvelden ikke har egne (se Tips.swift).
     public var tips: TipsRules
+    /// Hullene (antall hull fra start) der ledelsen underveis meldes, stigende, 1…18
+    /// (PWA: `LEDELSE_SJEKKPUNKT`). Tom liste: ledelsen meldes ikke.
+    public var leadCheckpoints: [Int]
 
     public init(evenings: Int, scoring: ScoringRules, table: TableRules, sidePrizes: SidePrizeRules,
-                handicap: HandicapRules, formats: FormatRules, tips: TipsRules = .golfgutu) {
+                handicap: HandicapRules, formats: FormatRules, tips: TipsRules = .golfgutu,
+                leadCheckpoints: [Int] = Ruleset.golfgutuLeadCheckpoints) {
         self.evenings = evenings
         self.scoring = scoring
         self.table = table
@@ -29,6 +33,7 @@ public struct Ruleset: Hashable, Sendable {
         self.handicap = handicap
         self.formats = formats
         self.tips = tips
+        self.leadCheckpoints = leadCheckpoints
     }
 
     // MARK: Gruppene
@@ -233,6 +238,9 @@ public struct Ruleset: Hashable, Sendable {
 
     // MARK: Golfgutu
 
+    /// Golfgutu: ledelsen meldes etter hull 3, 6, 9, 12, 15 og 18 (`LEDELSE_SJEKKPUNKT`).
+    public static let golfgutuLeadCheckpoints = [3, 6, 9, 12, 15, 18]
+
     /// Golfgutu-oppsettet: verdiene fra db-nytt.js og app-nytt.js. 7 kvelder, alle matcher teller
     /// (`TELLENDE_MATCHER = 0`), stablefordsummen teller beste 5 runder (`TELLENDE_RUNDER`),
     /// duellpoeng 1/0,5/0, trekant 1/0,5/0, LD og KP 1 poeng delt ved likt, halve poeng,
@@ -319,7 +327,7 @@ public struct Ruleset: Hashable, Sendable {
 
 extension Ruleset: Codable {
     private enum CodingKeys: String, CodingKey {
-        case version, evenings, scoring, table, sidePrizes, handicap, formats, tips
+        case version, evenings, scoring, table, sidePrizes, handicap, formats, tips, leadCheckpoints
     }
 
     /// Versjon 1: flat.
@@ -345,6 +353,7 @@ extension Ruleset: Codable {
             handicap = try c.decodeIfPresent(HandicapRules.self, forKey: .handicap) ?? g.handicap
             formats = try c.decodeIfPresent(FormatRules.self, forKey: .formats) ?? g.formats
             tips = try c.decodeIfPresent(TipsRules.self, forKey: .tips) ?? g.tips
+            leadCheckpoints = try c.decodeIfPresent([Int].self, forKey: .leadCheckpoints) ?? g.leadCheckpoints
             return
         }
         // Versjon 1. `countingEvenings` gjaldt matcher (`TELLENDE_MATCHER`), `stablefordCountingEvenings` runder.
@@ -381,6 +390,7 @@ extension Ruleset: Codable {
         try c.encode(handicap, forKey: .handicap)
         try c.encode(formats, forKey: .formats)
         try c.encode(tips, forKey: .tips)
+        try c.encode(leadCheckpoints, forKey: .leadCheckpoints)
     }
 }
 

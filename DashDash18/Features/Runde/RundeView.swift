@@ -27,6 +27,9 @@ struct RundeView: View {
                     if !game.isDecidedHoleByHole, let matches {
                         MatchkortSection(card: matches)
                     }
+                    let eventID = game.snapshot.round.eventID
+                    KveldExtrasButtons(model: KveldExtrasModel(context: model.clubContext, eventID: eventID))
+                        .id(eventID)
                 }
                 .padding(.horizontal, DDSpacing.gutter)
                 .padding(.vertical, DDSpacing.l)

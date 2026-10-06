@@ -27,6 +27,8 @@ final class KveldModel {
     private var client: SupabaseClient { context.client }
     private var clubID: UUID { context.clubID }
     var memberID: UUID { context.memberID }
+    var isOrganizer: Bool { context.isOrganizer }
+    var clubContext: ClubContext { context }
 
     var daysUntil: Int? {
         event.flatMap { EveningDates.daysBetween(today, $0.eventDate) }
@@ -111,6 +113,7 @@ final class KveldModel {
         let comment = SignupInput.cleanComment(raw ?? "")
         guard SignupInput.needsWrite(current: mySignup, status: status, comment: comment) else { return }
 
+        let before = mySignup?.status
         let row = SignupUpsert(eventID: event.id, memberID: memberID, clubID: clubID, status: status, comment: comment)
         do {
             let saved: [SignupRow] = try await client.from("signups")
@@ -122,8 +125,28 @@ final class KveldModel {
         } catch {
             throw DataError.from(error)
         }
+        // Bare det som er nytt for de andre (`svarLinje`); en kommentar er ingen hendelse.
+        if let news = SignupNews.event(member: memberID, from: before, to: status, eventDate: event.eventDate) {
+            await activityLog.logQuietly(news, eventID: event.id)
+        }
         await load()
     }
+
+    // MARK: Purring
+
+    /// De aktive som ikke har svart, i visningsrekkefølgen. Purringen går til dem.
+    var nudgeTargets: [SignupSummary.Entry] { Nudge.targets(summary) }
+
+    /// Arrangøren purrer på dem som mangler svar. Gir teksten som skal vises etterpå.
+    func nudge() async throws(DataError) -> String {
+        guard context.isOrganizer else { throw .notAllowed }
+        guard let event else { throw .invalid("Ingen kveld å purre på.") }
+        let missing = nudgeTargets.map(\.memberID)
+        try await activityLog.nudge(eventID: event.id, eventDate: event.eventDate, missing: missing)
+        return Nudge.doneText(count: missing.count)
+    }
+
+    private var activityLog: ActivityLog { ActivityLog(client: client, clubID: clubID) }
 }
 
 /// Raden som sendes til `signups`. Kommentaren sendes som null når den er tom, så den tømmes.

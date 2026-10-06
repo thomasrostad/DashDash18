@@ -59,8 +59,13 @@ private struct KveldContent: View {
                             referenceYear: EveningDates.year(of: model.today)
                         )
                         .ddCard(.large)
+                        KveldExtrasCards(model: KveldExtrasModel(context: model.clubContext, eventID: event.id))
+                            .id(event.id)
                         SignupSection(model: model)
                             .padding(.top, DDSpacing.l)
+                        if Nudge.isOffered(isOrganizer: model.isOrganizer, summary: model.summary) {
+                            NudgeSection(model: model)
+                        }
                         SignupOverviewSection(summary: model.summary, myID: model.memberID)
                     } else {
                         EmptyKveldView()

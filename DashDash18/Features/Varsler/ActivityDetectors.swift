@@ -21,8 +21,9 @@ nonisolated enum BigScore {
 
 /// `loggLedelseHvisEndret`: hvem leder etter de n FØRSTE hullene, ved sjekkpunktene.
 nonisolated enum LeadTracker {
-    /// Golfgutu: hull 3, 6, 9, 12, 15 og 18 (PWA: `LEDELSE_SJEKKPUNKT`).
-    static let golfgutuCheckpoints = [3, 6, 9, 12, 15, 18]
+    /// Golfgutu: hull 3, 6, 9, 12, 15 og 18 (PWA: `LEDELSE_SJEKKPUNKT`). Andre regelsett setter
+    /// sine egne (`Ruleset.leadCheckpoints`).
+    static let golfgutuCheckpoints = Ruleset.golfgutu.leadCheckpoints
 
     struct Entry: Equatable, Sendable {
         let member: UUID
@@ -148,12 +149,12 @@ nonisolated extension RoundGame {
     }
 
     /// Ledelsen etter at `holeIndex` er lagret, eller nil. Runder som avgjøres hull for hull
-    /// (matcher som ikke er trekanter) har ingen poengleder å melde.
-    func leadEvent(afterSaving holeIndex: Int,
-                   checkpoints: [Int] = LeadTracker.golfgutuCheckpoints) -> ActivityEvent? {
+    /// (matcher som ikke er trekanter) har ingen poengleder å melde. Sjekkpunktene er
+    /// regelsettets (`leadCheckpoints`) når de ikke gis.
+    func leadEvent(afterSaving holeIndex: Int, checkpoints: [Int]? = nil) -> ActivityEvent? {
         guard !MatchPlay.isDecidedHoleByHole(round),
               let change = LeadTracker.change(leadEntries, afterHoles: holeIndex + 1, holeCount: holeCount,
-                                              checkpoints: checkpoints) else { return nil }
+                                              checkpoints: checkpoints ?? rules.leadCheckpoints) else { return nil }
         return .leadChanged(afterHole: change.afterHole, leaders: change.leaders.ids, points: change.leaders.points,
                             outcome: change.outcome)
     }

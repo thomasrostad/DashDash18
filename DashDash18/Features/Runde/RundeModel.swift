@@ -46,6 +46,7 @@ final class RundeModel {
     }
 
     private var client: SupabaseClient { context.client }
+    var clubContext: ClubContext { context }
 
     var viewer: Viewer { Viewer(memberID: context.memberID, isOrganizer: context.isOrganizer) }
     var hasRound: Bool { game != nil }
@@ -222,10 +223,26 @@ final class RundeModel {
             rebuild()
             if let updated = self.game {
                 celebration = updated.celebration(hole: hole, saved: fresh)
+                // Varsler bare for det serveren har: et hull i kø logges ikke.
+                if case .saved = outcome {
+                    logQuietly(updated.eventsAfterSaving(hole: hole, fresh: fresh), in: updated)
+                }
             }
             advance(from: hole)
         } catch {
             saveError = "Hull \(game.holeNumber(hole)) ble ikke lagret: \(DataError.from(error).message) Prøv igjen."
+        }
+    }
+
+    /// Logger i bakgrunnen, så føringen ikke venter på varslene. En feil stopper ingenting.
+    private func logQuietly(_ events: [ActivityEvent], in game: RoundGame) {
+        guard !events.isEmpty else { return }
+        let log = ActivityLog(client: client, clubID: context.clubID)
+        let roundID = game.roundID, eventID = game.snapshot.round.eventID
+        Task {
+            for event in events {
+                await log.logQuietly(event, eventID: eventID, roundID: roundID)
+            }
         }
     }
 
@@ -263,6 +280,10 @@ final class RundeModel {
             rebuild()
         } catch {
             throw DataError.from(error)
+        }
+        if let updated = self.game,
+           let event = updated.sidePrizeEventAfterClaim(kind, member: member, before: game) {
+            logQuietly([event], in: updated)
         }
     }
 

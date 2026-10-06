@@ -273,7 +273,20 @@ final class RundeAdminModel {
                            + RoundErrors.startMessage(sqlState: (error as? PostgrestError)?.code, fallback: DataError.from(error)))
         }
         await reload()
+        await logStarted(roundID: id)
     }
+
+    /// «Ny runde» i aktiviteten, fra runden slik serveren har den etter start_round. Feiler
+    /// hentingen eller loggingen, står runden startet likevel.
+    private func logStarted(roundID: UUID) async {
+        let active = activeRound?.id == roundID ? activeRound : nil
+        guard let row = rounds.first(where: { $0.id == roundID }) ?? active,
+              let snapshot = try? await RundeQueries.snapshot(client: client, round: row),
+              let event = RoundGame(snapshot).startedEventIfActive else { return }
+        await activityLog.logQuietly(event, eventID: row.eventID, roundID: row.id)
+    }
+
+    private var activityLog: ActivityLog { ActivityLog(client: client, clubID: clubID) }
 
     /// Start en kladd fra lista: henter oppsettet, sjekker det og starter.
     func start(_ round: RoundRow) async throws(DataError) {
@@ -283,15 +296,22 @@ final class RundeAdminModel {
 
     /// «Lås runden»: runden er ferdig.
     func lock(_ round: RoundRow) async throws(DataError) {
+        let locked: RoundRow
         do {
             let updated: [RoundRow] = try await client.from("rounds")
                 .update(RoundStatusPatch(status: .locked))
                 .eq("id", value: round.id)
                 .select(Self.roundColumns)
                 .execute().value
-            guard updated.first?.status == .locked else { throw DataError.notAllowed }
+            guard let row = updated.first, row.status == .locked else { throw DataError.notAllowed }
+            locked = row
         } catch {
             throw DataError.from(error)
+        }
+        // En kladd som låses, har aldri vært ute hos de andre.
+        if RoundActivity.isLoggable(round.status),
+           let event = RoundActivity.locked(locked, courseName: course(locked.courseID)?.course.name) {
+            await activityLog.logQuietly(event, eventID: locked.eventID, roundID: locked.id)
         }
         await reload()
     }
