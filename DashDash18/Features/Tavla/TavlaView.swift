@@ -22,6 +22,14 @@ private struct TavlaContent: View {
         content
             .task { await model.load() }
             .refreshable { await model.load() }
+            .toolbar {
+                if let standings = model.standings, !standings.isEmpty {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        ResultShareButton(share: standings.share)
+                            .tint(Color.ddOnDark)
+                    }
+                }
+            }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
                     Task { await model.load() }
