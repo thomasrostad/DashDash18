@@ -29,6 +29,19 @@ public enum JS {
     public static func roundHalf(_ x: Double) -> Double {
         round(x * 2) / 2
     }
+
+    /// `String(n)` for et endelig tall: heltall uten desimaler («4», ikke «4.0»), −0 som «0»,
+    /// ellers korteste desimalform («3.4»). Gjelder tall i vanlig størrelse (ikke eksponentform).
+    public static func string(_ x: Double) -> String {
+        if x == 0 { return "0" }
+        if x == x.rounded(.towardZero), abs(x) < 1e15 { return String(Int64(x)) }
+        return "\(x)"
+    }
+
+    /// `String(n).replace('.', ',')`: norsk desimalkomma.
+    public static func norwegianString(_ x: Double) -> String {
+        string(x).replacingOccurrences(of: ".", with: ",")
+    }
 }
 
 /// Norsk sortering, som `a.localeCompare(b, 'no')` i PWA-en: æ, ø og å etter z.
