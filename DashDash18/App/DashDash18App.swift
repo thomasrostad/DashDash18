@@ -6,14 +6,21 @@ struct DashDash18App: App {
         AppServices(config: try AppConfig.load())
     }
 
+    init() {
+        DDAppearance.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
-            switch services {
-            case .success(let services):
-                AppRoot(services: services)
-            case .failure(let error):
-                ConfigErrorView(error: error)
+            Group {
+                switch services {
+                case .success(let services):
+                    AppRoot(services: services)
+                case .failure(let error):
+                    ConfigErrorView(error: error)
+                }
             }
+            .ddAppStyle()
         }
     }
 }
