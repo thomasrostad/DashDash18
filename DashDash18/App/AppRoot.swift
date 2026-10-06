@@ -4,6 +4,7 @@ import SwiftUI
 /// logget inn, fordi databasen avviser alt fra uinnloggede (skjema v1).
 struct AppRoot: View {
     let services: AppServices
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
@@ -15,13 +16,23 @@ struct AppRoot: View {
             case .signedIn(let user):
                 ClubGate(services: services, user: user)
                     .task(id: user.id) { await services.club.load(userID: user.id) }
+                    .task(id: user.id) { services.outbox.start() }
             }
         }
         .environment(services.auth)
         .environment(services.club)
         .task { await services.auth.observe() }
         .onChange(of: services.auth.state) { _, state in
-            if state == .signedOut { services.club.reset() }
+            if state == .signedOut {
+                services.club.reset()
+                services.outbox.stop()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Send hull i kø når appen blir aktiv (bare innlogget, ellers avviser serveren).
+            if phase == .active, case .signedIn = services.auth.state {
+                Task { await services.outbox.flush() }
+            }
         }
     }
 }
