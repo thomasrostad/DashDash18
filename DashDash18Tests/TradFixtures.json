@@ -1,0 +1,49 @@
+{
+  "kilde": "Kveldens tråd. Tall og tilfeller fra referanse/golfgutu-pwa/tests/kveldens-traad-test.js og traad-bilder-test.js (regnet av db-nytt.js og app-nytt.js). Spiller-id-er er bokstaver; hver plattform gjør dem om til sine id-er.",
+  "spillere": [
+    { "id": "a", "navn": "Thomas Rostad" },
+    { "id": "b", "navn": "Thomas Strypet" },
+    { "id": "c", "navn": "Kåre Ås" },
+    { "id": "d", "navn": "Carl <Moe>" }
+  ],
+  "nevneNavn": { "a": "ThomasR", "b": "ThomasS", "c": "Kåre", "d": "Carl" },
+  "finnNevnte": [
+    { "hva": "store og små bokstaver er likegyldige", "tekst": "Hei @thomass og @KÅRE!", "avsender": "x", "nevnte": ["b", "c"] },
+    { "hva": "e-postadresser nevner ingen", "tekst": "send til thomas@fink.no", "avsender": "x", "nevnte": [] },
+    { "hva": "«@Thomas» er tvetydig", "tekst": "@Thomas kommer du?", "avsender": "x", "nevnte": [] },
+    { "hva": "avsenderen nevner ikke seg selv", "tekst": "@Kåre her", "avsender": "c", "nevnte": [] },
+    { "hva": "«@Carlsen» er ikke @Carl", "tekst": "@Carlsen", "avsender": "x", "nevnte": [] },
+    { "hva": "sendingen i testen (trimmet tekst)", "tekst": "Kommer 17:30, @kåre og @ThomasR!", "avsender": "b", "nevnte": ["a", "c"] },
+    { "hva": "uten @ ingen", "tekst": "Kåre kommer", "avsender": "x", "nevnte": [] }
+  ],
+  "forslag": [
+    { "hva": "@tho foreslår begge Thomas", "utkast": "Hei @tho", "meg": "d", "forslag": ["ThomasR", "ThomasS"] },
+    { "hva": "uten @ på slutten ingen forslag", "utkast": "Hei", "meg": "d", "forslag": [] },
+    { "hva": "bare @: alle utenom deg", "utkast": "@", "meg": "d", "forslag": ["ThomasR", "ThomasS", "Kåre"] }
+  ],
+  "settInnNevn": [
+    { "utkast": "Hei @tho", "navn": "ThomasS", "resultat": "Hei @ThomasS " }
+  ],
+  "uleste": {
+    "meg": "c",
+    "meldinger": [
+      { "id": "m1", "fra": "a", "tid": "2099-10-01T10:00:00Z" },
+      { "id": "m2", "fra": "b", "tid": "2099-10-01T10:05:00Z" },
+      { "id": "m3", "fra": "c", "tid": "2099-10-01T10:06:00Z" },
+      { "id": "m4", "fra": "d", "tid": "2099-10-01T10:07:00Z" }
+    ],
+    "aldriApnet": 3,
+    "etterLest": 0,
+    "nye": [
+      { "id": "m9", "fra": "a", "tid": "2099-10-01T12:00:00Z" },
+      { "id": "m10", "fra": "c", "tid": "2099-10-01T12:01:00Z" }
+    ],
+    "etterNye": 1
+  },
+  "bildemaal": [
+    { "hva": "liggende", "b": 4032, "h": 3024, "maks": 1600, "ut": [1600, 1200] },
+    { "hva": "stående", "b": 3024, "h": 4032, "maks": 1600, "ut": [1200, 1600] },
+    { "hva": "små bilder blåses ikke opp", "b": 800, "h": 600, "maks": 1600, "ut": [800, 600] }
+  ],
+  "tekst": { "maks": 500 }
+}
