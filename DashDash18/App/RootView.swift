@@ -22,11 +22,15 @@ struct RootView: View {
                                 if config.environment != .prod {
                                     ToolbarItem(placement: .topBarTrailing) {
                                         EnvironmentBadge(environment: config.environment)
+                                            .tint(Color.ddOnDark)
                                     }
                                 }
                                 if let badge {
                                     ToolbarItem(placement: .topBarTrailing) {
+                                        // Lys på den grønne linja. Uten egen tint arver bjella
+                                        // skoggrønn, som i lys modus gir en svak mint-kapsel.
                                         VarslerBell(badge: badge)
+                                            .tint(Color.ddOnDark)
                                     }
                                 }
                             }

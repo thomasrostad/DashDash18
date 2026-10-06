@@ -10,9 +10,9 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 5 (prøvekveld på test gjenstår). Fase 3–4 i hovedsak ferdig. |
-| **Sist gjort** | Match og sidepremier i runden, avslutning og retting, start_round og confirm_round_par (SQL 006/007 kjørt). Score ført mot test med spøkelsesspillere. |
-| **Neste oppgave** | Agenter jobber: Tavla, sosialt (SQL 008-utkast + Deg), design. Deretter: aktivitet/varsler, tråd, tippekupong (etter SQL 008), TestFlight. |
+| **Nåværende fase** | Fase 7 i hovedsak ferdig. Neste: fase 8 (push, Live Activity, widgets) og TestFlight. |
+| **Sist gjort** | Design (PWA + golfee) på alle skjermer. Aktivitet/varsler, tråd og tippekupong koblet inn. Enhetstester grønne. |
+| **Neste oppgave** | Brukeren prøver bjelle, tråd, tips og nytt design på telefon. SQL 009 til godkjenning. Fase 8. |
 | **Venter på deg** | Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
@@ -216,10 +216,10 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Avkort runden med effekt-forhåndsvisning (`avkortingenKoster`). *(06.10.)*
 - [x] Avslutt kvelden: lås, kveld ferdig, neste kveld rykker opp. *(06.10: låser pågående runder.)*
 - [x] Rett en score, Rundene (tabell, retting i låst runde, logges). Slett runde (én RPC). *(06.10.)*
-- [ ] Aktivitet og varsler i appen: strukturert (type + data), ikke HTML. Reaksjoner.
+- [x] Aktivitet og varsler i appen: strukturert (type + data), ikke HTML. Reaksjoner. *(06.10. Ikke prøvd mot database.)*
 - [ ] Deg: handicap (komma), portrett, koblede innloggingsmåter, logg ut.
-- [ ] Kveldens tråd: tekst, @navn, bilde fra bildebiblioteket, uleste.
-- [ ] Tippekupong: fem spørsmål, frist i Oslo-tid, andres tips etter låsing, fasit og resultat. Innsats i poeng eller «for æra» (B10).
+- [x] Kveldens tråd: tekst, @navn, bilde fra bildebiblioteket, uleste. *(06.10. Ikke prøvd mot database.)*
+- [x] Tippekupong: fem spørsmål, frist i Oslo-tid, andres tips etter låsing, fasit og resultat. Innsats i poeng eller «for æra» (B10). *(06.10. Ikke prøvd mot database.)*
 
 **Ferdig når:**
 - Jeg avkorter en runde etter 14 hull og ser samme effekt per spiller som PWA-en viser for samme data.
