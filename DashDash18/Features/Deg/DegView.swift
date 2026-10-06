@@ -44,6 +44,14 @@ struct DegView: View {
                     .fontWeight(.medium)
                 }
             }
+            if PushFeature.isEnabled, let context {
+                Section {
+                    NavigationLink { PushSettingsView(context: context) } label: {
+                        Label("Varsler", systemImage: "bell.badge")
+                            .labelStyle(DDIconLabelStyle())
+                    }
+                }
+            }
             if membership.isOrganizer {
                 Section {
                     NavigationLink { AdminHubView() } label: {
