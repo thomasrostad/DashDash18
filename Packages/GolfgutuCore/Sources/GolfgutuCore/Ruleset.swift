@@ -17,15 +17,18 @@ public struct Ruleset: Hashable, Sendable {
     public var sidePrizes: SidePrizeRules
     public var handicap: HandicapRules
     public var formats: FormatRules
+    /// Tippekupongen: frist, innsats og linje når kvelden ikke har egne (se Tips.swift).
+    public var tips: TipsRules
 
     public init(evenings: Int, scoring: ScoringRules, table: TableRules, sidePrizes: SidePrizeRules,
-                handicap: HandicapRules, formats: FormatRules) {
+                handicap: HandicapRules, formats: FormatRules, tips: TipsRules = .golfgutu) {
         self.evenings = evenings
         self.scoring = scoring
         self.table = table
         self.sidePrizes = sidePrizes
         self.handicap = handicap
         self.formats = formats
+        self.tips = tips
     }
 
     // MARK: Gruppene
@@ -316,7 +319,7 @@ public struct Ruleset: Hashable, Sendable {
 
 extension Ruleset: Codable {
     private enum CodingKeys: String, CodingKey {
-        case version, evenings, scoring, table, sidePrizes, handicap, formats
+        case version, evenings, scoring, table, sidePrizes, handicap, formats, tips
     }
 
     /// Versjon 1: flat.
@@ -341,6 +344,7 @@ extension Ruleset: Codable {
             sidePrizes = try c.decodeIfPresent(SidePrizeRules.self, forKey: .sidePrizes) ?? g.sidePrizes
             handicap = try c.decodeIfPresent(HandicapRules.self, forKey: .handicap) ?? g.handicap
             formats = try c.decodeIfPresent(FormatRules.self, forKey: .formats) ?? g.formats
+            tips = try c.decodeIfPresent(TipsRules.self, forKey: .tips) ?? g.tips
             return
         }
         // Versjon 1. `countingEvenings` gjaldt matcher (`TELLENDE_MATCHER`), `stablefordCountingEvenings` runder.
@@ -376,6 +380,7 @@ extension Ruleset: Codable {
         try c.encode(sidePrizes, forKey: .sidePrizes)
         try c.encode(handicap, forKey: .handicap)
         try c.encode(formats, forKey: .formats)
+        try c.encode(tips, forKey: .tips)
     }
 }
 
