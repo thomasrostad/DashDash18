@@ -351,6 +351,14 @@ Status: **Tatt** (av deg, eller av meg etter fullmakt), **Utsatt** eller **Åpen
 ### B14 – Regelmotoren som lokal Swift-pakke · Tatt (meg)
 Spillogikken bygges i `Packages/GolfgutuCore`, en lokal Swift-pakke uten SwiftUI og nettverk, med Swift Testing og JSON-fixtures. Den testes med `swift test` uten Xcode, kan bygges parallelt med appen, og deles senere med widgets, Live Activity og Watch. Pakken legges til i Xcode-prosjektet av brukeren (*Add Local…*).
 
+### B15 – Banedata: søk etter ekte baner og Trackman-scorekort · Åpen (deg)
+Kartlagt 06.10.2026. Ingen åpen, komplett kilde for norske scorekort med CR/slope, og ingen offentlig kilde for Trackman-scorekort.
+- **Anbefalt hovedvei:** GolfAPI.io for søk (par/SI/lengde per tee, CR/slope per kjønn, green-koordinater; caching i egen database er tillatt, videredeling ikke). Pris må hentes inn (contact@golfapi.io), nordisk dekning må testes på 10–20 norske klubber. Reserve: GolfCourseAPI Pro (ca. 10 USD/mnd).
+- **Alltid:** «Bekreft mot scorekortet/skjermen» før banen brukes, med kilde (api/ocr/manuell) lagret på banen. Foto av scorekort lest på telefonen (Vision `RecognizeDocumentsRequest`, iOS 26) som reserve.
+- **Trackman:** match Trackman-navnet mot den ekte banen i API-et, merk «Trackman-versjon», bekreft mot simulatorskjermen, og del bekreftede scorekort mellom klubbene. Spør Trackman om partnertilgang.
+- **Norsk offisiell kilde:** bare via avtale med NGF/GolfBox (slik Gimmie har). Ikke høst klubbsider eller GolfBox systematisk (katalogvern).
+- **Konsekvens for skjemaet:** API-nøkkelen må ligge på serveren (Supabase Edge Function), ikke i appen. Et felles banekatalog på tvers av klubber (i stedet for bare per klubb) og felt for kilde/ekstern-id krever ny migrering (SQL til godkjenning).
+
 ### B6 – Lokal lagring · Tatt (meg)
 **SwiftData** for cache og utboks. Domenelogikken ligger i rene Swift-typer utenfor.
 
