@@ -11,9 +11,9 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | | |
 |---|---|
 | **Nåværende fase** | Fase 1 (pågår). Fase 2 er ferdig. |
-| **Sist gjort** | Innlogging med e-postkode. App: 33 enhetstester og 2 UI-tester grønne. Pakken: 49 tester grønne. |
-| **Neste oppgave** | Brukeren prøver e-postinnlogging på telefonen. Deretter Logg inn med Apple, så Google (fase 1 oppgave 7). |
-| **Venter på deg** | E-postmalen i Supabase skal vise koden (`{{ .Token }}`). |
+| **Sist gjort** | Fase 6-logikk i GolfgutuCore (match, trekant, sidepremier, sesongtabell): pakken 74 tester grønne. Innlogging med e-postkode ferdig. |
+| **Neste oppgave** | Logg inn med Apple (fase 1 oppgave 7). Brukeren fikser signering (app-ID `com.dashdash18.app`) og venter på at Resend verifiserer `dashdash18.com`. |
+| **Venter på deg** | Signering i Xcode (app-ID registrert, «Try Again»). DMARC i Cloudflare og Verify i Resend. Svar: skal «beste N» telle kvelder eller matcher? |
 
 ---
 
@@ -186,9 +186,9 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Riktig matchstilling på kvelden og riktig tabell for sesongen, etter regelsettet.
 
-- [ ] Match: `matchSider`, `matchSlag`, `sideNettoPaaHull`, `matchHullVinner`, `matchHullDiff`, `matchUtfallForA`, `matchStilling`, `matchTekst`, `matchStillingKort`.
-- [ ] Trekant: `trekantPoeng`.
-- [ ] Tabell etter regelsettet: duellpoeng, sidepremier, vekt, hva som teller (alle eller beste N), tiebreak. Golfgutu-oppsettet = `jakketavle`.
+- [x] Match: `matchSider`, `matchSlag`, `sideNettoPaaHull`, `matchHullVinner`, `matchHullDiff`, `matchUtfallForA`, `matchStilling`, `matchTekst`, `matchStillingKort`. *(Logikk i GolfgutuCore, 06.10.)*
+- [x] Trekant: `trekantPoeng`. *(Også `trekkMatcher`.)*
+- [x] Tabell etter regelsettet: duellpoeng, sidepremier, vekt, hva som teller (alle eller beste N), tiebreak. Golfgutu-oppsettet = `jakketavle`. *(Logikk ferdig. Åpent: «beste N» teller matcher/runder, ikke kvelder, som PWA-en.)*
 - [ ] LD og KP: meld egen lengde, stilling, delt ved likt.
 - [ ] Kveld: matchkort, «1 opp / Delt / —», stilling i «Bayen nå».
 - [ ] Tavla: tabell, «Slik telles det» generert fra regelsettet, spillerprofil, sesongoppsummering.
