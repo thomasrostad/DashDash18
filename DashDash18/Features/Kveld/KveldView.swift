@@ -59,6 +59,9 @@ private struct KveldContent: View {
                             referenceYear: EveningDates.year(of: model.today)
                         )
                         .ddCard(.large)
+                        if let entry = model.calendarEntry {
+                            AddToCalendarButton(entry: entry)
+                        }
                         KveldExtrasCards(model: KveldExtrasModel(context: model.clubContext, eventID: event.id))
                             .id(event.id)
                         SignupSection(model: model)
