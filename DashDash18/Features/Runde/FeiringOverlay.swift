@@ -29,6 +29,7 @@ struct FeiringOverlay: View {
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                 HStack(spacing: 8) {
+                    if let match = celebration.matchText { pill(match) }
                     if let points = celebration.points { pill("+\(points) poeng") }
                     if let place = celebration.place { pill("\(place). plass") }
                 }

@@ -543,6 +543,8 @@ nonisolated struct Celebration: Equatable, Identifiable, Sendable {
     let place: Int?
     /// Neste hull (banens nummer), eller nil på siste hull.
     let nextHole: Int?
+    /// I en match: stillingen etter hullet («1 opp etter 1») i stedet for poeng og plass.
+    var matchText: String? = nil
 
     static func == (a: Self, b: Self) -> Bool { a.id == b.id }
 }
@@ -578,7 +580,9 @@ nonisolated extension RoundGame {
         case .birdie: "Bra jobba, \(who)!"
         }
         if MatchPlay.holeMatch(for: best.member.uuidString, in: round) != nil {
-            return Celebration(level: best.level, eyebrow: eyebrow, text: text, points: nil, place: nil, nextHole: next)
+            let standing = holeMatchStanding(best.member).map(MatchPlay.text)
+            return Celebration(level: best.level, eyebrow: eyebrow, text: text, points: nil, place: nil, nextHole: next,
+                               matchText: standing.flatMap { $0.isEmpty ? nil : $0 })
         }
         let points = Scoring.points(par: hole.par, gross: best.strokes, handicap: handicap(best.member),
                                     strokeIndex: hole.strokeIndex, holes: holeCount, rules: rules)
