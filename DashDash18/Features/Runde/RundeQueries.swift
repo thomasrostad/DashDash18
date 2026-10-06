@@ -103,4 +103,62 @@ enum RundeQueries {
             .execute().value
         guard rows.first?.parConfirmedAt != nil else { throw DataError.notAllowed }
     }
+
+    // MARK: Longest drive og nærmest pinnen
+
+    static let claimColumns = "id, round_id, member_id, kind, meters, hole_index"
+
+    /// «Meld inn» / «Oppdater»: én rad per runde, spiller og type (`side_claims_one_per_kind`).
+    /// Finnes raden, oppdateres den; ellers settes den inn. Har noen andre satt inn i mellomtiden
+    /// (arrangøren for deg), rettes den raden. Sjekker raden tilbake (RLS kan stille avvise).
+    static func saveSideClaim(client: SupabaseClient, _ draft: SideClaimDraft) async throws -> SideClaimRow {
+        struct Insert: Encodable {
+            let round_id: UUID
+            let member_id: UUID
+            let kind: String
+            let meters: Double
+            let hole_index: Int
+        }
+        struct Update: Encodable {
+            let meters: Double
+            let hole_index: Int
+        }
+        let update = Update(meters: draft.meters, hole_index: draft.holeIndex)
+
+        func updated(_ rows: [SideClaimRow]) throws -> SideClaimRow {
+            guard let row = rows.first, abs(row.meters - draft.meters) < 0.05 else { throw DataError.notAllowed }
+            return row
+        }
+
+        if let id = draft.existing {
+            let rows: [SideClaimRow] = try await client.from("side_claims")
+                .update(update).eq("id", value: id)
+                .select(claimColumns).execute().value
+            if !rows.isEmpty { return try updated(rows) }
+            // Raden er borte (slettet et annet sted): sett inn på nytt under.
+        }
+        do {
+            let rows: [SideClaimRow] = try await client.from("side_claims")
+                .insert(Insert(round_id: draft.roundID, member_id: draft.memberID, kind: draft.kind.rawValue,
+                               meters: draft.meters, hole_index: draft.holeIndex))
+                .select(claimColumns).execute().value
+            return try updated(rows)
+        } catch let error where DataError.from(error) == .duplicate {
+            let rows: [SideClaimRow] = try await client.from("side_claims")
+                .update(update)
+                .eq("round_id", value: draft.roundID)
+                .eq("member_id", value: draft.memberID)
+                .eq("kind", value: draft.kind.rawValue)
+                .select(claimColumns).execute().value
+            return try updated(rows)
+        }
+    }
+
+    /// Sletter en innmelding. Sjekker at raden faktisk ble slettet.
+    static func deleteSideClaim(client: SupabaseClient, id: UUID) async throws {
+        let rows: [SideClaimRow] = try await client.from("side_claims")
+            .delete().eq("id", value: id)
+            .select(claimColumns).execute().value
+        guard !rows.isEmpty else { throw DataError.notAllowed }
+    }
 }

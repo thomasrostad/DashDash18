@@ -16,8 +16,15 @@ struct RundeView: View {
                     } else {
                         playing(game)
                     }
-                    BayenNaaSection(rows: game.standings(viewer: model.viewer)) { member in
+                    let matches = game.matchCard(viewer: model.viewer)
+                    if game.isDecidedHoleByHole, let matches {
+                        MatchkortSection(card: matches)
+                    }
+                    BayenNaaListe(rows: game.bayenNaa(viewer: model.viewer)) { member in
                         scorecardFor = ScorecardTarget(memberID: member)
+                    }
+                    if !game.isDecidedHoleByHole, let matches {
+                        MatchkortSection(card: matches)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -79,6 +86,22 @@ struct RundeView: View {
             Text("Du er ikke med i denne runden. Du ser stillingen under.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+        }
+        let lines = game.holeMatchLines(hole: model.currentHole, viewer: model.viewer)
+        if !lines.isEmpty {
+            HullMatchLinjer(lines: lines)
+        }
+        ForEach([SideClaimKind.drive, .kp], id: \.self) { kind in
+            if let box = game.sidePrizeBox(kind, hole: model.currentHole, viewer: model.viewer) {
+                SidepremieBoks(
+                    box: box,
+                    viewer: model.viewer.memberID,
+                    names: game.snapshot.names,
+                    existing: { game.sideClaim(kind, for: $0)?.meters },
+                    onSubmit: { try await model.submitSideClaim(kind, member: $0, text: $1) },
+                    onDelete: { try await model.deleteSideClaim($0) }
+                )
+            }
         }
     }
 }

@@ -134,6 +134,9 @@ final class RundeModel {
         let channel = client.channel("runde-\(roundID.uuidString)")
         let changes = channel.postgresChange(AnyAction.self, schema: "public", table: "hole_scores",
                                              filter: .eq("round_id", value: roundID))
+        // Longest drive og nærmest pinnen meldes fra hver sin telefon: ledelsen skal følge med.
+        let claimChanges = channel.postgresChange(AnyAction.self, schema: "public", table: "side_claims",
+                                                  filter: .eq("round_id", value: roundID))
         let statuses = channel.statusChange
         self.channel = channel
         channelRound = roundID
@@ -145,6 +148,11 @@ final class RundeModel {
             },
             Task { [weak self] in
                 for await _ in changes {
+                    await self?.load()
+                }
+            },
+            Task { [weak self] in
+                for await _ in claimChanges {
                     await self?.load()
                 }
             },
@@ -237,5 +245,35 @@ final class RundeModel {
             throw DataError.from(error)
         }
         await load()
+    }
+
+    // MARK: Longest drive og nærmest pinnen
+
+    /// «Meld inn» / «Oppdater» for `member` (meg, eller hvem som helst for arrangøren).
+    func submitSideClaim(_ kind: SideClaimKind, member: UUID, text: String) async throws(DataError) {
+        guard let game else { return }
+        let draft: SideClaimDraft
+        switch game.sideClaimDraft(kind, member: member, text: text, viewer: viewer) {
+        case .success(let d): draft = d
+        case .failure(let error): throw error
+        }
+        do {
+            let row = try await RundeQueries.saveSideClaim(client: client, draft)
+            snapshot?.apply(claim: row)
+            rebuild()
+        } catch {
+            throw DataError.from(error)
+        }
+    }
+
+    /// «Slett» på en innmelding (egen i runden som går, eller arrangør).
+    func deleteSideClaim(_ id: UUID) async throws(DataError) {
+        do {
+            try await RundeQueries.deleteSideClaim(client: client, id: id)
+            snapshot?.removeClaim(id)
+            rebuild()
+        } catch {
+            throw DataError.from(error)
+        }
     }
 }
