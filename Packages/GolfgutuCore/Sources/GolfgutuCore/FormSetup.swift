@@ -59,7 +59,7 @@ public struct FormSuggestion: Hashable, Sendable {
 
 extension CompetitionForm {
     /// `SPILLERE_PER_BAAS` i Golfgutu-oppsettet.
-    public static let golfgutuMaxPerBay = 4
+    public static var golfgutuMaxPerBay: Int { Ruleset.golfgutu.formats.maxPerBay }
 
     /// `erLagform`.
     public var isTeamForm: Bool { teamSize > 1 }

@@ -32,9 +32,12 @@ public enum Scoring {
         gross - handicapStrokes(handicap: handicap, strokeIndex: strokeIndex, holes: holes)
     }
 
-    /// `pointsForHole`: stableford, `max(0, par − netto + 2)`.
-    public static func points(par: Int, gross: Int, handicap: Double, strokeIndex: Int, holes: Int) -> Int {
-        max(0, par - netStrokes(gross: gross, handicap: handicap, strokeIndex: strokeIndex, holes: holes) + 2)
+    /// `pointsForHole`: stableford, `max(bunn, par − netto + poeng for netto par)` fra regelsettet
+    /// (Golfgutu: `max(0, par − netto + 2)`).
+    public static func points(par: Int, gross: Int, handicap: Double, strokeIndex: Int, holes: Int,
+                              rules: Ruleset = .golfgutu) -> Int {
+        let net = netStrokes(gross: gross, handicap: handicap, strokeIndex: strokeIndex, holes: holes)
+        return max(rules.scoring.minimumPoints, par - net + rules.scoring.netParPoints)
     }
 
     /// `scoreNameForHole`: netto − par. ≤ −2 eagle, −1 birdie, 0 par, 1 bogey, 2 dobbel, ellers blowup.
@@ -54,17 +57,19 @@ public enum Scoring {
     ///
     /// Hull uten score gir `poengForTomtHull`. Har spilleren ingen score i det hele tatt, er svaret 0,
     /// også med `nettopar`. Nøkkelen er rundens 0-baserte hullindeks.
-    public static func points(from scores: HoleScores, in round: Round, handicap: Double) -> Int {
+    public static func points(from scores: HoleScores, in round: Round, handicap: Double,
+                              rules: Ruleset = .golfgutu) -> Int {
         if scores.isEmpty { return 0 }
         let course = round.courseHoles()
         let count = round.numberOfHoles
         let counting = Truncation.countingHoles(round)
-        let empty = Truncation.pointsForEmptyHole(round)
+        let empty = Truncation.pointsForEmptyHole(round, rules: rules)
         var total = 0
         for i in 0..<counting where i < course.count {
             let hole = course[i]
             if let gross = scores[i] {
-                total += points(par: hole.par, gross: gross, handicap: handicap, strokeIndex: hole.strokeIndex, holes: count)
+                total += points(par: hole.par, gross: gross, handicap: handicap, strokeIndex: hole.strokeIndex, holes: count,
+                                rules: rules)
             } else {
                 total += empty
             }
@@ -73,15 +78,16 @@ public enum Scoring {
     }
 
     /// `roundNetTotal`: summen for én spiller med et gitt handicap.
-    public static func roundNetTotal(_ round: Round, playerID: String?, handicap: Double) -> Int {
-        points(from: playerID.flatMap { round.holeScores[$0] } ?? [:], in: round, handicap: handicap)
+    public static func roundNetTotal(_ round: Round, playerID: String?, handicap: Double,
+                                     rules: Ruleset = .golfgutu) -> Int {
+        points(from: playerID.flatMap { round.holeScores[$0] } ?? [:], in: round, handicap: handicap, rules: rules)
     }
 
     /// `roundNetTotalForPlayer`: summen med spillerens `effectiveHandicap` i runden.
     public static func roundNetTotal(_ round: Round, player: Player?, roster: [Player],
-                                     groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Int {
+                                     rules: Ruleset = .golfgutu) -> Int {
         roundNetTotal(round, playerID: player?.id,
-                      handicap: Handicap.effective(for: player, in: round, roster: roster, groups: groups))
+                      handicap: Handicap.effective(for: player, in: round, roster: roster, rules: rules), rules: rules)
     }
 
     /// Rundens poeng per spiller, slik PWA-en lagrer dem i `round_points` (`regnOmRundePoeng`).
@@ -92,36 +98,37 @@ public enum Scoring {
     /// første spiller som har ført hullet (id-rekkefølge; i PWA-en er det radrekkefølgen, og tallene
     /// er like når laget fører ett kort). Hull uten score gir `poengForTomtHull`.
     public static func roundPoints(_ round: Round, roster: [Player],
-                                   groups: [SeedingGroup] = SeedingGroup.golfgutu) -> [String: Int] {
+                                   rules: Ruleset = .golfgutu) -> [String: Int] {
         var out: [String: Int] = [:]
         for pid in round.holeScores.keys.sorted() where !(round.holeScores[pid] ?? [:]).isEmpty {
             if out[pid] != nil { continue }
             if let mates = Handicap.teammates(of: pid, in: round), mates.count > 1 {
-                let total = teamPoints(round, members: mates, roster: roster, groups: groups)
+                let total = teamPoints(round, members: mates, roster: roster, rules: rules)
                 for m in mates { out[m] = total }
                 continue
             }
-            let hcp = Handicap.effective(for: roster.first { $0.id == pid }, in: round, roster: roster, groups: groups)
-            out[pid] = roundNetTotal(round, playerID: pid, handicap: hcp)
+            let hcp = Handicap.effective(for: roster.first { $0.id == pid }, in: round, roster: roster, rules: rules)
+            out[pid] = roundNetTotal(round, playerID: pid, handicap: hcp, rules: rules)
         }
         return out
     }
 
     /// `skrivLagpoeng`: lagets sum etter formens regning.
-    static func teamPoints(_ round: Round, members: [String], roster: [Player], groups: [SeedingGroup]) -> Int {
+    static func teamPoints(_ round: Round, members: [String], roster: [Player], rules: Ruleset) -> Int {
         let course = round.courseHoles()
         let count = round.numberOfHoles
         let form = round.form
         var perHole: [Int: [Int]] = [:]
         for pid in members {
             guard let scores = round.holeScores[pid] else { continue }
-            let hcp = Handicap.effective(for: roster.first { $0.id == pid }, in: round, roster: roster, groups: groups)
+            let hcp = Handicap.effective(for: roster.first { $0.id == pid }, in: round, roster: roster, rules: rules)
             for (h, gross) in scores.sorted(by: { $0.key < $1.key }) where h >= 0 && h < course.count {
                 let hole = course[h]
-                perHole[h, default: []].append(points(par: hole.par, gross: gross, handicap: hcp, strokeIndex: hole.strokeIndex, holes: count))
+                perHole[h, default: []].append(points(par: hole.par, gross: gross, handicap: hcp,
+                                                      strokeIndex: hole.strokeIndex, holes: count, rules: rules))
             }
         }
-        let empty = Truncation.pointsForEmptyHole(round)
+        let empty = Truncation.pointsForEmptyHole(round, rules: rules)
         var total = 0
         for h in 0..<Truncation.countingHoles(round) {
             guard let p = perHole[h], let first = p.first else { total += empty; continue }

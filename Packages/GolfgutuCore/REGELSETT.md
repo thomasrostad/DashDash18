@@ -1,101 +1,107 @@
 # Regelverdier i GolfgutuCore
 
-Kartlegging (fase 3, regelsett-revisjon, R1). Hver verdi som står fast i koden, hvor den brukes,
-om den ligger i `Ruleset` i dag, og Golfgutu-verdien (PWA-en, `db-nytt.js`).
+Alle verdier i regelmotoren som er et valg for turneringen, ligger i `Ruleset`. Faste tall står bare
+i `Ruleset.golfgutu` (Golfgutu-oppsettet, som gir samme svar som PWA-en). Tabellene under viser hver
+regelverdi: hvor den brukes, feltet i `Ruleset` (eller hvorfor den blir i koden) og Golfgutu-verdien.
 
-Status: **Ja** = i `Ruleset`. **Nei** = fast i koden. Vurdering: **flytt** = turneringsvalg som
-skal inn i regelsettet (R2), **bli** = golfregel, WHS-matematikk, dataregel eller ren visning.
+Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sitt eget regelsett.
 
 ## Poeng per hull og runde
 
-| Verdi | Brukes i | I Ruleset | Golfgutu | Vurdering |
-|---|---|---|---|---|
-| Stableford: poeng for netto par | `Scoring.points` (`par − netto + 2`) | Nei | 2 | flytt |
-| Stableford: laveste poeng på et hull | `Scoring.points` (`max(0, …)`) | Nei | 0 | flytt |
-| Poeng for tomt hull ved `nettopar` (`POENG_NETTO_PAR`) | `Truncation.pointsForEmptyHole`, `netParPoints` | Nei | 2 | følger «poeng for netto par» (samme tall per definisjon) |
-| Navn på hull (eagle ≤ −2 … blowup) | `Scoring.scoreName` | Nei | −2/−1/0/1/2 | bli (golfbegreper, bare visning) |
-| Slagfordeling etter stroke index, 9 eller 18 hull | `Scoring.handicapStrokes` | Nei | – | bli (golfregel) |
-| Lagets poeng per hull (`sum-netto`, `beste-netto`, ett kort) | `Scoring.teamPoints` | Nei | – | bli (del av formens definisjon) |
+| Verdi | Brukes i | Ruleset | Golfgutu |
+|---|---|---|---|
+| Stableford: poeng for netto par | `Scoring.points` | `scoring.netParPoints` | 2 |
+| Stableford: laveste poeng på et hull | `Scoring.points` | `scoring.minimumPoints` | 0 |
+| Poeng for tomt hull ved `nettopar` (`POENG_NETTO_PAR`) | `Truncation.pointsForEmptyHole` | `scoring.netParPoints` (samme tall per definisjon) | 2 |
+| Navn på hull (eagle ≤ −2 … blowup) | `Scoring.scoreName` | bli (golfbegreper, bare visning) | – |
+| Slagfordeling etter stroke index, 9 eller 18 hull | `Scoring.handicapStrokes` | bli (golfregel) | – |
+| Lagets poeng per hull (`sum-netto`, `beste-netto`, ett kort) | `Scoring.teamPoints` | bli (formens definisjon) | – |
 
 ## Avkorting
 
-| Verdi | Brukes i | I Ruleset | Golfgutu | Vurdering |
-|---|---|---|---|---|
-| Reglene `felles`, `nettopar`, `null` | `Truncation.Rule` | Nei | alle tre | bli (velges per runde av arrangøren, lagres på runden) |
-| `felles` kutter til `round(avkortetEtter)`, under 1 = hele runden | `Truncation.countingHoles` | Nei | – | bli (dataregel) |
+| Verdi | Brukes i | Ruleset | Golfgutu |
+|---|---|---|---|
+| Reglene `felles`, `nettopar`, `null` | `Truncation.Rule` | bli (velges per runde, lagres på runden) | – |
+| `felles` kutter til `round(avkortetEtter)` | `Truncation.countingHoles` | bli (dataregel) | – |
 
 ## Bane
 
-| Verdi | Brukes i | I Ruleset | Golfgutu | Vurdering |
-|---|---|---|---|---|
-| `DEFAULT_PAR` (par 72) | `Course.defaultPar`, `courseHoles` | Nei | 4,5,3,4,4,3,5,4,4,4,3,5,4,4,3,4,5,4 | bli (reserve når banedata mangler) |
-| Gyldig par 3–6 | `Course.isValidPar`, `isReady`, `courseHoles` | Nei | 3…6 | bli, se åpne spørsmål |
-| Lengde per par (`PAR_LENGDE`) | `Course.parLengthRange` | Nei | 3: 90–210, 4: 230–440, 5: 420–580 | bli, se åpne spørsmål |
-| 9 eller 18 hull, start på hull 10 | `Round.numberOfHoles`, `courseHoles` | Nei | – | bli (dataregel) |
+| Verdi | Brukes i | Ruleset | Golfgutu |
+|---|---|---|---|
+| `DEFAULT_PAR` | `Course.defaultPar` | bli (reserve når banedata mangler) | par 72 |
+| Gyldig par 3–6 | `Course.isValidPar` | bli, se åpne spørsmål | 3…6 |
+| Lengde per par (`PAR_LENGDE`) | `Course.parLengthRange` | bli, se åpne spørsmål | 3: 90–210, 4: 230–440, 5: 420–580 |
+| 9 eller 18 hull, start på hull 10 | `Round.numberOfHoles`, `courseHoles` | bli (dataregel) | – |
 
 ## Handicap
 
-| Verdi | Brukes i | I Ruleset | Golfgutu | Vurdering |
-|---|---|---|---|---|
-| WHS: `indeks · slope/113 + (CR − par)`, 113, par 72 som reserve | `Handicap.courseHandicap` | Nei | – | bli (WHS) |
-| Andel per form (`hcpAndel`) og regelen «per spiller, ellers 1» | `CompetitionForm.all`, `Ruleset.allowance(for:)` | Delvis (`allowanceOverride`) | stableford 0,95, match 1, fourball-4 0,75, brutto 0, øvrige 1 | flytt (andel per form) |
-| Seeding-grupper | `Handicap.groupHandicap` | Ja | 1/2/3 = 0/5/10 | – |
-| Ekstern handicap (simulator) for nye runder | `Ruleset.externalHandicap` | Ja | av | – |
-| Lagshandicap, toerformer: snitt av grunnlagene | `Handicap.teamHandicap` | Nei | snitt | flytt |
-| Lagshandicap, `scramble-4`: 25/20/15/10 % (lavest først) | `Handicap.scramble4Weights` | Nei | 0,25/0,20/0,15/0,10 | flytt |
-| Lagshandicap, øvrige: laveste · andel | `Handicap.teamHandicap` | Nei | laveste | flytt (samme regel som over) |
-| Lagsgrunnlag: banehandicap · hull/18, seedet = gruppetall | `Handicap.teamBasis` | Nei | – | bli (matematikk) |
-| `effectiveHandicap`: `round(bane · andel · hull/18)` | `Handicap.effective` | Nei | – | bli (matematikk) |
-| Rundens andel mangler → 1 | `Handicap.allowance` | Nei | 1 | bli (eldre runder) |
+| Verdi | Brukes i | Ruleset | Golfgutu |
+|---|---|---|---|
+| Andel per form for nye runder | `Ruleset.allowance(for:)` | `handicap.formAllowances`, `handicap.allowanceOverride` | stableford 0,95, match 1, fourball-4 0,75, brutto 0, lagformer 1 |
+| Seeding-grupper | `Handicap.groupHandicap` | `handicap.seedingGroups` | 1/2/3 = 0/5/10 |
+| Ekstern handicap (simulator) for nye runder | – | `handicap.externalHandicap` | av |
+| Lagshandicap per form | `Handicap.teamHandicap` | `handicap.teamHandicap` (`average`, `weighted` med `weights`, `lowest`; mangler = `lowest`) | toerformer snitt, scramble-4 25/20/15/10, ellers laveste · andel |
+| WHS: `indeks · slope/113 + (CR − par)` | `Handicap.courseHandicap` | bli (WHS) | – |
+| Lagsgrunnlag: banehandicap · hull/18 | `Handicap.teamBasis` | bli (matematikk) | – |
+| `effectiveHandicap`: `round(bane · andel · hull/18)` | `Handicap.effective` | bli (matematikk) | – |
+| Rundens andel mangler → 1 | `Handicap.allowance` | bli (eldre runder) | 1 |
 
 ## Match og trekant
 
-| Verdi | Brukes i | I Ruleset | Golfgutu | Vurdering |
-|---|---|---|---|---|
-| Matchslag: laveste spiller fra scratch (full forskjell) | `MatchPlay.strokeOffset` | Nei | laveste fra scratch | flytt |
-| Laveste netto vinner hullet, avgjort når opp > igjen | `MatchPlay.holeWinner`, `standing` | Nei | – | bli (golfregel) |
-| Utfall 1/0,5/0 (intern koding) | `MatchPlay.outcomeForA` | Nei | – | bli (koding; poengene kommer fra `matchPoints`) |
-| Poeng for seier/uavgjort/tap | `MatchPlay.points(forOutcome:)` | Ja | 1/0,5/0 | – |
-| Trekantpoeng etter plass | `Triangle.points` | Ja | 1/0,5/0 | – |
-| Trekant rangeres på stablefordsum, delt plass deler | `Triangle.points` | Nei | – | bli, se åpne spørsmål |
-| Trekning: stilling, navn, snu på oddetall omgang, trekant av de tre siste | `Triangle.drawMatches` | Nei | – | bli (algoritme) |
+| Verdi | Brukes i | Ruleset | Golfgutu |
+|---|---|---|---|
+| Matchslag | `MatchPlay.strokeOffset` | `formats.matchStrokes` (`lowestFromScratch`, `fullHandicap`) | laveste fra scratch |
+| Poeng for seier/uavgjort/tap | `MatchPlay.points(forOutcome:)` | `table.matchPoints` | 1/0,5/0 |
+| Trekantpoeng etter plass | `Triangle.points` | `table.trianglePoints` | 1/0,5/0 |
+| Laveste netto vinner hullet, avgjort når opp > igjen | `MatchPlay` | bli (golfregel) | – |
+| Utfall 1/0,5/0 (intern koding) | `MatchPlay.outcomeForA` | bli (koding; poengene fra `table.matchPoints`) | – |
+| Trekant rangeres på stablefordsum, delt plass deler | `Triangle.points` | bli, se åpne spørsmål | – |
+| Trekning (stilling, navn, snu, trekant av de tre siste) | `Triangle.drawMatches` | bli (algoritme) | – |
 
 ## Sidepremier
 
-| Verdi | Brukes i | I Ruleset | Golfgutu | Vurdering |
-|---|---|---|---|---|
-| Sidepremier av/på | `Season.sidePrizeResults` | Ja (felles for LD og KP) | på | flytt til av/på per premie |
-| Poeng per premie | `Season.sidePrizeResults` | Ja (felles) | 1 | flytt til per premie |
-| Deling ved likt (1/n) | `Season.sidePrizeResults` | Nei | deles | flytt |
-| Drive: lengst vinner. KP: kortest vinner | `SidePrizes.longestDriveClaims`, `closestToPinClaims` | Nei | – | bli (premiens definisjon) |
-| Foreslått LD-hull (lengste par ≥ 4 …) og KP-hull (første par 3 fra hull 4 …) | `SidePrizes.suggested…Hole` | Nei | – | bli (bare forslag; arrangøren velger hull) |
+| Verdi | Brukes i | Ruleset | Golfgutu |
+|---|---|---|---|
+| Longest drive av/på og poeng | `Season.sidePrizeResults` | `sidePrizes.longestDrive` | på, 1 |
+| Nærmest pinnen av/på og poeng | `Season.sidePrizeResults` | `sidePrizes.closestToPin` | på, 1 |
+| Deling ved likt (1/n) | `Season.sidePrizeResults` | `sidePrizes.splitTies` (av: alle på delt førsteplass får fullt) | deles |
+| Drive: lengst vinner. KP: kortest vinner | `SidePrizes` | bli (premiens definisjon) | – |
+| Foreslått LD- og KP-hull | `SidePrizes.suggested…Hole` | bli (bare forslag; arrangøren velger hull) | – |
 
 ## Tabell og sesong
 
-| Verdi | Brukes i | I Ruleset | Golfgutu | Vurdering |
-|---|---|---|---|---|
-| Antall kvelder | `Ruleset.evenings` | Ja | 7 | – |
-| Hva som teller i tabellen (`TELLENDE_MATCHER`) | `Season.matchResults` | Ja (`countingEvenings`, men betyr matcher) | alle | gjøres eksplisitt (R3) |
-| Hva som teller i stablefordsummen (`TELLENDE_RUNDER`) | `Season.countingRounds` | Ja | beste 5 runder | gjøres eksplisitt (R3) |
-| Utvalg sorteres på poeng, så hulldifferanse | `Season.matchResults` | Nei | – | bli (del av «beste N») |
-| Sidepremier strykes aldri | `Season.jacketBoard` | Nei | – | se R3 |
-| Avrunding til halve poeng i tabellen | `Season.matchSum`, `jacketBoard`, `formatPoints` | Nei | 0,5 | flytt |
-| Skilletegn | `Season.jacketBoard` | Ja | hulldifferanse, stablefordsum | – |
-| Navn skiller til slutt | `Season.jacketBoard` | Nei | – | bli (alltid siste) |
-| Rundevekt (`multiplier`), 0 = teller ikke | `Season.weight` | Nei | 1 | bli (lagres per runde av arrangøren) |
-| To runder samme dato = én kveld | `Season.eveningDates` | Nei | – | bli (definisjon) |
+| Verdi | Brukes i | Ruleset | Golfgutu |
+|---|---|---|---|
+| Antall kvelder | – | `evenings` | 7 |
+| Hva som teller i tabellen (`TELLENDE_MATCHER`) | `Season.matchResults` | `table.counting` | alle matcher |
+| Hva som teller i stablefordsummen (`TELLENDE_RUNDER`) | `Season.countingRounds` | `table.stablefordCounting` | beste 5 runder |
+| Avrunding av tabellpoeng | `Season.matchSum`, `jacketBoard`, `formatPoints` | `table.roundingStep` (`null` = ingen) | 0,5 |
+| Skilletegn | `Season.jacketBoard` | `table.tiebreaks` | hulldifferanse, stablefordsum |
+| Utvalg sorteres på poeng, så hulldifferanse | `Season.matchResults` | bli (del av «beste N») | – |
+| Navn skiller til slutt | `Season.jacketBoard` | bli (alltid siste) | – |
+| Rundevekt (`multiplier`), 0 = teller ikke | `Season.weight` | bli (lagres per runde av arrangøren) | 1 |
+| To runder samme dato = én kveld | `Season.eveningDates` | bli (definisjon) | – |
 
 ## Former og oppsett
 
-| Verdi | Brukes i | I Ruleset | Golfgutu | Vurdering |
-|---|---|---|---|---|
-| Standardform | `Ruleset.defaultFormID` | Ja | stableford | – |
-| Maks per bås | `Ruleset.maxPerBay`, `CompetitionForm.golfgutuMaxPerBay` | Ja | 4 | – |
-| Tillatte former | – | Nei | alle | flytt |
-| Formkatalogen (lag, kort, regning, støtte, skjeve lag, hjelpetekst) | `CompetitionForm.all` | Nei | 16 former | bli (katalog; andelen flyttes) |
-| Minst 2 spillere, oddetall gir én trekant | `CompetitionForm.setup` | Nei | – | bli, se åpne spørsmål |
+| Verdi | Brukes i | Ruleset | Golfgutu |
+|---|---|---|---|
+| Standardform | – | `formats.defaultFormID` | stableford |
+| Tillatte former | `Ruleset.suggestions`, `allowedForms` | `formats.allowedFormIDs` | alle 16 |
+| Maks per bås | `Ruleset.setup`, `suggestions` | `formats.maxPerBay` | 4 |
+| Formkatalogen (lag, kort, regning, støtte, hjelpetekst) | `CompetitionForm.all` | bli (katalog; andelen ligger i regelsettet) | 16 former |
+| Ukjent form → stableford | `CompetitionForm.form(id:)` | bli (som `formForRunde`, gjelder lagrede runder) | – |
+| Minst 2 spillere, oddetall gir én trekant | `CompetitionForm.setup` | bli, se åpne spørsmål | – |
+
+## Hvorfor noe blir i koden
+
+- **Golfregler og WHS** (slagfordeling, WHS-formelen, hullvinner i match, «avgjort») er ikke valg en turnering tar. Endres de, er det ikke golf lenger.
+- **Data og definisjoner** (9/18 hull, kveld = dato, rundens andel og vekt, avkortingsregel per runde) hører til runden og lagres der. Arrangøren setter dem når runden startes.
+- **Visning og forslag** (navn på hull, foreslåtte LD/KP-hull) påvirker ikke poengene.
+- **Banebiblioteket** deles mellom sesongene og kan ikke avhenge av én sesongs regelsett.
 
 ## Åpne spørsmål
 
-1. **Par 3–6 og lengdegrensene** er plausibilitetssjekker for banebiblioteket, som deles av alle sesonger. De kan ikke avhenge av én sesongs regelsett. Blir i koden til vi vet om noen trenger par 7 eller andre grenser.
-2. **Trekant rangert på stableford** og **oddetall gir trekant** er slik PWA-en gjør det. Andre grupper vil kanskje ha en fri runde (bye) i stedet. Ikke tatt med nå.
+1. **Par 3–6 og lengdegrensene** er plausibilitetssjekker for banebiblioteket. Blir i koden til vi vet om noen trenger par 7 eller andre grenser.
+2. **Trekant rangert på stableford** og **oddetall gir trekant** er slik PWA-en gjør det. Andre grupper vil kanskje ha fri runde (bye) i stedet. Ikke tatt med nå.
+3. **`fullHandicap` i match** er det eneste alternativet til «laveste fra scratch». Prosent av forskjellen (f.eks. 90 % som WHS anbefaler for fourball) er ikke tatt med.

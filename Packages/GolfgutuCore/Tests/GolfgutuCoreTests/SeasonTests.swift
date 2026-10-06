@@ -216,12 +216,12 @@ struct SeasonTests {
         for a in fil.annetRegelsett {
             var r = Ruleset.golfgutu
             let k = a.konstanter
-            if let w = k.POENG_SEIER { r.matchPoints.win = w }
-            if let d = k.POENG_DELT { r.matchPoints.draw = d }
-            if let l = k.POENG_TAP { r.matchPoints.loss = l }
-            if let n = k.TELLENDE_MATCHER { r.countingEvenings = n }
-            if let n = k.TELLENDE_RUNDER { r.stablefordCountingEvenings = n }
-            if let t = k.TREKANT_POENG { r.trianglePoints = t }
+            if let w = k.POENG_SEIER { r.table.matchPoints.win = w }
+            if let d = k.POENG_DELT { r.table.matchPoints.draw = d }
+            if let l = k.POENG_TAP { r.table.matchPoints.loss = l }
+            if let n = k.TELLENDE_MATCHER { r.table.counting = .init(unit: .match, best: n) }
+            if let n = k.TELLENDE_RUNDER { r.table.stablefordCounting = .init(unit: .round, best: n) }
+            if let t = k.TREKANT_POENG { r.table.trianglePoints = t }
             sjekk(a.sak, ruleset: r, a.sak.navn)
         }
     }
@@ -233,7 +233,7 @@ struct SeasonTests {
         #expect(golfgutu.jacketBoard().map(\.total) == [5, 2])
 
         var tre = Ruleset.golfgutu
-        tre.countingEvenings = 3
+        tre.table.counting = .init(unit: .match, best: 3)
         let s3 = Season(players: sak.spillere, rounds: sak.runder, ruleset: tre)
         // Anders: tre knepne seire teller (3 poeng, +3); Bjørn: to store seire og ett knepent tap (2, +35).
         #expect(s3.matchTotals(for: "a") == Season.MatchSum(points: 3, holes: 3, matches: 3))
@@ -242,17 +242,31 @@ struct SeasonTests {
         #expect(s3.jacketBoard().first { $0.player.id == "a" }?.played == 7)
 
         var to = Ruleset.golfgutu
-        to.matchPoints = .init(win: 2, draw: 1, loss: 0)
+        to.table.matchPoints = .init(win: 2, draw: 1, loss: 0)
         #expect(Season(players: sak.spillere, rounds: sak.runder, ruleset: to).jacketBoard().map(\.total) == [10, 4])
 
         // Sidepremier av, eller 2 poeng per premie (ingen PWA-konstant; utledet: 2 · 1/2 delt).
         let lik = try #require(fil.saker.first { $0.navn == "lik lengde deler" })
         var av = Ruleset.golfgutu
-        av.sidePrizes.enabled = false
+        av.sidePrizes.longestDrive.enabled = false
+        av.sidePrizes.closestToPin.enabled = false
         #expect(Season(players: lik.spillere, rounds: lik.runder, claims: lik.claims, ruleset: av).sidePrizePoints(for: "a") == 0)
         var dobbel = Ruleset.golfgutu
-        dobbel.sidePrizes.points = 2
+        dobbel.sidePrizes.longestDrive.points = 2
+        dobbel.sidePrizes.closestToPin.points = 2
         #expect(Season(players: lik.spillere, rounds: lik.runder, claims: lik.claims, ruleset: dobbel).sidePrizePoints(for: "a") == 1)
+        // Uten deling får begge på delt førsteplass fullt poeng; premie av for én type påvirker bare den.
+        var hel = Ruleset.golfgutu
+        hel.sidePrizes.splitTies = false
+        let helSesong = Season(players: lik.spillere, rounds: lik.runder, claims: lik.claims, ruleset: hel)
+        #expect(helSesong.sidePrizePoints(for: "a") == 1 && helSesong.sidePrizePoints(for: "c") == 1)
+        let typer = Set(Season(players: lik.spillere, rounds: lik.runder, claims: lik.claims).sidePrizeResults(for: "a").map(\.kind))
+        for kind in typer {
+            var en = Ruleset.golfgutu
+            en.sidePrizes[kind].enabled = false
+            #expect(!Season(players: lik.spillere, rounds: lik.runder, claims: lik.claims, ruleset: en)
+                .sidePrizeResults(for: "a").contains { $0.kind == kind })
+        }
     }
 
     /// Tiebreak-rekkefølgen fra regelsettet. Egen (utledet fra fixturen): Anders vinner duellen (hull +2)
@@ -261,11 +275,11 @@ struct SeasonTests {
     @Test func tiebreakFraRegelsettet() throws {
         let sak = try #require(fil.saker.first { $0.navn == "duellen og stablefordet rangerer motsatt" })
         var r = Ruleset.golfgutu
-        r.matchPoints = .init(win: 0, draw: 0, loss: 0)
+        r.table.matchPoints = .init(win: 0, draw: 0, loss: 0)
         #expect(Season(players: sak.spillere, rounds: sak.runder, ruleset: r).jacketBoard().map(\.player.id) == ["a", "b"])
-        r.tiebreaks = [.stableford, .holeDifference]
+        r.table.tiebreaks = [.stableford, .holeDifference]
         #expect(Season(players: sak.spillere, rounds: sak.runder, ruleset: r).jacketBoard().map(\.player.id) == ["b", "a"])
-        r.tiebreaks = []
+        r.table.tiebreaks = []
         // Bare navn: Anders før Bjørn.
         #expect(Season(players: sak.spillere, rounds: sak.runder, ruleset: r).jacketBoard().map(\.player.id) == ["a", "b"])
     }
@@ -274,7 +288,7 @@ struct SeasonTests {
     @Test func alleRunderTellerIStablefordsummen() throws {
         let sak = try #require(fil.saker.first { $0.navn == "de to svakeste strykes" })
         var r = Ruleset.golfgutu
-        r.stablefordCountingEvenings = nil
+        r.table.stablefordCounting.best = nil
         // Utledet: 30 + 28 + 26 + 24 + 22 + 20 + 18 = 168.
         #expect(Season(players: sak.spillere, rounds: sak.runder, ruleset: r).stablefordTotal(for: "a") == 168)
     }

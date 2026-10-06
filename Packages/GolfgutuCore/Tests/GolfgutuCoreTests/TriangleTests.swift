@@ -69,16 +69,16 @@ struct TriangleTests {
     @Test func plasspoengFraRegelsettet() throws {
         let t = try #require(fil.trekanter.first { $0.navn == "delt førsteplass" })
         var regler = Ruleset.golfgutu
-        #expect(regler.trianglePoints == [1, 0.5, 0])
-        regler.trianglePoints = [3, 1, 0]
-        let svar = Triangle.points(t.runde.matches[0], in: t.runde, roster: t.spillere, placePoints: regler.trianglePoints)
+        #expect(regler.table.trianglePoints == [1, 0.5, 0])
+        regler.table.trianglePoints = [3, 1, 0]
+        let svar = Triangle.points(t.runde.matches[0], in: t.runde, roster: t.spillere, rules: regler)
         #expect(svar == ["a": 2, "b": 2, "c": 0])
         // Et lagret regelsett uten feltet får Golfgutu-verdien.
         let gammelt = try JSONDecoder().decode(Ruleset.self, from: Data("""
         {"seedingGroups":[],"externalHandicap":false,"defaultFormID":"stableford","maxPerBay":4,"evenings":7,
          "matchPoints":{"win":1,"draw":0.5,"loss":0},"sidePrizes":{"enabled":true,"points":1}}
         """.utf8))
-        #expect(gammelt.trianglePoints == [1, 0.5, 0])
+        #expect(gammelt.table.trianglePoints == [1, 0.5, 0])
     }
 
     @Test func trekkMatcher() {

@@ -102,8 +102,8 @@ public struct MatchStanding: Hashable, Sendable {
 
 /// Matchspill hull for hull (db-nytt.js linje 398–634).
 ///
-/// Alle funksjonene som trenger handicap tar inn troppen og seedinggruppene fra regelsettet,
-/// med Golfgutu-gruppene som standard.
+/// Alle funksjonene som trenger handicap tar inn troppen og regelsettet,
+/// med Golfgutu-oppsettet som standard.
 public enum MatchPlay {
     // MARK: Sidene
 
@@ -141,31 +141,32 @@ public enum MatchPlay {
 
     /// `sideHandicap`: laveste `effectiveHandicap` på siden. Tom side → 0.
     public static func sideHandicap(_ playerIDs: [String], in round: Round, roster: [Player],
-                                    groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Double {
-        playerIDs.map { effective($0, round, roster, groups) }.min() ?? 0
+                                    rules: Ruleset = .golfgutu) -> Double {
+        playerIDs.map { effective($0, round, roster, rules) }.min() ?? 0
     }
 
-    /// `matchSlag`: full forskjell. Den laveste i matchen spiller fra scratch, og dette tallet
-    /// trekkes fra alle.
+    /// `matchSlag`: tallet som trekkes fra alles handicap i matchen. Med `lowestFromScratch` (Golfgutu)
+    /// spiller den laveste fra scratch og de andre får forskjellen; med `fullHandicap` 0.
     public static func strokeOffset(for match: Match, in round: Round, roster: [Player],
-                                    groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Double {
+                                    rules: Ruleset = .golfgutu) -> Double {
+        if rules.formats.matchStrokes == .fullHandicap { return 0 }
         let s = sides(of: match, in: round)
-        return min(sideHandicap(s.a, in: round, roster: roster, groups: groups),
-                   sideHandicap(s.b, in: round, roster: roster, groups: groups))
+        return min(sideHandicap(s.a, in: round, roster: roster, rules: rules),
+                   sideHandicap(s.b, in: round, roster: roster, rules: rules))
     }
 
     /// `sideNettoPaaHull`: beste netto på siden på hullet. Slagene er `effectiveHandicap − ekstraSlag`
     /// (ikke under 0), fordelt over hele runden. `nil` når ingen på siden har ført, eller hullet
     /// ikke finnes.
     public static func sideNet(_ playerIDs: [String], hole: Int, extraStrokes: Double, in round: Round,
-                               roster: [Player], groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Int? {
+                               roster: [Player], rules: Ruleset = .golfgutu) -> Int? {
         let course = round.courseHoles()
         guard hole >= 0, hole < course.count else { return nil }
         let played = course[hole]
         var best: Int?
         for pid in playerIDs {
             guard let gross = round.holeScores[pid]?[hole] else { continue }
-            let own = effective(pid, round, roster, groups)
+            let own = effective(pid, round, roster, rules)
             let net = Scoring.netStrokes(gross: gross, handicap: max(0, own - extraStrokes),
                                          strokeIndex: played.strokeIndex, holes: round.numberOfHoles)
             if best == nil || net < best! { best = net }
@@ -178,25 +179,25 @@ public enum MatchPlay {
     /// `matchHullVinner`: 1 når A vant hullet, −1 når B vant, 0 delt. `nil` når en side ikke har ført.
     /// Laveste netto vinner, ikke stableford.
     public static func holeWinner(_ match: Match, hole: Int, in round: Round, roster: [Player],
-                                  groups: [SeedingGroup] = SeedingGroup.golfgutu, strokeOffset lowest: Double? = nil) -> Int? {
+                                  rules: Ruleset = .golfgutu, strokeOffset lowest: Double? = nil) -> Int? {
         let s = sides(of: match, in: round)
         guard !s.a.isEmpty, !s.b.isEmpty else { return nil }
-        let lav = lowest ?? strokeOffset(for: match, in: round, roster: roster, groups: groups)
-        guard let a = sideNet(s.a, hole: hole, extraStrokes: lav, in: round, roster: roster, groups: groups),
-              let b = sideNet(s.b, hole: hole, extraStrokes: lav, in: round, roster: roster, groups: groups) else { return nil }
+        let lav = lowest ?? strokeOffset(for: match, in: round, roster: roster, rules: rules)
+        guard let a = sideNet(s.a, hole: hole, extraStrokes: lav, in: round, roster: roster, rules: rules),
+              let b = sideNet(s.b, hole: hole, extraStrokes: lav, in: round, roster: roster, rules: rules) else { return nil }
         return a < b ? 1 : (b < a ? -1 : 0)
     }
 
     /// `matchHullDiff`: summen over de tellende hullene, sett fra A. Slagfordelingen går fortsatt
     /// over hele runden. `nil` når en side er tom.
     public static func holeDiff(_ match: Match, in round: Round, roster: [Player],
-                                groups: [SeedingGroup] = SeedingGroup.golfgutu) -> MatchHoleDiff? {
+                                rules: Ruleset = .golfgutu) -> MatchHoleDiff? {
         let s = sides(of: match, in: round)
         guard !s.a.isEmpty, !s.b.isEmpty else { return nil }
-        let lav = strokeOffset(for: match, in: round, roster: roster, groups: groups)
+        let lav = strokeOffset(for: match, in: round, roster: roster, rules: rules)
         var diff = MatchHoleDiff(up: 0, played: 0)
         for h in 0..<Truncation.countingHoles(round) {
-            guard let v = holeWinner(match, hole: h, in: round, roster: roster, groups: groups, strokeOffset: lav) else { continue }
+            guard let v = holeWinner(match, hole: h, in: round, roster: roster, rules: rules, strokeOffset: lav) else { continue }
             diff.played += 1
             diff.up += v
         }
@@ -208,7 +209,7 @@ public enum MatchPlay {
     /// `matchUtfallForA`: 1 seier, 0,5 delt, 0 tap. Manuelt resultat vinner over hullene.
     /// `nil` for trekant, og når ingen hull er spilt.
     public static func outcomeForA(_ match: Match, in round: Round, roster: [Player],
-                                   groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Double? {
+                                   rules: Ruleset = .golfgutu) -> Double? {
         if match.isTriangle { return nil }
         if let result = match.result {
             switch result {
@@ -217,12 +218,12 @@ public enum MatchPlay {
             case .halved: return 0.5
             }
         }
-        guard let d = holeDiff(match, in: round, roster: roster, groups: groups), d.played > 0 else { return nil }
+        guard let d = holeDiff(match, in: round, roster: roster, rules: rules), d.played > 0 else { return nil }
         return d.up > 0 ? 1 : (d.up < 0 ? 0 : 0.5)
     }
 
     /// `poengForUtfall`: hva utfallet er verdt i tabellen, etter regelsettet.
-    public static func points(forOutcome outcome: Double?, _ points: Ruleset.MatchPoints = Ruleset.golfgutu.matchPoints) -> Double {
+    public static func points(forOutcome outcome: Double?, _ points: Ruleset.MatchPoints = Ruleset.golfgutu.table.matchPoints) -> Double {
         outcome == 1 ? points.win : (outcome == 0.5 ? points.draw : points.loss)
     }
 
@@ -231,9 +232,9 @@ public enum MatchPlay {
     /// `matchStilling`: stillingen sett fra spilleren. `nil` for trekant og tom side.
     /// Hull igjen måles mot de tellende hullene.
     public static func standing(_ match: Match, from playerID: String, in round: Round, roster: [Player],
-                                groups: [SeedingGroup] = SeedingGroup.golfgutu) -> MatchStanding? {
+                                rules: Ruleset = .golfgutu) -> MatchStanding? {
         if match.isTriangle { return nil }
-        guard let d = holeDiff(match, in: round, roster: roster, groups: groups) else { return nil }
+        guard let d = holeDiff(match, in: round, roster: roster, rules: rules) else { return nil }
         let s = sides(of: match, in: round)
         let onB = s.b.contains(playerID)
         let mine = onB ? -d.up : d.up
@@ -279,7 +280,7 @@ public enum MatchPlay {
 
     // MARK: Hjelpere
 
-    static func effective(_ pid: String, _ round: Round, _ roster: [Player], _ groups: [SeedingGroup]) -> Double {
-        Handicap.effective(for: roster.first { $0.id == pid }, in: round, roster: roster, groups: groups)
+    static func effective(_ pid: String, _ round: Round, _ roster: [Player], _ rules: Ruleset) -> Double {
+        Handicap.effective(for: roster.first { $0.id == pid }, in: round, roster: roster, rules: rules)
     }
 }

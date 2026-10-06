@@ -22,29 +22,26 @@ public struct SeedingGroup: Codable, Hashable, Sendable {
 
 /// Handicap og tildeling, som i db-nytt.js linje 58–344.
 ///
-/// Alle funksjonene som leser seeding tar inn gruppene fra regelsettet, med
-/// Golfgutu-gruppene som standard.
+/// Alle funksjonene som leser seeding eller lagshandicap tar inn regelsettet, med
+/// Golfgutu-oppsettet som standard.
 public enum Handicap {
-    /// Vektene i firemannsscramble (lavest først): 25/20/15/10 %.
-    public static let scramble4Weights: [Double] = [0.25, 0.20, 0.15, 0.10]
-
     // MARK: Seeding
 
     /// `seedingGruppe`: gruppa med dette nummeret, eller `nil`.
-    public static func seedingGroup(_ number: Int?, groups: [SeedingGroup] = SeedingGroup.golfgutu) -> SeedingGroup? {
+    public static func seedingGroup(_ number: Int?, rules: Ruleset = .golfgutu) -> SeedingGroup? {
         guard let number else { return nil }
-        return groups.first { $0.number == number }
+        return rules.handicap.seedingGroups.first { $0.number == number }
     }
 
     /// `gruppeHandicap`: gruppas faste tall, eller `nil` når spilleren ikke er seedet.
     /// `nil` er noe annet enn 0: gruppe 1 spiller på 0.
-    public static func groupHandicap(for player: Player?, groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Double? {
-        seedingGroup(player?.seedGroup, groups: groups)?.handicap
+    public static func groupHandicap(for player: Player?, rules: Ruleset = .golfgutu) -> Double? {
+        seedingGroup(player?.seedGroup, rules: rules)?.handicap
     }
 
     /// `erSeedet`.
-    public static func isSeeded(_ player: Player?, groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Bool {
-        groupHandicap(for: player, groups: groups) != nil
+    public static func isSeeded(_ player: Player?, rules: Ruleset = .golfgutu) -> Bool {
+        groupHandicap(for: player, rules: rules) != nil
     }
 
     // MARK: WHS
@@ -68,8 +65,8 @@ public enum Handicap {
     /// `banehandicap`: seedet → gruppetallet. Ellers WHS-banehandicap når runden har bane,
     /// og rå indeks (ikke avrundet) uten bane. Uten tildeling.
     public static func courseHandicap(for player: Player?, in round: Round,
-                                      groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Double {
-        if let gh = groupHandicap(for: player, groups: groups) { return gh }
+                                      rules: Ruleset = .golfgutu) -> Double {
+        if let gh = groupHandicap(for: player, rules: rules) { return gh }
         let idx = jsNumber(player?.handicap)
         if let course = round.course {
             return courseHandicap(index: idx, courseRating: course.courseRating, slopeRating: course.slopeRating,
@@ -81,28 +78,30 @@ public enum Handicap {
     /// `lagGrunnlag`: det én mann tar med inn i laget. Seedet → gruppetallet (halveres ikke).
     /// Ellers banehandicap · antall hull / 18, ikke avrundet.
     public static func teamBasis(for player: Player?, in round: Round,
-                                 groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Double {
-        if let gh = groupHandicap(for: player, groups: groups) { return gh }
-        return courseHandicap(for: player, in: round, groups: groups) * (Double(round.numberOfHoles) / 18)
+                                 rules: Ruleset = .golfgutu) -> Double {
+        if let gh = groupHandicap(for: player, rules: rules) { return gh }
+        return courseHandicap(for: player, in: round, rules: rules) * (Double(round.numberOfHoles) / 18)
     }
 
     /// `lagHandicap`: lagets ene handicap.
     ///
-    /// Toerformer: snittet av grunnlagene. `scramble-4`: 25/20/15/10 % av grunnlagene, lavest først.
-    /// Ellers: laveste grunnlag · tildeling. Ett avrundingstrinn til slutt. Brutto (tildeling 0) gir 0.
+    /// Regelen for formen står i regelsettet (Golfgutu: toerformer snittet av grunnlagene,
+    /// `scramble-4` 25/20/15/10 % lavest først, ellers laveste grunnlag · tildeling).
+    /// Ett avrundingstrinn til slutt. Brutto (tildeling 0) gir 0.
     /// - Parameter members: spillerne på laget. `nil` er en id som ikke finnes i troppen.
     public static func teamHandicap(in round: Round, members: [Player?],
-                                    groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Double {
-        let basis = members.map { teamBasis(for: $0, in: round, groups: groups) }.sorted()
+                                    rules: Ruleset = .golfgutu) -> Double {
+        let basis = members.map { teamBasis(for: $0, in: round, rules: rules) }.sorted()
         if basis.isEmpty { return 0 }
         if allowance(round) == 0 { return 0 }
-        let form = round.form
+        let rule = rules.handicap.teamHandicapRule(for: round.form.id)
         let sum: Double
-        if form.teamSize == 2 {
+        switch rule.method {
+        case .average:
             sum = basis.reduce(0, +) / Double(basis.count)
-        } else if form.id == "scramble-4" {
-            sum = zip(scramble4Weights, basis).reduce(0) { $0 + $1.0 * $1.1 }
-        } else {
+        case .weighted:
+            sum = zip(rule.weights ?? [], basis).reduce(0) { $0 + $1.0 * $1.1 }
+        case .lowest:
             sum = basis[0] * allowance(round)
         }
         return JS.round(sum)
@@ -110,8 +109,8 @@ public enum Handicap {
 
     /// `lagHandicap` med spiller-id-er slått opp i troppen.
     public static func teamHandicap(in round: Round, memberIDs: [String], roster: [Player],
-                                    groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Double {
-        teamHandicap(in: round, members: memberIDs.map { id in roster.first { $0.id == id } }, groups: groups)
+                                    rules: Ruleset = .golfgutu) -> Double {
+        teamHandicap(in: round, members: memberIDs.map { id in roster.first { $0.id == id } }, rules: rules)
     }
 
     /// `lagFor`: lagkameratene (inkludert spilleren selv), eller `nil` uten lag.
@@ -128,17 +127,17 @@ public enum Handicap {
     /// 3. Seedet → gruppetallet (0 når tildelingen er 0).
     /// 4. Ellers `round(banehandicap · tildeling · antall hull / 18)`.
     public static func effective(for player: Player?, in round: Round, roster: [Player],
-                                 groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Double {
+                                 rules: Ruleset = .golfgutu) -> Double {
         if round.hcpExtern { return 0 }
         let form = round.form
         if form.card == .perTeam || form.teamSize == 2, let player,
            let mates = teammates(of: player.id, in: round), !mates.isEmpty {
-            return teamHandicap(in: round, memberIDs: mates, roster: roster, groups: groups)
+            return teamHandicap(in: round, memberIDs: mates, roster: roster, rules: rules)
         }
-        if let gh = groupHandicap(for: player, groups: groups) {
+        if let gh = groupHandicap(for: player, rules: rules) {
             return allowance(round) > 0 ? gh : 0
         }
-        return JS.round(courseHandicap(for: player, in: round, groups: groups)
+        return JS.round(courseHandicap(for: player, in: round, rules: rules)
                         * allowance(round) * (Double(round.numberOfHoles) / 18))
     }
 

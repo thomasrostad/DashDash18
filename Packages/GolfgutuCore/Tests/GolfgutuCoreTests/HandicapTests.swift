@@ -99,11 +99,12 @@ struct HandicapTests {
 
     /// Egen: seeding-gruppene kommer fra regelsettet. Utledet fra koden: gruppas tall brukes rått.
     @Test func egneSeedingGrupper() {
-        let grupper = [SeedingGroup(number: 1, handicap: 2, name: "A"), SeedingGroup(number: 2, handicap: 8, name: "B")]
+        var grupper = Ruleset.golfgutu
+        grupper.handicap.seedingGroups = [SeedingGroup(number: 1, handicap: 2, name: "A"), SeedingGroup(number: 2, handicap: 8, name: "B")]
         let p = Player(id: "x", handicap: 20, seedGroup: 2)
         let r = Round(gameType: "stableford", holeCount: 9, hcpAllowance: 0.95)
-        #expect(Handicap.effective(for: p, in: r, roster: [p], groups: grupper) == 8)
-        #expect(Handicap.effective(for: Player(id: "z", handicap: 20, seedGroup: 3), in: r, roster: [], groups: grupper)
+        #expect(Handicap.effective(for: p, in: r, roster: [p], rules: grupper) == 8)
+        #expect(Handicap.effective(for: Player(id: "z", handicap: 20, seedGroup: 3), in: r, roster: [], rules: grupper)
                 == JS.round(20 * 0.95 * 0.5))
     }
 }

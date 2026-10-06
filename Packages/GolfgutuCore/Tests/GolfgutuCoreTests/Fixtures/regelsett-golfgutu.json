@@ -1,18 +1,52 @@
 {
-  "allowanceOverride": null,
-  "seedingGroups": [
-    { "number": 1, "handicap": 0, "name": "Gruppe 1" },
-    { "number": 2, "handicap": 5, "name": "Gruppe 2" },
-    { "number": 3, "handicap": 10, "name": "Gruppe 3" }
-  ],
-  "externalHandicap": false,
-  "defaultFormID": "stableford",
-  "maxPerBay": 4,
+  "version": 2,
   "evenings": 7,
-  "countingEvenings": null,
-  "stablefordCountingEvenings": 5,
-  "matchPoints": { "win": 1, "draw": 0.5, "loss": 0 },
-  "sidePrizes": { "enabled": true, "points": 1 },
-  "trianglePoints": [1, 0.5, 0],
-  "tiebreaks": ["holeDifference", "stableford"]
+  "scoring": { "netParPoints": 2, "minimumPoints": 0 },
+  "table": {
+    "matchPoints": { "win": 1, "draw": 0.5, "loss": 0 },
+    "trianglePoints": [1, 0.5, 0],
+    "counting": { "unit": "match", "best": null },
+    "stablefordCounting": { "unit": "round", "best": 5 },
+    "tiebreaks": ["holeDifference", "stableford"],
+    "roundingStep": 0.5
+  },
+  "sidePrizes": {
+    "longestDrive": { "enabled": true, "points": 1 },
+    "closestToPin": { "enabled": true, "points": 1 },
+    "splitTies": true
+  },
+  "handicap": {
+    "allowanceOverride": null,
+    "formAllowances": {
+      "stableford": 0.95, "stableford-brutto": 0, "slag-netto": 0.95, "slag-brutto": 0,
+      "par-bogey": 0.95, "maks-score": 0.95, "match": 1, "fourball": 1, "fourball-4": 0.75,
+      "sammenlagt-lag": 1, "foursome": 1, "greensome": 1, "chapman": 1, "scramble-2": 1,
+      "scramble-4": 1, "skins": 0.95
+    },
+    "seedingGroups": [
+      { "number": 1, "handicap": 0, "name": "Gruppe 1" },
+      { "number": 2, "handicap": 5, "name": "Gruppe 2" },
+      { "number": 3, "handicap": 10, "name": "Gruppe 3" }
+    ],
+    "externalHandicap": false,
+    "teamHandicap": {
+      "fourball": { "method": "average" },
+      "sammenlagt-lag": { "method": "average" },
+      "foursome": { "method": "average" },
+      "greensome": { "method": "average" },
+      "chapman": { "method": "average" },
+      "scramble-2": { "method": "average" },
+      "scramble-4": { "method": "weighted", "weights": [0.25, 0.20, 0.15, 0.10] }
+    }
+  },
+  "formats": {
+    "defaultFormID": "stableford",
+    "allowedFormIDs": [
+      "stableford", "stableford-brutto", "slag-netto", "slag-brutto", "par-bogey", "maks-score",
+      "match", "fourball", "fourball-4", "sammenlagt-lag", "foursome", "greensome", "chapman",
+      "scramble-2", "scramble-4", "skins"
+    ],
+    "maxPerBay": 4,
+    "matchStrokes": "lowestFromScratch"
+  }
 }
