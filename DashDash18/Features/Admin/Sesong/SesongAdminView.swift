@@ -12,6 +12,7 @@ struct SesongAdminView: View {
             ContentUnavailableView("Ingen klubb", systemImage: "list.number",
                                    description: Text("Velg en klubb for å se sesongene."))
                 .navigationTitle("Sesong og regler")
+                .ddNavigationChrome()
         }
     }
 }
@@ -27,6 +28,7 @@ private struct SesongListView: View {
     var body: some View {
         content
             .navigationTitle("Sesong og regler")
+            .ddNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Ny sesong", systemImage: "plus") { showsNewSeason = true }
@@ -67,7 +69,7 @@ private struct SesongListView: View {
     }
 
     private var list: some View {
-        List {
+        DDList {
             ForEach(SeasonLifecycle.grouped(model.seasons), id: \.status) { group in
                 Section(SeasonLifecycle.title(group.status)) {
                     ForEach(group.seasons) { season in
@@ -77,8 +79,8 @@ private struct SesongListView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(season.name)
                                 Text(season.rules.evenings == 1 ? "1 kveld" : "\(season.rules.evenings) kvelder")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
+                                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                                    .foregroundStyle(Color.ddInkSecondary)
                             }
                         }
                     }

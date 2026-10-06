@@ -26,6 +26,25 @@ struct DDList<Content: View>: View {
     }
 }
 
+/// `Section("Tittel")` med overskrift i designsystemet.
+struct DDSection<Content: View>: View {
+    let title: String
+    @ViewBuilder var content: Content
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        Section {
+            content
+        } header: {
+            DDHeader(title)
+        }
+    }
+}
+
 /// Seksjonsoverskrift i en liste: mono versaler, som `.gg-section-label`.
 struct DDHeader: View {
     let text: String

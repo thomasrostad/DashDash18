@@ -37,7 +37,7 @@ struct AvsluttKveldenSection: View {
                 }
                 .disabled(isBusy || context == nil)
             } footer: {
-                Text("Låser \(active.count == 1 ? "runden som går" : "rundene som går"). Mangler noen hull, får du spørsmål om å avkorte først.")
+                DDFooter("Låser \(active.count == 1 ? "runden som går" : "rundene som går"). Mangler noen hull, får du spørsmål om å avkorte først.")
             }
             .confirmationDialog(pending?.prompt.title ?? "", isPresented: Binding(
                 get: { pending != nil }, set: { if !$0 { pending = nil } }

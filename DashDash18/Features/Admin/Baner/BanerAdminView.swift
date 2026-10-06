@@ -14,6 +14,7 @@ struct BanerAdminView: View {
             }
         }
         .navigationTitle("Banene")
+        .ddNavigationChrome()
         .task {
             guard model == nil, let context else { return }
             let model = CourseLibraryModel(context: context)
@@ -32,11 +33,11 @@ private struct CourseListView: View {
     @State private var importMessage: String?
 
     var body: some View {
-        List {
+        DDList {
             if let error = model.error {
                 Section {
                     Label(error.message, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.ddError)
                 }
             }
             if isOrganizer, model.hasLoaded, !model.missingFromSet.isEmpty {
@@ -45,7 +46,7 @@ private struct CourseListView: View {
             if let importMessage {
                 Section {
                     Label(importMessage, systemImage: "checkmark.circle")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Color.ddForestInk)
                 }
             }
             if !model.items.isEmpty {
@@ -104,7 +105,7 @@ private struct CourseListView: View {
             }
             .disabled(isImporting)
         } footer: {
-            Text(missing == 1
+            DDFooter(missing == 1
                  ? "Én av banene fra GolfGutu-appen mangler her. Den legges inn med par, indeks og lengde."
                  : "\(missing) av banene fra GolfGutu-appen mangler her. De legges inn med par, indeks og lengde. Baner som alt finnes med samme navn, røres ikke.")
         }
@@ -136,22 +137,22 @@ private struct CourseRowView: View {
                 Text(item.course.name)
                 if !item.course.inUse {
                     Text("skjult")
-                        .font(.caption2)
+                        .font(.dd(.sans, size: 11, relativeTo: .caption2))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 1)
-                        .background(.quaternary, in: Capsule())
+                        .background(Color.ddEarth, in: Capsule())
                 }
             }
             Text(item.summary)
-                .font(.caption)
-                .foregroundStyle(item.isReady ? Color.secondary : Color.orange)
+                .font(.dd(.sans, size: 12, relativeTo: .caption))
+                .foregroundStyle(item.isReady ? Color.ddInkSecondary : Color.ddRustText)
             if let external = item.differentExternalName {
                 Text("I simulatoren: \(external)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.dd(.sans, size: 12, relativeTo: .caption))
+                    .foregroundStyle(Color.ddInkSecondary)
             }
             ConfirmationText(course: item.course)
-                .font(.caption)
+                .font(.dd(.sans, size: 12, relativeTo: .caption))
         }
         .padding(.vertical, 2)
     }
@@ -168,10 +169,10 @@ struct ConfirmationText: View {
             } icon: {
                 Image(systemName: "checkmark.seal")
             }
-            .foregroundStyle(.green)
+            .foregroundStyle(Color.ddForestInk)
         } else {
             Label("Aldri bekreftet mot en skjerm", systemImage: "exclamationmark.circle")
-                .foregroundStyle(.orange)
+                .foregroundStyle(Color.ddRustText)
         }
     }
 }

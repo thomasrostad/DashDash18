@@ -264,3 +264,15 @@ struct DDLivePill: View {
         .background(Capsule().fill(Color.ddBlushBackground))
     }
 }
+
+/// Label med ikonet i skoggrønt foran teksten (detaljlinjer som tid, sted og komité).
+struct DDIconLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 10) {
+            configuration.icon
+                .foregroundStyle(Color.ddForestInk)
+                .frame(width: 20)
+            configuration.title
+        }
+    }
+}

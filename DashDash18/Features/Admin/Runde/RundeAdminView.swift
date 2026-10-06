@@ -79,6 +79,7 @@ private struct RundeAdminContent: View {
     private var base: some View {
         content
             .navigationTitle("Runder")
+            .ddNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Ny runde", systemImage: "plus") {
@@ -122,7 +123,7 @@ private struct RundeAdminContent: View {
                 Text(text)
             } actions: {
                 Button("Prøv igjen") { Task { await model.load() } }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.dd(.primary))
             }
         case .loaded:
             list
@@ -130,11 +131,11 @@ private struct RundeAdminContent: View {
     }
 
     private var list: some View {
-        List {
+        DDList {
             Section {
                 if model.events.isEmpty {
                     Text("Ingen kvelder i terminlista. Legg inn en under «Terminliste» først.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.ddInkSecondary)
                 } else {
                     Picker("Kveld", selection: Binding(
                         get: { model.selectedEventID },
@@ -151,7 +152,7 @@ private struct RundeAdminContent: View {
                 Section {
                     Label("\(model.title(active)) går på en annen kveld. Lås den før du starter en ny.",
                           systemImage: "exclamationmark.circle")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
             }
 
@@ -159,15 +160,15 @@ private struct RundeAdminContent: View {
                 Section {
                     if model.rounds.isEmpty {
                         Text("Ingen runder ennå. Trykk + for å sette opp kveldens første.")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.ddInkSecondary)
                     }
                     ForEach(model.rounds) { round in
                         row(round)
                     }
                 } header: {
-                    Text("Kveldens runder")
+                    DDHeader("Kveldens runder")
                 } footer: {
-                    Text("Kladder ser bare arrangørene. Én runde kan gå om gangen i klubben.")
+                    DDFooter("Kladder ser bare arrangørene. Én runde kan gå om gangen i klubben.")
                 }
 
                 AvsluttKveldenSection(rounds: model.rounds, title: model.title) { text in
@@ -181,7 +182,7 @@ private struct RundeAdminContent: View {
                     Label("Rundene", systemImage: "tablecells")
                 }
             } footer: {
-                Text("Hele runden som tabell, og retting av hull, også i låste runder.")
+                DDFooter("Hele runden som tabell, og retting av hull, også i låste runder.")
             }
         }
         .disabled(isBusy)
@@ -214,8 +215,8 @@ private struct RundeAdminContent: View {
                     Text(model.title(round))
                         .foregroundStyle(.primary)
                     Text(subtitle(round, players: players.count, bays: bays))
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
                 Spacer()
                 StatusBadge(status: round.status)
@@ -273,18 +274,26 @@ struct StatusBadge: View {
 
     var body: some View {
         Text(RoundListing.statusText(status))
-            .font(.caption.weight(.semibold))
+            .font(.dd(.sans, size: 12, weight: .semibold, relativeTo: .caption))
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(color.opacity(0.15), in: Capsule())
+            .background(background, in: Capsule())
             .foregroundStyle(color)
     }
 
     private var color: Color {
         switch status {
-        case .draft: .secondary
-        case .active: .green
-        case .locked: .blue
+        case .draft: Color.ddInkSecondary
+        case .active: Color.ddLimeInk
+        case .locked: Color.ddInkSecondary
+        }
+    }
+
+    private var background: Color {
+        switch status {
+        case .draft: Color.ddEarth
+        case .active: Color.ddLimeBackground
+        case .locked: Color.ddEarthDeep
         }
     }
 }

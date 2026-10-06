@@ -16,15 +16,15 @@ struct RundeBaysStep: View {
         let others = model.members.filter { !included.contains($0.id) }
         let unseated = draft.participants.filter { draft.bays.seat(for: $0) == nil }
 
-        List {
+        DDList {
             Section {
                 // 12 er databasens grense for båsnummer (`round_players.bay_no`).
                 Stepper("Båser: \(bayCount)", value: $bayCount, in: 1...max(1, min(12, draft.participants.count)))
                 Button("Bland på nytt", systemImage: "shuffle") { reshuffle() }
             } header: {
-                Text(headline)
+                DDHeader(headline)
             } footer: {
-                Text(footer)
+                DDFooter(footer)
             }
 
             ForEach(draft.bays.bayNumbers, id: \.self) { bay in
@@ -38,18 +38,18 @@ struct RundeBaysStep: View {
                         Text("Bås \(bay)")
                         Spacer()
                         Text("\(ids.count)" + (ids.count > maxPerBay ? " · over \(maxPerBay)" : ""))
-                            .foregroundStyle(ids.count > maxPerBay ? .orange : .secondary)
+                            .foregroundStyle(ids.count > maxPerBay ? Color.ddRustText : Color.ddInkSecondary)
                     }
                 } footer: {
                     if draft.bays.marker(in: bay) == nil {
                         Text("Ingen markør. Trykk et navn og velg «Gjør til markør».")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Color.ddRustText)
                     }
                 }
             }
 
             if !unseated.isEmpty {
-                Section("Uten bås") {
+                DDSection("Uten bås") {
                     ForEach(unseated, id: \.self) { id in playerRow(id) }
                 }
             }
@@ -64,9 +64,9 @@ struct RundeBaysStep: View {
                         }
                     }
                 } header: {
-                    Text("Ikke med")
+                    DDHeader("Ikke med")
                 } footer: {
-                    Text("Trykk for å ta med. Han havner i båsen med færrest.")
+                    DDFooter("Trykk for å ta med. Han havner i båsen med færrest.")
                 }
             }
         }
@@ -113,7 +113,7 @@ struct RundeBaysStep: View {
                 Spacer()
                 if seat?.isMarker == true {
                     Label("Markør", systemImage: "pencil.and.list.clipboard")
-                        .font(.caption.weight(.semibold))
+                        .font(.dd(.sans, size: 12, weight: .semibold, relativeTo: .caption))
                         .foregroundStyle(.tint)
                 }
             }

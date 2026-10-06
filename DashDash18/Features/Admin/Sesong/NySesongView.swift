@@ -12,8 +12,8 @@ struct NySesongView: View {
     @State private var error: DataError?
 
     var body: some View {
-        Form {
-            Section("Navn") {
+        DDForm {
+            DDSection("Navn") {
                 TextField("For eksempel «Vinter 2027»", text: $name)
                     .textInputAutocapitalization(.sentences)
             }
@@ -27,22 +27,23 @@ struct NySesongView: View {
                 .pickerStyle(.inline)
                 .labelsHidden()
             } header: {
-                Text("Regler")
+                DDHeader("Regler")
             } footer: {
-                Text("Golfgutu-oppsettet er reglene fra GolfGutu Invitational. Du kan endre alt etterpå.")
+                DDFooter("Golfgutu-oppsettet er reglene fra GolfGutu Invitational. Du kan endre alt etterpå.")
             }
-            Section("Slik telles det") {
+            DDSection("Slik telles det") {
                 Text(RulesetExplanation.text(for: SeasonLifecycle.rules(for: template, seasons: model.seasons)))
-                    .font(.callout)
+                    .font(.dd(.sans, size: 15, relativeTo: .callout))
             }
             if let error {
                 Section {
                     Label(error.message, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.ddError)
                 }
             }
         }
         .navigationTitle("Ny sesong")
+        .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

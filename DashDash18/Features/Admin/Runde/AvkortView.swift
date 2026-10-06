@@ -30,6 +30,7 @@ private struct AvkortContent: View {
     var body: some View {
         content
             .navigationTitle("Avkort runden")
+            .ddNavigationChrome()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -63,19 +64,19 @@ private struct AvkortContent: View {
 
     private func form(_ game: RoundGame, choice: CutChoice) -> some View {
         let preview = game.cutPreview(choice)
-        return Form {
+        return DDForm {
             Section {
                 Text("Runden avkortes for alle samtidig. Poengene regnes om med én gang, for hele feltet.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddInkSecondary)
                 if let summary = game.cutSummary {
                     Label(summary + ". Du kan endre valget eller fjerne avkortingen.", systemImage: "scissors")
-                        .font(.footnote)
+                        .font(.dd(.sans, size: 13, relativeTo: .footnote))
                 }
                 if game.status == .locked {
                     Label("Runden er låst og kan ikke avkortes. Enkelthull rettes under Rundene.", systemImage: "lock")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
+                        .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                        .foregroundStyle(Color.ddRustText)
                 }
             }
 
@@ -88,9 +89,9 @@ private struct AvkortContent: View {
                 .pickerStyle(.inline)
                 .labelsHidden()
             } header: {
-                Text("Hva skjer med hullene som ikke ble spilt")
+                DDHeader("Hva skjer med hullene som ikke ble spilt")
             } footer: {
-                Text(choice.rule.help)
+                DDFooter(choice.rule.help)
             }
 
             Section {
@@ -100,13 +101,13 @@ private struct AvkortContent: View {
                     }
                 }
             } footer: {
-                Text(game.cutHint(for: choice.rule))
+                DDFooter(game.cutHint(for: choice.rule))
             }
 
-            Section("Dette endrer seg") {
+            DDSection("Dette endrer seg") {
                 if preview.lines.isEmpty {
                     Text("Ingen poengsummer endrer seg av dette valget.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
                 ForEach(preview.lines) { line in
                     HStack {
@@ -114,11 +115,11 @@ private struct AvkortContent: View {
                         Spacer()
                         Text("\(line.before) → \(line.after)")
                             .monospacedDigit()
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.ddInkSecondary)
                         Text(CutPreview.signed(line.diff))
                             .monospacedDigit()
                             .frame(minWidth: 36, alignment: .trailing)
-                            .foregroundStyle(line.diff < 0 ? .red : .green)
+                            .foregroundStyle(line.diff < 0 ? Color.ddError : Color.ddForestInk)
                     }
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel(line.text)

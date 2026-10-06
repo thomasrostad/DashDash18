@@ -93,6 +93,7 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
     case statCard            // svarte statistikk-kort
     case statText
     case statSecondary
+    case statRust            // rust på svart kort (tapt hull, «ned»)
     // Knapper (handoff «knappelogikken», 01.10.2026, men hovedknappen er gul etter golfee)
     case buttonPrimary, buttonPrimaryText, buttonPrimaryPressed
     case buttonMoney, buttonMoneyText, buttonMoneyPressed
@@ -147,6 +148,7 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
         case .statCard: (DDRGBA(0x000000), DDRGBA(0x000000))
         case .statText: (DDRGBA(0xFFFFFF), DDRGBA(0xFFFFFF))
         case .statSecondary: (DDRGBA(0x9A9A9A), DDRGBA(0x9A9A9A))
+        case .statRust: (DDRGBA(0xE4762F), DDRGBA(0xE4762F))
         case .buttonPrimary: (DDRGBA(0xF5C842), DDRGBA(0xF5C842))
         case .buttonPrimaryText: (DDRGBA(0x1E1A05), DDRGBA(0x1E1A05))
         case .buttonPrimaryPressed: (DDRGBA(0xE0B32E), DDRGBA(0xE0B32E))
@@ -203,6 +205,8 @@ nonisolated enum DDContrastPairs {
         Pair(name: "Gul tekst på kort", foreground: .yellowText, background: .card, base: nil),
         Pair(name: "Statistikk-tekst", foreground: .statText, background: .statCard, base: nil),
         Pair(name: "Statistikk sekundær", foreground: .statSecondary, background: .statCard, base: nil),
+        Pair(name: "Statistikk rust", foreground: .statRust, background: .statCard, base: nil),
+        Pair(name: "Statistikk grønt", foreground: .accentLime, background: .statCard, base: nil),
         Pair(name: "Statistikk gult tall", foreground: .accentYellow, background: .statCard, base: nil),
         Pair(name: "Primærknapp", foreground: .buttonPrimaryText, background: .buttonPrimary, base: nil),
         Pair(name: "Pengeknapp", foreground: .buttonMoneyText, background: .buttonMoney, base: nil),

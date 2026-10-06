@@ -17,6 +17,10 @@ struct DashDash18App: App {
                 if ProcessInfo.processInfo.arguments.contains("-DDDesignCatalog") {
                     // Bare for utvikling: åpner designkatalogen uten innlogging (skjermbilder).
                     NavigationStack { DesignCatalogView() }
+                } else if let i = ProcessInfo.processInfo.arguments.firstIndex(of: "-DDDesignScreen"),
+                          i + 1 < ProcessInfo.processInfo.arguments.count,
+                          let screen = DesignScreenSamples.Screen(rawValue: ProcessInfo.processInfo.arguments[i + 1]) {
+                    DesignScreenSamples(screen: screen)
                 } else {
                     content
                 }

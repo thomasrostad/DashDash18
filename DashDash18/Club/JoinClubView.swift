@@ -14,7 +14,7 @@ struct JoinClubView: View {
     @State private var error: ClubError?
 
     var body: some View {
-        Form {
+        DDForm {
             if let preview {
                 previewSections(preview)
             } else {
@@ -23,11 +23,12 @@ struct JoinClubView: View {
             if let error {
                 Section {
                     Label(error.message, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.ddError)
                 }
             }
         }
         .navigationTitle(preview?.name ?? "Bli med")
+        .ddNavigationChrome()
         .disabled(isBusy)
     }
 
@@ -36,13 +37,13 @@ struct JoinClubView: View {
             TextField("Invitasjonskode", text: $codeText)
                 .textInputAutocapitalization(.characters)
                 .autocorrectionDisabled()
-                .font(.body.monospaced())
+                .font(.dd(.mono, size: 14, relativeTo: .body))
                 .onSubmit(lookUp)
             Button(action: lookUp) {
                 busyLabel("Finn klubben")
             }
         } footer: {
-            Text("Koden får du av arrangøren, f.eks. «A1B2C3D4E5».")
+            DDFooter("Koden får du av arrangøren, f.eks. «A1B2C3D4E5».")
         }
     }
 
@@ -58,9 +59,9 @@ struct JoinClubView: View {
                     }
                 }
             } header: {
-                Text("Er du en av disse?")
+                DDHeader("Er du en av disse?")
             } footer: {
-                Text("Trykk på navnet ditt. Da er du med med én gang.")
+                DDFooter("Trykk på navnet ditt. Da er du med med én gang.")
             }
         }
         Section {
@@ -73,9 +74,9 @@ struct JoinClubView: View {
                 busyLabel("Be om å bli med")
             }
         } header: {
-            Text(preview.openMembers.isEmpty ? "Bli med som ny" : "Står du ikke på lista?")
+            DDHeader(preview.openMembers.isEmpty ? "Bli med som ny" : "Står du ikke på lista?")
         } footer: {
-            Text("Arrangøren må godkjenne deg før du ser noe.")
+            DDFooter("Arrangøren må godkjenne deg før du ser noe.")
         }
         Section {
             Button("Bruk en annen kode") {

@@ -16,7 +16,7 @@ struct RulesetHandicapSection: View {
             Toggle("Ekstern handicap", isOn: $draft.rules.handicap.externalHandicap)
             NavigationLink("Lagshandicap") { TeamHandicapView(draft: $draft) }
         } header: {
-            Text(RulesetSection.handicap.title)
+            DDHeader(RulesetSection.handicap.title)
         } footer: {
             RuleSectionFooter(text: "Andelen er hvor stor del av banehandicapet en ny runde gir. Ekstern handicap: simulatoren deler ut slagene.",
                               issues: draft.issues(in: .handicap).filter { !$0.field.hasPrefix("handicap.seedingGroups") })
@@ -26,7 +26,7 @@ struct RulesetHandicapSection: View {
             ForEach(draft.rules.handicap.seedingGroups.indices, id: \.self) { i in
                 HStack {
                     Text("\(draft.rules.handicap.seedingGroups[i].number).")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.ddInkSecondary)
                         .monospacedDigit()
                     TextField("Navn", text: $draft.rules.handicap.seedingGroups[i].name)
                     RuleNumberField("Handicap", value: $draft.rules.handicap.seedingGroups[i].handicap)
@@ -36,7 +36,7 @@ struct RulesetHandicapSection: View {
             .onDelete { draft.removeSeedingGroups(at: $0) }
             Button("Legg til gruppe", systemImage: "plus") { draft.addSeedingGroup() }
         } header: {
-            Text("Seeding")
+            DDHeader("Seeding")
         } footer: {
             RuleSectionFooter(text: "Seedede spillere spiller på gruppens faste handicap. Sveip for å fjerne en gruppe. Ingen grupper: ingen seeding.",
                               issues: draft.issues(in: .handicap).filter { $0.field.hasPrefix("handicap.seedingGroups") })
@@ -49,7 +49,7 @@ private struct FormAllowancesView: View {
     @Binding var draft: RulesetDraft
 
     var body: some View {
-        Form {
+        DDForm {
             Section {
                 ForEach(CompetitionForm.all) { form in
                     RulePercentField(title: form.name,
@@ -62,6 +62,7 @@ private struct FormAllowancesView: View {
             }
         }
         .navigationTitle("Andel per form")
+        .ddNavigationChrome()
     }
 }
 
@@ -70,7 +71,7 @@ private struct TeamHandicapView: View {
     @Binding var draft: RulesetDraft
 
     var body: some View {
-        Form {
+        DDForm {
             ForEach(RulesetDraft.teamForms) { form in
                 Section {
                     Picker("Metode", selection: Binding(get: { draft.teamMethod(form) },
@@ -90,19 +91,21 @@ private struct TeamHandicapView: View {
                         Button("Legg til vekt", systemImage: "plus") { draft.addTeamWeight(form) }
                     }
                 } header: {
-                    Text(form.name)
+                    DDHeader(form.name)
                 } footer: {
                     RuleSectionFooter(text: nil, issues: draft.issues(in: .handicap).filter { $0.field == "handicap.teamHandicap.\(form.id)" })
                 }
             }
         }
         .navigationTitle("Lagshandicap")
+        .ddNavigationChrome()
         .safeAreaInset(edge: .bottom) {
             Text("Snitt: gjennomsnittet av spillernes grunnlag. Vektet: lavest først, med vekt per spiller. Laveste: laveste grunnlag ganger andelen.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+                .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                .foregroundStyle(Color.ddInkSecondary)
                 .padding()
-                .background(.bar)
+                .glassEffect(.regular, in: .rect(cornerRadius: DDRadius.card))
+                .padding(.horizontal, DDSpacing.s)
         }
     }
 }

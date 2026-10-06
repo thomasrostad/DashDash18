@@ -111,7 +111,8 @@ extension View {
 
     /// Grønn navigasjonslinje med krem tekst, som headeren i PWA-en.
     func ddNavigationChrome() -> some View {
-        toolbarBackground(Color.ddForest, for: .navigationBar)
+        containerBackground(Color.ddBackground, for: .navigation)
+            .toolbarBackground(Color.ddForest, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
     }

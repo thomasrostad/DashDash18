@@ -24,14 +24,15 @@ struct SesongDetailView: View {
     private func content(_ season: SeasonRow) -> some View {
         dialogs(list(season), season)
             .navigationTitle(season.name)
+            .ddNavigationChrome()
             .disabled(isBusy)
     }
 
     private func list(_ season: SeasonRow) -> some View {
-        List {
-            Section("Slik telles det") {
+        DDList {
+            DDSection("Slik telles det") {
                 Text(RulesetExplanation.text(for: season.rules))
-                    .font(.callout)
+                    .font(.dd(.sans, size: 15, relativeTo: .callout))
             }
             Section {
                 NavigationLink {
@@ -55,7 +56,7 @@ struct SesongDetailView: View {
             if let error {
                 Section {
                     Label(error.message, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.ddError)
                 }
             }
         }

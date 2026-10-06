@@ -66,6 +66,7 @@ extension Color {
     static let ddStatCard = DDToken.statCard.color
     static let ddStatText = DDToken.statText.color
     static let ddStatSecondary = DDToken.statSecondary.color
+    static let ddStatRust = DDToken.statRust.color
     /// Feilmeldinger: mørk rust på lys flate, lys rust i mørk modus.
     static let ddError = DDToken.rustDark.color
 }

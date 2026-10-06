@@ -6,7 +6,7 @@ struct ClubOnboardingView: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            DDList {
                 Section {
                     NavigationLink {
                         JoinClubView(user: user)
@@ -14,7 +14,7 @@ struct ClubOnboardingView: View {
                         Label("Bli med i en klubb", systemImage: "person.badge.plus")
                     }
                 } footer: {
-                    Text("Du trenger invitasjonskoden fra arrangøren.")
+                    DDFooter("Du trenger invitasjonskoden fra arrangøren.")
                 }
                 Section {
                     NavigationLink {
@@ -23,10 +23,11 @@ struct ClubOnboardingView: View {
                         Label("Lag en ny klubb", systemImage: "flag")
                     }
                 } footer: {
-                    Text("Du blir arrangør og får en kode du kan dele med resten av gjengen.")
+                    DDFooter("Du blir arrangør og får en kode du kan dele med resten av gjengen.")
                 }
             }
             .navigationTitle("Velkommen")
+            .ddNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     SignOutButton()
@@ -52,8 +53,9 @@ struct PendingMembershipView: View {
                 Button("Sjekk igjen") {
                     Task { await club.load(userID: user.id) }
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.dd(.primary))
             }
+            .ddScreenBackground()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     SignOutButton()

@@ -15,6 +15,7 @@ struct TroppAdminView: View {
             }
         }
         .navigationTitle("Troppen")
+        .ddNavigationChrome()
         .task(id: context?.clubID) {
             guard let context else { return }
             let model = TroppModel(context: context)
@@ -30,7 +31,7 @@ private struct TroppListView: View {
 
     var body: some View {
         let sections = model.sections
-        List {
+        DDList {
             if !sections.pending.isEmpty {
                 Section {
                     ForEach(sections.pending) { row in
@@ -43,20 +44,20 @@ private struct TroppListView: View {
                             }
                     }
                 } header: {
-                    Text("Venter på godkjenning")
+                    DDHeader("Venter på godkjenning")
                 } footer: {
-                    Text("Sveip mot høyre for å godkjenne, mot venstre for å avvise.")
+                    DDFooter("Sveip mot høyre for å godkjenne, mot venstre for å avvise.")
                 }
             }
             Section {
                 ForEach(sections.active) { row in memberLink(row) }
             } header: {
-                Text("Aktive (\(sections.active.count))")
+                DDHeader("Aktive (\(sections.active.count))")
             } footer: {
-                Text("Navn uten innlogging kan tas av spilleren med invitasjonskoden.")
+                DDFooter("Navn uten innlogging kan tas av spilleren med invitasjonskoden.")
             }
             if !sections.archived.isEmpty {
-                Section("Arkivert") {
+                DDSection("Arkivert") {
                     ForEach(sections.archived) { row in memberLink(row) }
                 }
             }
@@ -101,13 +102,13 @@ private struct TroppRowLabel: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(row.displayName)
-                if isMe { Text("(deg)").foregroundStyle(.secondary) }
+                if isMe { Text("(deg)").foregroundStyle(Color.ddInkSecondary) }
             }
             let details = TroppDisplay.details(for: row, groups: groups)
             if !details.isEmpty {
                 Text(details)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.dd(.sans, size: 12, relativeTo: .caption))
+                    .foregroundStyle(Color.ddInkSecondary)
             }
         }
     }

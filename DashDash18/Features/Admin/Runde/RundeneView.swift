@@ -20,6 +20,7 @@ private struct RundeneContent: View {
     var body: some View {
         content
             .navigationTitle("Rundene")
+            .ddNavigationChrome()
             .task { await model.load() }
             .refreshable { await model.load() }
     }
@@ -36,14 +37,14 @@ private struct RundeneContent: View {
                 Text(text)
             } actions: {
                 Button("Prøv igjen") { Task { await model.load() } }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.dd(.primary))
             }
         case .loaded:
             if model.items.isEmpty {
                 ContentUnavailableView("Ingen runder ennå", systemImage: "flag.2.crossed",
                                        description: Text("Rundene står her når den første er startet."))
             } else {
-                List {
+                DDList {
                     Section {
                         ForEach(model.items) { item in
                             NavigationLink {
@@ -53,8 +54,8 @@ private struct RundeneContent: View {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(item.title)
                                         Text(subtitle(item))
-                                            .font(.footnote)
-                                            .foregroundStyle(.secondary)
+                                            .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                                            .foregroundStyle(Color.ddInkSecondary)
                                     }
                                     Spacer()
                                     StatusBadge(status: item.round.status)
@@ -62,7 +63,7 @@ private struct RundeneContent: View {
                             }
                         }
                     } footer: {
-                        Text("Trykk en runde for å se alle spillerne og hullene, og rette et hull, også i en låst runde.")
+                        DDFooter("Trykk en runde for å se alle spillerne og hullene, og rette et hull, også i en låst runde.")
                     }
                 }
             }
@@ -113,6 +114,7 @@ private struct RoundTableContent: View {
     var body: some View {
         content
             .navigationTitle(model.title)
+            .ddNavigationChrome()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -165,25 +167,25 @@ private struct RoundTableContent: View {
                 Text(text)
             } actions: {
                 Button("Prøv igjen") { Task { await model.load() } }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.dd(.primary))
             }
         case .loaded:
             if let game = model.game {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(header(game))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                            .foregroundStyle(Color.ddInkSecondary)
                         let table = game.table()
                         if table.rows.isEmpty {
                             Text("Runden har ingen deltakere.")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.ddInkSecondary)
                         } else {
                             grid(table, game: game)
                         }
                         Text(footer(table))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                            .foregroundStyle(Color.ddInkSecondary)
                     }
                     .padding()
                 }
@@ -229,9 +231,9 @@ private struct RoundTableContent: View {
                     }
                     HStack(spacing: 0) {
                         ForEach(table.columns) { col in
-                            cellText("\(col.par)").foregroundStyle(.secondary).opacity(col.outside ? 0.4 : 1)
+                            cellText("\(col.par)").foregroundStyle(Color.ddInkSecondary).opacity(col.outside ? 0.4 : 1)
                         }
-                        cellText("\(table.parTotal)", width: 44).foregroundStyle(.secondary)
+                        cellText("\(table.parTotal)", width: 44).foregroundStyle(Color.ddInkSecondary)
                         cellText("", width: 48)
                     }
                     ForEach(table.rows) { row in
@@ -241,7 +243,7 @@ private struct RoundTableContent: View {
                                     correcting = CorrectionItem(member: row.memberID, hole: cell.index)
                                 } label: {
                                     cellText(cell.strokes.map(String.init) ?? "·")
-                                        .background(tint(cell.scoreName).opacity(0.25))
+                                        .background(tint(cell.scoreName))
                                         .opacity(cell.outside ? 0.4 : 1)
                                 }
                                 .buttonStyle(.plain)
@@ -256,7 +258,7 @@ private struct RoundTableContent: View {
                 }
             }
         }
-        .font(.callout.monospacedDigit())
+        .font(.dd(.sans, size: 15, relativeTo: .callout)).monospacedDigit()
     }
 
     private func label(_ text: String, bold: Bool = false) -> some View {
@@ -273,13 +275,10 @@ private struct RoundTableContent: View {
     }
 
     private func tint(_ name: ScoreName?) -> Color {
+        // Samme farger som score-merkene; par står uten farge, som før.
         switch name {
-        case .eagle: .yellow
-        case .birdie: .green
-        case .bogey: .orange
-        case .dobbel: .red
-        case .blowup: .purple
         case .par, nil: .clear
+        case let name?: name.tone.background
         }
     }
 }
@@ -319,7 +318,7 @@ struct ScoreCorrectionSheet: View {
     }
 
     var body: some View {
-        Form {
+        DDForm {
             Section {
                 Picker("Spiller", selection: $member) {
                     ForEach(players, id: \.self) { id in
@@ -332,40 +331,40 @@ struct ScoreCorrectionSheet: View {
                     }
                 }
             } footer: {
-                Text(correction.currentText)
+                DDFooter(correction.currentText)
             }
 
             Section {
                 HStack {
                     Button("Ett slag mindre", systemImage: "minus.circle") { correction.step(-1) }
                         .labelStyle(.iconOnly)
-                        .font(.title)
+                        .font(.dd(.sans, size: 28, relativeTo: .title))
                     Spacer()
                     VStack(spacing: 6) {
                         Text("\(correction.strokes)")
-                            .font(.largeTitle.monospacedDigit())
+                            .font(.dd(.sans, size: 34, relativeTo: .largeTitle)).monospacedDigit()
                             .contentTransition(.numericText())
                         let outcome = correction.outcome(game)
                         HStack(spacing: 6) {
                             ScoreChip(name: outcome.name)
-                            Text("\(outcome.points) p").font(.footnote.monospacedDigit())
+                            Text("\(outcome.points) p").font(.dd(.sans, size: 13, relativeTo: .footnote)).monospacedDigit()
                         }
                     }
                     Spacer()
                     Button("Ett slag mer", systemImage: "plus.circle") { correction.step(1) }
                         .labelStyle(.iconOnly)
-                        .font(.title)
+                        .font(.dd(.sans, size: 28, relativeTo: .title))
                 }
                 .buttonStyle(.borderless)
                 .padding(.vertical, 4)
             } footer: {
-                Text("Dette er en retting. Tallet erstatter det som står, for alle med én gang, og det lagres hvem som rettet.")
+                DDFooter("Dette er en retting. Tallet erstatter det som står, for alle med én gang, og det lagres hvem som rettet.")
             }
 
             if let notice = CorrectionNotice.text(for: game.status) {
                 Section {
                     Label(notice, systemImage: "lock")
-                        .font(.footnote)
+                        .font(.dd(.sans, size: 13, relativeTo: .footnote))
                 }
             }
 
@@ -378,6 +377,7 @@ struct ScoreCorrectionSheet: View {
         }
         .disabled(isBusy)
         .navigationTitle("Rett en score")
+        .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

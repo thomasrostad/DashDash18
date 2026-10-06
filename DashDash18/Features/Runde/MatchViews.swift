@@ -1,11 +1,21 @@
 import SwiftUI
 
 private extension MatchTone {
+    /// På lyst kort.
     var color: Color {
         switch self {
-        case .neutral: .primary
-        case .up: .green
-        case .down: .orange
+        case .neutral: .ddInk
+        case .up: .ddForestInk
+        case .down: .ddRustText
+        }
+    }
+
+    /// På svart statistikk-kort: grønn som i golfee, rust lysnet.
+    var statColor: Color {
+        switch self {
+        case .neutral: .ddStatText
+        case .up: .ddLime
+        case .down: .ddStatRust
         }
     }
 }
@@ -14,10 +24,7 @@ private struct SectionLabel: View {
     let text: String
 
     var body: some View {
-        Text(text)
-            .font(.caption.weight(.semibold))
-            .textCase(.uppercase)
-            .foregroundStyle(.secondary)
+        DDSectionLabel(text)
     }
 }
 
@@ -33,17 +40,17 @@ struct MatchkortSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(card.mine) { MatchLineRow(line: $0) }
                 if !card.mine.isEmpty && !card.others.isEmpty {
-                    Divider().padding(.vertical, 6)
+                    Rectangle().fill(Color.ddStatText.opacity(0.15)).frame(height: 1).padding(.vertical, 6)
                 }
                 ForEach(card.others) { MatchLineRow(line: $0) }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .background(.background.secondary, in: .rect(cornerRadius: 16))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .ddCard(.stat, padding: 0)
             if let hint = card.decidedHint {
                 Text(hint)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddInkSecondary)
             }
         }
     }
@@ -56,21 +63,23 @@ private struct MatchLineRow: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("\(line.matchNo).")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .font(.dd(.sans, size: 12, relativeTo: .caption)).monospacedDigit()
+                    .foregroundStyle(Color.ddStatSecondary)
                     .frame(width: 22, alignment: .leading)
                 VStack(alignment: .leading, spacing: 1) {
                     title
                     if let subtitle = line.subtitle {
                         Text(subtitle)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(.dd(.sans, size: 12, relativeTo: .caption))
+                            .foregroundStyle(Color.ddStatSecondary)
                     }
                 }
+                .foregroundStyle(Color.ddStatText)
                 Spacer(minLength: 8)
                 Text(line.text)
-                    .font(.subheadline.monospacedDigit().weight(line.isMine ? .semibold : .regular))
-                    .foregroundStyle(line.text == "Ikke startet" ? .secondary : line.tone.color)
+                    .font(.dd(.sans, size: 15, weight: line.isMine ? .semibold : .regular, relativeTo: .subheadline))
+                    .monospacedDigit()
+                    .foregroundStyle(line.text == "Ikke startet" ? Color.ddStatSecondary : line.tone.statColor)
             }
             .accessibilityElement(children: .combine)
             if !line.holes.isEmpty {
@@ -87,10 +96,10 @@ private struct MatchLineRow: View {
             let a = Text(line.title).fontWeight(line.leader == .a ? .semibold : .regular)
             let b = Text(opponent).fontWeight(line.leader == .b ? .semibold : .regular)
             Text("\(a) – \(b)")
-                .font(.subheadline)
+                .font(.dd(.sans, size: 14, relativeTo: .subheadline))
         } else {
             Text(line.title)
-                .font(.subheadline.weight(line.isMine ? .semibold : .regular))
+                .font(.dd(.sans, size: 14, weight: line.isMine ? .semibold : .regular, relativeTo: .subheadline))
         }
     }
 }
@@ -104,10 +113,10 @@ private struct MatchHoleStrip: View {
         LazyVGrid(columns: columns, spacing: 3) {
             ForEach(holes) { mark in
                 Text("\(mark.number)")
-                    .font(.caption2.monospacedDigit())
-                    .frame(maxWidth: .infinity, minHeight: 20)
-                    .foregroundStyle(mark.result == .won || mark.result == .lost ? .white : .primary)
-                    .background(fill(mark.result), in: .rect(cornerRadius: 4))
+                    .font(.dd(.sans, size: 11, relativeTo: .caption2)).monospacedDigit()
+                    .frame(maxWidth: .infinity, minHeight: 22)
+                    .foregroundStyle(foreground(mark.result))
+                    .background(fill(mark.result), in: .capsule)
                     .accessibilityLabel(mark.accessibilityLabel)
             }
         }
@@ -115,10 +124,18 @@ private struct MatchHoleStrip: View {
 
     private func fill(_ result: MatchHoleMark.Result) -> Color {
         switch result {
-        case .won: .green
-        case .lost: .orange
-        case .halved: .secondary.opacity(0.35)
-        case .open: .secondary.opacity(0.1)
+        case .won: .ddLime
+        case .lost: .ddStatRust
+        case .halved: Color.ddStatText.opacity(0.28)
+        case .open: Color.ddStatText.opacity(0.08)
+        }
+    }
+
+    private func foreground(_ result: MatchHoleMark.Result) -> Color {
+        switch result {
+        case .won: .ddLimeOnAccent
+        case .lost: .black
+        case .halved, .open: .ddStatText
         }
     }
 }
@@ -132,17 +149,16 @@ struct HullMatchLinjer: View {
             ForEach(lines) { line in
                 HStack {
                     Text(line.what)
-                        .font(.subheadline)
+                        .font(.dd(.sans, size: 14, relativeTo: .subheadline))
                     Spacer(minLength: 8)
                     Text(line.standing)
-                        .font(.subheadline.monospacedDigit().weight(.semibold))
+                        .font(.dd(.sans, size: 14, weight: .semibold, relativeTo: .subheadline)).monospacedDigit()
                         .foregroundStyle(line.tone.color)
                 }
                 .accessibilityElement(children: .combine)
             }
         }
-        .padding(12)
-        .background(.background.secondary, in: .rect(cornerRadius: 12))
+        .ddCard(padding: 12)
     }
 }
 
@@ -161,20 +177,22 @@ struct BayenNaaListe: View {
                     Button { onSelect(row.memberID) } label: {
                         HStack(spacing: 10) {
                             Text(row.place.map { "\($0)." } ?? "")
-                                .font(.subheadline.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                                .font(.dd(.sans, size: 14, relativeTo: .subheadline)).monospacedDigit()
+                                .foregroundStyle(Color.ddStatSecondary)
                                 .frame(width: 28, alignment: .leading)
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(row.name + (row.isMe ? " (deg)" : ""))
-                                    .font(.body.weight(row.isMe ? .semibold : .regular))
+                                    .font(row.isMe ? .ddBodyEmphasis : .ddBody)
+                                    .foregroundStyle(Color.ddStatText)
                                 Text("thru \(row.thru)" + (row.bay.map { " · bås \($0)" } ?? ""))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .font(.dd(.sans, size: 12, relativeTo: .caption))
+                                    .foregroundStyle(Color.ddStatSecondary)
                             }
                             Spacer()
+                            // Ditt tall i gult, de andre hvite (golfee).
                             Text(row.value)
-                                .font(.title3.monospacedDigit().bold())
-                                .foregroundStyle(row.tone.color)
+                                .font(.dd(.sans, size: 20, weight: .medium, relativeTo: .title3)).monospacedDigit()
+                                .foregroundStyle(row.isMe && row.tone == .neutral ? Color.ddYellow : row.tone.statColor)
                         }
                         .padding(.vertical, 8)
                         .contentShape(.rect)
@@ -182,12 +200,14 @@ struct BayenNaaListe: View {
                     .buttonStyle(.plain)
                     .accessibilityElement(children: .combine)
                     .accessibilityHint("Åpner scorekortet")
-                    if i < rows.count - 1 { Divider() }
+                    if i < rows.count - 1 {
+                        Rectangle().fill(Color.ddStatText.opacity(0.12)).frame(height: 1)
+                    }
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 4)
-            .background(.background.secondary, in: .rect(cornerRadius: 16))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
+            .ddCard(.stat, padding: 0)
         }
     }
 }
@@ -220,38 +240,40 @@ struct SidepremieBoks: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Label(box.title, systemImage: box.kind == .drive ? "ruler" : "scope")
-                    .font(.caption.weight(.semibold))
-                    .textCase(.uppercase)
-                    .foregroundStyle(.secondary)
+                    .ddEyebrow()
                 Spacer()
             }
             Text(box.leader)
-                .font(.title3.weight(.semibold))
+                .font(.ddTitleSmall)
+                .foregroundStyle(Color.ddForestInk)
             if let note = box.tieNote {
                 Text(note)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddInkSecondary)
             }
             if !box.lines.isEmpty {
                 VStack(spacing: 0) {
                     ForEach(box.lines) { line in
                         HStack(spacing: 8) {
                             Text("\(line.rank).")
-                                .font(.subheadline.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                                .font(.dd(.sans, size: 14, relativeTo: .subheadline)).monospacedDigit()
+                                .foregroundStyle(Color.ddInkSecondary)
                                 .frame(width: 24, alignment: .leading)
                             Text(line.name + (line.isMe ? " (deg)" : ""))
-                                .font(.subheadline.weight(line.isLeader ? .semibold : .regular))
+                                .font(line.isLeader ? .ddBodyEmphasis : .ddBody)
                             Spacer()
                             Text(line.meters)
-                                .font(.subheadline.monospacedDigit())
+                                .font(.ddNumber).monospacedDigit()
+                                .foregroundStyle(line.isLeader ? Color.ddForestInk : Color.ddInk)
                             if line.canDelete {
                                 Button(role: .destructive) {
                                     run { try await onDelete(line.claimID) }
                                 } label: {
                                     Image(systemName: "trash")
+                                        .frame(minWidth: 44, minHeight: 44)
                                 }
                                 .buttonStyle(.borderless)
+                                .foregroundStyle(DDToken.buttonDangerText.color)
                                 .accessibilityLabel("Slett innmeldingen til \(line.name)")
                                 .disabled(isBusy)
                             }
@@ -263,19 +285,24 @@ struct SidepremieBoks: View {
             }
             if box.canClaim, let selected {
                 if box.claimants.count > 1 {
-                    Picker("For hvem", selection: Binding(get: { selected }, set: { member = $0 })) {
-                        ForEach(box.claimants, id: \.self) { id in
-                            Text(name(id) + (id == viewer ? " (deg)" : "")).tag(id)
+                    // Gul nedtrekkspille (golfee).
+                    Menu {
+                        Picker("For hvem", selection: Binding(get: { selected }, set: { member = $0 })) {
+                            ForEach(box.claimants, id: \.self) { id in
+                                Text(name(id) + (id == viewer ? " (deg)" : "")).tag(id)
+                            }
                         }
+                    } label: {
+                        DDDropdownPill(name(selected) + (selected == viewer ? " (deg)" : ""))
                     }
-                    .pickerStyle(.menu)
+                    .accessibilityLabel("For hvem: \(name(selected))")
                 }
                 HStack(spacing: 8) {
                     TextField(fieldLabel(selected), text: $text)
                         .keyboardType(.decimalPad)
-                        .textFieldStyle(.roundedBorder)
                         .focused($focused)
-                    Text("m").foregroundStyle(.secondary)
+                        .ddField()
+                    Text("m").foregroundStyle(Color.ddInkSecondary)
                     Button(existing(selected) == nil ? "Meld inn" : "Oppdater") {
                         let who = selected
                         let value = text
@@ -284,19 +311,20 @@ struct SidepremieBoks: View {
                             focused = false
                         }
                     }
-                    .buttonStyle(.borderedProminent)
+                    // Gull-knappen er LD/KP sin (knappelogikken).
+                    .buttonStyle(.ddGold)
                     .disabled(isBusy || text.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
             if let error {
                 Label(error, systemImage: "exclamationmark.triangle")
-                    .font(.footnote)
-                    .foregroundStyle(.red)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddError)
             }
         }
-        .padding(14)
-        .background(box.kind == .drive ? Color.yellow.opacity(0.18) : Color.blue.opacity(0.12),
-                    in: .rect(cornerRadius: 14))
+        .padding(16)
+        .background(Color.ddDriveBox, in: .rect(cornerRadius: DDRadius.card))
+        .overlay(RoundedRectangle(cornerRadius: DDRadius.card).strokeBorder(Color.ddGold, lineWidth: 1))
         .onAppear { fill(selected) }
         .onChange(of: selected) { _, new in fill(new) }
     }

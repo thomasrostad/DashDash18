@@ -14,7 +14,7 @@ struct RulesetTableSections: View {
                 RuleNumberField("Trekant, \(i + 1). plass", value: $draft.rules.table.trianglePoints[i])
             }
         } header: {
-            Text("Tabellen: poeng")
+            DDHeader("Tabellen: poeng")
         } footer: {
             RuleSectionFooter(text: "Poeng for utfallet av en match. Blir det oddetall, spiller tre i en trekant og får poeng etter plass.",
                               issues: issues { $0.hasPrefix("table.matchPoints") || $0.hasPrefix("table.trianglePoints") })
@@ -30,7 +30,7 @@ struct RulesetTableSections: View {
                 RuleStepper("De beste", value: $draft.tableBest)
             }
         } header: {
-            Text("Tabellen: hva teller")
+            DDHeader("Tabellen: hva teller")
         } footer: {
             RuleSectionFooter(text: "Matcher: de beste matchene teller, sidepremiene teller alltid. Runder eller kvelder: alt spilleren vant der, teller sammen.",
                               issues: issues { $0.hasPrefix("table.counting") })
@@ -46,7 +46,7 @@ struct RulesetTableSections: View {
                 RuleStepper("De beste", value: $draft.stablefordBest)
             }
         } header: {
-            Text("Stablefordsummen")
+            DDHeader("Stablefordsummen")
         } footer: {
             RuleSectionFooter(text: "Summen brukes som skilletegn og vises på profilen.",
                               issues: issues { $0.hasPrefix("table.stablefordCounting") })
@@ -79,7 +79,7 @@ struct RulesetTableSections: View {
                 }
             }
         } header: {
-            Text("Ved likt poeng")
+            DDHeader("Ved likt poeng")
         } footer: {
             RuleSectionFooter(text: "Skilletegnene brukes i rekkefølge. Navn skiller alltid til slutt.",
                               issues: issues { $0 == "table.tiebreaks" })
@@ -91,7 +91,7 @@ struct RulesetTableSections: View {
                 RuleNumberField("Til nærmeste", value: $draft.roundingStep)
             }
         } header: {
-            Text("Avrunding")
+            DDHeader("Avrunding")
         } footer: {
             RuleSectionFooter(text: "0,5 gir halve poeng, 1 gir hele.", issues: issues { $0 == "table.roundingStep" })
         }

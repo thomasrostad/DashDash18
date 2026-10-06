@@ -4,6 +4,7 @@ import SwiftUI
 struct RundeView: View {
     @Bindable var model: RundeModel
     @State private var scorecardFor: ScorecardTarget?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ScrollView {
@@ -27,12 +28,14 @@ struct RundeView: View {
                         MatchkortSection(card: matches)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, DDSpacing.gutter)
+                .padding(.vertical, DDSpacing.l)
+                .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: model.currentHole)
             }
         }
         .refreshable { await model.load() }
         .navigationTitle(model.game?.snapshot.course?.name ?? "Kvelden")
+        .ddNavigationChrome()
         .sheet(item: $scorecardFor) { target in
             if let game = model.game {
                 ScorekortSheet(game: game, memberID: target.memberID)
@@ -45,27 +48,24 @@ struct RundeView: View {
                 }
             }
         }
+        .animation(reduceMotion ? nil : .smooth(duration: 0.32), value: model.celebration?.id)
     }
 
     @ViewBuilder
     private func playing(_ game: RoundGame) -> some View {
         if let line = game.markerLine(for: model.viewer) {
-            Text(line)
-                .font(.subheadline.weight(.semibold))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(12)
-                .background(.green.opacity(0.12), in: .rect(cornerRadius: 12))
+            // Beige info-stripe, som «Du er markør i bås 1 · …» i PWA-en.
+            DDInfoStripe(line)
         }
         if let stripe = game.bayStripe(currentHole: model.currentHole, viewer: model.viewer) {
-            HStack {
-                Text(stripe.text)
-                    .font(.subheadline)
-                Spacer(minLength: 8)
-                Button(stripe.button) { model.goTo(hole: stripe.hole) }
-                    .font(.subheadline.weight(.semibold))
+            DDInfoStripe(tone: .sun) {
+                HStack {
+                    Text(stripe.text)
+                    Spacer(minLength: 8)
+                    Button(stripe.button) { model.goTo(hole: stripe.hole) }
+                        .buttonStyle(.dd(.primary, compact: true))
+                }
             }
-            .padding(12)
-            .background(.yellow.opacity(0.25), in: .rect(cornerRadius: 12))
             .accessibilityElement(children: .contain)
         }
         HullprikkerView(dots: game.dots(currentHole: model.currentHole, viewer: model.viewer,
@@ -83,9 +83,7 @@ struct RundeView: View {
                 onScorecard: { scorecardFor = ScorecardTarget(memberID: $0 ?? model.viewer.memberID) }
             )
         } else {
-            Text("Du er ikke med i denne runden. Du ser stillingen under.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            DDInfoStripe("Du er ikke med i denne runden. Du ser stillingen under.")
         }
         let lines = game.holeMatchLines(hole: model.currentHole, viewer: model.viewer)
         if !lines.isEmpty {
