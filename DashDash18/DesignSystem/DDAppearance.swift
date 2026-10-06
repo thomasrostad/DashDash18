@@ -8,7 +8,7 @@ enum DDAppearance {
     static func configure() {
         DDFonts.register()
         let large = UIFont.dd(.sans, size: 34, weight: .medium, relativeTo: .largeTitle)
-        let inline = UIFont.dd(.sans, size: 18, weight: .semibold, relativeTo: .headline)
+        let inline = UIFont.dd(.sans, size: 20, weight: .medium, relativeTo: .headline)
         let appearance = UINavigationBar.appearance()
         // Alle skjermer har grønn linje (`ddNavigationChrome()`), så titlene er krem.
         let cream = DDToken.onDark.uiColor

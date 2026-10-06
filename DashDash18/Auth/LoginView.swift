@@ -90,7 +90,9 @@ struct LoginView: View {
             Text("E-post")
                 .font(.ddCallout)
                 .foregroundStyle(Color.ddInkSecondary)
-            TextField("deg@epost.no", text: $emailText)
+            // Egen prompt med verbatim: ellers lenkefarger iOS e-postadressen i plassholderen.
+            TextField("deg@epost.no", text: $emailText,
+                      prompt: Text(verbatim: "deg@epost.no").foregroundStyle(Color.ddInkSecondary))
                 .textContentType(.emailAddress)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)

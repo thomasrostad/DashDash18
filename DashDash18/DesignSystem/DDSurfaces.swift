@@ -109,9 +109,11 @@ extension View {
         listRowBackground(Color.ddCard)
     }
 
-    /// Grønn navigasjonslinje med krem tekst, som headeren i PWA-en.
+    /// Grønn navigasjonslinje med krem tittel, som headeren i PWA-en. Tittelen står inline:
+    /// stor tittel ble ikke tegnet på grønn linje i iOS 26 (prøvd i simulatoren 06.10).
     func ddNavigationChrome() -> some View {
         containerBackground(Color.ddBackground, for: .navigation)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.ddForest, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
