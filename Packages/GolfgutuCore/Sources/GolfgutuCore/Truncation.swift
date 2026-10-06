@@ -38,4 +38,79 @@ public enum Truncation {
     public static func pointsForEmptyHole(_ round: Round) -> Int {
         rule(round) == .netPar ? netParPoints : 0
     }
+
+    /// `lavesteFellesHull`: så langt alle som har begynt har kommet, talt som sammenhengende
+    /// førte hull fra hull 1. Spillere uten score teller ikke. Ingen score i det hele tatt → 0.
+    public static func lowestCommonHole(_ round: Round) -> Int {
+        let started = round.holeScores.values.filter { !$0.isEmpty }
+        if started.isEmpty { return 0 }
+        let count = round.numberOfHoles
+        var lowest = count
+        for scores in started {
+            var n = 0
+            while n < count, scores[n] != nil { n += 1 }
+            lowest = min(lowest, n)
+        }
+        return lowest
+    }
+
+    /// Én spiller som får en annen sum med avkortingen.
+    public struct Change: Hashable, Sendable {
+        public var playerID: String
+        public var before: Int
+        public var after: Int
+        public var diff: Int { after - before }
+    }
+
+    /// Hva avkortingen koster (`avkortingenKoster`, uten de hengende veddemålene).
+    public struct Cost: Hashable, Sendable {
+        /// Tellende hull med avkortingen.
+        public var countingHoles: Int
+        /// Antall hull i runden.
+        public var holes: Int
+        /// Spillerne som får en annen sum, størst tap først.
+        public var changes: [Change]
+    }
+
+    /// `avkortingenKoster`: summen per spiller før og etter en tenkt avkorting, for spillerne
+    /// i troppen som har ført noe. Sortert på endring, størst tap først (stabil på troppens rekkefølge).
+    public static func cost(of round: Round, after: Double, rule: Rule?, roster: [Player],
+                            groups: [SeedingGroup] = SeedingGroup.golfgutu) -> Cost {
+        var draft = round
+        draft.avkortetEtter = after.isFinite ? JS.round(after) : nil
+        draft.avkortRegel = rule?.rawValue
+
+        var changes: [(index: Int, change: Change)] = []
+        for (index, player) in roster.enumerated() {
+            guard let scores = round.holeScores[player.id], !scores.isEmpty else { continue }
+            let hcp = Handicap.effective(for: player, in: round, roster: roster, groups: groups)
+            let before = Scoring.points(from: scores, in: round, handicap: hcp)
+            let afterPoints = Scoring.points(from: scores, in: draft, handicap: hcp)
+            if before != afterPoints {
+                changes.append((index, Change(playerID: player.id, before: before, after: afterPoints)))
+            }
+        }
+        changes.sort { $0.change.diff != $1.change.diff ? $0.change.diff < $1.change.diff : $0.index < $1.index }
+        return Cost(countingHoles: countingHoles(draft), holes: round.numberOfHoles, changes: changes.map(\.change))
+    }
+}
+
+extension Truncation.Rule {
+    /// Navnet i `AVKORT_REGLER`.
+    public var name: String {
+        switch self {
+        case .common: "Tell til laveste felles hull"
+        case .netPar: "Uspilte hull gir netto par"
+        case .zero: "Uspilte hull gir 0 poeng"
+        }
+    }
+
+    /// Hjelpeteksten i `AVKORT_REGLER`.
+    public var help: String {
+        switch self {
+        case .common: "Bare hullene alle rakk teller, for alle. Rettferdig, men de som rakk lengst mister poengene sine fra de siste hullene."
+        case .netPar: "Hele runden teller. Hvert hull uten score gir 2 poeng, som om det ble spilt til netto par."
+        case .zero: "Hele runden teller. Hull uten score gir ingenting — den som rakk flest hull vinner mest på det."
+        }
+    }
 }
