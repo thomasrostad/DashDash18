@@ -21,9 +21,11 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 | `002_baner.sql` | `save_course`, `confirm_course` | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `004_sesong.sql` | `activate_season`, sletting bare av planlagte sesonger | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `005_kveld.sql` | `set_event_committee` | Godkjent, kjørt på test 06.10.2026. Ikke prod |
+| `008_sosialt.sql` | Aktivitet, reaksjoner, kveldens tråd, tippekupong, push-tokens (APNs), bøttene `avatars` og `thread` | **Utkast, ikke kjørt.** Venter på godkjenning, se «Oversikt for godkjenning: 008» nederst |
 | `lokal/stub.sql`, `lokal/001_prove.sql` | Lokal syntaks- og rolleprøve. **Aldri mot Supabase.** | Hjelpefiler |
+| `lokal/stub_storage.sql`, `lokal/008_prove.sql` | Lokal Storage-etterligning og rolleprøve for 008. **Aldri mot Supabase.** | Hjelpefiler |
 
-Kommer senere, som egne filer: par-bekreftelse for markør (se åpne spørsmål), aktivitetslogg og varsler, tråd, tippekupong, push-tokens (APNs), Storage-bøtter for bilder, og poeng/veddemål (fase 10).
+Kommer senere, som egne filer: push-innstillinger per spiller og klubb (fase 8), banebilder, og poeng/veddemål (fase 10).
 
 ## Slik kjøres en migrering i SQL Editor
 
@@ -167,3 +169,77 @@ Hull i runden er 0-baserte (`hole_index` 0–17), som i PWA-en. Banens hull er 1
 ### Med vilje utenfor v1
 
 Penger, veddemål, bøter, tråd, tippekupong, aktivitetslogg og push-tokens. De henger på `club_id`, `event_id`, `round_id` og `club_members.id`, så de kan legges til uten å endre det som er her. **Krav til veddemål senere:** ekte fremmednøkkel til `rounds` (PWA-en hadde runde-id inne i jsonb, slik at sletting etterlot åpne veddemål).
+
+
+---
+
+## Oversikt for godkjenning: 008 (sosialt)
+
+> **Status 06.10.2026:** utkast, **ikke kjørt** noe sted utenom lokal Postgres. Krever 001. Ingen avhengighet til 002–007.
+
+### Tabellene
+
+| Tabell | Hva den er |
+|---|---|
+| `activity` | Hendelsesloggen per klubb: `kind` (f.eks. `eagle`, `round_locked`) og `data` (jsonb), ikke HTML. Appen lager teksten. `category` er push-kategorien, `recipients` er en valgfri mottakerliste. |
+| `activity_reactions` | Én rad per hendelse, medlem og emoji fra det faste settet 👍 😂 ⛳ 🔥 ❤️. |
+| `thread_messages` | Kveldens tråd: melding per kveld med tekst (høyst 500 tegn, minst 1 uten bilde), @nevnte og valgfri bildesti. |
+| `tips` | Tippekupongen: ett tips per kveld og medlem med de fem svarene fra PWA-en (vinner, første ni, flest par, birdie, over/under). |
+| `push_tokens` | APNs-token per medlem og enhet (fase 8), med miljø (`sandbox`/`production`). |
+| `events` (nye kolonner) | `tips_stake_points` (innsats i **poeng**, B10) og `tips_line` (x,5). Tom = regelsettets standard. |
+| `club_members.avatar_path` | Formatet låses til `<member_id>/<uuid>.jpg`. |
+| Storage | Private bøtter `avatars` og `thread`, bare JPEG, maks 3 MB. |
+
+Fasit, poeng og resultat for tippekupongen lagres ikke. De regnes fra hullscorene i regelmotoren. Det finnes ingen betalingstabell, fordi innsatsen er poeng. Poengbanken kommer i fase 10.
+
+### Hvem kan hva (RLS i klartekst)
+
+- **Uinnlogget (anon), ventende medlem og andre klubber:** ingenting. Ingen tabeller, funksjoner eller filer.
+- **Aktivitet:** alle i klubben leser. Alle kan legge til en linje. Serveren setter hvem og når. Ingen kan endre eller slette en linje, heller ikke arrangøren (append-only, som i PWA-en). «Melding til alle» (`announcement`), purring (`nudge`), påminnelse (`reminder`) og mottakerliste er bare for arrangøren (og cron). Mottakerne må være i klubben. En tom liste betyr ingen, aldri alle.
+- **Reaksjoner:** alle i klubben ser dem. Du setter og fjerner bare dine egne.
+- **Tråden:** alle i klubben leser. Du skriver på egne vegne og sletter dine egne. Arrangøren sletter alle. Ingen redigering. `created_at` settes av serveren, og `pushed_at` kan ikke settes av klienten. Nevnte må være i klubben. Bildet må ligge i avsenderens mappe med meldingens egen id.
+- **Tippekupongen:** du ser alltid ditt eget tips. De andres ser du først når kupongen er låst. Du leverer, endrer og trekker eget tips bare mens den er åpen. Arrangøren kan fjerne et tips når som helst. `tips_submitted(kveld)` viser hvem som har levert og når, aldri svarene.
+  - **Låsen:** kupongen er åpen før fristen og før første score på en runde den kvelden, det som kommer først. Fristen er kveldens dato og `start_time` som Europe/Oslo, ellers 17:00. Sjekket lokalt: 8.10 → 15:00Z, 5.11 → 16:00Z, 25.10 → 16:00Z og 29.03 → 15:00Z, som i `tippekupong-test.js`.
+  - Innsats og linje står fast når første kupong er levert (55000).
+- **Push-tokens:** bare eieren ser og sletter sine egne (logg ut). Skriving går via `register_push_token(enhet, token, miljø)`. Den registrerer enheten for alle dine aktive medlemskap og tar over en enhet eller et token som tilhørte en annen innlogging. Senderen (Edge Function med service_role, aldri i appen) må bare bruke rader der medlemmet fortsatt er koblet til samme innlogging og er aktivt.
+- **Bilder:** alle i klubben ser bildene til klubbens medlemmer. Portrett: du selv eller arrangøren laster opp og sletter. Trådbilde: bare avsenderen laster opp, avsenderen eller arrangøren sletter. Ingen kan overskrive (ingen update-policy). Appen laster opp med `upsert = false` og ny sti for nytt bilde.
+- **Realtime:** `activity`, `activity_reactions`, `thread_messages` og `tips`. Realtime følger policyene, så før låsing får du bare hendelser for ditt eget tips.
+
+### RPC-er og hjelpere
+
+| Funksjon | Hvem | Hva |
+|---|---|---|
+| `tips_deadline(kveld)` | medlem | Fristen som tidspunkt (UTC). |
+| `tips_open(kveld)` | medlem | Om kupongen er åpen. Brukes i policyene. |
+| `tips_submitted(kveld)` | medlem | Hvem som har levert og når. |
+| `register_push_token(enhet, token, miljø, bundle)` | innlogget | Registrerer enheten i én transaksjon og returnerer radene. |
+| `storage_can_read/write(sti)` | innlogget | Sti-reglene for bøttene. Mappen sjekkes som uuid før oppslag. |
+
+### Valg jeg har tatt
+
+1. **Logg skrevet av klienten, som i PWA-en,** med vakter i databasen (hvem, når, arrangørens kategorier, mottakere). *Alternativ:* triggere som skriver loggen selv (f.eks. ved låst runde eller eagle). Det er sikrere, men gir mer SQL.
+2. **Kategoriene står i en CHECK-liste** med engelske id-er (`score`, `lead`, `side_prize`, `round`, `setup`, `bet`, `signup`, `social`, `club`, `tips`, `announcement`, `nudge`, `reminder`). En ny kategori krever en migrering. `penger` og `boter` er utelatt (B10).
+3. **Tråden følger PWA-en:** en melding med bilde kan ha tom tekst. Uten bilde må det være 1–500 tegn.
+4. **Bilder i medlemmets mappe** (`<member_id>/…`). Medlems-id-en er unik på tvers av klubber, så mappen sier også hvilken klubb som kan lese. Portrettet har egen bøtte (`avatars`) i stedet for PWA-ens `klubbilder/spillere/`.
+5. **Ett push-token per medlemskap og enhet.** En innlogging i to klubber gir to rader, så hver klubb kan få egne kategorier senere.
+6. **Fristens standard 17:00** står i SQL-en (Golfgutu-verdien). Innsats og linje er tomme og hentes fra regelsettet.
+7. **Linja må være x,5**, som i PWA-en.
+
+### Åpne spørsmål til deg
+
+1. **Innsats i poeng:** er det riktig at innsatsen per kveld er et heltall poeng (0 = «for æra»), uten oppgjør før poengbanken i fase 10?
+2. **Standard for frist, innsats og linje:** regelmotoren har ennå ikke felt for tippekupongen. Skal 17:00 også flyttes inn i regelsettet, eller er det greit at den står i databasen?
+3. **Mottakerliste:** linja står nå i varslene for alle, og lista styrer bare push (som PWA-ens `til`). Skal en linje med mottakere heller bare vises for dem?
+4. **Push-valg for tråden** (alle / når jeg nevnes / av) og kategorier av/på per spiller og for klubben: lar jeg det vente til fase 8 sammen med Edge Function-en?
+5. **Banebilder** (`courses.image_path`, plakaten): egen bøtte nå, eller senere?
+6. **Hendelser om kladder:** en linje kan peke på en kladdrunde som spillerne ikke ser. Skal databasen skjule slike linjer, eller holder det at appen ikke skriver dem?
+7. **Sletting av bilder:** når en melding slettes, sletter appen fila. Supabase lar ikke SQL slette filer. Holder det, eller vil du ha en opprydding som Edge Function senere?
+
+### Lokal sjekk av 008
+
+Kjørt mot en midlertidig, lokal Postgres 16.2 (pip-pakken `pgserver` i et virtuelt miljø i scratch). Supabase Storage er etterlignet i `lokal/stub_storage.sql` (`storage.buckets`, `storage.objects` med RLS, `storage.foldername`). Aldri mot Supabase.
+
+- `lokal/stub.sql`, `lokal/stub_storage.sql`, 001, 002, 004, 005, 006, 007 og 008 to ganger på rad: ingen feil. Andre kjøring er idempotent.
+- `lokal/008_prove.sql` i en tom base etter 001 og 008: **102 av 102 ok**. Den dekker anon, ventende, annen klubb, spiller og arrangør for alle tabellene, vaktene, fristen rundt sommertid, låsen ved første score, overtakelse av enhet og sti-reglene i Storage.
+- Kontrollspørringene og rullebakken er kjørt med forventet svar, og 008 gikk inn igjen etter rullebakken.
+- **Forbehold:** ekte Supabase Storage, Realtime og PostgREST er ikke prøvd. På Supabase eier `supabase_storage_admin` `storage.objects`. Policyene opprettes som `postgres` i SQL Editor, slik PWA-ens `traad-bilder.sql` gjorde.
