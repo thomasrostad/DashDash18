@@ -23,7 +23,7 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 | `005_kveld.sql` | `set_event_committee` | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `006_runder.sql` | `start_round` (oppsett og start i én transaksjon) | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `007_foring.sql` | `confirm_round_par` (markør eller arrangør bekrefter par) | Godkjent, kjørt på test 06.10.2026. Ikke prod |
-| `008_sosialt.sql` | Aktivitet, reaksjoner, kveldens tråd, tippekupong, push-tokens (APNs), bøttene `avatars` og `thread` | **Utkast, ikke kjørt.** Venter på godkjenning, se «Oversikt for godkjenning: 008» nederst |
+| `008_sosialt.sql` | Aktivitet, reaksjoner, kveldens tråd, tippekupong, push-tokens (APNs), bøttene `avatars` og `thread` | Godkjent 06.10.2026 med svarene under. Kjøres på test |
 | `lokal/stub.sql`, `lokal/001_prove.sql` | Lokal syntaks- og rolleprøve. **Aldri mot Supabase.** | Hjelpefiler |
 | `lokal/stub_storage.sql`, `lokal/008_prove.sql` | Lokal Storage-etterligning og rolleprøve for 008. **Aldri mot Supabase.** | Hjelpefiler |
 
@@ -231,10 +231,10 @@ Fasit, poeng og resultat for tippekupongen lagres ikke. De regnes fra hullscoren
 
 1. **Innsats i poeng:** er det riktig at innsatsen per kveld er et heltall poeng (0 = «for æra»), uten oppgjør før poengbanken i fase 10?
 2. **Standard for frist, innsats og linje:** regelmotoren har ennå ikke felt for tippekupongen. Skal 17:00 også flyttes inn i regelsettet, eller er det greit at den står i databasen?
-3. **Mottakerliste:** linja står nå i varslene for alle, og lista styrer bare push (som PWA-ens `til`). Skal en linje med mottakere heller bare vises for dem?
+3. **Mottakerliste:** *Besvart 06.10:* en linje med mottakere vises bare for mottakerne, den som laget den og arrangøren (RLS på `activity`).
 4. **Push-valg for tråden** (alle / når jeg nevnes / av) og kategorier av/på per spiller og for klubben: lar jeg det vente til fase 8 sammen med Edge Function-en?
 5. **Banebilder** (`courses.image_path`, plakaten): egen bøtte nå, eller senere?
-6. **Hendelser om kladder:** en linje kan peke på en kladdrunde som spillerne ikke ser. Skal databasen skjule slike linjer, eller holder det at appen ikke skriver dem?
+6. **Hendelser om kladder:** *Besvart 06.10:* databasen skjuler linjer som peker på en runde du ikke kan se (`can_read_round`).
 7. **Sletting av bilder:** når en melding slettes, sletter appen fila. Supabase lar ikke SQL slette filer. Holder det, eller vil du ha en opprydding som Edge Function senere?
 
 ### Lokal sjekk av 008

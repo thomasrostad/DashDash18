@@ -127,7 +127,11 @@ reset role;
 -- === Bjørn: ser loggen og reaksjonene, kan ikke fjerne andres ===============
 select pg_temp.som(:'u3');
 set role authenticated;
-select pg_temp.lik((select count(*) from public.activity), 4::bigint, 'medlem ser hele loggen');
+-- Bjørn ser de vanlige linjene og purringen han står på, men ikke purringen
+-- med tom mottakerliste (den er til ingen).
+select pg_temp.lik((select count(*) from public.activity), 3::bigint, 'medlem ser loggen unntatt linjer til andre');
+select pg_temp.lik((select count(*) from public.activity where id = :'purring'), 1::bigint, 'mottaker ser purringen');
+select pg_temp.lik((select count(*) from public.activity where id = :'ingen'), 0::bigint, 'linje til ingen vises ikke for medlem');
 select pg_temp.lik((select count(*) from public.activity_reactions), 1::bigint, 'medlem ser reaksjonene');
 with d as (delete from public.activity_reactions returning 1)
 select pg_temp.lik((select count(*) from d), 0::bigint, 'kan ikke fjerne andres reaksjon');

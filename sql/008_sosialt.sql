@@ -113,7 +113,7 @@ create table if not exists public.activity (
 );
 comment on table public.activity is
   'Hendelsesloggen per klubb: kind + data (jsonb), ikke HTML. Append-only. '
-  'category = push-kategori. recipients null = alle, liste = bare dem.';
+  'category = push-kategori. recipients null = alle, liste = bare dem (også for lesing).';
 create index if not exists activity_club_time_idx on public.activity (club_id, created_at desc);
 create index if not exists activity_event_idx on public.activity (event_id) where event_id is not null;
 create index if not exists activity_round_idx on public.activity (round_id) where round_id is not null;
@@ -535,8 +535,18 @@ begin
 end $$;
 
 -- --- activity: les medlem, skriv medlem (vakten tar resten), aldri endre ----
+-- Hendelser med mottakerliste vises bare for mottakerne (og den som laget dem,
+-- og arrangøren). Hendelser fra en kladdrunde vises bare for dem som ser runden
+-- (arrangøren), via can_read_round fra 001.
 create policy activity_select on public.activity
-  for select to authenticated using (public.is_club_member(club_id));
+  for select to authenticated using (
+    public.is_club_member(club_id)
+    and (recipients is null
+         or public.my_member_id(club_id) = any (recipients)
+         or actor_member_id = public.my_member_id(club_id)
+         or public.is_club_organizer(club_id))
+    and (round_id is null or public.can_read_round(round_id))
+  );
 create policy activity_insert on public.activity
   for insert to authenticated with check (public.is_club_member(club_id));
 
