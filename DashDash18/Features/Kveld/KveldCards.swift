@@ -8,17 +8,16 @@ struct NextEveningCard: View {
     let referenceYear: Int?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text(EveningDates.longText(event.eventDate, referenceYear: referenceYear, capitalized: true))
-                    .font(.title2.bold())
+                    .font(.ddTitle)
+                    .foregroundStyle(Color.ddForestInk)
                 Spacer()
                 if let daysUntil {
-                    Text(EveningDates.countdownText(days: daysUntil))
-                        .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(.yellow.opacity(0.25), in: .capsule)
+                    // Nedtellingen i sol-gult, som «12 DAGER» i PWA-en.
+                    DDPill(EveningDates.countdownText(days: daysUntil), tone: .sun)
+                        .fixedSize()
                 }
             }
             if let time = EveningDates.timeText(event.startTime) {
@@ -32,11 +31,11 @@ struct NextEveningCard: View {
             }
             if let note = event.note {
                 Text(note)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .font(.ddCallout)
+                    .foregroundStyle(Color.ddInkSecondary)
             }
         }
-        .padding(.vertical, 4)
+        .labelStyle(DDIconLabelStyle())
         .accessibilityElement(children: .combine)
     }
 }
@@ -53,46 +52,41 @@ struct SignupSection: View {
     private var current: SignupStatus? { model.mySignup?.status }
 
     var body: some View {
-        Section {
-            HStack(spacing: 8) {
-                ForEach(SignupStatus.allCases, id: \.self) { status in
-                    answerButton(status)
+        VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
+            DDSectionLabel(current == nil ? "Kommer du?" : "Ditt svar")
+            VStack(alignment: .leading, spacing: DDSpacing.m) {
+                HStack(spacing: 8) {
+                    ForEach(SignupStatus.allCases, id: \.self) { status in
+                        answerButton(status)
+                    }
+                }
+                .disabled(isBusy)
+
+                if current != nil {
+                    DDDivider()
+                    commentRow
+                }
+                if let error {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .ddErrorStyle()
                 }
             }
-            .buttonBorderShape(.capsule)
-            .disabled(isBusy)
-
-            if current != nil {
-                commentRow
-            }
-            if let error {
-                Label(error, systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.red)
-            }
-        } header: {
-            Text(current == nil ? "Kommer du?" : "Ditt svar")
+            .ddCard()
         }
     }
 
     @ViewBuilder
     private func answerButton(_ status: SignupStatus) -> some View {
         let selected = current == status
-        let button = Button {
+        Button {
             answer(status)
         } label: {
             Text(status.title)
-                .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-                .frame(maxWidth: .infinity)
         }
-        .tint(status.tint)
+        .buttonStyle(DDChoiceButtonStyle(selected: selected, tint: status.tint))
         .accessibilityAddTraits(selected ? .isSelected : [])
-        if selected {
-            button.buttonStyle(.borderedProminent)
-        } else {
-            button.buttonStyle(.bordered)
-        }
     }
 
     @ViewBuilder
@@ -102,6 +96,7 @@ struct SignupSection: View {
                 TextField("Kommentar (valgfritt)", text: $commentText, axis: .vertical)
                     .lineLimit(1...3)
                     .focused($commentFocused)
+                    .ddField()
                     .onChange(of: commentText) { _, text in
                         if text.count > SignupInput.commentMax {
                             commentText = String(text.prefix(SignupInput.commentMax))
@@ -109,14 +104,13 @@ struct SignupSection: View {
                     }
                 HStack {
                     Text("\(commentText.count)/\(SignupInput.commentMax)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.dd(.sans, size: 12, relativeTo: .caption))
+                        .foregroundStyle(Color.ddInkSecondary)
                     Spacer()
                     Button("Avbryt") { isEditingComment = false }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.ddText)
                     Button("Lagre", action: saveComment)
-                        .buttonStyle(.borderless)
-                        .bold()
+                        .buttonStyle(.dd(.primary, compact: true))
                 }
             }
             .disabled(isBusy)
@@ -128,14 +122,18 @@ struct SignupSection: View {
             } label: {
                 if let comment = model.mySignup?.comment {
                     HStack {
-                        Text("«\(comment)»").foregroundStyle(.primary)
+                        Text("«\(comment)»").foregroundStyle(Color.ddInk)
                         Spacer()
-                        Text("Endre")
+                        Text("Endre").fontWeight(.semibold)
                     }
                 } else {
                     Label("Legg til en kommentar", systemImage: "text.bubble")
+                        .fontWeight(.medium)
                 }
             }
+            .buttonStyle(.plain)
+            .foregroundStyle(Color.ddForestInk)
+            .frame(minHeight: 44)
         }
     }
 
@@ -173,30 +171,41 @@ struct SignupOverviewSection: View {
     var body: some View {
         ForEach(summary.groups, id: \.title) { group in
             if !group.entries.isEmpty {
-                Section("\(group.title) · \(group.entries.count)") {
+                DDSectionLabel("\(group.title) · \(group.entries.count)")
+                    .padding(.top, DDSpacing.l)
+                VStack(alignment: .leading, spacing: 0) {
                     ForEach(group.entries) { entry in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(entry.name)
-                                .fontWeight(entry.memberID == myID ? .semibold : .regular)
-                            if let comment = entry.comment {
-                                Text("«\(comment)»")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
+                        HStack(spacing: 12) {
+                            DDAvatar(name: entry.name)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(entry.name)
+                                    .font(entry.memberID == myID ? .ddBodyEmphasis : .ddBody)
+                                if let comment = entry.comment {
+                                    Text("«\(comment)»")
+                                        .font(.ddCaption)
+                                        .foregroundStyle(Color.ddInkSecondary)
+                                }
                             }
+                            Spacer(minLength: 0)
                         }
+                        .padding(.vertical, 10)
+                        .accessibilityElement(children: .combine)
+                        if entry.id != group.entries.last?.id { DDDivider() }
                     }
                 }
+                .ddCard(padding: DDSpacing.l)
             }
         }
     }
 }
 
 private extension SignupStatus {
-    var tint: Color {
+    /// Kommer = grønn pille (golfee), usikker = sol, kommer ikke = blush.
+    var tint: DDChoiceTint {
         switch self {
-        case .yes: .green
-        case .maybe: .orange
-        case .no: .red
+        case .yes: .forest
+        case .maybe: .sun
+        case .no: .blush
         }
     }
 }

@@ -35,6 +35,7 @@ struct RundeWizardView: View {
         }
         .disabled(isBusy)
         .navigationTitle(draft.isSaved ? "Rediger kladd" : "Ny runde")
+        .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .top) { indicator }
         .safeAreaInset(edge: .bottom) { buttons }
@@ -58,17 +59,17 @@ struct RundeWizardView: View {
             ForEach(Step.allCases, id: \.self) { s in
                 VStack(spacing: 4) {
                     Capsule()
-                        .fill(s.rawValue <= step.rawValue ? Color.accentColor : Color.secondary.opacity(0.3))
+                        .fill(s.rawValue <= step.rawValue ? Color.ddLime : Color.ddEarthDeep)
                         .frame(height: 4)
                     Text((s.rawValue < step.rawValue ? "✓ " : "") + s.title)
-                        .font(.caption2)
-                        .foregroundStyle(s == step ? .primary : .secondary)
+                        .font(.dd(.sans, size: 11, relativeTo: .caption2))
+                        .foregroundStyle(s == step ? Color.ddInk : Color.ddInkSecondary)
                 }
             }
         }
         .padding(.horizontal)
         .padding(.vertical, 6)
-        .background(.bar)
+        .background(Color.ddBackground)
     }
 
     /// Hvorfor «Neste» eller «Start runden» er sperret, rett over knappene.
@@ -90,34 +91,36 @@ struct RundeWizardView: View {
         VStack(spacing: 8) {
             if let reason = blockedReason {
                 Text(reason)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddInkSecondary)
                     .multilineTextAlignment(.center)
             }
             HStack {
                 if step != .course {
                     Button("Tilbake") { go(to: Step(rawValue: step.rawValue - 1)!) }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.dd(.secondary))
                 }
                 Spacer()
                 switch step {
                 case .course, .bays:
                     Button("Neste") { go(to: Step(rawValue: step.rawValue + 1)!) }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.dd(.primary))
                         .disabled(blockedReason != nil)
                 case .setup:
                     Button("Lagre som kladd") { save() }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.dd(.secondary))
                         .disabled(!model.issues(draft, forStart: false).isEmpty)
                     Button("Start runden") { start() }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.dd(.primary))
                         .disabled(blockedReason != nil)
                 }
             }
             if isBusy { ProgressView() }
         }
         .padding()
-        .background(.bar)
+        // Fast knapperad i glass over skjemaet.
+        .glassEffect(.regular, in: .rect(cornerRadius: DDRadius.cardLarge))
+        .padding(.horizontal, DDSpacing.s)
     }
 
     private func go(to next: Step) {
@@ -173,11 +176,11 @@ struct RundeCourseStep: View {
 
     var body: some View {
         let selected = model.course(draft.courseID)
-        Form {
+        DDForm {
             Section {
                 if model.courses.isEmpty {
                     Text("Ingen baner er klare. Legg inn parene under «Banene» først.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.ddInkSecondary)
                 } else {
                     Picker("Bane", selection: $draft.courseID) {
                         if let selected, !selected.isReady {
@@ -190,19 +193,19 @@ struct RundeCourseStep: View {
                 }
                 if let selected {
                     Text(selected.summary)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                        .foregroundStyle(Color.ddInkSecondary)
                     if let external = selected.differentExternalName {
                         Text("Heter «\(external)» i simulatoren.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                            .foregroundStyle(Color.ddInkSecondary)
                     }
                 }
             } footer: {
-                Text("Bare baner med par på alle hull står her. Uten kjenner ikke appen parene.")
+                DDFooter("Bare baner med par på alle hull står her. Uten kjenner ikke appen parene.")
             }
 
-            Section("Hull") {
+            DDSection("Hull") {
                 Picker("Antall hull", selection: $draft.holeCount) {
                     Text("18 hull").tag(18)
                     Text("9 hull").tag(9)
@@ -229,7 +232,7 @@ struct RundeCourseStep: View {
                     ), displayedComponents: .hourAndMinute)
                 }
             } header: {
-                Text("Tid")
+                DDHeader("Tid")
             } footer: {
                 if let event = model.selectedEvent {
                     Text("\(EveningDates.longText(event.eventDate, capitalized: true)). Runden blir «\(RoundListing.title(roundNo: draft.roundNo, courseName: selected?.course.name))».")

@@ -10,6 +10,7 @@ struct ConfigErrorView: View {
             systemImage: "exclamationmark.triangle",
             description: Text(message)
         )
+        .ddScreenBackground()
     }
 
     private var message: String {

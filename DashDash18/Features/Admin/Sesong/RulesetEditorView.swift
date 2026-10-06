@@ -22,13 +22,13 @@ struct RulesetEditorView: View {
     private var isReadOnly: Bool { season.status == .finished }
 
     var body: some View {
-        Form {
-            Section("Slik telles det") {
+        DDForm {
+            DDSection("Slik telles det") {
                 Text(RulesetExplanation.text(for: draft.rules))
-                    .font(.callout)
+                    .font(.dd(.sans, size: 15, relativeTo: .callout))
             }
             if !draft.issues.isEmpty {
-                Section("Må rettes før lagring") {
+                DDSection("Må rettes før lagring") {
                     RuleIssuesList(issues: draft.issues)
                 }
             }
@@ -45,17 +45,18 @@ struct RulesetEditorView: View {
                 Section {
                     Button("Tilbakestill til Golfgutu", role: .destructive) { confirmsReset = true }
                 } footer: {
-                    Text("Setter alle reglene til Golfgutu-oppsettet. Ingenting lagres før du trykker «Lagre».")
+                    DDFooter("Setter alle reglene til Golfgutu-oppsettet. Ingenting lagres før du trykker «Lagre».")
                 }
             }
             if let error {
                 Section {
                     Label(error.message, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.ddError)
                 }
             }
         }
         .navigationTitle("Regler")
+        .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if !isReadOnly {
@@ -68,7 +69,7 @@ struct RulesetEditorView: View {
         .overlay(alignment: .bottom) {
             if let savedMessage {
                 Text(savedMessage)
-                    .font(.footnote)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .glassEffect()
@@ -88,7 +89,7 @@ struct RulesetEditorView: View {
         Section {
             RuleStepper("Kvelder", value: $draft.rules.evenings)
         } header: {
-            Text(RulesetSection.season.title)
+            DDHeader(RulesetSection.season.title)
         } footer: {
             RuleSectionFooter(text: "Antall kvelder i sesongen.", issues: draft.issues(in: .season))
         }
@@ -99,7 +100,7 @@ struct RulesetEditorView: View {
             RuleStepper("Netto par gir", value: $draft.rules.scoring.netParPoints)
             RuleStepper("Laveste poeng", value: $draft.rules.scoring.minimumPoints)
         } header: {
-            Text(RulesetSection.scoring.title)
+            DDHeader(RulesetSection.scoring.title)
         } footer: {
             RuleSectionFooter(text: "Poeng per hull: netto par gir det første tallet, ett slag bedre gir ett mer. Et hull gir aldri mindre enn laveste poeng.",
                               issues: draft.issues(in: .scoring))
@@ -118,7 +119,7 @@ struct RulesetEditorView: View {
             }
             Toggle("Del poenget ved likt", isOn: $draft.rules.sidePrizes.splitTies)
         } header: {
-            Text(RulesetSection.sidePrizes.title)
+            DDHeader(RulesetSection.sidePrizes.title)
         } footer: {
             RuleSectionFooter(text: "Delt: to på likt får halvparten hver. Ikke delt: alle på delt førsteplass får fullt.",
                               issues: draft.issues(in: .sidePrizes))

@@ -11,8 +11,8 @@ struct CreateClubView: View {
     @State private var error: ClubError?
 
     var body: some View {
-        Form {
-            Section("Klubben") {
+        DDForm {
+            DDSection("Klubben") {
                 TextField("Navn på klubben", text: $clubName)
                     .textInputAutocapitalization(.words)
             }
@@ -23,14 +23,14 @@ struct CreateClubView: View {
                 TextField("Handicapindeks (valgfritt)", text: $handicapText)
                     .keyboardType(.numbersAndPunctuation)
             } header: {
-                Text("Deg")
+                DDHeader("Deg")
             } footer: {
-                Text("Navnet er det de andre ser i troppen. Plusshandicap skrives med «+».")
+                DDFooter("Navnet er det de andre ser i troppen. Plusshandicap skrives med «+».")
             }
             if let error {
                 Section {
                     Label(error.message, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.ddError)
                 }
             }
             Section {
@@ -46,6 +46,7 @@ struct CreateClubView: View {
             }
         }
         .navigationTitle("Ny klubb")
+        .ddNavigationChrome()
         .disabled(isBusy)
     }
 

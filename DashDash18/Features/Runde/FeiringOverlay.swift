@@ -9,9 +9,15 @@ struct FeiringOverlay: View {
 
     var body: some View {
         ZStack {
+            // Skoggrønn grunn med lys bak tittelen, som `.gg-celebrate`.
             Rectangle()
-                .fill(.black.opacity(0.55))
+                .fill(celebration.level == .ace ? Color(uiColor: DDRGBA(0x0B1F18).uiColor) : Color.ddForestDeep)
+                .opacity(0.96)
                 .ignoresSafeArea()
+            RadialGradient(colors: [accent.opacity(celebration.level == .birdie ? 0.14 : 0.24), .clear],
+                           center: .center, startRadius: 0, endRadius: 320)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
             if !reduceMotion && celebration.level.particles > 0 {
                 ConfettiView(level: celebration.level)
                     .ignoresSafeArea()
@@ -19,14 +25,14 @@ struct FeiringOverlay: View {
             }
             VStack(spacing: 12) {
                 Text(celebration.eyebrow)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.8))
+                    .ddEyebrow(color: accent.opacity(0.75))
                 Text(celebration.level.title)
-                    .font(.system(size: celebration.level == .ace ? 46 : 40, weight: .bold, design: .serif))
-                    .foregroundStyle(.white)
+                    .font(.dd(.sans, size: celebration.level == .birdie ? 44 : 54, weight: .light, relativeTo: .largeTitle))
+                    .foregroundStyle(accent)
+                    .multilineTextAlignment(.center)
                 Text(celebration.text)
-                    .font(.body)
-                    .foregroundStyle(.white)
+                    .font(.ddBody)
+                    .foregroundStyle(Color.ddOnDark.opacity(0.85))
                     .multilineTextAlignment(.center)
                 HStack(spacing: 8) {
                     if let match = celebration.matchText { pill(match) }
@@ -34,9 +40,8 @@ struct FeiringOverlay: View {
                     if let place = celebration.place { pill("\(place). plass") }
                 }
                 Button(celebration.nextHole.map { "Videre til hull \($0)" } ?? "Videre", action: onDismiss)
-                    .buttonStyle(.bordered)
-                    .tint(.white)
-                    .padding(.top, 8)
+                    .buttonStyle(.dd(.primary))
+                    .padding(.top, 12)
             }
             .padding(28)
             .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
@@ -52,13 +57,18 @@ struct FeiringOverlay: View {
         .sensoryFeedback(.success, trigger: celebration.id)
     }
 
+    /// Gull for eagle og bedre, lys grønn for birdie (PWA-ens `niv-birdie`).
+    private var accent: Color {
+        celebration.level == .birdie ? .ddLimeBackground : .ddGold
+    }
+
     private func pill(_ text: String) -> some View {
         Text(text)
-            .font(.subheadline.weight(.semibold))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 4)
-            .background(.white.opacity(0.2), in: .capsule)
-            .foregroundStyle(.white)
+            .font(.dd(.sans, size: 14, weight: .semibold, relativeTo: .subheadline))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .glassEffect(.regular, in: .capsule)
+            .foregroundStyle(Color.ddOnDark)
     }
 }
 
@@ -73,7 +83,7 @@ private struct ConfettiView: View {
         var width: Double, height: Double, color: Color
     }
 
-    private static let colors: [Color] = [.yellow, .green, .orange, .white, .mint]
+    private static let colors: [Color] = [.ddGold, .ddLime, .ddRust, .ddOnDark, .ddYellow]
 
     var body: some View {
         TimelineView(.animation) { timeline in
@@ -102,7 +112,7 @@ private struct ConfettiView: View {
                 Piece(x: 0.5 + Double.random(in: -0.35...0.35), vx: Double.random(in: -1.7...1.7),
                       vy: -Double.random(in: 10...17), rotation: Double.random(in: 0...Double.pi),
                       spin: Double.random(in: -0.17...0.17), width: Double.random(in: 5...10),
-                      height: Double.random(in: 8...15), color: Self.colors.randomElement() ?? .yellow)
+                      height: Double.random(in: 8...15), color: Self.colors.randomElement() ?? .ddGold)
             }
         }
     }

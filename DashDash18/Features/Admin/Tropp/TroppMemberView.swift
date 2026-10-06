@@ -20,21 +20,22 @@ struct TroppMemberView: View {
             }
         }
         .navigationTitle(model.row(memberID)?.displayName ?? "Spiller")
+        .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .disabled(model.isBusy(memberID))
         .onAppear(perform: resetFields)
     }
 
     private func form(_ row: ClubMemberRow) -> some View {
-        Form {
+        DDForm {
             if row.status == .pending {
                 Section {
                     Button("Godkjenn") { run(.approve) }
                     Button("Avvis", role: .destructive) { confirming = .reject }
                 } header: {
-                    Text("Venter på godkjenning")
+                    DDHeader("Venter på godkjenning")
                 } footer: {
-                    Text("Avvis arkiverer raden og frigjør innloggingen, så personen kan prøve igjen med riktig navn.")
+                    DDFooter("Avvis arkiverer raden og frigjør innloggingen, så personen kan prøve igjen med riktig navn.")
                 }
             }
 
@@ -79,9 +80,9 @@ struct TroppMemberView: View {
                 }
             }
         } header: {
-            Text("Navn og handicap")
+            DDHeader("Navn og handicap")
         } footer: {
-            Text("Plusshandicap skrives med «+».")
+            DDFooter("Plusshandicap skrives med «+».")
         }
     }
 
@@ -100,7 +101,7 @@ struct TroppMemberView: View {
                 }
             }
         } header: {
-            Text("Seeding")
+            DDHeader("Seeding")
         } footer: {
             if let season = model.seasonName {
                 Text("Gruppene kommer fra regelsettet i \(season).")
@@ -125,7 +126,7 @@ struct TroppMemberView: View {
             ))
             .disabled(!treasurer.isAllowed)
         } header: {
-            Text("Roller")
+            DDHeader("Roller")
         } footer: {
             if let reason = organizer.reason ?? treasurer.reason {
                 Text(reason)
@@ -139,7 +140,7 @@ struct TroppMemberView: View {
         Section {
             if row.userID == nil {
                 Label("Har ikke logget inn", systemImage: "person.crop.circle.badge.questionmark")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.ddInkSecondary)
             } else {
                 Label(row.id == model.context.memberID ? "Dette er deg" : "Logget inn",
                       systemImage: "person.crop.circle.badge.checkmark")
@@ -149,7 +150,7 @@ struct TroppMemberView: View {
                     .disabled(!release.isAllowed)
             }
         } header: {
-            Text("Innlogging")
+            DDHeader("Innlogging")
         } footer: {
             if let reason = release.reason {
                 Text(reason)

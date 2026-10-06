@@ -15,7 +15,7 @@ struct RundeSetupStep: View {
     var body: some View {
         let form = draft.form
         let holes = draft.coreRound(course: coreCourse).courseHoles()
-        Form {
+        DDForm {
             formSection(form)
             if form.isTeamForm { teamSection(form) }
             matchSection(form)
@@ -27,15 +27,15 @@ struct RundeSetupStep: View {
                     }
                 }
             } footer: {
-                Text("Ganger opp poengene runden gir. 0 betyr at den ikke teller sammenlagt.")
+                DDFooter("Ganger opp poengene runden gir. 0 betyr at den ikke teller sammenlagt.")
             }
             handicapSection(form)
             let issues = model.issues(draft, forStart: true)
             if !issues.isEmpty {
-                Section("Før runden kan starte") {
+                DDSection("Før runden kan starte") {
                     ForEach(issues.map(\.message), id: \.self) { text in
                         Label(text, systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Color.ddRustText)
                     }
                 }
             }
@@ -66,19 +66,19 @@ struct RundeSetupStep: View {
                 }
             }
             Text(form.help)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+                .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                .foregroundStyle(Color.ddInkSecondary)
             let setup = rules.setup(formID: form.id, players: count)
             if let text = setup.text {
                 Label("\(count) med: \(text)" + (setup.isUneven ? " (ulike lag)" : ""), systemImage: "checkmark.circle")
-                    .font(.footnote)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
             } else if let reason = setup.reason {
                 Label(reason, systemImage: "exclamationmark.triangle")
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddRustText)
             }
         } header: {
-            Text("Konkurranseform")
+            DDHeader("Konkurranseform")
         } footer: {
             if !suggestions.isEmpty {
                 Text("Går opp med \(count): " + suggestions.map { "\($0.name) (\($0.text))" }.joined(separator: ", ") + ".")
@@ -126,11 +126,11 @@ struct RundeSetupStep: View {
                 draft.redrawMatches(roster: model.members)
             }
         } header: {
-            Text("Lag · \(form.teamSize) per lag")
+            DDHeader("Lag · \(form.teamSize) per lag")
         } footer: {
             if let problem = TeamPlanner.problem(teams: draft.teams, participants: draft.participants, form: form,
                                                  maxPerBay: rules.formats.maxPerBay) {
-                Text(problem).foregroundStyle(.orange)
+                Text(problem).foregroundStyle(Color.ddRustText)
             }
         }
     }
@@ -142,7 +142,7 @@ struct RundeSetupStep: View {
         Section {
             if draft.matches.isEmpty {
                 Text("Ingen matcher. Runden gir da ingen duellpoeng.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.ddInkSecondary)
             }
             ForEach(Array(draft.matches.enumerated()), id: \.offset) { index, match in
                 Button {
@@ -163,9 +163,9 @@ struct RundeSetupStep: View {
                 draft.reshuffleBays(count: bayCount)
             }
         } header: {
-            Text("Matcher")
+            DDHeader("Matcher")
         } footer: {
-            Text(form.isTeamForm
+            DDFooter(form.isTeamForm
                  ? "Lag mot lag i rekkefølge: 1 mot 2, 3 mot 4. Trykk en match for å endre den."
                  : "Trukket sveitsisk på navn. Ved oddetall blir de tre siste en trekant. Trykk en match for å endre den.")
         }
@@ -206,9 +206,9 @@ struct RundeSetupStep: View {
                 holePicker("Hull", selection: $draft.kpHoleIndex, suggestion: kpSuggestion, holes: holes)
             }
         } header: {
-            Text("Sidepremier")
+            DDHeader("Sidepremier")
         } footer: {
-            Text("Appen foreslår hull \(holeNumber(ldSuggestion)) for longest drive og hull \(holeNumber(kpSuggestion)) for nærmest pinnen.")
+            DDFooter("Appen foreslår hull \(holeNumber(ldSuggestion)) for longest drive og hull \(holeNumber(kpSuggestion)) for nærmest pinnen.")
         }
     }
 
@@ -244,9 +244,9 @@ struct RundeSetupStep: View {
                 }
             }
         } header: {
-            Text("Handicap")
+            DDHeader("Handicap")
         } footer: {
-            Text(draft.externalHandicap
+            DDFooter(draft.externalHandicap
                  ? "Simulatoren deler ut slagene, og dere fører netto fra skjermen. Appen gir ingen slag."
                  : "Dere fører brutto. Appen trekker fra slagene etter stroke index. Spillehandicapet regnes og lagres når runden starter.")
         }
@@ -292,7 +292,7 @@ struct MatchEditor: View {
     let onDone: (Result) -> Void
 
     var body: some View {
-        Form {
+        DDForm {
             if match.isTeamMatch {
                 let numbers = Array(Set(draft.teams.values)).sorted()
                 Picker("Lag A", selection: $match.teamA) {
@@ -307,8 +307,8 @@ struct MatchEditor: View {
                 playerPicker("Tredje (trekant)", $match.playerC, allowNone: true)
                 if match.isTriangle {
                     Text("En trekant avgjøres på poengsum, ikke hull mot hull.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
             }
             if !isNew {
@@ -316,6 +316,7 @@ struct MatchEditor: View {
             }
         }
         .navigationTitle(isNew ? "Ny match" : "Endre match")
+        .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

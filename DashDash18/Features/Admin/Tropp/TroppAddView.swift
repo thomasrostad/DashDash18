@@ -11,7 +11,7 @@ struct TroppAddView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            DDForm {
                 Section {
                     TextField("Navn", text: $name)
                         .textContentType(.name)
@@ -19,10 +19,11 @@ struct TroppAddView: View {
                     TextField("Handicapindeks (valgfritt)", text: $handicapText)
                         .keyboardType(.numbersAndPunctuation)
                 } footer: {
-                    Text("Navnet står som ledig til spilleren logger inn og velger det. Plusshandicap skrives med «+».")
+                    DDFooter("Navnet står som ledig til spilleren logger inn og velger det. Plusshandicap skrives med «+».")
                 }
             }
             .navigationTitle("Nytt navn")
+            .ddNavigationChrome()
             .navigationBarTitleDisplayMode(.inline)
             .disabled(isBusy)
             .toolbar {

@@ -21,7 +21,7 @@ struct RuleNumberField: View {
                     .multilineTextAlignment(.trailing)
                     .frame(maxWidth: 90)
                 if let suffix {
-                    Text(suffix).foregroundStyle(.secondary)
+                    Text(suffix).foregroundStyle(Color.ddInkSecondary)
                 }
             }
         }
@@ -71,8 +71,8 @@ struct RuleIssuesList: View {
     var body: some View {
         ForEach(issues, id: \.self) { issue in
             Label(issue.message, systemImage: "exclamationmark.triangle.fill")
-                .foregroundStyle(.red)
-                .font(.footnote)
+                .foregroundStyle(Color.ddError)
+                .font(.dd(.sans, size: 13, relativeTo: .footnote))
         }
     }
 }

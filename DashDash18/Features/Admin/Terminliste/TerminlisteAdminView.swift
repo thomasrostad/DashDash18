@@ -26,6 +26,7 @@ private struct TerminlisteContent: View {
     var body: some View {
         content
             .navigationTitle("Terminliste")
+            .ddNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Ny kveld", systemImage: "plus") { editing = IdentifiedDraft(draft: model.draft(for: nil)) }
@@ -75,7 +76,7 @@ private struct TerminlisteContent: View {
                 Text(message)
             } actions: {
                 Button("Prøv igjen") { Task { await model.load() } }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.dd(.primary))
             }
         case .loaded:
             list
@@ -87,7 +88,7 @@ private struct TerminlisteContent: View {
         let (upcoming, past) = Terminliste.split(model.events, today: today)
         let year = EveningDates.year(of: today)
         let missingCommittee = upcoming.contains { (model.committees[$0.id] ?? []).count < perEvening }
-        return List {
+        return DDList {
             Section {
                 if let season = model.activeSeason {
                     LabeledContent("Sesong", value: season.name)
@@ -97,14 +98,14 @@ private struct TerminlisteContent: View {
                     } icon: {
                         Image(systemName: "info.circle")
                     }
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.ddInkSecondary)
                 }
             }
 
-            Section("Kommende") {
+            DDSection("Kommende") {
                 if upcoming.isEmpty {
                     Text("Ingen kvelder satt opp. Trykk + for å legge inn en.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
                 ForEach(upcoming) { event in
                     row(event, referenceYear: year)
@@ -117,7 +118,7 @@ private struct TerminlisteContent: View {
                     Button("Trekk sosialkomité", systemImage: "dice") { draw() }
                         .disabled(model.members.count < perEvening)
                 } footer: {
-                    Text("Fyller kommende kvelder som mangler komité. De med færrest turer trekkes først. Kvelder som har komité, røres ikke.")
+                    DDFooter("Fyller kommende kvelder som mangler komité. De med færrest turer trekkes først. Kvelder som har komité, røres ikke.")
                 }
             }
 
@@ -145,7 +146,7 @@ private struct TerminlisteContent: View {
                 referenceYear: referenceYear
             )
         }
-        .tint(.primary)
+        .tint(Color.ddInk)
         .swipeActions {
             Button("Slett", systemImage: "trash", role: .destructive) { pendingDelete = event }
         }
@@ -181,16 +182,16 @@ private struct EventRowLabel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(EveningDates.longText(event.eventDate, referenceYear: referenceYear, capitalized: true))
-                .font(.headline)
+                .font(.dd(.sans, size: 17, weight: .semibold, relativeTo: .headline))
             let details = [EveningDates.timeText(event.startTime), event.venue].compactMap { $0 }
             if !details.isEmpty {
                 Text(details.joined(separator: " · "))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.dd(.sans, size: 14, relativeTo: .subheadline))
+                    .foregroundStyle(Color.ddInkSecondary)
             }
             Text(committee.isEmpty ? "Ingen sosialkomité" : "Sosialkomité: \(NorwegianList.join(committee))")
-                .font(.footnote)
-                .foregroundStyle(committee.isEmpty ? .orange : .secondary)
+                .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                .foregroundStyle(committee.isEmpty ? Color.ddRustText : Color.ddInkSecondary)
         }
         .padding(.vertical, 2)
     }
@@ -206,7 +207,7 @@ private struct EventEditor: View {
     @State private var confirmDelete = false
 
     var body: some View {
-        Form {
+        DDForm {
             Section {
                 DatePicker("Dato", selection: $draft.date, displayedComponents: .date)
                 Toggle("Klokkeslett", isOn: $draft.hasTime)
@@ -218,7 +219,7 @@ private struct EventEditor: View {
                 TextField("Notat (valgfritt)", text: $draft.note, axis: .vertical)
                     .lineLimit(2...5)
             } footer: {
-                Text("Én kveld per dato.")
+                DDFooter("Én kveld per dato.")
             }
 
             Section {
@@ -234,16 +235,16 @@ private struct EventEditor: View {
                             }
                         }
                     }
-                    .tint(.primary)
+                    .tint(Color.ddInk)
                     .accessibilityAddTraits(draft.committee.contains(member.id) ? .isSelected : [])
                 }
             } header: {
-                Text("Sosialkomité (\(draft.committee.count))")
+                DDHeader("Sosialkomité (\(draft.committee.count))")
             }
 
             if let error {
                 Section {
-                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Color.ddError)
                 }
             }
 
@@ -255,6 +256,7 @@ private struct EventEditor: View {
         }
         .environment(\.timeZone, EveningDates.osloTimeZone)
         .navigationTitle(draft.id == nil ? "Ny kveld" : "Endre kveld")
+        .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .disabled(isBusy)
         .toolbar {
@@ -318,25 +320,26 @@ private struct CommitteeDrawSheet: View {
     @State private var isBusy = false
 
     var body: some View {
-        List {
+        DDList {
             Section {
                 ForEach(plan, id: \.eventID) { assignment in
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(EveningDates.longText(assignment.date, capitalized: true)).font(.headline)
+                        Text(EveningDates.longText(assignment.date, capitalized: true)).font(.dd(.sans, size: 17, weight: .semibold, relativeTo: .headline))
                         Text(NorwegianList.join(assignment.memberIDs.map(model.memberName)))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.ddInkSecondary)
                     }
                 }
             } footer: {
-                Text("Ingenting er lagret ennå.")
+                DDFooter("Ingenting er lagret ennå.")
             }
             if let error {
                 Section {
-                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
+                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Color.ddError)
                 }
             }
         }
         .navigationTitle("Sosialkomité")
+        .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .disabled(isBusy)
         .toolbar {

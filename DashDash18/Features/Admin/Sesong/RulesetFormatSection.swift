@@ -25,7 +25,7 @@ struct RulesetFormatSection: View {
                 ForEach(Ruleset.MatchStrokes.allCases, id: \.self) { Text(RuleNames.title($0)).tag($0) }
             }
         } header: {
-            Text(RulesetSection.formats.title)
+            DDHeader(RulesetSection.formats.title)
         } footer: {
             RuleSectionFooter(text: "Laveste fra scratch: den beste i matchen spiller uten slag, de andre får forskjellen.",
                               issues: draft.issues(in: .formats))
@@ -38,15 +38,15 @@ private struct AllowedFormsView: View {
     @Binding var draft: RulesetDraft
 
     var body: some View {
-        Form {
+        DDForm {
             Section {
                 ForEach(CompetitionForm.all) { form in
                     Toggle(isOn: Binding(get: { draft.isAllowed(form) }, set: { draft.setAllowed(form, $0) })) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(form.name)
                             Text(form.help)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
+                                .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                                .foregroundStyle(Color.ddInkSecondary)
                         }
                     }
                 }
@@ -55,5 +55,6 @@ private struct AllowedFormsView: View {
             }
         }
         .navigationTitle("Tillatte former")
+        .ddNavigationChrome()
     }
 }

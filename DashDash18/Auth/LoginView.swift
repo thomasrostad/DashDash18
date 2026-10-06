@@ -21,29 +21,53 @@ struct LoginView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                switch step {
-                case .email:
-                    appleSection
-                    emailSection
-                case .code(let email):
-                    codeSection(email: email)
-                }
-                if let error {
-                    Section {
-                        Label(error.message, systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(.red)
+            ScrollView {
+                VStack(spacing: 0) {
+                    LoginHero()
+                        .padding(.vertical, 48)
+                    VStack(alignment: .leading, spacing: DDSpacing.l) {
+                        switch step {
+                        case .email:
+                            appleSection
+                            emailSection
+                        case .code(let email):
+                            codeSection(email: email)
+                        }
+                        if let error {
+                            Label(error.message, systemImage: "exclamationmark.triangle")
+                                .font(.ddCallout)
+                                .foregroundStyle(Color.ddError)
+                        }
                     }
+                    .padding(.horizontal, DDSpacing.xxl)
+                    .padding(.top, DDSpacing.xxl)
+                    .padding(.bottom, 40)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        UnevenRoundedRectangle(topLeadingRadius: DDRadius.sheet, topTrailingRadius: DDRadius.sheet)
+                            .fill(Color.ddCard)
+                            .ignoresSafeArea(edges: .bottom)
+                    )
                 }
+                .frame(maxWidth: 480)
+                .frame(maxWidth: .infinity)
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .background(Color.ddForestDeep.ignoresSafeArea())
             .navigationTitle("Logg inn")
+            .navigationBarTitleDisplayMode(.inline)
+            .ddNavigationChrome()
             .disabled(isBusy)
             .onAppear { focused = true }
         }
     }
 
     private var appleSection: some View {
-        Section {
+        VStack(alignment: .leading, spacing: DDSpacing.m) {
+            Text("Logg inn")
+                .font(.ddTitle)
+                .foregroundStyle(Color.ddForestInk)
+                .accessibilityAddTraits(.isHeader)
             SignInWithAppleButton(.signIn) { request in
                 appleNonce = AppleNonce.random()
                 request.requestedScopes = [.fullName, .email]
@@ -52,16 +76,23 @@ struct LoginView: View {
                 handleApple(result)
             }
             .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-            .frame(height: 50)
-            .listRowInsets(EdgeInsets())
-        } footer: {
+            .frame(height: 56)
+            .clipShape(.capsule)
             Text("Eller logg inn med en kode på e-post:")
+                .font(.ddCallout)
+                .foregroundStyle(Color.ddInkSecondary)
+                .padding(.top, DDSpacing.s)
         }
     }
 
     private var emailSection: some View {
-        Section {
-            TextField("deg@epost.no", text: $emailText)
+        VStack(alignment: .leading, spacing: DDSpacing.s) {
+            Text("E-post")
+                .font(.ddCallout)
+                .foregroundStyle(Color.ddInkSecondary)
+            // Egen prompt med verbatim: ellers lenkefarger iOS e-postadressen i plassholderen.
+            TextField("deg@epost.no", text: $emailText,
+                      prompt: Text(verbatim: "deg@epost.no").foregroundStyle(Color.ddInkSecondary))
                 .textContentType(.emailAddress)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
@@ -69,45 +100,62 @@ struct LoginView: View {
                 .focused($focused)
                 .submitLabel(.send)
                 .onSubmit(sendCode)
+                .ddField()
+            Text("Vi sender en engangskode til e-posten din. Ingen passord å huske.")
+                .font(.ddCaption)
+                .foregroundStyle(Color.ddInkSecondary)
             Button(action: sendCode) {
                 busyLabel("Send kode")
             }
-        } header: {
-            Text("E-post")
-        } footer: {
-            Text("Vi sender en engangskode til e-posten din. Ingen passord å huske.")
+            .buttonStyle(.ddPrimary)
+            .padding(.top, DDSpacing.s)
         }
     }
 
     private func codeSection(email: String) -> some View {
-        Section {
+        VStack(alignment: .leading, spacing: DDSpacing.s) {
+            Text("Skriv inn koden")
+                .font(.ddTitle)
+                .foregroundStyle(Color.ddForestInk)
+                .accessibilityAddTraits(.isHeader)
+            Text("Sendt til \(email). Bli i appen og skriv inn koden her.")
+                .font(.ddCallout)
+                .foregroundStyle(Color.ddInkSecondary)
+            Text("Kode")
+                .font(.ddCallout)
+                .foregroundStyle(Color.ddInkSecondary)
+                .padding(.top, DDSpacing.s)
             TextField("Engangskode", text: $codeText)
                 .textContentType(.oneTimeCode)
                 .keyboardType(.numberPad)
                 .focused($focused)
                 .onSubmit { verify(email: email) }
+                .font(.dd(.mono, size: 20, weight: .medium, relativeTo: .title3))
+                .ddField()
             Button { verify(email: email) } label: {
                 busyLabel("Logg inn")
             }
-            Button("Send ny kode") { resend(to: email) }
-            Button("Bruk en annen e-post") {
-                step = .email
-                codeText = ""
-                error = nil
+            .buttonStyle(.ddPrimary)
+            .padding(.top, DDSpacing.s)
+            HStack {
+                Button("Send ny kode") { resend(to: email) }
+                Spacer()
+                Button("Bruk en annen e-post") {
+                    step = .email
+                    codeText = ""
+                    error = nil
+                }
             }
-        } header: {
-            Text("Kode")
-        } footer: {
-            Text("Sendt til \(email). Bli i appen og skriv inn koden her.")
+            .buttonStyle(.ddText)
         }
     }
 
     private func busyLabel(_ title: String) -> some View {
-        HStack {
+        HStack(spacing: DDSpacing.s) {
             Text(title)
             if isBusy {
-                Spacer()
                 ProgressView()
+                    .tint(DDToken.buttonPrimaryText.color)
             }
         }
     }
@@ -167,5 +215,24 @@ struct LoginView: View {
             }
             isBusy = false
         }
+    }
+}
+
+/// Jakka, navnet og sesongen på grønn grunn, som innloggingen i PWA-en.
+private struct LoginHero: View {
+    var body: some View {
+        VStack(spacing: DDSpacing.m) {
+            DDJacketIcon()
+                .stroke(Color.ddGold, style: StrokeStyle(lineWidth: 1.6, lineJoin: .round))
+                .frame(width: 44, height: 52)
+                .accessibilityHidden(true)
+            Text("DashDash18")
+                .font(.ddDisplay)
+                .foregroundStyle(Color.ddOnDark)
+            Text("GolfGutu Invitational")
+                .ddEyebrow(color: Color.ddOnDark.opacity(0.55))
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }

@@ -7,34 +7,17 @@ struct HullprikkerView: View {
     let onSelect: (Int) -> Void
 
     var body: some View {
-        let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 9)
-        LazyVGrid(columns: columns, spacing: 6) {
+        // Loddrette streker som i PWA-en (`.gg-holedots`), én per hull.
+        HStack(spacing: 3) {
             ForEach(dots) { dot in
                 Button { onSelect(dot.index) } label: {
-                    ZStack {
-                        Circle()
-                            .fill(fill(dot))
-                        if dot.isPending {
-                            Circle().strokeBorder(.orange, style: StrokeStyle(lineWidth: 2, dash: [3, 2]))
-                        }
-                        if dot.isCurrent {
-                            Circle().strokeBorder(.primary, lineWidth: 2)
-                        }
-                        Text("\(dot.number)")
-                            .font(.caption2.monospacedDigit().weight(dot.isCurrent ? .bold : .regular))
-                            .foregroundStyle(dot.state == .done ? .white : .primary)
-                    }
-                    .frame(height: 30)
-                    .overlay(alignment: .topTrailing) {
-                        if dot.isLongestDrive || dot.isClosestToPin {
-                            Circle().fill(dot.isLongestDrive ? .yellow : .blue).frame(width: 7, height: 7)
-                        }
-                    }
-                    .overlay(alignment: .bottom) {
-                        if dot.isBayHole {
-                            Circle().fill(.orange).frame(width: 5, height: 5).offset(y: 5)
-                        }
-                    }
+                    DDHoleTick(
+                        state: progress(dot),
+                        isCurrent: dot.isCurrent,
+                        marker: dot.isLongestDrive ? .longestDrive : (dot.isClosestToPin ? .closestToPin : .none),
+                        isPending: dot.isPending,
+                        isBayHole: dot.isBayHole
+                    )
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(dot.accessibilityLabel)
@@ -43,11 +26,11 @@ struct HullprikkerView: View {
         }
     }
 
-    private func fill(_ dot: HoleDot) -> Color {
+    private func progress(_ dot: HoleDot) -> DDHoleTick.Progress {
         switch dot.state {
-        case .done: .green
-        case .partial: .green.opacity(0.35)
-        case .upcoming: .secondary.opacity(0.15)
+        case .done: .played
+        case .partial: .partial
+        case .upcoming: .upcoming
         }
     }
 }
@@ -59,28 +42,27 @@ struct BayenNaaSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Bayen nå")
-                .font(.caption.weight(.semibold))
-                .textCase(.uppercase)
-                .foregroundStyle(.secondary)
+            DDSectionLabel("Bayen nå")
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { i, row in
                     Button { onSelect(row.memberID) } label: {
                         HStack(spacing: 10) {
                             Text("\(i + 1).")
-                                .font(.subheadline.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                                .font(.ddCallout).monospacedDigit()
+                                .foregroundStyle(Color.ddStatSecondary)
                                 .frame(width: 28, alignment: .leading)
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(row.name + (row.isMe ? " (deg)" : ""))
-                                    .font(.body.weight(row.isMe ? .semibold : .regular))
+                                    .font(row.isMe ? .ddBodyEmphasis : .ddBody)
+                                    .foregroundStyle(Color.ddStatText)
                                 Text("thru \(row.thru)" + (row.bay.map { " · bås \($0)" } ?? ""))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .font(.ddCaption)
+                                    .foregroundStyle(Color.ddStatSecondary)
                             }
                             Spacer()
                             Text("\(row.total)")
-                                .font(.title3.monospacedDigit().bold())
+                                .font(.ddNumberLarge).monospacedDigit()
+                                .foregroundStyle(row.isMe ? Color.ddYellow : Color.ddStatText)
                         }
                         .padding(.vertical, 8)
                         .contentShape(.rect)
@@ -88,17 +70,20 @@ struct BayenNaaSection: View {
                     .buttonStyle(.plain)
                     .accessibilityElement(children: .combine)
                     .accessibilityHint("Åpner scorekortet")
-                    if i < rows.count - 1 { Divider() }
+                    if i < rows.count - 1 {
+                        Rectangle().fill(Color.ddStatText.opacity(0.12)).frame(height: 1)
+                    }
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 4)
-            .background(.background.secondary, in: .rect(cornerRadius: 16))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
+            .ddCard(.stat, padding: 0)
         }
     }
 }
 
 /// Scorekortet til én spiller: Ut/Inn, par, slag og poeng per hull, sum.
+/// Svart statistikk-kort med hvite tall og fargede poeng (golfee + PWA-ens score-merker).
 struct ScorekortSheet: View {
     let game: RoundGame
     let memberID: UUID
@@ -108,30 +93,46 @@ struct ScorekortSheet: View {
     var body: some View {
         let card = game.scorecard(for: memberID, inward: inward)
         NavigationStack {
-            List {
-                if game.hasInward {
-                    Picker("Side", selection: $inward) {
-                        Text("Ut · \(game.holeNumber(0))–\(game.holeNumber(8))").tag(false)
-                        Text("Inn · \(game.holeNumber(9))–\(game.holeNumber(min(17, game.holeCount - 1)))").tag(true)
+            ScrollView {
+                VStack(alignment: .leading, spacing: DDSpacing.m) {
+                    if game.hasInward {
+                        DDSegmentedControl([
+                            (false, "Ut · \(game.holeNumber(0))–\(game.holeNumber(8))"),
+                            (true, "Inn · \(game.holeNumber(9))–\(game.holeNumber(min(17, game.holeCount - 1)))"),
+                        ], selection: $inward)
+                        .accessibilityLabel("Side")
                     }
-                    .pickerStyle(.segmented)
-                    .listRowBackground(Color.clear)
-                }
-                Section {
-                    row("Hull", "Par", "Slag", nil, header: true)
-                    ForEach(card.lines) { line in
-                        row("\(line.number)", "\(line.par)", line.strokes.map(String.init) ?? "—", line)
+                    DDSectionLabel((game.snapshot.course?.name ?? "Runden") + " · " + (card.inward ? "Inn" : "Ut"))
+                        .padding(.top, DDSpacing.s)
+                    VStack(spacing: 0) {
+                        row("Hull", "Par", "Slag", nil, header: true)
+                        ForEach(card.lines) { line in
+                            rule
+                            row("\(line.number)", "\(line.par)", line.strokes.map(String.init) ?? "—", line)
+                        }
+                        rule
+                        row("Sum", "\(card.sumPar)", card.sumStrokes > 0 ? "\(card.sumStrokes)" : "—", nil,
+                            sum: card.sumPoints)
                     }
-                    row("Sum", "\(card.sumPar)", card.sumStrokes > 0 ? "\(card.sumStrokes)" : "—", nil,
-                        sum: card.sumPoints)
-                } header: {
-                    Text((game.snapshot.course?.name ?? "Runden") + " · " + (card.inward ? "Inn" : "Ut"))
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 8)
+                    .ddCard(.stat, padding: 0)
+                    HStack {
+                        Text("Totalt i runden")
+                        Spacer()
+                        Text("\(game.total(memberID)) poeng")
+                            .font(.ddNumber)
+                            .monospacedDigit()
+                            .foregroundStyle(Color.ddForestInk)
+                    }
+                    .ddCard(.glass)
+                    .accessibilityElement(children: .combine)
                 }
-                Section {
-                    LabeledContent("Totalt i runden", value: "\(game.total(memberID)) poeng")
-                }
+                .padding(.horizontal, DDSpacing.gutter)
+                .padding(.vertical, DDSpacing.l)
             }
             .navigationTitle(card.name)
+            .ddNavigationChrome()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -140,27 +141,40 @@ struct ScorekortSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationBackground(Color.ddBackground)
+    }
+
+    private var rule: some View {
+        Rectangle().fill(Color.ddStatText.opacity(0.12)).frame(height: 1)
     }
 
     private func row(_ hole: String, _ par: String, _ strokes: String, _ line: Scorecard.Line?,
                      header: Bool = false, sum: Int? = nil) -> some View {
         HStack {
             Text(hole).frame(width: 44, alignment: .leading)
+                .font(header ? .ddEyebrow : .ddNumber)
             Text(par).frame(width: 40)
+                .foregroundStyle(header ? Color.ddStatSecondary : Color.ddStatSecondary)
             Text(strokes).frame(width: 44)
             Spacer()
             if header {
                 Text("Poeng")
             } else if let sum {
-                Text("\(sum)").bold()
+                Text("\(sum)")
+                    .font(.ddNumberLarge)
+                    .foregroundStyle(Color.ddYellow)
             } else if let line, let name = line.scoreName, let points = line.points {
-                ScoreChip(name: name, text: "\(points)")
+                DDPointsBadge(points: points, name: name)
             } else {
-                Text("—").foregroundStyle(.secondary)
+                DDPointsBadge(points: nil, name: nil)
             }
         }
-        .font(header ? .caption.weight(.semibold) : .body.monospacedDigit())
-        .foregroundStyle(header ? .secondary : .primary)
+        .font(header ? .ddEyebrow : .ddBody)
+        .monospacedDigit()
+        .textCase(header ? .uppercase : nil)
+        .tracking(header ? 1.2 : 0)
+        .foregroundStyle(header ? Color.ddStatSecondary : Color.ddStatText)
+        .frame(minHeight: header ? 32 : 46)
         .accessibilityElement(children: .combine)
     }
 }
@@ -178,23 +192,22 @@ struct ParBekreftelseCard: View {
         let odd = Course.holesWithOddLength(holes)
         VStack(alignment: .leading, spacing: 10) {
             Text("Før dere begynner")
-                .font(.caption.weight(.semibold))
-                .textCase(.uppercase)
-                .foregroundStyle(.secondary)
+                .ddEyebrow()
             Text("Stemmer dette med skjermen?")
-                .font(.title2.bold())
+                .font(.ddTitle)
+                .foregroundStyle(Color.ddForestInk)
             Text(summary(holes))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(.dd(.sans, size: 14, relativeTo: .subheadline))
+                .foregroundStyle(Color.ddInkSecondary)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 9), spacing: 4) {
                 ForEach(holes.indices, id: \.self) { i in
                     VStack(spacing: 0) {
-                        Text("\(game.holeNumber(i))").font(.caption2).foregroundStyle(.secondary)
-                        Text("\(holes[i].par)").font(.body.monospacedDigit().bold())
+                        Text("\(game.holeNumber(i))").font(.dd(.sans, size: 11, relativeTo: .caption2)).foregroundStyle(Color.ddInkSecondary)
+                        Text("\(holes[i].par)").font(.dd(.sans, size: 16, weight: .bold, relativeTo: .body)).monospacedDigit()
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
-                    .background(.secondary.opacity(0.1), in: .rect(cornerRadius: 6))
+                    .padding(.vertical, 6)
+                    .background(Color.ddEarth, in: .rect(cornerRadius: 10))
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Hull \(game.holeNumber(i)), par \(holes[i].par)")
                 }
@@ -202,11 +215,11 @@ struct ParBekreftelseCard: View {
             if !odd.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(odd.count == 1 ? "Se på dette hullet først:" : "Se på disse hullene først:")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.orange)
+                        .font(.dd(.sans, size: 14, weight: .semibold, relativeTo: .subheadline))
+                        .foregroundStyle(Color.ddRustText)
                     ForEach(odd, id: \.number) { h in
                         Text("Hull \(game.holeNumber(h.number - 1)) står som par \(h.par ?? 0) på \(HoleMath.meters(h.meters ?? 0)) m")
-                            .font(.subheadline)
+                            .font(.dd(.sans, size: 14, relativeTo: .subheadline))
                     }
                 }
             }
@@ -218,25 +231,23 @@ struct ParBekreftelseCard: View {
                         do { try await onConfirm(); error = nil } catch { self.error = DataError.from(error).message }
                     }
                 } label: {
-                    Text("Stemmer · start føringen").frame(maxWidth: .infinity)
+                    Text("Stemmer · start føringen")
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .buttonStyle(.ddPrimary)
                 .disabled(isBusy)
             } else {
                 Text("Markøren eller arrangøren sjekker parene først · du ser det live.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddInkSecondary)
                     .frame(maxWidth: .infinity)
             }
             if let error {
                 Label(error, systemImage: "exclamationmark.triangle")
-                    .font(.footnote)
-                    .foregroundStyle(.red)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddError)
             }
         }
-        .padding(16)
-        .background(.background.secondary, in: .rect(cornerRadius: 16))
+        .ddCard(.large)
     }
 
     private func summary(_ holes: [PlayedHole]) -> String {

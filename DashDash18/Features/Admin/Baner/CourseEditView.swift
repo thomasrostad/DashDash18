@@ -29,7 +29,7 @@ struct CourseEditView: View {
 
     var body: some View {
         let validation = draft.validate()
-        Form {
+        DDForm {
             Section {
                 TextField("Navn", text: $draft.name)
                     .textInputAutocapitalization(.words)
@@ -37,9 +37,9 @@ struct CourseEditView: View {
                     .autocorrectionDisabled()
                 Toggle("I bruk", isOn: $draft.inUse)
             } header: {
-                Text("Banen")
+                DDHeader("Banen")
             } footer: {
-                Text("Navnet i simulatoren er det dere slår opp i båsen, hvis det er et annet enn vårt. Baner som ikke er i bruk, vises ikke når en runde settes opp.")
+                DDFooter("Navnet i simulatoren er det dere slår opp i båsen, hvis det er et annet enn vårt. Baner som ikke er i bruk, vises ikke når en runde settes opp.")
             }
 
             Section {
@@ -54,9 +54,9 @@ struct CourseEditView: View {
                         .multilineTextAlignment(.trailing)
                 }
             } header: {
-                Text("Rating")
+                DDHeader("Rating")
             } footer: {
-                Text("Tomt felt regnes som banens par og slope 113. Da får spilleren handicapindeksen sin rett, som når simulatoren deler ut slagene.")
+                DDFooter("Tomt felt regnes som banens par og slope 113. Da får spilleren handicapindeksen sin rett, som når simulatoren deler ut slagene.")
             }
 
             Section {
@@ -66,7 +66,7 @@ struct CourseEditView: View {
                 .pickerStyle(.segmented)
                 LabeledContent("Par", value: draft.par.map(String.init) ?? "–")
             } footer: {
-                Text("Les par, indeks og lengde av skjermen i båsen. Tomme felt betyr at appen ikke vet. Indeks kan stå tom; den brukes bare når appen selv deler ut slagene.")
+                DDFooter("Les par, indeks og lengde av skjermen i båsen. Tomme felt betyr at appen ikke vet. Indeks kan stå tom; den brukes bare når appen selv deler ut slagene.")
             }
 
             holeSection(title: "Hull 1–9", range: 0..<min(9, draft.holeCount))
@@ -81,18 +81,19 @@ struct CourseEditView: View {
                 Section {
                     Button("Slett banen", role: .destructive) { askDelete = true }
                 } footer: {
-                    Text("Går bare når ingen runder bruker banen.")
+                    DDFooter("Går bare når ingen runder bruker banen.")
                 }
             }
 
             if let error {
                 Section {
                     Label(error.message, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.ddError)
                 }
             }
         }
         .navigationTitle(item == nil ? "Ny bane" : draft.name.isEmpty ? "Bane" : draft.name)
+        .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .disabled(isBusy)
         .toolbar {
@@ -121,13 +122,13 @@ struct CourseEditView: View {
                 Text("Indeks").frame(width: 64)
                 Text("Meter").frame(width: 64)
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            .font(.dd(.sans, size: 12, relativeTo: .caption))
+            .foregroundStyle(Color.ddInkSecondary)
             ForEach(range, id: \.self) { index in
                 HoleRowEditor(hole: $draft.holes[index])
             }
         } header: {
-            Text(title)
+            DDHeader(title)
         }
     }
 
@@ -138,8 +139,8 @@ struct CourseEditView: View {
             Section {
                 ForEach(Array(shown.enumerated()), id: \.offset) { _, issue in
                     Label(issue.message, systemImage: issue.isBlocking ? "xmark.octagon" : "exclamationmark.triangle")
-                        .foregroundStyle(issue.isBlocking ? Color.red : Color.orange)
-                        .font(.callout)
+                        .foregroundStyle(issue.isBlocking ? Color.ddError : Color.ddRustText)
+                        .font(.dd(.sans, size: 15, relativeTo: .callout))
                 }
             }
         }
@@ -151,7 +152,7 @@ struct CourseEditView: View {
             Button("Bekreft mot skjermen", systemImage: "checkmark.seal") { confirm(item) }
                 .disabled(draft != original || !item.isReady)
         } header: {
-            Text("Simulatorskjermen")
+            DDHeader("Simulatorskjermen")
         } footer: {
             if draft != original {
                 Text("Lagre endringene før du bekrefter.")

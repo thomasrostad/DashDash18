@@ -44,28 +44,31 @@ private struct KveldContent: View {
                 Text(message)
             } actions: {
                 Button("Prøv igjen") { Task { await model.load() } }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.dd(.primary))
             }
         case .loaded:
-            if let event = model.event {
-                List {
-                    Section("Neste kveld") {
+            // ScrollView, så «dra ned for å hente på nytt» virker i begge tilfeller.
+            ScrollView {
+                VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
+                    if let event = model.event {
+                        DDSectionLabel("Neste kveld")
                         NextEveningCard(
                             event: event,
                             committee: model.committee,
                             daysUntil: model.daysUntil,
                             referenceYear: EveningDates.year(of: model.today)
                         )
+                        .ddCard(.large)
+                        SignupSection(model: model)
+                            .padding(.top, DDSpacing.l)
+                        SignupOverviewSection(summary: model.summary, myID: model.memberID)
+                    } else {
+                        EmptyKveldView()
+                            .ddCard(.empty)
                     }
-                    SignupSection(model: model)
-                    SignupOverviewSection(summary: model.summary, myID: model.memberID)
                 }
-            } else {
-                // List, så «dra ned for å hente på nytt» virker også her.
-                List {
-                    EmptyKveldView()
-                        .listRowBackground(Color.clear)
-                }
+                .padding(.horizontal, DDSpacing.gutter)
+                .padding(.vertical, DDSpacing.l)
             }
         }
     }

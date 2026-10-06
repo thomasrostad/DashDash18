@@ -22,75 +22,72 @@ struct HullkortView: View {
                 Spacer()
                 Text(card.strokesLabel)
             }
-            .font(.caption.weight(.semibold))
-            .textCase(.uppercase)
-            .foregroundStyle(.secondary)
+            .ddEyebrow()
+            .padding(.top, 6)
 
             VStack(spacing: 0) {
+                DDDivider()
                 ForEach(card.rows) { row in
                     HullRadView(row: row, isPending: isPending, onStep: onStep, onConfirm: onConfirm,
                                 onName: { onScorecard(row.memberID) })
-                    if row.id != card.rows.last?.id { Divider() }
+                    if row.id != card.rows.last?.id { DDDivider() }
                 }
             }
 
             if card.showsParHint {
                 Text("Stiplet tall er par. Trykk tallet for å bekrefte det.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.ddCaption)
+                    .foregroundStyle(Color.ddInkSecondary)
             }
             if let outside = card.outsideTruncation {
                 Text(outside)
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .font(.ddCaption)
+                    .ddWarningStyle()
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
             }
             if isPending {
                 Label("Hullet er ikke lagret ennå. Det sendes når du har dekning.", systemImage: "icloud.and.arrow.up")
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .font(.ddCaption)
+                    .ddWarningStyle()
             }
             if let error {
                 Label(error, systemImage: "exclamationmark.triangle")
-                    .font(.footnote)
-                    .foregroundStyle(.red)
+                    .ddErrorStyle()
             }
             actionView
+                .padding(.top, 4)
             if let hint = card.viewerHint {
                 Text(hint)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.ddCaption)
+                    .foregroundStyle(Color.ddInkSecondary)
             }
             if card.holeIndex > 0 {
                 Button("‹ Forrige hull") { onGoTo(card.holeIndex - 1) }
-                    .font(.subheadline)
+                    .buttonStyle(.ddText)
                     .frame(maxWidth: .infinity)
             }
         }
-        .padding(16)
-        .background(.background.secondary, in: .rect(cornerRadius: 16))
+        .ddCard(.large)
     }
 
     private var header: some View {
         HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(card.title)
-                    .font(.caption.weight(.semibold))
-                    .textCase(.uppercase)
-                    .foregroundStyle(.secondary)
+                    .ddEyebrow()
                 Text(card.detail)
-                    .font(.title3.bold())
+                    .font(.dd(.sans, size: 15, relativeTo: .subheadline))
+                    .monospacedDigit()
+                    .foregroundStyle(Color.ddInkSecondary)
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 6) {
                 if card.isLongestDrive {
-                    Label("Longest drive", systemImage: "ruler")
-                        .modifier(TagStyle())
+                    DDSidePrizeTag(kind: .longestDrive)
                 }
                 if card.isClosestToPin {
-                    Label("Nærmest pinnen", systemImage: "scope")
-                        .modifier(TagStyle())
+                    DDSidePrizeTag(kind: .closestToPin)
                 }
             }
         }
@@ -103,42 +100,26 @@ struct HullkortView: View {
         case .save(let title, let enabled, let blocker):
             Button(action: onSave) {
                 Group {
-                    if isSaving { ProgressView() } else { Text(title) }
+                    if isSaving { ProgressView().tint(DDToken.buttonPrimaryText.color) } else { Text(title) }
                 }
-                .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .buttonStyle(.ddPrimary)
             .disabled(!enabled || isSaving)
             if let blocker {
                 Text(blocker)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.ddCaption)
+                    .foregroundStyle(Color.ddInkSecondary)
                     .frame(maxWidth: .infinity)
             }
         case .next(let title, let hole):
             Button(title) { onGoTo(hole) }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.dd(.secondary, fullWidth: true))
         case .scorecard:
             Button("Alle hull er lagret · se scorekortet →") { onScorecard(nil) }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.dd(.secondary, fullWidth: true))
         case .none:
             EmptyView()
         }
-    }
-}
-
-private struct TagStyle: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .font(.caption.weight(.semibold))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(.yellow.opacity(0.3), in: .capsule)
     }
 }
 
@@ -152,16 +133,15 @@ struct HullRadView: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 Button(action: onName) {
-                    HStack(spacing: 6) {
-                        Text(row.name).font(.body.weight(.semibold))
+                    HStack(alignment: .firstTextBaseline, spacing: 7) {
+                        Text(row.name)
+                            .font(.ddName)
+                            .foregroundStyle(Color.ddForestInk)
+                            .lineLimit(1)
                         if row.isMe {
-                            Text("deg")
-                                .font(.caption2.weight(.semibold))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 1)
-                                .background(.green.opacity(0.18), in: .capsule)
+                            Text("deg").ddEyebrow()
                         }
                     }
                 }
@@ -170,14 +150,15 @@ struct HullRadView: View {
 
                 if row.editable || row.saved != nil {
                     Text("\(row.strokesReceived) slag fått")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.ddMonoSmall)
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
                 result
                 if let calculation = row.calculation {
                     Text(calculation)
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
+                        .font(.ddMonoSmall)
+                        .monospacedDigit()
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
             }
             Spacer(minLength: 4)
@@ -185,31 +166,42 @@ struct HullRadView: View {
                 stepper
             } else {
                 Text(row.saved.map(String.init) ?? "—")
-                    .font(.title2.monospacedDigit().bold())
-                    .foregroundStyle(row.saved == nil ? .secondary : .primary)
+                    .font(.ddStrokes)
+                    .monospacedDigit()
+                    .foregroundStyle(row.saved == nil ? Color.ddHairline : Color.ddForestInk)
+                    .frame(minWidth: 46, alignment: .trailing)
             }
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, row.isMe ? 8 : 0)
-        .background(row.isMe ? AnyShapeStyle(.green.opacity(0.06)) : AnyShapeStyle(.clear), in: .rect(cornerRadius: 10))
+        .padding(.vertical, 12)
+        .padding(.horizontal, row.isMe ? 10 : 0)
+        // Din rad har en svak gulltone, som i PWA-en.
+        .background(row.isMe ? Color.ddYouRow : Color.clear, in: .rect(cornerRadius: 16))
+        .padding(.horizontal, row.isMe ? -10 : 0)
     }
 
     @ViewBuilder
     private var result: some View {
         if let name = row.scoreName {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 ScoreChip(name: name)
                 if let points = row.points {
-                    Text("\(points) p").font(.caption.monospacedDigit().weight(.semibold))
+                    Text("\(points) p")
+                        .font(.ddCallout)
+                        .monospacedDigit()
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
                 if isPending && !row.editable {
-                    Text("ikke lagret ennå").font(.caption).foregroundStyle(.orange)
+                    Text("ikke lagret ennå").font(.ddCaption).ddWarningStyle()
                 }
             }
+        } else if row.editable && !row.confirmed {
+            DDChip("Par? trykk tallet", tone: .earth, compact: true)
+                .foregroundStyle(Color.ddInkSecondary)
+                .accessibilityHidden(true)
         } else if !row.editable {
             Text("ikke lagret ennå")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.ddCaption)
+                .foregroundStyle(Color.ddInkSecondary)
         }
     }
 
@@ -219,26 +211,14 @@ struct HullRadView: View {
                 onStep(-1, row.memberID)
             } label: {
                 Image(systemName: "minus")
-                    .frame(width: 36, height: 36)
             }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.circle)
+            .buttonStyle(DDStepperButtonStyle(kind: .minus))
             .accessibilityLabel("Ett slag mindre for \(row.name)")
 
             Button {
                 onConfirm(row.memberID)
             } label: {
-                Text("\(row.value)")
-                    .font(.title2.monospacedDigit().bold())
-                    .frame(width: 44, height: 44)
-                    .foregroundStyle(row.confirmed ? .primary : .secondary)
-                    .overlay {
-                        if !row.confirmed {
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+                DDStrokeValue(value: "\(row.value)", confirmed: row.confirmed)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(row.confirmed ? "\(row.value) slag" : "Bekreft par \(row.value)")
@@ -247,37 +227,20 @@ struct HullRadView: View {
                 onStep(1, row.memberID)
             } label: {
                 Image(systemName: "plus")
-                    .frame(width: 36, height: 36)
             }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.circle)
+            .buttonStyle(DDStepperButtonStyle(kind: .plus))
             .accessibilityLabel("Ett slag mer for \(row.name)")
         }
         .sensoryFeedback(.selection, trigger: row.value)
     }
 }
 
-/// Eagle, Birdie, Par, Bogey, Dobbel, Blowup.
+/// Eagle, Birdie, Par, Bogey, Dobbel, Blowup (fargene fra designsystemet).
 struct ScoreChip: View {
     let name: ScoreName
     var text: String?
 
     var body: some View {
-        Text(text ?? name.label)
-            .font(.caption.weight(.semibold))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.22), in: .capsule)
-    }
-
-    private var color: Color {
-        switch name {
-        case .eagle: .yellow
-        case .birdie: .green
-        case .par: .gray
-        case .bogey: .orange
-        case .dobbel: .red
-        case .blowup: .purple
-        }
+        DDChip(text ?? name.label, tone: name.tone, compact: true)
     }
 }
