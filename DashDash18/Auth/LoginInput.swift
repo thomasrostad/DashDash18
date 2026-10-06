@@ -27,6 +27,7 @@ nonisolated enum LoginError: Error, Equatable {
     case wrongOrExpiredCode
     case tooManyAttempts
     case offline
+    case appleFailed
     case unknown(String)
 
     var message: String {
@@ -36,6 +37,7 @@ nonisolated enum LoginError: Error, Equatable {
         case .wrongOrExpiredCode: "Koden er feil eller utløpt. Be om en ny kode."
         case .tooManyAttempts: "For mange forsøk. Vent litt og prøv igjen."
         case .offline: "Ingen kontakt med serveren. Sjekk nettet og prøv igjen."
+        case .appleFailed: "Innloggingen med Apple ble ikke fullført. Prøv igjen, eller bruk e-post."
         case .unknown(let detail): "Noe gikk galt: \(detail)"
         }
     }

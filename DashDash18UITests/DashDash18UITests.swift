@@ -14,6 +14,7 @@ final class DashDash18UITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Logg inn"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.textFields["deg@epost.no"].exists)
         XCTAssertTrue(app.buttons["Send kode"].exists)
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Apple'")).firstMatch.exists)
     }
 
     @MainActor

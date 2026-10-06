@@ -53,6 +53,17 @@ final class AuthModel {
         }
     }
 
+    /// Logg inn med Apple: ID-tokenet fra Apple byttes mot en Supabase-økt.
+    func signInWithApple(idToken: String, rawNonce: String) async throws(LoginError) {
+        do {
+            try await auth.signInWithIdToken(
+                credentials: OpenIDConnectCredentials(provider: .apple, idToken: idToken, nonce: rawNonce)
+            )
+        } catch {
+            throw Self.loginError(from: error)
+        }
+    }
+
     /// Lokal utlogging, som i PWA-en: en global utlogging kunne henge.
     func signOut() async {
         try? await auth.signOut(scope: .local)

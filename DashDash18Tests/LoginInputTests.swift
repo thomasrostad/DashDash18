@@ -41,7 +41,7 @@ struct LoginInputTests {
     }
 
     @Test func alleFeilHarNorskMelding() {
-        let feil: [LoginError] = [.invalidEmail, .invalidCode, .wrongOrExpiredCode, .tooManyAttempts, .offline, .unknown("x")]
+        let feil: [LoginError] = [.invalidEmail, .invalidCode, .wrongOrExpiredCode, .tooManyAttempts, .offline, .appleFailed, .unknown("x")]
         #expect(feil.allSatisfy { !$0.message.isEmpty })
     }
 }

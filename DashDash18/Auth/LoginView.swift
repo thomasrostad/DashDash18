@@ -1,8 +1,11 @@
+import AuthenticationServices
 import SwiftUI
 
-/// Innlogging med engangskode på e-post. Apple og Google kommer i neste steg.
+/// Innlogging med Apple eller engangskode på e-post. Google kommer i neste steg.
 struct LoginView: View {
     @Environment(AuthModel.self) private var auth
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var appleNonce = ""
 
     private enum Step {
         case email
@@ -21,6 +24,7 @@ struct LoginView: View {
             Form {
                 switch step {
                 case .email:
+                    appleSection
                     emailSection
                 case .code(let email):
                     codeSection(email: email)
@@ -35,6 +39,23 @@ struct LoginView: View {
             .navigationTitle("Logg inn")
             .disabled(isBusy)
             .onAppear { focused = true }
+        }
+    }
+
+    private var appleSection: some View {
+        Section {
+            SignInWithAppleButton(.signIn) { request in
+                appleNonce = AppleNonce.random()
+                request.requestedScopes = [.fullName, .email]
+                request.nonce = AppleNonce.sha256(appleNonce)
+            } onCompletion: { result in
+                handleApple(result)
+            }
+            .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+            .frame(height: 50)
+            .listRowInsets(EdgeInsets())
+        } footer: {
+            Text("Eller logg inn med en kode på e-post:")
         }
     }
 
@@ -114,6 +135,25 @@ struct LoginView: View {
             return
         }
         run { try await auth.verify(email: email, code: code) }
+    }
+
+    private func handleApple(_ result: Result<ASAuthorization, any Error>) {
+        switch result {
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let tokenData = credential.identityToken,
+                  let idToken = String(data: tokenData, encoding: .utf8)
+            else {
+                error = .appleFailed
+                return
+            }
+            let nonce = appleNonce
+            run { try await auth.signInWithApple(idToken: idToken, rawNonce: nonce) }
+        case .failure(let failure):
+            // Avbrutt av brukeren er ikke en feil.
+            if (failure as? ASAuthorizationError)?.code == .canceled { return }
+            error = .appleFailed
+        }
     }
 
     private func run(_ action: @escaping () async throws -> Void) {
