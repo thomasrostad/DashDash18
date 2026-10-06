@@ -5,9 +5,14 @@ struct DegView: View {
     let user: AuthUser
     let membership: Membership
     @Environment(ClubModel.self) private var club
+    @Environment(\.clubContext) private var context
 
     var body: some View {
         List {
+            if let context {
+                DegProfileSection(context: context)
+                    .id(context.memberID)
+            }
             Section("Klubb") {
                 LabeledContent("Klubb", value: membership.club.name)
                 LabeledContent("Navn i troppen", value: membership.displayName)
