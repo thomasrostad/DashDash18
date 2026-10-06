@@ -1,6 +1,8 @@
 # SPEC: DashDash18
 
-Kartlegging av GolfGutu-PWA-en (`referanse/golfgutu-pwa/`) som grunnlag for en native iOS-klient mot samme Supabase-database. PWA-en er fasit for funksjon og regler. Ingen Swift-kode her.
+Kartlegging av GolfGutu-PWA-en (`referanse/golfgutu-pwa/`). PWA-en er fasit for funksjon og regler. Ingen Swift-kode her.
+
+> **Endret 06.10.2026:** Appen får **egen Supabase** og deler ikke database med PWA-en (ROADMAP B4). Seksjon 3 beskriver derfor PWA-basen som kilde for import, ikke som kontrakt appen skriver mot. Regler om identisk skrivemønster og sameksistens (3.3, 4.9, 6) gjelder ikke lenger. Turneringsreglene blir et regelsett i admin-panelet (ROADMAP B12), og seksjon 4 beskriver **Golfgutu-oppsettet** som må gi samme svar. Seksjon 6 er erstattet av `ROADMAP.md`.
 
 ## Om grunnlaget
 

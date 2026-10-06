@@ -10,10 +10,10 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 1 – Innlogging og Kveld i lesemodus (ikke startet) |
-| **Sist gjort** | Beslutninger tatt (seksjon 3). `.gitignore` holder `referanse/` utenfor git. Ingen Swift-kode ennå. Prosjektet er fortsatt Xcode-malen. |
-| **Neste oppgave** | Fase 1, oppgave 1: sette deployment target til iOS 26.0 og Swift 6-språkmodus i Xcode (B7). |
-| **Venter på deg** | Godkjenning av Supabase-oppsett for Apple- og Google-innlogging (B9) før fase 1 oppgave 8. |
+| **Nåværende fase** | Fase 1 – Grunnmur, ny Supabase og innlogging (ikke startet) |
+| **Sist gjort** | Plan revidert: egen Supabase for appen (B4), regelsett styrt fra admin-panel (B12), iPhone først (B13). |
+| **Neste oppgave** | Fase 1, oppgave 1: sette deployment target til iOS 26.0 og Swift 6-språkmodus i Xcode. |
+| **Venter på deg** | Opprette to nye Supabase-prosjekter (test og prod) og gi meg test-URL og publishable key. Godkjenne skjema-SQL (fase 1, oppgave 5). |
 
 ---
 
@@ -21,233 +21,215 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 «Ferdig» betyr:
 
-1. **Gjengen spiller en hel kveld uten PWA-en.** Påmelding, kladd, start, par-bekreftelse, føring per bås, LD/KP, tippekupong, tråd, avkorting og «Avslutt kvelden» gjøres i iOS-appen, av spillere, markører og arrangør.
-2. **All spillogikk gir samme svar som PWA-en.** Hver regel i `db-nytt.js` som påvirker poeng, stableford, WHS, match, jakketabell og tips har en Swift-test med tall hentet fra PWA-ens tester eller utledet fra koden (SPEC 4).
-3. **Appen er distribuert til alle** i gjengen via TestFlight og kjører mot **prod**-databasen.
-4. **Ingen data går tapt eller må flyttes.** Appen bruker samme database som PWA-en, så sesongen fortsetter der den slapp.
-5. Føring virker med dårlig dekning: ingen hull går tapt når nettet faller ut.
-6. Veddemål er avgjort på nytt (B10): enten med poeng i stedet for penger, eller utelatt. Penger flyttes ikke.
-
-PWA-en lever side om side med appen til appen er god nok til å overta (B3).
+1. **Gjengen spiller en hel kveld i appen, uten PWA-en.** Påmelding, oppsett, start, føring per bås, LD/KP, tippekupong, tråd, avkorting og avslutning gjøres i appen, av spillere, markører og arrangør.
+2. **Turneringen er ikke låst.** Antall spillere, antall kvelder, hva som teller, poengmodell, former og sidepremier settes av arrangøren i admin-panelet.
+3. **Golfgutu-oppsettet gir samme svar som PWA-en.** Med regelsettet som gjengir PWA-ens regler, gir appen samme stableford, slag, match, jakketabell og tips som `db-nytt.js`. Hver regel har en Swift-test med tall fra PWA-ens tester eller utledet fra koden (SPEC 4).
+4. **Appen har sin egen Supabase.** Historikken fra PWA-en er importert, så sesongen fortsetter der den slapp.
+5. **Appen er distribuert til alle** i gjengen med iPhone via TestFlight.
+6. Føring virker med dårlig dekning: ingen hull går tapt når nettet faller ut.
 
 ---
 
 ## 2. FASER
 
-Hver fase gir noe som kan prøves på en ekte kveld. Fram til appen får skrive mot prod (B4) betyr «ekte kveld» en kveld simulert i **test**-prosjektet, med PWA-ens test-bygg (`golfgutu-test.pages.dev`) og iOS-appen side om side.
+Hver fase gir noe som kan prøves. Fram til byttet (fase 9) foregår alt mot appens **test**-prosjekt, mens gjengen fortsetter å bruke PWA-en på torsdager. «Ekte kveld» betyr derfor en kveld spilt i appen ved siden av PWA-en, eller en prøvekveld med noen av gutta.
 
-Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal ha en Swift-test (Swift Testing) som gir samme svar. Fullstendig oversikt står i vedlegg A.
+Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal ha en Swift-test som gir samme svar med Golfgutu-oppsettet. Fullstendig oversikt står i vedlegg A.
 
 ---
 
-### Fase 1 – Innlogging og Kveld i lesemodus
+### Fase 1 – Grunnmur, ny Supabase og innlogging
 
-**Mål:** Logge inn mot test-databasen med Apple, Google eller e-postkode, og se kvelden og en runde som pågår (ført fra PWA-en) live på telefonen.
+**Mål:** Logge inn i appen mot en ny, egen test-database med Apple, Google eller e-postkode.
 
 - [ ] Sette deployment target til iOS 26.0 og Swift 6-språkmodus i Xcode (B7). Ikke via `project.pbxproj`.
-- [ ] Miljøkonfig for **test** (URL og publishable key) i en fil som ikke sjekkes inn, og som ikke kan peke på prod ved et uhell.
-- [ ] Legge til `supabase-swift` via Swift Package Manager i Xcode.
 - [ ] Rydde malkoden (`Item.swift`, mal-`ContentView`) og opprette mappestrukturen.
-- [ ] Datamodeller (rene `Codable`-typer) for `players`, `schedule`, `signups`, `rounds`, `round_bays`, `round_teams`, `round_matches`, `round_holes`, `hole_scores`, `round_points`, `courses`, `course_holes`, `settings` (SPEC 3.1).
-- [ ] Paginert henting (1000 rader, eksplisitt sortering) som i PWA-en (SPEC 3.3).
-- [ ] Innlogging med e-postkode (ikke anta kodelengde) og kobling av `auth.uid()` til spillerrad: «velg navnet ditt» (ta ledig rad, sjekk at én rad kom tilbake), «Bli med» som ny spiller, logg ut.
-- [ ] **Logg inn med Apple** (native, `AuthenticationServices` + `signInWithIdToken`) og **Google** (OAuth via `supabase-swift`, uten ekstra SDK). Krever godkjent Supabase-oppsett (B9).
-- [ ] **Koble til Apple/Google** fra en innlogget konto (`linkIdentity`), slik at eksisterende spillere beholder samme `user_id` og PWA-innloggingen fortsatt virker.
-- [ ] «Vi kjenner deg ikke igjen»: tydelig vei hvis noen logger inn med en ny identitet som ikke er koblet (for eksempel Apples «Skjul e-post»).
-- [ ] Hent på nytt når appen blir aktiv igjen (SPEC 5.1 nr. 4).
-- [ ] Realtime på `hole_scores`, `rounds`, `round_bays` med målrettet refetch.
-- [ ] Kveld-skjerm, rolig: neste kveld, påmeldte, topp av tabellen (foreløpig fra `round_points`).
-- [ ] Kveld-skjerm, spill: aktiv runde, min bås, hvem som fører, brutto per hull for båsen, scorekort (bare tall som ligger i basen).
+- [ ] Legge til `supabase-swift` via Swift Package Manager i Xcode.
+- [ ] Miljøkonfig for test og prod i filer som ikke sjekkes inn, med tydelig visning av miljø i appen.
+- [ ] **Skjema v1** for kjernen (SQL i `sql/`, til godkjenning): klubb/tropp, medlemmer og roller, sesong med regelsett (B12), kveld, påmelding, bane og hull, runde, deltakere, bås og markør, lag, match, score. Med RLS og grants, også anon-revoke.
+- [ ] Kjøre skjemaet på test etter godkjenning, med kontrollspørringer.
+- [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først.
+- [ ] Første innlogging: velg navn i troppen eller bli med som ny. Arrangør kan godkjenne og frigjøre.
+- [ ] Rolig Kveld-skjerm som viser «Ingen kveld satt opp» og hvem som er logget inn.
 
 **Ferdig når:**
-- Jeg logger inn på telefonen mot test med e-postkoden min og ser riktig navn.
-- Jeg kobler Apple til kontoen, logger ut og inn igjen med Apple, og er fortsatt samme spiller. E-postkoden virker fortsatt i PWA-test.
-- Jeg logger inn med Google på samme måte.
-- Jeg ser neste kveld og hvem som er påmeldt, likt PWA-test.
-- Når noen fører et hull i PWA-test, dukker tallet opp i appen innen få sekunder, også etter at appen har ligget i bakgrunnen.
-- Appen kan ikke nå prod (sjekket i konfig).
+- Jeg logger inn på telefonen med Apple, logger ut, logger inn med Google og med e-postkode. Hver gang er jeg samme spiller (eller kan koble kontoene).
+- Appen viser at den kjører mot test, og kan ikke nå prod ved et uhell.
+- En annen bruker uten rolle kan ikke lese eller endre andres data utover det RLS tillater (sjekket med to kontoer).
 
-**Tester:** Ingen regneregler ennå. Swift-tester for radmapping (standardverdier som `holeCount` 9/18, `ldAktiv !== false`, `prat_push`-fallback), `banehullFraRader` (`banepar-test.js`), `paameldteForDato` (`paamelding-test.js`, `kvelder-test.js`). Oppførselen fra `innlogging-test.js`, `innmelding-test.js` og `uinnloeste-rader-test.js` (ta ledig rad, ikke ta andres).
+**Tester:** Swift-tester for radmapping og konfig. Oppførselen fra `innlogging-test.js`, `innmelding-test.js` og `uinnloeste-rader-test.js` (ta ledig navn, ikke ta andres).
 
 **Avhengigheter og risiko:**
-- Apple- og Google-innlogging krever oppsett i Supabase (providers, manuell kobling), i Apple Developer (Sign in with Apple, tjeneste-ID og nøkkel) og i Google Cloud (OAuth-klient). Supabase-delen godkjennes av deg (B9).
-- Supabase kobler automatisk identiteter med samme verifiserte e-post. Apples «Skjul e-post» gir en annen adresse, og da må kontoen kobles manuelt fra en innlogget økt.
-- Engangskoden sendes via Resend. Hvis e-post fra test ikke er satt opp, trengs en testbruker (finnes bare i test).
-- RLS gir tomt svar til anon: hent aldri før innlogging (SPEC 3.2).
+- Du oppretter Supabase-prosjektene (B4).
+- Apple-innlogging trenger Sign in with Apple i Apple Developer (tjeneste-ID og nøkkel). Google trenger en OAuth-klient i Google Cloud.
+- Skjemaet bestemmer mye av resten. Det må være generelt nok for B12, men ikke større enn kjernen trenger. Resten kommer i senere migreringer.
 
 **Anslag:** 7–10 økter.
 
 ---
 
-### Fase 2 – Spillogikk og føring som markør
+### Fase 2 – Regelmotor med Golfgutu-oppsettet
 
-**Mål:** Føre score for båsen fra iPhone med nøyaktig samme poeng som PWA-en regner.
+**Mål:** Hele poeng- og handicaplogikken i Swift, styrt av regelsettet, med samme svar som PWA-en for Golfgutu-oppsettet.
 
-- [ ] Spillogikk i rene Swift-typer (ingen UI/nett): `courseForRound` med rang-strokeindex og `holeStart`, `courseHandicap`, `rundeAndel`, seeding, `banehandicap`, `lagGrunnlag`, `lagHandicap`, `effectiveHandicap`, `handicapStrokesForHole`, `pointsForHole`, `scoreNameForHole`, `poengFraHull`, `tellendeHull`, `poengForTomtHull`, `lavesteFellesHull`, `KONKURRANSEFORMER`, `formForRunde` (SPEC 4.1–4.5).
-- [ ] Avrunding som JS: én felles hjelper for `Math.round` (`floor(x + 0.5)`) og `rund2` (SPEC 4.0).
-- [ ] `kanFore` og båsoppslag (SPEC 4.10).
-- [ ] Hullkort for hele båsen: stepper, «N slag fått», regnestykket, score-merke, bekreft hver spiller, «Lagre hull» låst til alle er ført.
-- [ ] Seer-modus for ikke-markør med linjen «… fører · du ser det live».
-- [ ] `saveHoleScore` som i PWA-en: upsert `hole_scores`, les tilbake, regn, upsert `round_points`. Lagsform skriver hele laget og `skrivLagpoeng` (SPEC 4.9).
-- [ ] Sjekk rader tilbake og vis klar feil hvis RLS stopper skrivingen.
-- [ ] Følg båsens hull (`baasensHull`), sol-stripe når jeg ser på et annet hull.
-- [ ] Scorekort Ut/Inn med poeng regnet lokalt.
-- [ ] Paritetssjekk: en hel runde ført i iOS gir samme `round_points` som `regnOmRundePoeng` i PWA-en for samme data.
+- [ ] Regelsett-modell (B12) med Golfgutu-oppsettet som ferdig mal.
+- [ ] Bane og hull: `courseForRound` med rang-strokeindex og start på hull 10, standard-par, lengdesjekk, `baneErKlar` (SPEC 4.1).
+- [ ] Handicap: `courseHandicap`, andel, seeding med valgfrie grupper, `banehandicap`, `lagGrunnlag`, `lagHandicap`, `effectiveHandicap`, ekstern handicap (Trackman), brutto (SPEC 4.2).
+- [ ] Slag og poeng: `handicapStrokesForHole`, `pointsForHole`, `scoreNameForHole`, `poengFraHull` (SPEC 4.3).
+- [ ] Former: `KONKURRANSEFORMER` som data, `formForRunde`, lagdeling og forslag (SPEC 4.4).
+- [ ] Avkorting: tre regler, `tellendeHull`, `lavesteFellesHull` (SPEC 4.5).
+- [ ] Avrunding som JS i én hjelper (`floor(x + 0.5)`, `rund2`) og norsk sortering (SPEC 4.0).
+- [ ] Testtall som JSON-fixtures (CLAUDE.md).
 
 **Ferdig når:**
-- Jeg er markør i en bås på test, fører 9 hull for fire spillere i appen, og PWA-test viser samme brutto, netto og poeng per spiller.
-- En spiller som ikke er markør kan ikke føre (stepperen vises ikke), og ser tallene live.
-- Seedet spiller, 9-hullsrunde med `holeStart` 9, `hcp_extern` (Trackman) og en scramble-runde gir samme poeng i begge apper.
+- Alle Swift-tester for fasen er grønne, og hver PWA-test listet under har en tilsvarende test med samme tall.
+- Jeg kan lese en kort rapport som viser at de samme fem eksempelrundene gir samme poeng i Swift som PWA-ens tester.
 
-**Tester:** `brutto-test.js`, `seeding-test.js`, `parspill-test.js`, `baneoppsett-test.js`, `banepar-test.js`, `banehull-test.js`, `banebytte-test.js`, `trackman-test.js`, `avkorting-test.js` (poeng-delen), `markor-test.js` (`kanFore`), `tropp-test.js` (`kanFore`, handicap). Pluss egne tester for det som mangler test i PWA-en: `scoreNameForHole`, `rundeAndel`, `lagGrunnlag`, `poengForTomtHull`, `holeStart: 9` mot 18-hulls bane, `skrivLagpoeng`.
+**Tester:** `brutto-test.js`, `seeding-test.js`, `parspill-test.js`, `baneoppsett-test.js`, `banepar-test.js`, `banehull-test.js`, `banebytte-test.js`, `trackman-test.js`, `avkorting-test.js` (poeng), `paamelding-test.js` og `skjevt-lag-test.js` (lagdeling). Pluss egne tester der PWA-en mangler: `scoreNameForHole`, `rundeAndel`, `lagGrunnlag`, `poengForTomtHull`, start på hull 10 mot 18-hulls bane, `lagdeling`.
 
 **Avhengigheter og risiko:**
-- Krever fase 1.
-- **Største risiko i hele prosjektet:** små avvik (avrunding, JS-sannhet, rekkefølge) gir feil poeng i en delt database. Mot: test først, paritetssjekk mot PWA-test på samme runde.
-- `saveHoleScore` er to skriv (ikke atomisk), som i PWA-en. Vi kopierer mønsteret, vi forbedrer det ikke.
+- Kan startes parallelt med fase 1 (ingen nettverk).
+- Risiko: små avvik i avrunding, JS-sannhet og rekkefølge (SPEC 4.0). Mot: tester først, tall fra PWA-en.
+- Regelsettet kan friste til å bygge for mye. Bare det PWA-en gjør pluss det som trengs for at antall og telling ikke er låst. Mer kommer senere.
 
 **Anslag:** 8–12 økter.
 
 ---
 
-### Fase 3 – Robust føring og første kveld i bruk
+### Fase 3 – Admin-panel: tropp, baner, sesong og terminliste
 
-**Mål:** Markørene kan bruke appen på en ekte torsdag uten å miste et eneste hull, selv uten dekning.
+**Mål:** Arrangøren kan sette opp en sesong i appen, med egne regler, egne spillere og egne baner.
 
-- [ ] Lokal lagring med SwiftData (B6): cache av kveldens data og en utboks for score.
-- [ ] Utboks: hull lagres lokalt først, sendes i rekkefølge med nye forsøk, idempotent upsert. Tydelig «ikke lagret ennå» per hull.
-- [ ] Gjenoppta etter at appen er drept: utboksen sendes ved neste oppstart.
-- [ ] Konflikt: siste skriving vinner, som i PWA-en. Vis hvis noen andre har endret et hull jeg har i kø.
-- [ ] Feiring (birdie/eagle/albatross/hole in one) med redusert-bevegelse-støtte.
-- [ ] Aktivitetslogg ved store scorer og ledelsesskifte (hull 3/6/9/12/15/18), likt tekstformat som PWA-en, uten dobbel logging når PWA-en fører samme kveld.
-- [ ] TestFlight-oppsett (B1), første bygg til markørene.
-- [ ] Prod-konfig ved siden av test, med tydelig skille i appen (B4).
-- [ ] Prøvekveld på test: alle markører på iOS, resten på PWA.
-- [ ] Første prod-kveld (etter din godkjenning): markørene fører i appen, PWA-en er reserve.
+- [ ] Admin-panel (kun arrangør): Sesong og regelsett (start fra Golfgutu-oppsettet, endre antall kvelder, hva som teller, poengmodell, sidepremier, handicapmodell, tillatte former, maks per bås).
+- [ ] Tropp: legg til og fjern spillere uten tak på antall, handicapindeks, seeding, roller (arrangør, kasserer), frigjør innlogging.
+- [ ] Baner: liste, rediger par, indeks, lengde, CR og slope, bekreftet-status. Import av PWA-ens 18 baner fra referansens SQL-filer eller fra PWA-basen (lesing).
+- [ ] Terminliste: kvelder med dato, tid, sted, sosialkomité.
+- [ ] Skjema-tillegg ved behov (SQL til godkjenning).
 
 **Ferdig når:**
-- Jeg slår på flymodus, fører tre hull, slår av flymodus: alle tre hull ligger i PWA-en med riktige poeng.
-- Jeg dreper appen med hull i kø, åpner igjen: hullene sendes.
-- Markørene har fått appen via TestFlight og ført en hel kveld uten tap, først på test og så på prod.
+- Jeg setter opp en sesong med 5 kvelder og «beste 3 teller» for 9 spillere, og en med Golfgutu-oppsettet for 12. Begge lagres og vises riktig.
+- Alle 18 baner fra PWA-en ligger i appen med samme par og indeks.
+- En spiller uten arrangør-rolle ser ikke admin-panelet og kan ikke endre noe via API.
 
-**Tester:** Ingen nye regneregler. Swift-tester for utboksen (rekkefølge, idempotens, nye forsøk). Verdien fra `hent-paa-nytt-test.js` og `skjema-realtime-test.js` er oppførsel (hent ved aktivering, tastet tekst overlever oppdatering), ikke tall.
+**Tester:** `banebekreftelse-test.js`, `baneskjema-test.js`, `banevalg-test.js`, `banepar-test.js`, `terminliste-test.js`, `tropp-test.js`, `seeding-test.js` (rolle-delen), `trekant-test.js` (`trekkSosialkomite` har ingen PWA-test, egen test med fast tilfeldighet).
 
 **Avhengigheter og risiko:**
-- Krever fase 2.
-- Første skriving mot prod krever din eksplisitte godkjenning (B4).
-- Ekstern TestFlight går gjennom Apples beta-gjennomgang. Uten penger i appen er risikoen lav (B1).
+- Krever fase 1 og regelsett-modellen fra fase 2.
+- Regelsettet må ha gyldighetssjekk (for eksempel «beste N» der N > antall kvelder).
 
-**Anslag:** 6–9 økter.
+**Anslag:** 7–10 økter.
 
 ---
 
-### Fase 4 – Match, trekant og Tavla
+### Fase 4 – Påmelding og oppsett av kvelden
 
-**Mål:** Se riktig matchstilling på kvelden og riktig jakketabell for sesongen.
+**Mål:** Spillerne melder seg på i appen, og arrangøren setter opp kvelden (kladd, båser, markører, form, lag, matcher) og starter den.
 
-- [ ] Match: `matchSider`, `matchSlag`, `sideNettoPaaHull`, `matchHullVinner`, `matchHullDiff`, `matchUtfallForA`, `matchStilling`, `matchTekst`, `matchStillingKort`, `avgjoresHullForHull`.
+- [ ] Påmelding: Kommer / Usikker / Kommer ikke + kommentar, angre, purring av de som ikke har svart.
+- [ ] Kveld-skjerm, rolig: neste kveld, påmeldte, sosialkomité.
+- [ ] Start runde-veiviser i tre steg: bane og tid, hvem og båser, oppsett. Lagre som kladd, rediger kladd, start (blokkert hvis en runde går).
+- [ ] Båser og markør (`foreslaatteBaaser`), matcher for hånd, lag, forslag om form (`oppsettForAntall`, `formerSomPasser`), `trekkMatcher`.
+- [ ] Forslag til LD- og KP-hull. Par-bekreftelse før føring.
+- [ ] Flere runder samme kveld.
+
+**Ferdig når:**
+- Fem test-spillere melder seg på fra egne telefoner (eller simulator), og jeg ser svarene.
+- Jeg lager to kladder for samme kveld, starter den første, og den andre nektes til den første er avsluttet.
+- Båser, markører, lag og matcher blir som jeg satte dem.
+
+**Tester:** `paamelding-svar-test.js`, `paamelding-test.js`, `kvelder-test.js`, `neste-kveld-test.js`, `kladd-test.js`, `rediger-kladd-test.js`, `markor-test.js` (`foreslaatteBaaser`), `matcher-test.js`, `trekant-test.js` (`trekkMatcher`), `skjevt-lag-test.js`, `sidepremie-valgfritt-test.js`.
+
+**Avhengigheter og risiko:**
+- Krever fase 2 og 3.
+- Lagring av båser, lag og matcher gjøres som én RPC (atomisk), ikke slett-så-sett-inn som i PWA-en.
+
+**Anslag:** 7–10 økter.
+
+---
+
+### Fase 5 – Føring per bås, offline og første prøvekveld
+
+**Mål:** Markøren fører en hel runde for båsen sin på iPhone, også uten dekning, og alle ser det live.
+
+- [ ] Kveld-skjerm, spill: hullprikker, hullkort for hele båsen, «Bayen nå».
+- [ ] Hullkort: stepper, «N slag fått», regnestykket, score-merke, bekreft hver spiller, «Lagre hull» låst til alle er ført.
+- [ ] Skriverett (`kanFore`) i appen og i RLS: arrangør, markør for egen bås, ellers seg selv.
+- [ ] Lagring av et hull for hele båsen i én RPC (atomisk, idempotent).
+- [ ] Seer-modus for ikke-markør. Følg båsens hull, sol-stripe.
+- [ ] Lokal lagring med SwiftData (B6): cache og utboks. Hull i kø sendes i rekkefølge med nye forsøk, også etter at appen er drept.
+- [ ] Realtime og henting på nytt når appen blir aktiv.
+- [ ] Scorekort Ut/Inn. Feiring (birdie, eagle, albatross, hole in one) med redusert-bevegelse-støtte.
+- [ ] TestFlight-oppsett og første bygg til noen i gjengen (B1).
+- [ ] Prøvekveld: en kveld der minst én bås fører i appen ved siden av PWA-en.
+
+**Ferdig når:**
+- Jeg fører 9 hull for fire spillere, og poengene i appen er de samme som PWA-en ville gitt for samme slag.
+- En spiller som ikke er markør kan ikke føre, og ser tallene live på sin telefon.
+- Flymodus på, tre hull ført, flymodus av: alle tre hull er lagret på serveren.
+- Appen drept med hull i kø, åpnet igjen: hullene sendes.
+
+**Tester:** `markor-test.js` (`kanFore`), `tropp-test.js` (`kanFore`), `brutto-test.js` (regnestykket), `banebytte-test.js` (poeng etter retting). Swift-tester for utboksen (rekkefølge, idempotens, nye forsøk). Oppførsel fra `hent-paa-nytt-test.js` og `skjema-realtime-test.js`.
+
+**Avhengigheter og risiko:**
+- Krever fase 4.
+- Hvis vi lagrer poeng i stedet for å regne dem, må de alltid regnes fra serverens scorer (PWA-ens 41 → 3-feil, SPEC 4.9).
+- Gjengen bruker fortsatt PWA-en på ekte kvelder. Dobbel føring på prøvekvelden er bevisst og må være frivillig for dem som er med.
+
+**Anslag:** 10–14 økter.
+
+---
+
+### Fase 6 – Match, trekant og Tavla
+
+**Mål:** Riktig matchstilling på kvelden og riktig tabell for sesongen, etter regelsettet.
+
+- [ ] Match: `matchSider`, `matchSlag`, `sideNettoPaaHull`, `matchHullVinner`, `matchHullDiff`, `matchUtfallForA`, `matchStilling`, `matchTekst`, `matchStillingKort`.
 - [ ] Trekant: `trekantPoeng`.
-- [ ] Sesong: `matchResultaterFor`, `matchSum`, `sidepremieVinnere`, `sidepremieResultaterFor`, `jakketavle`, `fmtPoeng`, `tellendeRunderFor` og `seasonTotalNytt` som skilletegn.
-- [ ] Kveld: matchkort, «Bayen nå» sortert på netto eller matchstilling, «1 opp / Delt / —».
-- [ ] LD/KP: vis hull, meld egen lengde (`side_claims`, slett + sett inn), stilling.
-- [ ] Tavla: Jakkeracet, «Slik telles det», spillerprofil (snitt, beste, birdies, innbyrdes).
-- [ ] Sesongoppsummering når `settings.finished` (uten pengepremier og bøtestatistikk i første omgang).
+- [ ] Tabell etter regelsettet: duellpoeng, sidepremier, vekt, hva som teller (alle eller beste N), tiebreak. Golfgutu-oppsettet = `jakketavle`.
+- [ ] LD og KP: meld egen lengde, stilling, delt ved likt.
+- [ ] Kveld: matchkort, «1 opp / Delt / —», stilling i «Bayen nå».
+- [ ] Tavla: tabell, «Slik telles det» generert fra regelsettet, spillerprofil, sesongoppsummering.
 
 **Ferdig når:**
-- Tavla i appen og i PWA-en viser samme rekkefølge, poeng og hulldifferanse for alle spillere.
-- En fourball-match og en trekant gir samme stilling og tekst i begge apper, hull for hull.
-- Jeg melder longest drive i appen og den vises i PWA-en.
+- For en importert kopi av en PWA-kveld (fase 9-importen kjørt mot test) viser Tavla samme rekkefølge, poeng og hulldifferanse som PWA-en.
+- Endrer jeg regelsettet til «beste 3 teller», endrer tabellen seg som forventet.
+- En fourball-match og en trekant gir samme stilling og tekst som PWA-en, hull for hull.
 
-**Tester:** `match-test.js`, `matchrunde-test.js`, `matcher-test.js`, `trekant-test.js`, `seier-test.js`, `sesong-test.js`, `skjevt-lag-test.js`, `sidepremie-valgfritt-test.js`, `kvelder-test.js`, `neste-kveld-test.js`. Pluss egne tester for det PWA-en ikke tester: alle grener i `matchTekst`, delt sidepremie (0,5), `matchSum`, `sideNettoPaaHull`.
+**Tester:** `match-test.js`, `matchrunde-test.js`, `matcher-test.js`, `trekant-test.js`, `seier-test.js`, `sesong-test.js`, `skjevt-lag-test.js`, `sidepremie-valgfritt-test.js`. Pluss egne for alle grener i `matchTekst`, delt sidepremie (0,5), `matchSum`, `sideNettoPaaHull`, og regelsett ulike Golfgutu-oppsettet.
 
 **Avhengigheter og risiko:**
-- Krever fase 2.
+- Krever fase 5. Importen fra fase 9 kan gjøres tidlig mot test for å få ekte data å sammenligne med.
 - `localeCompare('no')` påvirker rekkefølge ved likt. Test med æ, ø, å.
-- Sesongteksten «tre beste» er uavklart (SPEC 4.6.2).
 
-**Anslag:** 6–8 økter.
-
----
-
-### Fase 5 – Påmelding, varsler og Deg
-
-**Mål:** Spillerne trenger ikke PWA-en mellom kveldene.
-
-- [ ] Svar på kvelden: Kommer / Usikker / Kommer ikke + kommentar (`svarPaaDato`), angre i 8 s, loggtekster som PWA-en.
-- [ ] Terminliste (les), sosialkomité, kveld rykker opp når ferdig (`kveldErFerdig`).
-- [ ] Varsler: aktivitetslogg «I dag / Tidligere», ulest per enhet, reaksjoner (`activity_reaksjoner`).
-- [ ] Deg: handicapindeks (komma tillatt, `parseHcp`), portrett (`klubbilder`), koblede innloggingsmåter (Apple/Google/e-post), logg ut.
-- [ ] Kalender: lenke til eksisterende abonnement (`/api/kalender/<token>.ics`) via `webcal://`.
-
-**Ferdig når:**
-- Jeg svarer «Usikker» med kommentar i appen, og PWA-en viser det. Angre virker.
-- Aktivitet fra PWA-en dukker opp i Varsler, og en reaksjon i appen vises i PWA-en.
-- Jeg endrer handicap til «18,4» og PWA-en viser 18,4.
-
-**Tester:** `paamelding-svar-test.js`, `paamelding-test.js`, `terminliste-test.js`, `reaksjoner-test.js`, `kvelder-test.js`, `neste-kveld-test.js`. Oppførsel fra `kalender-del-test.js`, `klubbilder-test.js`.
-
-**Avhengigheter og risiko:**
-- Krever fase 1. Kan gjøres parallelt med fase 4.
-- Aktivitetsloggen er HTML-tekst med emoji-prefiks. Ikonvalg må parses som i PWA-en (`AKTIVITET_IKON`).
-
-**Anslag:** 4–6 økter.
+**Anslag:** 7–10 økter.
 
 ---
 
-### Fase 6 – Arrangørsiden
+### Fase 7 – Avslutning, varsler, tråd og tippekupong
 
-**Mål:** Arrangøren kan sette opp, kjøre og avslutte en kveld helt i appen, uten å ødelegge noe PWA-en fortsatt gjør med penger.
+**Mål:** Resten av kvelden: avslutte, rette, snakke og tippe.
 
-- [ ] Start runde-veiviser i tre steg, lagre som kladd, rediger kladd, start (blokkert hvis en runde går).
-- [ ] Båser og markører (`foreslaatteBaaser`, `saveBaaser`), matcher for hånd (`saveMatcher`), lag (`saveLag`), forslag om form (`oppsettForAntall`, `formerSomPasser`), `trekkMatcher`.
-- [ ] Par-bekreftelse og banebekreftelse (`bekreftBaneoppsett` med 23505-håndtering), forslag til LD/KP-hull.
-- [ ] Innstillinger for runden: bytt bane (regn om), `hcp_extern`, LD/KP av/på, vekt.
-- [ ] Rett en score, Rundene (tabell, retting i låst runde, logges).
-- [ ] Avkort runden med effekt-forhåndsvisning (`avkortingenKoster`, `saveAvkorting`).
-- [ ] **Avslutt kvelden:** lås runden og kjør de samme etterarbeidene som PWA-en gjør i dag, uten egen UI for penger: `oppdaterMarkeder` (`vilkaarUtfall`, `skalLukkes`), `avregnKvelden` (`veddemaalPoster`, `kupongPoster`, idempotent) og `kunngjorTippekongen`. Ellers blir veddemålene og skyldlisten i PWA-en feil (B10).
-- [ ] Slett runde via RPC `slett_runde(rid)` med oppsummering.
-- [ ] Klubb-oppsett: tropp (legg til, seed, frigjør innlogging), baner, terminliste og sosialkomité, arrangører, push-kategorier (`push_av`).
-- [ ] Purring og melding til alle (`activity_log` med `til`).
+- [ ] Avkort runden med effekt-forhåndsvisning (`avkortingenKoster`).
+- [ ] Avslutt kvelden: lås, kveld ferdig, neste kveld rykker opp.
+- [ ] Rett en score, Rundene (tabell, retting i låst runde, logges). Slett runde (én RPC).
+- [ ] Aktivitet og varsler i appen: strukturert (type + data), ikke HTML. Reaksjoner.
+- [ ] Deg: handicap (komma), portrett, koblede innloggingsmåter, logg ut.
+- [ ] Kveldens tråd: tekst, @navn, bilde fra bildebiblioteket, uleste.
+- [ ] Tippekupong: fem spørsmål, frist i Oslo-tid, andres tips etter låsing, fasit og resultat. Innsats i poeng eller «for æra» (B10).
 
 **Ferdig når:**
-- Jeg setter opp to kladder for en kveld i appen, starter dem etter tur, og PWA-en viser samme båser, matcher og lag.
-- Jeg avkorter en runde etter 14 hull, og effekten per spiller er lik den PWA-en viser.
-- «Avslutt kvelden» i appen gir samme avgjorte veddemål og samme poster i PWA-en som om arrangøren hadde brukt PWA-en. Kjørt to ganger gir den ingen nye.
+- Jeg avkorter en runde etter 14 hull og ser samme effekt per spiller som PWA-en viser for samme data.
+- Kvelden avsluttes, og neste kveld vises øverst.
+- En melding med bilde i tråden vises hos en annen spiller.
+- Tippekupongen låses ved første slag, og fasiten er lik PWA-ens for samme kveld.
 
-**Tester:** `kladd-test.js`, `rediger-kladd-test.js`, `markor-test.js` (`foreslaatteBaaser`), `paamelding-test.js` (`oppsettForAntall`), `skjevt-lag-test.js`, `trekant-test.js` (`trekkMatcher`), `banebekreftelse-test.js`, `baneskjema-test.js`, `banevalg-test.js`, `slett-runde-test.js`, `rundene-test.js`, `avkorting-test.js`, `seeding-test.js`, `tropp-test.js`, `kunngjoring-test.js`, `push-kategorier-test.js`, `vilkaar-test.js`, `kveld-test.js`, `poster-test.js` (bare `veddemaalPoster` og `avregnKvelden`). Pluss egne for `trekkSosialkomite` (injisert tilfeldighet), forslag til LD/KP-hull, `lagdeling`.
-
-**Avhengigheter og risiko:**
-- Krever fase 2 og 4 (veddemål på `match`, `drive` og `kp` bruker matchstilling og sidepremier).
-- **Uavklart (SPEC 3.5):** om par-bekreftelse virker for en markør som ikke er arrangør. Avklares mot test først i fasen.
-- Delete-then-insert for båser, lag og matcher er ikke atomisk. Kopieres som i PWA-en.
-- Avregningen er ekte penger i PWA-en så lenge den lever. Ingen snarveier på avrunding (`rund2`).
-
-**Anslag:** 11–16 økter.
-
----
-
-### Fase 7 – Tippekupong og kveldens tråd
-
-**Mål:** Det siste av kvelden som i dag bare finnes i PWA-en.
-
-- [ ] Tippekupong: fem spørsmål, frist i Oslo-tid (`tipsFrist`, `tipsAapen`), lagre/trekk, andres tips etter låsing, `tips_levert()`.
-- [ ] Fasit og resultat: `tipsFasit`, `tipsRiktig`, `tipsResultat`, «Tippekongen». Oppgjøret i kroner vises ikke i appen (B10), men `kupongPoster` kjøres ved avslutning (fase 6) så PWA-en stemmer.
-- [ ] Kveldens tråd: tekst, @navn, slett, uleste, push-valg (`prat_push`). Bilde fra bildebiblioteket (kamera i fase 8).
-- [ ] Varsle `/api/prat-push` etter sendt melding, som PWA-en.
-
-**Ferdig når:**
-- Jeg leverer kupong i appen før kl 17, og den låses når første slag føres i PWA-en.
-- Etter kvelden gir appen og PWA-en samme fasit og samme vinnere.
-- En melding fra appen vises i PWA-ens tråd, og omvendt.
-
-**Tester:** `tippekupong-test.js`, `kveldens-traad-test.js`, `traad-bilder-test.js`. Pluss egne for `tipsRiktig`, `tipsBeste`, `tipsKomplett`, `osloTidspunkt` rundt sommertid.
+**Tester:** `avkorting-test.js`, `rundene-test.js`, `slett-runde-test.js`, `kunngjoring-test.js`, `reaksjoner-test.js`, `kveldens-traad-test.js`, `traad-bilder-test.js`, `tippekupong-test.js` (fasit og resultat; oppgjør i kroner utgår). Pluss egne for `tipsRiktig`, `tipsBeste`, `tipsKomplett`, `osloTidspunkt` rundt sommertid.
 
 **Avhengigheter og risiko:**
-- Krever fase 2.
-- `meldinger` krever `created_at` innen ±1 min av serverens klokke. Utelat feltet.
-- Bildesti må være `<spiller>/<melding>.jpg`: generer id før opplasting.
+- Krever fase 5 og 6.
+- Tippekupongen uten penger må avklares sammen med B10.
 
-**Anslag:** 6–8 økter.
+**Anslag:** 9–13 økter.
 
 ---
 
@@ -255,193 +237,186 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Det PWA-en aldri kunne: push for alle, Live Activity, widgets, kamera og kalender.
 
-- [ ] **APNs-push** (B5): tabell for enhetstokens (SQL til godkjenning), sender på serversiden (worker eller Edge Function), samme kategorier og `push_av` som i dag. Testes på test før prod.
-- [ ] Varselvalg i appen som speiler `push_av` og `prat_push`.
-- [ ] **Live Activity** under runde: hull, egen score, stilling i bås/match. Oppdatert lokalt først, push-oppdatering når APNs finnes.
-- [ ] **Widgets:** neste kveld og jakketabell.
-- [ ] **Kamera** i tråden, komprimert til 1600 px JPEG som PWA-en.
-- [ ] **Kalender:** «Legg i kalender» via EventKit, i tillegg til abonnement.
-- [ ] Deling av tavla og resultater via delingsark.
+- [ ] **APNs-push:** tabell for enhetstokens (SQL til godkjenning) og en sender (Supabase Edge Function), med kategorier som kan slås av og på per spiller og av arrangør.
+- [ ] Varsler for store scorer, ledelsesskifte, ny runde, påminnelse før kveld, purring, tråd (nevnt/alle/av).
+- [ ] **Live Activity** under runde: hull, egen score, stilling i bås og match.
+- [ ] **Widgets:** neste kveld og tabell-topp.
+- [ ] **Kamera** i tråden.
+- [ ] **Kalender:** «Legg i kalender» via EventKit.
+- [ ] Deling av tabell og resultater via delingsark.
 
 **Ferdig når:**
-- Jeg får push på telefonen når noen gjør birdie, uten at PWA-en er installert.
+- Jeg får push når noen i gjengen gjør birdie, og kan skru av den kategorien.
 - Live Activity viser hull og stilling på låseskjermen under hele runden.
 - Widgeten viser neste kveld og topp 3.
 
-**Tester:** `push-kategorier-test.js` (kategori av/på). `push-paaminnelse-test.js`, `push-status-test.js` og `push-worker-test.mjs` gjelder serversiden og får tilsvarende tester der senderen bygges, ikke i appen.
+**Tester:** `push-kategorier-test.js` (av/på). `push-paaminnelse-test.js` og `push-status-test.js` får tilsvarende tester for Edge Function-en.
 
 **Avhengigheter og risiko:**
-- APNs krever en databaseendring og en server-komponent (B5). Ikke uten godkjent SQL.
-- Web push og APNs må gå parallelt så lenge noen bruker PWA-en, uten doble varsler.
+- Krever fase 5. Kan delvis gjøres parallelt med fase 6 og 7.
+- APNs-nøkkel fra Apple Developer må lagres som hemmelighet i Supabase, aldri i appen.
 
 **Anslag:** 10–15 økter.
 
 ---
 
-### Fase 9 – Hele gjengen på appen
+### Fase 9 – Import og bytte
 
-**Mål:** Alle bruker iOS-appen mot prod for alt som er bygget, med PWA-en som reserve og for penger.
+**Mål:** Historikken fra PWA-en ligger i appens database, og gjengen spiller neste kveld i appen.
 
-- [ ] TestFlight-invitasjon til alle i gjengen.
-- [ ] Innlogging for alle: hver spiller kobler Apple eller Google, eller fortsetter med e-postkode.
-- [ ] Generalprøve på test: en hel kveld med bare iOS, også arrangøren.
-- [ ] En hel prod-kveld der ingen åpner PWA-en for noe annet enn penger.
-- [ ] Liste over det som fortsatt mangler før PWA-en kan pensjoneres.
+- [ ] Importverktøy (lesing fra PWA-ens prod, skriving til appens database): spillere, baner, terminliste, påmeldinger, runder med oppsett, scorer, sidepremier, tips. Idempotent, kan kjøres flere ganger.
+- [ ] Hvordan dataene hentes ut (SQL-eksport, eller lesing med innlogget bruker) avgjøres i fasen. Ingenting skrives til PWA-basen.
+- [ ] Kontroll: etter import viser appens Tavla det samme som PWA-ens for hele sesongen.
+- [ ] Prod-oppsett av appens Supabase (skjema, innlogging, APNs) etter godkjenning.
+- [ ] TestFlight-invitasjon til alle med iPhone. Hver spiller logger inn og velger navnet sitt (importert).
+- [ ] Generalprøve på test med hele gjengen.
+- [ ] Byttedag: siste import etter siste PWA-kveld, så neste kveld i appen.
+- [ ] PWA-en fryses: viser «Vi har flyttet til appen» og lar seg ikke føre i.
 
 **Ferdig når:**
-- Alle i gjengen har appen og har logget inn.
-- En hel prod-kveld er gjennomført i appen, og tallene stemmer med det PWA-en viser.
+- Tavla i appen er identisk med PWA-ens etter siste import.
+- Alle med iPhone har logget inn og funnet navnet sitt.
+- En hel kveld er spilt i appen på prod uten at PWA-en ble åpnet.
 
-**Tester:** Hele Swift-testsuiten grønn. Paritetssjekk mot PWA-en på en kopi av en ekte kveld fra prod (leses, ikke skrives).
+**Tester:** Hele Swift-testsuiten grønn. Paritetssjekk på importerte data for hele sesongen.
 
 **Avhengigheter og risiko:**
 - Krever fase 1–7. Fase 8 er ønsket, men ikke et krav.
-- Hvis noen ikke har iPhone, kan PWA-en ikke pensjoneres helt (B3).
+- **Android-brukere** kan ikke bruke appen før Android finnes, og PWA-en er fryst (B13).
+- Penger og veddemål i PWA-en må være gjort opp eller eksportert før frysing (B10).
 
-**Anslag:** 3–5 økter (pluss kveldene).
+**Anslag:** 5–8 økter (pluss kveldene).
 
 ---
 
-### Fase 10 – Veddemål på nytt og pensjonering av PWA-en
+### Fase 10 – Veddemål med poeng
 
-**Mål:** Bestemme og bygge veddemål for appen, og ta PWA-en ut av bruk.
+**Mål:** Gjengen kan vedde på kvelden igjen, med poeng i stedet for penger.
 
-- [ ] Beslutning om modell (B10): poeng i stedet for penger, penger som i dag, eller ingen veddemål.
-- [ ] Hvis poeng: egen poengmodell (ikke `poster` i kroner), krever sannsynligvis databaseendring (SQL til godkjenning) og en regel for hva som skjer med åpne pengeveddemål og gammel gjeld i PWA-en.
-- [ ] Bygge vedd-ark, liste og avgjøring i appen etter valgt modell (`forsteApneHull`, `markedTarInnsatser`, `vilkaarUtfall` er allerede portert i fase 6).
-- [ ] Gjøre opp eller fryse gjenværende gjeld i PWA-en før den pensjoneres.
-- [ ] Pensjonering: PWA-en viser «bruk appen», eller blir stående som nødløsning ut sesongen (B3).
+- [ ] Endelig modell (B10): poengbank per sesong, innsats, tak, oppgjør.
+- [ ] Skjema-tillegg (SQL til godkjenning).
+- [ ] Vedd-ark med malene fra PWA-en (hull-duell, par, slår, fritekst), låsing (`forsteApneHull`, `markedTarInnsatser`) og automatisk avgjøring (`vilkaarUtfall`).
+- [ ] Poengtabell for veddemål, separat fra jakketabellen.
 
 **Ferdig når:**
-- Gjengen har vedet (eller bevisst valgt bort veddemål) en hel kveld i appen.
-- Ingen åpen gjeld er igjen bare i PWA-en.
-- PWA-en er ikke nødvendig for noe.
+- Et veddemål på «birdie på hull 5» stenger når hull 4 er ført, og avgjøres riktig når hull 5 føres.
+- Poengene i veddemålstabellen stemmer med regnestykket.
 
-**Tester:** `lockout-test.js`, `status-del-test.js`, og de delene av `vilkaar-test.js` og `poster-test.js` som gjelder valgt modell. `utlegg-test.js` hvis utlegg beholdes.
+**Tester:** `vilkaar-test.js`, `lockout-test.js`, `kveld-test.js`, `status-del-test.js`, `poster-test.js` (`veddemaalPoster` som poeng, og nettoing).
 
 **Avhengigheter og risiko:**
-- Krever fase 9 og B10.
-- En poengmodell i samme database som PWA-ens pengemodell kan forvirre så lenge begge lever. Byggestart først når PWA-en snart skal pensjoneres.
+- Krever fase 5 og 6 (match-, drive- og kp-vilkår).
+- Kan bygges før fase 9 hvis gjengen savner veddemål ved byttet.
 
-**Anslag:** 5–10 økter, avhengig av modell.
+**Anslag:** 6–9 økter.
 
 ---
 
-**Totalt:** ca. 66–99 økter. Usikkerheten er størst i fase 2 (paritet), 6 (arrangør og avregning) og 8 (server-del).
+**Totalt:** ca. 76–111 økter. Usikkerheten er størst i fase 2 (paritet), 5 (offline) og 9 (import).
+
+Etter v1: Android (B13), Apple Watch, GPS.
 
 ---
 
 ## 3. BESLUTNINGER
 
-Status: **Tatt** (av deg eller meg etter fullmakt), eller **Åpen**.
+Status: **Tatt** (av deg, eller av meg etter fullmakt), **Utsatt** eller **Åpen**.
 
-### B1 – Distribusjon · Tatt (meg)
-**Ekstern TestFlight med e-postinvitasjon.** Uten ekte penger i appen (B10) er Apples beta-gjennomgang lite risikabelt, og eksterne testere slipper å bli brukere i App Store Connect. Bygg utløper etter 90 dager og må fornyes. Krever betalt Apple Developer-medlemskap. Offentlig App Store er ikke et mål for v1.
-*Konsekvens:* hvis veddemål med penger kommer tilbake (B10), må dette vurderes på nytt (Apples regler for pengespill, retningslinje 5.3). Jeg har ikke verifisert gjeldende ordlyd.
+### B1 – Distribusjon · Tatt
+**Ekstern TestFlight med e-postinvitasjon.** Du har Apple Developer-konto. Uten ekte penger i appen er Apples beta-gjennomgang lite risikabelt. Bygg utløper etter 90 dager og må fornyes. Offentlig App Store er ikke et mål for v1.
 
 ### B2 – Spillogikk · Tatt (meg)
-**Portere `db-nytt.js` til Swift med like tester.** Ingen databaseendring, virker offline, PWA-en er urørt.
-*Konsekvens:* to implementasjoner må holdes like så lenge PWA-en lever. Flytting til Postgres kan vurderes etter pensjonering, når det bare finnes én klient.
+**Regelmotor i Swift**, med testtall som JSON-fixtures. Virker offline og under føring.
+*Konsekvens for Android:* motoren må skrives på nytt for Android, men fixturene gjør det mekanisk å sjekke at svarene er like. Alternativet er å flytte utregningene til Postgres-funksjoner nå. Det gir én sannhet for begge plattformer, men føring og stilling offline blir vanskeligere. Jeg anbefaler Swift nå, og å vurdere server på nytt når Android planlegges.
 
-### B3 – Sameksistens og pensjonering · Tatt (deg)
-**PWA-en lever til appen er god nok til å overta.** Begge bruker samme database, så sesongen fortsetter der den slapp uten flytting av data.
-- iOS skriver nøyaktig som PWA-en (SPEC 4.9). Ingen nye kolonner eller tolkninger.
-- Avregning ved «Avslutt kvelden» gjøres likt i begge apper (fase 6), så PWA-ens skyldliste stemmer selv om appen ikke viser penger.
-- Aktivitetslogg og varsler skal ikke dobles når begge apper brukes samme kveld.
-- Pensjonering skjer i fase 10.
+### B3 – PWA-en · Tatt (deg)
+**PWA-en og PWA-basen er urørt til byttet.** Gjengen spiller på PWA-en til appen er god nok. Ved byttet (fase 9) importeres historikken, og PWA-en fryses. Ingen sameksistens mot samme database.
 
-**Åpent spørsmål:** har alle 12 iPhone? README siterer «Vi har bare iPhone», men det bør bekreftes.
-
-### B4 – Prod · Tatt (meg)
-**Test fram til og med prøvekvelden i fase 3. Deretter prod for markørene, med din godkjenning før første prod-skriving.** Konfig for test og prod skilles tydelig i appen.
+### B4 – Supabase · Tatt (deg)
+**Ny Supabase for appen.** Jeg anbefaler to prosjekter: **test** og **prod**, som PWA-en har i dag.
+*Konsekvens:* eget skjema som tåler dynamiske turneringer, atomiske RPC-er, strammere RLS, APNs-tabell uten å røre PWA-en. Koster en importjobb (fase 9).
 
 ### B5 – Databaseendringer · Tatt (meg), hver endring godkjennes av deg
-Endringer planen kan trenge:
-- **Tabell for APNs-enhetstokens** og en sender (fase 8).
-- **Realtime-publikasjon** for tabeller appen abonnerer på, hvis de mangler (SPEC 3.5).
-- **`round_holes.meters`** finnes kanskje ikke (SPEC 3.5). Sjekkes først.
-- **Poengmodell for veddemål** (fase 10), hvis B10 lander på poeng.
-
-Prosess:
-1. SQL skrives som fil i dette repoet (`sql/`), aldri i `referanse/`.
+1. SQL skrives som fil i `sql/` i dette repoet, nummerert.
 2. Du godkjenner SQL-en.
-3. Kjøres på **test**, med kontrollspørringer og rullebakke i fila (som PWA-ens migreringer).
-4. PWA-test og iOS testes mot test.
+3. Kjøres på **test**, med kontrollspørringer og rullebakke i fila.
+4. Appen testes mot test.
 5. Prod først etter ny godkjenning.
-6. Husk anon-fella: `revoke execute … from anon` etter hver `create or replace`, og sjekk returnerte rader (SPEC 3.2).
+6. Anon-fella fra PWA-en: `revoke execute … from anon` etter hver `create or replace`, og sjekk returnerte rader (SPEC 3.2).
 
 ### B6 – Lokal lagring · Tatt (meg)
-**SwiftData** for cache og utboks. Domenelogikken ligger i rene Swift-typer utenfor, så den kan testes og deles med widgets og Live Activity.
+**SwiftData** for cache og utboks. Domenelogikken ligger i rene Swift-typer utenfor.
 
 ### B7 – Deployment target og Swift · Tatt (meg)
-**iOS 26.0 og Swift 6-språkmodus.** Prosjektet står i dag på 26.5 og Swift 5, som stenger ute telefoner på 26.0–26.4. Endres i Xcode.
+**iOS 26.0 og Swift 6.** Prosjektet står i dag på 26.5 og Swift 5. Endres i Xcode.
 
 ### B8 – `referanse/` i git · Tatt (deg)
-**Holdes utenfor git** (`.gitignore`), fordi mappa inneholder nøkler.
+Holdes utenfor git (`.gitignore`), fordi mappa inneholder nøkler.
 
-### B9 – Innlogging · Tatt (deg), oppsett må godkjennes
-**Apple, Google og eksisterende e-postkode.**
-- Apple: native, via `AuthenticationServices` og `signInWithIdToken`.
-- Google: OAuth via `supabase-swift` i nettleserark, uten ekstra SDK.
-- Eksisterende spillere kobler Apple/Google til kontoen sin (`linkIdentity`), slik at `players.user_id` og PWA-innloggingen er uendret.
-- Nye spillere kan logge inn rett med Apple/Google og velge navn.
+### B9 – Innlogging · Tatt (deg)
+**Apple, Google og e-postkode.** Apple native (`AuthenticationServices` + `signInWithIdToken`), Google via OAuth i `supabase-swift` uten ekstra SDK, e-postkode som i dag. Med ny database er det ingen gamle kontoer å koble, men en spiller kan koble flere måter til samme konto. Supabase-konfig godkjennes av deg.
 
-**Krever din godkjenning før det gjøres:** i Supabase (test først) må Apple og Google aktiveres som providers og manuell identitetskobling slås på. Det er konfig, ikke SQL, men det er en endring i Supabase. Apple Developer- og Google Cloud-oppsett gjør du (eller vi sammen).
+### B10 – Veddemål og penger · Tatt (deg): poeng i stedet for penger, i fase 10
+Ingen kroner i appen: ingen skyldliste, Vipps, bøter eller utlegg i v1. Tippekupongen bruker poeng eller «for æra». Åpen gjeld i PWA-en gjøres opp der før den fryses.
 
-### B10 – Veddemål og penger · Utsatt (deg)
-**Appen viser ikke penger eller veddemål i første omgang.** Avregningen ved «Avslutt kvelden» porteres likevel (fase 6), så PWA-ens penger stemmer så lenge den lever. Modellen bestemmes i fase 10.
+### B11 – GPS · Tatt (meg)
+Utenfor v1. Databasen har ingen banegeometri.
 
-| Alternativ | Konsekvens |
-|---|---|
-| **Poeng i stedet for penger** (min anbefaling) | Ingen pengespill-risiko hos Apple. Gjengen kan fortsatt vedde. Krever egen poengmodell og sannsynligvis en databaseendring. Gammel gjeld i kroner må gjøres opp i PWA-en først. |
-| Penger som i dag | Bare porting, men risiko ved Apples gjennomgang (B1). |
-| Ingen veddemål | Minst arbeid, men tar bort en del av kvelden gjengen bruker. |
+### B12 – Regelsett · Tatt (deg)
+**Turneringen styres fra admin-panelet, uten faste tall.** Forslag til hva regelsettet dekker (endelig i fase 2 og 3):
+- antall spillere: ubegrenset; maks per bås (standard 4)
+- antall kvelder i sesongen, og hva som teller: alle, eller beste N
+- tabellmodell: duellpoeng (seier/delt/tap med valgfrie verdier), stableford-sum, eller slag
+- sidepremier: LD og KP av/på, poeng per premie, deling ved likt
+- rundevekt per runde
+- handicapmodell: WHS med andel, seeding-grupper med egne tall, ekstern (Trackman), brutto
+- tillatte konkurranseformer
+- tiebreak-rekkefølge
 
-### B11 – Lukket for nå
-- **GPS/avstand til green:** utenfor v1 (seksjon 4).
-- **Tellende runder:** alle 7 kvelder teller, som PWA-en. Teksten «tre beste» på Sesongsiden er utdatert og følges ikke.
+**Golfgutu-oppsettet** er en ferdig mal som gjengir PWA-en (7 kvelder, alle teller, duellpoeng 1/0,5/0, LD og KP 1 poeng, seeding 0/5/10, osv.). Det er det paritetstestene kjøres mot.
+
+### B13 – Plattform · Tatt (deg)
+**iPhone først, Android senere.**
+**Åpent spørsmål:** har noen i gjengen Android? Etter byttet er PWA-en fryst, og da står de uten app til Android finnes. Alternativer: vente med byttet, la dem bruke appen via en annens telefon (markør fører for dem uansett), eller lage en enkel nettversjon senere.
 
 ---
 
 ## 4. UTENFOR OMFANG (første ferdige versjon)
 
-- **Penger og veddemål med kroner i appen** (B10). Avregningen kjører i bakgrunnen for PWA-ens skyld.
-- **Bøter, utlegg og bøtekasse.** Henger sammen med penger og avgjøres sammen med B10.
-- **GPS og avstand til green.** PWA-en har det ikke, og databasen har ingen banegeometri.
+- **Penger:** skyldliste, Vipps, bøter, utlegg, premiepenger. Veddemål kommer med poeng i fase 10.
+- **Android.** Kommer etter v1 (B13).
+- **GPS og avstand til green.**
 - **Apple Watch.**
-- **Ekte bane** (ikke simulator) som eget bruksmønster.
-- **Android.** Hvis noen trenger det, blir PWA-en stående (B3).
-- **iPad-tilpasset bred modus** for arrangør. Appen kjører på iPad som iPhone-layout.
-- **Plakaten for kvelden** (canvas til Instagram). PWA-en kan brukes til den så lenge den lever.
-- **Regelendringer:** skins, halve slag, to runder samtidig, påmelding per runde, flere sesonger eller klubber. Appen gjør det PWA-en gjør.
-- **Flytting av logikk til Postgres** (B2) og retting av RLS-hull. Etter pensjonering.
-- **E-postreserve og kalender-endepunkt.** Blir i `_worker.js` som i dag.
-- **Den gamle banken** (`bank_bevegelser`, saldo, innskudd).
+- **Ekte bane** (ikke simulator) som eget bruksmønster. Regelsettet stenger ikke for det, men appen er ikke testet for det.
+- **iPad-tilpasset bred modus.** Appen kjører på iPad som iPhone-layout.
+- **Plakaten for kvelden** (canvas til Instagram).
+- **Sameksistens med PWA-en** mot samme database.
+- **Skins og halve slag.** Kan legges til i regelsettet senere.
+- **Den gamle banken** (`bank_bevegelser`, saldo, innskudd) importeres ikke.
 
 ---
 
 ## Vedlegg A – PWA-tester og hvor de dekkes
 
+Alle tall gjelder Golfgutu-oppsettet.
+
 | Test | Fase | Merknad |
 |---|---|---|
-| `brutto-test.js`, `seeding-test.js`, `parspill-test.js`, `baneoppsett-test.js`, `banepar-test.js`, `banehull-test.js`, `banebytte-test.js`, `trackman-test.js` | 2 | Regneregler |
-| `avkorting-test.js` | 2, 6 | Poeng (2), avkort-flyt og hengende veddemål (6) |
-| `markor-test.js` | 2, 6 | `kanFore` (2), `foreslaatteBaaser` (6) |
-| `tropp-test.js` | 2, 6 | |
-| `match-test.js`, `matchrunde-test.js`, `matcher-test.js`, `trekant-test.js`, `seier-test.js`, `sesong-test.js`, `skjevt-lag-test.js`, `sidepremie-valgfritt-test.js` | 4 | |
-| `kvelder-test.js`, `neste-kveld-test.js` | 1, 4, 5 | |
-| `paamelding-test.js` | 1, 5, 6 | |
-| `innlogging-test.js`, `innmelding-test.js`, `uinnloeste-rader-test.js` | 1 | Oppførsel ved innlogging og å ta navn |
-| `paamelding-svar-test.js`, `terminliste-test.js`, `reaksjoner-test.js` | 5 | |
-| `kladd-test.js`, `rediger-kladd-test.js`, `banebekreftelse-test.js`, `baneskjema-test.js`, `banevalg-test.js`, `slett-runde-test.js`, `rundene-test.js`, `kunngjoring-test.js` | 6 | |
-| `vilkaar-test.js`, `kveld-test.js` | 6, 10 | Avgjøring ved avslutning (6), vedd-UI (10) |
-| `poster-test.js` | 6, 10 | `veddemaalPoster` og `avregnKvelden` (6), skyldliste (10) |
-| `lockout-test.js`, `status-del-test.js` | 10 | Innsats-låsing i vedd-UI |
-| `utlegg-test.js` | 10 | Hvis utlegg beholdes |
-| `tippekupong-test.js`, `kveldens-traad-test.js`, `traad-bilder-test.js` | 7 | |
-| `push-kategorier-test.js` | 6, 8 | |
-| `push-paaminnelse-test.js`, `push-status-test.js`, `push-worker-test.mjs`, `kalender-worker-test.mjs` | 8 | Serverside, ikke i appen |
-| `hent-paa-nytt-test.js`, `skjema-realtime-test.js` | 1, 3 | Oppførsel, ikke tall |
-| `kalender-del-test.js`, `klubbilder-test.js` | 5 | Oppførsel |
-| `knapper-test.js`, `toast-test.js` | – | UI-regler (dobbelttrykk, toast-kø). Hensikten videreføres, ikke testene |
+| `brutto-test.js`, `seeding-test.js`, `parspill-test.js`, `baneoppsett-test.js`, `banehull-test.js`, `banebytte-test.js`, `trackman-test.js` | 2 | Regneregler |
+| `banepar-test.js` | 2, 3 | |
+| `avkorting-test.js` | 2, 7 | Poeng (2), avkort-flyt (7) |
+| `paamelding-test.js`, `skjevt-lag-test.js` | 2, 4 | Lagdeling (2), oppsett (4) |
+| `innlogging-test.js`, `innmelding-test.js`, `uinnloeste-rader-test.js` | 1 | Oppførsel |
+| `banebekreftelse-test.js`, `baneskjema-test.js`, `banevalg-test.js`, `terminliste-test.js`, `tropp-test.js` | 3 | |
+| `paamelding-svar-test.js`, `kvelder-test.js`, `neste-kveld-test.js`, `kladd-test.js`, `rediger-kladd-test.js`, `sidepremie-valgfritt-test.js` | 4 | |
+| `markor-test.js` | 4, 5 | `foreslaatteBaaser` (4), `kanFore` (5) |
+| `matcher-test.js`, `trekant-test.js` | 4, 6 | Oppsett (4), poeng (6) |
+| `match-test.js`, `matchrunde-test.js`, `seier-test.js`, `sesong-test.js` | 6 | |
+| `rundene-test.js`, `slett-runde-test.js`, `kunngjoring-test.js`, `reaksjoner-test.js`, `kveldens-traad-test.js`, `traad-bilder-test.js`, `tippekupong-test.js` | 7 | Tips uten kroner |
+| `push-kategorier-test.js`, `push-paaminnelse-test.js`, `push-status-test.js` | 8 | Edge Function |
+| `vilkaar-test.js`, `lockout-test.js`, `kveld-test.js`, `status-del-test.js`, `poster-test.js` | 10 | Med poeng |
+| `hent-paa-nytt-test.js`, `skjema-realtime-test.js` | 5 | Oppførsel, ikke tall |
+| `kalender-del-test.js`, `klubbilder-test.js` | 7, 8 | Oppførsel |
+| `utlegg-test.js`, `push-worker-test.mjs`, `kalender-worker-test.mjs` | – | Penger og PWA-worker, utenfor omfang |
+| `knapper-test.js`, `toast-test.js` | – | UI-regler. Hensikten videreføres, ikke testene |
 | `porten-test.js`, `bred-test.js`, `globalnavn-test.js`, `plakat-test.js` | – | PWA-spesifikke eller utenfor omfang |

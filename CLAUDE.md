@@ -1,45 +1,41 @@
 # DashDash18
 
-Native iOS-klient (SwiftUI, iOS 26+, Swift Testing) for GolfGutu Invitational.
+Native iOS-app (SwiftUI, iOS 26+, Swift 6, Swift Testing) for GolfGutu Invitational. Erstatter GolfGutu-PWA-en. iPhone først, Android senere.
 
 ## Fasit
 
 - `referanse/golfgutu-pwa/` er fasit for funksjonalitet og regler. `referanse/golfgutu-pwa/README.md` er i praksis spesifikasjonen.
 - Regelmotoren ligger i `referanse/golfgutu-pwa/db-nytt.js`. UI-flyt ligger i `app-nytt.js`. Skjema og RLS ligger i `sql/`.
 - Der README og kode er uenige, vinner koden som faktisk kjører (`db-nytt.js`). Si fra om avviket.
-- `SPEC.md` er en tidlig kartlegging. Når den avviker fra denne filen, gjelder denne filen.
+- `SPEC.md` er en kartlegging av PWA-en. `ROADMAP.md` har beslutningene. Ved konflikt gjelder denne filen, så `ROADMAP.md`, så `SPEC.md`.
 
 ## Backend
 
-- Eksisterende Supabase-database. Bruk `supabase-swift`.
-- **Test-prosjektet først.** Prod rører vi ikke før brukeren eksplisitt sier det.
-- iOS-appen og PWA-en brukes samtidig mot samme database. Appen må derfor følge PWA-ens kontrakt: samme tabeller, kolonner, verdier og skrivemønster.
-- RLS er eneste tilgangskontroll. Anta at en skrivning kan feile stille (PostgREST skiller ikke «RLS stoppet deg» fra «ingen rader»). Sjekk rader tilbake.
+- **Egen, ny Supabase** for appen. Bruk `supabase-swift`. To prosjekter: test og prod. **Test først.** Prod rører vi ikke før brukeren eksplisitt sier det.
+- **PWA-ens database deles ikke.** Den brukes bare som kilde for import, og bare med lesing. Aldri skriv til den.
+- Skjemaet er vårt eget og skal tåle dynamiske turneringer (se «Regelsett»). Lagre rådata (scorer, oppsett). Regn ut avledede verdier i stedet for å lagre dem, med mindre det er et bevisst valg.
+- RLS er tilgangskontrollen. Sjekk rader tilbake ved skriving. Bruk RPC (én transaksjon) når en handling skriver flere rader.
 - Ingen hemmeligheter i repoet. Kun publishable key i klienten. Service-role-nøkkel skal aldri inn i appen.
 
-## Paritet med PWA-en (viktigst)
+## Regelsett og paritet (viktigst)
 
-All spillogikk må gi **nøyaktig samme resultat** som `db-nytt.js`. Gjelder blant annet:
-
-- poeng og stableford, slagfordeling per hull (stroke index, 9 vs 18 hull)
-- WHS banehandicap, andeler, seedingsgrupper, lagshandicap, avrunding
-- konkurranseformer og matchspill, trekant, avkorting
-- jakketabell og tiebreak
-- veddemålsoppgjør, poster/saldo og oppgjør, nettoing, avrunding av beløp
+- Turneringen styres av et **regelsett** som arrangøren setter i admin-panelet: antall spillere, antall kvelder, hva som teller, poengmodell, sidepremier, handicapmodell, former og så videre. **Ingenting skal være låst** til 12 spillere, 7 kvelder eller én måte å spille på.
+- **Golfgutu-oppsettet** er regelsettet som gjengir PWA-ens regler. Med det oppsettet må all spillogikk gi **nøyaktig samme resultat** som `db-nytt.js`: stableford, slagfordeling, WHS, andeler, seeding, lagshandicap, avrunding, former, match, trekant, avkorting, jakketabell, tiebreak og tips.
+- Andre regelsett er utvidelser. De skal ikke endre svaret for Golfgutu-oppsettet.
 
 Arbeidsmåte:
 
 - Les den aktuelle funksjonen i `db-nytt.js` før du implementerer den. Gjenskap oppførselen, ikke koden. Skriv idiomatisk Swift.
-- Skriv testen først, med forventede verdier utledet fra `db-nytt.js` (eller fra PWA-ens egne tester i `referanse/golfgutu-pwa/tests/`). Ikke gjett tall.
-- Kantfall teller: avrunding, 9-hullsrunder, `hcp_extern`, seedede spillere, lag, uavgjort.
-- Hold spillogikk i rene Swift-typer uten SwiftUI- og nettverksavhengighet, slik at den kan testes isolert og senere deles med Watch/widgets.
-- Ikke lagre avledede verdier annerledes enn PWA-en. Skriver appen `round_points`, `poster` e.l., må formatet være identisk med det PWA-en skriver.
+- Skriv testen først, med forventede verdier utledet fra `db-nytt.js` eller fra PWA-ens tester i `referanse/golfgutu-pwa/tests/`. Ikke gjett tall.
+- Legg testtallene som språknøytrale fixtures (JSON), slik at de kan gjenbrukes av en Android- eller server-implementasjon senere.
+- Kantfall teller: avrunding (`Math.round` = `floor(x + 0.5)`), 9-hullsrunder, ekstern handicap, seedede spillere, lag, uavgjort, norsk sortering.
+- Hold spillogikken i rene Swift-typer uten SwiftUI- og nettverksavhengighet, slik at den kan testes isolert og deles med Watch, widgets og Live Activity.
 
 ## Regler
 
 - **Aldri rediger `.xcodeproj` direkte** (heller ikke `project.pbxproj`). Legg til og flytt filer via Xcode-verktøyene (MCP), eller be brukeren gjøre det i Xcode.
 - **Aldri endre noe i `referanse/`.**
-- **Ingen endringer i databasen uten at brukeren har godkjent SQL-en.** Det gjelder skjema, policies, funksjoner, triggere og data. Vis SQL-en, vent på godkjenning, kjør først mot test. Les-spørringer er greit.
+- **Ingen endringer i Supabase uten at brukeren har godkjent det.** Det gjelder skjema, policies, funksjoner, triggere, data og konfig (for eksempel innloggingsmåter). Vis SQL-en, vent på godkjenning, kjør først mot test. Les-spørringer er greit.
 - **Bygg etter hver endring.** Bruk `BuildProject` (Xcode MCP). Fiks feil og advarsler før du går videre.
 - **Små steg.** Én avgrenset endring om gangen.
 
@@ -53,7 +49,7 @@ Arbeidsmåte:
 
 ## Kode og stil
 
-- Swift Concurrency (`async`/`await`, actors), `@Observable`. Apple-rammeverk først. Nye avhengigheter utover `supabase-swift` krever godkjenning.
+- Swift Concurrency (`async`/`await`, actors), `@Observable`, SwiftData for lokal lagring. Apple-rammeverk først. Nye avhengigheter utover `supabase-swift` krever godkjenning.
 - Hold views små. Logikk i modeller og tjenester.
 - Følg stilen i omkringliggende kode.
 
@@ -73,6 +69,7 @@ Arbeidsmåte:
 - `DashDash18/` – appkode
 - `DashDash18Tests/`, `DashDash18UITests/`
 - `DashDash18.xcodeproj`
-- `referanse/` – skrivebeskyttet
-- `SPEC.md` – kartlegging av PWA-en (utkast)
+- `sql/` – migreringer for den nye Supabase-en (opprettes ved første migrering)
+- `referanse/` – skrivebeskyttet, ikke i git (inneholder nøkler)
+- `SPEC.md` – kartlegging av PWA-en
 - `ROADMAP.md` – faser, status og beslutninger
