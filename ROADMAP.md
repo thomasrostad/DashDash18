@@ -11,8 +11,8 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | | |
 |---|---|
 | **Nåværende fase** | Fase 1 (pågår). Fase 2 er ferdig. |
-| **Sist gjort** | Miljøkonfig vist i appen. `GolfgutuCore` koblet til appen. Skjema v1 kjørt på test. App: 10 enhetstester og 3 UI-tester grønne. Pakken: 49 tester grønne. |
-| **Neste oppgave** | Fase 1 oppgave 7: innlogging med e-postkode (Apple og Google etterpå). |
+| **Sist gjort** | Innlogging med e-postkode. App: 33 enhetstester og 2 UI-tester grønne. Pakken: 49 tester grønne. |
+| **Neste oppgave** | Brukeren prøver e-postinnlogging på telefonen. Deretter Logg inn med Apple, så Google (fase 1 oppgave 7). |
 | **Venter på deg** | E-postmalen i Supabase skal vise koden (`{{ .Token }}`). |
 
 ---
@@ -48,7 +48,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Miljøkonfig for test og prod i filer som ikke sjekkes inn, med tydelig visning av miljø i appen. *(`Config/Supabase-<Miljø>.plist` utenfor git, `AppConfig` avviser feil miljø og hemmelig nøkkel, TEST-merke i verktøylinjen og miljø i Deg.)*
 - [x] **Skjema v1** for kjernen (SQL i `sql/`, til godkjenning): klubb/tropp, medlemmer og roller, sesong med regelsett (B12), kveld, påmelding, bane og hull, runde, deltakere, bås og markør, lag, match, score. Med RLS og grants, også anon-revoke. *(`sql/001_skjema_v1.sql`, godkjent 06.10.)*
 - [x] Kjøre skjemaet på test etter godkjenning, med kontrollspørringer. *(10/10 ok, anon får 42501.)*
-- [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først.
+- [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først. *(E-postkode ferdig 06.10: hele appen bak innlogging, økt i nøkkelringen, norske feilmeldinger, logg ut i Deg. Apple og Google gjenstår.)*
 - [ ] Første innlogging: velg navn i troppen eller bli med som ny. Arrangør kan godkjenne og frigjøre.
 - [ ] Rolig Kveld-skjerm som viser «Ingen kveld satt opp» og hvem som er logget inn.
 

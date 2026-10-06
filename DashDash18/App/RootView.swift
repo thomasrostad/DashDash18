@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     let config: AppConfig
+    let user: AuthUser
     @State private var selectedTab: AppTab = .kveld
 
     var body: some View {
@@ -29,7 +30,7 @@ struct RootView: View {
         switch tab {
         case .kveld: KveldView()
         case .tavla: TavlaView()
-        case .deg: DegView(config: config)
+        case .deg: DegView(config: config, user: user)
         }
     }
 }
@@ -47,7 +48,11 @@ struct EnvironmentBadge: View {
 }
 
 #Preview {
-    RootView(config: .preview)
+    RootView(config: .preview, user: .preview)
+}
+
+extension AuthUser {
+    static let preview = AuthUser(id: UUID(), email: "deg@epost.no")
 }
 
 extension AppConfig {

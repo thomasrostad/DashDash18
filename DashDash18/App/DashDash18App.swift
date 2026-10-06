@@ -10,7 +10,7 @@ struct DashDash18App: App {
         WindowGroup {
             switch config {
             case .success(let config):
-                RootView(config: config)
+                AppRoot(config: config)
             case .failure(let error):
                 ConfigErrorView(error: error)
             }
