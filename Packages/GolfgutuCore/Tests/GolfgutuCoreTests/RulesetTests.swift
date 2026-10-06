@@ -19,6 +19,7 @@ struct RulesetTests {
             let FORM_STANDARD: String
             let SIDEPREMIE_POENG: Double
             let HCP_EXTERN_NY_RUNDE: Bool
+            let LEDELSE_SJEKKPUNKT: [Int]
         }
         struct Andel: Decodable { let formId: String; let andel: Double }
         let konstanter: K
@@ -42,6 +43,7 @@ struct RulesetTests {
         #expect(g.sidePrizes.closestToPin == .init(enabled: true, points: k.SIDEPREMIE_POENG))
         #expect(g.handicap.externalHandicap == k.HCP_EXTERN_NY_RUNDE)
         #expect(g.handicap.allowanceOverride == nil)
+        #expect(g.leadCheckpoints == k.LEDELSE_SJEKKPUNKT)
         // Konstantene i db-nytt.js som ikke står i fixturen: POENG_NETTO_PAR = 2 og max(0, …) i
         // pointsForHole, TREKANT_POENG, lagHandicap og matchSlag, fmtPoeng/matchSum til halve,
         // 1 / vinnere.length i sidepremieResultaterFor, og alle 16 former valgbare.
@@ -103,6 +105,19 @@ struct RulesetTests {
         #expect(delvis.table.roundingStep == nil)
         #expect(delvis.table.matchPoints == Ruleset.golfgutu.table.matchPoints)
         #expect(delvis.handicap == Ruleset.golfgutu.handicap)
+        #expect(delvis.leadCheckpoints == Ruleset.golfgutu.leadCheckpoints)
+        #expect(v1.leadCheckpoints == [3, 6, 9, 12, 15, 18])
+    }
+
+    /// Sjekkpunktene for ledelsen leses, skrives og kan være andre enn Golfgutu-oppsettets.
+    @Test func ledelsensSjekkpunkter() throws {
+        let egne = try JSONDecoder().decode(Ruleset.self, from: Data(#"{"version": 2, "leadCheckpoints": [9, 18]}"#.utf8))
+        #expect(egne.leadCheckpoints == [9, 18])
+        #expect(egne.validate().isEmpty)
+        let ingen = try JSONDecoder().decode(Ruleset.self, from: Data(#"{"version": 2, "leadCheckpoints": []}"#.utf8))
+        #expect(ingen.leadCheckpoints.isEmpty)
+        let rundtur = try JSONDecoder().decode(Ruleset.self, from: JSONEncoder().encode(egne))
+        #expect(rundtur.leadCheckpoints == [9, 18])
     }
 
     /// Verdiene som var faste i koden, styres nå av regelsettet. Utledet fra formlene.
@@ -240,6 +255,13 @@ struct RulesetTests {
         #expect(felt { $0.formats.allowedFormIDs = [] } == ["formats.allowedFormIDs"])
         #expect(felt { $0.formats.allowedFormIDs.append("golfball-bingo") } == ["formats.allowedFormIDs"])
         #expect(felt { $0.formats.allowedFormIDs = ["match"] } == ["formats.defaultFormID"])
+        // Ledelsens sjekkpunkter: 1…18, stigende, uten like.
+        #expect(felt { $0.leadCheckpoints = [0, 9] } == ["leadCheckpoints"])
+        #expect(felt { $0.leadCheckpoints = [9, 19] } == ["leadCheckpoints"])
+        #expect(felt { $0.leadCheckpoints = [9, 6] } == ["leadCheckpoints"])
+        #expect(felt { $0.leadCheckpoints = [9, 9] } == ["leadCheckpoints"])
+        #expect(felt { $0.leadCheckpoints = [1, 18] }.isEmpty)
+        #expect(felt { $0.leadCheckpoints = [] }.isEmpty)
 
         // Meldingene er norske og nevner tallene.
         var r = Ruleset.golfgutu

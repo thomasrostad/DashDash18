@@ -1,5 +1,5 @@
 {
- "_kilde": "Konstanter fra db-nytt.js (SESONG_RUNDER, TELLENDE_RUNDER, TELLENDE_MATCHER, POENG_SEIER/DELT/TAP, SEEDING_GRUPPER, SPILLERE_PER_BAAS, FORM_STANDARD). Sidepremie: 1 poeng delt på antall vinnere (sidepremieResultaterFor). hcp_extern: false og andel fra handleStartRunde i app-nytt.js.",
+ "_kilde": "Konstanter fra db-nytt.js (SESONG_RUNDER, TELLENDE_RUNDER, TELLENDE_MATCHER, POENG_SEIER/DELT/TAP, SEEDING_GRUPPER, SPILLERE_PER_BAAS, FORM_STANDARD) og LEDELSE_SJEKKPUNKT fra app-nytt.js. Sidepremie: 1 poeng delt på antall vinnere (sidepremieResultaterFor). hcp_extern: false og andel fra handleStartRunde i app-nytt.js.",
  "konstanter": {
   "SESONG_RUNDER": 7,
   "TELLENDE_RUNDER": 5,
@@ -27,7 +27,8 @@
   "SPILLERE_PER_BAAS": 4,
   "FORM_STANDARD": "stableford",
   "SIDEPREMIE_POENG": 1,
-  "HCP_EXTERN_NY_RUNDE": false
+  "HCP_EXTERN_NY_RUNDE": false,
+  "LEDELSE_SJEKKPUNKT": [3, 6, 9, 12, 15, 18]
  },
  "andelForNyRunde": [
   {
