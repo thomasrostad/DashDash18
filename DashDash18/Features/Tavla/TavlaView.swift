@@ -42,16 +42,18 @@ private struct TavlaContent: View {
                 Text(message)
             } actions: {
                 Button("Prøv igjen") { Task { await model.load() } }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.dd(.primary))
             }
         case .loaded:
             if let standings = model.standings {
                 TavlaList(standings: standings)
             } else {
-                // List, så «dra ned for å hente på nytt» virker også her.
-                List {
+                // ScrollView, så «dra ned for å hente på nytt» virker også her.
+                ScrollView {
                     NoSeasonView()
-                        .listRowBackground(Color.clear)
+                        .ddCard(.empty)
+                        .padding(.horizontal, DDSpacing.gutter)
+                        .padding(.vertical, DDSpacing.l)
                 }
             }
         }
@@ -63,55 +65,97 @@ struct TavlaList: View {
     let standings: TavlaStandings
 
     var body: some View {
-        List {
-            if standings.status == .finished, standings.summary != nil {
-                Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
+                if standings.status == .finished, standings.summary != nil {
                     NavigationLink {
                         SeasonSummaryView(standings: standings)
                     } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Sesongen er ferdig")
-                                .font(.headline)
-                            Text("Se mesteren, pallen og sesongens tall.")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
+                        FinishedSeasonCard()
                     }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, DDSpacing.m)
                 }
-            }
 
-            Section {
+                DDSectionLabel("Jakkeracet · \(standings.seasonName)") {
+                    Text("\(standings.eveningsPlayed) av \(standings.eveningsTotal) \(standings.eveningsTotal == 1 ? "kveld" : "kvelder") spilt")
+                        .ddEyebrow()
+                }
                 if standings.isEmpty {
                     ContentUnavailableView("Ingen spillere ennå", systemImage: "person.3",
                                            description: Text("Troppen står her når arrangøren har lagt den inn."))
+                        .ddCard(.empty)
                 } else {
-                    ForEach(standings.rows) { row in
-                        NavigationLink {
-                            PlayerProfileView(standings: standings, memberID: row.memberID)
-                        } label: {
-                            TavlaRowView(row: row, standings: standings)
+                    VStack(spacing: 0) {
+                        ForEach(standings.rows) { row in
+                            NavigationLink {
+                                PlayerProfileView(standings: standings, memberID: row.memberID)
+                            } label: {
+                                TavlaRowView(row: row, standings: standings)
+                            }
+                            .buttonStyle(.plain)
+                            if row.id != standings.rows.last?.id { DDDivider() }
                         }
-                        .listRowBackground(row.isMe ? Color.accentColor.opacity(0.12) : nil)
                     }
+                    .ddCard(padding: DDSpacing.l)
                 }
-            } header: {
-                HStack {
-                    Text(standings.seasonName)
-                    Spacer()
-                    Text("\(standings.eveningsPlayed) av \(standings.eveningsTotal) \(standings.eveningsTotal == 1 ? "kveld" : "kvelder") spilt")
-                }
-            }
 
-            Section {
-                DisclosureGroup("Slik telles det") {
-                    ForEach(Array(RulesetExplanation.sentences(for: standings.rules).enumerated()), id: \.offset) { _, line in
-                        Text(line)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                RulesExplanationCard(rules: standings.rules)
+                    .padding(.top, DDSpacing.m)
+            }
+            .padding(.horizontal, DDSpacing.gutter)
+            .padding(.vertical, DDSpacing.l)
+        }
+    }
+}
+
+/// Hero-kortet over tabellen når sesongen er ferdig: jakka og veien til oppsummeringen.
+private struct FinishedSeasonCard: View {
+    var body: some View {
+        HStack(spacing: 14) {
+            DDJacketIcon()
+                .stroke(Color.ddGold, style: StrokeStyle(lineWidth: 1.6, lineJoin: .round))
+                .frame(width: 30, height: 36)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Sesongen er ferdig")
+                    .font(.ddTitleSmall)
+                Text("Se mesteren, pallen og sesongens tall.")
+                    .font(.ddCallout)
+                    .foregroundStyle(Color.ddOnDark.opacity(0.8))
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "arrow.right")
+                .foregroundStyle(Color.ddGold)
+                .accessibilityHidden(true)
+        }
+        .ddCard(.hero)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// «Slik telles det»: regelsettet i setninger, sammenfoldet.
+private struct RulesExplanationCard: View {
+    let rules: Ruleset
+
+    var body: some View {
+        DisclosureGroup {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(RulesetExplanation.sentences(for: rules).enumerated()), id: \.offset) { _, line in
+                    Text(line)
+                        .font(.ddCallout)
+                        .foregroundStyle(Color.ddInkSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+            .padding(.top, 10)
+        } label: {
+            Text("Slik telles det")
+                .font(.ddBodyEmphasis)
+                .foregroundStyle(Color.ddForestInk)
         }
+        .tint(Color.ddForestInk)
+        .ddCard()
     }
 }
 
@@ -120,33 +164,15 @@ struct TavlaRowView: View {
     let standings: TavlaStandings
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text("\(row.place).")
-                .font(.body.monospacedDigit())
-                .foregroundStyle(.secondary)
-                .frame(minWidth: 28, alignment: .trailing)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(row.name)
-                        .font(row.isMe ? .body.bold() : .body)
-                    if row.isMe {
-                        Text("DEG")
-                            .font(.caption2.bold())
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(Color.accentColor, in: .capsule)
-                            .foregroundStyle(.white)
-                    }
-                }
-                Text(detail)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+        DDRankRow(place: "\(row.place).", name: row.name, detail: detail, isMe: row.isMe) {
+            HStack(spacing: 10) {
+                DDRankValue(standings.points(row.total))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.ddInkSecondary)
+                    .accessibilityHidden(true)
             }
-            Spacer()
-            Text(standings.points(row.total))
-                .font(.title3.monospacedDigit().weight(.semibold))
         }
-        .accessibilityElement(children: .combine)
     }
 
     private var detail: String {
