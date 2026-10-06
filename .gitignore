@@ -1,0 +1,16 @@
+# Referansen (GolfGutu-PWA) inneholder nøkler og skal ikke i git
+referanse/
+
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+
+# Lokal konfig og hemmeligheter
+*.xcconfig.local
+Secrets*.xcconfig
+.env*
