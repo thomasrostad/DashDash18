@@ -49,7 +49,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] **Skjema v1** for kjernen (SQL i `sql/`, til godkjenning): klubb/tropp, medlemmer og roller, sesong med regelsett (B12), kveld, påmelding, bane og hull, runde, deltakere, bås og markør, lag, match, score. Med RLS og grants, også anon-revoke. *(`sql/001_skjema_v1.sql`, godkjent 06.10.)*
 - [x] Kjøre skjemaet på test etter godkjenning, med kontrollspørringer. *(10/10 ok, anon får 42501.)*
 - [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først. *(06.10: e-postkode prøvd på telefon via Resend fra `noreply@dashdash18.com`. Logg inn med Apple bygget og slått på i Supabase. Google gjenstår.)*
-- [x] Første innlogging: velg navn i troppen eller bli med som ny. Arrangør kan godkjenne og frigjøre. *(06.10: lag klubb, bli med med kode, ta ledig navn eller vent på godkjenning, Deg viser klubb/rolle/kode. Godkjenning i admin kommer i fase 3. Ikke prøvd på telefon ennå.)*
+- [x] Første innlogging: velg navn i troppen eller bli med som ny. Arrangør kan godkjenne og frigjøre. *(06.10: lag klubb, bli med med kode, ta ledig navn eller vent på godkjenning, Deg viser klubb/rolle/kode. Godkjenning i admin kommer i fase 3. «Lag en ny klubb» prøvd på telefon mot test 06.10.)*
 - [ ] Rolig Kveld-skjerm som viser «Ingen kveld satt opp» og hvem som er logget inn.
 
 **Ferdig når:**
