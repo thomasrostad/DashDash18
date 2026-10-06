@@ -438,6 +438,7 @@ struct RoundListingTests {
     @Test func enRundeGaarAllerede() {
         #expect(RoundErrors.startMessage(sqlState: "23505", fallback: .unknown("x")) == "En runde går allerede. Lås den før du starter en ny.")
         #expect(RoundErrors.startMessage(sqlState: "42501", fallback: .notAllowed) == DataError.notAllowed.message)
+        #expect(RoundErrors.startMessage(sqlState: "55000", fallback: .unknown("x")) == "Bare en kladd kan startes. Last inn på nytt og sjekk.")
         #expect(RoundListing.nextRoundNo(existing: []) == 1)
     }
 }

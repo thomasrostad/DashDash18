@@ -32,6 +32,8 @@ private struct RundeAdminContent: View {
     @State private var wizard: WizardItem?
     @State private var pendingDelete: PendingDelete?
     @State private var pendingLock: RoundRow?
+    @State private var reviewing: RoundRow?
+    @State private var cutting: RoundRow?
     @State private var message: String?
     @State private var error: String?
     @State private var isBusy = false
@@ -87,6 +89,16 @@ private struct RundeAdminContent: View {
             }
             .task { await model.load() }
             .refreshable { await model.load() }
+            .navigationDestination(isPresented: Binding(get: { reviewing != nil }, set: { if !$0 { reviewing = nil } })) {
+                if let round = reviewing {
+                    RoundTableView(round: round, title: model.title(round))
+                }
+            }
+            .sheet(item: $cutting, onDismiss: { Task { await model.load() } }) { round in
+                NavigationStack {
+                    AvkortSheet(round: round, title: model.title(round)) { message = $0 }
+                }
+            }
             .sheet(item: $wizard) { item in
                 NavigationStack {
                     RundeWizardView(model: model, draft: item.draft) { result in
@@ -157,6 +169,19 @@ private struct RundeAdminContent: View {
                 } footer: {
                     Text("Kladder ser bare arrangørene. Én runde kan gå om gangen i klubben.")
                 }
+
+                AvsluttKveldenSection(rounds: model.rounds, title: model.title) { text in
+                    await model.load()
+                    message = text
+                }
+            }
+
+            Section {
+                NavigationLink { RundeneView() } label: {
+                    Label("Rundene", systemImage: "tablecells")
+                }
+            } footer: {
+                Text("Hele runden som tabell, og retting av hull, også i låste runder.")
             }
         }
         .disabled(isBusy)
@@ -172,9 +197,11 @@ private struct RundeAdminContent: View {
                 Button("Rediger kladden", systemImage: "pencil") { edit(round) }
                 Button("Start runden", systemImage: "play") { run { try await model.start(round) } }
             case .active:
+                Button("Se hele runden", systemImage: "tablecells") { reviewing = round }
+                Button("Avkort runden …", systemImage: "scissors") { cutting = round }
                 Button("Lås runden", systemImage: "lock") { pendingLock = round }
             case .locked:
-                EmptyView()
+                Button("Se hele runden", systemImage: "tablecells") { reviewing = round }
             }
             if round.status != .locked {
                 Button(round.status == .draft ? "Slett kladden" : "Slett runden", systemImage: "trash", role: .destructive) {
@@ -194,7 +221,6 @@ private struct RundeAdminContent: View {
                 StatusBadge(status: round.status)
             }
         }
-        .disabled(round.status == .locked)
     }
 
     private func subtitle(_ round: RoundRow, players: Int, bays: Int) -> String {
