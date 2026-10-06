@@ -24,6 +24,7 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 | `006_runder.sql` | `start_round` (oppsett og start i én transaksjon) | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `007_foring.sql` | `confirm_round_par` (markør eller arrangør bekrefter par) | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `008_sosialt.sql` | Aktivitet, reaksjoner, kveldens tråd, tippekupong, push-tokens (APNs), bøttene `avatars` og `thread` | Godkjent og kjørt på test 06.10.2026. Ikke prod |
+| `009_ledelse_en_gang.sql` | Unik indeks: ledelsesvarsel bare én gang per runde og sjekkpunkt | Forslag, ikke kjørt |
 | `lokal/stub.sql`, `lokal/001_prove.sql` | Lokal syntaks- og rolleprøve. **Aldri mot Supabase.** | Hjelpefiler |
 | `lokal/stub_storage.sql`, `lokal/008_prove.sql` | Lokal Storage-etterligning og rolleprøve for 008. **Aldri mot Supabase.** | Hjelpefiler |
 
