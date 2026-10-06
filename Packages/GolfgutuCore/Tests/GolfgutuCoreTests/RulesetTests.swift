@@ -184,6 +184,24 @@ struct RulesetTests {
         #expect(Ruleset.golfgutu.validate().isEmpty)
     }
 
+    /// Eksempelet i REGELSETT.md: 5 kvelder, beste 3 kvelder, seier 3 / uavgjort 1, ingen sidepremier.
+    /// Utelatte felt (`formAllowances`, `teamHandicap`) får Golfgutu-verdien.
+    @Test func annetOppsettFraJSON() throws {
+        let r = try JSONDecoder().decode(Ruleset.self, from: Fixture.data("regelsett-eksempel"))
+        #expect(r.validate().isEmpty)
+        #expect(r.evenings == 5)
+        #expect(r.table.counting == .init(unit: .evening, best: 3))
+        #expect(r.table.matchPoints == .init(win: 3, draw: 1, loss: 0))
+        #expect(!r.sidePrizes.longestDrive.enabled && !r.sidePrizes.closestToPin.enabled)
+        #expect(r.table.roundingStep == nil)
+        #expect(r.handicap.seedingGroups.isEmpty)
+        #expect(r.handicap.teamHandicap == Ruleset.golfgutu.handicap.teamHandicap)
+        #expect(r.allowance(for: CompetitionForm.form(id: "stableford")) == 1)
+        #expect(r.suggestions(players: 8).map(\.id) == ["stableford", "match", "fourball", "scramble-2"])
+        let rundtur = try JSONDecoder().decode(Ruleset.self, from: JSONEncoder().encode(r))
+        #expect(rundtur == r)
+    }
+
     /// Ett problem om gangen, med feltet det gjelder.
     @Test func ugyldigeRegelsett() {
         func felt(_ endre: (inout Ruleset) -> Void) -> [String] {

@@ -5,6 +5,150 @@ i `Ruleset.golfgutu` (Golfgutu-oppsettet, som gir samme svar som PWA-en). Tabell
 regelverdi: hvor den brukes, feltet i `Ruleset` (eller hvorfor den blir i koden) og Golfgutu-verdien.
 
 Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sitt eget regelsett.
+`Ruleset.validate()` gir en liste med problemer (`RulesetIssue`: felt og norsk melding) før lagring.
+
+## Struktur (versjon 2)
+
+| Felt | Type | Betydning |
+|---|---|---|
+| `version` | tall | 2. Mangler feltet, eller er det 1, leses den gamle flate formen. |
+| `evenings` | tall | Antall kvelder i sesongen. |
+| `scoring.netParPoints` | tall | Stablefordpoeng for netto par (og for uspilt hull ved `nettopar`). |
+| `scoring.minimumPoints` | tall | Laveste poeng på et hull. |
+| `table.matchPoints` | `{win, draw, loss}` | Poeng for utfallet av en duell. |
+| `table.trianglePoints` | 3 tall | Poeng etter plass i trekanten, beste først. Delt plass deler. |
+| `table.counting` | `{unit, best}` | Hva som teller i tabellen. `unit`: `match`, `round`, `evening`. `best`: N eller `null` (alle). |
+| `table.stablefordCounting` | `{unit, best}` | Hva som teller i stablefordsummen. `unit`: `round`, `evening`. |
+| `table.tiebreaks` | liste | `holeDifference`, `stableford` i ønsket rekkefølge. Navn skiller alltid til slutt. |
+| `table.roundingStep` | tall eller `null` | Avrunding av tabellpoeng (0,5 = halve). `null`: ingen. |
+| `sidePrizes.longestDrive`, `sidePrizes.closestToPin` | `{enabled, points}` | Av/på og poeng per premie. |
+| `sidePrizes.splitTies` | sann/usann | Likt deler poenget. Usann: alle på delt førsteplass får fullt. |
+| `handicap.allowanceOverride` | tall eller `null` | Én andel for alle former. `null`: per form. |
+| `handicap.formAllowances` | form-id → tall | Andelen en ny runde i formen får. Mangler formen: 1. |
+| `handicap.seedingGroups` | liste | `{number, handicap, name}`. Tom: ingen seeding. |
+| `handicap.externalHandicap` | sann/usann | Simulatoren deler ut slagene på nye runder. |
+| `handicap.teamHandicap` | form-id → `{method, weights}` | `average`, `weighted` (vekter lavest først) eller `lowest` (laveste · andel). Mangler formen: `lowest`. |
+| `formats.defaultFormID` | form-id | Formen en ny runde starter med. Må være tillatt. |
+| `formats.allowedFormIDs` | liste | Formene arrangøren kan velge. |
+| `formats.maxPerBay` | tall | Største lag i en bås. |
+| `formats.matchStrokes` | `lowestFromScratch` / `fullHandicap` | Slag i match. |
+
+Felt som mangler i JSON-en, får Golfgutu-verdien. `null` er et valg der feltet tillater det
+(`best`, `roundingStep`, `allowanceOverride`). Skjemaets standard `{"version": 1}` blir Golfgutu-oppsettet.
+
+### Golfgutu
+
+Fixture: `Tests/GolfgutuCoreTests/Fixtures/regelsett-golfgutu.json` (lik `Ruleset.golfgutu`).
+
+```json
+{
+  "version": 2,
+  "evenings": 7,
+  "scoring": { "netParPoints": 2, "minimumPoints": 0 },
+  "table": {
+    "matchPoints": { "win": 1, "draw": 0.5, "loss": 0 },
+    "trianglePoints": [1, 0.5, 0],
+    "counting": { "unit": "match", "best": null },
+    "stablefordCounting": { "unit": "round", "best": 5 },
+    "tiebreaks": ["holeDifference", "stableford"],
+    "roundingStep": 0.5
+  },
+  "sidePrizes": {
+    "longestDrive": { "enabled": true, "points": 1 },
+    "closestToPin": { "enabled": true, "points": 1 },
+    "splitTies": true
+  },
+  "handicap": {
+    "allowanceOverride": null,
+    "formAllowances": {
+      "stableford": 0.95, "stableford-brutto": 0, "slag-netto": 0.95, "slag-brutto": 0,
+      "par-bogey": 0.95, "maks-score": 0.95, "match": 1, "fourball": 1, "fourball-4": 0.75,
+      "sammenlagt-lag": 1, "foursome": 1, "greensome": 1, "chapman": 1, "scramble-2": 1,
+      "scramble-4": 1, "skins": 0.95
+    },
+    "seedingGroups": [
+      { "number": 1, "handicap": 0, "name": "Gruppe 1" },
+      { "number": 2, "handicap": 5, "name": "Gruppe 2" },
+      { "number": 3, "handicap": 10, "name": "Gruppe 3" }
+    ],
+    "externalHandicap": false,
+    "teamHandicap": {
+      "fourball": { "method": "average" },
+      "sammenlagt-lag": { "method": "average" },
+      "foursome": { "method": "average" },
+      "greensome": { "method": "average" },
+      "chapman": { "method": "average" },
+      "scramble-2": { "method": "average" },
+      "scramble-4": { "method": "weighted", "weights": [0.25, 0.20, 0.15, 0.10] }
+    }
+  },
+  "formats": {
+    "defaultFormID": "stableford",
+    "allowedFormIDs": [
+      "stableford", "stableford-brutto", "slag-netto", "slag-brutto", "par-bogey", "maks-score",
+      "match", "fourball", "fourball-4", "sammenlagt-lag", "foursome", "greensome", "chapman",
+      "scramble-2", "scramble-4", "skins"
+    ],
+    "maxPerBay": 4,
+    "matchStrokes": "lowestFromScratch"
+  }
+}
+```
+
+### Et annet oppsett
+
+5 kvelder, de 3 beste kveldene teller (både i tabellen og stablefordsummen), seier 3 / uavgjort 1 / tap 0,
+trekant 3/1/0, ingen sidepremier, ingen avrunding, fullt handicap, ingen seeding, fire former og
+stablefordsum før hulldifferanse. `formAllowances` og `teamHandicap` er utelatt og får Golfgutu-verdien.
+Fixture: `Tests/GolfgutuCoreTests/Fixtures/regelsett-eksempel.json` (testet i `annetOppsettFraJSON`).
+
+```json
+{
+  "version": 2,
+  "evenings": 5,
+  "scoring": { "netParPoints": 2, "minimumPoints": 0 },
+  "table": {
+    "matchPoints": { "win": 3, "draw": 1, "loss": 0 },
+    "trianglePoints": [3, 1, 0],
+    "counting": { "unit": "evening", "best": 3 },
+    "stablefordCounting": { "unit": "evening", "best": 3 },
+    "tiebreaks": ["stableford", "holeDifference"],
+    "roundingStep": null
+  },
+  "sidePrizes": {
+    "longestDrive": { "enabled": false, "points": 0 },
+    "closestToPin": { "enabled": false, "points": 0 },
+    "splitTies": true
+  },
+  "handicap": {
+    "allowanceOverride": 1,
+    "seedingGroups": [],
+    "externalHandicap": false
+  },
+  "formats": {
+    "defaultFormID": "stableford",
+    "allowedFormIDs": ["stableford", "match", "fourball", "scramble-2"],
+    "maxPerBay": 4,
+    "matchStrokes": "lowestFromScratch"
+  }
+}
+```
+
+### Versjon 1 (lest, ikke skrevet)
+
+Flat form: `allowanceOverride`, `seedingGroups`, `externalHandicap`, `defaultFormID`, `maxPerBay`,
+`evenings`, `countingEvenings` (→ `table.counting` med `unit: match`), `stablefordCountingEvenings`
+(→ `table.stablefordCounting` med `unit: round`), `matchPoints`, `sidePrizes {enabled, points}`
+(→ begge premiene), `trianglePoints`, `tiebreaks`. Fixture: `regelsett-golfgutu-v1.json`.
+
+## Gyldighetssjekk
+
+`validate()` melder blant annet: under én kveld; «beste N» under 1, eller flere kvelder enn sesongen har;
+stablefordsum som teller matcher; negative poeng (duell, trekant, sidepremier, netto par); seier under
+uavgjort eller uavgjort under tap; trekant uten tre plasser eller med bedre plass som gir mindre;
+avrunding 0 eller mindre; samme skilletegn to ganger; laveste hullpoeng over netto par; andel utenfor
+0–100 %; to seedinggrupper med samme nummer; vektet lagshandicap uten vekter eller med negative vekter;
+maks per bås under 1; ingen tillatte former, ukjent form, og standardform som ikke er tillatt.
 
 ## Poeng per hull og runde
 
