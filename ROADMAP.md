@@ -11,9 +11,9 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | | |
 |---|---|
 | **Nåværende fase** | Fase 1 (pågår). Fase 2 er ferdig. |
-| **Sist gjort** | Fase 6-logikk i GolfgutuCore (match, trekant, sidepremier, sesongtabell): pakken 74 tester grønne. Innlogging med e-postkode ferdig. |
-| **Neste oppgave** | Logg inn med Apple (fase 1 oppgave 7). Brukeren fikser signering (app-ID `com.dashdash18.app`) og venter på at Resend verifiserer `dashdash18.com`. |
-| **Venter på deg** | Signering i Xcode (app-ID registrert, «Try Again»). DMARC i Cloudflare og Verify i Resend. Svar: skal «beste N» telle kvelder eller matcher? |
+| **Sist gjort** | E-postkode virker på telefonen (Resend, domenet `dashdash18.com` verifisert). Apple-innlogging bygget. Regelsett v2: 80 tester grønne. |
+| **Neste oppgave** | Fase 1 oppgave 8: første innlogging – lag klubb eller bli med (invitasjonskode, velg navn). Google-innlogging etterpå. |
+| **Venter på deg** | Bekreft at Logg inn med Apple virker på telefonen. Svar på de fire regelsett-spørsmålene i `Packages/GolfgutuCore/REGELSETT.md`. |
 
 ---
 
@@ -48,7 +48,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Miljøkonfig for test og prod i filer som ikke sjekkes inn, med tydelig visning av miljø i appen. *(`Config/Supabase-<Miljø>.plist` utenfor git, `AppConfig` avviser feil miljø og hemmelig nøkkel, TEST-merke i verktøylinjen og miljø i Deg.)*
 - [x] **Skjema v1** for kjernen (SQL i `sql/`, til godkjenning): klubb/tropp, medlemmer og roller, sesong med regelsett (B12), kveld, påmelding, bane og hull, runde, deltakere, bås og markør, lag, match, score. Med RLS og grants, også anon-revoke. *(`sql/001_skjema_v1.sql`, godkjent 06.10.)*
 - [x] Kjøre skjemaet på test etter godkjenning, med kontrollspørringer. *(10/10 ok, anon får 42501.)*
-- [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først. *(E-postkode ferdig 06.10: hele appen bak innlogging, økt i nøkkelringen, norske feilmeldinger, logg ut i Deg. Apple og Google gjenstår.)*
+- [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først. *(06.10: e-postkode prøvd på telefon via Resend fra `noreply@dashdash18.com`. Logg inn med Apple bygget og slått på i Supabase. Google gjenstår.)*
 - [ ] Første innlogging: velg navn i troppen eller bli med som ny. Arrangør kan godkjenne og frigjøre.
 - [ ] Rolig Kveld-skjerm som viser «Ingen kveld satt opp» og hvem som er logget inn.
 
