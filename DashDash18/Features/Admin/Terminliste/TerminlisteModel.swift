@@ -197,28 +197,20 @@ final class TerminlisteModel {
         await load()
     }
 
-    /// Bytter komiteen for en kveld: sletter dem som er tatt ut, legger til de nye.
-    /// To kall, ikke én transaksjon (se sql/005_kveld.sql for en RPC som gjør det samlet).
+    /// Bytter komiteen for en kveld i én transaksjon (RPC `set_event_committee`, sql/005,
+    /// kjørt på test 06.10).
     private func setCommittee(eventID: UUID, to wanted: Set<UUID>) async throws(DataError) {
-        let current = Set(committees[eventID] ?? [])
-        let removed = current.subtracting(wanted)
-        let added = wanted.subtracting(current)
+        struct Params: Encodable {
+            let p_event_id: UUID
+            let p_member_ids: [UUID]
+        }
+        guard Set(committees[eventID] ?? []) != wanted else { return }
         do {
-            if !removed.isEmpty {
-                try await client.from("event_committee")
-                    .delete()
-                    .eq("event_id", value: eventID)
-                    .in("member_id", values: removed.map(\.uuidString))
-                    .execute()
-            }
-            if !added.isEmpty {
-                let rows = added.map { EventCommitteeRow(eventID: eventID, memberID: $0, clubID: clubID) }
-                let inserted: [EventCommitteeRow] = try await client.from("event_committee")
-                    .insert(rows)
-                    .select("event_id, member_id, club_id")
-                    .execute().value
-                guard inserted.count == rows.count else { throw DataError.notAllowed }
-            }
+            let saved: [UUID] = try await client
+                .rpc("set_event_committee", params: Params(p_event_id: eventID, p_member_ids: wanted.sorted { $0.uuidString < $1.uuidString }))
+                .execute()
+                .value
+            guard Set(saved) == wanted else { throw DataError.notAllowed }
         } catch {
             throw DataError.invalid("Kvelden er lagret, men ikke sosialkomiteen. \(DataError.from(error).message)")
         }

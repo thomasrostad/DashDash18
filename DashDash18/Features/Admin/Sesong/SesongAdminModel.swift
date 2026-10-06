@@ -60,16 +60,18 @@ final class SesongAdminModel {
         try await update(season.id, SeasonRulesPatch(rules: rules))
     }
 
-    /// Aktiverer sesongen. Er en annen aktiv, avsluttes den først (`finishing`).
-    /// To skrivinger etter hverandre; se `sql/004_sesong.sql` for en RPC som gjør det i én transaksjon.
+    /// Aktiverer sesongen og avslutter en annen aktiv i samme transaksjon
+    /// (RPC `activate_season`, sql/004, kjørt på test 06.10). `finishing` beholdes for skjermen.
     func activate(_ season: SeasonRow, finishing other: SeasonRow?) async throws(DataError) {
-        if let other {
-            try await update(other.id, SeasonStatusPatch(status: .finished))
+        struct Params: Encodable { let p_season_id: UUID }
+        let row: SeasonRow = try await write {
+            try await context.client.rpc("activate_season", params: Params(p_season_id: season.id)).execute().value
         }
-        do {
-            try await update(season.id, SeasonStatusPatch(status: .active))
-        } catch DataError.duplicate {
-            throw .invalid("Klubben har allerede en aktiv sesong. Avslutt den først.")
+        for i in seasons.indices where seasons[i].status == .active && seasons[i].id != row.id {
+            seasons[i].status = .finished
+        }
+        if let i = seasons.firstIndex(where: { $0.id == row.id }) {
+            seasons[i] = row
         }
     }
 

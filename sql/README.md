@@ -18,6 +18,9 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 | Fil | Innhold | Status |
 |---|---|---|
 | `001_skjema_v1.sql` | Kjernen for fase 1–5 | Godkjent, kjørt på test 06.10.2026. Ikke prod |
+| `002_baner.sql` | `save_course`, `confirm_course` | Godkjent, kjørt på test 06.10.2026. Ikke prod |
+| `004_sesong.sql` | `activate_season`, sletting bare av planlagte sesonger | Godkjent, kjørt på test 06.10.2026. Ikke prod |
+| `005_kveld.sql` | `set_event_committee` | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `lokal/stub.sql`, `lokal/001_prove.sql` | Lokal syntaks- og rolleprøve. **Aldri mot Supabase.** | Hjelpefiler |
 
 Kommer senere, som egne filer: par-bekreftelse for markør (se åpne spørsmål), aktivitetslogg og varsler, tråd, tippekupong, push-tokens (APNs), Storage-bøtter for bilder, og poeng/veddemål (fase 10).

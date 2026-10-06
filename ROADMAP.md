@@ -13,7 +13,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | **Nåværende fase** | Fase 3 (nesten ferdig) og fase 4 (påmelding ferdig, oppsett av kveld gjenstår). |
 | **Sist gjort** | Fire agenter: tropp, baner, sesong og regler, terminliste og påmelding. Alt slått sammen, enhetstester grønne. Kartlegging av banedata (B15). |
 | **Neste oppgave** | Brukeren prøver arrangørsiden på telefon. Godkjenning av SQL 002/004/005. Deretter fase 4: oppsett av kveld (kladd, båser, markør) og fase 5: føring. |
-| **Venter på deg** | SQL 002/004/005. CR = par for 7 baner? Kontakt GolfAPI.io (B15). Google-innlogging. |
+| **Venter på deg** | Test av arrangørsiden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. Baneverdier (CR) senere. |
 
 ---
 
@@ -108,7 +108,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Tropp: legg til og fjern spillere uten tak på antall, handicapindeks, seeding, roller (arrangør, kasserer), frigjør innlogging. *(06.10: også godkjenn/avvis, arkiver. Ikke prøvd mot database.)*
 - [x] Baner: liste, rediger par, indeks, lengde, CR og slope, bekreftet-status. Import av PWA-ens 18 baner fra referansens SQL-filer eller fra PWA-basen (lesing). *(06.10: 18 Golfgutu-baner som JSON-import. CR-spørsmål åpent. Søk etter ekte baner: B15.)*
 - [x] Terminliste: kvelder med dato, tid, sted, sosialkomité. *(06.10: også trekning av sosialkomité.)*
-- [ ] Skjema-tillegg ved behov (SQL til godkjenning). *(Forslag klare, ikke kjørt: `sql/002_baner.sql`, `004_sesong.sql`, `005_kveld.sql`.)*
+- [ ] Skjema-tillegg ved behov (SQL til godkjenning). *(002, 004, 005 godkjent og kjørt på test 06.10; appen bruker RPC-ene.)*
 
 **Ferdig når:**
 - Jeg setter opp en sesong med 5 kvelder og «beste 3 teller» for 9 spillere, og en med Golfgutu-oppsettet for 12. Begge lagres og vises riktig.

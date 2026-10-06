@@ -4,9 +4,7 @@ import Supabase
 
 /// Banebiblioteket for klubben: henter, lagrer, bekrefter, sletter og importerer baner.
 ///
-/// Lagring av bane og hull er flere forespørsler (bane, så sletting av hull som er
-/// borte, så upsert av hullene). Feiler en av de siste, står banen lagret med de gamle
-/// hullene. `sql/002_baner.sql` foreslår en RPC som gjør alt i én transaksjon.
+/// Bane og hull lagres i én transaksjon med RPC `save_course` (sql/002, kjørt på test 06.10).
 @Observable
 final class CourseLibraryModel {
     private(set) var items: [CourseListItem] = []
@@ -58,55 +56,69 @@ final class CourseLibraryModel {
         }
     }
 
-    /// Lagrer en ny bane (`id == nil`) eller endrer en som finnes. Gir den lagrede banen.
+    /// Lagrer en ny bane (`id == nil`) eller endrer en som finnes, med alle hullene i én
+    /// transaksjon (RPC `save_course`, sql/002). Gir den lagrede banen slik serveren har den.
     @discardableResult
     func save(_ values: CourseInputValues, id: UUID?) async throws(DataError) -> CourseListItem {
+        struct Hole: Encodable {
+            let hole_number: Int
+            let par: Int
+            let stroke_index: Int?
+            let length_m: Int?
+
+            func encode(to encoder: any Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(hole_number, forKey: .hole_number)
+                try c.encode(par, forKey: .par)
+                try c.encode(stroke_index, forKey: .stroke_index)
+                try c.encode(length_m, forKey: .length_m)
+            }
+
+            enum CodingKeys: String, CodingKey { case hole_number, par, stroke_index, length_m }
+        }
+        struct Params: Encodable {
+            let p_club_id: UUID
+            let p_course_id: UUID?
+            let p_name: String
+            let p_external_name: String?
+            let p_course_rating: Double?
+            let p_slope_rating: Int?
+            let p_in_use: Bool
+            let p_holes: [Hole]
+
+            func encode(to encoder: any Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(p_club_id, forKey: .p_club_id)
+                try c.encode(p_course_id, forKey: .p_course_id)
+                try c.encode(p_name, forKey: .p_name)
+                try c.encode(p_external_name, forKey: .p_external_name)
+                try c.encode(p_course_rating, forKey: .p_course_rating)
+                try c.encode(p_slope_rating, forKey: .p_slope_rating)
+                try c.encode(p_in_use, forKey: .p_in_use)
+                try c.encode(p_holes, forKey: .p_holes)
+            }
+
+            enum CodingKeys: String, CodingKey {
+                case p_club_id, p_course_id, p_name, p_external_name, p_course_rating, p_slope_rating, p_in_use, p_holes
+            }
+        }
         do {
-            let write = CourseWrite(clubID: context.clubID, values: values)
-            let course: CourseRow
-            if let id {
-                course = try await client
-                    .from("courses")
-                    .update(write)
-                    .eq("id", value: id)
-                    .select(Self.courseColumns)
-                    .single()
-                    .execute()
-                    .value
-            } else {
-                course = try await client
-                    .from("courses")
-                    .insert(write)
-                    .select(Self.courseColumns)
-                    .single()
-                    .execute()
-                    .value
-            }
-
-            // Hull som ikke lenger finnes (18 → 9, eller banen tømt). Slettes før upsert,
-            // så en indeks som flyttes fra hull 12 til hull 3 ikke kolliderer.
-            if id != nil {
-                try await client
-                    .from("course_holes")
-                    .delete()
-                    .eq("course_id", value: course.id)
-                    .gt("hole_number", value: values.holes.count)
-                    .execute()
-            }
-
-            var holes: [CourseHoleRecord] = []
-            if !values.holes.isEmpty {
-                holes = try await client
-                    .from("course_holes")
-                    .upsert(values.holes.map { HoleWrite($0.record(courseID: course.id)) },
-                            onConflict: "course_id,hole_number")
-                    .select("course_id, hole_number, par, stroke_index, length_m")
-                    .execute()
-                    .value
-                guard holes.count == values.holes.count else { throw DataError.notAllowed }
-            }
-
-            let item = CourseListItem(course: course, holes: holes)
+            let params = Params(
+                p_club_id: context.clubID,
+                p_course_id: id,
+                p_name: values.name,
+                p_external_name: values.externalName,
+                p_course_rating: values.courseRating,
+                p_slope_rating: values.slopeRating,
+                p_in_use: values.inUse,
+                p_holes: values.holes.map {
+                    let r = $0.record(courseID: id ?? UUID())
+                    return Hole(hole_number: r.holeNumber, par: r.par, stroke_index: r.strokeIndex, length_m: r.lengthM)
+                }
+            )
+            let savedID: UUID = try await client.rpc("save_course", params: params).execute().value
+            let item = try await fetchItem(savedID)
+            guard item.holes.count == values.holes.count else { throw DataError.notAllowed }
             replace(item)
             return item
         } catch {
@@ -114,25 +126,33 @@ final class CourseLibraryModel {
         }
     }
 
-    /// «Bekreft mot skjermen»: hvem og når tallene sist ble sjekket mot simulatoren.
+    /// «Bekreft mot skjermen»: serveren setter hvem og når (RPC `confirm_course`, sql/002).
     func confirm(_ item: CourseListItem) async throws(DataError) {
-        struct Confirm: Encodable {
-            let confirmed_by: UUID
-            let confirmed_at: Date
-        }
+        struct Params: Encodable { let p_course_id: UUID }
         do {
-            let course: CourseRow = try await client
-                .from("courses")
-                .update(Confirm(confirmed_by: context.memberID, confirmed_at: Date()))
-                .eq("id", value: item.id)
-                .select(Self.courseColumns)
-                .single()
-                .execute()
-                .value
-            replace(CourseListItem(course: course, holes: item.holes))
+            _ = try await client.rpc("confirm_course", params: Params(p_course_id: item.id)).execute()
+            replace(try await fetchItem(item.id))
         } catch {
             throw Self.saveError(error, name: item.course.name)
         }
+    }
+
+    /// Leser én bane med hull, slik den ligger på serveren.
+    private func fetchItem(_ id: UUID) async throws -> CourseListItem {
+        let course: CourseRow = try await client
+            .from("courses")
+            .select(Self.courseColumns)
+            .eq("id", value: id)
+            .single()
+            .execute()
+            .value
+        let holes: [CourseHoleRecord] = try await client
+            .from("course_holes")
+            .select("course_id, hole_number, par, stroke_index, length_m")
+            .eq("course_id", value: id)
+            .execute()
+            .value
+        return CourseListItem(course: course, holes: holes)
     }
 
     /// Sletter banen og hullene (cascade). Databasen stopper det når runder bruker banen.
