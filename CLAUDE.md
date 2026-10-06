@@ -37,7 +37,7 @@ Arbeidsmåte:
 - **Aldri rediger `.xcodeproj` direkte** (heller ikke `project.pbxproj`). Legg til og flytt filer via Xcode-verktøyene (MCP), eller be brukeren gjøre det i Xcode.
 - **Aldri endre noe i `referanse/`.**
 - **Ingen endringer i Supabase uten at brukeren har godkjent det.** Det gjelder skjema, policies, funksjoner, triggere, data og konfig (for eksempel innloggingsmåter). Vis SQL-en, vent på godkjenning, kjør først mot test. Les-spørringer er greit.
-- **Bygg etter hver endring.** Bruk `BuildProject` (Xcode MCP). Fiks feil og advarsler før du går videre. Henger Xcode-koblingen (har skjedd ved testkjøring), bruk `xcodebuild test -project DashDash18.xcodeproj -scheme DashDash18 -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` med `-derivedDataPath` i scratch, så det ikke kolliderer med Xcode.
+- **Bygg etter hver endring.** Bruk `BuildProject` (Xcode MCP). Fiks feil og advarsler før du går videre. Henger Xcode-koblingen (har skjedd ved testkjøring), bruk `xcodebuild test -project DashDash18.xcodeproj -scheme DashDash18 -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` med `-derivedDataPath ~/Library/Developer/Xcode/DerivedData/DashDash18-cli`. Aldri en byggemappe under `Documents` (iCloud legger metadata på filene, og kodesigneringen feiler).
 - **Små steg.** Én avgrenset endring om gangen.
 
 ## Arbeidsregler (ROADMAP)
@@ -47,6 +47,7 @@ Arbeidsmåte:
 - Kryss av oppgaven og oppdater STATUS i `ROADMAP.md` etter hver fullført oppgave, og commit med en melding som peker på fasen (f.eks. «Fase 2: stableford per hull»).
 - Hvis noe viser seg å være større eller annerledes enn planlagt: oppdater planen og si fra, i stedet for å improvisere.
 - Ingen endringer i Supabase uten at brukeren har godkjent SQL-en.
+- Push til GitHub (`origin main`) etter hver commit.
 
 ## Kode og stil
 

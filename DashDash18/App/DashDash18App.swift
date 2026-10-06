@@ -2,15 +2,15 @@ import SwiftUI
 
 @main
 struct DashDash18App: App {
-    private let config = Result { () throws(AppConfig.LoadError) -> AppConfig in
-        try AppConfig.load()
+    private let services = Result { () throws(AppConfig.LoadError) -> AppServices in
+        AppServices(config: try AppConfig.load())
     }
 
     var body: some Scene {
         WindowGroup {
-            switch config {
-            case .success(let config):
-                AppRoot(config: config)
+            switch services {
+            case .success(let services):
+                AppRoot(services: services)
             case .failure(let error):
                 ConfigErrorView(error: error)
             }

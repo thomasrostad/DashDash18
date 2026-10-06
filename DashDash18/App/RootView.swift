@@ -3,6 +3,7 @@ import SwiftUI
 struct RootView: View {
     let config: AppConfig
     let user: AuthUser
+    let membership: Membership
     @State private var selectedTab: AppTab = .kveld
 
     var body: some View {
@@ -30,7 +31,7 @@ struct RootView: View {
         switch tab {
         case .kveld: KveldView()
         case .tavla: TavlaView()
-        case .deg: DegView(config: config, user: user)
+        case .deg: DegView(config: config, user: user, membership: membership)
         }
     }
 }
@@ -48,11 +49,19 @@ struct EnvironmentBadge: View {
 }
 
 #Preview {
-    RootView(config: .preview, user: .preview)
+    RootView(config: .preview, user: .preview, membership: .preview)
 }
 
 extension AuthUser {
     static let preview = AuthUser(id: UUID(), email: "deg@epost.no")
+}
+
+extension Membership {
+    static let preview = Membership(
+        id: UUID(), clubID: UUID(), displayName: "Thomas", status: .active,
+        isOrganizer: true, isTreasurer: false,
+        club: ClubInfo(name: "Golfgutu Invitational", joinCode: "A1B2C3D4E5")
+    )
 }
 
 extension AppConfig {
