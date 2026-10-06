@@ -54,6 +54,7 @@ Arbeidsmåte:
 - Swift Concurrency (`async`/`await`, actors), `@Observable`, SwiftData for lokal lagring. Apple-rammeverk først. Nye avhengigheter utover `supabase-swift` krever godkjenning.
 - Hold views små. Logikk i modeller og tjenester.
 - Følg stilen i omkringliggende kode.
+- Appmålet er MainActor som standard. Rene typer som brukes fra tester eller bakgrunn merkes `nonisolated`, og extensions av dem må også være `nonisolated extension` (ellers krasjer de på kjøretid uten kompileringsfeil).
 
 ## Tester
 
