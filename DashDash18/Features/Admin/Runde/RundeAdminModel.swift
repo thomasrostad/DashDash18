@@ -6,8 +6,8 @@ import Supabase
 /// Kveldens runder for arrangøren: lista, veiviseren og handlingene (lagre, starte, låse, slette).
 ///
 /// Lagring er to kall: raden i `rounds`, så `set_round_setup` (deltakere, båser, lag og matcher
-/// i én transaksjon). Start er i tillegg en statusendring. Feiler et senere kall, står runden
-/// som kladd med det som ble lagret (se sql/006_runder.sql for en RPC som starter i ett).
+/// i én transaksjon). Start er raden, så `start_round` (sql/006_runder.sql), som skriver oppsettet
+/// og setter status i én transaksjon. Feiler start_round, står runden som kladd slik den var.
 @Observable
 final class RundeAdminModel {
     enum LoadState: Equatable {
@@ -256,17 +256,20 @@ final class RundeAdminModel {
             throw .invalid("\(title(blocking)) går allerede. Lås den før du starter en ny, eller lagre denne som kladd.")
         }
         let id = try await writeRound(draft)
-        try await writeSetup(draft, roundID: id, withPlayingHandicap: true)
+        let params = RoundSetupParams.make(roundID: id, draft: draft, roster: members,
+                                           course: course(draft.courseID)?.coreCourse, rules: rules,
+                                           withPlayingHandicap: true)
+        struct Started: Decodable { let players: Int; let matches: Int; let status: RoundStatus }
         do {
-            let updated: [RoundRow] = try await client.from("rounds")
-                .update(RoundStatusPatch(status: .active))
-                .eq("id", value: id)
-                .select(Self.roundColumns)
-                .execute().value
-            guard updated.first?.status == .active else { throw DataError.notAllowed }
+            // Oppsett og status i én transaksjon. Går en annen runde (23505), ruller alt tilbake.
+            let started: Started = try await client.rpc("start_round", params: params).execute().value
+            guard started.status == .active, started.players == params.players.count,
+                  started.matches == params.matches.count else {
+                throw DataError.invalid("Runden ble ikke startet slik oppsettet sto. Last inn på nytt og sjekk.")
+            }
         } catch {
             await reload()
-            throw .invalid("Oppsettet er lagret som kladd, men runden startet ikke. "
+            throw .invalid("Runden startet ikke. "
                            + RoundErrors.startMessage(sqlState: (error as? PostgrestError)?.code, fallback: DataError.from(error)))
         }
         await reload()

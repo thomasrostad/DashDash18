@@ -317,7 +317,8 @@ nonisolated struct RoundStatusPatch: Encodable, Sendable {
     let status: RoundStatus
 }
 
-/// Parameterne til `set_round_setup(p_round_id, p_players, p_matches)`.
+/// Parameterne til `set_round_setup(p_round_id, p_players, p_matches)` og
+/// `start_round(p_round_id, p_players, p_matches)`.
 nonisolated struct RoundSetupParams: Encodable, Equatable, Sendable {
     struct PlayerEntry: Encodable, Equatable, Sendable {
         let memberID: UUID
@@ -519,9 +520,14 @@ nonisolated struct DeleteRoundResult: Decodable, Equatable, Sendable {
 
 /// Norske meldinger for feil ved lagring og start.
 nonisolated enum RoundErrors {
-    /// 23505 ved start er den unike indeksen `rounds_one_active_per_club`.
+    /// `start_round`: 23505 er den unike indeksen `rounds_one_active_per_club`,
+    /// 55000 er at runden ikke er en kladd lenger.
     static func startMessage(sqlState: String?, fallback: DataError) -> String {
-        sqlState == "23505" ? "En runde går allerede. Lås den før du starter en ny." : fallback.message
+        switch sqlState {
+        case "23505": "En runde går allerede. Lås den før du starter en ny."
+        case "55000": "Bare en kladd kan startes. Last inn på nytt og sjekk."
+        default: fallback.message
+        }
     }
 
     /// 23505 ved lagring er `rounds_unique_no_per_event`: to arrangører lagret samtidig.
