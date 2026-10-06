@@ -16,8 +16,19 @@ public struct Season: Sendable {
     /// `round_points` per runde, regnet én gang.
     private let pointsByRound: [[String: Int]]
 
-    public init(players: [Player], rounds: [Round], claims: [SideClaim] = [], ruleset: Ruleset = .golfgutu) {
+    /// - Parameter playingHandicaps: rundens frosne spillehandicap, runde-id → spiller-id → handicap
+    ///   i hele slag. Legges på rundene (`Round.playingHandicaps`, og vinner over det som står der fra før)
+    ///   og er fasit for poeng og matcher i den runden. Endrer en spiller handicap midt i sesongen,
+    ///   regnes hver runde med det spilleren hadde da. Tom (standard): alt regnes fra troppen.
+    public init(players: [Player], rounds: [Round], claims: [SideClaim] = [], ruleset: Ruleset = .golfgutu,
+                playingHandicaps: [String: [String: Double]] = [:]) {
         self.players = players
+        let rounds = rounds.map { round -> Round in
+            guard let id = round.id, let frozen = playingHandicaps[id], !frozen.isEmpty else { return round }
+            var r = round
+            r.playingHandicaps.merge(frozen) { _, new in new }
+            return r
+        }
         self.rounds = rounds
         self.claims = claims
         self.ruleset = ruleset

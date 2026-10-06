@@ -327,3 +327,115 @@ struct TavlaProfileTests {
         #expect(sum.eveningsPlayed == 1 && sum.eveningsTotal == 7)
     }
 }
+
+// MARK: - Rundens frosne handicap (én sannhet med Kveld)
+
+struct TavlaFrozenHandicapTests {
+    /// Bjørn hadde 18 i kveld 1 og 0 i kveld 2; i troppen står han nå med 9. Anders har 0.
+    /// Anders går par, Bjørn ett over på hvert hull (banehandicap = indeks: CR 72, slope 113, SI 1–18).
+    /// Samme scenario som GolfgutuCore-fixturen frosset-handicap.json.
+    static func changedHandicap() -> (members: [ClubMemberRow], rounds: [RoundSnapshot]) {
+        let members = [T.member(T.anders, "Anders"), T.member(T.bjorn, "Bjørn", hcp: 9)]
+        let rounds = [(1, "2026-05-01", 18.0), (2, "2026-05-08", 0.0)].map { n, date, frozen in
+            var r = T.round(n, date: date, strokes: [T.anders: T.over(0), T.bjorn: T.over(1)],
+                            matches: [T.Match(a: T.anders, b: T.bjorn)], members: members)
+            r.players = r.players.map { p in
+                var p = p
+                if p.memberID == T.id(T.bjorn) { p.handicapIndex = frozen }
+                return p
+            }
+            return r
+        }
+        return (members, rounds)
+    }
+
+    @Test func hverRundeRegnesMedHandicapetDaDenBleSpilt() {
+        let (members, rounds) = Self.changedHandicap()
+        let s = T.standings(rounds, members: members)
+        let a = T.id(T.anders).uuidString, b = T.id(T.bjorn).uuidString
+        // Kveld 1: ett slag per hull gir Bjørn netto par, 36 mot 36 og delt match.
+        #expect(s.season.roundPoints(0) == [a: 36, b: 36])
+        // Kveld 2: scratch, 18 poeng, og Anders vinner alle hull.
+        #expect(s.season.roundPoints(1) == [a: 36, b: 18])
+        let anders = T.row(s, T.anders), bjorn = T.row(s, T.bjorn)
+        #expect(anders.total == 1.5 && anders.holes == 18 && anders.stableford == 72)
+        #expect(bjorn.total == 0.5 && bjorn.holes == -18 && bjorn.stableford == 54)
+    }
+
+    @Test func tabellenGirSammeRundepoengOgMatcherSomKveld() {
+        let (members, rounds) = Self.changedHandicap()
+        let s = T.standings(rounds, members: members)
+        for (i, snapshot) in s.snapshots.enumerated() {
+            let game = RoundGame(snapshot)
+            for p in snapshot.players {
+                #expect(s.season.roundPoints(i)[p.memberID.uuidString] == game.total(p.memberID))
+            }
+            for m in game.round.matches {
+                #expect(MatchPlay.outcomeForA(m, in: s.season.rounds[i], roster: s.season.players)
+                        == MatchPlay.outcomeForA(m, in: game.round, roster: game.roster))
+            }
+        }
+    }
+
+    @Test func lagretSpillehandicapErFasit() {
+        // Frosset indeks 0, men runden startet med 18 lagret: Kveld og Tavla bruker 18.
+        var r = T.round(1, date: "2026-05-01", strokes: [T.anders: T.over(0), T.bjorn: T.over(1)],
+                        members: Array(T.four.prefix(2)))
+        r.players = r.players.map { p in
+            var p = p
+            if p.memberID == T.id(T.bjorn) { p.playingHandicap = 18 }
+            return p
+        }
+        let s = T.standings([r], members: Array(T.four.prefix(2)))
+        let game = RoundGame(r)
+        #expect(game.total(T.id(T.bjorn)) == 36)
+        #expect(s.season.roundPoints(0)[T.id(T.bjorn).uuidString] == 36)
+        // Netto par på alle hull: ingen netto birdie.
+        #expect(s.profile(T.id(T.bjorn))!.birdies == 0)
+    }
+}
+
+// MARK: - Innmeldinger: lik lengde avgjøres av tidspunktet
+
+struct TavlaClaimOrderTests {
+    @Test func likLengdeDenSomMeldteFoerstStaarOeverst() {
+        var r = T.round(1, date: "2026-09-01", strokes: [T.anders: T.over(0), T.bjorn: T.over(0)],
+                        claims: [(T.anders, .drive, 250), (T.bjorn, .drive, 250)], members: Array(T.four.prefix(2)))
+        let t0 = Date(timeIntervalSince1970: 1_788_287_400)
+        r.sideClaims[0].createdAt = t0.addingTimeInterval(60.5)
+        r.sideClaims[1].createdAt = t0
+        let game = RoundGame(r)
+        let sorted = SidePrizes.claims(.drive, in: game.round, claims: game.coreSideClaims)
+        #expect(sorted.map(\.playerId) == [T.id(T.bjorn).uuidString, T.id(T.anders).uuidString])
+
+        let s = T.standings([r], members: Array(T.four.prefix(2)))
+        let tavla = SidePrizes.claims(.drive, in: s.season.rounds[0], claims: s.claims)
+        #expect(tavla.map(\.playerId) == sorted.map(\.playerId))
+        // Delt uansett rekkefølge.
+        #expect(T.row(s, T.anders).side == 0.5 && T.row(s, T.bjorn).side == 0.5)
+    }
+
+    @Test func utenTidspunktStaarDeINavnerekkefolge() {
+        let r = T.round(1, date: "2026-09-01", strokes: [T.anders: T.over(0), T.bjorn: T.over(0)],
+                        claims: [(T.bjorn, .drive, 250), (T.anders, .drive, 250)], members: Array(T.four.prefix(2)))
+        let game = RoundGame(r)
+        let sorted = SidePrizes.claims(.drive, in: game.round, claims: game.coreSideClaims)
+        #expect(sorted.map(\.playerId) == [T.id(T.anders).uuidString, T.id(T.bjorn).uuidString])
+    }
+
+    @Test func createdAtDekodesOgErValgfri() throws {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let id = UUID().uuidString
+        let with = try decoder.decode(SideClaimRow.self, from: Data("""
+            {"id":"\(id)","round_id":"\(id)","member_id":"\(id)","kind":"drive","meters":250,"hole_index":6,
+             "created_at":"2026-09-01T18:30:00Z"}
+            """.utf8))
+        #expect(with.createdAt == Date(timeIntervalSince1970: 1_788_287_400))
+        #expect(with.timestamp == "2026-09-01T18:30:00.000Z")
+        let without = try decoder.decode(SideClaimRow.self, from: Data("""
+            {"id":"\(id)","round_id":"\(id)","member_id":"\(id)","kind":"kp","meters":2.4}
+            """.utf8))
+        #expect(without.createdAt == nil && without.timestamp == nil)
+    }
+}

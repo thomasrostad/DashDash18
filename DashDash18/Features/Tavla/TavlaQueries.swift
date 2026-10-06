@@ -53,7 +53,7 @@ enum TavlaQueries {
             .select("round_id, match_no, player_a, player_b, player_c, team_a, team_b, result")
             .in("round_id", values: ids).execute().value
         async let claimRows: [SideClaimRow] = client.from("side_claims")
-            .select("id, round_id, member_id, kind, meters, hole_index")
+            .select(RundeQueries.claimColumns)
             .in("round_id", values: ids).execute().value
         async let courseRows: [CourseRow] = courseIDs.isEmpty ? [] : client.from("courses")
             .select("id, club_id, name, external_name, course_rating, slope_rating, in_use, confirmed_by, confirmed_at")
