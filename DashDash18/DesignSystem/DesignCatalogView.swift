@@ -18,6 +18,7 @@ struct DesignCatalogView: View {
                 chips
                 holeCard
                 holeTicks
+                tavlaAndSocial
                 NavigationLink("Listeprøve →") { DDListSample() }
                     .buttonStyle(.ddText)
             }
@@ -249,6 +250,62 @@ struct DesignCatalogView: View {
     }
 }
 
+extension DesignCatalogView {
+    /// Tavla (fliser, pall, rangering) og det sosiale (varsler, tråd).
+    var tavlaAndSocial: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            DDSectionLabel("Tavla")
+            DDJacketHero(eyebrow: "Sesongen 2026 · mester", title: "Bjørn",
+                         subtitle: "bærer den grønne jakka · 42 poeng")
+            DDTileGrid([
+                DDStatTile("Snitt / runde", value: "30"),
+                DDStatTile("Beste runde", value: "36", highlight: true),
+            ])
+            VStack(spacing: 0) {
+                DDRankRow(place: "1.", name: "Bjørn", detail: "+12 hull · 150 stableford") { DDRankValue("42") }
+                DDDivider()
+                DDRankRow(place: "2.", name: "Thomas", detail: "+4 hull · 138 stableford", isMe: true) {
+                    DDRankValue("38")
+                }
+            }
+            .ddCard(padding: DDSpacing.l)
+
+            DDSectionLabel("Varsler og tråd")
+            HStack(alignment: .top, spacing: 12) {
+                DDIconTile(systemImage: "bird.fill")
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Ola birdie på hull 12").font(.ddBodyEmphasis)
+                    HStack(spacing: 6) {
+                        DDReactionChip(emoji: "🔥", count: 2, isMine: true)
+                        DDReactionChip(emoji: "👍", count: 1)
+                    }
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 6) {
+                    Text("3 min").font(.ddMonoSmall).foregroundStyle(Color.ddInkSecondary)
+                    DDUnreadDot()
+                }
+            }
+            .ddCard()
+            HStack(spacing: 10) {
+                Image(systemName: "bell")
+                    .foregroundStyle(Color.ddOnDark)
+                    .overlay(alignment: .topTrailing) { DDCountBadge("3").fixedSize().offset(x: 10, y: -9) }
+                    .padding(14)
+                    .background(Circle().fill(Color.ddForest))
+                Button {} label: { Image(systemName: "arrow.up") }
+                    .buttonStyle(DDSendButtonStyle())
+                    .accessibilityLabel("Send")
+            }
+            Text("Blir litt sen, starter dere uten meg?").ddBubble(mine: false)
+            HStack {
+                Spacer()
+                Text("Vi venter ved båsen 👍").ddBubble(mine: true)
+            }
+        }
+    }
+}
+
 /// Liste og skjema med designsystemet, for å se rader, overskrifter og felt.
 struct DDListSample: View {
     @State private var name = "Thomas"
@@ -256,6 +313,16 @@ struct DDListSample: View {
 
     var body: some View {
         DDList {
+            Section {
+                // Hero-rad i en liste (Tippekupongen, Tippekongen): radens egen bakgrunn vinner over DDList.
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Tippekupongen").ddEyebrow(color: .ddGold)
+                    Text("Torsdag 8. oktober").font(.ddTitle)
+                }
+                .foregroundStyle(Color.ddOnDark)
+                .padding(.vertical, 8)
+                .listRowBackground(Color.ddHeroCard)
+            }
             Section {
                 TextField("Ditt navn", text: $name)
                 Toggle("Seedet", isOn: $on)

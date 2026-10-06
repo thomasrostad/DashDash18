@@ -3,13 +3,40 @@ import GolfgutuCore
 import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
-/// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`).
+/// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `profil`, `sesong`,
+/// `varsler`, `trad`).
 struct DesignScreenSamples: View {
-    enum Screen: String { case hullkort, feiring }
+    enum Screen: String { case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste }
     @State var screen: Screen = .hullkort
 
     var body: some View {
         switch screen {
+        case .tavla, .tavlaferdig:
+            NavigationStack {
+                TavlaList(standings: TavlaSamples.standings(finished: screen == .tavlaferdig))
+                    .navigationTitle("Tavla")
+                    .ddNavigationChrome()
+            }
+            .tint(Color.ddForestInk)
+        case .profil:
+            NavigationStack {
+                PlayerProfileView(standings: TavlaSamples.standings(), memberID: TavlaSamples.me)
+            }
+            .tint(Color.ddForestInk)
+        case .sesong:
+            NavigationStack {
+                SeasonSummaryView(standings: TavlaSamples.standings(finished: true))
+            }
+            .tint(Color.ddForestInk)
+        case .varsler:
+            VarslerSampleScreen()
+                .tint(Color.ddForestInk)
+        case .trad:
+            TradSampleScreen()
+                .tint(Color.ddForestInk)
+        case .liste:
+            NavigationStack { DDListSample() }
+                .tint(Color.ddForestInk)
         case .hullkort:
             NavigationStack {
                 ScrollView {
