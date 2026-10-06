@@ -1,0 +1,64 @@
+{
+ "beskrivelse": "Bjørn endret handicap midt i sesongen: 18 i kveld 1, 0 i kveld 2, 9 i troppen nå. Anders har 0 hele veien. Alle hull par 4, SI 1–18, CR 72 / slope 113 (banehandicap = indeks). Anders går par (4) på alle hull, Bjørn ett over (5). Regnet med pointsForHole (max(0, par − netto + 2)), handicapStrokesForHole og matchHullVinner (laveste fra scratch) i db-nytt.js. Frosset: kveld 1 får Bjørn ett slag per hull, netto 4 mot 4, delt match og 36 mot 36 poeng; kveld 2 vinner Anders alle hull, 18 opp og 36 mot 18. Troppens handicap (9): Bjørn får slag på SI 1–9 begge kveldene, Anders 9 opp og 36 mot 27.",
+ "spillere": [
+  {"id": "a", "name": "Anders", "handicap": 0},
+  {"id": "b", "name": "Bjørn", "handicap": 9}
+ ],
+ "runder": [
+  {
+   "id": "r1", "gameType": "match", "holeCount": 18, "holeStart": 0, "hcpAllowance": 1, "hcpExtern": false,
+   "course": {"id": "bane", "name": "Testbanen", "par": 72, "courseRating": 72, "slopeRating": 113,
+              "holes": [{"par": 4, "si": 1}, {"par": 4, "si": 2}, {"par": 4, "si": 3}, {"par": 4, "si": 4},
+                        {"par": 4, "si": 5}, {"par": 4, "si": 6}, {"par": 4, "si": 7}, {"par": 4, "si": 8},
+                        {"par": 4, "si": 9}, {"par": 4, "si": 10}, {"par": 4, "si": 11}, {"par": 4, "si": 12},
+                        {"par": 4, "si": 13}, {"par": 4, "si": 14}, {"par": 4, "si": 15}, {"par": 4, "si": 16},
+                        {"par": 4, "si": 17}, {"par": 4, "si": 18}]},
+   "teams": {},
+   "holeScores": {
+    "a": {"0": 4, "1": 4, "2": 4, "3": 4, "4": 4, "5": 4, "6": 4, "7": 4, "8": 4, "9": 4, "10": 4, "11": 4, "12": 4, "13": 4, "14": 4, "15": 4, "16": 4, "17": 4},
+    "b": {"0": 5, "1": 5, "2": 5, "3": 5, "4": 5, "5": 5, "6": 5, "7": 5, "8": 5, "9": 5, "10": 5, "11": 5, "12": 5, "13": 5, "14": 5, "15": 5, "16": 5, "17": 5}
+   },
+   "matches": [{"matchNo": 1, "playerA": "a", "playerB": "b"}],
+   "weight": 1, "date": "2026-05-01", "locked": true
+  },
+  {
+   "id": "r2", "gameType": "match", "holeCount": 18, "holeStart": 0, "hcpAllowance": 1, "hcpExtern": false,
+   "course": {"id": "bane", "name": "Testbanen", "par": 72, "courseRating": 72, "slopeRating": 113,
+              "holes": [{"par": 4, "si": 1}, {"par": 4, "si": 2}, {"par": 4, "si": 3}, {"par": 4, "si": 4},
+                        {"par": 4, "si": 5}, {"par": 4, "si": 6}, {"par": 4, "si": 7}, {"par": 4, "si": 8},
+                        {"par": 4, "si": 9}, {"par": 4, "si": 10}, {"par": 4, "si": 11}, {"par": 4, "si": 12},
+                        {"par": 4, "si": 13}, {"par": 4, "si": 14}, {"par": 4, "si": 15}, {"par": 4, "si": 16},
+                        {"par": 4, "si": 17}, {"par": 4, "si": 18}]},
+   "teams": {},
+   "holeScores": {
+    "a": {"0": 4, "1": 4, "2": 4, "3": 4, "4": 4, "5": 4, "6": 4, "7": 4, "8": 4, "9": 4, "10": 4, "11": 4, "12": 4, "13": 4, "14": 4, "15": 4, "16": 4, "17": 4},
+    "b": {"0": 5, "1": 5, "2": 5, "3": 5, "4": 5, "5": 5, "6": 5, "7": 5, "8": 5, "9": 5, "10": 5, "11": 5, "12": 5, "13": 5, "14": 5, "15": 5, "16": 5, "17": 5}
+   },
+   "matches": [{"matchNo": 1, "playerA": "a", "playerB": "b"}],
+   "weight": 1, "date": "2026-05-08", "locked": true
+  }
+ ],
+ "spillehandicap": {"r1": {"a": 0, "b": 18}, "r2": {"a": 0, "b": 0}},
+ "frosset": {
+  "rundePoeng": [{"a": 36, "b": 36}, {"a": 36, "b": 18}],
+  "matcher": {
+   "a": [{"roundId": "r1", "poeng": 0.5, "hull": 0}, {"roundId": "r2", "poeng": 1, "hull": 18}],
+   "b": [{"roundId": "r1", "poeng": 0.5, "hull": 0}, {"roundId": "r2", "poeng": 0, "hull": -18}]
+  },
+  "jakketavle": [
+   {"id": "a", "total": 1.5, "duell": 1.5, "side": 0, "matcher": 2, "hull": 18, "spilte": 2, "stableford": 72},
+   {"id": "b", "total": 0.5, "duell": 0.5, "side": 0, "matcher": 2, "hull": -18, "spilte": 2, "stableford": 54}
+  ]
+ },
+ "troppen": {
+  "rundePoeng": [{"a": 36, "b": 27}, {"a": 36, "b": 27}],
+  "matcher": {
+   "a": [{"roundId": "r1", "poeng": 1, "hull": 9}, {"roundId": "r2", "poeng": 1, "hull": 9}],
+   "b": [{"roundId": "r1", "poeng": 0, "hull": -9}, {"roundId": "r2", "poeng": 0, "hull": -9}]
+  },
+  "jakketavle": [
+   {"id": "a", "total": 2, "duell": 2, "side": 0, "matcher": 2, "hull": 18, "spilte": 2, "stableford": 72},
+   {"id": "b", "total": 0, "duell": 0, "side": 0, "matcher": 2, "hull": -18, "spilte": 2, "stableford": 54}
+  ]
+ }
+}

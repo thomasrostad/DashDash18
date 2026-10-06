@@ -123,12 +123,14 @@ public enum Handicap {
     /// `effectiveHandicap`: spillerens handicap i denne runden, i hele slag.
     ///
     /// 1. Simulatoren deler ut slagene (`hcpExtern`) → 0.
+    /// 1b. Rundens frosne spillehandicap (`round.playingHandicaps`) for spilleren → det.
     /// 2. Lagform med ett kort per lag, eller toerform, og spilleren har lag → lagets handicap.
     /// 3. Seedet → gruppetallet (0 når tildelingen er 0).
     /// 4. Ellers `round(banehandicap · tildeling · antall hull / 18)`.
     public static func effective(for player: Player?, in round: Round, roster: [Player],
                                  rules: Ruleset = .golfgutu) -> Double {
         if round.hcpExtern { return 0 }
+        if let id = player?.id, let frozen = round.playingHandicaps[id] { return frozen }
         let form = round.form
         if form.card == .perTeam || form.teamSize == 2, let player,
            let mates = teammates(of: player.id, in: round), !mates.isEmpty {
