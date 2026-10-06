@@ -192,7 +192,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Tabell etter regelsettet: duellpoeng, sidepremier, vekt, hva som teller (alle eller beste N), tiebreak. Golfgutu-oppsettet = `jakketavle`. *(Logikk ferdig. Åpent: «beste N» teller matcher/runder, ikke kvelder, som PWA-en.)*
 - [x] LD og KP: meld egen lengde, stilling, delt ved likt. *(06.10.)*
 - [x] Kveld: matchkort, «1 opp / Delt / —», stilling i «Bayen nå». *(06.10.)*
-- [ ] Tavla: tabell, «Slik telles det» generert fra regelsettet, spillerprofil, sesongoppsummering.
+- [x] Tavla: tabell, «Slik telles det» generert fra regelsettet, spillerprofil, sesongoppsummering. *(06.10: prøvd på telefon mot test, runden vises i tabellen.)*
 
 **Ferdig når:**
 - For en importert kopi av en PWA-kveld (fase 9-importen kjørt mot test) viser Tavla samme rekkefølge, poeng og hulldifferanse som PWA-en.
