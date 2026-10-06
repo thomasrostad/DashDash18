@@ -102,6 +102,24 @@ extension Ruleset {
         if !formats.allowedFormIDs.isEmpty, !formats.allowedFormIDs.contains(formats.defaultFormID) {
             add("formats.defaultFormID", "Standardformen må være blant de tillatte formene.")
         }
+
+        // Tippekupongen. Grensene er databasens (events.tips_stake_points, events.tips_line).
+        if Tips.startTime(tips.defaultStartTime, rules: .golfgutu) != tips.defaultStartTime
+            || tips.defaultStartTime.count != 5 {
+            add("tips.defaultStartTime", "Fristen må være et klokkeslett som 17:00.")
+        }
+        if !Tips.stakeLimits.contains(tips.defaultStakePoints) {
+            add("tips.defaultStakePoints", "Innsatsen må være mellom 0 og \(Tips.stakeLimits.upperBound) poeng.")
+        }
+        if tips.stakeOptions.isEmpty || tips.stakeOptions.contains(where: { !Tips.stakeLimits.contains($0) }) {
+            add("tips.stakeOptions", "Innsatsvalgene må være mellom 0 og \(Tips.stakeLimits.upperBound) poeng.")
+        }
+        if !Tips.isValidLine(tips.defaultLine) {
+            add("tips.defaultLine", "Linja må være et halvt slag (som 2,5) mellom −9,5 og +18,5.")
+        }
+        if !(tips.lineStep > 0) || tips.lineStep != tips.lineStep.rounded() {
+            add("tips.lineStep", "Linja må flyttes i hele slag, så den blir stående på et halvt.")
+        }
         return issues
     }
 }
