@@ -1,0 +1,106 @@
+import Foundation
+import GolfgutuCore
+import Supabase
+
+/// Spørringene for runden som går. Bare lesing, pluss par-bekreftelsen for arrangøren.
+/// Score skrives aldri herfra (se `ScoreSubmitting`).
+enum RundeQueries {
+    static let roundColumns = """
+        id, club_id, event_id, course_id, round_no, name, status, hole_count, first_hole, tee_time, format, \
+        handicap_allowance, external_handicap, weight, ld_enabled, ld_hole_index, kp_enabled, kp_hole_index, \
+        cut_rule, cut_after, par_confirmed_by, par_confirmed_at, started_at, locked_at
+        """
+    static let playerColumns =
+        "round_id, member_id, club_id, handicap_index, seed_group, playing_handicap, bay_no, is_marker, team_no"
+    static let scoreColumns = "round_id, member_id, hole_index, strokes, recorded_at, updated_by, updated_at"
+
+    /// Runden som går i klubben (høyst én, se `rounds_one_active_per_club`), med alt under.
+    static func activeRound(client: SupabaseClient, clubID: UUID) async throws -> RoundSnapshot? {
+        let rounds: [RoundRow] = try await client.from("rounds")
+            .select(roundColumns)
+            .eq("club_id", value: clubID)
+            .eq("status", value: RoundStatus.active.rawValue)
+            .limit(1)
+            .execute().value
+        guard let round = rounds.first else { return nil }
+        return try await snapshot(client: client, round: round)
+    }
+
+    static func snapshot(client: SupabaseClient, round: RoundRow) async throws -> RoundSnapshot {
+        let id = round.id
+        async let holes: [RoundHoleRow] = client.from("round_holes")
+            .select("round_id, hole_index, par, stroke_index, length_m")
+            .eq("round_id", value: id).execute().value
+        async let players: [RoundPlayerRow] = client.from("round_players")
+            .select(playerColumns)
+            .eq("round_id", value: id).execute().value
+        async let matches: [RoundMatchRow] = client.from("round_matches")
+            .select("round_id, match_no, player_a, player_b, player_c, team_a, team_b, result")
+            .eq("round_id", value: id).execute().value
+        async let scores: [HoleScoreRow] = client.from("hole_scores")
+            .select(scoreColumns)
+            .eq("round_id", value: id).execute().value
+        async let claims: [SideClaimRow] = client.from("side_claims")
+            .select("id, round_id, member_id, kind, meters, hole_index")
+            .eq("round_id", value: id).execute().value
+        async let members: [ClubMemberRow] = client.from("club_members")
+            .select(KveldQueries.memberColumns)
+            .eq("club_id", value: round.clubID).execute().value
+        async let events: [EventRow] = client.from("events")
+            .select("id, club_id, season_id, event_date, start_time, venue, note")
+            .eq("id", value: round.eventID).execute().value
+
+        var snapshot = RoundSnapshot(round: round)
+        snapshot.roundHoles = try await holes
+        snapshot.players = try await players
+        snapshot.matches = try await matches
+        snapshot.scores = try await scores
+        snapshot.sideClaims = try await claims
+        snapshot.names = Dictionary(try await members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { a, _ in a })
+        let event = try await events.first
+        snapshot.eventDate = event?.eventDate
+
+        if let courseID = round.courseID {
+            async let courses: [CourseRow] = client.from("courses")
+                .select("id, club_id, name, external_name, course_rating, slope_rating, in_use, confirmed_by, confirmed_at")
+                .eq("id", value: courseID).execute().value
+            async let courseHoles: [CourseHoleRecord] = client.from("course_holes")
+                .select("course_id, hole_number, par, stroke_index, length_m")
+                .eq("course_id", value: courseID).execute().value
+            snapshot.course = try await courses.first
+            snapshot.courseHoles = try await courseHoles
+        }
+        snapshot.rules = try await rules(client: client, clubID: round.clubID, seasonID: event?.seasonID)
+        return snapshot
+    }
+
+    /// Regelsettet til kveldens sesong, ellers den aktive sesongen, ellers Golfgutu-oppsettet.
+    static func rules(client: SupabaseClient, clubID: UUID, seasonID: UUID?) async throws -> Ruleset {
+        let columns = "id, club_id, name, status, rules"
+        if let seasonID {
+            let rows: [SeasonRow] = try await client.from("seasons").select(columns)
+                .eq("id", value: seasonID).execute().value
+            if let season = rows.first { return season.rules }
+        }
+        let active: [SeasonRow] = try await client.from("seasons").select(columns)
+            .eq("club_id", value: clubID)
+            .eq("status", value: SeasonStatus.active.rawValue)
+            .limit(1)
+            .execute().value
+        return active.first?.rules ?? .golfgutu
+    }
+
+    /// Arrangøren bekrefter at par stemmer med skjermen. Sjekker raden tilbake.
+    static func confirmPar(client: SupabaseClient, roundID: UUID, memberID: UUID) async throws {
+        struct Confirm: Encodable {
+            let par_confirmed_by: UUID
+            let par_confirmed_at: Date
+        }
+        let rows: [RoundRow] = try await client.from("rounds")
+            .update(Confirm(par_confirmed_by: memberID, par_confirmed_at: Date()))
+            .eq("id", value: roundID)
+            .select(roundColumns)
+            .execute().value
+        guard rows.first?.parConfirmedAt != nil else { throw DataError.notAllowed }
+    }
+}

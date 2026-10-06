@@ -1,12 +1,15 @@
 import SwiftUI
 
-/// Kveld-fanen før runden: neste kveld, ditt svar og hvem som kommer.
+/// Kveld-fanen: runden som går, ellers neste kveld, ditt svar og hvem som kommer.
 struct KveldView: View {
     @Environment(\.clubContext) private var context
 
     var body: some View {
         if let context {
-            KveldContent(model: KveldModel(context: context))
+            // Går en runde, vises den i stedet for neste kveld.
+            RundeGate(context: context) {
+                KveldContent(model: KveldModel(context: context))
+            }
         } else {
             EmptyKveldView()
         }
