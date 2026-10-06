@@ -129,7 +129,7 @@ struct DDChip: View {
 
     var body: some View {
         Text(text)
-            .font(compact ? .dd(.grotesk, size: 11.5, weight: .semibold, relativeTo: .caption) : .ddChip)
+            .font(compact ? .dd(.sans, size: 11.5, weight: .semibold, relativeTo: .caption) : .ddChip)
             .foregroundStyle(tone.foreground)
             .padding(.horizontal, compact ? 10 : 14)
             .padding(.vertical, compact ? 4 : 7)
@@ -209,7 +209,7 @@ struct DDAvatar: View {
 
     var body: some View {
         Text(Self.initials(name))
-            .font(.dd(.grotesk, size: size * 0.4, weight: .semibold, relativeTo: .caption))
+            .font(.dd(.sans, size: size * 0.4, weight: .semibold, relativeTo: .caption))
             .foregroundStyle(Color.ddLimeInk)
             .frame(width: size, height: size)
             .background(Circle().fill(Color.ddLimeBackground))

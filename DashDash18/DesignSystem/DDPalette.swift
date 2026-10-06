@@ -84,7 +84,16 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
     case blushBackground, blushDeep
     /// Tekst på blush (bogey og verre). I mørk modus lysere enn --rust-dark: #F0B48F ga 4,2:1 på Dobbel.
     case blushInk
-    // Knapper (handoff «knappelogikken», 01.10.2026)
+    // Friske aksenter fra konseptappen «golfee» (06.10.2026)
+    case accentLime          // aktiv pille/segment («Statistics»)
+    case accentLimeInk
+    case accentYellow        // nedtrekkspille og primærhandling («Hole 10 ▾»)
+    case accentYellowInk
+    case yellowText          // gul som tekst og aktiv fane (mørkere i lys modus for kontrast)
+    case statCard            // svarte statistikk-kort
+    case statText
+    case statSecondary
+    // Knapper (handoff «knappelogikken», 01.10.2026, men hovedknappen er gul etter golfee)
     case buttonPrimary, buttonPrimaryText, buttonPrimaryPressed
     case buttonMoney, buttonMoneyText, buttonMoneyPressed
     case buttonLine
@@ -129,9 +138,18 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
         case .blushBackground: (DDRGBA(0xFCE5DB), DDRGBA(0xFCE5DB, alpha: 0.14))
         case .blushDeep: (DDRGBA(0xF7D4C6), DDRGBA(0xFCE5DB, alpha: 0.24))
         case .blushInk: (DDRGBA(0x612807), DDRGBA(0xFCE5DB))
-        case .buttonPrimary: (DDRGBA(0x1C483A), DDRGBA(0xD9EBD0))
-        case .buttonPrimaryText: (DDRGBA(0xFFF9DF), DDRGBA(0x10231D))
-        case .buttonPrimaryPressed: (DDRGBA(0x123528), DDRGBA(0xBAD3B0))
+        case .accentLime: (DDRGBA(0x6BE07A), DDRGBA(0x6BE07A))
+        case .accentLimeInk: (DDRGBA(0x0F2E17), DDRGBA(0x0F2E17))
+        case .accentYellow: (DDRGBA(0xF5C842), DDRGBA(0xF5C842))
+        case .accentYellowInk: (DDRGBA(0x1E1A05), DDRGBA(0x1E1A05))
+        // #F5C842 gir 1,5:1 på krem. Som tekst (aktiv fane) bruker vi en mørk oker i lys modus.
+        case .yellowText: (DDRGBA(0x7A5C00), DDRGBA(0xF5C842))
+        case .statCard: (DDRGBA(0x000000), DDRGBA(0x000000))
+        case .statText: (DDRGBA(0xFFFFFF), DDRGBA(0xFFFFFF))
+        case .statSecondary: (DDRGBA(0x9A9A9A), DDRGBA(0x9A9A9A))
+        case .buttonPrimary: (DDRGBA(0xF5C842), DDRGBA(0xF5C842))
+        case .buttonPrimaryText: (DDRGBA(0x1E1A05), DDRGBA(0x1E1A05))
+        case .buttonPrimaryPressed: (DDRGBA(0xE0B32E), DDRGBA(0xE0B32E))
         case .buttonMoney: (DDRGBA(0xA84A10), DDRGBA(0xB4501A))
         case .buttonMoneyText: (DDRGBA(0xFFF9DF), DDRGBA(0xFFF9DF))
         case .buttonMoneyPressed: (DDRGBA(0x8E3E0D), DDRGBA(0x9A4416))
@@ -179,6 +197,13 @@ nonisolated enum DDContrastPairs {
         Pair(name: "Bogey", foreground: .blushInk, background: .blushBackground, base: .card),
         Pair(name: "Dobbel", foreground: .blushInk, background: .blushDeep, base: .card),
         Pair(name: "Gull-merke", foreground: .goldInk, background: .gold, base: nil),
+        Pair(name: "Grønn aktiv pille", foreground: .accentLimeInk, background: .accentLime, base: nil),
+        Pair(name: "Gul nedtrekkspille", foreground: .accentYellowInk, background: .accentYellow, base: nil),
+        Pair(name: "Gul tekst på bakgrunn", foreground: .yellowText, background: .background, base: nil),
+        Pair(name: "Gul tekst på kort", foreground: .yellowText, background: .card, base: nil),
+        Pair(name: "Statistikk-tekst", foreground: .statText, background: .statCard, base: nil),
+        Pair(name: "Statistikk sekundær", foreground: .statSecondary, background: .statCard, base: nil),
+        Pair(name: "Statistikk gult tall", foreground: .accentYellow, background: .statCard, base: nil),
         Pair(name: "Primærknapp", foreground: .buttonPrimaryText, background: .buttonPrimary, base: nil),
         Pair(name: "Pengeknapp", foreground: .buttonMoneyText, background: .buttonMoney, base: nil),
         Pair(name: "Sekundærknapp", foreground: .buttonLine, background: .card, base: nil),

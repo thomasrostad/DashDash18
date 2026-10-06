@@ -7,12 +7,13 @@ enum DDAppearance {
     @MainActor
     static func configure() {
         DDFonts.register()
-        let large = UIFont.dd(.serif, size: 34, weight: .light, relativeTo: .largeTitle)
-        let inline = UIFont.dd(.serif, size: 21, relativeTo: .headline)
+        let large = UIFont.dd(.sans, size: 34, weight: .medium, relativeTo: .largeTitle)
+        let inline = UIFont.dd(.sans, size: 18, weight: .semibold, relativeTo: .headline)
         let appearance = UINavigationBar.appearance()
-        // Fargen kommer fra `ddNavigationChrome()` (krem på grønt) eller systemet; her bare skriften.
-        appearance.largeTitleTextAttributes = [.font: large]
-        appearance.titleTextAttributes = [.font: inline]
+        // Alle skjermer har grønn linje (`ddNavigationChrome()`), så titlene er krem.
+        let cream = DDToken.onDark.uiColor
+        appearance.largeTitleTextAttributes = [.font: large, .foregroundColor: cream]
+        appearance.titleTextAttributes = [.font: inline, .foregroundColor: cream]
     }
 }
 

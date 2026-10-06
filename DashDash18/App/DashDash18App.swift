@@ -13,14 +13,28 @@ struct DashDash18App: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                switch services {
-                case .success(let services):
-                    AppRoot(services: services)
-                case .failure(let error):
-                    ConfigErrorView(error: error)
+                #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("-DDDesignCatalog") {
+                    // Bare for utvikling: åpner designkatalogen uten innlogging (skjermbilder).
+                    NavigationStack { DesignCatalogView() }
+                } else {
+                    content
                 }
+                #else
+                content
+                #endif
             }
             .ddAppStyle()
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch services {
+        case .success(let services):
+            AppRoot(services: services)
+        case .failure(let error):
+            ConfigErrorView(error: error)
         }
     }
 }

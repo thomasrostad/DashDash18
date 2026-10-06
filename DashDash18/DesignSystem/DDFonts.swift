@@ -2,18 +2,17 @@ import CoreText
 import SwiftUI
 import UIKit
 
-/// De tre skriftene fra PWA-en (alle SIL Open Font License, se `Resources/Fonts/OFL-*.txt`).
-/// Regel: serif for navn og drama, mono for tall og etiketter, grotesk for resten.
+/// Skriftene (begge SIL Open Font License, se `Resources/Fonts/OFL-*.txt`).
+/// 42dot Sans for overskrifter, brødtekst og tall (føringen fra konseptappen «golfee»),
+/// Sometype Mono fra PWA-en bare for små etiketter i versaler.
 nonisolated enum DDFontFamily: String, CaseIterable, Sendable {
-    case grotesk   // Hanken Grotesk
-    case serif     // Source Serif 4
-    case mono      // Sometype Mono
+    case sans   // 42dot Sans
+    case mono   // Sometype Mono
 
     /// Fila i appbunten (variabel skrift, alle vekter i én fil).
     var fileName: String {
         switch self {
-        case .grotesk: "HankenGrotesk-Variable"
-        case .serif: "SourceSerif4-Variable"
+        case .sans: "42dotSans-Variable"
         case .mono: "SometypeMono-Variable"
         }
     }
@@ -21,21 +20,13 @@ nonisolated enum DDFontFamily: String, CaseIterable, Sendable {
     /// PostScript-navnet til den navngitte vekten i den variable fila.
     func postScriptName(_ weight: DDFontWeight) -> String {
         switch self {
-        case .grotesk:
+        case .sans:
             switch weight {
-            case .light: "HankenGrotesk-Regular_Light"
-            case .regular: "HankenGrotesk-Regular"
-            case .medium: "HankenGrotesk-Regular_Medium"
-            case .semibold: "HankenGrotesk-Regular_SemiBold"
-            case .bold: "HankenGrotesk-Regular_Bold"
-            }
-        case .serif:
-            switch weight {
-            case .light: "SourceSerif4Roman-Light"
-            case .regular: "SourceSerif4Roman-Regular"
-            case .medium: "SourceSerif4Roman-Medium"
-            case .semibold: "SourceSerif4Roman-SemiBold"
-            case .bold: "SourceSerif4Roman-Bold"
+            case .light: "42dotSans-Light"
+            case .regular: "42dotSans-Light_Regular"
+            case .medium: "42dotSans-Light_Medium"
+            case .semibold: "42dotSans-Light_SemiBold"
+            case .bold: "42dotSans-Light_Bold"
             }
         case .mono:
             switch weight {
@@ -50,8 +41,7 @@ nonisolated enum DDFontFamily: String, CaseIterable, Sendable {
 
     var systemDesign: Font.Design {
         switch self {
-        case .grotesk: .default
-        case .serif: .serif
+        case .sans: .default
         case .mono: .monospaced
         }
     }
@@ -110,52 +100,53 @@ extension Font {
         return .system(style, design: family.systemDesign, weight: weight.system)
     }
 
-    // Typografiskala (style.css). Størrelsene er PWA-ens px på en 402 pt bred iPhone.
+    // Typografiskala. Store tall og navn i 42dot Sans (lett/medium), som i golfee;
+    // størrelsene følger PWA-en på en 402 pt bred iPhone.
 
-    /// «GolfGutu» på innlogging og velkomst (serif light 40).
-    static let ddDisplay = dd(.serif, size: 40, weight: .light, relativeTo: .largeTitle)
-    /// Overskrift på skjerm og ark (serif 24).
-    static let ddTitle = dd(.serif, size: 24, relativeTo: .title2)
-    /// Kortoverskrift (serif 21), f.eks. «Ingen runde på gang» og datoen for kvelden.
-    static let ddTitleSmall = dd(.serif, size: 21, relativeTo: .title3)
-    /// Spillernavn (serif 21 på hullkortet og Tavla).
-    static let ddName = dd(.serif, size: 21, relativeTo: .title3)
-    /// Navn i lister (serif 18).
-    static let ddNameSmall = dd(.serif, size: 18, relativeTo: .headline)
-    /// Hullnummer og store plasstall (serif light 64).
-    static let ddHoleNumber = dd(.serif, size: 64, weight: .light, relativeTo: .largeTitle)
-    /// Feiring (serif light 54).
-    static let ddCelebration = dd(.serif, size: 54, weight: .light, relativeTo: .largeTitle)
+    /// Stor tittel på innlogging (lett 44).
+    static let ddDisplay = dd(.sans, size: 44, weight: .light, relativeTo: .largeTitle)
+    /// Overskrift på skjerm og ark (medium 24).
+    static let ddTitle = dd(.sans, size: 24, weight: .medium, relativeTo: .title2)
+    /// Kortoverskrift (medium 20), f.eks. «Ingen runde på gang» og datoen for kvelden.
+    static let ddTitleSmall = dd(.sans, size: 20, weight: .medium, relativeTo: .title3)
+    /// Spillernavn (regular 21 på hullkortet).
+    static let ddName = dd(.sans, size: 21, weight: .regular, relativeTo: .title3)
+    /// Navn i lister (medium 17).
+    static let ddNameSmall = dd(.sans, size: 17, weight: .medium, relativeTo: .headline)
+    /// Hullnummer og store plasstall (lett 64).
+    static let ddHoleNumber = dd(.sans, size: 64, weight: .light, relativeTo: .largeTitle)
+    /// Feiring (lett 54).
+    static let ddCelebration = dd(.sans, size: 54, weight: .light, relativeTo: .largeTitle)
 
-    /// Brødtekst (grotesk 15).
-    static let ddBody = dd(.grotesk, size: 15, relativeTo: .body)
-    /// Uthevet brødtekst og radtitler (grotesk 500 15).
-    static let ddBodyEmphasis = dd(.grotesk, size: 15, weight: .medium, relativeTo: .body)
-    /// Knappetekst (grotesk 600 16).
-    static let ddButton = dd(.grotesk, size: 16, weight: .semibold, relativeTo: .body)
-    /// Stor knapp (grotesk 600 17).
-    static let ddButtonLarge = dd(.grotesk, size: 17, weight: .semibold, relativeTo: .headline)
-    /// Sekundærtekst (grotesk 13.5).
-    static let ddCallout = dd(.grotesk, size: 13.5, relativeTo: .callout)
-    /// Små linjer under en rad (grotesk 12.5).
-    static let ddCaption = dd(.grotesk, size: 12.5, relativeTo: .caption)
-    /// Score-merke (grotesk 600 13).
-    static let ddChip = dd(.grotesk, size: 13, weight: .semibold, relativeTo: .footnote)
+    /// Brødtekst (regular 16, «Body 16px» i golfee).
+    static let ddBody = dd(.sans, size: 16, relativeTo: .body)
+    /// Uthevet brødtekst og radtitler (medium 16).
+    static let ddBodyEmphasis = dd(.sans, size: 16, weight: .medium, relativeTo: .body)
+    /// Knappetekst (semibold 16).
+    static let ddButton = dd(.sans, size: 16, weight: .semibold, relativeTo: .body)
+    /// Stor knapp (semibold 17).
+    static let ddButtonLarge = dd(.sans, size: 17, weight: .semibold, relativeTo: .headline)
+    /// Sekundærtekst (14).
+    static let ddCallout = dd(.sans, size: 14, relativeTo: .callout)
+    /// Små linjer under en rad (13).
+    static let ddCaption = dd(.sans, size: 13, relativeTo: .caption)
+    /// Score-merke (semibold 13).
+    static let ddChip = dd(.sans, size: 13, weight: .semibold, relativeTo: .footnote)
 
     /// Seksjonsetikett og «eyebrow» (mono 10, versaler med sporing).
     static let ddEyebrow = dd(.mono, size: 10, relativeTo: .caption2)
-    /// Pille (mono 9.5).
+    /// Pille i versaler (mono 9.5).
     static let ddPill = dd(.mono, size: 9.5, relativeTo: .caption2)
-    /// Små tall og linjer i mono (11–12).
-    static let ddMonoSmall = dd(.mono, size: 12, relativeTo: .caption)
-    /// Tall i rader (mono 500 17).
-    static let ddNumber = dd(.mono, size: 17, weight: .medium, relativeTo: .body)
-    /// Totalsum (mono 500 20).
-    static let ddNumberLarge = dd(.mono, size: 20, weight: .medium, relativeTo: .title3)
-    /// Slag på hullkortet (mono 500 32).
-    static let ddStrokes = dd(.mono, size: 32, weight: .medium, relativeTo: .title)
-    /// Stort tall i hero-kort (mono 500 52).
-    static let ddHeroNumber = dd(.mono, size: 52, weight: .medium, relativeTo: .largeTitle)
+    /// Små tall og linjer (sans 13, tabelltall).
+    static let ddMonoSmall = dd(.sans, size: 13, relativeTo: .caption)
+    /// Tall i rader (medium 17).
+    static let ddNumber = dd(.sans, size: 17, weight: .medium, relativeTo: .body)
+    /// Totalsum (medium 20).
+    static let ddNumberLarge = dd(.sans, size: 20, weight: .medium, relativeTo: .title3)
+    /// Slag på hullkortet (medium 32).
+    static let ddStrokes = dd(.sans, size: 32, weight: .medium, relativeTo: .title)
+    /// Stort tall i hero- og statistikk-kort (lett 52).
+    static let ddHeroNumber = dd(.sans, size: 52, weight: .light, relativeTo: .largeTitle)
 }
 
 extension UIFont {

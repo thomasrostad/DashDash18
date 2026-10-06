@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// Knappeklassene fra PWA-en (handoff «knappelogikken», 01.10.2026). Én fargeregel:
-/// skoggrønn = hovedhandling, rust = kroner flytter seg, gull = LD/KP,
-/// bark på blush = noe forsvinner. Rust er ikke lenkefarge.
+/// Knappeklassene fra PWA-en (handoff «knappelogikken», 01.10.2026), med golfee-føringen:
+/// gul pille = hovedhandling, skoggrønn omriss = sekundær, rust = kroner flytter seg,
+/// gull = LD/KP, bark på blush = noe forsvinner. Rust er ikke lenkefarge.
 enum DDButtonKind {
-    /// `.hoved` (56): skjermens hovedhandling.
+    /// `.hoved` (56): skjermens hovedhandling, gul pille.
     case primary
     /// `.penger` (56): kroner flytter seg.
     case money
@@ -65,8 +65,8 @@ private struct DDButtonBody: View {
     private var font: Font {
         switch style.kind {
         case .primary, .money, .dangerFinal: style.compact ? .ddButton : .ddButtonLarge
-        case .text: .dd(.grotesk, size: 15, weight: .semibold, relativeTo: .body)
-        default: style.compact ? .dd(.grotesk, size: 14, weight: .semibold, relativeTo: .subheadline) : .ddButton
+        case .text: .dd(.sans, size: 15, weight: .semibold, relativeTo: .body)
+        default: style.compact ? .dd(.sans, size: 14, weight: .semibold, relativeTo: .subheadline) : .ddButton
         }
     }
 
@@ -85,7 +85,6 @@ private struct DDButtonBody: View {
         if !isEnabled { return token(.buttonDisabledText) }
         if style.onDark {
             switch style.kind {
-            case .primary: return .ddForest
             case .secondary, .text: return .ddOnDark
             default: break
             }
@@ -105,7 +104,6 @@ private struct DDButtonBody: View {
         if !isEnabled { return style.kind == .text ? .clear : token(.buttonDisabled) }
         if style.onDark {
             switch style.kind {
-            case .primary: return .ddOnDark
             case .secondary: return pressed ? Color.ddOnDark.opacity(0.12) : .clear
             case .text: return pressed ? Color.ddOnDark.opacity(0.12) : .clear
             default: break
@@ -140,7 +138,7 @@ private struct DDButtonBody: View {
     private var shadow: Color {
         guard isEnabled, !style.compact else { return .clear }
         switch style.kind {
-        case .primary where !style.onDark: return Color(red: 28 / 255, green: 72 / 255, blue: 58 / 255).opacity(0.35)
+        case .primary: return Color(red: 160 / 255, green: 120 / 255, blue: 0).opacity(0.30)
         case .money: return Color(red: 191 / 255, green: 84 / 255, blue: 18 / 255).opacity(0.35)
         default: return .clear
         }
@@ -186,7 +184,7 @@ private struct DDChoiceBody: View {
 
     var body: some View {
         configuration.label
-            .font(.dd(.grotesk, size: 14.5, weight: selected ? .semibold : .medium, relativeTo: .subheadline))
+            .font(.dd(.sans, size: 14.5, weight: selected ? .semibold : .medium, relativeTo: .subheadline))
             .foregroundStyle(foreground)
             .padding(.horizontal, 12)
             .frame(minHeight: 48)
@@ -202,7 +200,7 @@ private struct DDChoiceBody: View {
     private var background: Color {
         guard selected else { return .ddCard }
         switch tint {
-        case .forest: return DDToken.buttonPrimary.color
+        case .forest: return .ddLime
         case .lime: return .ddLimeBackground
         case .sun: return .ddSunBackground
         case .blush: return .ddBlushBackground
@@ -212,7 +210,7 @@ private struct DDChoiceBody: View {
     private var foreground: Color {
         guard selected else { return .ddInkSecondary }
         switch tint {
-        case .forest: return DDToken.buttonPrimaryText.color
+        case .forest: return .ddLimeOnAccent
         case .lime: return .ddLimeInk
         case .sun: return .ddSunInk
         case .blush: return .ddRustDark

@@ -11,6 +11,8 @@ struct AppRoot: View {
             switch services.auth.state {
             case .starting:
                 ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ddScreenBackground()
             case .signedOut:
                 LoginView()
             case .signedIn(let user):
@@ -48,6 +50,8 @@ struct ClubGate: View {
         switch club.state {
         case .loading:
             ProgressView("Henter klubben din …")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ddScreenBackground()
         case .noClub:
             ClubOnboardingView(user: user)
         case .pending(let membership):
@@ -65,9 +69,10 @@ struct ClubGate: View {
                 Button("Prøv igjen") {
                     Task { await club.load(userID: user.id) }
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.dd(.primary))
                 SignOutButton()
             }
+            .ddScreenBackground()
         }
     }
 }

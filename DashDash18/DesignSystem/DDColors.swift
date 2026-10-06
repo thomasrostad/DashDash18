@@ -57,6 +57,15 @@ extension Color {
     static let ddBlushBackground = DDToken.blushBackground.color
     static let ddBlushDeep = DDToken.blushDeep.color
     static let ddBlushInk = DDToken.blushInk.color
+    // Aksenter fra golfee
+    static let ddLime = DDToken.accentLime.color
+    static let ddLimeOnAccent = DDToken.accentLimeInk.color
+    static let ddYellow = DDToken.accentYellow.color
+    static let ddYellowInk = DDToken.accentYellowInk.color
+    static let ddYellowText = DDToken.yellowText.color
+    static let ddStatCard = DDToken.statCard.color
+    static let ddStatText = DDToken.statText.color
+    static let ddStatSecondary = DDToken.statSecondary.color
     /// Feilmeldinger: mørk rust på lys flate, lys rust i mørk modus.
     static let ddError = DDToken.rustDark.color
 }

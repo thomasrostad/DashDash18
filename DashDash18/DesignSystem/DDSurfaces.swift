@@ -14,11 +14,12 @@ enum DDSpacing {
     static let cardGap: CGFloat = 10
 }
 
+/// Store, myke hjørner (golfee) i stedet for PWA-ens 16/20.
 enum DDRadius {
-    static let input: CGFloat = 12
-    static let card: CGFloat = 16
-    static let cardLarge: CGFloat = 20
-    static let sheet: CGFloat = 22
+    static let input: CGFloat = 16
+    static let card: CGFloat = 24
+    static let cardLarge: CGFloat = 30
+    static let sheet: CGFloat = 32
 }
 
 /// Korttyper: `.gg-card`, `.gg-card.pad-lg` og det grønne hero-kortet `.gg-green`.
@@ -28,6 +29,10 @@ enum DDCardStyle {
     case hero
     /// Stiplet ramme uten fyll (`.gg-empty`), for tomtilstander.
     case empty
+    /// Liquid Glass over bakgrunnen (flytende kort og kontroller).
+    case glass
+    /// Svart statistikk-kort med hvite tall (scorekort, match, «Bayen nå»), fra golfee.
+    case stat
 }
 
 struct DDCardModifier: ViewModifier {
@@ -40,9 +45,14 @@ struct DDCardModifier: ViewModifier {
         content
             .padding(padding ?? defaultPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .foregroundStyle(style == .hero ? Color.ddOnDark : Color.ddInk)
+            .foregroundStyle(foreground)
             .background {
                 switch style {
+                case .glass:
+                    Color.clear
+                case .stat:
+                    shape.fill(Color.ddStatCard)
+                        .shadow(color: .black.opacity(colorScheme == .dark ? 0.5 : 0.22), radius: 18, y: 12)
                 case .empty:
                     shape.strokeBorder(Color.ddRuleCream, style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
                 case .hero:
@@ -55,13 +65,22 @@ struct DDCardModifier: ViewModifier {
                                 radius: style == .large ? 17 : 11, y: style == .large ? 10 : 6)
                 }
             }
+            .modifier(DDGlassIfNeeded(enabled: style == .glass, radius: radius))
     }
 
-    private var radius: CGFloat { style == .standard ? DDRadius.card : DDRadius.cardLarge }
+    private var foreground: Color {
+        switch style {
+        case .hero: .ddOnDark
+        case .stat: .ddStatText
+        default: .ddInk
+        }
+    }
+
+    private var radius: CGFloat { style == .standard || style == .glass ? DDRadius.card : DDRadius.cardLarge }
     private var defaultPadding: CGFloat {
         switch style {
-        case .standard, .empty: DDSpacing.l
-        case .large: 22
+        case .standard, .empty, .glass: DDSpacing.l + 2
+        case .large, .stat: 22
         case .hero: DDSpacing.xl
         }
     }
@@ -114,7 +133,7 @@ struct DDDivider: View {
 struct DDFieldModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.dd(.grotesk, size: 16, relativeTo: .body))
+            .font(.dd(.sans, size: 16, relativeTo: .body))
             .foregroundStyle(Color.ddInk)
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
@@ -129,4 +148,18 @@ struct DDFieldModifier: ViewModifier {
 
 extension View {
     func ddField() -> some View { modifier(DDFieldModifier()) }
+}
+
+/// Liquid Glass med samme radius som kortet.
+private struct DDGlassIfNeeded: ViewModifier {
+    let enabled: Bool
+    let radius: CGFloat
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content.glassEffect(.regular, in: .rect(cornerRadius: radius))
+        } else {
+            content
+        }
+    }
 }

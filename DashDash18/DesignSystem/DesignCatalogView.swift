@@ -4,10 +4,13 @@ import SwiftUI
 /// Designkatalogen: alle tokens og komponenter på én skjerm, for forhåndsvisning i Xcode.
 struct DesignCatalogView: View {
     @State private var choice = 0
+    @State private var segment = 0
+    @State private var hole = 10
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DDSpacing.xxl) {
+                golfee
                 colors
                 typography
                 cards
@@ -15,6 +18,8 @@ struct DesignCatalogView: View {
                 chips
                 holeCard
                 holeTicks
+                NavigationLink("Listeprøve →") { DDListSample() }
+                    .buttonStyle(.ddText)
             }
             .padding(.horizontal, DDSpacing.gutter)
             .padding(.vertical, DDSpacing.l)
@@ -22,6 +27,52 @@ struct DesignCatalogView: View {
         .ddScreenBackground()
         .navigationTitle("Designkatalog")
         .ddNavigationChrome()
+    }
+
+    /// Blandingen med konseptappen golfee: glass, grønn aktiv pille, gule nedtrekkspiller, svarte kort.
+    private var golfee: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            DDSectionLabel("Golfee-blanding")
+            DDSegmentedControl([(0, "Hullet"), (1, "Scorekort"), (2, "Bayen")], selection: $segment)
+            HStack {
+                Menu {
+                    ForEach(1...18, id: \.self) { n in Button("Hull \(n)") { hole = n } }
+                } label: {
+                    DDDropdownPill("Hull \(hole)")
+                }
+                Spacer()
+                GlassEffectContainer(spacing: 8) {
+                    HStack(spacing: 8) {
+                        Button {} label: { Image(systemName: "chevron.left") }
+                            .buttonStyle(DDGlassIconButtonStyle())
+                            .accessibilityLabel("Forrige hull")
+                        Button {} label: { Image(systemName: "chevron.right") }
+                            .buttonStyle(DDGlassIconButtonStyle(prominent: true))
+                            .accessibilityLabel("Neste hull")
+                    }
+                }
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Marco Simone · Ut").font(.ddBodyEmphasis)
+                    Spacer()
+                    DDPill("Live", tone: .gold)
+                }
+                DDStatHeader(title: "Stableford", unit: "poeng")
+                DDStatRow(label: "Thomas", value: "19", secondary: "7", highlight: true)
+                DDStatRow(label: "Kåre", value: "17", secondary: "7")
+                DDStatRow(label: "Ola", value: "15", secondary: "6")
+                DDStatHeader(title: "Match", unit: "hull")
+                DDStatRow(label: "Thomas og Kåre mot Ola og Per", value: "2 opp", highlight: true)
+            }
+            .ddCard(.stat)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Kort i glass over bakgrunnen").font(.ddBodyEmphasis)
+                Text("Liquid Glass, stor radius, myk kant.").font(.ddCallout).foregroundStyle(Color.ddInkSecondary)
+            }
+            .ddCard(.glass)
+            Button("Lagre hull 7") {}.buttonStyle(.ddPrimary)
+        }
     }
 
     private var colors: some View {
@@ -195,6 +246,33 @@ struct DesignCatalogView: View {
                 }
             }
         }
+    }
+}
+
+/// Liste og skjema med designsystemet, for å se rader, overskrifter og felt.
+struct DDListSample: View {
+    @State private var name = "Thomas"
+    @State private var on = true
+
+    var body: some View {
+        DDList {
+            Section {
+                TextField("Ditt navn", text: $name)
+                Toggle("Seedet", isOn: $on)
+                LabeledContent("Handicap", value: "12,4")
+                NavigationLink("Kåre") { Text("Kåre") }
+            } header: {
+                DDHeader("Troppen")
+            } footer: {
+                DDFooter("Navnet er det de andre ser i troppen.")
+            }
+            Section {
+                Button("Lagre") {}
+                Label("Klarte ikke å lagre. Prøv igjen.", systemImage: "exclamationmark.triangle").ddErrorStyle()
+            }
+        }
+        .navigationTitle("Listeprøve")
+        .ddNavigationChrome()
     }
 }
 

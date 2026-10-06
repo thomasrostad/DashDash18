@@ -4,7 +4,7 @@ import UIKit
 @testable import DashDash18
 
 struct DesignFontTests {
-    @Test("Alle tre skriftfamiliene ligger i bunten og er registrert")
+    @Test("Begge skriftfamiliene ligger i bunten og er registrert")
     func familiesRegistered() {
         #expect(DDFonts.available == Set(DDFontFamily.allCases))
     }
@@ -25,26 +25,25 @@ struct DesignFontTests {
 
     @Test("Ulike vekter gir ulike skrifter")
     func weightsDiffer() throws {
-        let regular = try #require(UIFont(name: DDFontFamily.grotesk.postScriptName(.regular), size: 17))
-        let semibold = try #require(UIFont(name: DDFontFamily.grotesk.postScriptName(.semibold), size: 17))
+        let regular = try #require(UIFont(name: DDFontFamily.sans.postScriptName(.regular), size: 17))
+        let semibold = try #require(UIFont(name: DDFontFamily.sans.postScriptName(.semibold), size: 17))
         #expect(regular.fontName != semibold.fontName)
     }
 
     @Test("Skriften for navigasjonslinja skalerer med Dynamic Type")
     func uiFontScales() {
         let small = UIFontMetrics(forTextStyle: .body)
-            .scaledFont(for: UIFont(name: DDFontFamily.serif.postScriptName(.regular), size: 17)!,
+            .scaledFont(for: UIFont(name: DDFontFamily.sans.postScriptName(.regular), size: 17)!,
                         compatibleWith: UITraitCollection(preferredContentSizeCategory: .extraSmall))
         let large = UIFontMetrics(forTextStyle: .body)
-            .scaledFont(for: UIFont(name: DDFontFamily.serif.postScriptName(.regular), size: 17)!,
+            .scaledFont(for: UIFont(name: DDFontFamily.sans.postScriptName(.regular), size: 17)!,
                         compatibleWith: UITraitCollection(preferredContentSizeCategory: .accessibilityLarge))
         #expect(large.pointSize > small.pointSize)
     }
 
     private func expectedFamily(_ family: DDFontFamily) -> String {
         switch family {
-        case .grotesk: "Hanken Grotesk"
-        case .serif: "Source Serif 4"
+        case .sans: "42dot Sans"
         case .mono: "Sometype Mono"
         }
     }

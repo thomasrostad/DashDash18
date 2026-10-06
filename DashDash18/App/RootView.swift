@@ -13,6 +13,7 @@ struct RootView: View {
                     NavigationStack {
                         content(for: tab)
                             .navigationTitle(tab.title)
+                            .ddNavigationChrome()
                             .toolbar {
                                 if config.environment != .prod {
                                     ToolbarItem(placement: .topBarTrailing) {
@@ -21,9 +22,14 @@ struct RootView: View {
                                 }
                             }
                     }
+                    // Knapper og lenker i innholdet er skoggrønne; rust er bare aktiv fane.
+                    .tint(Color.ddForestInk)
+                    .ddScreenBackground()
                 }
             }
         }
+        // Aktiv fane i gult (golfee), mørk oker i lys modus så etiketten holder 4,5:1.
+        .tint(Color.ddYellowText)
     }
 
     @ViewBuilder
@@ -41,9 +47,9 @@ struct EnvironmentBadge: View {
     let environment: AppEnvironment
 
     var body: some View {
-        Text(environment.displayName.uppercased())
-            .font(.caption.monospaced().bold())
-            .foregroundStyle(.orange)
+        // Gull på grønt, som rundechipen i PWA-ens header.
+        DDPill(environment.displayName, tone: .gold)
+            .fixedSize()
             .accessibilityLabel("Miljø: \(environment.displayName)")
     }
 }
