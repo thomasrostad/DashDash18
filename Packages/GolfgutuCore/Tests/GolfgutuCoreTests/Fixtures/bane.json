@@ -1,0 +1,3862 @@
+{
+ "_kilde": "banepar-test.js, baneoppsett-test.js, banehull-test.js. Saker merket «egen» er regnet ut av db-nytt.js.",
+ "defaultPar": [
+  4,
+  5,
+  3,
+  4,
+  4,
+  3,
+  5,
+  4,
+  4,
+  4,
+  3,
+  5,
+  4,
+  4,
+  3,
+  4,
+  5,
+  4
+ ],
+ "ektePar": [
+  4,
+  3,
+  5,
+  4,
+  4,
+  4,
+  3,
+  5,
+  4,
+  4,
+  4,
+  3,
+  4,
+  5,
+  4,
+  3,
+  4,
+  4
+ ],
+ "elisefarmPar": [
+  4,
+  4,
+  3,
+  4,
+  5,
+  3,
+  4,
+  4,
+  5,
+  4,
+  4,
+  5,
+  3,
+  5,
+  4,
+  4,
+  3,
+  4
+ ],
+ "elisefarmSi": [
+  11,
+  5,
+  17,
+  9,
+  3,
+  13,
+  1,
+  7,
+  15,
+  14,
+  10,
+  2,
+  18,
+  4,
+  16,
+  6,
+  8,
+  12
+ ],
+ "baneErKlar": [
+  {
+   "navn": "komplett bane er klar",
+   "kilde": "banepar-test.js",
+   "holes": [
+    {
+     "par": 4,
+     "si": 1,
+     "meters": 300
+    },
+    {
+     "par": 3,
+     "si": 2,
+     "meters": 301
+    },
+    {
+     "par": 5,
+     "si": 3,
+     "meters": 302
+    },
+    {
+     "par": 4,
+     "si": 4,
+     "meters": 303
+    },
+    {
+     "par": 4,
+     "si": 5,
+     "meters": 304
+    },
+    {
+     "par": 4,
+     "si": 6,
+     "meters": 305
+    },
+    {
+     "par": 3,
+     "si": 7,
+     "meters": 306
+    },
+    {
+     "par": 5,
+     "si": 8,
+     "meters": 307
+    },
+    {
+     "par": 4,
+     "si": 9,
+     "meters": 308
+    },
+    {
+     "par": 4,
+     "si": 10,
+     "meters": 309
+    },
+    {
+     "par": 4,
+     "si": 11,
+     "meters": 310
+    },
+    {
+     "par": 3,
+     "si": 12,
+     "meters": 311
+    },
+    {
+     "par": 4,
+     "si": 13,
+     "meters": 312
+    },
+    {
+     "par": 5,
+     "si": 14,
+     "meters": 313
+    },
+    {
+     "par": 4,
+     "si": 15,
+     "meters": 314
+    },
+    {
+     "par": 3,
+     "si": 16,
+     "meters": 315
+    },
+    {
+     "par": 4,
+     "si": 17,
+     "meters": 316
+    },
+    {
+     "par": 4,
+     "si": 18,
+     "meters": 317
+    }
+   ],
+   "klar": true
+  },
+  {
+   "navn": "ni hull er også klar",
+   "kilde": "banepar-test.js",
+   "holes": [
+    {
+     "par": 4,
+     "si": 1,
+     "meters": 300
+    },
+    {
+     "par": 3,
+     "si": 2,
+     "meters": 301
+    },
+    {
+     "par": 5,
+     "si": 3,
+     "meters": 302
+    },
+    {
+     "par": 4,
+     "si": 4,
+     "meters": 303
+    },
+    {
+     "par": 4,
+     "si": 5,
+     "meters": 304
+    },
+    {
+     "par": 4,
+     "si": 6,
+     "meters": 305
+    },
+    {
+     "par": 3,
+     "si": 7,
+     "meters": 306
+    },
+    {
+     "par": 5,
+     "si": 8,
+     "meters": 307
+    },
+    {
+     "par": 4,
+     "si": 9,
+     "meters": 308
+    }
+   ],
+   "klar": true
+  },
+  {
+   "navn": "uten hull i det hele tatt er ikke klar",
+   "kilde": "banepar-test.js",
+   "holes": null,
+   "klar": false
+  },
+  {
+   "navn": "tom liste er ikke klar",
+   "kilde": "banepar-test.js",
+   "holes": [],
+   "klar": false
+  },
+  {
+   "navn": "atten hull uten par er IKKE klar",
+   "kilde": "banepar-test.js",
+   "holes": [
+    {
+     "par": null,
+     "si": null,
+     "meters": 300
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 301
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 302
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 303
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 304
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 305
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 306
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 307
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 308
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 309
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 310
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 311
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 312
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 313
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 314
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 315
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 316
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 317
+    }
+   ],
+   "klar": false
+  },
+  {
+   "navn": "delvis par er IKKE klar",
+   "kilde": "banepar-test.js",
+   "holes": [
+    {
+     "par": 4,
+     "si": null,
+     "meters": 300
+    },
+    {
+     "par": 3,
+     "si": null,
+     "meters": 301
+    },
+    {
+     "par": 5,
+     "si": null,
+     "meters": 302
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 303
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 304
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 305
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 306
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 307
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 308
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 309
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 310
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 311
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 312
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 313
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 314
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 315
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 316
+    },
+    {
+     "par": null,
+     "si": null,
+     "meters": 317
+    }
+   ],
+   "klar": false
+  },
+  {
+   "navn": "feil antall hull er ikke klar",
+   "kilde": "banepar-test.js",
+   "holes": [
+    {
+     "par": 4,
+     "si": 1,
+     "meters": 300
+    },
+    {
+     "par": 3,
+     "si": 2,
+     "meters": 301
+    },
+    {
+     "par": 5,
+     "si": 3,
+     "meters": 302
+    },
+    {
+     "par": 4,
+     "si": 4,
+     "meters": 303
+    },
+    {
+     "par": 4,
+     "si": 5,
+     "meters": 304
+    },
+    {
+     "par": 4,
+     "si": 6,
+     "meters": 305
+    },
+    {
+     "par": 3,
+     "si": 7,
+     "meters": 306
+    },
+    {
+     "par": 5,
+     "si": 8,
+     "meters": 307
+    },
+    {
+     "par": 4,
+     "si": 9,
+     "meters": 308
+    },
+    {
+     "par": 4,
+     "si": 10,
+     "meters": 309
+    },
+    {
+     "par": 4,
+     "si": 11,
+     "meters": 310
+    },
+    {
+     "par": 3,
+     "si": 12,
+     "meters": 311
+    },
+    {
+     "par": 4,
+     "si": 13,
+     "meters": 312
+    }
+   ],
+   "klar": false
+  },
+  {
+   "navn": "par utenfor rimelighet er ikke klar",
+   "kilde": "banepar-test.js",
+   "holes": [
+    {
+     "par": 4,
+     "si": 1,
+     "meters": 300
+    },
+    {
+     "par": 3,
+     "si": 2,
+     "meters": 301
+    },
+    {
+     "par": 0,
+     "si": 3,
+     "meters": 0
+    },
+    {
+     "par": 4,
+     "si": 4,
+     "meters": 303
+    },
+    {
+     "par": 4,
+     "si": 5,
+     "meters": 304
+    },
+    {
+     "par": 4,
+     "si": 6,
+     "meters": 305
+    },
+    {
+     "par": 3,
+     "si": 7,
+     "meters": 306
+    },
+    {
+     "par": 5,
+     "si": 8,
+     "meters": 307
+    },
+    {
+     "par": 4,
+     "si": 9,
+     "meters": 308
+    },
+    {
+     "par": 4,
+     "si": 10,
+     "meters": 309
+    },
+    {
+     "par": 4,
+     "si": 11,
+     "meters": 310
+    },
+    {
+     "par": 3,
+     "si": 12,
+     "meters": 311
+    },
+    {
+     "par": 4,
+     "si": 13,
+     "meters": 312
+    },
+    {
+     "par": 5,
+     "si": 14,
+     "meters": 313
+    },
+    {
+     "par": 4,
+     "si": 15,
+     "meters": 314
+    },
+    {
+     "par": 3,
+     "si": 16,
+     "meters": 315
+    },
+    {
+     "par": 4,
+     "si": 17,
+     "meters": 316
+    },
+    {
+     "par": 4,
+     "si": 18,
+     "meters": 317
+    }
+   ],
+   "klar": false
+  },
+  {
+   "navn": "manglende stroke index hindrer ikke oppsett",
+   "kilde": "banepar-test.js",
+   "holes": [
+    {
+     "par": 4,
+     "si": null,
+     "meters": 300
+    },
+    {
+     "par": 3,
+     "si": null,
+     "meters": 301
+    },
+    {
+     "par": 5,
+     "si": null,
+     "meters": 302
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 303
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 304
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 305
+    },
+    {
+     "par": 3,
+     "si": null,
+     "meters": 306
+    },
+    {
+     "par": 5,
+     "si": null,
+     "meters": 307
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 308
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 309
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 310
+    },
+    {
+     "par": 3,
+     "si": null,
+     "meters": 311
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 312
+    },
+    {
+     "par": 5,
+     "si": null,
+     "meters": 313
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 314
+    },
+    {
+     "par": 3,
+     "si": null,
+     "meters": 315
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 316
+    },
+    {
+     "par": 4,
+     "si": null,
+     "meters": 317
+    }
+   ],
+   "klar": true
+  }
+ ],
+ "courseForRound": [
+  {
+   "navn": "ekte par leses uendret",
+   "kilde": "banepar-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": {
+     "par": 71,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 300
+      },
+      {
+       "par": 3,
+       "si": 2,
+       "meters": 301
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": 303
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 304
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": 305
+      },
+      {
+       "par": 3,
+       "si": 7,
+       "meters": 306
+      },
+      {
+       "par": 5,
+       "si": 8,
+       "meters": 307
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 308
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": 309
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 310
+      },
+      {
+       "par": 3,
+       "si": 12,
+       "meters": 311
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": 312
+      },
+      {
+       "par": 5,
+       "si": 14,
+       "meters": 313
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": 314
+      },
+      {
+       "par": 3,
+       "si": 16,
+       "meters": 315
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": 316
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": 317
+      }
+     ]
+    },
+    "hcpExtern": true
+   },
+   "forventet": {
+    "par": [
+     4,
+     3,
+     5,
+     4,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4,
+     3,
+     4,
+     4
+    ]
+   }
+  },
+  {
+   "navn": "uten par faller runden tilbake på standardbanen",
+   "kilde": "banepar-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": {
+     "par": 72,
+     "holes": [
+      {
+       "par": null,
+       "si": null,
+       "meters": 300
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 301
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 302
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 303
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 304
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 305
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 306
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 307
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 308
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 309
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 310
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 311
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 312
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 313
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 314
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 315
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 316
+      },
+      {
+       "par": null,
+       "si": null,
+       "meters": 317
+      }
+     ]
+    },
+    "hcpExtern": true
+   },
+   "forventet": {
+    "par": [
+     4,
+     5,
+     3,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4
+    ]
+   }
+  },
+  {
+   "navn": "standardbanen er den gamle antakelsen",
+   "kilde": "baneoppsett-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18
+   },
+   "forventet": {
+    "par": [
+     4,
+     5,
+     3,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4
+    ],
+    "parSum": 72
+   }
+  },
+  {
+   "navn": "egne par og stroke index slår igjennom; atten hull: rangen er kortets tall",
+   "kilde": "baneoppsett-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holes": {
+     "0": {
+      "par": 4,
+      "strokeIndex": 11,
+      "meters": null
+     },
+     "1": {
+      "par": 4,
+      "strokeIndex": 5,
+      "meters": null
+     },
+     "2": {
+      "par": 3,
+      "strokeIndex": 17,
+      "meters": null
+     },
+     "3": {
+      "par": 4,
+      "strokeIndex": 9,
+      "meters": null
+     },
+     "4": {
+      "par": 5,
+      "strokeIndex": 3,
+      "meters": null
+     },
+     "5": {
+      "par": 3,
+      "strokeIndex": 13,
+      "meters": null
+     },
+     "6": {
+      "par": 4,
+      "strokeIndex": 1,
+      "meters": null
+     },
+     "7": {
+      "par": 4,
+      "strokeIndex": 7,
+      "meters": null
+     },
+     "8": {
+      "par": 5,
+      "strokeIndex": 15,
+      "meters": null
+     },
+     "9": {
+      "par": 4,
+      "strokeIndex": 14,
+      "meters": null
+     },
+     "10": {
+      "par": 4,
+      "strokeIndex": 10,
+      "meters": null
+     },
+     "11": {
+      "par": 5,
+      "strokeIndex": 2,
+      "meters": null
+     },
+     "12": {
+      "par": 3,
+      "strokeIndex": 18,
+      "meters": null
+     },
+     "13": {
+      "par": 5,
+      "strokeIndex": 4,
+      "meters": null
+     },
+     "14": {
+      "par": 4,
+      "strokeIndex": 16,
+      "meters": null
+     },
+     "15": {
+      "par": 4,
+      "strokeIndex": 6,
+      "meters": null
+     },
+     "16": {
+      "par": 3,
+      "strokeIndex": 8,
+      "meters": null
+     },
+     "17": {
+      "par": 4,
+      "strokeIndex": 12,
+      "meters": null
+     }
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     4,
+     3,
+     4,
+     5,
+     3,
+     4,
+     4,
+     5,
+     4,
+     4,
+     5,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4
+    ],
+    "kortIndeks": [
+     11,
+     5,
+     17,
+     9,
+     3,
+     13,
+     1,
+     7,
+     15,
+     14,
+     10,
+     2,
+     18,
+     4,
+     16,
+     6,
+     8,
+     12
+    ],
+    "strokeIndex": [
+     11,
+     5,
+     17,
+     9,
+     3,
+     13,
+     1,
+     7,
+     15,
+     14,
+     10,
+     2,
+     18,
+     4,
+     16,
+     6,
+     8,
+     12
+    ],
+    "parSum": 72
+   }
+  },
+  {
+   "navn": "ni egne hull: kortets tall står, rangen blir 1–9",
+   "kilde": "baneoppsett-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holes": {
+     "0": {
+      "par": 4,
+      "strokeIndex": 11,
+      "meters": null
+     },
+     "1": {
+      "par": 4,
+      "strokeIndex": 5,
+      "meters": null
+     },
+     "2": {
+      "par": 3,
+      "strokeIndex": 17,
+      "meters": null
+     },
+     "3": {
+      "par": 4,
+      "strokeIndex": 9,
+      "meters": null
+     },
+     "4": {
+      "par": 5,
+      "strokeIndex": 3,
+      "meters": null
+     },
+     "5": {
+      "par": 3,
+      "strokeIndex": 13,
+      "meters": null
+     },
+     "6": {
+      "par": 4,
+      "strokeIndex": 1,
+      "meters": null
+     },
+     "7": {
+      "par": 4,
+      "strokeIndex": 7,
+      "meters": null
+     },
+     "8": {
+      "par": 5,
+      "strokeIndex": 15,
+      "meters": null
+     }
+    }
+   },
+   "forventet": {
+    "kortIndeks": [
+     11,
+     5,
+     17,
+     9,
+     3,
+     13,
+     1,
+     7,
+     15
+    ],
+    "strokeIndex": [
+     6,
+     3,
+     9,
+     5,
+     2,
+     7,
+     1,
+     4,
+     8
+    ]
+   },
+   "merknad": "Testen sjekker rang[6]=1, rang[4]=2, rang[1]=3, rang[2]=9 og at rangene er 1–9; hele lista er den samme som banehull-test.js gir for samme kortindekser."
+  },
+  {
+   "navn": "parene, indeksene og lengdene kommer fra banen",
+   "kilde": "banehull-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": {
+     "id": "e",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136,
+     "holes": [
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": 13,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": 15,
+       "meters": 308
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": 309
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": 310
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": 311
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": 312
+      },
+      {
+       "par": 5,
+       "si": 4,
+       "meters": 313
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": 314
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": 315
+      },
+      {
+       "par": 3,
+       "si": 8,
+       "meters": 316
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": 317
+      }
+     ]
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     4,
+     3,
+     4,
+     5,
+     3,
+     4,
+     4,
+     5,
+     4,
+     4,
+     5,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4
+    ],
+    "kortIndeks": [
+     11,
+     5,
+     17,
+     9,
+     3,
+     13,
+     1,
+     7,
+     15,
+     14,
+     10,
+     2,
+     18,
+     4,
+     16,
+     6,
+     8,
+     12
+    ],
+    "meter0": 300
+   }
+  },
+  {
+   "navn": "bane uten hulldata gir standardbanen",
+   "kilde": "banehull-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": {
+     "id": "u",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": null
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     5,
+     3,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4
+    ]
+   }
+  },
+  {
+   "navn": "ingen bane gir standardbanen",
+   "kilde": "banehull-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18
+   },
+   "forventet": {
+    "par": [
+     4,
+     5,
+     3,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4
+    ]
+   }
+  },
+  {
+   "navn": "ni hull tar de ni første og rangerer om",
+   "kilde": "banehull-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "course": {
+     "id": "e",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136,
+     "holes": [
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": 13,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": 15,
+       "meters": 308
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": 309
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": 310
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": 311
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": 312
+      },
+      {
+       "par": 5,
+       "si": 4,
+       "meters": 313
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": 314
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": 315
+      },
+      {
+       "par": 3,
+       "si": 8,
+       "meters": 316
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": 317
+      }
+     ]
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     4,
+     3,
+     4,
+     5,
+     3,
+     4,
+     4,
+     5
+    ],
+    "kortIndeks": [
+     11,
+     5,
+     17,
+     9,
+     3,
+     13,
+     1,
+     7,
+     15
+    ],
+    "strokeIndex": [
+     6,
+     3,
+     9,
+     5,
+     2,
+     7,
+     1,
+     4,
+     8
+    ]
+   }
+  },
+  {
+   "navn": "hull 10–18 tar banens ni siste",
+   "kilde": "banehull-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 9,
+    "course": {
+     "id": "e",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136,
+     "holes": [
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": 13,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": 15,
+       "meters": 308
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": 309
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": 310
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": 311
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": 312
+      },
+      {
+       "par": 5,
+       "si": 4,
+       "meters": 313
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": 314
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": 315
+      },
+      {
+       "par": 3,
+       "si": 8,
+       "meters": 316
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": 317
+      }
+     ]
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     4,
+     5,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4
+    ],
+    "kortIndeks": [
+     14,
+     10,
+     2,
+     18,
+     4,
+     16,
+     6,
+     8,
+     12
+    ],
+    "strokeIndexSortert": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "strokeIndex6": 3
+   }
+  },
+  {
+   "navn": "hull 1–9 er fortsatt de ni første",
+   "kilde": "banehull-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "course": {
+     "id": "e",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136,
+     "holes": [
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": 13,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": 15,
+       "meters": 308
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": 309
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": 310
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": 311
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": 312
+      },
+      {
+       "par": 5,
+       "si": 4,
+       "meters": 313
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": 314
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": 315
+      },
+      {
+       "par": 3,
+       "si": 8,
+       "meters": 316
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": 317
+      }
+     ]
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     4,
+     3,
+     4,
+     5,
+     3,
+     4,
+     4,
+     5
+    ]
+   }
+  },
+  {
+   "navn": "rundens egne hull forskyves ikke",
+   "kilde": "banehull-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 9,
+    "course": {
+     "id": "e",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136,
+     "holes": [
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": 13,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": 15,
+       "meters": 308
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": 309
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": 310
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": 311
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": 312
+      },
+      {
+       "par": 5,
+       "si": 4,
+       "meters": 313
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": 314
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": 315
+      },
+      {
+       "par": 3,
+       "si": 8,
+       "meters": 316
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": 317
+      }
+     ]
+    },
+    "holes": {
+     "0": {
+      "par": 3,
+      "strokeIndex": 1,
+      "meters": null
+     },
+     "1": {
+      "par": 3,
+      "strokeIndex": 2,
+      "meters": null
+     },
+     "2": {
+      "par": 3,
+      "strokeIndex": 3,
+      "meters": null
+     },
+     "3": {
+      "par": 3,
+      "strokeIndex": 4,
+      "meters": null
+     },
+     "4": {
+      "par": 3,
+      "strokeIndex": 5,
+      "meters": null
+     },
+     "5": {
+      "par": 3,
+      "strokeIndex": 6,
+      "meters": null
+     },
+     "6": {
+      "par": 3,
+      "strokeIndex": 7,
+      "meters": null
+     },
+     "7": {
+      "par": 3,
+      "strokeIndex": 8,
+      "meters": null
+     },
+     "8": {
+      "par": 3,
+      "strokeIndex": 9,
+      "meters": null
+     }
+    }
+   },
+   "forventet": {
+    "par": [
+     3,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3
+    ]
+   }
+  },
+  {
+   "navn": "en attenhullsrunde påvirkes ikke av hole_start",
+   "kilde": "banehull-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 9,
+    "course": {
+     "id": "e",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136,
+     "holes": [
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": 13,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": 15,
+       "meters": 308
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": 309
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": 310
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": 311
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": 312
+      },
+      {
+       "par": 5,
+       "si": 4,
+       "meters": 313
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": 314
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": 315
+      },
+      {
+       "par": 3,
+       "si": 8,
+       "meters": 316
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": 317
+      }
+     ]
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     4,
+     3,
+     4,
+     5,
+     3,
+     4,
+     4,
+     5,
+     4,
+     4,
+     5,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4
+    ]
+   }
+  },
+  {
+   "navn": "rundens egne tall vinner over banens",
+   "kilde": "banehull-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "course": {
+     "id": "e",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136,
+     "holes": [
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": 13,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": 15,
+       "meters": 308
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": 309
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": 310
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": 311
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": 312
+      },
+      {
+       "par": 5,
+       "si": 4,
+       "meters": 313
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": 314
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": 315
+      },
+      {
+       "par": 3,
+       "si": 8,
+       "meters": 316
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": 317
+      }
+     ]
+    },
+    "holes": {
+     "0": {
+      "par": 3,
+      "strokeIndex": 9,
+      "meters": null
+     },
+     "1": {
+      "par": 3,
+      "strokeIndex": 8,
+      "meters": null
+     },
+     "2": {
+      "par": 3,
+      "strokeIndex": 7,
+      "meters": null
+     },
+     "3": {
+      "par": 3,
+      "strokeIndex": 6,
+      "meters": null
+     },
+     "4": {
+      "par": 3,
+      "strokeIndex": 5,
+      "meters": null
+     },
+     "5": {
+      "par": 3,
+      "strokeIndex": 4,
+      "meters": null
+     },
+     "6": {
+      "par": 3,
+      "strokeIndex": 3,
+      "meters": null
+     },
+     "7": {
+      "par": 3,
+      "strokeIndex": 2,
+      "meters": null
+     },
+     "8": {
+      "par": 3,
+      "strokeIndex": 1,
+      "meters": null
+     }
+    }
+   },
+   "forventet": {
+    "par": [
+     3,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3
+    ]
+   }
+  },
+  {
+   "navn": "manglende indeks faller tilbake på hullrekkefølgen, parene brukes likevel",
+   "kilde": "banehull-test.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": {
+     "id": "o",
+     "par": 72,
+     "courseRating": 70,
+     "slopeRating": 143,
+     "holes": [
+      {
+       "par": 4,
+       "si": null,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": null,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": null,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": null,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": null,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": null,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": null,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": null,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": null,
+       "meters": 308
+      },
+      {
+       "par": 4,
+       "si": null,
+       "meters": 309
+      },
+      {
+       "par": 4,
+       "si": null,
+       "meters": 310
+      },
+      {
+       "par": 5,
+       "si": null,
+       "meters": 311
+      },
+      {
+       "par": 3,
+       "si": null,
+       "meters": 312
+      },
+      {
+       "par": 5,
+       "si": null,
+       "meters": 313
+      },
+      {
+       "par": 4,
+       "si": null,
+       "meters": 314
+      },
+      {
+       "par": 4,
+       "si": null,
+       "meters": 315
+      },
+      {
+       "par": 3,
+       "si": null,
+       "meters": 316
+      },
+      {
+       "par": 4,
+       "si": null,
+       "meters": 317
+      }
+     ]
+    }
+   },
+   "forventet": {
+    "kortIndeks": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18
+    ],
+    "par": [
+     4,
+     4,
+     3,
+     4,
+     5,
+     3,
+     4,
+     4,
+     5,
+     4,
+     4,
+     5,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4
+    ]
+   }
+  },
+  {
+   "navn": "holeStart 9 mot 18-hullsbane: banens hull 10–18 med lengde, rangert om",
+   "kilde": "egen: utledet ved å kjøre courseForRound() i db-nytt.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 9,
+    "course": {
+     "id": "e",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136,
+     "holes": [
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": 13,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": 15,
+       "meters": 308
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": 309
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": 310
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": 311
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": 312
+      },
+      {
+       "par": 5,
+       "si": 4,
+       "meters": 313
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": 314
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": 315
+      },
+      {
+       "par": 3,
+       "si": 8,
+       "meters": 316
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": 317
+      }
+     ]
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     4,
+     5,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4
+    ],
+    "kortIndeks": [
+     14,
+     10,
+     2,
+     18,
+     4,
+     16,
+     6,
+     8,
+     12
+    ],
+    "strokeIndex": [
+     7,
+     5,
+     1,
+     9,
+     2,
+     8,
+     3,
+     4,
+     6
+    ],
+    "meters": [
+     309,
+     310,
+     311,
+     312,
+     313,
+     314,
+     315,
+     316,
+     317
+    ]
+   }
+  },
+  {
+   "navn": "holeStart 9 mot 9-hullsbane: ingen forskyvning",
+   "kilde": "egen: utledet ved å kjøre courseForRound() i db-nytt.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 9,
+    "course": {
+     "holes": [
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": 13,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": 15,
+       "meters": 308
+      }
+     ]
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     4,
+     3,
+     4,
+     5,
+     3,
+     4,
+     4,
+     5
+    ],
+    "kortIndeks": [
+     11,
+     5,
+     17,
+     9,
+     3,
+     13,
+     1,
+     7,
+     15
+    ],
+    "strokeIndex": [
+     6,
+     3,
+     9,
+     5,
+     2,
+     7,
+     1,
+     4,
+     8
+    ],
+    "meters": [
+     300,
+     301,
+     302,
+     303,
+     304,
+     305,
+     306,
+     307,
+     308
+    ]
+   }
+  },
+  {
+   "navn": "18-hullsrunde på 9-hullsbane: hull 10–18 fra DEFAULT_PAR[i], kortindeks i+1",
+   "kilde": "egen: utledet ved å kjøre courseForRound() i db-nytt.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": {
+     "holes": [
+      {
+       "par": 4,
+       "si": 11,
+       "meters": 300
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": 301
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": 302
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": 303
+      },
+      {
+       "par": 5,
+       "si": 3,
+       "meters": 304
+      },
+      {
+       "par": 3,
+       "si": 13,
+       "meters": 305
+      },
+      {
+       "par": 4,
+       "si": 1,
+       "meters": 306
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": 307
+      },
+      {
+       "par": 5,
+       "si": 15,
+       "meters": 308
+      }
+     ]
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     4,
+     3,
+     4,
+     5,
+     3,
+     4,
+     4,
+     5,
+     4,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4
+    ],
+    "kortIndeks": [
+     11,
+     5,
+     17,
+     9,
+     3,
+     13,
+     1,
+     7,
+     15,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18
+    ],
+    "strokeIndex": [
+     7,
+     3,
+     16,
+     5,
+     2,
+     10,
+     1,
+     4,
+     13,
+     6,
+     8,
+     9,
+     11,
+     12,
+     14,
+     15,
+     17,
+     18
+    ],
+    "meters": [
+     300,
+     301,
+     302,
+     303,
+     304,
+     305,
+     306,
+     307,
+     308,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  },
+  {
+   "navn": "JS-sannhet: par 0 og indeks 0 faller gjennom, meter 0 faller gjennom, likhet gir lavest hull først",
+   "kilde": "egen: utledet ved å kjøre courseForRound() i db-nytt.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holes": {
+     "0": {
+      "par": 0,
+      "strokeIndex": 0,
+      "meters": 0
+     },
+     "1": {
+      "par": 5,
+      "strokeIndex": 3,
+      "meters": 0
+     }
+    },
+    "course": {
+     "holes": [
+      {
+       "par": null,
+       "si": 0,
+       "meters": 0
+      },
+      {
+       "par": 3,
+       "si": 7,
+       "meters": 155
+      }
+     ]
+    }
+   },
+   "forventet": {
+    "par": [
+     4,
+     5,
+     3,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4
+    ],
+    "kortIndeks": [
+     1,
+     3,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "strokeIndex": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "meters": [
+     null,
+     155,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  },
+  {
+   "navn": "holeCount 7 regnes som 18",
+   "kilde": "egen: utledet ved å kjøre courseForRound() i db-nytt.js",
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 7
+   },
+   "forventet": {
+    "par": [
+     4,
+     5,
+     3,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4
+    ],
+    "kortIndeks": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18
+    ],
+    "strokeIndex": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18
+    ],
+    "meters": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  }
+ ],
+ "banehullFraRader": {
+  "atten": [
+   {
+    "courseId": "m",
+    "holeNumber": 1,
+    "par": 4,
+    "hcpIndex": 1,
+    "distanceMeters": 300
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 2,
+    "par": 3,
+    "hcpIndex": 2,
+    "distanceMeters": 301
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 3,
+    "par": 5,
+    "hcpIndex": 3,
+    "distanceMeters": 302
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 4,
+    "par": 4,
+    "hcpIndex": 4,
+    "distanceMeters": 303
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 5,
+    "par": 4,
+    "hcpIndex": 5,
+    "distanceMeters": 304
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 6,
+    "par": 4,
+    "hcpIndex": 6,
+    "distanceMeters": 305
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 7,
+    "par": 3,
+    "hcpIndex": 7,
+    "distanceMeters": 306
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 8,
+    "par": 5,
+    "hcpIndex": 8,
+    "distanceMeters": 307
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 9,
+    "par": 4,
+    "hcpIndex": 9,
+    "distanceMeters": 308
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 10,
+    "par": 4,
+    "hcpIndex": 10,
+    "distanceMeters": 309
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 11,
+    "par": 4,
+    "hcpIndex": 11,
+    "distanceMeters": 310
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 12,
+    "par": 3,
+    "hcpIndex": 12,
+    "distanceMeters": 311
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 13,
+    "par": 4,
+    "hcpIndex": 13,
+    "distanceMeters": 312
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 14,
+    "par": 5,
+    "hcpIndex": 14,
+    "distanceMeters": 313
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 15,
+    "par": 4,
+    "hcpIndex": 15,
+    "distanceMeters": 314
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 16,
+    "par": 3,
+    "hcpIndex": 16,
+    "distanceMeters": 315
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 17,
+    "par": 4,
+    "hcpIndex": 17,
+    "distanceMeters": 316
+   },
+   {
+    "courseId": "m",
+    "holeNumber": 18,
+    "par": 4,
+    "hcpIndex": 18,
+    "distanceMeters": 317
+   }
+  ],
+  "utenLengde": [
+   {
+    "courseId": "x",
+    "holeNumber": 1,
+    "par": 4,
+    "hcpIndex": 1
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 2,
+    "par": 3,
+    "hcpIndex": 2
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 3,
+    "par": 5,
+    "hcpIndex": 3
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 4,
+    "par": 4,
+    "hcpIndex": 4
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 5,
+    "par": 4,
+    "hcpIndex": 5
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 6,
+    "par": 4,
+    "hcpIndex": 6
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 7,
+    "par": 3,
+    "hcpIndex": 7
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 8,
+    "par": 5,
+    "hcpIndex": 8
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 9,
+    "par": 4,
+    "hcpIndex": 9
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 10,
+    "par": 4,
+    "hcpIndex": 10
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 11,
+    "par": 4,
+    "hcpIndex": 11
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 12,
+    "par": 3,
+    "hcpIndex": 12
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 13,
+    "par": 4,
+    "hcpIndex": 13
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 14,
+    "par": 5,
+    "hcpIndex": 14
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 15,
+    "par": 4,
+    "hcpIndex": 15
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 16,
+    "par": 3,
+    "hcpIndex": 16
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 17,
+    "par": 4,
+    "hcpIndex": 17
+   },
+   {
+    "courseId": "x",
+    "holeNumber": 18,
+    "par": 4,
+    "hcpIndex": 18
+   }
+  ],
+  "ni": [
+   {
+    "courseId": "n",
+    "holeNumber": 1,
+    "par": 4,
+    "hcpIndex": 1,
+    "distanceMeters": 300
+   },
+   {
+    "courseId": "n",
+    "holeNumber": 2,
+    "par": 3,
+    "hcpIndex": 2,
+    "distanceMeters": 301
+   },
+   {
+    "courseId": "n",
+    "holeNumber": 3,
+    "par": 5,
+    "hcpIndex": 3,
+    "distanceMeters": 302
+   },
+   {
+    "courseId": "n",
+    "holeNumber": 4,
+    "par": 4,
+    "hcpIndex": 4,
+    "distanceMeters": 303
+   },
+   {
+    "courseId": "n",
+    "holeNumber": 5,
+    "par": 4,
+    "hcpIndex": 5,
+    "distanceMeters": 304
+   },
+   {
+    "courseId": "n",
+    "holeNumber": 6,
+    "par": 4,
+    "hcpIndex": 6,
+    "distanceMeters": 305
+   },
+   {
+    "courseId": "n",
+    "holeNumber": 7,
+    "par": 3,
+    "hcpIndex": 7,
+    "distanceMeters": 306
+   },
+   {
+    "courseId": "n",
+    "holeNumber": 8,
+    "par": 5,
+    "hcpIndex": 8,
+    "distanceMeters": 307
+   },
+   {
+    "courseId": "n",
+    "holeNumber": 9,
+    "par": 4,
+    "hcpIndex": 9,
+    "distanceMeters": 308
+   }
+  ],
+  "stokket": [
+   {
+    "courseId": "s",
+    "holeNumber": 18,
+    "par": 4,
+    "hcpIndex": 18,
+    "distanceMeters": 317
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 17,
+    "par": 4,
+    "hcpIndex": 17,
+    "distanceMeters": 316
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 16,
+    "par": 3,
+    "hcpIndex": 16,
+    "distanceMeters": 315
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 15,
+    "par": 4,
+    "hcpIndex": 15,
+    "distanceMeters": 314
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 14,
+    "par": 5,
+    "hcpIndex": 14,
+    "distanceMeters": 313
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 13,
+    "par": 4,
+    "hcpIndex": 13,
+    "distanceMeters": 312
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 12,
+    "par": 3,
+    "hcpIndex": 12,
+    "distanceMeters": 311
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 11,
+    "par": 4,
+    "hcpIndex": 11,
+    "distanceMeters": 310
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 10,
+    "par": 4,
+    "hcpIndex": 10,
+    "distanceMeters": 309
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 9,
+    "par": 4,
+    "hcpIndex": 9,
+    "distanceMeters": 308
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 8,
+    "par": 5,
+    "hcpIndex": 8,
+    "distanceMeters": 307
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 7,
+    "par": 3,
+    "hcpIndex": 7,
+    "distanceMeters": 306
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 6,
+    "par": 4,
+    "hcpIndex": 6,
+    "distanceMeters": 305
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 5,
+    "par": 4,
+    "hcpIndex": 5,
+    "distanceMeters": 304
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 4,
+    "par": 4,
+    "hcpIndex": 4,
+    "distanceMeters": 303
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 3,
+    "par": 5,
+    "hcpIndex": 3,
+    "distanceMeters": 302
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 2,
+    "par": 3,
+    "hcpIndex": 2,
+    "distanceMeters": 301
+   },
+   {
+    "courseId": "s",
+    "holeNumber": 1,
+    "par": 4,
+    "hcpIndex": 1,
+    "distanceMeters": 300
+   }
+  ],
+  "mangler7": [
+   {
+    "courseId": "h",
+    "holeNumber": 1,
+    "par": 4,
+    "hcpIndex": 1,
+    "distanceMeters": 300
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 2,
+    "par": 3,
+    "hcpIndex": 2,
+    "distanceMeters": 301
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 3,
+    "par": 5,
+    "hcpIndex": 3,
+    "distanceMeters": 302
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 4,
+    "par": 4,
+    "hcpIndex": 4,
+    "distanceMeters": 303
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 5,
+    "par": 4,
+    "hcpIndex": 5,
+    "distanceMeters": 304
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 6,
+    "par": 4,
+    "hcpIndex": 6,
+    "distanceMeters": 305
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 8,
+    "par": 5,
+    "hcpIndex": 8,
+    "distanceMeters": 307
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 9,
+    "par": 4,
+    "hcpIndex": 9,
+    "distanceMeters": 308
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 10,
+    "par": 4,
+    "hcpIndex": 10,
+    "distanceMeters": 309
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 11,
+    "par": 4,
+    "hcpIndex": 11,
+    "distanceMeters": 310
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 12,
+    "par": 3,
+    "hcpIndex": 12,
+    "distanceMeters": 311
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 13,
+    "par": 4,
+    "hcpIndex": 13,
+    "distanceMeters": 312
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 14,
+    "par": 5,
+    "hcpIndex": 14,
+    "distanceMeters": 313
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 15,
+    "par": 4,
+    "hcpIndex": 15,
+    "distanceMeters": 314
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 16,
+    "par": 3,
+    "hcpIndex": 16,
+    "distanceMeters": 315
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 17,
+    "par": 4,
+    "hcpIndex": 17,
+    "distanceMeters": 316
+   },
+   {
+    "courseId": "h",
+    "holeNumber": 18,
+    "par": 4,
+    "hcpIndex": 18,
+    "distanceMeters": 317
+   }
+  ],
+  "tretten": [
+   {
+    "courseId": "t",
+    "holeNumber": 1,
+    "par": 4,
+    "hcpIndex": 1,
+    "distanceMeters": 300
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 2,
+    "par": 3,
+    "hcpIndex": 2,
+    "distanceMeters": 301
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 3,
+    "par": 5,
+    "hcpIndex": 3,
+    "distanceMeters": 302
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 4,
+    "par": 4,
+    "hcpIndex": 4,
+    "distanceMeters": 303
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 5,
+    "par": 4,
+    "hcpIndex": 5,
+    "distanceMeters": 304
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 6,
+    "par": 4,
+    "hcpIndex": 6,
+    "distanceMeters": 305
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 7,
+    "par": 3,
+    "hcpIndex": 7,
+    "distanceMeters": 306
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 8,
+    "par": 5,
+    "hcpIndex": 8,
+    "distanceMeters": 307
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 9,
+    "par": 4,
+    "hcpIndex": 9,
+    "distanceMeters": 308
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 10,
+    "par": 4,
+    "hcpIndex": 10,
+    "distanceMeters": 309
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 11,
+    "par": 4,
+    "hcpIndex": 11,
+    "distanceMeters": 310
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 12,
+    "par": 3,
+    "hcpIndex": 12,
+    "distanceMeters": 311
+   },
+   {
+    "courseId": "t",
+    "holeNumber": 13,
+    "par": 4,
+    "hcpIndex": 13,
+    "distanceMeters": 312
+   }
+  ],
+  "utenHcp": [
+   {
+    "courseId": "u",
+    "holeNumber": 1,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 300
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 2,
+    "par": 3,
+    "hcpIndex": null,
+    "distanceMeters": 301
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 3,
+    "par": 5,
+    "hcpIndex": null,
+    "distanceMeters": 302
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 4,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 303
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 5,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 304
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 6,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 305
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 7,
+    "par": 3,
+    "hcpIndex": null,
+    "distanceMeters": 306
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 8,
+    "par": 5,
+    "hcpIndex": null,
+    "distanceMeters": 307
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 9,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 308
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 10,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 309
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 11,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 310
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 12,
+    "par": 3,
+    "hcpIndex": null,
+    "distanceMeters": 311
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 13,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 312
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 14,
+    "par": 5,
+    "hcpIndex": null,
+    "distanceMeters": 313
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 15,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 314
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 16,
+    "par": 3,
+    "hcpIndex": null,
+    "distanceMeters": 315
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 17,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 316
+   },
+   {
+    "courseId": "u",
+    "holeNumber": 18,
+    "par": 4,
+    "hcpIndex": null,
+    "distanceMeters": 317
+   }
+  ]
+ },
+ "lengdePasserParet": [
+  {
+   "par": 3,
+   "meters": 165,
+   "ok": true
+  },
+  {
+   "par": 4,
+   "meters": 165,
+   "ok": false
+  },
+  {
+   "par": 4,
+   "meters": 380,
+   "ok": true
+  },
+  {
+   "par": 5,
+   "meters": 300,
+   "ok": false
+  },
+  {
+   "par": 5,
+   "meters": 495,
+   "ok": true
+  },
+  {
+   "par": 4,
+   "meters": 240,
+   "ok": true
+  },
+  {
+   "par": 4,
+   "meters": null,
+   "ok": true
+  }
+ ]
+}

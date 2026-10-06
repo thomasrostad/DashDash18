@@ -1,0 +1,98 @@
+{
+ "_kilde": "Konstanter fra db-nytt.js (SESONG_RUNDER, TELLENDE_RUNDER, TELLENDE_MATCHER, POENG_SEIER/DELT/TAP, SEEDING_GRUPPER, SPILLERE_PER_BAAS, FORM_STANDARD). Sidepremie: 1 poeng delt på antall vinnere (sidepremieResultaterFor). hcp_extern: false og andel fra handleStartRunde i app-nytt.js.",
+ "konstanter": {
+  "SESONG_RUNDER": 7,
+  "TELLENDE_RUNDER": 5,
+  "TELLENDE_MATCHER": 0,
+  "POENG_SEIER": 1,
+  "POENG_DELT": 0.5,
+  "POENG_TAP": 0,
+  "SEEDING_GRUPPER": [
+   {
+    "nr": 1,
+    "hcp": 0,
+    "navn": "Gruppe 1"
+   },
+   {
+    "nr": 2,
+    "hcp": 5,
+    "navn": "Gruppe 2"
+   },
+   {
+    "nr": 3,
+    "hcp": 10,
+    "navn": "Gruppe 3"
+   }
+  ],
+  "SPILLERE_PER_BAAS": 4,
+  "FORM_STANDARD": "stableford",
+  "SIDEPREMIE_POENG": 1,
+  "HCP_EXTERN_NY_RUNDE": false
+ },
+ "andelForNyRunde": [
+  {
+   "formId": "stableford",
+   "andel": 0.95
+  },
+  {
+   "formId": "stableford-brutto",
+   "andel": 0
+  },
+  {
+   "formId": "slag-netto",
+   "andel": 0.95
+  },
+  {
+   "formId": "slag-brutto",
+   "andel": 0
+  },
+  {
+   "formId": "par-bogey",
+   "andel": 0.95
+  },
+  {
+   "formId": "maks-score",
+   "andel": 0.95
+  },
+  {
+   "formId": "match",
+   "andel": 1
+  },
+  {
+   "formId": "fourball",
+   "andel": 1
+  },
+  {
+   "formId": "fourball-4",
+   "andel": 0.75
+  },
+  {
+   "formId": "sammenlagt-lag",
+   "andel": 1
+  },
+  {
+   "formId": "foursome",
+   "andel": 1
+  },
+  {
+   "formId": "greensome",
+   "andel": 1
+  },
+  {
+   "formId": "chapman",
+   "andel": 1
+  },
+  {
+   "formId": "scramble-2",
+   "andel": 1
+  },
+  {
+   "formId": "scramble-4",
+   "andel": 1
+  },
+  {
+   "formId": "skins",
+   "andel": 0.95
+  }
+ ]
+}

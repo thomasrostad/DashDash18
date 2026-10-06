@@ -1,0 +1,3650 @@
+{
+ "_kilde": "seeding-, parspill-, brutto-, trackman-, tropp-, banebytte- og skjevt-lag-test.js. «utledet: true» betyr at PWA-testen ikke har tallet, og at det er regnet ut ved å kjøre db-nytt.js.",
+ "seedingGrupper": [
+  {
+   "nr": 1,
+   "hcp": 0,
+   "navn": "Gruppe 1"
+  },
+  {
+   "nr": 2,
+   "hcp": 5,
+   "navn": "Gruppe 2"
+  },
+  {
+   "nr": 3,
+   "hcp": 10,
+   "navn": "Gruppe 3"
+  }
+ ],
+ "courseHandicap": [
+  {
+   "inn": [
+    18.4,
+    74.1,
+    136,
+    72
+   ],
+   "forventet": 24,
+   "kilde": "seeding-test.js / SPEC 4.2"
+  },
+  {
+   "inn": [
+    18.4,
+    null,
+    null,
+    72
+   ],
+   "kilde": "egen: mangler rating og slope → rå indeks avrundet",
+   "forventet": 18,
+   "utledet": true
+  },
+  {
+   "inn": [
+    18.4,
+    null,
+    136,
+    72
+   ],
+   "kilde": "egen: mangler rating → rating = par",
+   "forventet": 22,
+   "utledet": true
+  },
+  {
+   "inn": [
+    10,
+    70,
+    null,
+    null
+   ],
+   "kilde": "egen: mangler par → 72",
+   "forventet": 8,
+   "utledet": true
+  },
+  {
+   "inn": [
+    null,
+    74.1,
+    136,
+    72
+   ],
+   "kilde": "egen: mangler indeks → 0",
+   "forventet": 2,
+   "utledet": true
+  },
+  {
+   "inn": [
+    -2.5,
+    72,
+    113,
+    72
+   ],
+   "kilde": "egen: pluss-handicap avrundes som JS (-2,5 → -2)",
+   "forventet": -2,
+   "utledet": true
+  },
+  {
+   "inn": [
+    5,
+    71.3,
+    136,
+    72
+   ],
+   "kilde": "egen",
+   "forventet": 5,
+   "utledet": true
+  },
+  {
+   "inn": [
+    28,
+    71.3,
+    136,
+    72
+   ],
+   "kilde": "egen",
+   "forventet": 33,
+   "utledet": true
+  }
+ ],
+ "saker": [
+  {
+   "navn": "seeding: gruppa erstatter indeksen",
+   "kilde": "seeding-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Scratch",
+     "handicap": 2.1,
+     "seedGroup": 1
+    },
+    {
+     "id": "b",
+     "name": "Midt",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "c",
+     "name": "Høyt",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "d",
+     "name": "Useedet",
+     "handicap": 18.4,
+     "seedGroup": null
+    },
+    {
+     "id": "e",
+     "name": "Midt to",
+     "handicap": 9,
+     "seedGroup": 2
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 0.95,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "tung",
+     "name": "Tung bane",
+     "par": 72,
+     "courseRating": 74.1,
+     "slopeRating": 136
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "a",
+     "forventet": 0
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "b",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "c",
+     "forventet": 10
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "b",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "d",
+     "forventet": 23,
+     "merknad": "Math.round(courseHandicap(18.4, 74.1, 136, 72) * 0.95)"
+    }
+   ]
+  },
+  {
+   "navn": "seeding: ni hull halverer ikke gruppetallet",
+   "kilde": "seeding-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Scratch",
+     "handicap": 2.1,
+     "seedGroup": 1
+    },
+    {
+     "id": "b",
+     "name": "Midt",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "c",
+     "name": "Høyt",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "d",
+     "name": "Useedet",
+     "handicap": 18.4,
+     "seedGroup": null
+    },
+    {
+     "id": "e",
+     "name": "Midt to",
+     "handicap": 9,
+     "seedGroup": 2
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 0.95,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "tung",
+     "name": "Tung bane",
+     "par": 72,
+     "courseRating": 74.1,
+     "slopeRating": 136
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "b",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "seeding: fourball 85 % rører ikke gruppetallet",
+   "kilde": "seeding-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Scratch",
+     "handicap": 2.1,
+     "seedGroup": 1
+    },
+    {
+     "id": "b",
+     "name": "Midt",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "c",
+     "name": "Høyt",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "d",
+     "name": "Useedet",
+     "handicap": 18.4,
+     "seedGroup": null
+    },
+    {
+     "id": "e",
+     "name": "Midt to",
+     "handicap": 9,
+     "seedGroup": 2
+    }
+   ],
+   "runde": {
+    "gameType": "fourball",
+    "hcpAllowance": 0.85,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "tung",
+     "name": "Tung bane",
+     "par": 72,
+     "courseRating": 74.1,
+     "slopeRating": 136
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "b",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "seeding: uten bane er det også gruppetallet",
+   "kilde": "seeding-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Scratch",
+     "handicap": 2.1,
+     "seedGroup": 1
+    },
+    {
+     "id": "b",
+     "name": "Midt",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "c",
+     "name": "Høyt",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "d",
+     "name": "Useedet",
+     "handicap": 18.4,
+     "seedGroup": null
+    },
+    {
+     "id": "e",
+     "name": "Midt to",
+     "handicap": 9,
+     "seedGroup": 2
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 0.95,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": null,
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "c",
+     "forventet": 10
+    }
+   ]
+  },
+  {
+   "navn": "seeding: bruttoform gir 0 også for seedede",
+   "kilde": "seeding-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Scratch",
+     "handicap": 2.1,
+     "seedGroup": 1
+    },
+    {
+     "id": "b",
+     "name": "Midt",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "c",
+     "name": "Høyt",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "d",
+     "name": "Useedet",
+     "handicap": 18.4,
+     "seedGroup": null
+    },
+    {
+     "id": "e",
+     "name": "Midt to",
+     "handicap": 9,
+     "seedGroup": 2
+    }
+   ],
+   "runde": {
+    "gameType": "stableford-brutto",
+    "hcpAllowance": 0,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "tung",
+     "name": "Tung bane",
+     "par": 72,
+     "courseRating": 74.1,
+     "slopeRating": 136
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "c",
+     "forventet": 0
+    }
+   ]
+  },
+  {
+   "navn": "seeding: Trackman gir 0 også for seedede",
+   "kilde": "seeding-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Scratch",
+     "handicap": 2.1,
+     "seedGroup": 1
+    },
+    {
+     "id": "b",
+     "name": "Midt",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "c",
+     "name": "Høyt",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "d",
+     "name": "Useedet",
+     "handicap": 18.4,
+     "seedGroup": null
+    },
+    {
+     "id": "e",
+     "name": "Midt to",
+     "handicap": 9,
+     "seedGroup": 2
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 0.95,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": true,
+    "course": {
+     "id": "tung",
+     "name": "Tung bane",
+     "par": 72,
+     "courseRating": 74.1,
+     "slopeRating": 136
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "c",
+     "forventet": 0
+    }
+   ]
+  },
+  {
+   "navn": "seeding: to i gruppe 2 i foursome har 5 sammen",
+   "kilde": "seeding-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Scratch",
+     "handicap": 2.1,
+     "seedGroup": 1
+    },
+    {
+     "id": "b",
+     "name": "Midt",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "c",
+     "name": "Høyt",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "d",
+     "name": "Useedet",
+     "handicap": 18.4,
+     "seedGroup": null
+    },
+    {
+     "id": "e",
+     "name": "Midt to",
+     "handicap": 9,
+     "seedGroup": 2
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "tung",
+     "name": "Tung bane",
+     "par": 72,
+     "courseRating": 74.1,
+     "slopeRating": 136
+    },
+    "teams": {
+     "b": 1,
+     "e": 1
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "b",
+      "e"
+     ],
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "b",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "e",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "seeding: tatt ut av gruppa, WHS-tallet igjen",
+   "kilde": "seeding-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Scratch",
+     "handicap": 2.1,
+     "seedGroup": 1
+    },
+    {
+     "id": "b",
+     "name": "Midt",
+     "handicap": 18.4,
+     "seedGroup": null
+    },
+    {
+     "id": "c",
+     "name": "Høyt",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "d",
+     "name": "Useedet",
+     "handicap": 18.4,
+     "seedGroup": null
+    },
+    {
+     "id": "e",
+     "name": "Midt to",
+     "handicap": 9,
+     "seedGroup": 2
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 0.95,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "tung",
+     "name": "Tung bane",
+     "par": 72,
+     "courseRating": 74.1,
+     "slopeRating": 136
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "b",
+     "forventet": 23
+    }
+   ]
+  },
+  {
+   "navn": "seeding: ukjent gruppe (7) er ingen gruppe",
+   "kilde": "seeding-test.js (gruppeFor → null); tallet utledet",
+   "spillere": [
+    {
+     "id": "x",
+     "name": "X",
+     "handicap": 3,
+     "seedGroup": 7
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": null,
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "x",
+     "forventet": 3
+    }
+   ]
+  },
+  {
+   "navn": "parspill: foursome, to i gruppe 2 har 5 sammen",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "g2a": 1,
+     "g2b": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "g2b"
+     ],
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2a",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2b",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "parspill: greensome, to i gruppe 2 har 5 sammen",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "greensome",
+    "teams": {
+     "g2a": 1,
+     "g2b": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "g2b"
+     ],
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2a",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2b",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "parspill: chapman, to i gruppe 2 har 5 sammen",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "chapman",
+    "teams": {
+     "g2a": 1,
+     "g2b": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "g2b"
+     ],
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2a",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2b",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "parspill: scramble-2, to i gruppe 2 har 5 sammen",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "scramble-2",
+    "teams": {
+     "g2a": 1,
+     "g2b": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "g2b"
+     ],
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2a",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2b",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "parspill: fourball, to i gruppe 2 har 5 sammen",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "fourball",
+    "teams": {
+     "g2a": 1,
+     "g2b": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "g2b"
+     ],
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2a",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2b",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "parspill: sammenlagt-lag, to i gruppe 2 har 5 sammen",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "sammenlagt-lag",
+    "teams": {
+     "g2a": 1,
+     "g2b": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "g2b"
+     ],
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2a",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2b",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "parspill: scramble gruppe 2 og 3 gir (5+10)/2 → 8",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "scramble-2",
+    "teams": {
+     "g2a": 1,
+     "g3": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "g3"
+     ],
+     "forventet": 8
+    }
+   ]
+  },
+  {
+   "navn": "parspill: fourball, begge spiller på lagets 8",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "fourball",
+    "teams": {
+     "g2a": 1,
+     "g3": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g3",
+     "forventet": 8
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2a",
+     "forventet": 8
+    }
+   ]
+  },
+  {
+   "navn": "parspill: 5 og 10 gir 7,5 → 8",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "g2a": 1,
+     "g3": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "g3"
+     ],
+     "forventet": 8
+    }
+   ]
+  },
+  {
+   "navn": "parspill: 0 og 5 gir 2,5 → 3",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "g1": 1,
+     "g2a": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g1",
+      "g2a"
+     ],
+     "forventet": 3
+    }
+   ]
+  },
+  {
+   "navn": "parspill: 0 og 10 gir 5",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "g1": 1,
+     "g3": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g1",
+      "g3"
+     ],
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "parspill: useedet 18 og 9 gir 13,5 → 14",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "u18": 1,
+     "u9": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "u18",
+      "u9"
+     ],
+     "forventet": 14
+    }
+   ]
+  },
+  {
+   "navn": "parspill: ni hull, (9 + 4,5)/2 = 6,75 → 7",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "u18": 1,
+     "u9": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "u18",
+      "u9"
+     ],
+     "forventet": 7
+    },
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "u18",
+     "forventet": 9,
+     "kilde": "egen, utledet: banehandicap 18 · 9/18"
+    },
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "u9",
+     "forventet": 4.5,
+     "kilde": "egen, utledet: ikke avrundet"
+    }
+   ]
+  },
+  {
+   "navn": "parspill: gruppe 2 og useedet 18 gir 11,5 → 12",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "g2a": 1,
+     "u18": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "u18"
+     ],
+     "forventet": 12
+    }
+   ]
+  },
+  {
+   "navn": "parspill: ni hull halverer bare den useedede, (5 + 9)/2 = 7",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "g2a": 1,
+     "u18": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "u18"
+     ],
+     "forventet": 7
+    },
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "g2a",
+     "forventet": 5,
+     "kilde": "egen, utledet: seedet halveres ikke"
+    }
+   ]
+  },
+  {
+   "navn": "parspill: tre mann i fourball, (5+5+10)/3 → 7",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "fourball",
+    "teams": {
+     "g2a": 1,
+     "g2b": 1,
+     "g3": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "g2b",
+      "g3"
+     ],
+     "forventet": 7
+    }
+   ]
+  },
+  {
+   "navn": "parspill: scramble-4 bruker 25/20/15/10, [0,5,5,10] → 3",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "scramble-4",
+    "teams": {
+     "g1": 1,
+     "g2a": 1,
+     "g2b": 1,
+     "g3": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g1",
+      "g2a",
+      "g2b",
+      "g3"
+     ],
+     "forventet": 3
+    }
+   ]
+  },
+  {
+   "navn": "parspill: brutto gir 0 for laget",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "g2a": 1,
+     "g3": 1
+    },
+    "hcpAllowance": 0,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "g2a",
+      "g3"
+     ],
+     "forventet": 0
+    }
+   ]
+  },
+  {
+   "navn": "parspill: Trackman gir 0 for hver på laget",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "g2a": 1,
+     "g3": 1
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": true,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g3",
+     "forventet": 0
+    }
+   ]
+  },
+  {
+   "navn": "parspill: uten lagoppsett spiller hver på sitt",
+   "kilde": "parspill-test.js",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "fourball",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g3",
+     "forventet": 10
+    }
+   ]
+  },
+  {
+   "navn": "parspill: lag på 5 mot lag på 5",
+   "kilde": "parspill-test.js (sideHandicap = laveste effectiveHandicap på siden)",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "scramble-2",
+    "teams": {
+     "g2a": 1,
+     "g2b": 1,
+     "g3": 2,
+     "g1": 2
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2a",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g2b",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g3",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g1",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "brutto: banehandicap på nøytral bane",
+   "kilde": "brutto-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Anders",
+     "handicap": 18
+    },
+    {
+     "id": "b",
+     "name": "Bjørn",
+     "handicap": 0
+    },
+    {
+     "id": "c",
+     "name": "Cato",
+     "handicap": 7
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "course": {
+     "id": "b",
+     "name": "Testbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      }
+     ]
+    },
+    "hcpExtern": false
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "a",
+     "forventet": 18
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "b",
+     "forventet": 0
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "c",
+     "forventet": 7
+    }
+   ]
+  },
+  {
+   "navn": "brutto: hcp_extern gir 0",
+   "kilde": "brutto-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Anders",
+     "handicap": 18
+    },
+    {
+     "id": "b",
+     "name": "Bjørn",
+     "handicap": 0
+    },
+    {
+     "id": "c",
+     "name": "Cato",
+     "handicap": 7
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "course": {
+     "id": "b",
+     "name": "Testbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      }
+     ]
+    },
+    "hcpExtern": true
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "c",
+     "forventet": 0
+    }
+   ]
+  },
+  {
+   "navn": "brutto: handicap 18 over ni hull gir 9",
+   "kilde": "brutto-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Anders",
+     "handicap": 18
+    },
+    {
+     "id": "b",
+     "name": "Bjørn",
+     "handicap": 0
+    },
+    {
+     "id": "c",
+     "name": "Cato",
+     "handicap": 7
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "course": {
+     "id": "b",
+     "name": "Testbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 18,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      }
+     ]
+    },
+    "hcpExtern": false
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "a",
+     "forventet": 9
+    }
+   ]
+  },
+  {
+   "navn": "trackman: appen regner banehandicap (> 0)",
+   "kilde": "trackman-test.js (tallet utledet)",
+   "spillere": [
+    {
+     "id": "p1",
+     "name": "Høyt hcp",
+     "handicap": 28
+    },
+    {
+     "id": "p2",
+     "name": "Lavt hcp",
+     "handicap": 4
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "course": {
+     "id": "e",
+     "name": "Elisefarm",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136
+    },
+    "hcpExtern": false
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p1",
+     "forventet": 17,
+     "utledet": true
+    }
+   ]
+  },
+  {
+   "navn": "trackman: Trackman-modus gir 0 for alle",
+   "kilde": "trackman-test.js",
+   "spillere": [
+    {
+     "id": "p1",
+     "name": "Høyt hcp",
+     "handicap": 28
+    },
+    {
+     "id": "p2",
+     "name": "Lavt hcp",
+     "handicap": 4
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "course": {
+     "id": "e",
+     "name": "Elisefarm",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136
+    },
+    "hcpExtern": true
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p1",
+     "forventet": 0
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": 0
+    }
+   ]
+  },
+  {
+   "navn": "tropp: handicap 14 gir 14, 0 gir 0",
+   "kilde": "tropp-test.js",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Rostad",
+     "handicap": 14
+    },
+    {
+     "id": "b",
+     "name": "Næsset",
+     "handicap": 8.2
+    },
+    {
+     "id": "c",
+     "name": "Strypet",
+     "handicap": 12
+    },
+    {
+     "id": "d",
+     "name": "Andreas",
+     "handicap": 7
+    },
+    {
+     "id": "x",
+     "name": "X",
+     "handicap": 0
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "hcpAllowance": 1,
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "a",
+     "forventet": 14
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "x",
+     "forventet": 0
+    }
+   ]
+  },
+  {
+   "navn": "banebytte: uten bane, rå indeks",
+   "kilde": "banebytte-test.js (tallene utledet)",
+   "spillere": [
+    {
+     "id": "p1",
+     "name": "Lavt hcp",
+     "handicap": 5
+    },
+    {
+     "id": "p2",
+     "name": "Midt",
+     "handicap": 18.4
+    },
+    {
+     "id": "p3",
+     "name": "Høyt hcp",
+     "handicap": 28
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": null
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p1",
+     "forventet": 5,
+     "utledet": true
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": 18,
+     "utledet": true
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p3",
+     "forventet": 28,
+     "utledet": true
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "kilde": "egen: uten bane er banehandicap rå indeks, ikke avrundet",
+     "forventet": 18.4,
+     "utledet": true
+    }
+   ]
+  },
+  {
+   "navn": "banebytte: Elisefarm, slope 136",
+   "kilde": "banebytte-test.js (tallene utledet)",
+   "spillere": [
+    {
+     "id": "p1",
+     "name": "Lavt hcp",
+     "handicap": 5
+    },
+    {
+     "id": "p2",
+     "name": "Midt",
+     "handicap": 18.4
+    },
+    {
+     "id": "p3",
+     "name": "Høyt hcp",
+     "handicap": 28
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": {
+     "id": "elise",
+     "name": "Elisefarm",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p1",
+     "forventet": 5,
+     "utledet": true
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": 21,
+     "utledet": true
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p3",
+     "forventet": 33,
+     "utledet": true
+    }
+   ]
+  },
+  {
+   "navn": "banebytte: flat bane er det samme som ingen bane",
+   "kilde": "banebytte-test.js (tallene utledet)",
+   "spillere": [
+    {
+     "id": "p1",
+     "name": "Lavt hcp",
+     "handicap": 5
+    },
+    {
+     "id": "p2",
+     "name": "Midt",
+     "handicap": 18.4
+    },
+    {
+     "id": "p3",
+     "name": "Høyt hcp",
+     "handicap": 28
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p1",
+     "forventet": 5,
+     "utledet": true
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": 18,
+     "utledet": true
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p3",
+     "forventet": 28,
+     "utledet": true
+    }
+   ]
+  },
+  {
+   "navn": "skjevt lag: én mann alene har sitt eget gruppetall",
+   "kilde": "skjevt-lag-test.js",
+   "spillere": [
+    {
+     "id": "strypet",
+     "name": "Thomas Strypet",
+     "handicap": 8,
+     "seedGroup": 1
+    },
+    {
+     "id": "romano",
+     "name": "Jonas Romano",
+     "handicap": 12,
+     "seedGroup": 2
+    },
+    {
+     "id": "naesset",
+     "name": "Thomas Næsset",
+     "handicap": 10,
+     "seedGroup": 1
+    },
+    {
+     "id": "thuen",
+     "name": "Sebastian Thuen",
+     "handicap": 14,
+     "seedGroup": 2
+    },
+    {
+     "id": "alm",
+     "name": "Andreas Alm",
+     "handicap": 6,
+     "seedGroup": 1
+    },
+    {
+     "id": "rodt",
+     "name": "Henrik Rodt",
+     "handicap": 16,
+     "seedGroup": 2
+    },
+    {
+     "id": "hesthammer",
+     "name": "Jonas Hesthammer",
+     "handicap": 9,
+     "seedGroup": 1
+    },
+    {
+     "id": "huseby",
+     "name": "Preben Huseby",
+     "handicap": 20,
+     "seedGroup": 3
+    },
+    {
+     "id": "rostad",
+     "name": "Thomas Rostad",
+     "handicap": 15,
+     "seedGroup": 2
+    },
+    {
+     "id": "breivik",
+     "name": "Thomas Seim Breivik",
+     "handicap": 24,
+     "seedGroup": 3
+    }
+   ],
+   "runde": {
+    "gameType": "fourball",
+    "teams": {
+     "rostad": 5,
+     "breivik": 6
+    },
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "adare",
+     "name": "Adare Manor",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "rostad"
+     ],
+     "forventet": 5
+    },
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "breivik"
+     ],
+     "forventet": 10
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "breivik",
+     "forventet": 10
+    }
+   ]
+  },
+  {
+   "navn": "skjevt lag: Trackman fordeler, ingen slag fra appen",
+   "kilde": "skjevt-lag-test.js",
+   "spillere": [
+    {
+     "id": "strypet",
+     "name": "Thomas Strypet",
+     "handicap": 8,
+     "seedGroup": 1
+    },
+    {
+     "id": "romano",
+     "name": "Jonas Romano",
+     "handicap": 12,
+     "seedGroup": 2
+    },
+    {
+     "id": "naesset",
+     "name": "Thomas Næsset",
+     "handicap": 10,
+     "seedGroup": 1
+    },
+    {
+     "id": "thuen",
+     "name": "Sebastian Thuen",
+     "handicap": 14,
+     "seedGroup": 2
+    },
+    {
+     "id": "alm",
+     "name": "Andreas Alm",
+     "handicap": 6,
+     "seedGroup": 1
+    },
+    {
+     "id": "rodt",
+     "name": "Henrik Rodt",
+     "handicap": 16,
+     "seedGroup": 2
+    },
+    {
+     "id": "hesthammer",
+     "name": "Jonas Hesthammer",
+     "handicap": 9,
+     "seedGroup": 1
+    },
+    {
+     "id": "huseby",
+     "name": "Preben Huseby",
+     "handicap": 20,
+     "seedGroup": 3
+    },
+    {
+     "id": "rostad",
+     "name": "Thomas Rostad",
+     "handicap": 15,
+     "seedGroup": 2
+    },
+    {
+     "id": "breivik",
+     "name": "Thomas Seim Breivik",
+     "handicap": 24,
+     "seedGroup": 3
+    }
+   ],
+   "runde": {
+    "gameType": "fourball",
+    "teams": {
+     "alm": 1,
+     "naesset": 1,
+     "hesthammer": 2,
+     "thuen": 2,
+     "strypet": 2
+    },
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": true,
+    "course": {
+     "id": "adare",
+     "name": "Adare Manor",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "strypet",
+     "forventet": 0
+    }
+   ]
+  },
+  {
+   "navn": "rundeAndel null",
+   "kilde": "egen, utledet: (typeof a === number && a >= 0) ? a : 1",
+   "spillere": [],
+   "runde": {
+    "hcpAllowance": null
+   },
+   "sjekker": [
+    {
+     "fn": "rundeAndel",
+     "forventet": 1
+    }
+   ]
+  },
+  {
+   "navn": "rundeAndel 0",
+   "kilde": "egen, utledet: (typeof a === number && a >= 0) ? a : 1",
+   "spillere": [],
+   "runde": {
+    "hcpAllowance": 0
+   },
+   "sjekker": [
+    {
+     "fn": "rundeAndel",
+     "forventet": 0
+    }
+   ]
+  },
+  {
+   "navn": "rundeAndel 0.95",
+   "kilde": "egen, utledet: (typeof a === number && a >= 0) ? a : 1",
+   "spillere": [],
+   "runde": {
+    "hcpAllowance": 0.95
+   },
+   "sjekker": [
+    {
+     "fn": "rundeAndel",
+     "forventet": 0.95
+    }
+   ]
+  },
+  {
+   "navn": "rundeAndel 1",
+   "kilde": "egen, utledet: (typeof a === number && a >= 0) ? a : 1",
+   "spillere": [],
+   "runde": {
+    "hcpAllowance": 1
+   },
+   "sjekker": [
+    {
+     "fn": "rundeAndel",
+     "forventet": 1
+    }
+   ]
+  },
+  {
+   "navn": "rundeAndel -1",
+   "kilde": "egen, utledet: (typeof a === number && a >= 0) ? a : 1",
+   "spillere": [],
+   "runde": {
+    "hcpAllowance": -1
+   },
+   "sjekker": [
+    {
+     "fn": "rundeAndel",
+     "forventet": 1
+    }
+   ]
+  },
+  {
+   "navn": "lagGrunnlag med bane på ni hull",
+   "kilde": "egen, utledet ved å kjøre lagGrunnlag()",
+   "spillere": [
+    {
+     "id": "p1",
+     "name": "Lavt hcp",
+     "handicap": 5
+    },
+    {
+     "id": "p2",
+     "name": "Midt",
+     "handicap": 18.4
+    },
+    {
+     "id": "p3",
+     "name": "Høyt hcp",
+     "handicap": 28
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "course": {
+     "id": "elise",
+     "name": "Elisefarm",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "p2",
+     "forventet": 10.5,
+     "utledet": true
+    },
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "p3",
+     "forventet": 16.5,
+     "utledet": true
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": 21,
+     "utledet": true
+    }
+   ]
+  },
+  {
+   "navn": "lagHandicap med ukjent spiller-id",
+   "kilde": "egen, utledet: playerById gir undefined, grunnlaget blir courseHandicap(0, …)",
+   "spillere": [
+    {
+     "id": "p1",
+     "name": "Lavt hcp",
+     "handicap": 5
+    },
+    {
+     "id": "p2",
+     "name": "Midt",
+     "handicap": 18.4
+    },
+    {
+     "id": "p3",
+     "name": "Høyt hcp",
+     "handicap": 28
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {},
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": {
+     "par": 72,
+     "courseRating": 74,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "p1",
+      "finnesikke"
+     ],
+     "forventet": 5,
+     "utledet": true
+    }
+   ]
+  },
+  {
+   "navn": "fourball-4 går ikke via laget (kort per spiller, lag 4)",
+   "kilde": "egen, utledet ved å kjøre effectiveHandicap()",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "fourball-4",
+    "teams": {
+     "g1": 1,
+     "g2a": 1,
+     "g2b": 1,
+     "g3": 1
+    },
+    "hcpAllowance": 0.75,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g3",
+     "forventet": 10,
+     "utledet": true
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "u18",
+     "forventet": 14,
+     "utledet": true
+    }
+   ]
+  },
+  {
+   "navn": "lag 0 er ingen lag (JS-sannhet)",
+   "kilde": "egen, utledet: lagFor gir null når team_no er 0",
+   "spillere": [
+    {
+     "id": "g2a",
+     "name": "Gruppe 2 A",
+     "handicap": 18.4,
+     "seedGroup": 2
+    },
+    {
+     "id": "g2b",
+     "name": "Gruppe 2 B",
+     "handicap": 9,
+     "seedGroup": 2
+    },
+    {
+     "id": "g3",
+     "name": "Gruppe 3",
+     "handicap": 31,
+     "seedGroup": 3
+    },
+    {
+     "id": "g1",
+     "name": "Gruppe 1",
+     "handicap": 2,
+     "seedGroup": 1
+    },
+    {
+     "id": "u18",
+     "name": "Useedet 18",
+     "handicap": 18,
+     "seedGroup": null
+    },
+    {
+     "id": "u9",
+     "name": "Useedet 9",
+     "handicap": 9,
+     "seedGroup": null
+    }
+   ],
+   "runde": {
+    "gameType": "foursome",
+    "teams": {
+     "g1": 0,
+     "g3": 0
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flat bane",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "g3",
+     "forventet": 10,
+     "utledet": true
+    }
+   ]
+  },
+  {
+   "navn": "gammel game_type «Stableford» og ukjent «scramble2» gir stableford",
+   "kilde": "egen, utledet (banebytte-test.js bruker scramble2)",
+   "spillere": [
+    {
+     "id": "p1",
+     "name": "Lavt hcp",
+     "handicap": 5
+    },
+    {
+     "id": "p2",
+     "name": "Midt",
+     "handicap": 18.4
+    },
+    {
+     "id": "p3",
+     "name": "Høyt hcp",
+     "handicap": 28
+    }
+   ],
+   "runde": {
+    "gameType": "scramble2",
+    "teams": {
+     "p1": 1,
+     "p2": 1,
+     "p3": 2
+    },
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "course": {
+     "id": "elise",
+     "name": "Elisefarm",
+     "par": 72,
+     "courseRating": 71.3,
+     "slopeRating": 136
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p1",
+     "forventet": 5,
+     "utledet": true
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": 21,
+     "utledet": true
+    }
+   ]
+  }
+ ]
+}
