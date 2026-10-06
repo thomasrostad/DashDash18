@@ -359,6 +359,9 @@ Kartlagt 06.10.2026. Ingen åpen, komplett kilde for norske scorekort med CR/slo
 - **Norsk offisiell kilde:** bare via avtale med NGF/GolfBox (slik Gimmie har). Ikke høst klubbsider eller GolfBox systematisk (katalogvern).
 - **Konsekvens for skjemaet:** API-nøkkelen må ligge på serveren (Supabase Edge Function), ikke i appen. Et felles banekatalog på tvers av klubber (i stedet for bare per klubb) og felt for kilde/ekstern-id krever ny migrering (SQL til godkjenning).
 
+### B16 – Frosset handicap i sesongtabellen · Tatt (meg), kan overstyres
+Tabellen og Kveld regner hver runde med handicapet som ble frosset da runden startet (`round_players.playing_handicap`, ellers frosset indeks/seeding). PWA-en regnet matchresultatene i sesongen med spillernes *nåværende* handicap. Bevisst avvik: gamle resultater skal ikke flytte seg når noen endrer handicap. Golfgutu-paritet gjelder ellers.
+
 ### B6 – Lokal lagring · Tatt (meg)
 **SwiftData** for cache og utboks. Domenelogikken ligger i rene Swift-typer utenfor.
 
