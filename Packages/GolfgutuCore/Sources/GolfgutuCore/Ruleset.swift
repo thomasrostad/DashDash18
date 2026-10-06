@@ -59,6 +59,8 @@ public struct Ruleset: Hashable, Sendable {
     /// Hva som teller: de beste N av en enhet, eller alle.
     public struct Counting: Codable, Hashable, Sendable {
         public enum Unit: String, Codable, Hashable, Sendable, CaseIterable {
+            /// Kvelden: summen av rundene med samme dato.
+            case evening
             /// Hver match for seg (`TELLENDE_MATCHER`). Bare for tabellen.
             case match
             /// Hver runde for seg (`TELLENDE_RUNDER`).
@@ -97,9 +99,11 @@ public struct Ruleset: Hashable, Sendable {
         public var matchPoints: MatchPoints
         /// Poeng i en trekant etter plass (beste først). Delt plass deler summen av plassene.
         public var trianglePoints: [Double]
-        /// Det som teller i tabellen. Sidepremiene strykes aldri med enheten `match`.
+        /// Det som teller i tabellen: `match`, `round` eller `evening`. Sidepremiene strykes aldri med `match`;
+        /// med `round` og `evening` er de en del av rundens eller kveldens poeng.
         public var counting: Counting
-        /// Det som teller i stablefordsummen (skilletegn og profil). Vekten legges på før utvelgelsen.
+        /// Det som teller i stablefordsummen (skilletegn og profil): `round` eller `evening` (`match` regnes
+        /// som `round`). Vekten legges på før utvelgelsen.
         public var stablefordCounting: Counting
         /// Skillene ved likt totalpoeng, i rekkefølge. Norsk navnesortering er alltid det siste.
         public var tiebreaks: [Tiebreak]

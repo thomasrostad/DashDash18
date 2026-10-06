@@ -73,8 +73,8 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | Verdi | Brukes i | Ruleset | Golfgutu |
 |---|---|---|---|
 | Antall kvelder | – | `evenings` | 7 |
-| Hva som teller i tabellen (`TELLENDE_MATCHER`) | `Season.matchResults` | `table.counting` | alle matcher |
-| Hva som teller i stablefordsummen (`TELLENDE_RUNDER`) | `Season.countingRounds` | `table.stablefordCounting` | beste 5 runder |
+| Hva som teller i tabellen (`TELLENDE_MATCHER`) | `Season.tableSelection`, `matchResults` | `table.counting` (`unit`: `match`, `round`, `evening`; `best`: N eller `null` = alle) | `match`, alle |
+| Hva som teller i stablefordsummen (`TELLENDE_RUNDER`) | `Season.countingRounds` | `table.stablefordCounting` (`unit`: `round`, `evening`) | `round`, beste 5 |
 | Avrunding av tabellpoeng | `Season.matchSum`, `jacketBoard`, `formatPoints` | `table.roundingStep` (`null` = ingen) | 0,5 |
 | Skilletegn | `Season.jacketBoard` | `table.tiebreaks` | hulldifferanse, stablefordsum |
 | Utvalg sorteres på poeng, så hulldifferanse | `Season.matchResults` | bli (del av «beste N») | – |
@@ -93,6 +93,14 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | Ukjent form → stableford | `CompetitionForm.form(id:)` | bli (som `formForRunde`, gjelder lagrede runder) | – |
 | Minst 2 spillere, oddetall gir én trekant | `CompetitionForm.setup` | bli, se åpne spørsmål | – |
 
+### Telling («beste N»)
+
+- `match` (Golfgutu): de N beste matchene, sortert på poeng og så hulldifferanse. Sidepremiene strykes aldri (som PWA-en).
+- `evening`: spillerens tabellpoeng (matcher og sidepremier, vektet) summeres per kveld, altså rundene med samme dato. De N beste kveldene teller, med alt som ble vunnet der. Likt: hulldifferanse, så den tidligste kvelden.
+- `round`: som `evening`, men per runde.
+- Stablefordsummen: `round` (Golfgutu, beste 5 runder) eller `evening` (summen av kveldens runder).
+- Med `best: null` gir alle enhetene samme svar: alt teller.
+
 ## Hvorfor noe blir i koden
 
 - **Golfregler og WHS** (slagfordeling, WHS-formelen, hullvinner i match, «avgjort») er ikke valg en turnering tar. Endres de, er det ikke golf lenger.
@@ -104,4 +112,5 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 
 1. **Par 3–6 og lengdegrensene** er plausibilitetssjekker for banebiblioteket. Blir i koden til vi vet om noen trenger par 7 eller andre grenser.
 2. **Trekant rangert på stableford** og **oddetall gir trekant** er slik PWA-en gjør det. Andre grupper vil kanskje ha fri runde (bye) i stedet. Ikke tatt med nå.
-3. **`fullHandicap` i match** er det eneste alternativet til «laveste fra scratch». Prosent av forskjellen (f.eks. 90 % som WHS anbefaler for fourball) er ikke tatt med.
+3. **Sidepremier i kvelds-telling:** med `evening` og `round` er sidepremiene en del av kveldens poeng og strykes med kvelden. Med `match` strykes de aldri (PWA-en). Valgt fordi «tabellpoeng per kveld» naturlig tar med alt kvelden ga. Brukeren bør bekrefte.
+4. **`fullHandicap` i match** er det eneste alternativet til «laveste fra scratch». Prosent av forskjellen (f.eks. 90 % som WHS anbefaler for fourball) er ikke tatt med.

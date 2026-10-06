@@ -44,6 +44,18 @@ public struct Season: Sendable {
         public var dropped: [MatchResult]
     }
 
+    /// Sidepremiene som teller, og de som er strøket.
+    public struct SidePrizeSelection: Hashable, Sendable {
+        public var counting: [SidePrizeResult]
+        public var dropped: [SidePrizeResult]
+    }
+
+    /// Det som teller i tabellen: matcher og sidepremier.
+    public struct TableSelection: Hashable, Sendable {
+        public var matches: MatchSelection
+        public var sidePrizes: SidePrizeSelection
+    }
+
     /// `matchSum`.
     public struct MatchSum: Hashable, Sendable {
         /// Til nærmeste halve.
@@ -77,9 +89,10 @@ public struct Season: Sendable {
     /// En rad i jakketavla.
     public struct JacketRow: Hashable, Sendable {
         public var player: Player
-        /// Duell + sidepremier, til nærmeste halve.
+        /// Duell + sidepremier, avrundet etter regelsettet (Golfgutu: nærmeste halve).
         public var total: Double
         public var duel: Double
+        /// Tellende sidepremier.
         public var side: Double
         /// Tellende matcher.
         public var matches: Int
@@ -103,8 +116,48 @@ public struct Season: Sendable {
 
     /// `matchResultaterFor`: spillerens matcher gjennom sesongen, vektet med runden. Vekt 0 hopper over
     /// hele runden. Trekant gir plasspoeng og 0 i hulldifferanse; manuelt resultat gir 0 i hulldifferanse.
-    /// Sortert på poeng, så hulldifferanse; regelsettets «beste N» stryker resten.
+    /// Sortert på poeng, så hulldifferanse; regelsettets «beste N» (`table.counting`) stryker resten.
     public func matchResults(for playerID: String) -> MatchSelection {
+        tableSelection(for: playerID).matches
+    }
+
+    /// Det som teller i tabellen for spilleren, etter `table.counting`:
+    /// - `match` (Golfgutu, `TELLENDE_MATCHER`): de N beste matchene. Sidepremiene strykes aldri.
+    /// - `evening` / `round`: spillerens tabellpoeng (matcher og sidepremier) summeres per kveld
+    ///   (rundene med samme dato) eller per runde, og de N beste teller. Likt avgjøres av
+    ///   hulldifferansen, så den tidligste.
+    /// `best` `nil` (eller under 1): alt teller.
+    public func tableSelection(for playerID: String) -> TableSelection {
+        let chronological = matchResultsInOrder(for: playerID)
+        let all = chronological.enumerated().sorted { x, y in
+            if x.element.points != y.element.points { return x.element.points > y.element.points }
+            if x.element.holes != y.element.holes { return x.element.holes > y.element.holes }
+            return x.offset < y.offset
+        }.map(\.element)
+        let side = sidePrizeResults(for: playerID)
+        let counting = ruleset.table.counting
+        guard let n = counting.best, n > 0 else {
+            return TableSelection(matches: MatchSelection(counting: all, dropped: []),
+                                  sidePrizes: SidePrizeSelection(counting: side, dropped: []))
+        }
+        if counting.unit == .match {
+            return TableSelection(matches: MatchSelection(counting: Array(all.prefix(n)), dropped: Array(all.dropFirst(n))),
+                                  sidePrizes: SidePrizeSelection(counting: side, dropped: []))
+        }
+        let items = chronological.map { (key: groupKey($0.roundIndex, counting.unit), round: $0.roundIndex, points: $0.points, holes: $0.holes) }
+            + side.map { (key: groupKey($0.roundIndex, counting.unit), round: $0.roundIndex, points: $0.points, holes: 0) }
+        let keep = Self.bestGroups(items, best: n)
+        let inMatches = all.map { keep.contains(groupKey($0.roundIndex, counting.unit)) }
+        let inSide = side.map { keep.contains(groupKey($0.roundIndex, counting.unit)) }
+        return TableSelection(
+            matches: MatchSelection(counting: zip(all, inMatches).filter(\.1).map(\.0),
+                                    dropped: zip(all, inMatches).filter { !$0.1 }.map(\.0)),
+            sidePrizes: SidePrizeSelection(counting: zip(side, inSide).filter(\.1).map(\.0),
+                                           dropped: zip(side, inSide).filter { !$0.1 }.map(\.0)))
+    }
+
+    /// Matchene i rundenes rekkefølge, før sortering og utvalg.
+    private func matchResultsInOrder(for playerID: String) -> [MatchResult] {
         var all: [MatchResult] = []
         for (i, round) in rounds.enumerated() {
             let weight = Self.weight(round)
@@ -126,13 +179,30 @@ public struct Season: Sendable {
                                        holes: holes, isTriangle: false))
             }
         }
-        all = all.enumerated().sorted { x, y in
-            if x.element.points != y.element.points { return x.element.points > y.element.points }
-            if x.element.holes != y.element.holes { return x.element.holes > y.element.holes }
-            return x.offset < y.offset
-        }.map(\.element)
-        guard let n = ruleset.table.counting.best, n > 0 else { return MatchSelection(counting: all, dropped: []) }
-        return MatchSelection(counting: Array(all.prefix(n)), dropped: Array(all.dropFirst(n)))
+        return all
+    }
+
+    /// Nøkkelen en runde telles under: kvelden (`kveldsDatoer`-nøkkelen) eller runden selv.
+    func groupKey(_ roundIndex: Int, _ unit: Ruleset.Counting.Unit) -> String {
+        unit == .evening ? Self.eveningKey(rounds[roundIndex]) : "runde \(roundIndex)"
+    }
+
+    /// Nøklene til de N beste gruppene: summen av poengene, så hulldifferansen, så den tidligste runden.
+    static func bestGroups(_ items: [(key: String, round: Int, points: Double, holes: Int)], best n: Int) -> Set<String> {
+        var groups: [String: (round: Int, points: Double, holes: Int)] = [:]
+        for item in items {
+            var g = groups[item.key] ?? (round: item.round, points: 0, holes: 0)
+            g.round = min(g.round, item.round)
+            g.points += item.points
+            g.holes += item.holes
+            groups[item.key] = g
+        }
+        let ranked = groups.sorted { x, y in
+            if x.value.points != y.value.points { return x.value.points > y.value.points }
+            if x.value.holes != y.value.holes { return x.value.holes > y.value.holes }
+            return x.value.round < y.value.round
+        }
+        return Set(ranked.prefix(max(0, n)).map(\.key))
     }
 
     /// `matchSum`: poengene avrundet etter regelsettet (Golfgutu: nærmeste halve), hulldifferansen
@@ -187,15 +257,25 @@ public struct Season: Sendable {
     }
 
     /// `tellendeRunderFor`: rundene som teller i stablefordsummen, best først (vekten legges på før
-    /// utvelgelsen).
+    /// utvelgelsen), etter `table.stablefordCounting`: de N beste rundene (Golfgutu, `TELLENDE_RUNDER`),
+    /// eller rundene i de N beste kveldene (summen av kveldens runder). `best` `nil`: alle.
     public func countingRounds(for playerID: String) -> RoundSelection {
-        let all = rounds.indices.compactMap { i in
+        let chronological = rounds.indices.compactMap { i in
             weightedRoundPoints(i, playerID: playerID).map { RoundScore(roundIndex: i, roundID: rounds[i].id, points: $0) }
-        }.enumerated().sorted { x, y in
+        }
+        let all = chronological.enumerated().sorted { x, y in
             x.element.points != y.element.points ? x.element.points > y.element.points : x.offset < y.offset
         }.map(\.element)
-        guard let n = ruleset.table.stablefordCounting.best else { return RoundSelection(counting: all, dropped: []) }
-        return RoundSelection(counting: Array(all.prefix(n)), dropped: Array(all.dropFirst(n)))
+        let counting = ruleset.table.stablefordCounting
+        guard let n = counting.best else { return RoundSelection(counting: all, dropped: []) }
+        guard counting.unit == .evening else {
+            return RoundSelection(counting: Array(all.prefix(n)), dropped: Array(all.dropFirst(n)))
+        }
+        let keep = Self.bestGroups(chronological.map {
+            (key: groupKey($0.roundIndex, .evening), round: $0.roundIndex, points: $0.points, holes: 0)
+        }, best: n)
+        return RoundSelection(counting: all.filter { keep.contains(groupKey($0.roundIndex, .evening)) },
+                              dropped: all.filter { !keep.contains(groupKey($0.roundIndex, .evening)) })
     }
 
     /// `seasonTotalNytt`: summen av de tellende rundene, avrundet som JS.
@@ -205,13 +285,14 @@ public struct Season: Sendable {
 
     // MARK: Tabellene
 
-    /// `jakketavle`: duellpoeng pluss sidepremier, alle i troppen. Sortert på total, så regelsettets
-    /// skilletegn (Golfgutu: hulldifferanse, stablefordsum), så navn (norsk).
+    /// `jakketavle`: duellpoeng pluss sidepremier, alle i troppen, med det som teller etter regelsettet.
+    /// Sortert på total, så regelsettets skilletegn (Golfgutu: hulldifferanse, stablefordsum), så navn (norsk).
     public func jacketBoard() -> [JacketRow] {
         let rows = players.map { p -> JacketRow in
-            let d = matchResults(for: p.id)
+            let selection = tableSelection(for: p.id)
+            let d = selection.matches
             let s = Self.matchSum(d.counting, rules: ruleset)
-            let side = sidePrizePoints(for: p.id)
+            let side = selection.sidePrizes.counting.reduce(0) { $0 + $1.points }
             return JacketRow(player: p, total: ruleset.roundTablePoints(s.points + side), duel: s.points, side: side,
                              matches: s.matches, holes: s.holes, played: d.counting.count + d.dropped.count,
                              stableford: stablefordTotal(for: p.id))
@@ -251,7 +332,12 @@ public struct Season: Sendable {
 
     /// `kveldsDatoer`: kveldene, sortert. To runder samme dato er én kveld; en runde uten dato er sin egen.
     public static func eveningDates(_ rounds: [Round]) -> [String] {
-        Array(Set(rounds.map { $0.date.flatMap { $0.isEmpty ? nil : $0 } ?? "uten dato " + ($0.id ?? "undefined") })).sorted()
+        Array(Set(rounds.map(eveningKey))).sorted()
+    }
+
+    /// Kvelden runden hører til: datoen, eller «uten dato <id>» (en runde uten dato er sin egen kveld).
+    static func eveningKey(_ round: Round) -> String {
+        round.date.flatMap { $0.isEmpty ? nil : $0 } ?? "uten dato " + (round.id ?? "undefined")
     }
 
     /// `antallKvelder`.
