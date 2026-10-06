@@ -22,12 +22,15 @@ private struct TradContent: View {
     @FocusState private var composerFocused: Bool
     @State private var photoItem: PhotosPickerItem?
     @State private var confirmingDelete: ThreadMessageRow?
+    @State private var showsCamera = false
 
     var body: some View {
         messageList
             .overlay { stateOverlay }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                TradComposer(model: model, focused: $composerFocused, photoItem: $photoItem)
+                TradComposer(model: model, focused: $composerFocused, photoItem: $photoItem,
+                             sources: TradImageSource.available(cameraAvailable: TradCameraPicker.isAvailable),
+                             onCamera: { showsCamera = true })
             }
             .navigationTitle("Kveldens tråd")
             .ddNavigationChrome()
@@ -55,6 +58,14 @@ private struct TradContent: View {
                         model.errorMessage = TradImageCompressor.Failure.unreadable.message
                     }
                 }
+            }
+            .fullScreenCover(isPresented: $showsCamera) {
+                TradCameraPicker { data in
+                    showsCamera = false
+                    guard let data else { return }
+                    Task { await model.attach(imageData: data) }
+                }
+                .ignoresSafeArea()
             }
             .confirmationDialog(
                 "Slette meldingen?",
@@ -274,6 +285,8 @@ private struct TradComposer: View {
     @Bindable var model: TradModel
     var focused: FocusState<Bool>.Binding
     @Binding var photoItem: PhotosPickerItem?
+    let sources: [TradImageSource]
+    let onCamera: () -> Void
 
     var body: some View {
         VStack(spacing: 8) {
@@ -311,17 +324,15 @@ private struct TradComposer: View {
                 }
             }
             HStack(alignment: .bottom, spacing: 8) {
-                // Bare bildebiblioteket nå. Kamera kommer i fase 8 (trenger NSCameraUsageDescription).
-                PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
-                    Image(systemName: "photo")
-                        .frame(width: 44, height: 44)
+                ForEach(sources, id: \.self) { source in
+                    imageButton(source)
+                        // Utenfor etiketten: den er en Sendable-closure og kan ikke lese fargene.
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Color.ddForestInk)
+                        .glassEffect(.regular.interactive(), in: .circle)
+                        .disabled(model.isSending || model.isPreparingImage)
+                        .accessibilityLabel(source.accessibilityLabel)
                 }
-                // Utenfor etiketten: den er en Sendable-closure og kan ikke lese fargene.
-                .font(.system(size: 17, weight: .medium))
-                .foregroundStyle(Color.ddForestInk)
-                .glassEffect(.regular.interactive(), in: .circle)
-                .disabled(model.isSending || model.isPreparingImage)
-                .accessibilityLabel("Legg ved bilde")
 
                 TextField("Skriv til kvelden …", text: $model.draft, axis: .vertical)
                     .lineLimit(1...5)
@@ -360,6 +371,22 @@ private struct TradComposer: View {
             Color.ddBackground
                 .overlay(alignment: .top) { DDDivider() }
                 .ignoresSafeArea(edges: .bottom)
+        }
+    }
+
+    @ViewBuilder
+    private func imageButton(_ source: TradImageSource) -> some View {
+        switch source {
+        case .library:
+            PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
+                Image(systemName: source.systemImage)
+                    .frame(width: 44, height: 44)
+            }
+        case .camera:
+            Button(action: onCamera) {
+                Image(systemName: source.systemImage)
+                    .frame(width: 44, height: 44)
+            }
         }
     }
 }
