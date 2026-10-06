@@ -10,10 +10,10 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 7 i hovedsak ferdig. Neste: fase 8 (push, Live Activity, widgets) og TestFlight. |
-| **Sist gjort** | Design (PWA + golfee) på alle skjermer. Aktivitet/varsler, tråd og tippekupong koblet inn. Enhetstester grønne. |
-| **Neste oppgave** | Brukeren prøver bjelle, tråd, tips og nytt design på telefon. SQL 009 til godkjenning. Fase 8. |
-| **Venter på deg** | Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
+| **Nåværende fase** | Fase 8 – Native løft. Kamera, kalender og deling er ferdige. Forslag 010 (push) venter på godkjenning. Forarbeid til Live Activity og widgets pågår. |
+| **Sist gjort** | 07.10: kamera i tråden, «Legg i kalender» på Kveld, deling av Tavla og kveldsresultat (bilde + tekst). Forslag 010 for push (SQL, Edge Function `push-send`, appkode bak flagg). 564 enhetstester grønne. |
+| **Neste oppgave** | Brukeren prøver kamera, kalender og deling på telefon og godkjenner 010 (se `sql/README.md`). Deretter Live Activity og widgets (krever nytt target i Xcode). |
+| **Venter på deg** | `INFOPLIST_KEY_NSCameraUsageDescription` i Xcode. Godkjenne 009 og 010. APNs-nøkkel og Push-capability (`docs/push-oppsett.md`). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
 
@@ -241,13 +241,13 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Det PWA-en aldri kunne: push for alle, Live Activity, widgets, kamera og kalender.
 
-- [ ] **APNs-push:** tabell for enhetstokens (SQL til godkjenning) og en sender (Supabase Edge Function), med kategorier som kan slås av og på per spiller og av arrangør.
+- [ ] **APNs-push:** tabell for enhetstokens (SQL til godkjenning) og en sender (Supabase Edge Function), med kategorier som kan slås av og på per spiller og av arrangør. *(07.10: forslag `sql/010_push.sql`, `supabase/functions/push-send/`, appkode bak `PushFeature.isEnabled = false`. Venter på godkjenning, APNs-nøkkel og capability. Se `docs/push-oppsett.md`.)*
 - [ ] Varsler for store scorer, ledelsesskifte, ny runde, påminnelse før kveld, purring, tråd (nevnt/alle/av).
 - [ ] **Live Activity** under runde: hull, egen score, stilling i bås og match.
 - [ ] **Widgets:** neste kveld og tabell-topp.
-- [ ] **Kamera** i tråden.
-- [ ] **Kalender:** «Legg i kalender» via EventKit.
-- [ ] Deling av tabell og resultater via delingsark.
+- [x] **Kamera** i tråden. *(07.10. Krever `NSCameraUsageDescription` i Xcode. Ikke prøvd på telefon.)*
+- [x] **Kalender:** «Legg i kalender» via EventKit. *(07.10: på Kveld, uten kalendertilgang. Ikke prøvd på telefon.)*
+- [x] Deling av tabell og resultater via delingsark. *(07.10: Tavla og Runde, bilde + tekst. Ikke prøvd på telefon.)*
 
 **Ferdig når:**
 - Jeg får push når noen i gjengen gjør birdie, og kan skru av den kategorien.
