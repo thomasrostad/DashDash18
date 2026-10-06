@@ -82,6 +82,7 @@ final class RundeModel {
                 snapshot = nil
                 game = nil
                 state = .none
+                RoundActivityController.shared.sync(game: nil, viewer: viewer)
                 await stopRealtime()
                 return
             }
@@ -99,6 +100,8 @@ final class RundeModel {
     }
 
     private func rebuild() {
+        // Live Activity følger runden slik den vises (med hull i kø).
+        defer { RoundActivityController.shared.sync(game: game, viewer: viewer) }
         guard let snapshot else { game = nil; return }
         pendingHoles = submitter?.pendingHoles(roundID: snapshot.round.id) ?? []
         // Hull som er bekreftet av serveren, trenger ikke ligge oppå lenger.
