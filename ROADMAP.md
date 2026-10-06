@@ -11,9 +11,9 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | | |
 |---|---|
 | **Nåværende fase** | Fase 5 (prøvekveld på test gjenstår). Fase 3–4 i hovedsak ferdig. |
-| **Sist gjort** | Føring per bås slått sammen: hullkort, seer-modus, scorekort, feiring, realtime, lagring via utboksen. Enhetstester grønne (243). Ikke prøvd mot database. |
-| **Neste oppgave** | Prøvekveld på test (brukeren). SQL 006 (start_round) og 007 (confirm_round_par) til godkjenning. TestFlight. |
-| **Venter på deg** | Test av arrangørsiden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. Baneverdier (CR) senere. |
+| **Sist gjort** | Match og sidepremier i runden, avslutning og retting, start_round og confirm_round_par (SQL 006/007 kjørt). Score ført mot test med spøkelsesspillere. |
+| **Neste oppgave** | Agenter jobber: Tavla, sosialt (SQL 008-utkast + Deg), design. Deretter: aktivitet/varsler, tråd, tippekupong (etter SQL 008), TestFlight. |
+| **Venter på deg** | Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
 
@@ -133,7 +133,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Kveld-skjerm, rolig: neste kveld, påmeldte, sosialkomité. *(06.10.)*
 - [x] Start runde-veiviser i tre steg: bane og tid, hvem og båser, oppsett. Lagre som kladd, rediger kladd, start (blokkert hvis en runde går). *(06.10. Ikke prøvd mot database.)*
 - [x] Båser og markør (`foreslaatteBaaser`), matcher for hånd, lag, forslag om form (`oppsettForAntall`, `formerSomPasser`), `trekkMatcher`. *(06.10: trekning på navn til tabellen finnes, fase 6.)*
-- [ ] Forslag til LD- og KP-hull. Par-bekreftelse før føring.
+- [x] Forslag til LD- og KP-hull. Par-bekreftelse før føring. *(06.10: markør bekrefter med confirm_round_par, sql/007.)*
 - [x] Flere runder samme kveld. *(06.10.)*
 
 **Ferdig når:**
@@ -190,8 +190,8 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Match: `matchSider`, `matchSlag`, `sideNettoPaaHull`, `matchHullVinner`, `matchHullDiff`, `matchUtfallForA`, `matchStilling`, `matchTekst`, `matchStillingKort`. *(Logikk i GolfgutuCore, 06.10.)*
 - [x] Trekant: `trekantPoeng`. *(Også `trekkMatcher`.)*
 - [x] Tabell etter regelsettet: duellpoeng, sidepremier, vekt, hva som teller (alle eller beste N), tiebreak. Golfgutu-oppsettet = `jakketavle`. *(Logikk ferdig. Åpent: «beste N» teller matcher/runder, ikke kvelder, som PWA-en.)*
-- [ ] LD og KP: meld egen lengde, stilling, delt ved likt.
-- [ ] Kveld: matchkort, «1 opp / Delt / —», stilling i «Bayen nå».
+- [x] LD og KP: meld egen lengde, stilling, delt ved likt. *(06.10.)*
+- [x] Kveld: matchkort, «1 opp / Delt / —», stilling i «Bayen nå». *(06.10.)*
 - [ ] Tavla: tabell, «Slik telles det» generert fra regelsettet, spillerprofil, sesongoppsummering.
 
 **Ferdig når:**
@@ -213,9 +213,9 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Resten av kvelden: avslutte, rette, snakke og tippe.
 
-- [ ] Avkort runden med effekt-forhåndsvisning (`avkortingenKoster`).
-- [ ] Avslutt kvelden: lås, kveld ferdig, neste kveld rykker opp.
-- [ ] Rett en score, Rundene (tabell, retting i låst runde, logges). Slett runde (én RPC).
+- [x] Avkort runden med effekt-forhåndsvisning (`avkortingenKoster`). *(06.10.)*
+- [x] Avslutt kvelden: lås, kveld ferdig, neste kveld rykker opp. *(06.10: låser pågående runder.)*
+- [x] Rett en score, Rundene (tabell, retting i låst runde, logges). Slett runde (én RPC). *(06.10.)*
 - [ ] Aktivitet og varsler i appen: strukturert (type + data), ikke HTML. Reaksjoner.
 - [ ] Deg: handicap (komma), portrett, koblede innloggingsmåter, logg ut.
 - [ ] Kveldens tråd: tekst, @navn, bilde fra bildebiblioteket, uleste.
