@@ -103,6 +103,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Arrangøren kan sette opp en sesong i appen, med egne regler, egne spillere og egne baner.
 
+- [ ] Regelsett-revisjon: alle regelverdier i regelmotoren leses fra `Ruleset` (CLAUDE.md «Ingen regelverdier i koden»), inkludert «beste N» som kvelder eller matcher. Golfgutu-oppsettet gir fortsatt samme svar som PWA-en.
 - [ ] Admin-panel (kun arrangør): Sesong og regelsett (start fra Golfgutu-oppsettet, endre antall kvelder, hva som teller, poengmodell, sidepremier, handicapmodell, tillatte former, maks per bås).
 - [ ] Tropp: legg til og fjern spillere uten tak på antall, handicapindeks, seeding, roller (arrangør, kasserer), frigjør innlogging.
 - [ ] Baner: liste, rediger par, indeks, lengde, CR og slope, bekreftet-status. Import av PWA-ens 18 baner fra referansens SQL-filer eller fra PWA-basen (lesing).

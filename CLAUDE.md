@@ -22,6 +22,7 @@ Native iOS-app (SwiftUI, iOS 26+, Swift 6, Swift Testing) for GolfGutu Invitatio
 - Turneringen styres av et **regelsett** som arrangøren setter i admin-panelet: antall spillere, antall kvelder, hva som teller, poengmodell, sidepremier, handicapmodell, former og så videre. **Ingenting skal være låst** til 12 spillere, 7 kvelder eller én måte å spille på.
 - **Golfgutu-oppsettet** er regelsettet som gjengir PWA-ens regler. Med det oppsettet må all spillogikk gi **nøyaktig samme resultat** som `db-nytt.js`: stableford, slagfordeling, WHS, andeler, seeding, lagshandicap, avrunding, former, match, trekant, avkorting, jakketabell, tiebreak og tips.
 - Andre regelsett er utvidelser. De skal ikke endre svaret for Golfgutu-oppsettet.
+- **Ingen regelverdier i koden.** Poeng (seier, uavgjort, tap, sidepremier, trekant, stableford), hva som teller (kvelder eller matcher, alle eller beste N), handicap (modell, andel, seeding), former, grenser og tiebreak leses fra regelsettet. Faste tall finnes bare i Golfgutu-malen (`Ruleset.golfgutu`). Ny logikk som trenger en regelverdi, legger den til i regelsettet med Golfgutu-verdien som standard.
 
 Arbeidsmåte:
 
