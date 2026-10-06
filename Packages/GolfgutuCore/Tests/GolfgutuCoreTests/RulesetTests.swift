@@ -177,4 +177,59 @@ struct RulesetTests {
         #expect(!smaa.setup(formID: "scramble-4", players: 16).isOK)
         #expect(!smaa.suggestions(players: 16).contains { $0.id == "scramble-4" })
     }
+
+    // MARK: Gyldighetssjekk
+
+    @Test func golfgutuErGyldig() {
+        #expect(Ruleset.golfgutu.validate().isEmpty)
+    }
+
+    /// Ett problem om gangen, med feltet det gjelder.
+    @Test func ugyldigeRegelsett() {
+        func felt(_ endre: (inout Ruleset) -> Void) -> [String] {
+            var r = Ruleset.golfgutu
+            endre(&r)
+            return r.validate().map(\.field)
+        }
+        #expect(felt { $0.evenings = 0 } == ["evenings"])
+        // Beste N > antall kvelder, og beste 0.
+        #expect(felt { $0.evenings = 5; $0.table.counting = .init(unit: .evening, best: 6) } == ["table.counting.best"])
+        #expect(felt { $0.evenings = 5; $0.table.counting = .init(unit: .evening, best: 5) }.isEmpty)
+        #expect(felt { $0.table.counting = .init(unit: .match, best: 0) } == ["table.counting.best"])
+        #expect(felt { $0.table.counting = .init(unit: .match, best: 12) }.isEmpty)  // matcher kan være flere enn kvelder
+        #expect(felt { $0.table.stablefordCounting = .init(unit: .evening, best: 8) } == ["table.stablefordCounting.best"])
+        #expect(felt { $0.table.stablefordCounting = .init(unit: .match, best: 5) } == ["table.stablefordCounting.unit"])
+        // Negative poeng.
+        #expect(felt { $0.table.matchPoints.loss = -1 } == ["table.matchPoints.loss"])
+        #expect(felt { $0.table.matchPoints = .init(win: 1, draw: 2, loss: 0) } == ["table.matchPoints"])
+        #expect(felt { $0.sidePrizes.closestToPin.points = -1 } == ["sidePrizes.closestToPin.points"])
+        #expect(felt { $0.scoring.netParPoints = -2; $0.scoring.minimumPoints = -5 } == ["scoring.netParPoints"])
+        #expect(felt { $0.scoring.minimumPoints = 3 } == ["scoring.minimumPoints"])
+        // Trekant: tre verdier, ikke negative, synkende.
+        #expect(felt { $0.table.trianglePoints = [1, 0] } == ["table.trianglePoints"])
+        #expect(felt { $0.table.trianglePoints = [1, 0.5, -1] } == ["table.trianglePoints"])
+        #expect(felt { $0.table.trianglePoints = [0, 0.5, 1] } == ["table.trianglePoints"])
+        #expect(felt { $0.table.roundingStep = 0 } == ["table.roundingStep"])
+        #expect(felt { $0.table.roundingStep = nil }.isEmpty)
+        #expect(felt { $0.table.tiebreaks = [.stableford, .stableford] } == ["table.tiebreaks"])
+        // Handicap.
+        #expect(felt { $0.handicap.allowanceOverride = 1.2 } == ["handicap.allowanceOverride"])
+        #expect(felt { $0.handicap.formAllowances["match"] = -0.1 } == ["handicap.formAllowances.match"])
+        #expect(felt { $0.handicap.seedingGroups.append(SeedingGroup(number: 1, handicap: 3, name: "X")) } == ["handicap.seedingGroups"])
+        #expect(felt { $0.handicap.teamHandicap["scramble-4"] = .init(method: .weighted) } == ["handicap.teamHandicap.scramble-4"])
+        // Maks per bås og former.
+        #expect(felt { $0.formats.maxPerBay = 0 } == ["formats.maxPerBay"])
+        #expect(felt { $0.formats.allowedFormIDs = [] } == ["formats.allowedFormIDs"])
+        #expect(felt { $0.formats.allowedFormIDs.append("golfball-bingo") } == ["formats.allowedFormIDs"])
+        #expect(felt { $0.formats.allowedFormIDs = ["match"] } == ["formats.defaultFormID"])
+
+        // Meldingene er norske og nevner tallene.
+        var r = Ruleset.golfgutu
+        r.evenings = 5
+        r.table.counting = .init(unit: .evening, best: 6)
+        #expect(r.validate().first?.message == "Tabellen: beste 6 kvelder er flere enn de 5 kveldene i sesongen.")
+        r = .golfgutu
+        r.formats.allowedFormIDs = []
+        #expect(r.validate().first?.message == "Minst én konkurranseform må være tillatt.")
+    }
 }
