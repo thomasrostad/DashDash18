@@ -21,6 +21,8 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 | `002_baner.sql` | `save_course`, `confirm_course` | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `004_sesong.sql` | `activate_season`, sletting bare av planlagte sesonger | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `005_kveld.sql` | `set_event_committee` | Godkjent, kjørt på test 06.10.2026. Ikke prod |
+| `006_runder.sql` | `start_round` (oppsett og start i én transaksjon) | Godkjent, kjørt på test 06.10.2026. Ikke prod |
+| `007_foring.sql` | `confirm_round_par` (markør eller arrangør bekrefter par) | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `008_sosialt.sql` | Aktivitet, reaksjoner, kveldens tråd, tippekupong, push-tokens (APNs), bøttene `avatars` og `thread` | **Utkast, ikke kjørt.** Venter på godkjenning, se «Oversikt for godkjenning: 008» nederst |
 | `lokal/stub.sql`, `lokal/001_prove.sql` | Lokal syntaks- og rolleprøve. **Aldri mot Supabase.** | Hjelpefiler |
 | `lokal/stub_storage.sql`, `lokal/008_prove.sql` | Lokal Storage-etterligning og rolleprøve for 008. **Aldri mot Supabase.** | Hjelpefiler |
