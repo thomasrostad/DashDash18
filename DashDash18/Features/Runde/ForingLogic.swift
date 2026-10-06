@@ -157,6 +157,26 @@ nonisolated struct HoleDrafts: Equatable, Sendable {
     }
 }
 
+// MARK: - Par-bekreftelsen
+
+nonisolated extension RoundGame {
+    /// Kan `viewer` bekrefte parene? Samme regel som `confirm_round_par`: arrangøren alltid;
+    /// ellers en markør i runden, og bare mens den går.
+    func canConfirmPar(_ viewer: Viewer) -> Bool {
+        if viewer.isOrganizer { return true }
+        guard status == .active else { return false }
+        return snapshot.players.contains { $0.memberID == viewer.memberID && $0.isMarker }
+    }
+}
+
+/// Feilene fra `confirm_round_par` på norsk.
+nonisolated enum ParConfirmation {
+    static func error(_ error: DataError) -> DataError {
+        // 55000 («Runden er ikke i gang») kommer med serverens tekst som `.invalid`.
+        error == .notAllowed ? .invalid("Bare arrangøren eller en markør kan bekrefte parene.") : error
+    }
+}
+
 // MARK: - Hullkortet
 
 /// Det hullkortet viser for ett hull. Regnes av `RoundGame.card`.
@@ -543,6 +563,8 @@ nonisolated struct Celebration: Equatable, Identifiable, Sendable {
     let place: Int?
     /// Neste hull (banens nummer), eller nil på siste hull.
     let nextHole: Int?
+    /// I en match: stillingen etter hullet («1 opp etter 1») i stedet for poeng og plass.
+    var matchText: String? = nil
 
     static func == (a: Self, b: Self) -> Bool { a.id == b.id }
 }
@@ -578,7 +600,9 @@ nonisolated extension RoundGame {
         case .birdie: "Bra jobba, \(who)!"
         }
         if MatchPlay.holeMatch(for: best.member.uuidString, in: round) != nil {
-            return Celebration(level: best.level, eyebrow: eyebrow, text: text, points: nil, place: nil, nextHole: next)
+            let standing = holeMatchStanding(best.member).map(MatchPlay.text)
+            return Celebration(level: best.level, eyebrow: eyebrow, text: text, points: nil, place: nil, nextHole: next,
+                               matchText: standing.flatMap { $0.isEmpty ? nil : $0 })
         }
         let points = Scoring.points(par: hole.par, gross: best.strokes, handicap: handicap(best.member),
                                     strokeIndex: hole.strokeIndex, holes: holeCount, rules: rules)

@@ -224,7 +224,7 @@ struct ParBekreftelseCard: View {
                 .controlSize(.large)
                 .disabled(isBusy)
             } else {
-                Text("En arrangør sjekker parene først · du ser det live.")
+                Text("Markøren eller arrangøren sjekker parene først · du ser det live.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
