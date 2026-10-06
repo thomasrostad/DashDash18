@@ -39,6 +39,14 @@ struct RundeView: View {
         .refreshable { await model.load() }
         .navigationTitle(model.game?.snapshot.course?.name ?? "Kvelden")
         .ddNavigationChrome()
+        .toolbar {
+            if let game = model.game, !game.snapshot.players.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ResultShareButton(share: game.share(viewer: model.viewer))
+                        .tint(Color.ddOnDark)
+                }
+            }
+        }
         .sheet(item: $scorecardFor) { target in
             if let game = model.game {
                 ScorekortSheet(game: game, memberID: target.memberID)
