@@ -7,7 +7,7 @@ import GolfgutuCore
 
 /// Spill på runden er av til 020 er godkjent og kjørt. Da kaller ingenting RPC-er som ikke finnes.
 nonisolated enum GamesFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 // MARK: - Radene
