@@ -37,6 +37,10 @@ struct RundeView: View {
                     if model.looseContext != nil {
                         LooseRoundActions(model: model)
                     }
+                    if let access = model.statsAccess {
+                        SpillIRunden(game: game, hole: model.currentHole, viewer: model.viewer,
+                                     client: access.client, userID: access.userID)
+                    }
                 }
                 .padding(.horizontal, DDSpacing.gutter)
                 .padding(.vertical, DDSpacing.l)

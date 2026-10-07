@@ -6,7 +6,8 @@ import SwiftUI
 /// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `profil`, `sesong`,
 /// `varsler`, `trad`, `hurtigstart`, `arrangor`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
 /// `statoversikt`, `stathistorikk`, `statrekorder`, `stattom`, `statforing`,
-/// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`).
+/// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
+/// og spill på runden: `spill`, `spillnytt`, `spillresultat`).
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor
@@ -16,6 +17,8 @@ struct DesignScreenSamples: View {
         case statoversikt, stathistorikk, statrekorder, stattom, statforing
         // Løse runder med venner (fase 13).
         case losspill, losny, losbane, losinviter, losblimed, losrunde, losresultat
+        // Spill på runden (fase 14).
+        case spill, spillnytt, spillresultat
     }
     @State var screen: Screen = .hullkort
 
@@ -73,6 +76,10 @@ struct DesignScreenSamples: View {
                 .tint(Color.ddForestInk)
         case .losspill, .losny, .losbane, .losinviter, .losblimed, .losrunde, .losresultat:
             SpillSampleScreen(screen: screen)
+        case .spill, .spillresultat:
+            GamesSampleScreen(finished: screen == .spillresultat)
+        case .spillnytt:
+            SpillNyttSampleScreen()
         case .liste:
             NavigationStack { DDListSample() }
                 .tint(Color.ddForestInk)

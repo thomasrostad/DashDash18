@@ -622,13 +622,10 @@ public enum Bets {
 
         let scale = pow(10, Double(max(0, rules.bets.payoutDecimals)))
         // Enheter (hele poeng ved 0 desimaler). Innsatsene er hele poeng, så produktet er eksakt.
-        var units = winners.map { JS.round(sums[$0]!.points * lose * scale / win) }
-        let rest = Int((lose * scale - units.reduce(0, +)).rounded())
-        for k in 0..<abs(rest) {
-            units[k % units.count] += rest > 0 ? 1 : -1
-        }
+        // Samme fordeling brukes i oppgjøret av spill på runden (`PointSplit`).
+        let units = PointSplit.apportion(lose * scale, weights: winners.map { ($0, sums[$0]!.points) })
         var out: [String: Double] = [:]
-        for (i, pid) in winners.enumerated() { out[pid] = units[i] / scale }
+        for pid in winners { out[pid] = (units[pid] ?? 0) / scale }
         for pid in losers { out[pid] = -sums[pid]!.points }
         return out
     }

@@ -345,7 +345,7 @@ Besluttet 07.10.2026 (deg):
 
 - **Fase 12 – Fundament** *(07.10: 017 kjørt på test, kontrollen 14/14, slått på; jakkeracet likt via konkurranser)*: runden er kjernen, og klubb er valgfritt. Planen har profiler, gjester og konkurranser som eget lag. Jakkeracet blir én konkurranse, og pariteten står.
 - **Fase 13 – Løs runde med venner** *(07.10: bygget bak `LooseRoundsFeature`, venter på 018 og URL-skjemaet `dashdash` i Xcode)*: ny runde på sekunder, invitasjon med lenke eller QR, felles banebibliotek.
-- **Fase 14 – Spill på runden:** skins, Nassau, Wolf, bingo-bango-bongo og 2 mot 2, i poeng.
+- **Fase 14 – Spill på runden** *(07.10: bygget bak `GamesFeature`, motor med 20 håndregnede scenarier; venter på 020)*: skins, Nassau, Wolf, bingo-bango-bongo og 2 mot 2, i poeng.
 - **Fase 15 – Flere konkurranser:** liga, cup og morroturneringer samtidig (erstatter tidligere fase 12-utkast), med «Teller også i …».
 - **Fase 16 – Statistikk** *(07.10: ferdig, 021 kjørt, slått på)*: historikk, snitt, rekorder og handicaputvikling.
 - **Fase 17 – Åpent for alle (App Store):** onboarding uten klubb, sletting av konto, personvern, rapporter og blokker, Google-innlogging og prod.
