@@ -297,7 +297,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Gjengen kan vedde på kvelden igjen, med poeng i stedet for penger.
 
-- [ ] Endelig modell (B10): poengbank per sesong, innsats, tak, oppgjør. *(07.10: forslag i `docs/veddemaal-poeng.md`, venter på svar.)*
+- [x] Endelig modell (B10): poengbank per sesong, innsats, tak, oppgjør. *(07.10: besluttet, se `docs/veddemaal-poeng.md`: 1000 poeng per sesong, hele poeng, auto-annullering ved delt, den som avgjør kan ikke ha innsats.)*
 - [ ] Skjema-tillegg (SQL til godkjenning). *(07.10: `sql/012_veddemaal.sql`, forslag.)*
 - [x] Vedd-ark med malene fra PWA-en (hull-duell, par, slår, fritekst), låsing (`forsteApneHull`, `markedTarInnsatser`) og automatisk avgjøring (`vilkaarUtfall`). *(07.10: regelmotor med 18 tester fra PWA-ens fasit, UI bak flagg.)*
 - [x] Poengtabell for veddemål, separat fra jakketabellen. *(07.10: bak flagg.)*
