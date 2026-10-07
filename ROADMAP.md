@@ -11,8 +11,8 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | | |
 |---|---|
 | **Nåværende fase** | Fase 9 og 10 forarbeid ferdig. Importverktøy (`Packages/DashImport`) ferdig. Veddemål med poeng er slått på mot test (012 kjørt). |
-| **Sist gjort** | 07.10: kamera, kalender, deling, widgets og Live Activity prøvd på telefon. Push på test (010, `push-send`, webhook, cron). Arrangørskjermene «Hva blir push» og «Hvem har push». Varsler for store scorer og ledelsesskifte uten duplikater. Deg: handicap, portrett, innloggingsmåter, logg ut. App-ikon og TestFlight. Xcode Cloud bygger fra `main` til TestFlight (`docs/xcode-cloud.md`). 632 enhetstester grønne. |
-| **Neste oppgave** | Prøveimport mot test (eksport fra PWA-en, paritetssjekk, godkjent import-SQL). Prøve veddemål på telefon. |
+| **Sist gjort** | 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
+| **Neste oppgave** | Fase 11: enklere arrangøroppsett. Godkjenne 014 (par-bekreftelse uten markør). Trykk på push åpner riktig skjerm. Prøveimport (fase 9). |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
