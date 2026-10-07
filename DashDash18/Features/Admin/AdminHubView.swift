@@ -25,6 +25,16 @@ struct AdminHubView: View {
                     Label("Banene", systemImage: "map")
                 }
             }
+            if PushFeature.isEnabled {
+                DDSection("Push") {
+                    NavigationLink { ClubPushSettingsView() } label: {
+                        Label("Hva blir push", systemImage: "bell.badge")
+                    }
+                    NavigationLink { PushStatusView() } label: {
+                        Label("Hvem har push", systemImage: "iphone.radiowaves.left.and.right")
+                    }
+                }
+            }
         }
         .navigationTitle("Arrangørsiden")
         .ddNavigationChrome()
