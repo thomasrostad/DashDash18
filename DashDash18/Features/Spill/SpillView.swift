@@ -217,6 +217,8 @@ struct LooseRoundScreen: View {
 struct LooseRoundActions: View {
     let model: RundeModel
     @State private var showsInvite = false
+    /// «Del regningen» (fase 17, `BillSplitFeature`).
+    @State private var showsBill = false
     @State private var confirmsFinish = false
     @State private var isFinishing = false
     @State private var error: String?
@@ -229,6 +231,10 @@ struct LooseRoundActions: View {
             }
             if model.canInvite {
                 Button("Inviter med lenke eller QR", systemImage: "qrcode") { showsInvite = true }
+                    .buttonStyle(.dd(.secondary, fullWidth: true))
+            }
+            if BillSplitFeature.isEnabled {
+                Button("Del regningen", systemImage: "creditcard") { showsBill = true }
                     .buttonStyle(.dd(.secondary, fullWidth: true))
             }
             if model.canFinish {
@@ -250,12 +256,21 @@ struct LooseRoundActions: View {
                 .tint(Color.ddForestInk)
             }
         }
+        .sheet(isPresented: $showsBill) {
+            BillSplitView(people: billNames)
+        }
         .confirmationDialog("Avslutte runden?", isPresented: $confirmsFinish, titleVisibility: .visible) {
             Button("Avslutt runden") { finish() }
             Button("Avbryt", role: .cancel) {}
         } message: {
             Text("Ingen kan føre mer, og invitasjonen slutter å virke. Resultatet står i «Mine runder».")
         }
+    }
+
+    /// Navnene i runden, med deg først.
+    private var billNames: [String] {
+        guard let snapshot = model.game?.snapshot else { return [] }
+        return BillSplit.names(players: snapshot.players.map(\.memberID), names: snapshot.names, me: model.viewer.memberID)
     }
 
     private func finish() {
