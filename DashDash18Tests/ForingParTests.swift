@@ -40,5 +40,9 @@ struct ForingParTests {
         #expect(ParConfirmation.error(.notAllowed).message == "Bare arrangøren eller en markør kan bekrefte parene.")
         #expect(ParConfirmation.error(DataError.from(sqlState: "55000", message: "Runden er ikke i gang")).message
                 == "Runden er ikke i gang")
+        #expect(ParConfirmation.message(.unknown("500")) == "Noe gikk galt: 500 Prøv igjen.")
+        #expect(ParConfirmation.message(.offline) == DataError.offline.message)
+        #expect(ParConfirmation.message(ParConfirmation.error(.notAllowed))
+                == "Bare arrangøren eller en markør kan bekrefte parene.")
     }
 }

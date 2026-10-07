@@ -193,6 +193,13 @@ nonisolated enum ParConfirmation {
         // 55000 («Runden er ikke i gang») kommer med serverens tekst som `.invalid`.
         error == .notAllowed ? .invalid("Bare arrangøren eller en markør kan bekrefte parene.") : error
     }
+
+    /// Teksten under knappen. Feil som kan gå over av seg selv, sier «Prøv igjen»
+    /// (nett-teksten sier det allerede).
+    static func message(_ error: DataError) -> String {
+        if case .unknown = error { return error.message + " Prøv igjen." }
+        return error.message
+    }
 }
 
 // MARK: - Hullkortet

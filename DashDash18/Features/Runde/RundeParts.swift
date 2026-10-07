@@ -225,10 +225,16 @@ struct ParBekreftelseCard: View {
             }
             if canConfirm {
                 Button {
+                    guard !isBusy else { return }
+                    isBusy = true
                     Task {
-                        isBusy = true
                         defer { isBusy = false }
-                        do { try await onConfirm(); error = nil } catch { self.error = DataError.from(error).message }
+                        do {
+                            try await onConfirm()
+                            error = nil
+                        } catch {
+                            self.error = ParConfirmation.message(DataError.from(error))
+                        }
                     }
                 } label: {
                     Text("Stemmer · start føringen")
