@@ -7,7 +7,7 @@ import GolfgutuCore
 
 /// Veddemålene er av til 012 er godkjent og kjørt. Da kaller ingenting RPC-er som ikke finnes.
 nonisolated enum BetsFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 // MARK: - Radene

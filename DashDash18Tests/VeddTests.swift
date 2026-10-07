@@ -46,8 +46,9 @@ struct VeddTests {
         return BetsInput(tavla: TavlaInput(season: season, members: members, rounds: [snapshot]), bets: bets, stakes: stakes)
     }
 
-    @Test func avSlaattTilDatabasenErKlar() {
-        #expect(BetsFeature.isEnabled == false)
+    /// 012 er kjørt på test (07.10.2026), så veddemål er slått på.
+    @Test func slaattPaaEtter012() {
+        #expect(BetsFeature.isEnabled)
     }
 
     // MARK: Radene og mappingen

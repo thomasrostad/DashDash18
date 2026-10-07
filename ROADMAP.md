@@ -10,9 +10,9 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 9 og 10 forarbeid ferdig. Importverktøy (`Packages/DashImport`) og veddemål med poeng (bak `BetsFeature.isEnabled = false`) venter på dine valg og godkjenning av 012. |
+| **Nåværende fase** | Fase 9 og 10 forarbeid ferdig. Importverktøy (`Packages/DashImport`) ferdig. Veddemål med poeng er slått på mot test (012 kjørt). |
 | **Sist gjort** | 07.10: kamera, kalender, deling, widgets og Live Activity prøvd på telefon. Push på test (010, `push-send`, webhook, cron). Arrangørskjermene «Hva blir push» og «Hvem har push». Varsler for store scorer og ledelsesskifte uten duplikater. Deg: handicap, portrett, innloggingsmåter, logg ut. App-ikon og TestFlight. Xcode Cloud bygger fra `main` til TestFlight (`docs/xcode-cloud.md`). 632 enhetstester grønne. |
-| **Neste oppgave** | Prøveimport mot test (eksport fra PWA-en, paritetssjekk, godkjent import-SQL). Svar på spørsmålene i `docs/import-plan.md` og `docs/veddemaal-poeng.md`, så kjøre 012. |
+| **Neste oppgave** | Prøveimport mot test (eksport fra PWA-en, paritetssjekk, godkjent import-SQL). Prøve veddemål på telefon. |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
@@ -298,7 +298,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 **Mål:** Gjengen kan vedde på kvelden igjen, med poeng i stedet for penger.
 
 - [x] Endelig modell (B10): poengbank per sesong, innsats, tak, oppgjør. *(07.10: besluttet, se `docs/veddemaal-poeng.md`: 1000 poeng per sesong, hele poeng, auto-annullering ved delt, den som avgjør kan ikke ha innsats.)*
-- [ ] Skjema-tillegg (SQL til godkjenning). *(07.10: `sql/012_veddemaal.sql`, forslag.)*
+- [x] Skjema-tillegg (SQL til godkjenning). *(07.10: `sql/012_veddemaal.sql` godkjent og kjørt på test, 12/12. Veddemål slått på i appen.)*
 - [x] Vedd-ark med malene fra PWA-en (hull-duell, par, slår, fritekst), låsing (`forsteApneHull`, `markedTarInnsatser`) og automatisk avgjøring (`vilkaarUtfall`). *(07.10: regelmotor med 18 tester fra PWA-ens fasit, UI bak flagg.)*
 - [x] Poengtabell for veddemål, separat fra jakketabellen. *(07.10: bak flagg.)*
 
