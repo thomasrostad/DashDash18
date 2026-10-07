@@ -24,3 +24,4 @@ DashDash18/Config/Supabase-*.plist
 # Swift Package Manager
 .build/
 .swiftpm/
+supabase/.temp/

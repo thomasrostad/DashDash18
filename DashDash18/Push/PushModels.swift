@@ -8,7 +8,7 @@ import Foundation
 /// Når den er av, spør appen ikke om varseltillatelse, registrerer seg ikke hos APNs, kaller
 /// ingen push-RPC-er og viser ikke innstillingene under Deg.
 nonisolated enum PushFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 // MARK: - Token og miljø
