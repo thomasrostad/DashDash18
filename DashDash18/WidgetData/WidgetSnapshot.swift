@@ -150,4 +150,14 @@ nonisolated struct WidgetSnapshotStore: Sendable {
         }
         return true
     }
+
+    /// Ved utlogging: widgetene skal ikke vise klubben og navnene til den som logget ut.
+    /// Fila slettes, og widgetene viser «Åpne Tavla i appen» til noen logger inn igjen.
+    func clear(reloadWidgets: Bool = true) {
+        guard FileManager.default.fileExists(atPath: fileURL.path()) else { return }
+        try? FileManager.default.removeItem(at: fileURL)
+        if reloadWidgets {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+    }
 }

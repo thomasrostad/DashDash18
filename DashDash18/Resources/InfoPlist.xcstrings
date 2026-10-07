@@ -37,8 +37,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "DashDash18 bruker kameraet til å ta bilder til kveldens tråd."
+            "state" : "translated",
+            "value" : "DashDash bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DashDash bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt."
           }
         }
       }

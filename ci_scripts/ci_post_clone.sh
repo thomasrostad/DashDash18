@@ -16,6 +16,10 @@ SUPABASE_URL="https://$SUPABASE_PROJECT_REF.supabase.co"
 
 case "$SUPABASE_PUBLISHABLE_KEY" in
   sb_secret_*|*service_role*) echo "Feil: hemmelig nøkkel i SUPABASE_PUBLISHABLE_KEY" >&2; exit 1 ;;
+  sb_publishable_*) ;;
+  # Gamle JWT-nøkler (anon og service_role) ser like ut uten dekoding. Prosjektet bruker
+  # publishable keys, så alt annet avvises (appen sjekker også, se AppConfig.isSecretKey).
+  *) echo "Feil: SUPABASE_PUBLISHABLE_KEY skal starte med sb_publishable_" >&2; exit 1 ;;
 esac
 
 CONFIG_DIR="$CI_PRIMARY_REPOSITORY_PATH/DashDash18/Config"

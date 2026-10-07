@@ -107,6 +107,17 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         retryTask = nil
     }
 
+    /// Etter «Slett konto»: hullene til kontoen (og dem uten bruker, fra før feltet fantes) kan
+    /// aldri sendes, og skal ikke ligge igjen på telefonen. Andres hull i køen står.
+    func removeAll(userID: UUID) {
+        let items = (try? context.fetch(FetchDescriptor<OutboxItem>())) ?? []
+        for item in items where item.userID == nil || item.userID == userID {
+            context.delete(item)
+        }
+        save()
+        refreshStatus()
+    }
+
     // MARK: - ScoreSubmitting
 
     func submit(_ submission: HoleSubmission) async throws -> SubmitOutcome {

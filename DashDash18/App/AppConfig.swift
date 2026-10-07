@@ -62,10 +62,23 @@ nonisolated struct AppConfig: Equatable, Sendable {
             throw .missingValue("SupabasePublishableKey")
         }
         // Den hemmelige nøkkelen skal aldri inn i appen.
-        guard !key.hasPrefix("sb_secret_") else { throw .secretKey }
+        guard !Self.isSecretKey(key) else { throw .secretKey }
 
         self.environment = environment
         self.supabaseURL = url
         self.publishableKey = key
+    }
+
+    /// Ny hemmelig nøkkel (`sb_secret_…`) eller gammel JWT-nøkkel med rollen `service_role`.
+    /// Begge går forbi RLS og skal bare finnes på serveren.
+    static func isSecretKey(_ key: String) -> Bool {
+        if key.hasPrefix("sb_secret_") { return true }
+        let parts = key.split(separator: ".")
+        guard key.hasPrefix("eyJ"), parts.count == 3 else { return false }
+        var payload = parts[1].replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        payload += String(repeating: "=", count: (4 - payload.count % 4) % 4)
+        guard let data = Data(base64Encoded: payload),
+              let claims = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return false }
+        return claims["role"] as? String == "service_role"
     }
 }

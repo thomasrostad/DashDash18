@@ -44,6 +44,8 @@ struct TopThreeView: View {
                         }
                         .font(.caption)
                         .fontWeight(leader.isMe ? .semibold : .regular)
+                        // Låseskjermen: navn og poeng skjules til telefonen er låst opp.
+                        .privacySensitive()
                     }
                 }
             }

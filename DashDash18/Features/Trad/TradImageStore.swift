@@ -27,6 +27,12 @@ final class TradImageStore {
         cache.removeObject(forKey: path as NSString)
     }
 
+    /// Ved utlogging: ingen bilder fra forrige innlogging ligger igjen i minnet.
+    func removeAll() {
+        local.removeAll()
+        cache.removeAllObjects()
+    }
+
     func cached(_ path: String) -> UIImage? {
         local[path] ?? cache.object(forKey: path as NSString)
     }
