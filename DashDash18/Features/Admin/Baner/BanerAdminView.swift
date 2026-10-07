@@ -24,7 +24,7 @@ struct BanerAdminView: View {
     }
 }
 
-private struct CourseListView: View {
+struct CourseListView: View {
     let model: CourseLibraryModel
     let isOrganizer: Bool
 
@@ -49,20 +49,19 @@ private struct CourseListView: View {
                         .foregroundStyle(Color.ddForestInk)
                 }
             }
-            if !model.items.isEmpty {
+            ForEach(CourseListItem.grouped(model.items), id: \.kind) { group in
                 Section {
-                    ForEach(model.items) { item in
+                    ForEach(group.items) { item in
                         NavigationLink {
                             CourseEditView(model: model, item: item)
                         } label: {
                             CourseRowView(item: item)
                         }
                     }
+                } header: {
+                    DDHeader(group.kind.groupTitle)
                 } footer: {
-                    let unconfirmed = model.items.filter { !$0.isConfirmed }.count
-                    if unconfirmed > 0 {
-                        Text("\(unconfirmed) av \(model.items.count) baner er aldri bekreftet mot en simulatorskjerm. Første gang dere spiller en bane, sjekker markøren tallene mot skjermen.")
-                    }
+                    DDFooter(Self.footer(group.items, kind: group.kind))
                 }
             }
         }
@@ -87,6 +86,20 @@ private struct CourseListView: View {
                 CourseEditView(model: model, item: nil)
             }
         }
+    }
+
+    /// «Klar» forklart, og hvor mange som aldri er bekreftet.
+    private static func footer(_ items: [CourseListItem], kind: CourseKind) -> String {
+        var text = "Klar betyr at alle hullene har par, så banen kan velges i en runde."
+        let unconfirmed = items.filter { !$0.isConfirmed }.count
+        if unconfirmed > 0 {
+            let what = kind == .simulator ? "simulatorskjermen" : "scorekortet"
+            text += unconfirmed == items.count
+                ? " Ingen er bekreftet mot \(what) ennå."
+                : " \(unconfirmed) av \(items.count) er aldri bekreftet mot \(what)."
+            text += " Første gang dere spiller en bane, sjekker markøren tallene."
+        }
+        return text
     }
 
     private var importSection: some View {
@@ -132,8 +145,8 @@ private struct CourseRowView: View {
     let item: CourseListItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(item.course.name)
                 if !item.course.inUse {
                     Text("skjult")
@@ -142,36 +155,56 @@ private struct CourseRowView: View {
                         .padding(.vertical, 1)
                         .background(Color.ddEarth, in: Capsule())
                 }
+                Spacer(minLength: 8)
+                CourseReadinessChip(readiness: item.readiness)
             }
-            Text(item.summary)
-                .font(.dd(.sans, size: 12, relativeTo: .caption))
-                .foregroundStyle(item.isReady ? Color.ddInkSecondary : Color.ddRustText)
-            if let external = item.differentExternalName {
+            if item.isReady {
+                Text(item.summary)
+                    .font(.dd(.sans, size: 12, relativeTo: .caption))
+                    .foregroundStyle(Color.ddInkSecondary)
+            }
+            if item.kind == .simulator, let external = item.differentExternalName {
                 Text("I simulatoren: \(external)")
                     .font(.dd(.sans, size: 12, relativeTo: .caption))
                     .foregroundStyle(Color.ddInkSecondary)
             }
-            ConfirmationText(course: item.course)
-                .font(.dd(.sans, size: 12, relativeTo: .caption))
+            if item.isReady {
+                ConfirmationText(course: item.course, kind: item.kind)
+                    .font(.dd(.sans, size: 12, relativeTo: .caption))
+            }
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// «Klar» i grønt, eller «Mangler par på 3 hull» i rust.
+struct CourseReadinessChip: View {
+    let readiness: CourseReadiness
+
+    var body: some View {
+        DDChip(readiness.title, tone: readiness.isReady ? .lime : .earth, compact: true)
+            .fixedSize()
     }
 }
 
 /// «Bekreftet mot skjermen for 3 dager siden» eller «Aldri bekreftet mot en skjerm».
+/// På ekte baner: scorekortet.
 struct ConfirmationText: View {
     let course: CourseRow
+    var kind: CourseKind = .simulator
 
     var body: some View {
         if let confirmedAt = course.confirmedAt {
             Label {
-                Text("Bekreftet mot skjermen \(confirmedAt, format: .relative(presentation: .named))")
+                Text("Bekreftet mot \(kind.source) \(confirmedAt, format: .relative(presentation: .named))")
             } icon: {
                 Image(systemName: "checkmark.seal")
             }
             .foregroundStyle(Color.ddForestInk)
         } else {
-            Label("Aldri bekreftet mot en skjerm", systemImage: "exclamationmark.circle")
+            Label(kind == .simulator ? "Aldri bekreftet mot en skjerm" : "Aldri bekreftet mot scorekortet",
+                  systemImage: "exclamationmark.circle")
                 .foregroundStyle(Color.ddRustText)
         }
     }

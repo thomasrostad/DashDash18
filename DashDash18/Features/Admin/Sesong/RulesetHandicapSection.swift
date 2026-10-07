@@ -1,25 +1,29 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Handicapmodellen: andel, seeding, ekstern handicap og lagshandicap.
+/// De avanserte handicapvalgene: ekstern handicap, lagshandicap og seeding.
+/// Andelen står blant de vanligste valgene (`RulesetCommonSections`).
 struct RulesetHandicapSection: View {
     @Binding var draft: RulesetDraft
 
     var body: some View {
         Section {
-            Toggle("Samme andel for alle former", isOn: $draft.usesCommonAllowance)
-            if draft.usesCommonAllowance {
-                RuleNumberField("Andel", value: $draft.commonAllowancePercent, suffix: "%")
-            } else {
-                NavigationLink("Andel per form") { FormAllowancesView(draft: $draft) }
+            Toggle(isOn: $draft.rules.handicap.externalHandicap) {
+                RuleFieldLabel(title: "Ekstern handicap", help: "Simulatoren deler ut slagene, ikke appen.",
+                               changeNote: draft.changeNote(.externalHandicap))
             }
-            Toggle("Ekstern handicap", isOn: $draft.rules.handicap.externalHandicap)
-            NavigationLink("Lagshandicap") { TeamHandicapView(draft: $draft) }
+            NavigationLink {
+                TeamHandicapView(draft: $draft)
+            } label: {
+                RuleFieldLabel(title: "Lagshandicap", changeNote: draft.changeNote(.teamHandicap))
+            }
         } header: {
             DDHeader(RulesetSection.handicap.title)
         } footer: {
-            RuleSectionFooter(text: "Andelen er hvor stor del av banehandicapet en ny runde gir. Ekstern handicap: simulatoren deler ut slagene.",
-                              issues: draft.issues(in: .handicap).filter { !$0.field.hasPrefix("handicap.seedingGroups") })
+            RuleSectionFooter(text: nil,
+                              issues: draft.issues(in: .handicap).filter {
+                                  $0.field.hasPrefix("handicap.teamHandicap") || $0.field.hasPrefix("handicap.external")
+                              })
         }
 
         Section {
@@ -36,7 +40,7 @@ struct RulesetHandicapSection: View {
             .onDelete { draft.removeSeedingGroups(at: $0) }
             Button("Legg til gruppe", systemImage: "plus") { draft.addSeedingGroup() }
         } header: {
-            DDHeader("Seeding")
+            RuleSectionHeader(title: "Seeding", changeNote: draft.changeNote(.seeding))
         } footer: {
             RuleSectionFooter(text: "Seedede spillere spiller på gruppens faste handicap. Sveip for å fjerne en gruppe. Ingen grupper: ingen seeding.",
                               issues: draft.issues(in: .handicap).filter { $0.field.hasPrefix("handicap.seedingGroups") })
@@ -45,7 +49,7 @@ struct RulesetHandicapSection: View {
 }
 
 /// Andelen en ny runde får, per form.
-private struct FormAllowancesView: View {
+struct FormAllowancesView: View {
     @Binding var draft: RulesetDraft
 
     var body: some View {

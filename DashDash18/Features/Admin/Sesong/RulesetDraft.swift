@@ -62,6 +62,19 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
     var canSave: Bool { issues.isEmpty }
     var hasChanges: Bool { rules != original }
 
+    /// Er regelsettet Golfgutu-oppsettet uendret?
+    var isGolfgutu: Bool { RulesetSummary.isGolfgutu(rules) }
+
+    /// «Endret · standard 1» ved et felt som ikke er som i Golfgutu-oppsettet.
+    func changeNote(_ field: RulesetField) -> String? {
+        field.changeNote(rules)
+    }
+
+    /// Hvor mange av de avanserte valgene som er endret fra Golfgutu-oppsettet.
+    var changedAdvancedCount: Int {
+        RulesetField.changed(rules).filter { !$0.isCommon }.count
+    }
+
     func issues(in section: RulesetSection) -> [RulesetIssue] {
         issues.filter { RulesetSection.section(for: $0.field) == section }
     }

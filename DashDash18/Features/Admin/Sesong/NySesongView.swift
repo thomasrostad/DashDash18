@@ -1,7 +1,8 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Ny sesong: navn og mal for regelsettet. Sesongen starter som planlagt.
+/// Ny sesong: forslaget er ferdig utfylt («Sesongen <år>» og reglene fra forrige sesong).
+/// Sesongen starter som planlagt.
 struct NySesongView: View {
     let model: SesongAdminModel
     @Environment(\.dismiss) private var dismiss
@@ -14,7 +15,7 @@ struct NySesongView: View {
     var body: some View {
         DDForm {
             DDSection("Navn") {
-                TextField("For eksempel «Vinter 2027»", text: $name)
+                TextField("For eksempel «Sesongen 2027»", text: $name)
                     .textInputAutocapitalization(.sentences)
             }
             Section {
@@ -29,12 +30,11 @@ struct NySesongView: View {
             } header: {
                 DDHeader("Regler")
             } footer: {
-                DDFooter("Golfgutu-oppsettet er reglene fra GolfGutu Invitational. Du kan endre alt etterpå.")
+                DDFooter(model.seasons.isEmpty
+                         ? "Golfgutu-oppsettet er reglene fra GolfGutu Invitational. Du kan endre alt etterpå."
+                         : "Forslaget er reglene fra forrige sesong. Golfgutu-oppsettet er reglene fra GolfGutu Invitational. Du kan endre alt etterpå.")
             }
-            DDSection("Slik telles det") {
-                Text(RulesetExplanation.text(for: SeasonLifecycle.rules(for: template, seasons: model.seasons)))
-                    .font(.dd(.sans, size: 15, relativeTo: .callout))
-            }
+            RulesetSummarySection(rules: SeasonLifecycle.rules(for: template, seasons: model.seasons), title: "Slik blir det")
             if let error {
                 Section {
                     Label(error.message, systemImage: "exclamationmark.triangle")
@@ -55,7 +55,10 @@ struct NySesongView: View {
             }
         }
         .disabled(isBusy)
-        .onAppear { template = SeasonLifecycle.defaultTemplate(seasons: model.seasons) }
+        .onAppear {
+            template = SeasonLifecycle.defaultTemplate(seasons: model.seasons)
+            if name.isEmpty { name = SeasonLifecycle.suggestedName(seasons: model.seasons) }
+        }
     }
 
     private func create() {

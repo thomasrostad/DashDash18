@@ -78,9 +78,12 @@ private struct SesongListView: View {
                         } label: {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(season.name)
-                                Text(season.rules.evenings == 1 ? "1 kveld" : "\(season.rules.evenings) kvelder")
+                                Text(RulesetSummary.short(for: season.rules))
                                     .font(.dd(.sans, size: 13, relativeTo: .footnote))
                                     .foregroundStyle(Color.ddInkSecondary)
+                                Text(RulesetSummary.badge(for: season.rules))
+                                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                                    .foregroundStyle(RulesetSummary.isGolfgutu(season.rules) ? Color.ddForestInk : Color.ddInkSecondary)
                             }
                         }
                     }

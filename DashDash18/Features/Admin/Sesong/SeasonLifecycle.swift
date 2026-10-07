@@ -42,6 +42,18 @@ nonisolated enum SeasonLifecycle {
         seasons.first.map { .copy($0.id) } ?? .golfgutu
     }
 
+    /// Forslaget til navn på ny sesong: «Sesongen <år>», med første år fra `now` som ikke er tatt
+    /// (uten hensyn til store og små bokstaver eller mellomrom).
+    static func suggestedName(seasons: [SeasonRow], now: Date = .now, calendar: Calendar = .current) -> String {
+        let taken = Set(seasons.map { $0.name.trimmingCharacters(in: .whitespaces).lowercased() })
+        let year = calendar.component(.year, from: now)
+        for candidate in year...(year + 50) {
+            let name = "Sesongen \(candidate)"
+            if !taken.contains(name.lowercased()) { return name }
+        }
+        return "Sesongen \(year)"
+    }
+
     /// Sesongene i visningsrekkefølgen: aktiv, planlagt, ferdig. Innenfor hver status som fra databasen (nyest først).
     static func grouped(_ seasons: [SeasonRow]) -> [(status: SeasonStatus, seasons: [SeasonRow])] {
         [SeasonStatus.active, .planned, .finished].compactMap { status in

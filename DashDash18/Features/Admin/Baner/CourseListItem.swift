@@ -6,10 +6,21 @@ nonisolated struct CourseListItem: Equatable, Identifiable, Sendable {
     var course: CourseRow
     /// Sortert på hullnummer.
     var holes: [CourseHoleRecord]
+    /// `courses.kind` når den leses (sql/016, `CourseKindFeature`), ellers nil.
+    var storedKind: CourseKind?
 
-    init(course: CourseRow, holes: [CourseHoleRecord]) {
+    init(course: CourseRow, holes: [CourseHoleRecord], storedKind: CourseKind? = nil) {
         self.course = course
         self.holes = holes.sorted { $0.holeNumber < $1.holeNumber }
+        self.storedKind = storedKind
+    }
+
+    /// Simulatorbane eller ekte bane.
+    var kind: CourseKind { CourseKind.resolve(stored: storedKind) }
+
+    /// «Klar» eller hva som mangler.
+    var readiness: CourseReadiness {
+        isReady ? .ready : CourseReadiness(pars: coreCourse.holes?.map(\.par) ?? [])
     }
 
     var id: UUID { course.id }
@@ -69,9 +80,18 @@ nonisolated struct CourseListItem: Equatable, Identifiable, Sendable {
         }
     }
 
-    /// Setter sammen baner og hull fra to spørringer.
-    static func make(courses: [CourseRow], holes: [CourseHoleRecord]) -> [CourseListItem] {
+    /// Setter sammen baner og hull fra to spørringer (og typene, når de leses).
+    static func make(courses: [CourseRow], holes: [CourseHoleRecord],
+                     kinds: [UUID: CourseKind] = [:]) -> [CourseListItem] {
         let grouped = Dictionary(grouping: holes, by: \.courseID)
-        return sorted(courses.map { CourseListItem(course: $0, holes: grouped[$0.id] ?? []) })
+        return sorted(courses.map { CourseListItem(course: $0, holes: grouped[$0.id] ?? [], storedKind: kinds[$0.id]) })
+    }
+
+    /// Banelista delt i simulatorbaner og ekte baner, i den rekkefølgen. Tomme grupper utelates.
+    static func grouped(_ items: [CourseListItem]) -> [(kind: CourseKind, items: [CourseListItem])] {
+        CourseKind.allCases.compactMap { kind in
+            let rows = items.filter { $0.kind == kind }
+            return rows.isEmpty ? nil : (kind, rows)
+        }
     }
 }

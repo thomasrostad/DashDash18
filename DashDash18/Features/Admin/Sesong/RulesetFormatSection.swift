@@ -7,22 +7,29 @@ struct RulesetFormatSection: View {
 
     var body: some View {
         Section {
-            Picker("Standardform", selection: $draft.rules.formats.defaultFormID) {
+            Picker(selection: $draft.rules.formats.defaultFormID) {
                 ForEach(draft.rules.allowedForms) { Text($0.name).tag($0.id) }
                 if !draft.rules.allowedForms.contains(where: { $0.id == draft.rules.formats.defaultFormID }) {
                     Text("\(CompetitionForm.form(id: draft.rules.formats.defaultFormID).name) (ikke tillatt)")
                         .tag(draft.rules.formats.defaultFormID)
                 }
+            } label: {
+                RuleFieldLabel(title: "Standardform", changeNote: draft.changeNote(.defaultForm))
             }
             NavigationLink {
                 AllowedFormsView(draft: $draft)
             } label: {
-                LabeledContent("Tillatte former",
-                               value: "\(draft.rules.allowedForms.count) av \(CompetitionForm.all.count)")
+                LabeledContent {
+                    Text("\(draft.rules.allowedForms.count) av \(CompetitionForm.all.count)")
+                } label: {
+                    RuleFieldLabel(title: "Tillatte former", changeNote: draft.changeNote(.allowedForms))
+                }
             }
-            RuleStepper("Maks per bås", value: $draft.rules.formats.maxPerBay)
-            Picker("Slag i match", selection: $draft.rules.formats.matchStrokes) {
+            RuleStepper("Maks per bås", value: $draft.rules.formats.maxPerBay, changeNote: draft.changeNote(.maxPerBay))
+            Picker(selection: $draft.rules.formats.matchStrokes) {
                 ForEach(Ruleset.MatchStrokes.allCases, id: \.self) { Text(RuleNames.title($0)).tag($0) }
+            } label: {
+                RuleFieldLabel(title: "Slag i match", changeNote: draft.changeNote(.matchStrokes))
             }
         } header: {
             DDHeader(RulesetSection.formats.title)
