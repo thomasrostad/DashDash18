@@ -3,7 +3,11 @@
 -- ===========================================================================
 -- Status: FORSLAG til godkjenning (ROADMAP B5). Ikke kjørt mot Supabase, verken
 -- test eller prod. Prøvd lokalt (lokal/023_prove.sql). Krever 001–018
--- (entitlements og competitions fra 017). 022 er fase 15 og røres ikke.
+-- (entitlements og competitions fra 017). 022 er fase 15 og røres ikke, men
+-- kjøres før 023 (README).
+--
+-- Besluttet 07.10.2026: bare liga og cup krever kjøp. Morroturneringer (fun),
+-- sesongen (jakkeracet) og spill på runden (game) er gratis.
 --
 -- Hvorfor (docs/visjon-apen-app.md, «Besluttet 07.10.2026» punkt 4): appen er
 -- gratis, men å kjøre en turnering koster. Det må være kjøp i appen (StoreKit),
@@ -12,8 +16,8 @@
 -- serveren skriver entitlements.
 --
 -- Produktene (docs/app-store.md):
---   no.dashdash.turnering.sesong   FORBRUKBAR. Låser opp én turnering (liga, cup
---                                  eller morroturnering) så lenge den varer.
+--   no.dashdash.turnering.sesong   FORBRUKBAR. Låser opp én turnering (liga
+--                                  eller cup) så lenge den varer.
 --                                  Ikke-forbrukbar går ikke: et slikt kjøp kan
 --                                  bare gjøres én gang per Apple-ID, og da kunne
 --                                  ingen kjøre turnering nummer to.
@@ -35,10 +39,10 @@
 --      turnering du styrer.
 --   4. competition_is_unlocked(turnering): sant når turneringen ikke krever
 --      kjøp, eller et aktivt kjøp eller abonnement låser den opp.
---   5. Nye turneringer av typen league, cup og fun krever kjøp
---      (requires_purchase settes av serveren). Sesongens konkurranse
---      (jakkeracet) og spill på runden (game) er gratis. Eksisterende rader
---      endres ikke.
+--   5. Nye turneringer av typen league og cup krever kjøp
+--      (requires_purchase settes av serveren). Morroturneringer (fun),
+--      sesongens konkurranse (jakkeracet) og spill på runden (game) er
+--      gratis. Eksisterende rader endres ikke.
 --
 -- Mønsteret fra 001–021 følges.
 -- ===========================================================================
@@ -252,7 +256,7 @@ grant execute on function public.assign_purchase(uuid, uuid) to authenticated;
 
 
 -- ===========================================================================
--- 5. NYE TURNERINGER KREVER KJØP (league, cup, fun)
+-- 5. NYE TURNERINGER KREVER KJØP (league og cup; fun er gratis)
 -- ===========================================================================
 -- Kjører etter competitions_guard (navnene sorteres), så vakta fra 017 har
 -- allerede nektet appen å sette requires_purchase selv.
@@ -263,7 +267,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if new.season_id is null and not new.is_main and new.kind in ('league', 'cup', 'fun') then
+  if new.season_id is null and not new.is_main and new.kind in ('league', 'cup') then
     new.requires_purchase := true;
   end if;
   return new;
@@ -316,6 +320,10 @@ commit;
 --        not exists (select competition_id from public.entitlements
 --                    where competition_id is not null and status = 'active' and product_kind = 'consumable'
 --                    group by competition_id having count(*) > 1)
+-- union all
+-- select 8, 'bare liga og cup krever kjøp (morro, sesong og spill er gratis)',
+--        pg_get_functiondef('public.competitions_require_purchase()'::regprocedure) like '%(''league'', ''cup'')%'
+--        and pg_get_functiondef('public.competitions_require_purchase()'::regprocedure) not like '%''fun''%'
 -- order by nr;
 
 

@@ -5,7 +5,7 @@
 -- KUN LOKALT. ALDRI MOT SUPABASE (verken test eller prod).
 -- ===========================================================================
 -- Rolleprøve for 023_kjop.sql. Rekkefølge i en tom, lokal Postgres:
--- lokal/stub.sql, lokal/stub_storage.sql, 001–018 (019–021 kan være med),
+-- lokal/stub.sql, lokal/stub_storage.sql, 001–018 (019–022 kan være med),
 -- 023 (gjerne to ganger), så denne fila. Lager sin egen verden.
 -- Hver resultatlinje skal starte med "ok"; ingen "FEIL".
 -- ===========================================================================
@@ -63,10 +63,16 @@ select pg_temp.lik((select requires_purchase from public.competitions where id =
 select pg_temp.lik((select requires_purchase from public.competitions where id = :'skins'), false, 'spill på runden er gratis');
 select pg_temp.lik(public.competition_is_unlocked(:'skins'), true, 'gratis = låst opp');
 select pg_temp.lik(public.competition_is_unlocked(:'cup'), false, 'cupen er låst før kjøp');
-insert into public.competitions (kind, name, requires_purchase) values ('fun', 'Snik', false) returning id as snik \gset
+select pg_temp.lik((select requires_purchase from public.competitions where id = :'liga'), true, 'en liga krever kjøp');
+-- Besluttet 07.10.2026: morroturneringer er gratis.
+select public.create_competition('fun', 'Fredagsmorro') as morro \gset
+select pg_temp.lik((select requires_purchase from public.competitions where id = :'morro'), false, 'en morroturnering er gratis');
+select pg_temp.lik(public.competition_is_unlocked(:'morro'), true, 'morroturneringen er låst opp uten kjøp');
+insert into public.competitions (kind, name, requires_purchase) values ('league', 'Snik', false) returning id as snik \gset
 select pg_temp.lik((select requires_purchase from public.competitions where id = :'snik'), true,
                    'appen kan ikke slippe unna kjøpskravet ved å sende false');
 select pg_temp.feil($$insert into public.competitions (kind, name, requires_purchase) values ('fun', 'Snik', true)$$, '42501');
+select pg_temp.feil($$update public.competitions set requires_purchase = true where id = '$$ || :'morro' || $$'$$, '42501');
 select pg_temp.feil($$update public.competitions set requires_purchase = false where id = '$$ || :'cup' || $$'$$, '42501');
 select pg_temp.feil($$insert into public.entitlements (product_id, profile_id) values ('$$ || :'P' || $$', '$$ || :'uH' || $$')$$, '42501');
 select pg_temp.feil($$select public.record_purchase('{}'::jsonb)$$, '42501');
