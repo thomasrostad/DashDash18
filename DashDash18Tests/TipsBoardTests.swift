@@ -184,6 +184,30 @@ struct TipsBoardTests {
         #expect(b.phase == .open && b.deadlineText == "torsdag 8. oktober kl. 18:30")
     }
 
+    /// Skjermen står åpen over fristen: den henter på nytt like etter, så kupongen låses der også.
+    @Test func hentesPaaNyttVedFristen() throws {
+        let input = TipsInput(event: T.event, members: T.four)
+        let b = TipsBoard(input, me: T.id(T.anders), isOrganizer: false, now: T.at("2026-10-08T14:00:00Z"))
+        #expect(b.phase == .open)
+        let wait = try #require(b.secondsUntilLockCheck(now: T.at("2026-10-08T14:59:00Z")))
+        #expect(wait == 60 + TipsBoard.lockCheckMargin)
+        // Telefonens klokke foran serveren: serveren sa åpen etter fristen, prøv igjen senere.
+        var skewed = input
+        skewed.serverOpen = true
+        let late = TipsBoard(skewed, me: T.id(T.anders), isOrganizer: false, now: T.at("2026-10-08T15:00:10Z"))
+        #expect(late.secondsUntilLockCheck(now: T.at("2026-10-08T15:00:10Z")) == TipsBoard.lockRecheckInterval)
+        // Låst: ingen ny henting.
+        let locked = TipsBoard(input, me: T.id(T.anders), isOrganizer: false, now: T.at("2026-10-08T15:00:00Z"))
+        #expect(locked.secondsUntilLockCheck(now: T.at("2026-10-08T15:00:00Z")) == nil)
+    }
+
+    @Test func resultatlinjaForVoiceOver() {
+        #expect(TipsBoard.resultAccessibilityLabel(place: 1, name: "Anders", isWinner: true, points: 4, possible: 5)
+                == "1. plass, Anders, tippekonge, 4 av 5 riktige")
+        #expect(TipsBoard.resultAccessibilityLabel(place: 3, name: "Deg", isWinner: false, points: 2, possible: 4)
+                == "3. plass, Deg, 2 av 4 riktige")
+    }
+
     /// Ingen påmeldt: hele troppen står først.
     @Test func ingenPaameldt() {
         let b = TipsBoard(TipsInput(event: T.event, members: T.four), me: T.id(T.anders), isOrganizer: true,

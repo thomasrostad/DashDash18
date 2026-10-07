@@ -57,9 +57,16 @@ final class TipsModel {
         do {
             _ = try await TipsQueries.save(client: client, row)
         } catch {
-            throw TipsModel.mapLocked(DataError.from(error))
+            throw await lockedOrError(error)
         }
         await load()
+    }
+
+    /// Låst av første slag siden sist: hent på nytt, så skjermen viser den låste kupongen.
+    private func lockedOrError(_ error: any Error) async -> DataError {
+        let mapped = TipsModel.mapLocked(DataError.from(error))
+        if mapped == TipsModel.locked { await load() }
+        return mapped
     }
 
     /// Trekker kupongen. Du kan levere en ny til fristen.
@@ -71,7 +78,7 @@ final class TipsModel {
         do {
             try await TipsQueries.withdraw(client: client, eventID: eventID, memberID: memberID)
         } catch {
-            throw TipsModel.mapLocked(DataError.from(error))
+            throw await lockedOrError(error)
         }
         draft = TipsDraft(me: memberID, saved: nil)
         await load()

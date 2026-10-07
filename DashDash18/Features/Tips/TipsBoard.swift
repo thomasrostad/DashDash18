@@ -157,6 +157,19 @@ nonisolated struct TipsBoard: Sendable {
 
     // MARK: Tilstand
 
+    /// Når skjermen skal hente kupongen på nytt fordi fristen låser den, i sekunder fra `now`.
+    /// Bare mens den er åpen. Er fristen passert uten at serveren har låst (telefonens klokke
+    /// går foran), prøves det igjen litt senere.
+    func secondsUntilLockCheck(now: Date) -> TimeInterval? {
+        guard phase == .open, let deadline else { return nil }
+        let left = deadline.timeIntervalSince(now)
+        return left > 0 ? left + Self.lockCheckMargin : Self.lockRecheckInterval
+    }
+
+    /// Litt etter fristen, så serveren rekker å regne den som passert.
+    static let lockCheckMargin: TimeInterval = 2
+    static let lockRecheckInterval: TimeInterval = 30
+
     /// Arrangøren kan endre innsats og linje til første kupong er levert (databasen: 55000).
     var canEditSettings: Bool { isOrganizer && phase == .open && submitted.isEmpty }
 
@@ -260,6 +273,11 @@ nonisolated struct TipsBoard: Sendable {
             text += result.winners.count > 1 ? " · deler potten på \(pot.total) poeng" : " · tar potten på \(pot.total) poeng"
         }
         return text
+    }
+
+    /// VoiceOver for én linje i resultatlista: «2. plass, Anders, 3 av 5 riktige».
+    static func resultAccessibilityLabel(place: Int, name: String, isWinner: Bool, points: Int, possible: Int) -> String {
+        "\(place). plass, \(name)" + (isWinner ? ", tippekonge" : "") + ", \(points) av \(possible) riktige"
     }
 
     // MARK: Hjelpere
