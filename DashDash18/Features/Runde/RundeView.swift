@@ -31,6 +31,7 @@ struct RundeView: View {
                     KveldExtrasButtons(model: KveldExtrasModel(context: model.clubContext, eventID: eventID))
                         .id(eventID)
                     VeddKnapp(game: game, me: model.viewer.memberID)
+                    SpillIRunden(game: game, hole: model.currentHole, viewer: model.viewer, context: model.clubContext)
                 }
                 .padding(.horizontal, DDSpacing.gutter)
                 .padding(.vertical, DDSpacing.l)
