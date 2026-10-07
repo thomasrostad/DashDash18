@@ -52,6 +52,8 @@ struct NewCompetitionView: View {
     let onDone: () -> Void
 
     @State private var isSaving = false
+    @State private var showsPaywall = false
+    @Environment(PurchaseService.self) private var purchases: PurchaseService?
 
     init(model list: CompetitionsModel, onDone: @escaping () -> Void) {
         _model = State(initialValue: NewCompetitionModel(list: list))
@@ -97,6 +99,12 @@ struct NewCompetitionView: View {
                     .padding(.horizontal, DDSpacing.s)
             }
         }
+        .sheet(isPresented: $showsPaywall) {
+            PaywallView(service: purchases, competitionID: nil,
+                        competitionName: draft.name.trimmingCharacters(in: .whitespaces).isEmpty
+                            ? CompetitionText.kind(draft.kind) : draft.name,
+                        clubID: draft.clubID)
+        }
         .task { await model.load() }
         .onChange(of: model.draft.kind) { _, _ in model.draft.normalize() }
         .onChange(of: model.draft.clubID) { _, _ in model.draft.normalize() }
@@ -116,7 +124,8 @@ struct NewCompetitionView: View {
         } header: {
             DDHeader("Konkurransen")
         } footer: {
-            DDFooter(CompetitionText.kindHelp(draft.kind))
+            DDFooter([CompetitionText.kindHelp(draft.kind), CompetitionPurchase.note(draft.kind)]
+                .compactMap(\.self).joined(separator: " "))
         }
     }
 
@@ -204,7 +213,7 @@ struct NewCompetitionView: View {
     private var rulesFooter: String {
         switch draft.kind {
         case .cup:
-            return "Kampene spilles som matchspill i en runde som teller i cupen. Arrangøren fører vinneren, med forslag fra runden."
+            return "Kampene spilles som matchspill i en runde som teller i cupen. Spillerne fører vinneren selv, med forslag fra runden, og arrangøren kan rette."
         default:
             let r = draft.leagueRules
             let base = r.scoring == .placement
@@ -241,11 +250,16 @@ struct NewCompetitionView: View {
         }
     }
 
+    /// Liga og cup uten kjøp: betalingsveggen først. Etter kjøpet trykker du «Lag» igjen.
     private func save() {
+        if model.list.needsPurchase(model.draft, purchases: purchases) {
+            showsPaywall = true
+            return
+        }
         isSaving = true
         Task {
             defer { isSaving = false }
-            if await model.list.create(model.draft) != nil { onDone() }
+            if await model.list.create(model.draft, purchases: purchases) != nil { onDone() }
         }
     }
 }

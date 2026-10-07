@@ -1,11 +1,9 @@
 import SwiftUI
 
 /// Betalingsveggen «Kjør turneringen». Prisen kommer fra App Store (`Product.displayPrice`), aldri
-/// fra koden. Vises av fase 15 når en turnering som krever kjøp, skal startes:
-///
-///     .sheet(isPresented: $showsPaywall) {
-///         PaywallView(service: purchases, competitionID: competition.id, competitionName: competition.name)
-///     }
+/// fra koden. Vises av «Ny konkurranse» (fase 15) når en liga eller cup ikke er låst opp. Da finnes
+/// turneringen ikke ennå (`competitionID` nil): kjøpet blir en ledig kreditt, som kobles til
+/// turneringen når den lages (`CompetitionPurchase.needsCredit`).
 struct PaywallView: View {
     let service: PurchaseService?
     let competitionID: UUID?
@@ -25,7 +23,7 @@ struct PaywallView: View {
                         benefit("trophy", "Tabell, terminliste og regelsett for hele turneringen")
                         benefit("person.3", "Så mange deltakere og runder du vil")
                         benefit("bell.badge", "Varsler, tråd og resultatdeling for alle som er med")
-                        benefit("figure.golf", "Løse runder og spill på runden er alltid gratis")
+                        benefit("figure.golf", "Løse runder, morroturneringer og spill på runden er alltid gratis")
                     }
                     .padding(DDSpacing.l)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -64,7 +62,7 @@ struct PaywallView: View {
                 .font(.ddTitle)
                 .foregroundStyle(Color.ddInk)
                 .accessibilityAddTraits(.isHeader)
-            Text("Appen er gratis å spille i. Det koster bare å kjøre en turnering, og det betales én gang per turnering.")
+            Text("Appen er gratis å spille i. Det koster bare å kjøre en liga eller cup, og det betales én gang per turnering.")
                 .font(.ddCallout)
                 .foregroundStyle(Color.ddInkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -129,6 +127,9 @@ struct PaywallView: View {
     private var statusMessage: (text: String, icon: String, isError: Bool)? {
         if let competitionID, service?.lastUnlocked == competitionID {
             return ("Turneringen er låst opp. God runde!", "checkmark.seal", false)
+        }
+        if competitionID == nil, let service, CompetitionUnlock.unusedCredit(in: service.entitlements) != nil {
+            return ("Kjøpet er klart. Lukk og trykk «Lag», så brukes det på turneringen.", "checkmark.seal", false)
         }
         if case .failed(let error) = service?.state {
             return (error.message, "exclamationmark.triangle", error != .pending)

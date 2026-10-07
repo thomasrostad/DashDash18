@@ -6,7 +6,7 @@
 -- ===========================================================================
 -- Rolleprøve for 022_konkurranser.sql. Rekkefølge i en tom, lokal Postgres:
 --   lokal/stub.sql, lokal/stub_storage.sql, 001–016, lokal/017_for.sql,
---   017_fundament.sql, lokal/017_prove.sql, 018, 020, 021,
+--   017_fundament.sql, lokal/017_prove.sql, 018, 020, 021 (019 og 023 kan være med),
 --   022_konkurranser.sql (gjerne to ganger), lokal/022_prove.sql.
 -- Hver resultatlinje skal starte med "ok"; ingen "FEIL".
 --
@@ -250,8 +250,28 @@ select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 1, %L)$$, :'
 select pg_temp.feil(format($$select public.record_cup_result(%L, 3, 0, %L)$$, :'cup', :'c_thomas'), '22023');
 select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 2, %L)$$, :'cup', :'c_thomas'), '22023');
 select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 1, %L, false, '2 opp', %L)$$, :'cup', :'c_carl', :'los'), '22023');
+reset role;
+
+-- Spillerne fører selv (besluttet 07.10.2026). Første førte resultat gjelder.
+select pg_temp.som(:'u2'); set role authenticated;
+select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 1, null)$$, :'cup'), '42501');
+select pg_temp.lik((public.record_cup_result(:'cup', 1, 1, :'c_anders', false, '1 opp', :'r3')).recorded_by, :'u2'::uuid,
+                   'Anders (spiller i kampen) fører selv, og det logges hvem som førte');
+select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 1, %L)$$, :'cup', :'c_carl'), '55000');
+select pg_temp.lik((select winner from public.competition_matches where competition_id = :'cup' and round_no = 1 and slot = 1),
+                   :'c_anders'::uuid, 'ny registrering fra en spiller etter resultatet avvises, første gjelder');
+select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 1, null)$$, :'cup'), '42501');
+reset role;
+select pg_temp.som(:'u3'); set role authenticated;
+-- Bjørn har meldt seg av og er ikke i kampen.
+select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 1, %L)$$, :'cup', :'c_anders'), '42501');
+reset role;
+
+select pg_temp.som(:'u1'); set role authenticated;
 select pg_temp.lik((public.record_cup_result(:'cup', 1, 1, :'c_carl', false, '2 opp', :'r3')).winner, :'c_carl'::uuid,
-                   'Carl slår Anders 2 opp i r3 (runden teller i cupen)');
+                   'arrangøren retter: Carl slo Anders 2 opp i r3 (runden teller i cupen)');
+select pg_temp.lik((select recorded_by from public.competition_matches where competition_id = :'cup' and round_no = 1 and slot = 1),
+                   :'u1'::uuid, 'rettingen logger arrangøren');
 select pg_temp.feil(format($$select public.draw_cup(%L, %L)$$, :'cup',
   jsonb_build_array(jsonb_build_object('slot', 0, 'a', :'c_thomas', 'b', null),
                     jsonb_build_object('slot', 1, 'a', :'c_anders', 'b', :'c_carl'))), '55000');
@@ -266,13 +286,18 @@ select pg_temp.lik((select count(*) from public.competition_matches where compet
                    'og finalen finnes ikke før neste resultat');
 select pg_temp.lik((public.record_cup_result(:'cup', 1, 1, :'c_anders', false, '1 opp')).winner, :'c_anders'::uuid,
                    'semifinalen rettes: Anders vant');
-select pg_temp.lik((public.record_cup_result(:'cup', 2, 0, :'c_anders', false, '3&2')).player_b, :'c_anders'::uuid,
-                   'finalen er nå Thomas mot Anders, og Anders vinner');
 select pg_temp.feil($$delete from public.competition_participants where id = '$$ || :'c_carl' || $$'$$, '23503');
 reset role;
 
+-- Finalen: Anders fører selv (raden lages av hans registrering).
 select pg_temp.som(:'u2'); set role authenticated;
-select pg_temp.feil(format($$select public.record_cup_result(%L, 2, 0, %L)$$, :'cup', :'c_thomas'), '42501');
+select pg_temp.lik((public.record_cup_result(:'cup', 2, 0, :'c_anders', false, '3&2')).player_b, :'c_anders'::uuid,
+                   'finalen er nå Thomas mot Anders, og Anders fører at han vant');
+select pg_temp.lik((select recorded_by::text || '/' || result from public.competition_matches
+                    where competition_id = :'cup' and round_no = 2 and slot = 0), :'u2' || '/3&2', 'finalen er ført av Anders');
+select pg_temp.feil(format($$select public.record_cup_result(%L, 2, 0, %L)$$, :'cup', :'c_thomas'), '55000');
+select pg_temp.feil(format($$select public.record_cup_result(%L, 2, 0, null)$$, :'cup'), '42501');
+select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 1, %L)$$, :'cup', :'c_carl'), '55000');
 select pg_temp.lik((select count(*) from public.competition_matches where competition_id = :'cup'), 3::bigint,
                    'Anders (medlem) ser kampene');
 reset role;
@@ -313,6 +338,11 @@ select pg_temp.feil($$select public.leave_competition(gen_random_uuid())$$, '425
 select pg_temp.feil($$select public.set_round_competitions(gen_random_uuid(), '{}')$$, '42501');
 select pg_temp.feil($$select public.draw_cup(gen_random_uuid(), '[]')$$, '42501');
 select pg_temp.feil($$select public.record_cup_result(gen_random_uuid(), 1, 0, null)$$, '42501');
+select pg_temp.feil($$select * from public.competition_invites$$, '42501');
+select pg_temp.feil($$select public.competition_invite(gen_random_uuid())$$, '42501');
+select pg_temp.feil($$select public.revoke_competition_invite(gen_random_uuid())$$, '42501');
+select pg_temp.feil($$select public.competition_invite_preview('ABCDEFGH23')$$, '42501');
+select pg_temp.feil($$select public.claim_competition_invite('ABCDEFGH23')$$, '42501');
 reset role;
 
 set role authenticated;
@@ -320,6 +350,11 @@ select pg_temp.feil($$select public.competition_round_entrants(gen_random_uuid()
 select pg_temp.feil($$select public.create_competition_with_entrants('fun', 'x')$$, '42501');
 select pg_temp.feil($$select public.join_competition(gen_random_uuid())$$, '42501');
 select pg_temp.feil($$select public.set_round_competitions(gen_random_uuid(), '{}')$$, '42501');
+select pg_temp.feil($$select public.record_cup_result(gen_random_uuid(), 1, 0, null)$$, '42501');
+select pg_temp.feil($$select public.competition_invite(gen_random_uuid())$$, '42501');
+select pg_temp.feil($$select public.revoke_competition_invite(gen_random_uuid())$$, '42501');
+select pg_temp.feil($$select public.competition_invite_preview('ABCDEFGH23')$$, '42501');
+select pg_temp.feil($$select public.claim_competition_invite('ABCDEFGH23')$$, '42501');
 reset role;
 
 -- === F. 017 står: jakkeracet og kontrollen ======================================
@@ -328,3 +363,158 @@ select pg_temp.lik((select count(*) from public.competitions where kind = 'seaso
 select pg_temp.lik((select count(*) from pg_policies where schemaname = 'public'
                       and tablename in ('competitions', 'competition_participants', 'competition_rounds')), 11::bigint,
                    'policyene fra 017 er urørt');
+
+-- === G. Invitasjon til en privat konkurranse (kode og lenke) =====================
+-- Anders lager en privat cup med Thomas. Hanne (fremmed) og Bjørn blir med
+-- med koden. Spillerne fører resultatene selv, og Anders (eier) retter.
+select pg_temp.som('');
+select display_name as anders_navn from public.profiles where id = :'u2' \gset
+select pg_temp.som(:'u2'); set role authenticated;
+select public.create_competition_with_entrants('cup', 'Vennecupen', null, 'listed', null, null, null, false,
+                                               '{}', array[:'u1']::uuid[]) as venn \gset
+select public.competition_invite(:'venn') ->> 'code' as kode \gset
+select pg_temp.lik(:'kode' ~ '^[0-9A-HJKMNP-TV-Z]{10}$', true, 'koden er 10 tegn Crockford base32');
+select pg_temp.lik(public.competition_invite(:'venn') ->> 'code', :'kode', 'samme kode igjen (idempotent)');
+select pg_temp.lik((public.competition_invite(:'venn') ->> 'expires_at')::timestamptz between now() + interval '6 days 23 hours'
+                     and now() + interval '7 days 1 hour', true, 'koden utløper om 7 dager');
+reset role;
+
+select pg_temp.som(:'u1'); set role authenticated;
+select pg_temp.lik(public.competition_invite(:'venn') ->> 'code', :'kode', 'Thomas (påmeldt) får samme kode');
+select pg_temp.lik((select count(*) from public.competition_invites where competition_id = :'venn'), 1::bigint,
+                   'Thomas (påmeldt) ser koden');
+select pg_temp.feil(format($$select public.competition_invite(%L)$$, :'liga'), '22023');
+reset role;
+
+select pg_temp.som(:'u9'); set role authenticated;
+select pg_temp.lik((select count(*) from public.competition_invites), 0::bigint, 'Hanne ser ingen koder');
+select pg_temp.feil(format($$select public.competition_invite(%L)$$, :'venn'), 'P0002');
+select pg_temp.feil($$insert into public.competition_invites (competition_id, code, expires_at) values ('$$ || :'venn' || $$', 'ABCDEFGH23', now() + interval '1 day')$$, '42501');
+select public.competition_invite_preview(lower(substr(:'kode', 1, 5)) || '-' || substr(:'kode', 6)) as forh \gset
+select pg_temp.lik((select string_agg(k, ',' order by k) from jsonb_object_keys(:'forh'::jsonb) k),
+                   'competition_id,entered,entrants,kind,name,owner_name', 'forhåndsvisningen: navn, type, eier og antall, ikke mer');
+select pg_temp.lik(:'forh'::jsonb ->> 'name' || '/' || (:'forh'::jsonb ->> 'kind') || '/' || (:'forh'::jsonb ->> 'entrants')
+                   || '/' || (:'forh'::jsonb ->> 'entered'), 'Vennecupen/cup/2/false', 'Hanne ser Vennecupen, cup, 2 påmeldte');
+select pg_temp.lik(:'forh'::jsonb ->> 'owner_name', :'anders_navn', 'og eieren');
+select pg_temp.feil($$select public.competition_invite_preview('ABCDEFGH23')$$, 'P0002');
+select pg_temp.feil($$select public.competition_invite_preview('')$$, 'P0002');
+select pg_temp.lik((select count(*) from public.competitions where id = :'venn'), 0::bigint, 'Hanne ser ikke cupen før hun blir med');
+select pg_temp.lik(public.claim_competition_invite(:'kode') ->> 'joined', 'new', 'Hanne blir med med koden');
+select pg_temp.lik(public.claim_competition_invite(:'kode') ->> 'joined', 'already', 'igjen: hun er med fra før');
+select pg_temp.lik((select count(*) from public.competitions where id = :'venn'), 1::bigint, 'Hanne ser cupen');
+select pg_temp.lik((select count(*) from public.competition_invites where competition_id = :'venn'), 1::bigint,
+                   'og koden, så hun kan dele den videre');
+select pg_temp.lik(public.leave_competition(:'venn'), true, 'Hanne melder seg av');
+select pg_temp.lik(public.claim_competition_invite(:'kode') ->> 'joined', 'rejoined', 'og på igjen med koden');
+reset role;
+select pg_temp.som(:'u3'); set role authenticated;
+select pg_temp.lik(public.claim_competition_invite(:'kode') ->> 'joined', 'new', 'Bjørn blir med med koden');
+reset role;
+
+-- Koden går ut: ingen ser noe, og eieren får en ny.
+select pg_temp.som('');
+update public.competition_invites set expires_at = now() - interval '1 minute' where competition_id = :'venn';
+select pg_temp.som(:'u4'); set role authenticated;
+select pg_temp.feil(format($$select public.competition_invite_preview(%L)$$, :'kode'), 'P0002');
+select pg_temp.feil(format($$select public.claim_competition_invite(%L)$$, :'kode'), 'P0002');
+reset role;
+-- Bare eieren lager en ny (sikkerhetsrevisjonen).
+select pg_temp.som(:'u9'); set role authenticated;
+select pg_temp.feil(format($$select public.competition_invite(%L)$$, :'venn'), '55000');
+reset role;
+select pg_temp.som(:'u2'); set role authenticated;
+select public.competition_invite(:'venn') ->> 'code' as kode2 \gset
+select pg_temp.lik(:'kode2' <> :'kode', true, 'eieren får ny kode når den gamle har gått ut');
+reset role;
+
+-- Fornye og trekke tilbake: bare eieren. De påmeldte deler koden som gjelder.
+select pg_temp.som(:'u1'); set role authenticated;
+select pg_temp.lik(public.competition_invite(:'venn') ->> 'code', :'kode2', 'Thomas (påmeldt) får koden som gjelder');
+select pg_temp.feil(format($$select public.competition_invite(%L, true)$$, :'venn'), '42501');
+select pg_temp.feil(format($$select public.revoke_competition_invite(%L)$$, :'venn'), '42501');
+reset role;
+select pg_temp.som(:'u9'); set role authenticated;
+select pg_temp.feil(format($$select public.revoke_competition_invite(%L)$$, :'venn'), '42501');
+reset role;
+select pg_temp.som(:'u4'); set role authenticated;
+select pg_temp.feil(format($$select public.revoke_competition_invite(%L)$$, :'venn'), 'P0002');
+reset role;
+select pg_temp.som(:'u2'); set role authenticated;
+select pg_temp.lik(public.revoke_competition_invite(:'venn'), true, 'Anders trekker koden tilbake');
+select pg_temp.lik(public.revoke_competition_invite(:'venn'), false, 'igjen: ingen kode å trekke tilbake');
+reset role;
+select pg_temp.som(:'u4'); set role authenticated;
+select pg_temp.feil(format($$select public.competition_invite_preview(%L)$$, :'kode2'), 'P0002');
+select pg_temp.feil(format($$select public.claim_competition_invite(%L)$$, :'kode2'), 'P0002');
+reset role;
+select pg_temp.som(:'u1'); set role authenticated;
+select pg_temp.feil(format($$select public.competition_invite(%L)$$, :'venn'), '55000');
+select pg_temp.lik((select count(*) from public.competition_participants where competition_id = :'venn' and status = 'active'),
+                   4::bigint, 'de påmeldte er fortsatt med etter at koden er trukket tilbake');
+reset role;
+select pg_temp.som(:'u2'); set role authenticated;
+select public.competition_invite(:'venn', true) ->> 'code' as kode3 \gset
+select public.competition_invite(:'venn', true) ->> 'code' as kode2 \gset
+select pg_temp.lik(:'kode2' <> :'kode3', true, 'eieren fornyer: ny kode');
+reset role;
+select pg_temp.som(:'u4'); set role authenticated;
+select pg_temp.feil(format($$select public.competition_invite_preview(%L)$$, :'kode3'), 'P0002');
+select pg_temp.lik(public.competition_invite_preview(:'kode2') ->> 'name', 'Vennecupen', 'den nye koden virker, den gamle ikke');
+reset role;
+
+-- Trekning: Anders – Thomas og Hanne – Bjørn. Da tar cupen ingen nye.
+select pg_temp.som('');
+select id as v_anders from public.competition_participants where competition_id = :'venn' and profile_id = :'u2' \gset
+select id as v_thomas from public.competition_participants where competition_id = :'venn' and profile_id = :'u1' \gset
+select id as v_hanne  from public.competition_participants where competition_id = :'venn' and profile_id = :'u9' \gset
+select id as v_bjorn  from public.competition_participants where competition_id = :'venn' and profile_id = :'u3' \gset
+select pg_temp.som(:'u2'); set role authenticated;
+select pg_temp.lik(public.draw_cup(:'venn', jsonb_build_array(
+                     jsonb_build_object('slot', 0, 'a', :'v_anders', 'b', :'v_thomas'),
+                     jsonb_build_object('slot', 1, 'a', :'v_hanne', 'b', :'v_bjorn'))), 2, 'Anders trekker Vennecupen');
+select pg_temp.feil(format($$select public.competition_invite(%L)$$, :'venn'), '55000');
+reset role;
+select pg_temp.som(:'u4'); set role authenticated;
+select pg_temp.feil(format($$select public.claim_competition_invite(%L)$$, :'kode2'), '55000');
+reset role;
+
+-- Resultatene: spillerne fører sin egen kamp, én gang.
+select pg_temp.som(:'u9'); set role authenticated;
+select pg_temp.lik(public.claim_competition_invite(:'kode2') ->> 'joined', 'already', 'Hanne er med etter trekningen');
+select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 0, %L)$$, :'venn', :'v_anders'), '42501');
+select pg_temp.lik((public.record_cup_result(:'venn', 1, 1, :'v_hanne', false, '4&3')).recorded_by, :'u9'::uuid,
+                   'Hanne fører sin egen kamp');
+reset role;
+select pg_temp.som(:'u3'); set role authenticated;
+select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 1, %L)$$, :'venn', :'v_bjorn'), '55000');
+select pg_temp.feil(format($$select public.record_cup_result(%L, 1, 1, null)$$, :'venn'), '42501');
+reset role;
+select pg_temp.som(:'u1'); set role authenticated;
+select pg_temp.lik((public.record_cup_result(:'venn', 1, 0, :'v_thomas', true)).walkover, true, 'Thomas fører walkover i sin kamp');
+reset role;
+select pg_temp.som(:'u2'); set role authenticated;
+select pg_temp.lik((public.record_cup_result(:'venn', 1, 1, :'v_bjorn', false, '1 opp')).recorded_by, :'u2'::uuid,
+                   'Anders (eier) retter: Bjørn vant');
+reset role;
+select pg_temp.som(:'u3'); set role authenticated;
+select pg_temp.lik((public.record_cup_result(:'venn', 2, 0, :'v_bjorn', false, '2&1')).player_a, :'v_thomas'::uuid,
+                   'Bjørn fører finalen mot Thomas');
+reset role;
+select pg_temp.som(:'u1'); set role authenticated;
+select pg_temp.feil(format($$select public.record_cup_result(%L, 2, 0, %L)$$, :'venn', :'v_thomas'), '55000');
+reset role;
+
+-- Ferdig: koden virker ikke lenger. Slettet: koden går med.
+select pg_temp.som(:'u2'); set role authenticated;
+update public.competitions set status = 'finished' where id = :'venn';
+reset role;
+select pg_temp.som(:'u4'); set role authenticated;
+select pg_temp.feil(format($$select public.competition_invite_preview(%L)$$, :'kode2'), '55000');
+select pg_temp.feil(format($$select public.claim_competition_invite(%L)$$, :'kode2'), '55000');
+reset role;
+select pg_temp.som(:'u2'); set role authenticated;
+delete from public.competitions where id = :'venn';
+reset role;
+select pg_temp.som('');
+select pg_temp.lik((select count(*) from public.competition_invites where competition_id = :'venn'), 0::bigint,
+                   'eieren sletter cupen: koden går med');

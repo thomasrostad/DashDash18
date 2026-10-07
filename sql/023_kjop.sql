@@ -3,7 +3,11 @@
 -- ===========================================================================
 -- Status: FORSLAG til godkjenning (ROADMAP B5). Ikke kjørt mot Supabase, verken
 -- test eller prod. Prøvd lokalt (lokal/023_prove.sql). Krever 001–018
--- (entitlements og competitions fra 017). 022 er fase 15 og røres ikke.
+-- (entitlements og competitions fra 017). 022 er fase 15 og røres ikke, men
+-- kjøres før 023 (README).
+--
+-- Besluttet 07.10.2026: bare liga og cup krever kjøp. Morroturneringer (fun),
+-- sesongen (jakkeracet) og spill på runden (game) er gratis.
 --
 -- Hvorfor (docs/visjon-apen-app.md, «Besluttet 07.10.2026» punkt 4): appen er
 -- gratis, men å kjøre en turnering koster. Det må være kjøp i appen (StoreKit),
@@ -12,8 +16,8 @@
 -- serveren skriver entitlements.
 --
 -- Produktene (docs/app-store.md):
---   no.dashdash.turnering.sesong   FORBRUKBAR. Låser opp én turnering (liga, cup
---                                  eller morroturnering) så lenge den varer.
+--   no.dashdash.turnering.sesong   FORBRUKBAR. Låser opp én turnering (liga
+--                                  eller cup) så lenge den varer.
 --                                  Ikke-forbrukbar går ikke: et slikt kjøp kan
 --                                  bare gjøres én gang per Apple-ID, og da kunne
 --                                  ingen kjøre turnering nummer to.
@@ -35,10 +39,10 @@
 --      turnering du styrer.
 --   4. competition_is_unlocked(turnering): sant når turneringen ikke krever
 --      kjøp, eller et aktivt kjøp eller abonnement låser den opp.
---   5. Nye turneringer av typen league, cup og fun krever kjøp
---      (requires_purchase settes av serveren). Sesongens konkurranse
---      (jakkeracet) og spill på runden (game) er gratis. Eksisterende rader
---      endres ikke.
+--   5. Nye turneringer av typen league og cup krever kjøp
+--      (requires_purchase settes av serveren). Morroturneringer (fun),
+--      sesongens konkurranse (jakkeracet) og spill på runden (game) er
+--      gratis. Eksisterende rader endres ikke.
 --
 -- Mønsteret fra 001–021 følges.
 -- ===========================================================================
@@ -145,6 +149,12 @@ grant execute on function public.competition_is_unlocked(uuid) to authenticated;
 --     revoked_at, app_account_token, club_id, competition_id}
 -- Upsert på original_transaction_id. Samme kjøp fra en annen profil = 42501
 -- (en kvittering kan ikke «lånes»). Returnerer raden som jsonb.
+-- Sikkerhetsrevisjonen 07.10.2026 (i tillegg til sjekkene i verify-purchase):
+--   * M4: app_account_token må finnes og være profil-id-en (appen setter den
+--     ved kjøpet), ellers 42501.
+--   * H3: environment må være oppgitt ('sandbox' eller 'production') og
+--     lagres. Det er ingen standard: et kjøp uten miljø blir aldri
+--     «production». verify-purchase avviser sandkassen utenfor test.
 create or replace function public.record_purchase(p jsonb)
 returns jsonb
 language plpgsql
@@ -158,6 +168,8 @@ declare
   v_status       text := coalesce(nullif(p ->> 'status', ''), 'active');
   v_competition  uuid := nullif(p ->> 'competition_id', '')::uuid;
   v_club         uuid := nullif(p ->> 'club_id', '')::uuid;
+  v_env          text := nullif(p ->> 'environment', '');
+  v_token        uuid := nullif(p ->> 'app_account_token', '')::uuid;
   v_existing     public.entitlements;
   v_row          public.entitlements;
 begin
@@ -166,6 +178,12 @@ begin
   end if;
   if not exists (select 1 from public.profiles pr where pr.id = v_profile) then
     raise exception 'Fant ikke profilen' using errcode = 'P0002';
+  end if;
+  if v_env is null or v_env not in ('sandbox', 'production') then
+    raise exception 'Mangler miljø (sandbox eller production)' using errcode = '22023';
+  end if;
+  if v_token is null or v_token <> v_profile then
+    raise exception 'Kjøpet er ikke gjort av denne kontoen (appAccountToken)' using errcode = '42501';
   end if;
 
   select * into v_existing from public.entitlements e where e.original_transaction_id = v_original for update;
@@ -194,9 +212,9 @@ begin
                                         transaction_id, environment, status, purchased_at, expires_at,
                                         revoked_at, app_account_token, competition_id)
   values (v_profile, v_club, p ->> 'product_id', v_kind, v_original,
-          nullif(p ->> 'transaction_id', ''), coalesce(nullif(p ->> 'environment', ''), 'production'), v_status,
+          nullif(p ->> 'transaction_id', ''), v_env, v_status,
           nullif(p ->> 'purchased_at', '')::timestamptz, nullif(p ->> 'expires_at', '')::timestamptz,
-          nullif(p ->> 'revoked_at', '')::timestamptz, nullif(p ->> 'app_account_token', '')::uuid, v_competition)
+          nullif(p ->> 'revoked_at', '')::timestamptz, v_token, v_competition)
   on conflict (original_transaction_id) do update
     set transaction_id = excluded.transaction_id,
         status         = excluded.status,
@@ -252,7 +270,7 @@ grant execute on function public.assign_purchase(uuid, uuid) to authenticated;
 
 
 -- ===========================================================================
--- 5. NYE TURNERINGER KREVER KJØP (league, cup, fun)
+-- 5. NYE TURNERINGER KREVER KJØP (league og cup; fun er gratis)
 -- ===========================================================================
 -- Kjører etter competitions_guard (navnene sorteres), så vakta fra 017 har
 -- allerede nektet appen å sette requires_purchase selv.
@@ -263,7 +281,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if new.season_id is null and not new.is_main and new.kind in ('league', 'cup', 'fun') then
+  if new.season_id is null and not new.is_main and new.kind in ('league', 'cup') then
     new.requires_purchase := true;
   end if;
   return new;
@@ -316,6 +334,14 @@ commit;
 --        not exists (select competition_id from public.entitlements
 --                    where competition_id is not null and status = 'active' and product_kind = 'consumable'
 --                    group by competition_id having count(*) > 1)
+-- union all
+-- select 8, 'bare liga og cup krever kjøp (morro, sesong og spill er gratis)',
+--        pg_get_functiondef('public.competitions_require_purchase()'::regprocedure) like '%(''league'', ''cup'')%'
+--        and pg_get_functiondef('public.competitions_require_purchase()'::regprocedure) not like '%''fun''%'
+-- union all
+-- select 9, 'hvert kjøp har miljø og appAccountToken = kjøperen (H3, M4)',
+--        not exists (select 1 from public.entitlements
+--                    where environment is null or app_account_token is distinct from profile_id)
 -- order by nr;
 
 

@@ -69,7 +69,7 @@ Merk: «Sports»-statistikk som handicap regnes som Other User Content. Krasjrap
    supabase functions deploy verify-purchase --project-ref <ref>
    ```
    Begge med JWT-sjekk på (standard).
-4. Secrets for `verify-purchase` (Edge Functions → Secrets): `APPSTORE_ISSUER_ID`, `APPSTORE_KEY_ID`, `APPSTORE_PRIVATE_KEY` (innholdet i `.p8`), `APPSTORE_BUNDLE_ID` = `com.dashdash18.app`. `delete-account` trenger ingen egne.
+4. Secrets for `verify-purchase` (Edge Functions → Secrets): `APPSTORE_ISSUER_ID`, `APPSTORE_KEY_ID`, `APPSTORE_PRIVATE_KEY` (innholdet i `.p8`), `APPSTORE_BUNDLE_ID` = `com.dashdash18.app`. Bare på test-prosjektet: `APPSTORE_ALLOW_SANDBOX` = `true` (ellers avvises sandkassekjøp fra TestFlight og Xcode, så et testkjøp aldri låser opp i produksjon). `delete-account` trenger ingen egne.
 5. **Varsel om nye rapporter** (Apple vil ha oppfølging innen 24 timer): Database → Webhooks → på INSERT i `public.content_reports` → send e-post (f.eks. via en liten Edge Function med Resend) til personvern@dashdash18.com. Til da: kjør kontroll 10 i 019 daglig.
 6. Prod: samme rekkefølge når test er godkjent.
 

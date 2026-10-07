@@ -456,9 +456,252 @@ import Testing
         #expect(q.p_club_id == nil && q.p_member_ids.isEmpty && !q.p_signup_open && q.p_starts_on == "2026-10-07")
     }
 
-    @Test func betalingErStubbetTilApen() {
-        #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me))
+    @Test func flaggeneErAv() {
         #expect(!CompetitionsFeature.isEnabled)
+        #expect(!PurchaseFeature.isEnabled)
+        // Med kjøp av er alt låst opp, som før.
+        #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, entitlements: []))
+    }
+}
+
+// MARK: - Kjøp: bare liga og cup (besluttet 07.10.2026)
+
+/// Kjøpene fra serveren uten nett, for `PurchaseService`.
+nonisolated private struct FakePurchaseBackend: PurchaseBackend {
+    let rows: [EntitlementRow]
+    func verify(transactionID: UInt64, competitionID: UUID?, clubID: UUID?) async throws -> EntitlementRow {
+        throw PurchaseError.offline
+    }
+    func entitlements() async throws -> [EntitlementRow] { rows }
+    func assign(entitlementID: UUID, competitionID: UUID) async throws {}
+    func isUnlocked(competitionID: UUID) async throws -> Bool { false }
+}
+
+@MainActor struct KonkurranseKjopTests {
+    let now = Date(timeIntervalSince1970: 1_800_000_000)
+
+    func entitlement(kind: String = "consumable", competition: UUID? = nil, club: UUID? = nil,
+                     expires: Date? = nil, status: EntitlementRow.Status = .active) -> EntitlementRow {
+        EntitlementRow(id: UUID(), profileID: F.me, clubID: club, competitionID: competition,
+                       productID: kind == "consumable" ? PurchaseProduct.tournament.rawValue : PurchaseProduct.yearly.rawValue,
+                       productKind: kind, status: status, expiresAt: expires)
+    }
+
+    func unlocked(_ kind: CompetitionKind, club: UUID? = nil, _ e: [EntitlementRow]) -> Bool {
+        CompetitionPurchase.isUnlocked(kind: kind, clubID: club, userID: F.me, entitlements: e, enabled: true, now: now)
+    }
+
+    /// Samme liste som triggeren i sql/023.
+    @Test func bareLigaOgCupKreverKjop() {
+        #expect(CompetitionPurchase.requiresPurchase(.league))
+        #expect(CompetitionPurchase.requiresPurchase(.cup))
+        #expect(!CompetitionPurchase.requiresPurchase(.fun))
+        #expect(!CompetitionPurchase.requiresPurchase(.season))
+        #expect(!CompetitionPurchase.requiresPurchase(.game))
+    }
+
+    @Test func morroErGratisLigaOgCupLaast() {
+        #expect(unlocked(.fun, []))
+        #expect(!unlocked(.league, []))
+        #expect(!unlocked(.cup, club: F.club, []))
+        // Med kjøp av: alt låst opp.
+        #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, entitlements: [], enabled: false))
+    }
+
+    @Test func abonnementEllerKredittLaserOpp() {
+        let later = now.addingTimeInterval(3600)
+        let personal = entitlement(kind: "subscription", expires: later)
+        let forClub = entitlement(kind: "subscription", club: F.club, expires: later)
+        let expired = entitlement(kind: "subscription", expires: now.addingTimeInterval(-1))
+        #expect(unlocked(.cup, [personal]))
+        #expect(!unlocked(.cup, club: F.club, [personal]))
+        #expect(unlocked(.league, club: F.club, [forClub]))
+        #expect(!unlocked(.league, [forClub]))
+        #expect(!unlocked(.league, [expired]))
+        // Et kjøp som ikke er koblet (kreditt), låser opp den neste. Et brukt eller refundert gjør ikke.
+        #expect(unlocked(.cup, [entitlement()]))
+        #expect(!unlocked(.cup, [entitlement(competition: UUID())]))
+        #expect(!unlocked(.cup, [entitlement(status: .refunded)]))
+    }
+
+    @Test func kredittenKoblesBareNarDenTrengs() {
+        let credit = entitlement()
+        let sub = entitlement(kind: "subscription", expires: now.addingTimeInterval(3600))
+        func needs(_ kind: CompetitionKind, _ e: [EntitlementRow], enabled: Bool = true) -> Bool {
+            CompetitionPurchase.needsCredit(kind: kind, clubID: nil, userID: F.me, entitlements: e, enabled: enabled, now: now)
+        }
+        #expect(needs(.cup, [credit]))
+        #expect(!needs(.cup, [credit, sub]))
+        #expect(!needs(.fun, [credit]))
+        #expect(!needs(.cup, []))
+        #expect(!needs(.cup, [credit], enabled: false))
+    }
+
+    @Test func tekstenINyKonkurranse() {
+        #expect(CompetitionPurchase.note(.cup, enabled: false) == nil)
+        #expect(CompetitionPurchase.note(.league, enabled: true)?.contains("krever kjøp") == true)
+        #expect(CompetitionPurchase.note(.fun, enabled: true) == "Gratis å lage og kjøre.")
+    }
+
+    /// Koblingen til fase 17: kjøpene som `PurchaseService` har hentet.
+    @Test func brukerKjopenePurchaseServiceHarHentet() async {
+        let service = PurchaseService(backend: FakePurchaseBackend(rows: [entitlement()]), profileID: F.me)
+        #expect(!CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, purchases: service, enabled: true))
+        await service.refreshEntitlements()
+        #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, purchases: service, enabled: true))
+        #expect(!CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, purchases: nil, enabled: true))
+        #expect(CompetitionPurchase.isUnlocked(kind: .fun, clubID: nil, userID: F.me, purchases: nil, enabled: true))
+    }
+
+    /// «Ny konkurranse» viser betalingsveggen bare når typen er låst.
+    @Test func nyKonkurranseTrengerKjop() {
+        let list = CompetitionsModel(preview: .init(), access: F.access(organizer: true), clubID: F.club, clubName: "Golfgutu")
+        var d = CompetitionDraft(clubID: F.club, today: "2026-10-07")
+        d.kind = .fun
+        #expect(!list.needsPurchase(d, purchases: nil))
+        d.kind = .cup
+        // Med PurchaseFeature av: ingen betalingsvegg.
+        #expect(list.needsPurchase(d, purchases: nil) == PurchaseFeature.isEnabled)
+    }
+}
+
+// MARK: - Invitasjon til en privat konkurranse (sql/022)
+
+@MainActor struct KonkurranseInvitasjonTests {
+    @Test func lenkenTilKonkurransen() throws {
+        let code = try #require(InviteCode("ABCDEFGH23"))
+        let target = InviteTarget.competition(name: "Vennecupen")
+        #expect(target.url(code).absoluteString == "dashdash://konkurranse/ABCDEFGH23")
+        #expect(InviteCode(url: target.url(code), host: InviteTarget.competitionHost) == code)
+        // En rundelenke er ikke en konkurranselenke, og omvendt.
+        #expect(InviteCode(url: target.url(code)) == nil)
+        #expect(InviteCode(url: code.url, host: InviteTarget.competitionHost) == nil)
+        #expect(InviteCode.parse(" dashdash://Konkurranse/abcde-fgh23 ", host: InviteTarget.competitionHost) == code)
+        #expect(InviteCode.parse("abcde-fgh23", host: InviteTarget.competitionHost) == code)
+        let text = target.shareText(code)
+        #expect(text.contains("Vennecupen") && text.contains("dashdash://konkurranse/ABCDEFGH23") && text.contains("ABCDE-FGH23"))
+        #expect(InviteTarget.round(courseName: "Losby").shareText(code) == code.shareText(courseName: "Losby"))
+        #expect(InviteTarget.round(courseName: nil).url(code) == code.url)
+    }
+
+    @Test func appenTarImotBeggeLenkene() throws {
+        let code = try #require(InviteCode("ABCDEFGH23"))
+        let round = try #require(URL(string: "dashdash://runde/ABCDEFGH23"))
+        let competition = try #require(URL(string: "dashdash://konkurranse/ABCDEFGH23"))
+        #expect(AppLink.parse(round, rounds: true, competitions: true) == .round(code))
+        #expect(AppLink.parse(competition, rounds: true, competitions: true) == .competition(code))
+        // Hver lenke virker bare med flagget sitt.
+        #expect(AppLink.parse(round, rounds: false, competitions: true) == nil)
+        #expect(AppLink.parse(competition, rounds: true, competitions: false) == nil)
+        #expect(AppLink.parse(try #require(URL(string: "dashdash://login-callback")), rounds: true, competitions: true) == nil)
+        #expect(AppLink.round(code).id != AppLink.competition(code).id)
+    }
+
+    @Test func hvemKanInvitere() {
+        let a = F.access()
+        let mine = F.competition(7700, kind: .fun, club: nil, owner: F.me)
+        let theirs = F.competition(7701, kind: .league, club: nil, owner: F.friend)
+        let entered = [F.participant(7702, theirs, profile: F.me)]
+        #expect(a.canInvite(mine, [], isDrawn: false))
+        #expect(!a.canInvite(theirs, [], isDrawn: false))
+        #expect(a.canInvite(theirs, entered, isDrawn: false))
+        // Meldt av: ingen kode.
+        #expect(!a.canInvite(theirs, [F.participant(7702, theirs, profile: F.me, status: .withdrawn)], isDrawn: false))
+        // Klubbens deles i klubben, og ferdige og trukne cuper tar ingen nye.
+        #expect(!F.access(organizer: true).canInvite(F.competition(7703, kind: .fun), [], isDrawn: false))
+        #expect(!a.canInvite(F.competition(7704, kind: .fun, club: nil, owner: F.me, status: .finished), [], isDrawn: false))
+        let cup = F.competition(7705, kind: .cup, club: nil, owner: F.me)
+        #expect(a.canInvite(cup, [], isDrawn: false) && !a.canInvite(cup, [], isDrawn: true))
+        #expect(!a.canInvite(F.competition(7706, kind: .game, club: nil, owner: F.me), [], isDrawn: false))
+    }
+
+    @Test func forhandsvisningenOgSvaret() throws {
+        let json = #"""
+        {"competition_id":"0a000000-0000-0000-0000-00000000000a","name":"Vennecupen","kind":"cup",
+         "owner_name":"Anders","entrants":4,"entered":false}
+        """#
+        let p = try JSONDecoder().decode(CompetitionInvitePreview.self, from: Data(json.utf8))
+        #expect(p.name == "Vennecupen" && p.kind == .cup && p.ownerName == "Anders" && !p.entered)
+        #expect(p.summary == "Cup · 4 påmeldte")
+        let one = CompetitionInvitePreview(competitionID: p.competitionID, name: "Morro", kind: .fun, ownerName: nil,
+                                           entrants: 1, entered: true)
+        #expect(one.summary == "Morroturnering · 1 påmeldt")
+        let claim = try JSONDecoder().decode(CompetitionClaimResult.self, from: Data(#"""
+        {"competition_id":"0a000000-0000-0000-0000-00000000000a","participant_id":"0b000000-0000-0000-0000-00000000000b","joined":"rejoined"}
+        """#.utf8))
+        #expect(claim.joined == .rejoined && claim.competitionID == p.competitionID)
+    }
+
+    /// Sikkerhetsrevisjonen: bare eieren fornyer og trekker tilbake koden. De påmeldte får bare
+    /// koden som gjelder.
+    @Test func eierenFornyerOgTrekkerTilbake() async throws {
+        let first = try #require(InviteCode("ABCDEFGH23"))
+        let second = try #require(InviteCode("ZYXWVTSRQ9"))
+        let target = InviteTarget.competition(name: "Vennecupen")
+        let participant = InviteModel(target: target) { first }
+        await participant.load()
+        #expect(participant.code == first && participant.manage == nil)
+        await participant.revoke()
+        #expect(participant.code == first && !participant.isRevoked)
+
+        let owner = InviteModel(target: target, manage: .init(renew: { second }, revoke: {})) { first }
+        await owner.load()
+        await owner.revoke()
+        #expect(owner.code == nil && owner.isRevoked)
+        // Etter tilbaketrekking hentes ingen kode av seg selv.
+        await owner.load()
+        #expect(owner.code == nil)
+        await owner.renew()
+        #expect(owner.code == second && !owner.isRevoked)
+
+        let refused = InviteModel(target: target, manage: .init(renew: { throw DataError.notAllowed },
+                                                                revoke: { throw DataError.notAllowed })) { first }
+        await refused.load()
+        await refused.revoke()
+        #expect(refused.code == first && !refused.isRevoked && refused.error == DataError.notAllowed.message)
+    }
+
+    @Test func kodenSkrevetInnEllerLimtInn() throws {
+        let preview = CompetitionInvitePreview(competitionID: F.id(1), name: "Vennecupen", kind: .cup, ownerName: "Anders",
+                                               entrants: 2, entered: false)
+        let model = JoinCompetitionModel(preview: preview, code: try #require(InviteCode("ABCDEFGH23")))
+        model.codeText = "dashdash://runde/ABCDEFGH23"
+        #expect(model.typedCode == nil)
+        model.codeText = "dashdash://konkurranse/ABCDEFGH23"
+        #expect(model.typedCode?.value == "ABCDEFGH23")
+        model.codeText = "abcde fgh23"
+        #expect(model.typedCode?.value == "ABCDEFGH23")
+    }
+}
+
+// MARK: - Resultat i cupkampen: spillerne fører selv (besluttet 07.10.2026)
+
+@MainActor struct KonkurranseCupForingTests {
+    typealias C = KonkurranseCupTests
+
+    @Test func spillerneForerSinEgenKampEnGang() {
+        // Du er p4 (mot p5 i første runde).
+        let cup = CupStandings(participants: C.participants, matches: C.drawn, names: C.names, me: [C.p(4)])
+        let mine = cup.rounds[0][1], bye = cup.rounds[0][0], later = cup.rounds[1][0]
+        #expect(CupRecording.right(mine, isAdmin: false) == .record)
+        #expect(CupRecording.right(bye, isAdmin: false) == .none)
+        #expect(CupRecording.right(later, isAdmin: false) == .none)
+        // Når resultatet står, kan bare arrangøren endre det.
+        var rows = C.drawn
+        rows[1] = C.match(1, 1, 4, 5, winner: 5, result: "2&1")
+        let decided = CupStandings(participants: C.participants, matches: rows, names: C.names, me: [C.p(4)])
+        #expect(CupRecording.right(decided.rounds[0][1], isAdmin: false) == .none)
+        #expect(CupRecording.right(decided.rounds[0][1], isAdmin: true) == .edit)
+    }
+
+    @Test func andresKamperOgArrangoren() {
+        // Du er p1 (bye): kampen p4 – p5 er ikke din.
+        let cup = CupStandings(participants: C.participants, matches: C.drawn, names: C.names, me: [C.p(1)])
+        #expect(CupRecording.right(cup.rounds[0][1], isAdmin: false) == .none)
+        #expect(CupRecording.right(cup.rounds[0][1], isAdmin: true) == .edit)
+        // Ingen fører en bye eller en kamp som venter, heller ikke arrangøren.
+        #expect(CupRecording.right(cup.rounds[0][0], isAdmin: true) == .none)
+        #expect(CupRecording.right(cup.rounds[1][0], isAdmin: true) == .none)
     }
 }
 

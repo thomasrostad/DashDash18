@@ -50,6 +50,8 @@ Viewet `round_roster` gir navn og profil for alle deltakerne i en runde, uansett
 
 `competition_participants` er de påmeldte: et klubbmedlem eller en profil. Gjester er med gjennom rundene (`entry = open`).
 
+**Fase 15 (sql/022, besluttet 07.10.2026):** en privat konkurranse deles med kode eller lenke (`competition_invites`, `dashdash://konkurranse/<KODE>`), som en løs runde. Den som har koden, ser navn, type, eier og antall påmeldte, og «Bli med» melder deg på. Bare eieren lager, fornyer og trekker tilbake koden. I en cup fører de to spillerne resultatet selv; første førte resultat gjelder, arrangøren eller eieren kan rette, og `competition_matches.recorded_by` viser hvem som førte.
+
 `competition_rounds` er rundene som teller. **En runde kan telle i flere konkurranser**, for eksempel jakkeracet, morrocupen og skins i båsen. `source = season` er koblet av databasen, og `manual` er lagt til av en arrangør eller eier.
 
 **Samme person på tvers av runder** (`PersonDirectory.entrant` i appen): i klubbens egen konkurranse er et medlem alltid medlemmet, også når hen spiller en løs runde med profilen sin. Ellers er det profilen når den er kjent. Er den ikke kjent, er det bare spilleren i den runden (gjest).
@@ -62,7 +64,7 @@ Viewet `round_roster` gir navn og profil for alle deltakerne i en runde, uansett
 **Hvorfor ikke kopiere banen per klubb?** Da må hver klubb rette det samme én gang til, og en ny henting kan ikke vite hva som er rettet.
 
 ### Kjøp i appen (StoreKit)
-`entitlements` har én rad per kjøp eller abonnement med `product_id`, `original_transaction_id`, miljø, status og utløp. Raden hører til en profil og eventuelt en klubb. Bare serveren skriver den, med service_role i en Edge Function som har sjekket kvitteringen mot App Store Server API. Appen leser sine egne, og arrangøren leser klubbens. En konkurranse som krever kjøp, peker på kjøpet (`competitions.entitlement_id`). Jakkeracet krever ikke kjøp.
+`entitlements` har én rad per kjøp eller abonnement med `product_id`, `original_transaction_id`, miljø, status og utløp. Raden hører til en profil og eventuelt en klubb. Bare serveren skriver den, med service_role i en Edge Function som har sjekket kvitteringen mot App Store Server API. Appen leser sine egne, og arrangøren leser klubbens. En konkurranse som krever kjøp, peker på kjøpet (`competitions.entitlement_id`) eller har et koblet kjøp (`entitlements.competition_id`, sql/023). **Besluttet 07.10.2026:** bare liga og cup krever kjøp. Jakkeracet, morroturneringer og spill på runden er gratis. Kjøpet må ha `app_account_token` = kjøperens profil, og sandkassekjøp godtas bare på test.
 
 ## 2. Tilgang ved deltakelse (RLS)
 

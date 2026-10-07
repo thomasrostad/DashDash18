@@ -6,6 +6,7 @@ struct CompetitionsListView: View {
     @Bindable var model: CompetitionsModel
 
     @State private var showsNew = false
+    @State private var showsJoin = false
 
     var body: some View {
         content
@@ -13,9 +14,23 @@ struct CompetitionsListView: View {
             .ddNavigationChrome()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if model.client != nil {
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button("Bli med med kode", systemImage: "qrcode") { showsJoin = true }
+                    }
+                }
                 if model.canCreate {
                     ToolbarItem(placement: .primaryAction) {
                         Button("Ny konkurranse", systemImage: "plus") { showsNew = true }
+                    }
+                }
+            }
+            .sheet(isPresented: $showsJoin) {
+                if let client = model.client {
+                    NavigationStack {
+                        JoinCompetitionView(model: JoinCompetitionModel(client: client, code: nil)) { _ in
+                            Task { await model.load() }
+                        }
                     }
                 }
             }
@@ -47,6 +62,8 @@ struct CompetitionsListView: View {
                         Button("Ny konkurranse") { showsNew = true }
                             .buttonStyle(.dd(.primary))
                     }
+                    Button("Bli med med kode") { showsJoin = true }
+                        .buttonStyle(.dd(.text))
                 }
                 .ddCard(.empty)
                 .padding(.horizontal, DDSpacing.gutter)

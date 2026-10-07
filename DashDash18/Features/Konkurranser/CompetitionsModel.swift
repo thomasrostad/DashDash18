@@ -95,6 +95,10 @@ final class CompetitionsModel {
 
     func isAdmin(_ c: CompetitionRow) -> Bool { access.isAdmin(c) }
 
+    func canInvite(_ c: CompetitionRow) -> Bool {
+        access.canInvite(c, overview.participants, isDrawn: overview.drawn.contains(c.id))
+    }
+
     var canCreateInClub: Bool { access.canCreate(inClub: clubID) }
     var canCreate: Bool { canCreateInClub || access.canCreate(inClub: nil) }
 
@@ -118,10 +122,16 @@ final class CompetitionsModel {
 
     // MARK: Ny konkurranse
 
-    /// Lager konkurransen. Gir id-en, eller nil (feilen står i `error`).
-    func create(_ draft: CompetitionDraft) async -> UUID? {
-        guard let client, CompetitionPurchase.isUnlocked(kind: draft.kind, clubID: draft.clubID, userID: access.profileID)
-        else { return nil }
+    /// Krever den nye konkurransen kjøp som ikke er gjort (vis betalingsveggen)?
+    func needsPurchase(_ draft: CompetitionDraft, purchases: PurchaseService?) -> Bool {
+        !CompetitionPurchase.isUnlocked(kind: draft.kind, clubID: draft.clubID, userID: access.profileID,
+                                        purchases: purchases)
+    }
+
+    /// Lager konkurransen, og kobler en ledig kreditt til den når typen krever kjøp. Gir id-en,
+    /// eller nil (feilen står i `error`).
+    func create(_ draft: CompetitionDraft, purchases: PurchaseService? = nil) async -> UUID? {
+        guard let client, !needsPurchase(draft, purchases: purchases) else { return nil }
         if let issue = draft.issues().first {
             error = issue
             return nil
@@ -130,6 +140,12 @@ final class CompetitionsModel {
         defer { busy = nil }
         do {
             let id = try await CompetitionQueries.create(client: client, draft.params(main: main?.rules))
+            if let purchases, CompetitionPurchase.needsCredit(kind: draft.kind, clubID: draft.clubID,
+                                                             userID: access.profileID,
+                                                             entitlements: purchases.entitlements) {
+                // Kreditten brukes i stedet for et nytt kjøp (`assign_purchase`).
+                await purchases.purchase(.tournament, competitionID: id)
+            }
             await load()
             return id
         } catch {
@@ -201,6 +217,11 @@ final class CompetitionDetailModel {
     #endif
 
     var isAdmin: Bool { access.isAdmin(competition) }
+
+    /// Kan du føre (eller endre) resultatet i kampen?
+    func recordRight(_ game: CupStandings.Game) -> CupRecording.Right {
+        CupRecording.right(game, isAdmin: isAdmin)
+    }
 
     func load() async {
         guard let client else { return }
