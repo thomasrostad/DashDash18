@@ -20,6 +20,9 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
     private let network: any NetworkMonitoring
     private let backoff: OutboxBackoff
     private let timeout: Duration
+    /// Når markøren venter på «Lagre»: kortere enn i bakgrunnen. Hullet ligger trygt i køen, så
+    /// med svak dekning er det bedre å gå videre enn å stå med spinneren i 20 sekunder.
+    private let interactiveTimeout: Duration
 
     private var isRunning = false
     private var isFlushing = false
@@ -39,7 +42,8 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         clock: any OutboxClock = SystemOutboxClock(),
         network: any NetworkMonitoring = PathNetworkMonitor(),
         backoff: OutboxBackoff = OutboxBackoff(),
-        timeout: Duration = .seconds(20)
+        timeout: Duration = .seconds(20),
+        interactiveTimeout: Duration = .seconds(8)
     ) {
         self.inner = inner
         context = ModelContext(container)
@@ -48,6 +52,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         self.network = network
         self.backoff = backoff
         self.timeout = timeout
+        self.interactiveTimeout = min(interactiveTimeout, timeout)
         refreshStatus()
     }
 
@@ -109,7 +114,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
             // Køen har allerede nyere tall for alle spillerne.
             return .queued
         }
-        switch await attempt(id) {
+        switch await attempt(id, timeout: interactiveTimeout) {
         case .saved(let rows):
             if hasPending { Task { await flush() } }
             return .saved(rows)
@@ -152,7 +157,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         repeat {
             flushAgain = false
             for id in pendingIDsInOrder() where !inFlight.contains(id) {
-                if case .transient = await attempt(id) {
+                if case .transient = await attempt(id, timeout: timeout) {
                     scheduleRetry()
                     return
                 }
@@ -222,7 +227,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
 
     /// Ett forsøk på å sende posten. Posten hentes på nytt etter sending, fordi en nyere
     /// innsending kan ha endret eller slettet den imens.
-    private func attempt(_ id: UUID) async -> Attempt {
+    private func attempt(_ id: UUID, timeout: Duration) async -> Attempt {
         guard !inFlight.contains(id), let item = item(id), item.state == .pending else { return .skipped }
         let submission = item.submission
         item.attempts += 1
@@ -232,7 +237,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         inFlight.insert(id)
         defer { inFlight.remove(id) }
         do {
-            let outcome = try await sendWithTimeout(submission)
+            let outcome = try await sendWithTimeout(submission, timeout: timeout)
             guard case .saved(let rows) = outcome else {
                 return failed(id, message: "Lagt i kø av underliggende sender")
             }
@@ -274,9 +279,8 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         var value = false
     }
 
-    private func sendWithTimeout(_ submission: HoleSubmission) async throws -> SubmitOutcome {
+    private func sendWithTimeout(_ submission: HoleSubmission, timeout: Duration) async throws -> SubmitOutcome {
         let inner = inner
-        let timeout = timeout
         let send = Task { try await inner.submit(submission) }
         let timedOut = Flag()
         let timer = Task {

@@ -356,6 +356,17 @@ struct OutboxTests {
         #expect(outbox.status.lastError == "Tidsavbrudd mot serveren.")
     }
 
+    /// «Lagre» venter kortere enn sendingen i bakgrunnen: markøren står ikke med spinneren.
+    @Test func lagreVenterKortereEnnBakgrunnen() async throws {
+        let outbox = OutboxScoreSubmitter(inner: sender, container: container, clock: clock, network: network,
+                                          timeout: .seconds(25), interactiveTimeout: .milliseconds(50))
+        sender.mode = .hang
+        let started = ContinuousClock.now
+        #expect(try await outbox.submit(hole(0, [(anna, 4)])) == .queued)
+        #expect(ContinuousClock.now - started < .seconds(5))
+        #expect(outbox.pendingHoles(roundID: roundID) == [0])
+    }
+
     @Test func ukjentFeilProvesIgjen() async throws {
         let outbox = makeOutbox()
         sender.mode = .fail(.unknown("500"))
