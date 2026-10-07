@@ -5,6 +5,7 @@ import SwiftUI
 struct PushSettingsView: View {
     let context: ClubContext
     @Environment(PushRegistrar.self) private var registrar
+    @Environment(\.scenePhase) private var scenePhase
     @State private var preferences: PushPreferences?
     @State private var club = ClubPushSettings()
     @State private var error: String?
@@ -44,10 +45,22 @@ struct PushSettingsView: View {
             if let error {
                 Text(error)
                     .foregroundStyle(Color.ddRustText)
+                if preferences == nil {
+                    Button("Prøv igjen") { Task { await load() } }
+                        .fontWeight(.medium)
+                }
             }
         }
         .navigationTitle("Varsler")
-        .task { await load() }
+        .task {
+            await registrar.refreshAuthorization()
+            await load()
+        }
+        .refreshable { await load() }
+        // Tilbake fra Innstillinger: tillatelsen kan være gitt eller tatt bort.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await registrar.refreshAuthorization() } }
+        }
     }
 
     private func categoryToggle(_ category: ActivityCategory, preferences: PushPreferences) -> some View {

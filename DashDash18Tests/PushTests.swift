@@ -139,3 +139,40 @@ struct PushKategoriTests {
         #expect(!PushCategories.subtitle(category).isEmpty)
     }
 }
+
+/// Push mens appen står åpen (`dd18` fra push-send) og tillatelse som endres i Innstillinger.
+struct PushForegroundTests {
+    let event = UUID(uuidString: "eeeeeeee-0000-0000-0000-000000000001")!
+    let other = UUID(uuidString: "eeeeeeee-0000-0000-0000-000000000002")!
+
+    @Test func leserTypeOgKveldFraPushen() {
+        let thread = PushTarget(userInfo: ["aps": [:], "dd18": ["type": "thread", "message_id": "m", "event_id": event.uuidString.lowercased(), "category": "thread"]])
+        #expect(thread == PushTarget(kind: .thread, eventID: event))
+        let activity = PushTarget(userInfo: ["dd18": ["type": "activity", "activity_id": "a", "kind": "big_score"]])
+        #expect(activity == PushTarget(kind: .activity, eventID: nil))
+        #expect(PushTarget(userInfo: [:]) == PushTarget(kind: nil, eventID: nil))
+        #expect(PushTarget(userInfo: ["dd18": ["type": "noe nytt", "event_id": "ikke-en-uuid"]]) == PushTarget(kind: nil, eventID: nil))
+    }
+
+    @Test func traadenDuSerPaaVarslesIkke() {
+        let thread = PushTarget(kind: .thread, eventID: event)
+        #expect(!PushForeground.shouldShow(thread, visibleThreadEventID: event))
+        #expect(PushForeground.shouldShow(thread, visibleThreadEventID: other))
+        #expect(PushForeground.shouldShow(thread, visibleThreadEventID: nil))
+    }
+
+    @Test func altAnnetVisesSomBanner() {
+        #expect(PushForeground.shouldShow(PushTarget(kind: .activity, eventID: event), visibleThreadEventID: event))
+        #expect(PushForeground.shouldShow(PushTarget(kind: nil, eventID: nil), visibleThreadEventID: event))
+    }
+
+    @MainActor @Test func tillatelseLestPaaNytt() {
+        // Slått på i Innstillinger: registrer. Alt registrert: bli stående.
+        #expect(PushRegistrar.nextStatus(.allowed, current: .denied) == .registering)
+        #expect(PushRegistrar.nextStatus(.allowed, current: .failed("x")) == .registering)
+        #expect(PushRegistrar.nextStatus(.allowed, current: .registered) == .registered)
+        // Slått av i Innstillinger mens appen var registrert.
+        #expect(PushRegistrar.nextStatus(.denied, current: .registered) == .denied)
+        #expect(PushRegistrar.nextStatus(.notDetermined, current: .disabled) == .notDetermined)
+    }
+}
