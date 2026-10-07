@@ -10,9 +10,9 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 9 og 10 forarbeid ferdig. Importverktøy (`Packages/DashImport`) ferdig. Veddemål med poeng er slått på mot test (012 kjørt). |
+| **Nåværende fase** | Fase 12–17 (åpen app) er bygget. På test er 011–018, 020 og 021 kjørt og slått på. 019, 022 og 023 venter på godkjenning. |
 | **Sist gjort** | 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
-| **Neste oppgave** | Fase 13, 14 og 16 bygges bak flagg. Godkjenne og kjøre 017 (fundament). |
+| **Neste oppgave** | Fase 12–17 er bygget. Godkjenne og kjøre 019, 022 og 023, deploye `delete-account` og `verify-purchase`, oppsett i App Store Connect og Google (`docs/app-store.md`), så slå på flaggene ett for ett. Deretter byttet for gjengen (fase 9) og prod. |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
@@ -346,7 +346,7 @@ Besluttet 07.10.2026 (deg):
 - **Fase 12 – Fundament** *(07.10: 017 kjørt på test, kontrollen 14/14, slått på; jakkeracet likt via konkurranser)*: runden er kjernen, og klubb er valgfritt. Planen har profiler, gjester og konkurranser som eget lag. Jakkeracet blir én konkurranse, og pariteten står.
 - **Fase 13 – Løs runde med venner** *(07.10: 018 kjørt på test, URL-skjemaet `dashdash` lagt inn, slått på – Spill-fanen)*: ny runde på sekunder, invitasjon med lenke eller QR, felles banebibliotek.
 - **Fase 14 – Spill på runden** *(07.10: 020 kjørt på test, slått på; motor med 20 håndregnede scenarier)*: skins, Nassau, Wolf, bingo-bango-bongo og 2 mot 2, i poeng.
-- **Fase 15 – Flere konkurranser:** liga, cup og morroturneringer samtidig (erstatter tidligere fase 12-utkast), med «Teller også i …».
+- **Fase 15 – Flere konkurranser** *(07.10: bygget bak `CompetitionsFeature` – liga, cup, morroturnering, «Teller også i …»; venter på 022. Betalingsstubben kobles til `PurchaseService` fra fase 17 når kjøp slås på)*: liga, cup og morroturneringer samtidig (erstatter tidligere fase 12-utkast), med «Teller også i …».
 - **Fase 16 – Statistikk** *(07.10: ferdig, 021 kjørt, slått på)*: historikk, snitt, rekorder og handicaputvikling.
 - **Fase 17 – Åpent for alle (App Store)** *(07.10: bygget bak flagg; venter på 019, 023, Edge Functions og oppsett i App Store Connect/Google, se `docs/app-store.md`)*: onboarding uten klubb, sletting av konto, personvern, rapporter og blokker, Google-innlogging og prod.
 
