@@ -182,6 +182,13 @@ struct ForingLagringTests {
         #expect(g.recipients(for: id(F.cato)) == [id(F.cato)])
     }
 
+    @Test func lagreRettEtterHullbytteSperres() {
+        let changed = Date(timeIntervalSince1970: 100)
+        #expect(!SaveTapGuard.allows(now: changed.addingTimeInterval(0.2), holeChangedAt: changed))
+        #expect(SaveTapGuard.allows(now: changed.addingTimeInterval(0.6), holeChangedAt: changed))
+        #expect(SaveTapGuard.allows(now: changed, holeChangedAt: .distantPast))
+    }
+
     @Test func steppereHolderSegInnenforGrensa() {
         #expect(StrokeInput.clamp(0) == 1)
         #expect(StrokeInput.clamp(13) == 12)

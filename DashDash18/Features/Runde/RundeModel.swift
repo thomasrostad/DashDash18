@@ -21,7 +21,11 @@ final class RundeModel {
     private(set) var snapshot: RoundSnapshot?
     /// Runden slik den vises: serveren pluss hull som ligger i kø.
     private(set) var game: RoundGame?
-    var currentHole = 0
+    var currentHole = 0 {
+        didSet { if currentHole != oldValue { holeChangedAt = .now } }
+    }
+    /// Når kortet sist byttet hull (`SaveTapGuard`).
+    private var holeChangedAt = Date.distantPast
     private(set) var drafts = HoleDrafts()
     private(set) var pendingHoles: Set<Int> = []
     private(set) var isSaving = false
@@ -204,7 +208,8 @@ final class RundeModel {
 
     /// «Lagre hull N → hull N+1»: alle radene i én innsending, med tastetiden.
     func saveCurrentHole() async {
-        guard let game, let submitter, !isSaving, let card, case .save(_, true, _) = card.action else { return }
+        guard let game, let submitter, !isSaving, let card, case .save(_, true, _) = card.action,
+              SaveTapGuard.allows(now: .now, holeChangedAt: holeChangedAt) else { return }
         let hole = currentHole
         guard let submission = game.submission(hole: hole, drafts: drafts, viewer: viewer, recordedAt: Date()) else {
             drafts.clear(hole: hole)

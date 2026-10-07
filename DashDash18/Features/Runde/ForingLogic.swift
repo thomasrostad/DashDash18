@@ -15,6 +15,18 @@ nonisolated enum StrokeInput {
     }
 }
 
+/// Et trykk på «Lagre» rett etter at kortet byttet hull, var ment for hullet før: andre halvdel
+/// av et dobbelttrykk på «Lagre hull N → hull N+1» eller «Neste hull», eller kortet som flyttet
+/// seg under fingeren. Uten sperra lagres neste hull med par uten at noen har tastet det.
+/// En inndatagrense for skjermen, ikke en spilleregel.
+nonisolated enum SaveTapGuard {
+    static let interval: TimeInterval = 0.6
+
+    static func allows(now: Date, holeChangedAt: Date) -> Bool {
+        now.timeIntervalSince(holeChangedAt) >= interval
+    }
+}
+
 /// Hvem som ser på runden.
 nonisolated struct Viewer: Equatable, Sendable {
     let memberID: UUID
