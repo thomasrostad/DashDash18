@@ -1,12 +1,17 @@
 #!/bin/sh
 # Xcode Cloud: skriver Supabase-konfigen, som ikke ligger i git.
 # Verdiene settes som miljøvariabler i workflowen (App Store Connect → Xcode Cloud):
-#   SUPABASE_URL              f.eks. https://<ref>.supabase.co
+#   SUPABASE_PROJECT_REF      prosjekt-id, f.eks. tsekialrxuhrugscosgi (bare bokstaver;
+#                             Xcode Cloud godtar ikke «https://» i verdier)
 #   SUPABASE_PUBLISHABLE_KEY  publishable key (aldri service-role)
 # Bygget går alltid mot test. Prod kommer i fase 9.
 set -eu
 
-: "${SUPABASE_URL:?Mangler SUPABASE_URL i Xcode Cloud-workflowen}"
+: "${SUPABASE_PROJECT_REF:?Mangler SUPABASE_PROJECT_REF i Xcode Cloud-workflowen}"
+case "$SUPABASE_PROJECT_REF" in
+  *[!a-z0-9]*) echo "Feil: SUPABASE_PROJECT_REF skal bare ha små bokstaver og tall" >&2; exit 1 ;;
+esac
+SUPABASE_URL="https://$SUPABASE_PROJECT_REF.supabase.co"
 : "${SUPABASE_PUBLISHABLE_KEY:?Mangler SUPABASE_PUBLISHABLE_KEY i Xcode Cloud-workflowen}"
 
 case "$SUPABASE_PUBLISHABLE_KEY" in
