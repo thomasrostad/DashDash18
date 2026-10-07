@@ -12,7 +12,7 @@ Workflowen **TestFlight fra main** bygger appen og sender den til TestFlight hve
 - **Miljøvariabler:**
   - `SUPABASE_PROJECT_REF`: prosjekt-ID-en til test (Xcode Cloud godtar ikke `https://` i verdier)
   - `SUPABASE_PUBLISHABLE_KEY`: publishable key, merket Secret
-- **`ci_scripts/ci_post_clone.sh`** skriver `DashDash18/Config/Supabase-Test.plist` fra variablene. Det stopper hvis nøkkelen ser hemmelig ut eller ikke starter med `sb_publishable_`.
+- **`ci_scripts/ci_post_clone.sh`** fjerner mellomrom og linjeskift i verdiene, løser pakkene med Xcode-versjonen bygget bruker, og skriver `DashDash18/Config/Supabase-Test.plist` fra variablene. Det stopper hvis nøkkelen ser hemmelig ut eller ikke starter med `sb_publishable_`.
 
 ## Vanlig bruk
 
