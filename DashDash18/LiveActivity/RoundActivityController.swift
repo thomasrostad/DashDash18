@@ -26,8 +26,9 @@ final class RoundActivityController {
         guard LiveActivityFeature.isEnabled else { return }
         guard let game, game.wantsLiveActivity(for: viewer),
               let state = game.liveActivityContent(for: viewer) else {
-            // Runden er låst, borte, eller jeg spiller ikke: avslutt med det siste vi vet.
-            end(final: game.flatMap { $0.liveActivityContent(for: viewer) })
+            // Runden er låst, borte, eller jeg spiller ikke: avslutt med det siste vi vet. En låst
+            // runde hentes ikke lenger (bare aktive), så da er det siste som ble vist, sluttstillingen.
+            end(final: game.flatMap { $0.liveActivityContent(for: viewer) } ?? lastState)
             return
         }
 

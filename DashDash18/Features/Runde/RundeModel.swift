@@ -21,7 +21,11 @@ final class RundeModel {
     private(set) var snapshot: RoundSnapshot?
     /// Runden slik den vises: serveren pluss hull som ligger i kø.
     private(set) var game: RoundGame?
-    var currentHole = 0
+    var currentHole = 0 {
+        didSet { if currentHole != oldValue { holeChangedAt = .now } }
+    }
+    /// Når kortet sist byttet hull (`SaveTapGuard`).
+    private var holeChangedAt = Date.distantPast
     private(set) var drafts = HoleDrafts()
     private(set) var pendingHoles: Set<Int> = []
     private(set) var isSaving = false
@@ -33,7 +37,6 @@ final class RundeModel {
     var submitter: (any ScoreSubmitting)?
 
     private let context: ClubContext
-    private var queued: [QueuedHole] = []
     /// Hull i kø som ble ført for første gang: logges når serveren har dem (store scorer, ledelsen).
     private var queuedFresh: [Int: [RoundGame.FreshScore]] = [:]
     /// Det denne telefonen har logget i runden, så samme hendelse ikke går to ganger.
@@ -107,11 +110,13 @@ final class RundeModel {
         // Live Activity følger runden slik den vises (med hull i kø).
         defer { RoundActivityController.shared.sync(game: game, viewer: viewer) }
         guard let snapshot else { game = nil; return }
-        pendingHoles = submitter?.pendingHoles(roundID: snapshot.round.id) ?? []
+        // Køen leses fra utboksen hver gang, ikke fra minnet: hull som ble lagt i kø før appen
+        // ble startet på nytt, skal fortsatt stå (ellers står hullet tomt med par, og «Lagre»
+        // ville erstattet tallet i køen). Bekreftede hull er ute av køen og står hos serveren.
+        let pending = submitter?.pendingSubmissions(roundID: snapshot.round.id) ?? []
+        pendingHoles = Set(pending.map(\.holeIndex))
         logConfirmedQueuedHoles(server: snapshot)
-        // Hull som er bekreftet av serveren, trenger ikke ligge oppå lenger.
-        queued.removeAll { !pendingHoles.contains($0.hole) }
-        game = RoundGame(snapshot.overlaying(queued))
+        game = RoundGame(snapshot.overlaying(pending.map(QueuedHole.init)))
     }
 
     /// `folgerBaasen`: står kortet på båsens hull før hentingen?
@@ -127,7 +132,6 @@ final class RundeModel {
         if placedRound != game.roundID {
             placedRound = game.roundID
             drafts = HoleDrafts()
-            queued = []
             queuedFresh = [:]
             loggedOnce = ActivityOnceLog()
             currentHole = game.bayHole(for: viewer)
@@ -204,7 +208,8 @@ final class RundeModel {
 
     /// «Lagre hull N → hull N+1»: alle radene i én innsending, med tastetiden.
     func saveCurrentHole() async {
-        guard let game, let submitter, !isSaving, let card, case .save(_, true, _) = card.action else { return }
+        guard let game, let submitter, !isSaving, let card, case .save(_, true, _) = card.action,
+              SaveTapGuard.allows(now: .now, holeChangedAt: holeChangedAt) else { return }
         let hole = currentHole
         guard let submission = game.submission(hole: hole, drafts: drafts, viewer: viewer, recordedAt: Date()) else {
             drafts.clear(hole: hole)
@@ -226,8 +231,6 @@ final class RundeModel {
             case .saved(let rows):
                 snapshot?.apply(saved: rows, hole: hole, members: submission.entries.map(\.memberID))
             case .queued:
-                queued.removeAll { $0.hole == hole }
-                queued.append(QueuedHole(hole: hole, entries: submission.entries))
                 // Varsler bare for det serveren har: hullet logges når køen er sendt (rebuild).
                 if !fresh.isEmpty { queuedFresh[hole] = fresh }
             }

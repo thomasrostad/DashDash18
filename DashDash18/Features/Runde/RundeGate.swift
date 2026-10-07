@@ -8,6 +8,7 @@ struct RundeGate<Fallback: View>: View {
 
     @Environment(\.scoreSubmitter) private var submitter
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(OutboxStatus.self) private var outbox: OutboxStatus?
 
     init(context: ClubContext, @ViewBuilder fallback: () -> Fallback) {
         _model = State(initialValue: RundeModel(context: context))
@@ -29,6 +30,13 @@ struct RundeGate<Fallback: View>: View {
                     if !model.hasRound || !model.isLive || !model.pendingHoles.isEmpty {
                         await model.load()
                     }
+                }
+            }
+            // Køen er sendt i bakgrunnen (nettet kom tilbake) mens realtime er nede: hent med en
+            // gang, så «ikke lagret ennå» forsvinner og stillingen har tallene, uten 30 sekunder.
+            .onChange(of: outbox?.pendingCount) { old, new in
+                if let old, let new, new < old, !model.isLive {
+                    Task { await model.load() }
                 }
             }
             .onChange(of: scenePhase) { _, phase in

@@ -15,6 +15,18 @@ nonisolated enum StrokeInput {
     }
 }
 
+/// Et trykk på «Lagre» rett etter at kortet byttet hull, var ment for hullet før: andre halvdel
+/// av et dobbelttrykk på «Lagre hull N → hull N+1» eller «Neste hull», eller kortet som flyttet
+/// seg under fingeren. Uten sperra lagres neste hull med par uten at noen har tastet det.
+/// En inndatagrense for skjermen, ikke en spilleregel.
+nonisolated enum SaveTapGuard {
+    static let interval: TimeInterval = 0.6
+
+    static func allows(now: Date, holeChangedAt: Date) -> Bool {
+        now.timeIntervalSince(holeChangedAt) >= interval
+    }
+}
+
 /// Hvem som ser på runden.
 nonisolated struct Viewer: Equatable, Sendable {
     let memberID: UUID
@@ -137,6 +149,12 @@ nonisolated struct QueuedHole: Equatable, Sendable {
     let entries: [HoleSubmission.Entry]
 }
 
+nonisolated extension QueuedHole {
+    init(_ submission: HoleSubmission) {
+        self.init(hole: submission.holeIndex, entries: submission.entries)
+    }
+}
+
 /// Tallene markøren har trykket fram, før de er lagret. En verdi som finnes ER bekreftelsen
 /// (PWA-ens `scoreUtkast`). Overlever realtime-hentinger.
 nonisolated struct HoleDrafts: Equatable, Sendable {
@@ -174,6 +192,13 @@ nonisolated enum ParConfirmation {
     static func error(_ error: DataError) -> DataError {
         // 55000 («Runden er ikke i gang») kommer med serverens tekst som `.invalid`.
         error == .notAllowed ? .invalid("Bare arrangøren eller en markør kan bekrefte parene.") : error
+    }
+
+    /// Teksten under knappen. Feil som kan gå over av seg selv, sier «Prøv igjen»
+    /// (nett-teksten sier det allerede).
+    static func message(_ error: DataError) -> String {
+        if case .unknown = error { return error.message + " Prøv igjen." }
+        return error.message
     }
 }
 

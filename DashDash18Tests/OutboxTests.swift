@@ -250,6 +250,26 @@ struct OutboxTests {
         restarted.stop()
     }
 
+    /// Runde-skjermen legger køen oppå serverens tall, også etter omstart: tallene, eldst først,
+    /// med det nyeste per spiller.
+    @Test func koenKanLesesEtterOmstart() async throws {
+        sender.mode = .offline
+        do {
+            let outbox = makeOutbox()
+            _ = try await outbox.submit(hole(4, at: 20, [(anna, 6), (bjorn, 5)]))
+            _ = try await outbox.submit(hole(3, at: 10, [(anna, 4)]))
+            _ = try await outbox.submit(hole(4, at: 30, [(anna, 7)]))
+            _ = try await outbox.submit(hole(1, round: UUID(), [(anna, 4)]))
+        }
+        let restarted = makeOutbox()
+        let pending = restarted.pendingSubmissions(roundID: roundID)
+        #expect(pending.map(\.holeIndex) == [3, 4, 4])
+        let overlay = RoundSnapshot(round: ForingFixture.round()).overlaying(pending.map(QueuedHole.init))
+        let hole4 = overlay.scores.filter { $0.holeIndex == 4 }
+        #expect(hole4.first { $0.memberID == anna }?.strokes == 7)
+        #expect(hole4.first { $0.memberID == bjorn }?.strokes == 5)
+    }
+
     @Test func koenErKnyttetTilBruker() async throws {
         let thomas = UUID(), per = UUID()
         sender.mode = .offline
@@ -334,6 +354,17 @@ struct OutboxTests {
         #expect(try await outbox.submit(hole(0, [(anna, 4)])) == .queued)
         #expect(outbox.pendingHoles(roundID: roundID) == [0])
         #expect(outbox.status.lastError == "Tidsavbrudd mot serveren.")
+    }
+
+    /// «Lagre» venter kortere enn sendingen i bakgrunnen: markøren står ikke med spinneren.
+    @Test func lagreVenterKortereEnnBakgrunnen() async throws {
+        let outbox = OutboxScoreSubmitter(inner: sender, container: container, clock: clock, network: network,
+                                          timeout: .seconds(25), interactiveTimeout: .milliseconds(50))
+        sender.mode = .hang
+        let started = ContinuousClock.now
+        #expect(try await outbox.submit(hole(0, [(anna, 4)])) == .queued)
+        #expect(ContinuousClock.now - started < .seconds(5))
+        #expect(outbox.pendingHoles(roundID: roundID) == [0])
     }
 
     @Test func ukjentFeilProvesIgjen() async throws {
