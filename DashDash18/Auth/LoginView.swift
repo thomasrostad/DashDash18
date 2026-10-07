@@ -1,8 +1,12 @@
 import AuthenticationServices
 import SwiftUI
 
-/// Innlogging med Apple eller engangskode på e-post. Google kommer i neste steg.
+/// Innlogging med Apple, Google (bak `GoogleLoginFeature`) eller engangskode på e-post.
 struct LoginView: View {
+    /// Google-knappen (skjermprøven viser den selv om flagget er av).
+    var showsGoogle = GoogleLoginFeature.isEnabled
+    /// Lenkene til vilkår og personvern.
+    var showsLegal = LegalLinks.isVisible
     @Environment(AuthModel.self) private var auth
     @Environment(\.colorScheme) private var colorScheme
     @State private var appleNonce = ""
@@ -36,6 +40,10 @@ struct LoginView: View {
                             emailSection
                         case .code(let email):
                             codeSection(email: email)
+                        }
+                        if showsLegal {
+                            LegalLinksRow()
+                                .padding(.top, DDSpacing.s)
                         }
                         if let error {
                             Label(error.message, systemImage: "exclamationmark.triangle")
@@ -86,6 +94,9 @@ struct LoginView: View {
             .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
             .frame(height: 56)
             .clipShape(.capsule)
+            if showsGoogle {
+                GoogleSignInButton { run { try await auth.signInWithGoogle() } }
+            }
             Text("Eller logg inn med en kode på e-post:")
                 .font(.ddCallout)
                 .foregroundStyle(Color.ddInkSecondary)
@@ -281,5 +292,31 @@ private struct LoginHero: View {
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// «Fortsett med Google» i samme form som Apple-knappen. Googles retningslinjer: hvit flate,
+/// tydelig navn. Ingen logo-fil (ingen nye ressurser); teksten er nok.
+private struct GoogleSignInButton: View {
+    let action: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text("G")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .accessibilityHidden(true)
+                Text("Fortsett med Google")
+                    .font(.system(size: 19, weight: .medium))
+            }
+            .frame(maxWidth: .infinity, minHeight: 56)
+            .foregroundStyle(colorScheme == .dark ? Color.black : Color(white: 0.12))
+            .background(Capsule().fill(Color.white))
+            .overlay(Capsule().strokeBorder(Color(white: 0.75), lineWidth: 1))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Fortsett med Google")
     }
 }

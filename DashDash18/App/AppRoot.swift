@@ -8,6 +8,8 @@ struct AppRoot: View {
     /// Invitasjon til en løs runde fra en lenke (`dashdash://runde/KODE`, fase 13). Venter til du er
     /// logget inn.
     @State private var pendingInvite: InviteCode?
+    /// Kjøp i appen (fase 17). Lages per innlogging når `PurchaseFeature` er på; ellers nil.
+    @State private var purchases: PurchaseService?
 
     var body: some View {
         Group {
@@ -20,15 +22,18 @@ struct AppRoot: View {
                 LoginView()
             case .signedIn(let user):
                 ClubGate(services: services, user: user)
+                    .id(user.id)
                     .task(id: user.id) { await services.club.load(userID: user.id) }
                     .task(id: user.id) { services.outbox.start(userID: user.id) }
                     .task(id: user.id) { await services.push.start(userID: user.id) }
+                    .task(id: user.id) { startPurchases(userID: user.id) }
             }
         }
         .environment(services.auth)
         .environment(services.club)
         .environment(services.outbox.status)
         .environment(services.push)
+        .environment(purchases)
         .onOpenURL { url in
             guard LooseRoundsFeature.isEnabled, let code = InviteCode(url: url) else { return }
             pendingInvite = code
@@ -46,6 +51,8 @@ struct AppRoot: View {
                 services.club.reset()
                 services.outbox.stop()
                 services.push.stop()
+                purchases?.stop()
+                purchases = nil
             }
         }
         .onChange(of: scenePhase) { _, phase in
@@ -60,6 +67,16 @@ struct AppRoot: View {
 }
 
 extension AppRoot {
+    /// Lytter på transaksjoner fra App Store (også dem som ikke ble fullført sist) og henter kjøpene.
+    private func startPurchases(userID: UUID) {
+        guard PurchaseFeature.isEnabled else { return }
+        purchases?.stop()
+        let service = PurchaseService(client: services.client, profileID: userID)
+        purchases = service
+        service.start()
+        Task { await service.refreshEntitlements() }
+    }
+
     private var signedInUser: AuthUser? {
         if case .signedIn(let user) = services.auth.state { return user }
         return nil
@@ -67,22 +84,37 @@ extension AppRoot {
 }
 
 /// Etter innlogging: har du en aktiv klubb, får du appen. Ellers klubbvalg eller venting.
+/// Med `OpenAppFeature` kan du også spille uten klubb (`OpenAppGate`).
 struct ClubGate: View {
     let services: AppServices
     let user: AuthUser
     @Environment(ClubModel.self) private var club
+    @State private var choice: AppHomeChoice?
+    private let choices = AppHomeChoiceStore()
+
+    init(services: AppServices, user: AuthUser) {
+        self.services = services
+        self.user = user
+        _choice = State(initialValue: AppHomeChoiceStore().load(userID: user.id))
+    }
 
     var body: some View {
-        switch club.state {
+        switch OpenAppGate.home(club: club.state, choice: choice) {
         case .loading:
             ProgressView("Henter klubben din …")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ddScreenBackground()
-        case .noClub:
-            ClubOnboardingView(user: user)
+        case .chooser:
+            OnboardingChoiceView { choose($0) }
+        case .clubOnboarding:
+            ClubOnboardingView(user: user, onPlayWithoutClub: OpenAppFeature.isEnabled ? { choose(.friends) } : nil)
+        case .friends:
+            FriendsRootView(config: services.config, client: services.client, user: user)
+                .environment(\.scoreSubmitter, services.scoreSubmitter)
         case .pending(let membership):
-            PendingMembershipView(membership: membership, user: user)
-        case .active(let membership):
+            PendingMembershipView(membership: membership, user: user,
+                                  onPlayWithoutClub: OpenAppFeature.isEnabled ? { choose(.friends) } : nil)
+        case .club(let membership):
             RootView(config: services.config, user: user, membership: membership)
                 .environment(\.clubContext, ClubContext(client: services.client, user: user, membership: membership))
                 .environment(\.scoreSubmitter, services.scoreSubmitter)
@@ -99,6 +131,16 @@ struct ClubGate: View {
                 SignOutButton()
             }
             .ddScreenBackground()
+        }
+    }
+
+    /// Lagrer valget på telefonen og godtar vilkårene på serveren (019, når moderering er på).
+    private func choose(_ next: AppHomeChoice) {
+        choices.save(next, userID: user.id)
+        choice = next
+        if ModerationFeature.isEnabled {
+            let service = ModerationService(client: services.client)
+            Task { try? await service.acceptTerms() }
         }
     }
 }

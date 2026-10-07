@@ -62,9 +62,18 @@ struct DegView: View {
                         Label("Arrangørsiden", systemImage: "slider.horizontal.3")
                             .labelStyle(DDIconLabelStyle())
                     }
+                    if ModerationFeature.isEnabled, let context {
+                        NavigationLink {
+                            ReportsAdminView(service: ModerationService(client: context.client), clubID: membership.clubID)
+                        } label: {
+                            Label("Rapporter", systemImage: "flag.badge.ellipsis")
+                                .labelStyle(DDIconLabelStyle())
+                        }
+                    }
                 }
             }
             DegAccountSection(user: user)
+            DegOpenAppSections(client: context?.client, user: user)
             DDSection("Om appen") {
                 LabeledContent("Miljø", value: config.environment.displayName)
                 LabeledContent("Database") {

@@ -24,6 +24,9 @@ private struct TradContent: View {
     @State private var confirmingDelete: ThreadMessageRow?
     @State private var showsCamera = false
     @State private var cameraDenied = false
+    /// Rapporter og blokker (fase 17, `ModerationFeature`).
+    @State private var reportTarget: ReportTarget?
+    @State private var confirmingBlock: TradModel.Item?
 
     var body: some View {
         messageList
@@ -84,6 +87,24 @@ private struct TradContent: View {
             } message: { message in
                 Text(message.memberID == model.viewerID ? "Den forsvinner for alle." : "Du sletter en annens melding som arrangør.")
             }
+            .sheet(item: $reportTarget) { target in
+                ReportSheet(target: target) { reason, note, block in
+                    try await model.report(target, reason: reason, note: note, block: block)
+                }
+            }
+            .confirmationDialog(
+                "Blokkere?",
+                isPresented: Binding(get: { confirmingBlock != nil }, set: { if !$0 { confirmingBlock = nil } }),
+                titleVisibility: .visible,
+                presenting: confirmingBlock
+            ) { item in
+                Button("Blokker \(item.author)", role: .destructive) {
+                    Task { await model.block(memberID: item.message.memberID) }
+                }
+                Button("Avbryt", role: .cancel) {}
+            } message: { item in
+                Text("Du ser ikke lenger meldingene til \(item.author), og dere kan ikke legge hverandre til i runder. \(item.author) får ikke vite det. Du kan oppheve det under Deg.")
+            }
             .alert(
                 "Tråden",
                 isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })
@@ -92,6 +113,25 @@ private struct TradContent: View {
             } message: {
                 Text(model.errorMessage ?? "")
             }
+    }
+
+    @ViewBuilder
+    private func moderationButtons(for item: TradModel.Item) -> some View {
+        if !item.message.body.isEmpty {
+            Button("Rapporter meldingen", systemImage: "flag") {
+                reportTarget = ReportTarget(kind: .message, targetID: item.id, memberID: item.message.memberID,
+                                            authorName: item.author)
+            }
+        }
+        if item.message.imagePath != nil {
+            Button("Rapporter bildet", systemImage: "flag") {
+                reportTarget = ReportTarget(kind: .image, targetID: item.id, memberID: item.message.memberID,
+                                            authorName: item.author)
+            }
+        }
+        Button("Blokker \(item.author)", systemImage: "hand.raised", role: .destructive) {
+            confirmingBlock = item
+        }
     }
 
     private func openCamera() {
@@ -117,6 +157,9 @@ private struct TradContent: View {
                                     Button("Slett", systemImage: "trash", role: .destructive) {
                                         confirmingDelete = item.message
                                     }
+                                }
+                                if ModerationFeature.isEnabled, !item.isMine, !item.isPending {
+                                    moderationButtons(for: item)
                                 }
                             }
                     }

@@ -3,10 +3,20 @@ import SwiftUI
 /// Første gang etter innlogging: lag en klubb eller bli med i en.
 struct ClubOnboardingView: View {
     let user: AuthUser
+    /// «Spill med venner i stedet» (OpenAppFeature). nil = som før.
+    var onPlayWithoutClub: (() -> Void)?
 
     var body: some View {
         NavigationStack {
             DDList {
+                if let onPlayWithoutClub {
+                    Section {
+                        Button("Spill med venner uten klubb", systemImage: "figure.golf", action: onPlayWithoutClub)
+                            .fontWeight(.medium)
+                    } footer: {
+                        DDFooter("Du kan bli med i en klubb senere, fra Deg.")
+                    }
+                }
                 Section {
                     NavigationLink {
                         JoinClubView(user: user)
@@ -41,6 +51,8 @@ struct ClubOnboardingView: View {
 struct PendingMembershipView: View {
     let membership: Membership
     let user: AuthUser
+    /// «Spill med venner mens du venter» (OpenAppFeature). nil = som før.
+    var onPlayWithoutClub: (() -> Void)?
     @Environment(ClubModel.self) private var club
     @State private var checkResult: String?
 
@@ -65,6 +77,10 @@ struct PendingMembershipView: View {
                     Text(checkResult)
                         .font(.ddCallout)
                         .foregroundStyle(Color.ddInkSecondary)
+                }
+                if let onPlayWithoutClub {
+                    Button("Spill med venner mens du venter", action: onPlayWithoutClub)
+                        .buttonStyle(.dd(.secondary))
                 }
             }
             .ddScreenBackground()
