@@ -3,6 +3,19 @@ import GolfgutuCore
 import Observation
 import Supabase
 
+/// Hvilken runde skjermen viser: klubbens runde som går, eller en løs runde (fase 13).
+enum RundeSource {
+    case club(ClubContext)
+    case loose(LooseRoundContext)
+}
+
+/// En løs runde (sql/017–018): runden og den innloggede.
+struct LooseRoundContext {
+    let client: SupabaseClient
+    let userID: UUID
+    let roundID: UUID
+}
+
 /// Kveld-skjermen under spill: runden som går, hullkortet for båsen og «Bayen nå».
 /// Lagring går gjennom `ScoreSubmitting` (aldri rett til `save_hole`).
 @Observable
@@ -36,7 +49,7 @@ final class RundeModel {
 
     var submitter: (any ScoreSubmitting)?
 
-    private let context: ClubContext
+    private let source: RundeSource
     /// Hull i kø som ble ført for første gang: logges når serveren har dem (store scorer, ledelsen).
     private var queuedFresh: [Int: [RoundGame.FreshScore]] = [:]
     /// Det denne telefonen har logget i runden, så samme hendelse ikke går to ganger.
@@ -49,13 +62,53 @@ final class RundeModel {
     private var listenTasks: [Task<Void, Never>] = []
 
     init(context: ClubContext) {
-        self.context = context
+        source = .club(context)
     }
 
-    private var client: SupabaseClient { context.client }
-    var clubContext: ClubContext { context }
+    /// En løs runde (fase 13): hentes på id, også når den er avsluttet.
+    init(loose: LooseRoundContext) {
+        source = .loose(loose)
+    }
 
-    var viewer: Viewer { Viewer(memberID: context.memberID, isOrganizer: context.isOrganizer) }
+    #if DEBUG
+    /// Skjermprøve av en løs runde som alt er hentet (`-DDDesignScreen losrunde`). Ingen henting.
+    init(previewLoose snapshot: RoundSnapshot, context: LooseRoundContext) {
+        source = .loose(context)
+        self.snapshot = snapshot
+        game = RoundGame(snapshot)
+        placedRound = snapshot.round.id
+        if let game { currentHole = game.bayHole(for: viewer) }
+        state = .loaded
+    }
+    #endif
+
+    private var client: SupabaseClient {
+        switch source {
+        case .club(let context): context.client
+        case .loose(let loose): loose.client
+        }
+    }
+
+    /// Klubben, når runden er en klubbrunde.
+    var clubContext: ClubContext? {
+        if case .club(let context) = source { return context }
+        return nil
+    }
+
+    /// Den løse runden, når skjermen viser en.
+    var looseContext: LooseRoundContext? {
+        if case .loose(let loose) = source { return loose }
+        return nil
+    }
+
+    var viewer: Viewer {
+        switch source {
+        case .club(let context):
+            Viewer(memberID: context.memberID, isOrganizer: context.isOrganizer)
+        case .loose(let loose):
+            LooseRoundRights.viewer(info: snapshot?.loose, userID: loose.userID)
+        }
+    }
     var hasRound: Bool { game != nil }
 
     var card: HoleCard? {
@@ -67,7 +120,7 @@ final class RundeModel {
     /// Par-bekreftelsen tar plassen til hullkortet til noen har bekreftet.
     var needsParConfirmation: Bool { snapshot?.round.parConfirmedAt == nil }
     /// Arrangøren, eller en markør i runden som går (`confirm_round_par`).
-    var canConfirmPar: Bool { game?.canConfirmPar(viewer) ?? context.isOrganizer }
+    var canConfirmPar: Bool { game?.canConfirmPar(viewer) ?? viewer.isOrganizer }
 
     // MARK: Henting
 
@@ -85,7 +138,7 @@ final class RundeModel {
 
     private func fetch() async {
         do {
-            guard let fresh = try await RundeQueries.activeRound(client: client, clubID: context.clubID) else {
+            guard let fresh = try await fetchSnapshot() else {
                 snapshot = nil
                 game = nil
                 state = .none
@@ -103,6 +156,16 @@ final class RundeModel {
             // Behold det som vises når en oppfrisking feiler.
             if snapshot != nil { return }
             state = .failed(DataError.from(error).message)
+        }
+    }
+
+    /// Klubbens runde som går, eller den løse runden.
+    private func fetchSnapshot() async throws -> RoundSnapshot? {
+        switch source {
+        case .club(let context):
+            try await RundeQueries.activeRound(client: client, clubID: context.clubID)
+        case .loose(let loose):
+            try await LooseRoundQueries.snapshot(client: client, roundID: loose.roundID)
         }
     }
 
@@ -280,10 +343,12 @@ final class RundeModel {
     /// Det som bare skal stå én gang per runde (`ActivityOnce`), og alt er logget fra denne
     /// telefonen, sendes ikke igjen.
     private func logQuietly(_ events: [ActivityEvent], in game: RoundGame) {
+        // Aktiviteten hører til klubb og kveld (sql/008). Løse runder logger ikke ennå.
+        guard case .club(let context) = source, let eventID = game.snapshot.round.eventID else { return }
         let events = loggedOnce.admit(events, roundID: game.roundID)
         guard !events.isEmpty else { return }
         let log = ActivityLog(client: client, clubID: context.clubID)
-        let roundID = game.roundID, eventID = game.snapshot.round.eventID
+        let roundID = game.roundID
         Task {
             for event in events {
                 await log.logQuietly(event, eventID: eventID, roundID: roundID)
@@ -305,6 +370,31 @@ final class RundeModel {
             try await RundeQueries.confirmPar(client: client, roundID: round.id)
         } catch {
             throw ParConfirmation.error(DataError.from(error))
+        }
+        await load()
+    }
+
+    // MARK: Løs runde (fase 13)
+
+    /// Eieren og deltakerne med profil kan invitere, så lenge runden ikke er avsluttet.
+    var canInvite: Bool {
+        guard let loose = looseContext, let snapshot else { return false }
+        return LooseRoundRights.canInvite(info: snapshot.loose, userID: loose.userID, status: snapshot.round.status)
+    }
+
+    /// Bare eieren avslutter.
+    var canFinish: Bool {
+        guard let loose = looseContext, let snapshot else { return false }
+        return LooseRoundRights.canFinish(info: snapshot.loose, userID: loose.userID, status: snapshot.round.status)
+    }
+
+    /// «Avslutt runden» (`finish_loose_round`, sql/018). Resultatet står etterpå.
+    func finish() async throws(DataError) {
+        guard let loose = looseContext, canFinish else { return }
+        do {
+            try await LooseRoundQueries.finish(client: client, roundID: loose.roundID)
+        } catch {
+            throw DataError.from(error)
         }
         await load()
     }

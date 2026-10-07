@@ -16,8 +16,13 @@ nonisolated struct RoundSnapshot: Equatable, Sendable {
     var eventDate: String?
     /// Regelsettet til sesongen kvelden hører til. Mangler det, gjelder Golfgutu-oppsettet.
     var rules: Ruleset = .golfgutu
-    /// Navn fra troppen.
+    /// Navn fra troppen (klubbrunde) eller deltakerne (løs runde).
     var names: [UUID: String] = [:]
+    /// Eieren og deltakerne i en løs runde (sql/017). Tom for klubbrunder.
+    var loose: LooseRoundInfo?
+
+    /// En runde uten klubb og kveld.
+    var isLoose: Bool { round.clubID == nil }
 }
 
 /// Bås-oppsettet for runden (`baaserForRunde`).

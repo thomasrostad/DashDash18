@@ -82,7 +82,7 @@ enum TavlaQueries {
             s.sideClaims = claims.filter { $0.roundID == round.id }
             s.course = courses.first { $0.id == round.courseID }
             s.courseHoles = courseHoles.filter { $0.courseID == round.courseID }
-            s.eventDate = dates[round.eventID]
+            s.eventDate = round.eventID.flatMap { dates[$0] }
             s.rules = season.rules
             s.names = names
             return s

@@ -66,8 +66,11 @@ nonisolated struct RoundDraft: Equatable, Sendable {
             .sorted { (order[$0.memberID] ?? .max) < (order[$1.memberID] ?? .max) }
         var teams: [UUID: Int] = [:]
         for p in players { if let t = p.teamNo { teams[p.memberID] = t } }
+        // Arrangørsiden henter bare klubbens runder, og de har alltid en kveld (`rounds_home_check`,
+        // sql/017). Mangler den likevel, avviser databasen lagringen (fremmednøkkelen til kvelden).
         return RoundDraft(
-            roundID: round.id, isSaved: true, eventID: round.eventID, roundNo: round.roundNo, courseID: round.courseID,
+            roundID: round.id, isSaved: true, eventID: round.eventID ?? UUID(), roundNo: round.roundNo,
+            courseID: round.courseID,
             holeCount: round.holeCount, firstHole: round.firstHole, teeTime: round.teeTime,
             participants: participants, participantSource: source, bays: BayPlan(seats: seats),
             formID: round.format, teams: teams,
