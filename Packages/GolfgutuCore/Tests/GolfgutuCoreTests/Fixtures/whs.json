@@ -1,0 +1,5998 @@
+{
+ "kilde": "Rules of Handicapping (R&A/USGA), utgaven fra 1.1.2024. Forventede tall er regnet for hånd.",
+ "banehandicap": [
+  {
+   "index": 12.4,
+   "slope": 125,
+   "courseRating": 71.2,
+   "par": 72,
+   "forventet": 13
+  },
+  {
+   "index": 0.0,
+   "slope": 113,
+   "courseRating": 70.5,
+   "par": 72,
+   "forventet": -2
+  },
+  {
+   "index": 54.0,
+   "slope": 155,
+   "courseRating": 76.0,
+   "par": 72,
+   "forventet": 78
+  },
+  {
+   "index": -2.0,
+   "slope": 130,
+   "courseRating": 73.0,
+   "par": 72,
+   "forventet": -1
+  }
+ ],
+ "slagFatt": [
+  {
+   "banehandicap": 20,
+   "indeks": 1,
+   "forventet": 2
+  },
+  {
+   "banehandicap": 20,
+   "indeks": 2,
+   "forventet": 2
+  },
+  {
+   "banehandicap": 20,
+   "indeks": 3,
+   "forventet": 1
+  },
+  {
+   "banehandicap": 13,
+   "indeks": 13,
+   "forventet": 1
+  },
+  {
+   "banehandicap": 13,
+   "indeks": 14,
+   "forventet": 0
+  },
+  {
+   "banehandicap": -2,
+   "indeks": 17,
+   "forventet": -1
+  },
+  {
+   "banehandicap": -2,
+   "indeks": 16,
+   "forventet": 0
+  },
+  {
+   "banehandicap": -2,
+   "indeks": 18,
+   "forventet": -1
+  },
+  {
+   "banehandicap": 36,
+   "indeks": 18,
+   "forventet": 2
+  },
+  {
+   "banehandicap": 0,
+   "indeks": 1,
+   "forventet": 0
+  }
+ ],
+ "hoyesteHullscore": [
+  {
+   "par": 4,
+   "indeks": 5,
+   "banehandicap": 13,
+   "forventet": 7
+  },
+  {
+   "par": 5,
+   "indeks": 1,
+   "banehandicap": null,
+   "forventet": 10
+  },
+  {
+   "par": 3,
+   "indeks": 18,
+   "banehandicap": -2,
+   "forventet": 4
+  }
+ ],
+ "differential": [
+  {
+   "justert": 85,
+   "courseRating": 71.2,
+   "slope": 125,
+   "forventet": 12.5
+  },
+  {
+   "justert": 72,
+   "courseRating": 72.5,
+   "slope": 130,
+   "forventet": -0.4
+  },
+  {
+   "justert": 95,
+   "courseRating": 70.0,
+   "slope": 113,
+   "forventet": 25.0
+  }
+ ],
+ "utvalg": [
+  {
+   "scorer": 2,
+   "laveste": null,
+   "justering": null
+  },
+  {
+   "scorer": 3,
+   "laveste": 1,
+   "justering": -2.0
+  },
+  {
+   "scorer": 4,
+   "laveste": 1,
+   "justering": -1.0
+  },
+  {
+   "scorer": 5,
+   "laveste": 1,
+   "justering": 0.0
+  },
+  {
+   "scorer": 6,
+   "laveste": 2,
+   "justering": -1.0
+  },
+  {
+   "scorer": 8,
+   "laveste": 2,
+   "justering": 0.0
+  },
+  {
+   "scorer": 11,
+   "laveste": 3,
+   "justering": 0.0
+  },
+  {
+   "scorer": 12,
+   "laveste": 4,
+   "justering": 0.0
+  },
+  {
+   "scorer": 16,
+   "laveste": 5,
+   "justering": 0.0
+  },
+  {
+   "scorer": 17,
+   "laveste": 6,
+   "justering": 0.0
+  },
+  {
+   "scorer": 19,
+   "laveste": 7,
+   "justering": 0.0
+  },
+  {
+   "scorer": 20,
+   "laveste": 8,
+   "justering": 0.0
+  },
+  {
+   "scorer": 25,
+   "laveste": 8,
+   "justering": 0.0
+  }
+ ],
+ "nettoDobbelBogey": [
+  {
+   "navn": "med indeks 10",
+   "score": {
+    "id": "n1",
+    "date": "2026-05-01",
+    "holes": [
+     {
+      "par": 4,
+      "strokeIndex": 1,
+      "gross": 9
+     },
+     {
+      "par": 4,
+      "strokeIndex": 2,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 3,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 4,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 5,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 6,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 7,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 8,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 9,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 10,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 11,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 12,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 13,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 14,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 15,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 16,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 17,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 18,
+      "gross": 8
+     }
+    ],
+    "courseRating": 72.0,
+    "slope": 113.0,
+    "handicapIndex": 10.0
+   },
+   "banehandicap": 10,
+   "justert": 77,
+   "differential": 5.0
+  },
+  {
+   "navn": "uten indeks: par + 5",
+   "score": {
+    "id": "n2",
+    "date": "2026-05-01",
+    "holes": [
+     {
+      "par": 4,
+      "strokeIndex": 1,
+      "gross": 9
+     },
+     {
+      "par": 4,
+      "strokeIndex": 2,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 3,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 4,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 5,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 6,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 7,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 8,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 9,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 10,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 11,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 12,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 13,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 14,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 15,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 16,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 17,
+      "gross": 4
+     },
+     {
+      "par": 4,
+      "strokeIndex": 18,
+      "gross": 8
+     }
+    ],
+    "courseRating": 72.0,
+    "slope": 113.0
+   },
+   "banehandicap": null,
+   "justert": 81,
+   "differential": 9.0
+  }
+ ],
+ "historikk": [
+  {
+   "navn": "færre enn 20 scorer (tabellen i 5.2a)",
+   "scorer": [
+    {
+     "id": "a0",
+     "date": "2026-01-01",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "a1",
+     "date": "2026-01-02",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "a2",
+     "date": "2026-01-03",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "a3",
+     "date": "2026-01-04",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "a4",
+     "date": "2026-01-05",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "a5",
+     "date": "2026-01-06",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    }
+   ],
+   "indekser": [
+    null,
+    null,
+    13.0,
+    14.0,
+    15.0,
+    13.5
+   ],
+   "reduksjon": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "grense": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  {
+   "navn": "eksepsjonell score, 7 eller mer under (5.9)",
+   "scorer": [
+    {
+     "id": "e0",
+     "date": "2026-01-01",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "e1",
+     "date": "2026-01-02",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "e2",
+     "date": "2026-01-03",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "e3",
+     "date": "2026-01-04",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "e4",
+     "date": "2026-01-05",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    }
+   ],
+   "indekser": [
+    null,
+    null,
+    18.0,
+    8.0,
+    8.0
+   ],
+   "reduksjon": [
+    0,
+    0,
+    0,
+    1,
+    0
+   ],
+   "grense": [
+    false,
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  {
+   "navn": "eksepsjonell score, 10 eller mer under (5.9)",
+   "scorer": [
+    {
+     "id": "x0",
+     "date": "2026-01-01",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "x1",
+     "date": "2026-01-02",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "x2",
+     "date": "2026-01-03",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "x3",
+     "date": "2026-01-04",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    }
+   ],
+   "indekser": [
+    null,
+    null,
+    23.0,
+    9.0
+   ],
+   "reduksjon": [
+    0,
+    0,
+    0,
+    2
+   ],
+   "grense": [
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  {
+   "navn": "myk og hard grense over laveste indeks (5.7, 5.8)",
+   "scorer": [
+    {
+     "id": "c0",
+     "date": "2026-01-01",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c1",
+     "date": "2026-01-02",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c2",
+     "date": "2026-01-03",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c3",
+     "date": "2026-01-04",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c4",
+     "date": "2026-01-05",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c5",
+     "date": "2026-01-06",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c6",
+     "date": "2026-01-07",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c7",
+     "date": "2026-01-08",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c8",
+     "date": "2026-01-09",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c9",
+     "date": "2026-01-10",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c10",
+     "date": "2026-01-11",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c11",
+     "date": "2026-01-12",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c12",
+     "date": "2026-01-13",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c13",
+     "date": "2026-01-14",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c14",
+     "date": "2026-01-15",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c15",
+     "date": "2026-01-16",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c16",
+     "date": "2026-01-17",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c17",
+     "date": "2026-01-18",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c18",
+     "date": "2026-01-19",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c19",
+     "date": "2026-01-20",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 4
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 4
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c20",
+     "date": "2026-01-21",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c21",
+     "date": "2026-01-22",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c22",
+     "date": "2026-01-23",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c23",
+     "date": "2026-01-24",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c24",
+     "date": "2026-01-25",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c25",
+     "date": "2026-01-26",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c26",
+     "date": "2026-01-27",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c27",
+     "date": "2026-01-28",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c28",
+     "date": "2026-01-29",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c29",
+     "date": "2026-01-30",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c30",
+     "date": "2026-01-31",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c31",
+     "date": "2026-02-01",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c32",
+     "date": "2026-02-02",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c33",
+     "date": "2026-02-03",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c34",
+     "date": "2026-02-04",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    },
+    {
+     "id": "c35",
+     "date": "2026-02-05",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 6
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 5
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 5
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 36.0
+    }
+   ],
+   "indekser": [
+    null,
+    null,
+    8.0,
+    9.0,
+    10.0,
+    9.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    12.5,
+    14.0,
+    15.0,
+    15.0
+   ],
+   "reduksjon": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "grense": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true
+   ]
+  },
+  {
+   "navn": "høyeste indeks er 54,0",
+   "scorer": [
+    {
+     "id": "m0",
+     "date": "2026-01-01",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 7
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 54.0
+    },
+    {
+     "id": "m1",
+     "date": "2026-01-02",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 7
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 54.0
+    },
+    {
+     "id": "m2",
+     "date": "2026-01-03",
+     "holes": [
+      {
+       "par": 4,
+       "strokeIndex": 1,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 2,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 3,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 4,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 5,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 6,
+       "gross": 8
+      },
+      {
+       "par": 4,
+       "strokeIndex": 7,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 8,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 9,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 10,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 11,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 12,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 13,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 14,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 15,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 16,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 17,
+       "gross": 7
+      },
+      {
+       "par": 4,
+       "strokeIndex": 18,
+       "gross": 7
+      }
+     ],
+     "courseRating": 72.0,
+     "slope": 113.0,
+     "handicapIndex": 54.0
+    }
+   ],
+   "indekser": [
+    null,
+    null,
+    54.0
+   ],
+   "reduksjon": [
+    0,
+    0,
+    0
+   ],
+   "grense": [
+    false,
+    false,
+    false
+   ]
+  }
+ ],
+ "lavesteIndeks": {
+  "etablert": [
+   {
+    "date": "2025-01-01",
+    "index": 8.0
+   },
+   {
+    "date": "2025-06-01",
+    "index": 12.0
+   },
+   {
+    "date": "2026-03-01",
+    "index": 11.0
+   }
+  ],
+  "saker": [
+   {
+    "sisteScore": "2026-06-02",
+    "forventet": 11.0
+   },
+   {
+    "sisteScore": "2026-05-31",
+    "forventet": 8.0
+   },
+   {
+    "sisteScore": "2025-01-01",
+    "forventet": null
+   }
+  ]
+ }
+}

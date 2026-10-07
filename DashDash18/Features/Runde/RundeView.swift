@@ -94,6 +94,10 @@ struct RundeView: View {
                 onGoTo: { model.goTo(hole: $0) },
                 onScorecard: { scorecardFor = ScorecardTarget(memberID: $0 ?? model.viewer.memberID) }
             )
+            if StatsFeature.isEnabled, game.isPlaying(model.viewer.memberID), let par = game.statsPar(card.holeIndex) {
+                HoleStatsSlot(context: model.clubContext, roundID: game.roundID, memberID: model.viewer.memberID,
+                              holeIndex: card.holeIndex, par: par)
+            }
         } else {
             DDInfoStripe("Du er ikke med i denne runden. Du ser stillingen under.")
         }

@@ -53,6 +53,9 @@ struct DegView: View {
                     }
                 }
             }
+            if StatsFeature.isEnabled, let context {
+                StatsDegSection(context: context)
+            }
             if membership.isOrganizer {
                 Section {
                     NavigationLink { AdminHubView() } label: {
