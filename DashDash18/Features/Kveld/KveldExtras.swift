@@ -57,6 +57,7 @@ struct KveldExtrasCards: View {
                     unread: 0
                 )
             }
+            BetsKveldCard()
         }
         .buttonStyle(.plain)
         // Også tilbake fra tråden eller kupongen: uleste og status kan være endret.

@@ -19,13 +19,15 @@ public struct Ruleset: Hashable, Sendable {
     public var formats: FormatRules
     /// Tippekupongen: frist, innsats og linje når kvelden ikke har egne (se Tips.swift).
     public var tips: TipsRules
+    /// Veddemål med poeng: låsing, tak, beløp og poengbank (se Bets.swift).
+    public var bets: BetRules
     /// Hullene (antall hull fra start) der ledelsen underveis meldes, stigende, 1…18
     /// (PWA: `LEDELSE_SJEKKPUNKT`). Tom liste: ledelsen meldes ikke.
     public var leadCheckpoints: [Int]
 
     public init(evenings: Int, scoring: ScoringRules, table: TableRules, sidePrizes: SidePrizeRules,
                 handicap: HandicapRules, formats: FormatRules, tips: TipsRules = .golfgutu,
-                leadCheckpoints: [Int] = Ruleset.golfgutuLeadCheckpoints) {
+                bets: BetRules = .golfgutu, leadCheckpoints: [Int] = Ruleset.golfgutuLeadCheckpoints) {
         self.evenings = evenings
         self.scoring = scoring
         self.table = table
@@ -33,6 +35,7 @@ public struct Ruleset: Hashable, Sendable {
         self.handicap = handicap
         self.formats = formats
         self.tips = tips
+        self.bets = bets
         self.leadCheckpoints = leadCheckpoints
     }
 
@@ -327,7 +330,7 @@ public struct Ruleset: Hashable, Sendable {
 
 extension Ruleset: Codable {
     private enum CodingKeys: String, CodingKey {
-        case version, evenings, scoring, table, sidePrizes, handicap, formats, tips, leadCheckpoints
+        case version, evenings, scoring, table, sidePrizes, handicap, formats, tips, bets, leadCheckpoints
     }
 
     /// Versjon 1: flat.
@@ -353,6 +356,7 @@ extension Ruleset: Codable {
             handicap = try c.decodeIfPresent(HandicapRules.self, forKey: .handicap) ?? g.handicap
             formats = try c.decodeIfPresent(FormatRules.self, forKey: .formats) ?? g.formats
             tips = try c.decodeIfPresent(TipsRules.self, forKey: .tips) ?? g.tips
+            bets = try c.decodeIfPresent(BetRules.self, forKey: .bets) ?? g.bets
             leadCheckpoints = try c.decodeIfPresent([Int].self, forKey: .leadCheckpoints) ?? g.leadCheckpoints
             return
         }
@@ -390,6 +394,7 @@ extension Ruleset: Codable {
         try c.encode(handicap, forKey: .handicap)
         try c.encode(formats, forKey: .formats)
         try c.encode(tips, forKey: .tips)
+        try c.encode(bets, forKey: .bets)
         try c.encode(leadCheckpoints, forKey: .leadCheckpoints)
     }
 }

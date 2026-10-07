@@ -10,9 +10,9 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 8 – Native løft, i hovedsak ferdig. Push kjører på test. Første TestFlight-bygg (1.0 (1)) ligger til Beta App Review. |
+| **Nåværende fase** | Fase 9 og 10 forarbeid ferdig. Importverktøy (`Packages/DashImport`) og veddemål med poeng (bak `BetsFeature.isEnabled = false`) venter på dine valg og godkjenning av 012. |
 | **Sist gjort** | 07.10: kamera, kalender, deling, widgets og Live Activity prøvd på telefon. Push på test (010, `push-send`, webhook, cron). Arrangørskjermene «Hva blir push» og «Hvem har push». Varsler for store scorer og ledelsesskifte uten duplikater. Deg: handicap, portrett, innloggingsmåter, logg ut. App-ikon og TestFlight. Xcode Cloud bygger fra `main` til TestFlight (`docs/xcode-cloud.md`). 632 enhetstester grønne. |
-| **Neste oppgave** | Push mellom to kontoer når TestFlight er godkjent. Live Activity oppdatert via push. Fase 9 (import og bytte). |
+| **Neste oppgave** | Prøveimport mot test (eksport fra PWA-en, paritetssjekk, godkjent import-SQL). Svar på spørsmålene i `docs/import-plan.md` og `docs/veddemaal-poeng.md`, så kjøre 012. |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
@@ -268,8 +268,8 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Historikken fra PWA-en ligger i appens database, og gjengen spiller neste kveld i appen.
 
-- [ ] Importverktøy (lesing fra PWA-ens prod, skriving til appens database): spillere, baner, terminliste, påmeldinger, runder med oppsett, scorer, sidepremier, tips. Idempotent, kan kjøres flere ganger.
-- [ ] Hvordan dataene hentes ut (SQL-eksport, eller lesing med innlogget bruker) avgjøres i fasen. Ingenting skrives til PWA-basen.
+- [x] Importverktøy (lesing fra PWA-ens prod, skriving til appens database): spillere, baner, terminliste, påmeldinger, runder med oppsett, scorer, sidepremier, tips. Idempotent, kan kjøres flere ganger. *(07.10: `Packages/DashImport`, 28 tester. Ikke kjørt på ekte data.)*
+- [x] Hvordan dataene hentes ut (SQL-eksport, eller lesing med innlogget bruker) avgjøres i fasen. Ingenting skrives til PWA-basen. *(07.10: én lesende eksport-SQL, `sql/import/export_pwa.sql`. Se `docs/import-plan.md`.)*
 - [ ] Kontroll: etter import viser appens Tavla det samme som PWA-ens for hele sesongen.
 - [ ] Prod-oppsett av appens Supabase (skjema, innlogging, APNs) etter godkjenning.
 - [ ] TestFlight-invitasjon til alle med iPhone. Hver spiller logger inn og velger navnet sitt (importert).
@@ -297,10 +297,10 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Gjengen kan vedde på kvelden igjen, med poeng i stedet for penger.
 
-- [ ] Endelig modell (B10): poengbank per sesong, innsats, tak, oppgjør.
-- [ ] Skjema-tillegg (SQL til godkjenning).
-- [ ] Vedd-ark med malene fra PWA-en (hull-duell, par, slår, fritekst), låsing (`forsteApneHull`, `markedTarInnsatser`) og automatisk avgjøring (`vilkaarUtfall`).
-- [ ] Poengtabell for veddemål, separat fra jakketabellen.
+- [ ] Endelig modell (B10): poengbank per sesong, innsats, tak, oppgjør. *(07.10: forslag i `docs/veddemaal-poeng.md`, venter på svar.)*
+- [ ] Skjema-tillegg (SQL til godkjenning). *(07.10: `sql/012_veddemaal.sql`, forslag.)*
+- [x] Vedd-ark med malene fra PWA-en (hull-duell, par, slår, fritekst), låsing (`forsteApneHull`, `markedTarInnsatser`) og automatisk avgjøring (`vilkaarUtfall`). *(07.10: regelmotor med 18 tester fra PWA-ens fasit, UI bak flagg.)*
+- [x] Poengtabell for veddemål, separat fra jakketabellen. *(07.10: bak flagg.)*
 
 **Ferdig når:**
 - Et veddemål på «birdie på hull 5» stenger når hull 4 er ført, og avgjøres riktig når hull 5 føres.

@@ -110,6 +110,7 @@ struct TavlaList: View {
 
                 RulesExplanationCard(rules: standings.rules)
                     .padding(.top, DDSpacing.m)
+                BetsTavlaLink()
             }
             .padding(.horizontal, DDSpacing.gutter)
             .padding(.vertical, DDSpacing.l)

@@ -28,12 +28,14 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 | `010_push.sql` | Push (fase 8): `push_devices` (erstatter `push_tokens`), `push_preferences`, `clubs.push_disabled_categories`, `push_queue` med triggere, RPC-er for appen og senderen | Godkjent og kjørt på test 07.10.2026 (`010_kontroll.sql`: 12 av 12 ok). Ikke prod |
 | `010_kontroll.sql` | Samlet kontroll for 010, én rad per sjekk | Hjelpefil |
 | `011_varsler_en_gang.sql` | Unike indekser: stor score (runde, spiller, hull), ledelsen (runde, sjekkpunkt, fra 009) og «ny runde» (runde) bare én gang, så to telefoner ikke gir dobbel push | Godkjent og kjørt på test 07.10.2026 (tre indekser på plass). Erstatter 009. Ikke prod |
+| `012_veddemaal.sql` | Veddemål med poeng (fase 10): `bets`, `bet_stakes`, sperra `bet_accepts_stakes`, poengbanken regnet av `bet_points` (ikke lagret), RPC-ene `create_bet`, `place_bet_stake`, `resolve_bet`, `mark_bets_closed` | **Forslag, ikke kjørt.** Lokalt: kjørt to ganger, `lokal/012_prove.sql` 60 av 60 ok, kontrollen 10 av 10, rullebakken prøvd |
+| `lokal/012_prove.sql` | Lokal rolleprøve for 012. **Aldri mot Supabase.** | Hjelpefil |
 | `import/export_pwa.sql` | Fase 9: ren SELECT som lager et øyeblikksbilde (JSON) av **PWA-basen**. Kjøres i PWA-ens SQL Editor, og svaret lagres i `import-snapshot/` (ikke i git). Se `docs/import-plan.md` | Bare lesing. Ingen godkjenning trengs for å kjøre den, men den gir persondata |
 | `lokal/010_prove.sql` | Lokal rolleprøve for 010. **Aldri mot Supabase.** | Hjelpefil |
 | `lokal/stub.sql`, `lokal/001_prove.sql` | Lokal syntaks- og rolleprøve. **Aldri mot Supabase.** | Hjelpefiler |
 | `lokal/stub_storage.sql`, `lokal/008_prove.sql` | Lokal Storage-etterligning og rolleprøve for 008. **Aldri mot Supabase.** | Hjelpefiler |
 
-Kommer senere, som egne filer: push-innstillinger per spiller og klubb (fase 8), banebilder, og poeng/veddemål (fase 10).
+Kommer senere, som egne filer: banebilder.
 
 ## Slik kjøres en migrering i SQL Editor
 
@@ -291,3 +293,43 @@ Kjørt mot en midlertidig, lokal Postgres 16.2 (pip-pakken `pgserver` i et virtu
 ### Lokal sjekk av 010
 
 Lokal Postgres 16.2 (pgserver i scratch): `stub`, `stub_storage`, 001–009 og 010 **to ganger på rad** uten feil. `lokal/010_prove.sql`: **68 av 68 ok**. Flytting fra `push_tokens`, kontrollspørringene og rullebakken (og 010 på nytt etterpå) er prøvd. Webhooken, pg_cron, PostgREST og ekte APNs er ikke prøvd.
+
+
+---
+
+## Oversikt for godkjenning: 012 (veddemål med poeng)
+
+> **Status 07.10.2026:** forslag, **ikke kjørt** mot Supabase. Krever 001, 008 og 010. Modellen og de åpne spørsmålene står i `docs/veddemaal-poeng.md`.
+
+### Tabellene
+
+| Tabell | Hva den er |
+|---|---|
+| `bets` | Ett veddemål: sesong, valgfri kveld og runde (ekte fremmednøkler), hvem som la det ut, hvem det er rettet mot (`against_id`), påstanden (4–140 tegn), vilkåret (jsonb, `null` = fri tekst), status `open`/`resolved`/`void`, utfall `yes`/`no`, stempelet `closed_at` og hvem som avgjorde. |
+| `bet_stakes` | Innsatsene i **poeng** (1–10 000), side `yes`/`no`. Flere innsatser per spiller er lov, men alltid på samme side og under taket. |
+
+**Ingen saldotabell.** Saldo = startbeholdning (regelsettet) + netto fra avgjorte veddemål. `bet_points(sesong, medlem)` regner netto, stående, saldo og ledig, med samme regnestykke som `Bets.swift` i appen.
+
+### Hvem kan hva
+
+- **Uinnlogget:** ingenting (42501 på tabeller og funksjoner).
+- **Spiller:** leser veddemål og innsatser i egen klubb (veddemål om en kladd bare om du ser runden). Legger ut veddemål med første innsats (`create_bet`) og satser (`place_bet_stake`). Skriver aldri rett i tabellene.
+- **Arrangør:** som spiller, pluss `resolve_bet` (JA, NEI eller annullert) og `mark_bets_closed` (journalstempelet).
+
+### Sjekkene i databasen
+
+- **Sperra** (`bet_accepts_stakes`): stemplet eller avgjort tar ingenting. Hullvilkår: hullet må ligge minst forspranget (regelsettet, Golfgutu 1) foran den eller dem det gjelder, målt fra hullscorene. Rundevilkår: før første score. Låst runde: ingenting. Fri tekst: alltid.
+- **Tak** per veddemål og spiller fra regelsettet (Golfgutu 200), summert over innsatsene. **Samme side** som før. **Ledige poeng** når sesongen har bank. Innsatsene til ett medlem i én sesong låses mot hverandre (advisory lock), så to samtidige ikke bruker de samme poengene.
+- **Vilkåret** sjekkes for form (`bet_condition_valid`), og spillerne i det må være med i runden.
+- Avvises første innsats, rulles hele veddemålet tilbake.
+
+### Aktivitet og push
+
+`create_bet` skriver `bet_created` (eller `bet_challenge` når veddemålet er rettet mot noen), og `resolve_bet` skriver `bet_resolved`, i kategorien `bet` og i samme transaksjon. Køtriggeren fra 010 gjør dem til push. Enkeltinnsatser gir ingen linje.
+
+### Valg jeg har tatt
+
+1. **Saldo regnes, lagres ikke** (CLAUDE.md). Prisen er at regnestykket står to steder (SQL og Swift), slik PWA-ens `spiller_saldo` og `balanceFor` gjorde. Begge er prøvd med de samme tallene.
+2. **Regelverdiene leses fra sesongens regelsett** (`rules->'bets'`). Mangler feltet, gjelder Golfgutu-verdien, som i appens dekoder.
+3. **Slettes runden, går veddemålene om den med** (cascade), som PWA-ens slett_runde. `delete_round` teller dem ikke i svaret sitt.
+4. **Annullert** (`void`) er nytt: arrangørens utvei for delt hull, delt match og likt resultat, der vilkåret ikke gir svar.
