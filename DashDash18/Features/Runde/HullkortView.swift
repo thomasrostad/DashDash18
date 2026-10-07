@@ -221,7 +221,17 @@ struct HullRadView: View {
                 DDStrokeValue(value: "\(row.value)", confirmed: row.confirmed)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(row.confirmed ? "\(row.value) slag" : "Bekreft par \(row.value)")
+            // VoiceOver: navnet, tallet, og sveip opp/ned som − og +.
+            .accessibilityLabel(row.name)
+            .accessibilityValue(row.confirmed ? "\(row.value) slag" : "par \(row.value), ikke bekreftet")
+            .accessibilityHint(row.confirmed ? "Sveip opp eller ned for å endre." : "Dobbelttrykk for å bekrefte par.")
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment: onStep(1, row.memberID)
+                case .decrement: onStep(-1, row.memberID)
+                @unknown default: break
+                }
+            }
 
             Button {
                 onStep(1, row.memberID)
