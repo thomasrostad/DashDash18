@@ -20,10 +20,13 @@ private struct TavlaContent: View {
 
     var body: some View {
         content
-            .task { await model.load() }
+            .task {
+                await model.load()
+                await model.follow()
+            }
             .refreshable { await model.load() }
             .toolbar {
-                if let standings = model.standings, !standings.isEmpty {
+                if let standings = model.standings, standings.hasResults {
                     ToolbarItem(placement: .topBarTrailing) {
                         ResultShareButton(share: standings.share)
                             .tint(Color.ddOnDark)
@@ -173,7 +176,7 @@ struct TavlaRowView: View {
     let standings: TavlaStandings
 
     var body: some View {
-        DDRankRow(place: "\(row.place).", name: row.name, detail: detail, isMe: row.isMe) {
+        DDRankRow(place: standings.placeText(row), name: row.name, detail: detail, isMe: row.isMe) {
             HStack(spacing: 10) {
                 DDRankValue(standings.points(row.total))
                 Image(systemName: "chevron.right")

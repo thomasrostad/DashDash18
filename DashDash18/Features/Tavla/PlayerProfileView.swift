@@ -100,8 +100,10 @@ private struct ProfileHeader: View {
                 }
             }
             Spacer(minLength: 8)
-            DDPill("\(profile.row.place). plass", tone: .sun)
-                .fixedSize()
+            if standings.hasResults {
+                DDPill("\(profile.row.place). plass", tone: .sun)
+                    .fixedSize()
+            }
         }
         .accessibilityElement(children: .combine)
     }
