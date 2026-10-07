@@ -42,6 +42,7 @@ struct RundeWizardView: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Avbryt") { onDone(nil) }
+                    .disabled(isBusy)
             }
         }
         .onAppear {
@@ -115,6 +116,9 @@ struct RundeWizardView: View {
                         .disabled(blockedReason != nil)
                 }
             }
+            // Knapperaden ligger utenfor skjemaet (safeAreaInset), så den sperres her: to trykk
+            // på «Start runden» skal ikke gi to forsøk.
+            .disabled(isBusy)
             if isBusy { ProgressView() }
         }
         .padding()
@@ -140,6 +144,7 @@ struct RundeWizardView: View {
     }
 
     private func save() {
+        guard !isBusy else { return }
         isBusy = true
         Task {
             defer { isBusy = false }
@@ -154,6 +159,7 @@ struct RundeWizardView: View {
     }
 
     private func start() {
+        guard !isBusy else { return }
         isBusy = true
         Task {
             defer { isBusy = false }
@@ -239,6 +245,8 @@ struct RundeCourseStep: View {
                 }
             }
         }
+        // Klokka er Oslo-tid (som databasen), også når telefonen står i en annen tidssone.
+        .environment(\.timeZone, EveningDates.osloTimeZone)
         .onChange(of: draft.holeCount) { _, _ in fixHoles() }
         .onChange(of: draft.courseID) { _, _ in fixHoles() }
     }
