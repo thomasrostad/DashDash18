@@ -30,9 +30,10 @@ nonisolated struct InviteCode: Equatable, Hashable, Sendable {
         value = code
     }
 
-    /// Koden fra en lenke: `dashdash://runde/KODE` (også `dashdash://runde?kode=KODE`).
-    init?(url: URL) {
-        guard url.scheme?.lowercased() == Self.scheme, url.host()?.lowercased() == Self.host else { return nil }
+    /// Koden fra en lenke: `dashdash://runde/KODE` (også `dashdash://runde?kode=KODE`). Med `host`
+    /// for andre lenker med samme kode, f.eks. `dashdash://konkurranse/KODE` (sql/022).
+    init?(url: URL, host: String = InviteCode.host) {
+        guard url.scheme?.lowercased() == Self.scheme, url.host()?.lowercased() == host else { return nil }
         let fromPath = url.pathComponents.first { $0 != "/" }
         let fromQuery = URLComponents(url: url, resolvingAgainstBaseURL: false)?
             .queryItems?.first { $0.name == "kode" }?.value
@@ -41,16 +42,19 @@ nonisolated struct InviteCode: Equatable, Hashable, Sendable {
     }
 
     /// Det som limes inn: en lenke eller en kode.
-    static func parse(_ text: String) -> InviteCode? {
+    static func parse(_ text: String, host: String = InviteCode.host) -> InviteCode? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.lowercased().hasPrefix(scheme + ":"), let url = URL(string: trimmed) {
-            return InviteCode(url: url)
+            return InviteCode(url: url, host: host)
         }
         return InviteCode(trimmed)
     }
 
     /// `dashdash://runde/KODE`.
-    var url: URL { URL(string: "\(Self.scheme)://\(Self.host)/\(value)")! }
+    var url: URL { url(host: Self.host) }
+
+    /// `dashdash://<host>/KODE`.
+    func url(host: String) -> URL { URL(string: "\(Self.scheme)://\(host)/\(value)")! }
 
     /// «ABCDE-FGHJK»: lettere å lese høyt og skrive av.
     var display: String {
@@ -62,5 +66,74 @@ nonisolated struct InviteCode: Equatable, Hashable, Sendable {
     func shareText(courseName: String?) -> String {
         let what = courseName.map { "Bli med på runden på \($0) i DashDash." } ?? "Bli med på runden i DashDash."
         return "\(what)\n\(url.absoluteString)\nEller skriv inn koden \(display) under Spill → Bli med."
+    }
+}
+
+/// Hva en invitasjon gjelder: en løs runde (sql/018) eller en privat konkurranse (sql/022). Samme
+/// kode, ulik lenke og tekst.
+nonisolated enum InviteTarget: Equatable, Sendable {
+    case round(courseName: String?)
+    case competition(name: String)
+
+    /// `dashdash://konkurranse/<KODE>`.
+    static let competitionHost = "konkurranse"
+
+    var host: String {
+        switch self {
+        case .round: InviteCode.host
+        case .competition: Self.competitionHost
+        }
+    }
+
+    func url(_ code: InviteCode) -> URL { code.url(host: host) }
+
+    /// Teksten som deles: hva det er, lenken og koden.
+    func shareText(_ code: InviteCode) -> String {
+        switch self {
+        case .round(let courseName):
+            return code.shareText(courseName: courseName)
+        case .competition(let name):
+            return "Bli med i \(name) i DashDash.\n\(url(code).absoluteString)\n"
+                + "Eller skriv inn koden \(code.display) under Konkurranser → Bli med med kode."
+        }
+    }
+
+    var qrLabel: String {
+        switch self {
+        case .round: "QR-kode til runden"
+        case .competition: "QR-kode til konkurransen"
+        }
+    }
+
+    var help: String {
+        switch self {
+        case .round:
+            "Skann QR-koden med kameraet, eller trykk på lenken i meldingen. Uten lenke: skriv inn koden under "
+                + "Spill → Bli med med kode. Koden virker i 7 dager, og til runden avsluttes."
+        case .competition:
+            "Skann QR-koden med kameraet, eller trykk på lenken i meldingen. Uten lenke: skriv inn koden under "
+                + "Konkurranser → Bli med med kode. Den som blir med, meldes på. Koden virker i 7 dager, og til "
+                + "konkurransen er ferdig."
+        }
+    }
+}
+
+/// En lenke appen åpnes med: invitasjon til en løs runde eller til en konkurranse. Hver type virker
+/// bare når flagget sitt er på.
+nonisolated enum AppLink: Equatable, Identifiable, Sendable {
+    case round(InviteCode)
+    case competition(InviteCode)
+
+    var id: String {
+        switch self {
+        case .round(let code): "runde:\(code.value)"
+        case .competition(let code): "konkurranse:\(code.value)"
+        }
+    }
+
+    static func parse(_ url: URL, rounds: Bool, competitions: Bool) -> AppLink? {
+        if rounds, let code = InviteCode(url: url) { return .round(code) }
+        if competitions, let code = InviteCode(url: url, host: InviteTarget.competitionHost) { return .competition(code) }
+        return nil
     }
 }

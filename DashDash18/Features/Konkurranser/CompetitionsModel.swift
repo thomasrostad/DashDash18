@@ -95,6 +95,10 @@ final class CompetitionsModel {
 
     func isAdmin(_ c: CompetitionRow) -> Bool { access.isAdmin(c) }
 
+    func canInvite(_ c: CompetitionRow) -> Bool {
+        access.canInvite(c, overview.participants, isDrawn: overview.drawn.contains(c.id))
+    }
+
     var canCreateInClub: Bool { access.canCreate(inClub: clubID) }
     var canCreate: Bool { canCreateInClub || access.canCreate(inClub: nil) }
 
@@ -201,6 +205,11 @@ final class CompetitionDetailModel {
     #endif
 
     var isAdmin: Bool { access.isAdmin(competition) }
+
+    /// Kan du føre (eller endre) resultatet i kampen?
+    func recordRight(_ game: CupStandings.Game) -> CupRecording.Right {
+        CupRecording.right(game, isAdmin: isAdmin)
+    }
 
     func load() async {
         guard let client else { return }

@@ -217,6 +217,28 @@ enum CompetitionQueries {
             p_result: result, p_round_id: roundID)).execute()
     }
 
+    // MARK: Invitasjon (private konkurranser)
+
+    /// Koden til konkurransen (`competition_invite`): den som finnes, eller en ny.
+    static func invite(client: SupabaseClient, competitionID: UUID) async throws -> InviteCode {
+        struct Params: Encodable { let p_competition_id: UUID }
+        let invite: LooseRoundQueries.Invite = try await client
+            .rpc("competition_invite", params: Params(p_competition_id: competitionID)).execute().value
+        guard let code = InviteCode(invite.code) else { throw DataError.invalid("Serveren ga en ugyldig kode.") }
+        return code
+    }
+
+    static func invitePreview(client: SupabaseClient, code: InviteCode) async throws -> CompetitionInvitePreview {
+        struct Params: Encodable { let p_code: String }
+        return try await client.rpc("competition_invite_preview", params: Params(p_code: code.value)).execute().value
+    }
+
+    /// «Bli med» (`claim_competition_invite`): melder deg på. Én transaksjon.
+    static func claimInvite(client: SupabaseClient, code: InviteCode) async throws -> CompetitionClaimResult {
+        struct Params: Encodable { let p_code: String }
+        return try await client.rpc("claim_competition_invite", params: Params(p_code: code.value)).execute().value
+    }
+
     // MARK: Kveld
 
     /// Morroturneringene kvelden hører til (perioden eller rundene), for merket på Kveld.

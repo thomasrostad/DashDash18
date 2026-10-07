@@ -25,6 +25,7 @@ struct CompetitionDetailView: View {
 
     @State private var resultFor: CupStandings.Game?
     @State private var confirmsDraw = false
+    @State private var showsInvite = false
 
     var body: some View {
         content
@@ -35,6 +36,23 @@ struct CompetitionDetailView: View {
             }
             .navigationTitle(embedded ? "" : model.competition.name)
             .ddNavigationChrome()
+            .toolbar {
+                if !embedded, let list, list.canInvite(model.competition) {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Inviter", systemImage: "person.badge.plus") { showsInvite = true }
+                    }
+                }
+            }
+            .sheet(isPresented: $showsInvite) {
+                if let client = list?.client {
+                    NavigationStack {
+                        InviteView(model: InviteModel(target: .competition(name: model.competition.name)) {
+                            [id = model.competition.id] in
+                            try await CompetitionQueries.invite(client: client, competitionID: id)
+                        })
+                    }
+                }
+            }
             .sheet(item: $resultFor) { game in
                 NavigationStack {
                     CupResultSheet(model: model, game: game) { resultFor = nil }
@@ -144,7 +162,7 @@ struct CompetitionDetailView: View {
             .ddCard()
         } else {
             DDSectionLabel("Treet")
-            CupTreeView(cup: cup, canRecord: model.isAdmin) { resultFor = $0 }
+            CupTreeView(cup: cup, right: model.recordRight) { resultFor = $0 }
         }
     }
 
@@ -213,7 +231,8 @@ struct LeagueTableSection: View {
 /// Cuptreet: én kolonne per runde, kampene sentrert mot kampen de leder til.
 struct CupTreeView: View {
     let cup: CupStandings
-    let canRecord: Bool
+    /// Hvem kan føre hva (`CupRecording`): spillerne sin egen kamp, arrangøren alle.
+    let right: (CupStandings.Game) -> CupRecording.Right
     let onRecord: (CupStandings.Game) -> Void
 
     private let cardHeight: CGFloat = 126
@@ -231,8 +250,7 @@ struct CupTreeView: View {
                             .padding(.bottom, 8)
                         VStack(spacing: step - cardHeight) {
                             ForEach(games) { game in
-                                CupGameCard(game: game, canRecord: canRecord && game.state != .waiting && !game.isBye,
-                                            onRecord: { onRecord(game) })
+                                CupGameCard(game: game, right: right(game), onRecord: { onRecord(game) })
                                     .frame(height: cardHeight)
                             }
                         }
@@ -249,7 +267,7 @@ struct CupTreeView: View {
 
 struct CupGameCard: View {
     let game: CupStandings.Game
-    let canRecord: Bool
+    let right: CupRecording.Right
     let onRecord: () -> Void
 
     var body: some View {
@@ -268,7 +286,7 @@ struct CupGameCard: View {
                     .foregroundStyle(Color.ddInkSecondary)
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                if canRecord {
+                if right != .none {
                     Button(game.winner == nil ? "Før" : "Endre", action: onRecord)
                         .buttonStyle(.dd(.text, compact: true))
                         .fixedSize()
@@ -322,7 +340,8 @@ struct CupGameCard: View {
     }
 }
 
-/// Arrangøren fører vinneren: forslag fra runden de spilte, walkover og tekst.
+/// Vinneren av en kamp: forslag fra runden de spilte, walkover og tekst. Spillerne fører selv én
+/// gang; arrangøren eller eieren kan også rette og fjerne.
 struct CupResultSheet: View {
     let model: CompetitionDetailModel
     let game: CupStandings.Game
@@ -360,7 +379,8 @@ struct CupResultSheet: View {
             }
             Section {
                 Picker("Vinner", selection: $winner) {
-                    Text("Ikke avgjort").tag(UUID?.none)
+                    // Bare arrangøren fjerner et resultat. Spilleren må velge en vinner.
+                    Text(model.isAdmin ? "Ikke avgjort" : "Ikke valgt").tag(UUID?.none)
                     ForEach([game.a, game.b].compactMap(\.self), id: \.participantID) { side in
                         Text(side.name).tag(Optional(side.participantID))
                     }
@@ -374,7 +394,9 @@ struct CupResultSheet: View {
             } header: {
                 DDHeader("Vinner")
             } footer: {
-                DDFooter("Vinneren går videre i treet. Et resultat kan endres til neste kamp er avgjort.")
+                DDFooter(model.isAdmin
+                         ? "Vinneren går videre i treet. Spillerne kan føre selv. Du kan rette til neste kamp er avgjort."
+                         : "Vinneren går videre i treet. Første resultat som føres, gjelder. Bare arrangøren eller eieren kan endre det etterpå.")
             }
         }
         .navigationTitle("\(game.a?.name ?? "") – \(game.b?.name ?? "")")

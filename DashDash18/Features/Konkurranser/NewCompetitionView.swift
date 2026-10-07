@@ -204,7 +204,7 @@ struct NewCompetitionView: View {
     private var rulesFooter: String {
         switch draft.kind {
         case .cup:
-            return "Kampene spilles som matchspill i en runde som teller i cupen. Arrangøren fører vinneren, med forslag fra runden."
+            return "Kampene spilles som matchspill i en runde som teller i cupen. Spillerne fører vinneren selv, med forslag fra runden, og arrangøren kan rette."
         default:
             let r = draft.leagueRules
             let base = r.scoring == .placement

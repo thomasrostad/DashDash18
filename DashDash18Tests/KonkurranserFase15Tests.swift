@@ -462,6 +462,117 @@ import Testing
     }
 }
 
+// MARK: - Invitasjon til en privat konkurranse (sql/022)
+
+@MainActor struct KonkurranseInvitasjonTests {
+    @Test func lenkenTilKonkurransen() throws {
+        let code = try #require(InviteCode("ABCDEFGH23"))
+        let target = InviteTarget.competition(name: "Vennecupen")
+        #expect(target.url(code).absoluteString == "dashdash://konkurranse/ABCDEFGH23")
+        #expect(InviteCode(url: target.url(code), host: InviteTarget.competitionHost) == code)
+        // En rundelenke er ikke en konkurranselenke, og omvendt.
+        #expect(InviteCode(url: target.url(code)) == nil)
+        #expect(InviteCode(url: code.url, host: InviteTarget.competitionHost) == nil)
+        #expect(InviteCode.parse(" dashdash://Konkurranse/abcde-fgh23 ", host: InviteTarget.competitionHost) == code)
+        #expect(InviteCode.parse("abcde-fgh23", host: InviteTarget.competitionHost) == code)
+        let text = target.shareText(code)
+        #expect(text.contains("Vennecupen") && text.contains("dashdash://konkurranse/ABCDEFGH23") && text.contains("ABCDE-FGH23"))
+        #expect(InviteTarget.round(courseName: "Losby").shareText(code) == code.shareText(courseName: "Losby"))
+        #expect(InviteTarget.round(courseName: nil).url(code) == code.url)
+    }
+
+    @Test func appenTarImotBeggeLenkene() throws {
+        let code = try #require(InviteCode("ABCDEFGH23"))
+        let round = try #require(URL(string: "dashdash://runde/ABCDEFGH23"))
+        let competition = try #require(URL(string: "dashdash://konkurranse/ABCDEFGH23"))
+        #expect(AppLink.parse(round, rounds: true, competitions: true) == .round(code))
+        #expect(AppLink.parse(competition, rounds: true, competitions: true) == .competition(code))
+        // Hver lenke virker bare med flagget sitt.
+        #expect(AppLink.parse(round, rounds: false, competitions: true) == nil)
+        #expect(AppLink.parse(competition, rounds: true, competitions: false) == nil)
+        #expect(AppLink.parse(try #require(URL(string: "dashdash://login-callback")), rounds: true, competitions: true) == nil)
+        #expect(AppLink.round(code).id != AppLink.competition(code).id)
+    }
+
+    @Test func hvemKanInvitere() {
+        let a = F.access()
+        let mine = F.competition(7700, kind: .fun, club: nil, owner: F.me)
+        let theirs = F.competition(7701, kind: .league, club: nil, owner: F.friend)
+        let entered = [F.participant(7702, theirs, profile: F.me)]
+        #expect(a.canInvite(mine, [], isDrawn: false))
+        #expect(!a.canInvite(theirs, [], isDrawn: false))
+        #expect(a.canInvite(theirs, entered, isDrawn: false))
+        // Meldt av: ingen kode.
+        #expect(!a.canInvite(theirs, [F.participant(7702, theirs, profile: F.me, status: .withdrawn)], isDrawn: false))
+        // Klubbens deles i klubben, og ferdige og trukne cuper tar ingen nye.
+        #expect(!F.access(organizer: true).canInvite(F.competition(7703, kind: .fun), [], isDrawn: false))
+        #expect(!a.canInvite(F.competition(7704, kind: .fun, club: nil, owner: F.me, status: .finished), [], isDrawn: false))
+        let cup = F.competition(7705, kind: .cup, club: nil, owner: F.me)
+        #expect(a.canInvite(cup, [], isDrawn: false) && !a.canInvite(cup, [], isDrawn: true))
+        #expect(!a.canInvite(F.competition(7706, kind: .game, club: nil, owner: F.me), [], isDrawn: false))
+    }
+
+    @Test func forhandsvisningenOgSvaret() throws {
+        let json = #"""
+        {"competition_id":"0a000000-0000-0000-0000-00000000000a","name":"Vennecupen","kind":"cup",
+         "owner_name":"Anders","entrants":4,"entered":false}
+        """#
+        let p = try JSONDecoder().decode(CompetitionInvitePreview.self, from: Data(json.utf8))
+        #expect(p.name == "Vennecupen" && p.kind == .cup && p.ownerName == "Anders" && !p.entered)
+        #expect(p.summary == "Cup · 4 påmeldte")
+        let one = CompetitionInvitePreview(competitionID: p.competitionID, name: "Morro", kind: .fun, ownerName: nil,
+                                           entrants: 1, entered: true)
+        #expect(one.summary == "Morroturnering · 1 påmeldt")
+        let claim = try JSONDecoder().decode(CompetitionClaimResult.self, from: Data(#"""
+        {"competition_id":"0a000000-0000-0000-0000-00000000000a","participant_id":"0b000000-0000-0000-0000-00000000000b","joined":"rejoined"}
+        """#.utf8))
+        #expect(claim.joined == .rejoined && claim.competitionID == p.competitionID)
+    }
+
+    @Test func kodenSkrevetInnEllerLimtInn() throws {
+        let preview = CompetitionInvitePreview(competitionID: F.id(1), name: "Vennecupen", kind: .cup, ownerName: "Anders",
+                                               entrants: 2, entered: false)
+        let model = JoinCompetitionModel(preview: preview, code: try #require(InviteCode("ABCDEFGH23")))
+        model.codeText = "dashdash://runde/ABCDEFGH23"
+        #expect(model.typedCode == nil)
+        model.codeText = "dashdash://konkurranse/ABCDEFGH23"
+        #expect(model.typedCode?.value == "ABCDEFGH23")
+        model.codeText = "abcde fgh23"
+        #expect(model.typedCode?.value == "ABCDEFGH23")
+    }
+}
+
+// MARK: - Resultat i cupkampen: spillerne fører selv (besluttet 07.10.2026)
+
+@MainActor struct KonkurranseCupForingTests {
+    typealias C = KonkurranseCupTests
+
+    @Test func spillerneForerSinEgenKampEnGang() {
+        // Du er p4 (mot p5 i første runde).
+        let cup = CupStandings(participants: C.participants, matches: C.drawn, names: C.names, me: [C.p(4)])
+        let mine = cup.rounds[0][1], bye = cup.rounds[0][0], later = cup.rounds[1][0]
+        #expect(CupRecording.right(mine, isAdmin: false) == .record)
+        #expect(CupRecording.right(bye, isAdmin: false) == .none)
+        #expect(CupRecording.right(later, isAdmin: false) == .none)
+        // Når resultatet står, kan bare arrangøren endre det.
+        var rows = C.drawn
+        rows[1] = C.match(1, 1, 4, 5, winner: 5, result: "2&1")
+        let decided = CupStandings(participants: C.participants, matches: rows, names: C.names, me: [C.p(4)])
+        #expect(CupRecording.right(decided.rounds[0][1], isAdmin: false) == .none)
+        #expect(CupRecording.right(decided.rounds[0][1], isAdmin: true) == .edit)
+    }
+
+    @Test func andresKamperOgArrangoren() {
+        // Du er p1 (bye): kampen p4 – p5 er ikke din.
+        let cup = CupStandings(participants: C.participants, matches: C.drawn, names: C.names, me: [C.p(1)])
+        #expect(CupRecording.right(cup.rounds[0][1], isAdmin: false) == .none)
+        #expect(CupRecording.right(cup.rounds[0][1], isAdmin: true) == .edit)
+        // Ingen fører en bye eller en kamp som venter, heller ikke arrangøren.
+        #expect(CupRecording.right(cup.rounds[0][0], isAdmin: true) == .none)
+        #expect(CupRecording.right(cup.rounds[1][0], isAdmin: true) == .none)
+    }
+}
+
 // MARK: - Golfgutu-paritet
 
 @MainActor struct KonkurranseParitetFase15Tests {

@@ -87,6 +87,36 @@ nonisolated struct CompetitionAccess: Equatable, Sendable {
         if c.clubID != nil, membership(in: c.clubID) == nil { return .closed }
         return .open
     }
+
+    /// «Inviter» (`competition_invite`): bare private liga-, cup- og morroturneringer som ikke er
+    /// ferdige, og ikke en trukket cup. Eieren og de påmeldte deler koden.
+    func canInvite(_ c: CompetitionRow, _ participants: [CompetitionParticipantRow], isDrawn: Bool) -> Bool {
+        guard c.clubID == nil, [.league, .cup, .fun].contains(c.kind), c.status != .finished,
+              !(c.kind == .cup && isDrawn) else { return false }
+        return isAdmin(c) || myParticipation(c, participants) != nil
+    }
+}
+
+// MARK: - Resultat i en cupkamp
+
+/// Hvem fører resultatet i en cupkamp (`record_cup_result`, sql/022, besluttet 07.10.2026): de to
+/// spillerne fører selv, og første førte resultat gjelder. Arrangøren eller eieren kan føre og rette.
+nonisolated enum CupRecording {
+    enum Right: Equatable, Sendable {
+        /// Ingen knapp.
+        case none
+        /// «Før»: spilleren fører kampen sin én gang, uten å kunne fjerne resultatet.
+        case record
+        /// «Før» / «Endre»: arrangøren eller eieren, også «Ikke avgjort».
+        case edit
+    }
+
+    static func right(_ game: CupStandings.Game, isAdmin: Bool) -> Right {
+        guard !game.isBye, game.state != .waiting else { return .none }
+        if isAdmin { return .edit }
+        let mine = game.a?.isMe == true || game.b?.isMe == true
+        return mine && game.winner == nil ? .record : .none
+    }
 }
 
 extension ClubContext {

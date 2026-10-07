@@ -57,3 +57,49 @@ nonisolated struct CupPairingParam: Encodable, Equatable, Sendable {
     let a: UUID
     let b: UUID?
 }
+
+/// Det `competition_invite_preview` gir (sql/022): bare navn, type, eier og antall påmeldte, og om
+/// du er med selv.
+nonisolated struct CompetitionInvitePreview: Decodable, Equatable, Sendable {
+    let competitionID: UUID
+    let name: String
+    let kind: CompetitionKind
+    var ownerName: String?
+    let entrants: Int
+    let entered: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case competitionID = "competition_id"
+        case name, kind
+        case ownerName = "owner_name"
+        case entrants, entered
+    }
+
+    /// «Cup · 4 påmeldte».
+    var summary: String {
+        let count = entrants == 1 ? "1 påmeldt" : "\(entrants) påmeldte"
+        return "\(CompetitionText.kind(kind)) · \(count)"
+    }
+}
+
+/// Svaret fra `claim_competition_invite`.
+nonisolated struct CompetitionClaimResult: Decodable, Equatable, Sendable {
+    enum Joined: String, Decodable, Sendable {
+        /// Du var påmeldt fra før.
+        case already
+        /// Du er påmeldt.
+        case new
+        /// Du hadde meldt deg av, og er påmeldt igjen.
+        case rejoined
+    }
+
+    let competitionID: UUID
+    let participantID: UUID
+    let joined: Joined
+
+    enum CodingKeys: String, CodingKey {
+        case competitionID = "competition_id"
+        case participantID = "participant_id"
+        case joined
+    }
+}

@@ -5,9 +5,9 @@ import SwiftUI
 struct AppRoot: View {
     let services: AppServices
     @Environment(\.scenePhase) private var scenePhase
-    /// Invitasjon til en løs runde fra en lenke (`dashdash://runde/KODE`, fase 13). Venter til du er
-    /// logget inn.
-    @State private var pendingInvite: InviteCode?
+    /// Invitasjon fra en lenke: en løs runde (`dashdash://runde/KODE`, fase 13) eller en privat
+    /// konkurranse (`dashdash://konkurranse/KODE`, fase 15). Venter til du er logget inn.
+    @State private var pendingLink: AppLink?
     /// Kjøp i appen (fase 17). Lages per innlogging når `PurchaseFeature` er på; ellers nil.
     @State private var purchases: PurchaseService?
 
@@ -35,14 +35,20 @@ struct AppRoot: View {
         .environment(services.push)
         .environment(purchases)
         .onOpenURL { url in
-            guard LooseRoundsFeature.isEnabled, let code = InviteCode(url: url) else { return }
-            pendingInvite = code
+            guard let link = AppLink.parse(url, rounds: LooseRoundsFeature.isEnabled,
+                                           competitions: CompetitionsFeature.isActive) else { return }
+            pendingLink = link
         }
-        .sheet(item: Binding(get: { signedInUser == nil ? nil : pendingInvite }, set: { pendingInvite = $0 })) { code in
+        .sheet(item: Binding(get: { signedInUser == nil ? nil : pendingLink }, set: { pendingLink = $0 })) { link in
             if let user = signedInUser {
-                JoinFromLinkView(client: services.client, userID: user.id, code: code)
-                    .environment(services.outbox.status)
-                    .environment(\.scoreSubmitter, services.scoreSubmitter)
+                switch link {
+                case .round(let code):
+                    JoinFromLinkView(client: services.client, userID: user.id, code: code)
+                        .environment(services.outbox.status)
+                        .environment(\.scoreSubmitter, services.scoreSubmitter)
+                case .competition(let code):
+                    JoinCompetitionFromLinkView(client: services.client, code: code)
+                }
             }
         }
         .task { await services.auth.observe() }
