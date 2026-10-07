@@ -398,9 +398,10 @@ import Testing
         #expect(participant.status == .withdrawn && participant.profileID == K.id(801))
     }
 
-    @Test func klubbrundeHarKlubbSomHjem() {
+    @Test func klubbrundeHarKlubbSomHjem() throws {
         let round = TavlaSamples.round(1, date: "2026-05-14").round
         let origin = RoundOriginRow(round)
-        #expect(origin.home == .club(clubID: round.clubID, eventID: round.eventID) && origin.status == round.status)
+        let clubID = try #require(round.clubID), eventID = try #require(round.eventID)
+        #expect(origin.home == .club(clubID: clubID, eventID: eventID) && origin.status == round.status)
     }
 }

@@ -187,7 +187,7 @@ final class RundeneModel {
                 for r in refs { counts[r.round_id, default: 0] += 1 }
             }
             items = RundeneList.sorted(rounds.map { r in
-                RundeneItem(round: r, eventDate: dates[r.eventID], courseName: r.courseID.flatMap { courses[$0] },
+                RundeneItem(round: r, eventDate: r.eventID.flatMap { dates[$0] }, courseName: r.courseID.flatMap { courses[$0] },
                      players: counts[r.id] ?? 0)
             })
             state = .loaded

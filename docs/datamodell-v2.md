@@ -193,3 +193,10 @@ Disse legges til grunn for fase 13–17 til brukeren sier noe annet.
 4. **Åpne konkurranser:** deltakerne ser rundene som teller, med navn. Andre ser bare tabellen.
 5. **Slettet konto:** navnet erstattes med «Slettet spiller». Scorene blir stående, så tabellene ikke endres.
 6. **Hovedturnering:** som standard sesongen. Arrangøren kan velge en annen konkurranse senere (fase 15).
+
+## Nummerering av migreringene (07.10.2026)
+
+- **018:** løse runder (invitasjon, start, avslutt, banebiblioteket), fase 13.
+- **019:** banerettelser (`course_corrections`), blokkering og kontosletting. I avsnittene over står dette som «018».
+- **020:** spill på runden, fase 14.
+- **021:** statistikk, fase 16. Kjørt på test 07.10.2026.

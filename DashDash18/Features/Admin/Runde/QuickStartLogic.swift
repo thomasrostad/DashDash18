@@ -54,7 +54,7 @@ nonisolated enum QuickStart {
         let dates = Dictionary(events.map { ($0.id, $0.eventDate) }, uniquingKeysWith: { a, _ in a })
         return rounds
             .filter { $0.status != .draft && $0.id != roundID }
-            .compactMap { round in dates[round.eventID].map { (round, $0) } }
+            .compactMap { round in round.eventID.flatMap { dates[$0] }.map { (round, $0) } }
             .filter { $0.1 <= event.eventDate }
             .max { ($0.1, $0.0.roundNo) < ($1.1, $1.0.roundNo) }?
             .0

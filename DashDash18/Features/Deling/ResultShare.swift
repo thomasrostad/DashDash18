@@ -84,11 +84,13 @@ nonisolated extension ResultShare {
 }
 
 nonisolated extension RoundGame {
-    /// Kveldens stilling (eller resultat når runden er låst) til deling.
+    /// Kveldens stilling (eller resultat når runden er låst) til deling. En løs runde (uten klubb)
+    /// heter «Runden».
     func share(viewer: Viewer) -> ResultShare {
         let state = snapshot.round.status == .locked ? "Resultat" : "Stilling nå"
         let date = snapshot.eventDate.map { EveningDates.longText($0, capitalized: true) }
-        return ResultShare(eyebrow: "Kvelden", title: snapshot.course?.name ?? "Kvelden",
+        let eyebrow = snapshot.isLoose ? "Runden" : "Kvelden"
+        return ResultShare(eyebrow: eyebrow, title: snapshot.course?.name ?? eyebrow,
                            subtitle: [date, state].compactMap { $0 }.joined(separator: " · "),
                            lines: ResultShare.lines(from: bayenNaa(viewer: viewer)))
     }

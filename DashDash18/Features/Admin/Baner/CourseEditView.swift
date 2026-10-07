@@ -18,7 +18,10 @@ struct CourseEditView: View {
     init(model: CourseLibraryModel, item: CourseListItem?) {
         self.model = model
         self.item = item
-        let draft = item.map { CourseDraft(course: $0.course, holes: $0.holes, kind: $0.kind) } ?? CourseDraft()
+        var empty = CourseDraft()
+        // Det felles biblioteket er mest ekte baner (løse runder med venner).
+        if model.isShared { empty.kind = .course }
+        let draft = item.map { CourseDraft(course: $0.course, holes: $0.holes, kind: $0.kind) } ?? empty
         _draft = State(initialValue: draft)
         _original = State(initialValue: draft)
         _showsIndex = State(initialValue: draft.holes.contains { !$0.strokeIndexText.isEmpty || !$0.lengthText.isEmpty })
@@ -45,7 +48,10 @@ struct CourseEditView: View {
             issuesSection(validation)
 
             if let current {
-                confirmSection(current)
+                // Det felles biblioteket har ingen klubb å bekrefte for.
+                if !model.isShared {
+                    confirmSection(current)
+                }
                 Section {
                     Button("Slett banen", role: .destructive) { askDelete = true }
                 } footer: {
@@ -95,14 +101,16 @@ struct CourseEditView: View {
                 ForEach(CourseDraft.holeCounts, id: \.self) { Text("\($0) hull").tag($0) }
             }
             .pickerStyle(.segmented)
-            if draft.usesExternalName {
+            if draft.usesExternalName && !model.isShared {
                 TextField("Navn i simulatoren (valgfritt)", text: $draft.externalName)
                     .autocorrectionDisabled()
             }
         } header: {
             DDHeader("Banen")
         } footer: {
-            DDFooter(draft.usesExternalName
+            DDFooter(model.isShared
+                     ? "Banen legges i det felles biblioteket, så alle kan spille den. Bare du kan rette den."
+                     : draft.usesExternalName
                      ? "Navnet i simulatoren er det dere slår opp i båsen, hvis det er et annet enn vårt."
                      : "En ekte bane spilles ute. Les tallene av scorekortet.")
         }
@@ -185,11 +193,14 @@ struct CourseEditView: View {
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.trailing)
             }
-            Toggle("I bruk", isOn: $draft.inUse)
+            if !model.isShared {
+                Toggle("I bruk", isOn: $draft.inUse)
+            }
         } header: {
             DDHeader("Rating (valgfritt)")
         } footer: {
-            DDFooter("Tomt felt regnes som banens par og slope 113. Da får spilleren handicapindeksen sin rett, som når simulatoren deler ut slagene. Baner som ikke er i bruk, vises ikke når en runde settes opp.")
+            DDFooter("Tomt felt regnes som banens par og slope 113. Da får spilleren handicapindeksen sin rett, som når simulatoren deler ut slagene."
+                     + (model.isShared ? "" : " Baner som ikke er i bruk, vises ikke når en runde settes opp."))
         }
     }
 

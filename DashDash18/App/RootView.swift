@@ -12,7 +12,7 @@ struct RootView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            ForEach(AppTab.allCases) { tab in
+            ForEach(AppTab.tabs()) { tab in
                 Tab(tab.title, systemImage: tab.systemImage, value: tab) {
                     NavigationStack {
                         content(for: tab)
@@ -59,6 +59,10 @@ struct RootView: View {
     private func content(for tab: AppTab) -> some View {
         switch tab {
         case .kveld: KveldView()
+        case .spill:
+            if let context {
+                SpillView(model: SpillModel(client: context.client, userID: user.id))
+            }
         case .tavla: TavlaView()
         case .deg: DegView(config: config, user: user, membership: membership)
         }

@@ -27,7 +27,54 @@ enum RundeQueries {
         return try await snapshot(client: client, round: round)
     }
 
+    /// Runden med alt under. En klubbrunde får navn fra troppen og regler fra sesongen; en løs runde
+    /// (uten klubb, sql/017) får navn fra deltakerne og regelsettet for løse runder.
     static func snapshot(client: SupabaseClient, round: RoundRow) async throws -> RoundSnapshot {
+        guard let clubID = round.clubID, let eventID = round.eventID else {
+            return try await looseSnapshot(client: client, round: round)
+        }
+        async let base = baseSnapshot(client: client, round: round)
+        async let members: [ClubMemberRow] = client.from("club_members")
+            .select(KveldQueries.memberColumns)
+            .eq("club_id", value: clubID).execute().value
+        async let events: [EventRow] = client.from("events")
+            .select("id, club_id, season_id, event_date, start_time, venue, note")
+            .eq("id", value: eventID).execute().value
+
+        var snapshot = try await base
+        snapshot.names = Dictionary(try await members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { a, _ in a })
+        let event = try await events.first
+        snapshot.eventDate = event?.eventDate
+        snapshot.rules = try await rules(client: client, clubID: clubID, seasonID: event?.seasonID)
+        return snapshot
+    }
+
+    /// En løs runde: deltakerne (profil eller gjest) med navn fra `round_roster`, eieren, og
+    /// regelsettet for løse runder. Datoen er dagen runden startet.
+    static func looseSnapshot(client: SupabaseClient, round: RoundRow) async throws -> RoundSnapshot {
+        struct Owner: Decodable {
+            let ownerID: UUID?
+            enum CodingKeys: String, CodingKey { case ownerID = "owner_id" }
+        }
+        async let base = baseSnapshot(client: client, round: round)
+        async let roster: [RoundRosterRow] = client.from("round_roster")
+            .select(LooseRoundQueries.rosterColumns)
+            .eq("round_id", value: round.id).execute().value
+        async let owners: [Owner] = client.from("rounds")
+            .select("owner_id")
+            .eq("id", value: round.id).execute().value
+
+        var snapshot = try await base
+        let info = LooseRoundInfo(ownerID: try await owners.first?.ownerID, roster: try await roster)
+        snapshot.loose = info
+        snapshot.names = info.names
+        snapshot.eventDate = round.startedAt.map(LooseRoundInfo.day)
+        snapshot.rules = LooseRoundRules.template
+        return snapshot
+    }
+
+    /// Det som er likt for alle runder: hull, spillere, matcher, scorer, sidepremier og banen.
+    private static func baseSnapshot(client: SupabaseClient, round: RoundRow) async throws -> RoundSnapshot {
         let id = round.id
         async let holes: [RoundHoleRow] = client.from("round_holes")
             .select("round_id, hole_index, par, stroke_index, length_m")
@@ -44,12 +91,6 @@ enum RundeQueries {
         async let claims: [SideClaimRow] = client.from("side_claims")
             .select(claimColumns)
             .eq("round_id", value: id).execute().value
-        async let members: [ClubMemberRow] = client.from("club_members")
-            .select(KveldQueries.memberColumns)
-            .eq("club_id", value: round.clubID).execute().value
-        async let events: [EventRow] = client.from("events")
-            .select("id, club_id, season_id, event_date, start_time, venue, note")
-            .eq("id", value: round.eventID).execute().value
 
         var snapshot = RoundSnapshot(round: round)
         snapshot.roundHoles = try await holes
@@ -57,9 +98,6 @@ enum RundeQueries {
         snapshot.matches = try await matches
         snapshot.scores = try await scores
         snapshot.sideClaims = try await claims
-        snapshot.names = Dictionary(try await members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { a, _ in a })
-        let event = try await events.first
-        snapshot.eventDate = event?.eventDate
 
         if let courseID = round.courseID {
             async let courses: [CourseRow] = client.from("courses")
@@ -71,7 +109,6 @@ enum RundeQueries {
             snapshot.course = try await courses.first
             snapshot.courseHoles = try await courseHoles
         }
-        snapshot.rules = try await rules(client: client, clubID: round.clubID, seasonID: event?.seasonID)
         return snapshot
     }
 

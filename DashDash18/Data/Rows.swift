@@ -126,7 +126,8 @@ nonisolated struct SignupRow: Codable, Equatable, Sendable {
 
 nonisolated struct CourseRow: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
-    let clubID: UUID
+    /// Klubbens bane, eller tom: banen ligger i det felles biblioteket (sql/017).
+    let clubID: UUID?
     var name: String
     var externalName: String?
     var courseRating: Double?
@@ -134,6 +135,8 @@ nonisolated struct CourseRow: Codable, Equatable, Identifiable, Sendable {
     var inUse: Bool
     var confirmedBy: UUID?
     var confirmedAt: Date?
+    /// Den som la inn en bane i det felles biblioteket (sql/017). Hentes bare der; ellers nil.
+    var createdByProfile: UUID? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -145,6 +148,7 @@ nonisolated struct CourseRow: Codable, Equatable, Identifiable, Sendable {
         case inUse = "in_use"
         case confirmedBy = "confirmed_by"
         case confirmedAt = "confirmed_at"
+        case createdByProfile = "created_by_profile"
     }
 }
 
@@ -175,8 +179,9 @@ nonisolated enum RoundStatus: String, Codable, Sendable {
 
 nonisolated struct RoundRow: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
-    let clubID: UUID
-    var eventID: UUID
+    /// Klubb og kveld, eller begge tomme: en løs runde uten klubb (sql/017, `rounds_home_check`).
+    let clubID: UUID?
+    var eventID: UUID?
     var courseID: UUID?
     var roundNo: Int
     var name: String?
@@ -254,7 +259,8 @@ nonisolated struct RoundHoleRow: Codable, Equatable, Sendable {
 nonisolated struct RoundPlayerRow: Codable, Equatable, Sendable {
     let roundID: UUID
     let memberID: UUID
-    let clubID: UUID
+    /// Tom for en deltaker i en løs runde (profil eller gjest, sql/017).
+    let clubID: UUID?
     var handicapIndex: Double?
     var seedGroup: Int?
     var playingHandicap: Int?

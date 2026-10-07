@@ -5,6 +5,9 @@ import SwiftUI
 struct AppRoot: View {
     let services: AppServices
     @Environment(\.scenePhase) private var scenePhase
+    /// Invitasjon til en løs runde fra en lenke (`dashdash://runde/KODE`, fase 13). Venter til du er
+    /// logget inn.
+    @State private var pendingInvite: InviteCode?
 
     var body: some View {
         Group {
@@ -26,6 +29,17 @@ struct AppRoot: View {
         .environment(services.club)
         .environment(services.outbox.status)
         .environment(services.push)
+        .onOpenURL { url in
+            guard LooseRoundsFeature.isEnabled, let code = InviteCode(url: url) else { return }
+            pendingInvite = code
+        }
+        .sheet(item: Binding(get: { signedInUser == nil ? nil : pendingInvite }, set: { pendingInvite = $0 })) { code in
+            if let user = signedInUser {
+                JoinFromLinkView(client: services.client, userID: user.id, code: code)
+                    .environment(services.outbox.status)
+                    .environment(\.scoreSubmitter, services.scoreSubmitter)
+            }
+        }
         .task { await services.auth.observe() }
         .onChange(of: services.auth.state) { _, state in
             if state == .signedOut {
@@ -42,6 +56,13 @@ struct AppRoot: View {
                 Task { await services.club.refresh(userID: user.id) }
             }
         }
+    }
+}
+
+extension AppRoot {
+    private var signedInUser: AuthUser? {
+        if case .signedIn(let user) = services.auth.state { return user }
+        return nil
     }
 }
 

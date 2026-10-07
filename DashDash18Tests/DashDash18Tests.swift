@@ -3,7 +3,14 @@ import Testing
 
 struct AppTabTests {
     @Test func fanerIRekkefolge() {
-        #expect(AppTab.allCases.map(\.title) == ["Kveld", "Tavla", "Deg"])
+        #expect(AppTab.tabs(looseRounds: false).map(\.title) == ["Kveld", "Tavla", "Deg"])
+    }
+
+    /// Fase 13: «Spill» kommer etter Kveld når løse runder er på, ellers er fanene som før.
+    @Test func spillfanenBareMedLoseRunder() {
+        #expect(AppTab.tabs(looseRounds: true).map(\.title) == ["Kveld", "Spill", "Tavla", "Deg"])
+        #expect(AppTab.tabs() == AppTab.tabs(looseRounds: LooseRoundsFeature.isEnabled))
+        #expect(!LooseRoundsFeature.isEnabled || FoundationFeature.isEnabled)
     }
 
     @Test func hverFaneHarIkon() {

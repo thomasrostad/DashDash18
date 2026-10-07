@@ -110,7 +110,8 @@ final class HoleStatsEntryModel {
 
 /// Plassen under hullkortet. Tom når føringen er av (eller funksjonen ikke er slått på).
 struct HoleStatsSlot: View {
-    let context: ClubContext
+    let client: SupabaseClient
+    let userID: UUID
     let roundID: UUID
     let memberID: UUID
     let holeIndex: Int
@@ -118,7 +119,7 @@ struct HoleStatsSlot: View {
     @State private var model: HoleStatsEntryModel?
 
     var body: some View {
-        if StatsFeature.isEnabled, HoleStatsSetting().isOn(for: context.user.id) {
+        if StatsFeature.isEnabled, HoleStatsSetting().isOn(for: userID) {
             Group {
                 if let model {
                     HoleStatsEntryRow(par: par, holeNumberText: nil,
@@ -131,7 +132,7 @@ struct HoleStatsSlot: View {
                 }
             }
             .task(id: roundID) {
-                let m = model ?? HoleStatsEntryModel(client: context.client, memberID: memberID)
+                let m = model ?? HoleStatsEntryModel(client: client, memberID: memberID)
                 model = m
                 await m.load(roundID: roundID)
             }
