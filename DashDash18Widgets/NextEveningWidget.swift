@@ -19,7 +19,13 @@ struct NextEveningView: View {
     let entry: SnapshotEntry
     @Environment(\.widgetFamily) private var family
 
-    private var evening: WidgetSnapshot.NextEvening? { entry.snapshot.nextEvening }
+    /// Nil også når den lagrede kvelden er spilt og appen ikke har vært åpnet siden.
+    private var evening: WidgetSnapshot.NextEvening? { entry.snapshot.upcomingEvening(at: entry.date) }
+
+    /// Når det ikke er noen kveld å vise.
+    private var emptyText: String {
+        entry.snapshot.eveningIsOver(at: entry.date) ? "Kvelden er spilt" : "Ingen kveld satt opp"
+    }
 
     private var countdown: String? {
         guard let start = evening?.startsAt else { return nil }
@@ -49,7 +55,7 @@ struct NextEveningView: View {
             if let evening {
                 Text("\(countdown ?? evening.dateText)\(evening.timeText.map { " kl. \($0)" } ?? "")")
             } else {
-                Text("Ingen kveld satt opp")
+                Text(emptyText)
             }
         case .accessoryCircular:
             if let start = evening?.startsAt {
@@ -73,7 +79,7 @@ struct NextEveningView: View {
                     Text(evening.dateText).font(.headline).lineLimit(1).minimumScaleFactor(0.8)
                     if let detail { Text(detail).font(.caption).lineLimit(1) }
                 } else {
-                    Text("Ingen kveld satt opp").font(.caption)
+                    Text(emptyText).font(.caption)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -118,10 +124,11 @@ struct NextEveningView: View {
                 }
             } else {
                 Spacer(minLength: 0)
-                Text("Ingen kveld satt opp")
+                Text(emptyText)
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(WidgetPalette.forestInk)
-                Text("Åpne appen for å se terminlista.")
+                Text(entry.snapshot.eveningIsOver(at: entry.date)
+                     ? "Åpne appen for neste kveld." : "Åpne appen for å se terminlista.")
                     .font(.system(size: 12))
                     .foregroundStyle(WidgetPalette.inkSecondary)
             }

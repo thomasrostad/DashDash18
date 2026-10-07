@@ -33,6 +33,13 @@ nonisolated struct SnapshotProvider: TimelineProvider {
                 day = next
             }
         }
+        // Midnatt etter kvelden: da er den spilt, og widgeten slutter å vise den som «I dag».
+        if let start = snapshot.nextEvening?.startsAt,
+           let after = WidgetText.osloCalendar.date(byAdding: .day, value: 1,
+                                                     to: WidgetText.osloCalendar.startOfDay(for: start)),
+           after > now, after > (dates.last ?? now) {
+            dates.append(after)
+        }
         let entries = dates.map { SnapshotEntry(date: $0, snapshot: snapshot) }
         // Etter siste oppføring: les på nytt om noen timer (appen har kanskje ikke vært åpnet).
         let refresh = (dates.last ?? now).addingTimeInterval(6 * 3600)

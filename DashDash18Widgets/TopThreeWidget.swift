@@ -34,7 +34,7 @@ struct TopThreeView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("Tavla").font(.caption2.weight(.semibold)).widgetAccentable()
                 if top.isEmpty {
-                    Text("Ingen tabell ennå").font(.caption)
+                    Text(entry.snapshot.topThreeEmptyText).font(.caption)
                 } else {
                     ForEach(top, id: \.place) { leader in
                         HStack(spacing: 4) {
@@ -70,7 +70,7 @@ struct TopThreeView: View {
             }
             if top.isEmpty {
                 Spacer(minLength: 0)
-                Text("Ingen tabell ennå")
+                Text(entry.snapshot.topThreeEmptyText)
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(WidgetPalette.forestInk)
                 Spacer(minLength: 0)
