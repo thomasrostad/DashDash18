@@ -32,6 +32,8 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 | `015_runde_sted.sql` | `rounds.venue` (simulator/course), bås ↔ flight | Godkjent og kjørt på test 07.10.2026. Ikke prod |
 | `016_banetype.sql` | `courses.kind` (simulator/course) | Godkjent og kjørt på test 07.10.2026. Ikke prod |
 | `014_par_uten_markor.sql` | `confirm_round_par` som PWA-ens `kanBekrefteBaneoppsett`: uten båser, eller i en bås uten markør, kan alle som spiller bekrefte parene | Godkjent og kjørt på test 07.10.2026. Ikke prod |
+| `017_fundament.sql` | Fase 12, fundamentet for en åpen app: `profiles`, løse runder (`rounds.club_id`/`event_id` kan være tomme, med CHECK), deltakere som profil eller gjest (`round_participants`), `competitions`, `competition_participants`, `competition_rounds`, `entitlements`, felles banebibliotek med felt for ekstern kilde, utvidet RLS, RPC-ene `ensure_profile`, `create_loose_round` og `create_competition`, og en konkurranse per sesong med rundene koblet. Se `docs/datamodell-v2.md` | **Forslag, ikke kjørt.** Lokalt: kjørt to ganger, `lokal/017_prove.sql` 129 av 129 ok, kontrollen 14 av 14, rullebakken prøvd (også med løse data), og de gamle rolleprøvene gir samme svar med og uten 017 |
+| `lokal/017_for.sql`, `lokal/017_prove.sql` | Lokal rolleprøve for 017: «verden før» (kjøres før 017, tar et bilde av hva hver innlogging ser og kan), så prøven etter. **Aldri mot Supabase.** | Hjelpefiler |
 | `lokal/012_prove.sql` | Lokal rolleprøve for 012. **Aldri mot Supabase.** | Hjelpefil |
 | `import/export_pwa.sql` | Fase 9: ren SELECT som lager et øyeblikksbilde (JSON) av **PWA-basen**. Kjøres i PWA-ens SQL Editor, og svaret lagres i `import-snapshot/` (ikke i git). Se `docs/import-plan.md` | Bare lesing. Ingen godkjenning trengs for å kjøre den, men den gir persondata |
 | `lokal/010_prove.sql` | Lokal rolleprøve for 010. **Aldri mot Supabase.** | Hjelpefil |
@@ -336,3 +338,66 @@ Lokal Postgres 16.2 (pgserver i scratch): `stub`, `stub_storage`, 001–009 og 0
 2. **Regelverdiene leses fra sesongens regelsett** (`rules->'bets'`). Mangler feltet, gjelder Golfgutu-verdien, som i appens dekoder.
 3. **Slettes runden, går veddemålene om den med** (cascade), som PWA-ens slett_runde. `delete_round` teller dem ikke i svaret sitt.
 4. **Annullert** (`void`) er nytt: arrangørens utvei for delt hull, delt match og likt resultat, der vilkåret ikke gir svar.
+
+
+---
+
+## Oversikt for godkjenning: 017 (fundament, fase 12)
+
+> **Status 07.10.2026:** forslag, **ikke kjørt** mot Supabase. Krever 001–016. Modellen, trusselmodellen og veien videre står i `docs/datamodell-v2.md`. Appen rører ingenting av dette før `FoundationFeature.isEnabled` slås på.
+
+### Tabellene
+
+| Tabell | Hva den er |
+|---|---|
+| `profiles` | Én rad per innlogging (`id` = `auth.users.id`): visningsnavn (tomt til det er satt), handicap og portrett. Lages av en trigger på `auth.users` og av `ensure_profile()`. |
+| `round_participants` | Deltaker i en løs runde: en profil eller en gjest (bare navn). `round_players.member_id` = `id`, og raden i `round_players` lages av en trigger. |
+| `competitions` | En konkurranse: `season`/`league`/`cup`/`fun`/`game`, regelsett (jsonb med versjon), periode, eier (klubb eller profil), `entry`, `is_main` (høyst én aktiv per klubb), `requires_purchase` og `entitlement_id` (bare serveren). |
+| `competition_participants` | Påmeldte: klubbmedlem eller profil. |
+| `competition_rounds` | Rundene som teller. En runde kan telle i flere. `source` er `season` (triggeren) eller `manual`. |
+| `entitlements` | Kjøp i appen (StoreKit). Bare serveren skriver. |
+| `round_roster` (view) | Deltakerne i en runde med navn og profil, uansett type. `security_invoker`. |
+
+### Hva som endres for dagens data
+
+- `rounds.club_id` og `rounds.event_id` kan være tomme, men `rounds_home_check` krever begge eller ingen. Alle runder som finnes, har begge. Nye kolonner: `owner_id`. Ny fremmednøkkel: `course_id → courses(id)`.
+- `round_players.club_id` kan være tom (deltaker i løs runde). Ny generert kolonne: `participant_round_id`. To nye fremmednøkler.
+- `courses.club_id` kan være tom (det felles biblioteket). Nye kolonner: `source`, `external_id`, `fetched_at`, `created_by_profile`.
+- **Data:** en profil per innlogging (fra første aktive medlemskap), en konkurranse per sesong (`season`, `is_main`, `entry = club`), og rundene i sesongens kvelder koblet til den.
+- **Triggere:** sesongen speiles til konkurransen (navn, status, regler). Nye runder og kvelder som bytter sesong, kobles om. Vakter finnes for løse runder, baner, konkurranser og påmeldinger.
+- **Utvidede hjelpere** (create or replace, samme svar for klubbrunder): `can_read_round`, `is_round_organizer`, `can_score`, `side_claims_before_write`.
+- **Policyer som byttes** (klubbuttrykket er uendret, nytt ledd for løse runder og biblioteket): `rounds_*`, `side_claims_insert/update/delete`, `courses_*`, `course_holes_*`.
+
+### Hvem kan hva
+
+- **anon:** ingenting (42501 på alle nye tabeller, viewet og funksjonene).
+- **Klubbmedlem:** ser og kan nøyaktig det samme i klubben som før. Kontroll 9 sammenligner med 001-utgavene for hver innlogging, og `lokal/017_prove.sql` sammenligner et bilde tatt før og etter.
+- **Eier av en løs runde:** arrangørens rett i runden. Legger til gjester og folk hen kan se.
+- **Deltaker i en løs runde:** ser runden og fører etter kanFore (seg selv, eller som markør).
+- **Konkurranse:** arrangøren (klubbens) eller eieren styrer. Deltakerne ser den og de startede rundene i den. Bare rundens eier kan legge runden inn.
+- **Fremmed:** ser ingen profiler, runder, konkurranser eller klubbdata. Ser bare det felles banebiblioteket. Kan ikke legge deg til noe sted.
+
+### RPC-er
+
+| Funksjon | Hvem | Hva |
+|---|---|---|
+| `ensure_profile()` | innlogget | Lager profilen om den mangler og fyller tomme felt fra klubbmedlemskapet. Idempotent. |
+| `create_loose_round(bane, hull, første hull, form, sted, spillere, start)` | innlogget | Løs runde med deg som eier og første deltaker, profiler du kan se og gjester, i én transaksjon. Banen må være i det felles biblioteket. |
+| `create_competition(type, navn, klubb, entry, regler, fra, til)` | innlogget (arrangør for klubb) | Ny konkurranse (ikke sesong). Uten klubb blir du eier og første påmeldte. |
+
+### Lokal sjekk av 017
+
+Lokal Postgres 16.2 (pgserver i scratch, egen datakatalog og port): `stub`, `stub_storage`, 001–016, `lokal/017_for.sql`, 017 **to ganger**, så `lokal/017_prove.sql`: **129 av 129 ok**. Prøven dekker:
+
+- at hver innlogging ser og kan det samme som før;
+- migreringen av profiler, konkurranser og koblinger;
+- speilingen (ny runde, kvelden som bytter sesong, nytt navn på sesongen, `activate_season` fram og tilbake);
+- profiler (egne, andres, ventende);
+- to fremmede som registrerer seg, med felles bane, løs runde med gjest, føring og vaktene;
+- en løs runde med en klubbvenn og en gjest som kobles til en profil;
+- en konkurranse som teller en klubbrunde og en løs runde (runder fra to steder), med hvem som ser hva;
+- at dagens RPC-er virker (`save_hole`, `confirm_round_par`, `create_bet`, `set_round_setup`, `start_round`, `delete_round` og `create_club`);
+- sletting av runde og konto, og anon.
+
+Kontrollblokken nederst i fila ga **14 av 14** rett etter migreringen. Kontroll 9 ble prøvd med en bevisst feil i `can_score` og ga `false`. Rullebakken er kjørt både på en fersk base og etter rolleprøven (med løse runder, gjester og felles baner). Etter rullebakken ser alle det samme som før 017, og 017 gikk inn igjen. `lokal/001_prove`, `008_prove`, `010_prove` og `012_prove` gir **like linjer med og uten 017**. 008 har to kjente FEIL i begge, fordi 010 har erstattet `push_tokens`. **Forbehold:** ekte Supabase (PG 17, PostgREST, Realtime, Auth-triggeren og advisoren) er ikke prøvd.
+

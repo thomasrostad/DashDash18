@@ -28,7 +28,7 @@
 -- Hjelpefunksjonene can_read_round, is_round_organizer og can_score byttes ut
 -- (create or replace) med utgaver som har en ekstra gren for løse runder og
 -- konkurranser. For klubbrunder gir de nøyaktig samme svar som før (kontroll
--- 9–11 nederst sammenligner med 001-utgavene for hver bruker og runde).
+-- 9 nederst sammenligner med 001-utgavene for hver bruker og runde).
 --
 -- Tilgang ved deltakelse (RLS):
 --   * du ser runder i klubber der du er aktivt medlem (som før),
