@@ -34,6 +34,9 @@ struct PlayerProfileView: View {
                     DDStatTile("Birdies", value: "\(p.birdies)"),
                     DDStatTile("Lengste drive", value: p.longestDrive.map(SidePrizes.formatMeters) ?? "—"),
                 ])
+                if StatsFeature.isEnabled {
+                    StatsProfileLink(memberID: memberID, name: p.row.name)
+                }
 
                 if let text = p.headToHeadText(name: p.row.name) {
                     VStack(alignment: .leading, spacing: 6) {
