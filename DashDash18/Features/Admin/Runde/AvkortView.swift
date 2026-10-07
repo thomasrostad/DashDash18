@@ -37,10 +37,7 @@ private struct AvkortContent: View {
                     Button("Avbryt") { dismiss() }
                 }
             }
-            .task {
-                await model.load()
-                if choice == nil { choice = model.game?.defaultCutChoice }
-            }
+            .task { await load() }
             .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -54,7 +51,14 @@ private struct AvkortContent: View {
         case .loading:
             ProgressView("Henter runden …")
         case .failed(let text):
-            ContentUnavailableView("Fikk ikke hentet runden", systemImage: "wifi.exclamationmark", description: Text(text))
+            ContentUnavailableView {
+                Label("Fikk ikke hentet runden", systemImage: "wifi.exclamationmark")
+            } description: {
+                Text(text)
+            } actions: {
+                Button("Prøv igjen") { Task { await load() } }
+                    .buttonStyle(.dd(.primary))
+            }
         case .loaded:
             if let game = model.game, let choice {
                 form(game, choice: choice)
@@ -154,6 +158,12 @@ private struct AvkortContent: View {
         } message: {
             Text("Hele runden teller igjen, og poengene regnes om.")
         }
+    }
+
+    /// Henter runden og velger forslaget første gang (også etter «Prøv igjen»).
+    private func load() async {
+        await model.load()
+        if choice == nil { choice = model.game?.defaultCutChoice }
     }
 
     private func confirmText(_ choice: CutChoice, preview: CutPreview) -> String {
