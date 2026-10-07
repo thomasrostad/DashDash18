@@ -10,10 +10,10 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 8 – Native løft. Kamera, kalender og deling er ferdige. Forslag 010 (push) venter på godkjenning. Live Activity og widgets er slått på (target DashDash18WidgetsExtension). |
-| **Sist gjort** | 07.10: kamera i tråden, «Legg i kalender» på Kveld, deling av Tavla og kveldsresultat (bilde + tekst). Forslag 010 for push (SQL, Edge Function `push-send`, appkode bak flagg). Forarbeid til Live Activity og widgets (`DashDash18Widgets/`, flagg av). 587 enhetstester grønne. |
-| **Neste oppgave** | Prøve fase 8 på telefon: kamera, kalender, deling, widgets, Live Activity og push mellom to kontoer. Deretter varslene for store scorer, ledelsesskifte osv. og TestFlight. |
-| **Venter på deg** | Godkjenne 009. Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
+| **Nåværende fase** | Fase 8 – Native løft, i hovedsak ferdig. Push kjører på test. Første TestFlight-bygg (1.0 (1)) ligger til Beta App Review. |
+| **Sist gjort** | 07.10: kamera, kalender, deling, widgets og Live Activity prøvd på telefon. Push på test (010, `push-send`, webhook, cron). Arrangørskjermene «Hva blir push» og «Hvem har push». Varsler for store scorer og ledelsesskifte uten duplikater. Deg: handicap, portrett, innloggingsmåter, logg ut. App-ikon og TestFlight. 632 enhetstester grønne. |
+| **Neste oppgave** | Push mellom to kontoer når TestFlight er godkjent. Godkjenne og kjøre 011. Live Activity oppdatert via push. Fase 9 (import og bytte). |
+| **Venter på deg** | Godkjenne 011 (erstatter 009). Øke byggnummer i Xcode før neste TestFlight. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
 
@@ -217,7 +217,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Avslutt kvelden: lås, kveld ferdig, neste kveld rykker opp. *(06.10: låser pågående runder.)*
 - [x] Rett en score, Rundene (tabell, retting i låst runde, logges). Slett runde (én RPC). *(06.10.)*
 - [x] Aktivitet og varsler i appen: strukturert (type + data), ikke HTML. Reaksjoner. *(06.10. Ikke prøvd mot database.)*
-- [ ] Deg: handicap (komma), portrett, koblede innloggingsmåter, logg ut.
+- [x] Deg: handicap (komma), portrett, koblede innloggingsmåter, logg ut. *(07.10. Apple-kobling bak `AccountLinkingFeature.appleEnabled = false` til «Allow manual linking» er godkjent. Ikke prøvd på telefon.)*
 - [x] Kveldens tråd: tekst, @navn, bilde fra bildebiblioteket, uleste. *(06.10. Ikke prøvd mot database.)*
 - [x] Tippekupong: fem spørsmål, frist i Oslo-tid, andres tips etter låsing, fasit og resultat. Innsats i poeng eller «for æra» (B10). *(06.10. Ikke prøvd mot database.)*
 
@@ -242,12 +242,12 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 **Mål:** Det PWA-en aldri kunne: push for alle, Live Activity, widgets, kamera og kalender.
 
 - [x] **APNs-push:** tabell for enhetstokens (SQL til godkjenning) og en sender (Supabase Edge Function), med kategorier som kan slås av og på per spiller og av arrangør. *(07.10: 010 godkjent og kjørt på test (12/12), `push-send` deployet, secrets, webhook `dd18_push_queue` og pg_cron-påminnelse satt opp, Push-capability lagt til, flagget på. Ikke prøvd på telefon. Ikke prod.)*
-- [ ] Varsler for store scorer, ledelsesskifte, ny runde, påminnelse før kveld, purring, tråd (nevnt/alle/av).
-- [x] **Live Activity** under runde: hull, egen score, stilling i bås og match. *(07.10: target DashDash18WidgetsExtension, slått på. Oppdateres bare fra appen; push-oppdatering kommer med APNs. Ikke prøvd på telefon.)*
-- [x] **Widgets:** neste kveld og tabell-topp. *(07.10: App Group `group.com.dashdash18.app`, slått på. Ikke prøvd på telefon.)*
-- [x] **Kamera** i tråden. *(07.10. Ikke prøvd på telefon.)*
-- [x] **Kalender:** «Legg i kalender» via EventKit. *(07.10: på Kveld, uten kalendertilgang. Ikke prøvd på telefon.)*
-- [x] Deling av tabell og resultater via delingsark. *(07.10: Tavla og Runde, bilde + tekst. Ikke prøvd på telefon.)*
+- [x] Varsler for store scorer, ledelsesskifte, ny runde, påminnelse før kveld, purring, tråd (nevnt/alle/av). *(07.10: hull i kø logges, ledelsen regnes på ferske data, ingen duplikater fra samme telefon. Mellom telefoner: forslag 011. Arrangørskjermene «Hva blir push» og «Hvem har push». Ikke prøvd på telefon.)*
+- [x] **Live Activity** under runde: hull, egen score, stilling i bås og match. *(07.10: target DashDash18WidgetsExtension, slått på. Oppdateres bare fra appen; push-oppdatering kommer med APNs. Prøvd på telefon.)*
+- [x] **Widgets:** neste kveld og tabell-topp. *(07.10: App Group `group.com.dashdash18.app`, slått på. Prøvd på telefon.)*
+- [x] **Kamera** i tråden. *(07.10. Prøvd på telefon.)*
+- [x] **Kalender:** «Legg i kalender» via EventKit. *(07.10: på Kveld, uten kalendertilgang. Prøvd på telefon.)*
+- [x] Deling av tabell og resultater via delingsark. *(07.10: Tavla og Runde, bilde + tekst. Prøvd på telefon.)*
 
 **Ferdig når:**
 - Jeg får push når noen i gjengen gjør birdie, og kan skru av den kategorien.
