@@ -122,10 +122,16 @@ final class CompetitionsModel {
 
     // MARK: Ny konkurranse
 
-    /// Lager konkurransen. Gir id-en, eller nil (feilen står i `error`).
-    func create(_ draft: CompetitionDraft) async -> UUID? {
-        guard let client, CompetitionPurchase.isUnlocked(kind: draft.kind, clubID: draft.clubID, userID: access.profileID)
-        else { return nil }
+    /// Krever den nye konkurransen kjøp som ikke er gjort (vis betalingsveggen)?
+    func needsPurchase(_ draft: CompetitionDraft, purchases: PurchaseService?) -> Bool {
+        !CompetitionPurchase.isUnlocked(kind: draft.kind, clubID: draft.clubID, userID: access.profileID,
+                                        purchases: purchases)
+    }
+
+    /// Lager konkurransen, og kobler en ledig kreditt til den når typen krever kjøp. Gir id-en,
+    /// eller nil (feilen står i `error`).
+    func create(_ draft: CompetitionDraft, purchases: PurchaseService? = nil) async -> UUID? {
+        guard let client, !needsPurchase(draft, purchases: purchases) else { return nil }
         if let issue = draft.issues().first {
             error = issue
             return nil
@@ -134,6 +140,12 @@ final class CompetitionsModel {
         defer { busy = nil }
         do {
             let id = try await CompetitionQueries.create(client: client, draft.params(main: main?.rules))
+            if let purchases, CompetitionPurchase.needsCredit(kind: draft.kind, clubID: draft.clubID,
+                                                             userID: access.profileID,
+                                                             entitlements: purchases.entitlements) {
+                // Kreditten brukes i stedet for et nytt kjøp (`assign_purchase`).
+                await purchases.purchase(.tournament, competitionID: id)
+            }
             await load()
             return id
         } catch {

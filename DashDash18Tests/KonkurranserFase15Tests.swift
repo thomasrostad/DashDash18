@@ -456,9 +456,112 @@ import Testing
         #expect(q.p_club_id == nil && q.p_member_ids.isEmpty && !q.p_signup_open && q.p_starts_on == "2026-10-07")
     }
 
-    @Test func betalingErStubbetTilApen() {
-        #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me))
+    @Test func flaggeneErAv() {
         #expect(!CompetitionsFeature.isEnabled)
+        #expect(!PurchaseFeature.isEnabled)
+        // Med kjøp av er alt låst opp, som før.
+        #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, entitlements: []))
+    }
+}
+
+// MARK: - Kjøp: bare liga og cup (besluttet 07.10.2026)
+
+/// Kjøpene fra serveren uten nett, for `PurchaseService`.
+nonisolated private struct FakePurchaseBackend: PurchaseBackend {
+    let rows: [EntitlementRow]
+    func verify(transactionID: UInt64, competitionID: UUID?, clubID: UUID?) async throws -> EntitlementRow {
+        throw PurchaseError.offline
+    }
+    func entitlements() async throws -> [EntitlementRow] { rows }
+    func assign(entitlementID: UUID, competitionID: UUID) async throws {}
+    func isUnlocked(competitionID: UUID) async throws -> Bool { false }
+}
+
+@MainActor struct KonkurranseKjopTests {
+    let now = Date(timeIntervalSince1970: 1_800_000_000)
+
+    func entitlement(kind: String = "consumable", competition: UUID? = nil, club: UUID? = nil,
+                     expires: Date? = nil, status: EntitlementRow.Status = .active) -> EntitlementRow {
+        EntitlementRow(id: UUID(), profileID: F.me, clubID: club, competitionID: competition,
+                       productID: kind == "consumable" ? PurchaseProduct.tournament.rawValue : PurchaseProduct.yearly.rawValue,
+                       productKind: kind, status: status, expiresAt: expires)
+    }
+
+    func unlocked(_ kind: CompetitionKind, club: UUID? = nil, _ e: [EntitlementRow]) -> Bool {
+        CompetitionPurchase.isUnlocked(kind: kind, clubID: club, userID: F.me, entitlements: e, enabled: true, now: now)
+    }
+
+    /// Samme liste som triggeren i sql/023.
+    @Test func bareLigaOgCupKreverKjop() {
+        #expect(CompetitionPurchase.requiresPurchase(.league))
+        #expect(CompetitionPurchase.requiresPurchase(.cup))
+        #expect(!CompetitionPurchase.requiresPurchase(.fun))
+        #expect(!CompetitionPurchase.requiresPurchase(.season))
+        #expect(!CompetitionPurchase.requiresPurchase(.game))
+    }
+
+    @Test func morroErGratisLigaOgCupLaast() {
+        #expect(unlocked(.fun, []))
+        #expect(!unlocked(.league, []))
+        #expect(!unlocked(.cup, club: F.club, []))
+        // Med kjøp av: alt låst opp.
+        #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, entitlements: [], enabled: false))
+    }
+
+    @Test func abonnementEllerKredittLaserOpp() {
+        let later = now.addingTimeInterval(3600)
+        let personal = entitlement(kind: "subscription", expires: later)
+        let forClub = entitlement(kind: "subscription", club: F.club, expires: later)
+        let expired = entitlement(kind: "subscription", expires: now.addingTimeInterval(-1))
+        #expect(unlocked(.cup, [personal]))
+        #expect(!unlocked(.cup, club: F.club, [personal]))
+        #expect(unlocked(.league, club: F.club, [forClub]))
+        #expect(!unlocked(.league, [forClub]))
+        #expect(!unlocked(.league, [expired]))
+        // Et kjøp som ikke er koblet (kreditt), låser opp den neste. Et brukt eller refundert gjør ikke.
+        #expect(unlocked(.cup, [entitlement()]))
+        #expect(!unlocked(.cup, [entitlement(competition: UUID())]))
+        #expect(!unlocked(.cup, [entitlement(status: .refunded)]))
+    }
+
+    @Test func kredittenKoblesBareNarDenTrengs() {
+        let credit = entitlement()
+        let sub = entitlement(kind: "subscription", expires: now.addingTimeInterval(3600))
+        func needs(_ kind: CompetitionKind, _ e: [EntitlementRow], enabled: Bool = true) -> Bool {
+            CompetitionPurchase.needsCredit(kind: kind, clubID: nil, userID: F.me, entitlements: e, enabled: enabled, now: now)
+        }
+        #expect(needs(.cup, [credit]))
+        #expect(!needs(.cup, [credit, sub]))
+        #expect(!needs(.fun, [credit]))
+        #expect(!needs(.cup, []))
+        #expect(!needs(.cup, [credit], enabled: false))
+    }
+
+    @Test func tekstenINyKonkurranse() {
+        #expect(CompetitionPurchase.note(.cup, enabled: false) == nil)
+        #expect(CompetitionPurchase.note(.league, enabled: true)?.contains("krever kjøp") == true)
+        #expect(CompetitionPurchase.note(.fun, enabled: true) == "Gratis å lage og kjøre.")
+    }
+
+    /// Koblingen til fase 17: kjøpene som `PurchaseService` har hentet.
+    @Test func brukerKjopenePurchaseServiceHarHentet() async {
+        let service = PurchaseService(backend: FakePurchaseBackend(rows: [entitlement()]), profileID: F.me)
+        #expect(!CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, purchases: service, enabled: true))
+        await service.refreshEntitlements()
+        #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, purchases: service, enabled: true))
+        #expect(!CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, purchases: nil, enabled: true))
+        #expect(CompetitionPurchase.isUnlocked(kind: .fun, clubID: nil, userID: F.me, purchases: nil, enabled: true))
+    }
+
+    /// «Ny konkurranse» viser betalingsveggen bare når typen er låst.
+    @Test func nyKonkurranseTrengerKjop() {
+        let list = CompetitionsModel(preview: .init(), access: F.access(organizer: true), clubID: F.club, clubName: "Golfgutu")
+        var d = CompetitionDraft(clubID: F.club, today: "2026-10-07")
+        d.kind = .fun
+        #expect(!list.needsPurchase(d, purchases: nil))
+        d.kind = .cup
+        // Med PurchaseFeature av: ingen betalingsvegg.
+        #expect(list.needsPurchase(d, purchases: nil) == PurchaseFeature.isEnabled)
     }
 }
 

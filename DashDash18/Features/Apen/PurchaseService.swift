@@ -74,9 +74,9 @@ nonisolated struct SupabasePurchaseBackend: PurchaseBackend {
 /// kjøp på en annen enhet). En transaksjon fullføres (`finish()`) først når serveren har
 /// registrert den, så et kjøp aldri går tapt.
 ///
-/// Koblingen til fase 15: stubben `CompetitionPurchase.isUnlocked(...)` kan spørre
-/// `isUnlocked(_:)` (fra kjøpene som er hentet) eller `serverIsUnlocked(_:)`, og betalingsveggen
-/// er `PaywallView(service:competition:)`.
+/// Koblingen til fase 15: `CompetitionPurchase.isUnlocked(…, purchases:)` leser `entitlements`
+/// (abonnement eller ledig kreditt), «Ny konkurranse» viser `PaywallView` for liga og cup som ikke
+/// er låst opp, og kreditten kobles til turneringen når den er laget.
 @Observable
 final class PurchaseService {
     enum State: Equatable {
