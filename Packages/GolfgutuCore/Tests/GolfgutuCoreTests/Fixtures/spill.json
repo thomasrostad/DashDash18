@@ -1,0 +1,3429 @@
+{
+ "_kilde": "Spill på runden (fase 14). Forventede verdier er regnet for hånd fra regeldefinisjonene i GolfgutuCore (Games.swift og spillfilene) og malene (…Rules.standard), ikke fra en annen implementasjon. Utledningen står i hvert scenario. Malene: skins = vanlige skins-regler (laveste score alene vinner, delt hull går videre med carry-over); Nassau = tre veddemål (første ni, siste ni, totalt) med valgfritt automatisk press ved 2 under; Wolf = vanlig poengoppsett 2/3/4/1 og blind 6/2; bingo-bango-bongo = 1 poeng hver for først på green, nærmest når alle er på green og først i hullet; best ball = beste netto på laget, med WHS Appendix C-andelene for fourball (90 % match, 85 % slagspill/stableford). Runden er GolfgutuCore-runden (holeScores per spiller, rundens 0-baserte hull; uten bane gjelder standardbanen med indeks = hullnummer). playingHandicaps er rundens frosne spillehandicap. Spillere er id-er; Player-raden trengs ikke når handicapet er frosset. Hullfeltene som mangler i forventet, sjekkes ikke.",
+ "fordeling": [
+  {
+   "navn": "100 på tre like",
+   "total": 100,
+   "vekter": {
+    "a": 1,
+    "b": 1,
+    "c": 1
+   },
+   "forventet": {
+    "a": 34,
+    "b": 33,
+    "c": 33
+   }
+  },
+  {
+   "navn": "5 på to like: 2,5 rundes opp, resten tas fra laveste id",
+   "total": 5,
+   "vekter": {
+    "b": 1,
+    "c": 1
+   },
+   "forventet": {
+    "b": 2,
+    "c": 3
+   }
+  },
+  {
+   "navn": "10 på 3 og 1: 7,5 → 8 og 2,5 → 3, resten tas fra største vekt",
+   "total": 10,
+   "vekter": {
+    "x": 3,
+    "y": 1
+   },
+   "forventet": {
+    "x": 7,
+    "y": 3
+   }
+  },
+  {
+   "navn": "70 på tre like",
+   "total": 70,
+   "vekter": {
+    "a": 1,
+    "b": 1,
+    "c": 1
+   },
+   "forventet": {
+    "a": 24,
+    "b": 23,
+    "c": 23
+   }
+  }
+ ],
+ "scenarier": [
+  {
+   "navn": "skins netto med carry-over (9 hull, låst)",
+   "utledning": "b har handicap 2 og får slag på indeks 1–2 (hull 1 og 2). Netto: a 4 5 3 4 4 3 5 4 4, b 4 4 3 5 4 4 5 4 3, c 4 6 3 4 3 3 5 5 4. Hull 1 likt (1 står), hull 2 b alene 4 (2 skins), hull 3 likt, hull 4 a=c (2 står), hull 5 c alene (3 skins), hull 6 a=c, hull 7 likt, hull 8 a=b (3 står), hull 9 b alene (4 skins). Oppgjør 10 per skin fra hver av de andre: b +40, c +60, b +80; a −20−30−40.",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "playingHandicaps": {
+     "a": 0,
+     "b": 2,
+     "c": 0
+    },
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 5,
+      "1": 5,
+      "2": 3,
+      "3": 5,
+      "4": 4,
+      "5": 4,
+      "6": 5,
+      "7": 4,
+      "8": 3
+     },
+     "c": {
+      "0": 4,
+      "1": 6,
+      "2": 3,
+      "3": 4,
+      "4": 3,
+      "5": 3,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "skins",
+    "players": [
+     "a",
+     "b",
+     "c"
+    ]
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "c"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c"
+      ],
+      "verdi": 3
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 4
+     }
+    ],
+    "poeng": {
+     "a": 0,
+     "b": 6,
+     "c": 3
+    },
+    "oppgjor": {
+     "a": -90,
+     "b": 90,
+     "c": 0
+    },
+    "ferdig": true,
+    "carry": 0
+   }
+  },
+  {
+   "navn": "skins brutto",
+   "utledning": "Brutto, samme scorer. Hull 1 a=c, 2 a=b, 3 likt, 4 a=c (4 står), hull 5 c alene (5 skins), 6 a=c, 7 likt, 8 a=b (3 står), hull 9 b alene (4 skins). c +100 (a, b −50), b +80 (a, c −40).",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "playingHandicaps": {
+     "a": 0,
+     "b": 2,
+     "c": 0
+    },
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 5,
+      "1": 5,
+      "2": 3,
+      "3": 5,
+      "4": 4,
+      "5": 4,
+      "6": 5,
+      "7": 4,
+      "8": 3
+     },
+     "c": {
+      "0": 4,
+      "1": 6,
+      "2": 3,
+      "3": 4,
+      "4": 3,
+      "5": 3,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "skins",
+    "players": [
+     "a",
+     "b",
+     "c"
+    ],
+    "settings": {
+     "handicap": {
+      "net": false
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "c"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c"
+      ],
+      "verdi": 5
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 4
+     }
+    ],
+    "poeng": {
+     "a": 0,
+     "b": 4,
+     "c": 5
+    },
+    "oppgjor": {
+     "a": -90,
+     "b": 30,
+     "c": 60
+    },
+    "ferdig": true,
+    "carry": 0
+   }
+  },
+  {
+   "navn": "skins uten carry-over",
+   "utledning": "Netto som første scenario, men delte hull faller bort. b vinner hull 2 og 9, c hull 5, ett skin hver: b +20 +20, c +20, hver av de andre −10 per skin.",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "playingHandicaps": {
+     "a": 0,
+     "b": 2,
+     "c": 0
+    },
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 5,
+      "1": 5,
+      "2": 3,
+      "3": 5,
+      "4": 4,
+      "5": 4,
+      "6": 5,
+      "7": 4,
+      "8": 3
+     },
+     "c": {
+      "0": 4,
+      "1": 6,
+      "2": 3,
+      "3": 4,
+      "4": 3,
+      "5": 3,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "skins",
+    "players": [
+     "a",
+     "b",
+     "c"
+    ],
+    "settings": {
+     "carryOver": false
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 1
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "c"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c"
+      ],
+      "verdi": 1
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 1
+     }
+    ],
+    "poeng": {
+     "a": 0,
+     "b": 2,
+     "c": 1
+    },
+    "oppgjor": {
+     "a": -30,
+     "b": 30,
+     "c": 0
+    },
+    "ferdig": true,
+    "carry": 0
+   }
+  },
+  {
+   "navn": "skins: delt siste hull, skinnene deles (avrunding og rest som Bets.payouts)",
+   "utledning": "Brutto, fire spillere. a vinner hull 1, d hull 2, hull 3–8 likt (6 står), hull 9 a=b=c (7 står). Deles av a, b, c: d gir 70, potten 70/3 = 23,33 rundes til 23 hver (69), resten 1 går til laveste id (a). a: +30 −10 +24 = 44, b: −10 −10 +23 = 3, c: 3, d: −10 +30 −70 = −50.",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "holeScores": {
+     "a": {
+      "0": 3,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "c": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "d": {
+      "0": 4,
+      "1": 4,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 5
+     }
+    }
+   },
+   "spill": {
+    "kind": "skins",
+    "players": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "settings": {
+     "handicap": {
+      "net": false
+     },
+     "leftover": "split"
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "verdi": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "d"
+      ],
+      "verdi": 1
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     }
+    ],
+    "poeng": {
+     "a": 3.3333333333333335,
+     "b": 2.3333333333333335,
+     "c": 2.3333333333333335,
+     "d": 1
+    },
+    "oppgjor": {
+     "a": 44,
+     "b": 3,
+     "c": 3,
+     "d": -50
+    },
+    "ferdig": true,
+    "carry": 0
+   }
+  },
+  {
+   "navn": "skins: delt siste hull, skinnene faller bort (malen)",
+   "utledning": "Som over, men med malens lapse: de 7 skinnene vinnes ikke. a +30 −10 = 20, d −10 +30 = 20, b og c −20.",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "holeScores": {
+     "a": {
+      "0": 3,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "c": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "d": {
+      "0": 4,
+      "1": 4,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 5
+     }
+    }
+   },
+   "spill": {
+    "kind": "skins",
+    "players": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "settings": {
+     "handicap": {
+      "net": false
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "verdi": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "d"
+      ],
+      "verdi": 1
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     }
+    ],
+    "poeng": {
+     "a": 1,
+     "b": 0,
+     "c": 0,
+     "d": 1
+    },
+    "oppgjor": {
+     "a": 20,
+     "b": -20,
+     "c": -20,
+     "d": 20
+    },
+    "ferdig": true,
+    "carry": 0
+   }
+  },
+  {
+   "navn": "skins underveis: hull 4 mangler score, stillingen stopper der",
+   "utledning": "18 hull, ikke låst, brutto. a vinner hull 1, hull 2 likt, b vinner hull 3 (2 skins). c har ikke ført hull 4, så hull 4–18 venter. a +20, b +40, c −10 −20, a −20 for hull 3.",
+   "runde": {
+    "holeCount": 18,
+    "locked": false,
+    "holeScores": {
+     "a": {
+      "0": 3,
+      "1": 5,
+      "2": 4,
+      "3": 4,
+      "4": 4
+     },
+     "b": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 5
+     },
+     "c": {
+      "0": 4,
+      "1": 5,
+      "2": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "skins",
+    "players": [
+     "a",
+     "b",
+     "c"
+    ],
+    "settings": {
+     "handicap": {
+      "net": false
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "verdi": 1
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 2
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     }
+    ],
+    "poeng": {
+     "a": 1,
+     "b": 2,
+     "c": 0
+    },
+    "oppgjor": {
+     "a": 0,
+     "b": 30,
+     "c": -30
+    },
+    "ferdig": false,
+    "carry": 0
+   }
+  },
+  {
+   "navn": "skins i låst runde med manglende score",
+   "utledning": "Låst, brutto. Hull 1–4 likt (4 står). Hull 5: c mangler score, b 4 slår a 5 og vinner 5 skins. Hull 6 likt, hull 7 har ingen score (likt, står), hull 8 likt, hull 9 c alene på 3 (4 skins). b +100 (a, c −50), c +80 (a, b −40).",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 5,
+      "5": 3,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "7": 4,
+      "8": 4
+     },
+     "c": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "5": 3,
+      "7": 4,
+      "8": 3
+     }
+    }
+   },
+   "spill": {
+    "kind": "skins",
+    "players": [
+     "a",
+     "b",
+     "c"
+    ],
+    "settings": {
+     "handicap": {
+      "net": false
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 5
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "halved",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c"
+      ],
+      "verdi": 4
+     }
+    ],
+    "poeng": {
+     "a": 0,
+     "b": 5,
+     "c": 4
+    },
+    "oppgjor": {
+     "a": -90,
+     "b": 60,
+     "c": 30
+    },
+    "ferdig": true,
+    "carry": 0
+   }
+  },
+  {
+   "navn": "Nassau match, netto fra laveste",
+   "utledning": "a hcp 3, b hcp 5: b får 2 slag (indeks 1–2, hull 1 og 2). Hullvinnere første ni: a, delt, b, a, a, delt, delt, b, a → a 2 opp. Siste ni: b, b, a, a, delt, b, a, delt, delt → likt. Totalt a 2 opp (avgjort på hull 17). a vinner første ni (10) og totalen (10).",
+   "runde": {
+    "holeCount": 18,
+    "locked": true,
+    "playingHandicaps": {
+     "a": 3,
+     "b": 5
+    },
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 4,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 5,
+      "8": 4,
+      "9": 5,
+      "10": 4,
+      "11": 5,
+      "12": 4,
+      "13": 4,
+      "14": 4,
+      "15": 4,
+      "16": 5,
+      "17": 4
+     },
+     "b": {
+      "0": 6,
+      "1": 6,
+      "2": 3,
+      "3": 5,
+      "4": 5,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 5,
+      "9": 4,
+      "10": 3,
+      "11": 6,
+      "12": 5,
+      "13": 4,
+      "14": 3,
+      "15": 5,
+      "16": 5,
+      "17": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "nassau",
+    "players": [
+     "a",
+     "b"
+    ],
+    "sides": {
+     "a": 1,
+     "b": 2
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 0
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 2
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 2
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 0
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 2
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 2
+     }
+    ],
+    "veddemaal": [
+     {
+      "del": "front",
+      "status": "won",
+      "forste": 0,
+      "siste": 8,
+      "margin": 2,
+      "vinner": 1,
+      "verdi": 10
+     },
+     {
+      "del": "back",
+      "status": "halved",
+      "forste": 9,
+      "siste": 17,
+      "margin": 0,
+      "verdi": 10
+     },
+     {
+      "del": "total",
+      "status": "won",
+      "forste": 0,
+      "siste": 17,
+      "margin": 2,
+      "vinner": 1,
+      "verdi": 10
+     }
+    ],
+    "oppgjor": {
+     "a": 20,
+     "b": -20
+    },
+    "ferdig": true
+   }
+  },
+  {
+   "navn": "Nassau med press ved 2 under",
+   "utledning": "Samme runde. Første ni: a 2 opp etter hull 5 → press fra hull 6 (6–9: delt, delt, b, a = likt). Siste ni: a 2 under etter hull 11 → press fra hull 12; i det pressen er a 2 opp etter hull 13 → nytt press fra hull 14 (14–18: delt, b, a, delt, delt = likt). Press fra hull 12: a, a, delt, b, a, delt, delt = a 2 opp, vinner 10. a +10 +10 +10.",
+   "runde": {
+    "holeCount": 18,
+    "locked": true,
+    "playingHandicaps": {
+     "a": 3,
+     "b": 5
+    },
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 4,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 5,
+      "8": 4,
+      "9": 5,
+      "10": 4,
+      "11": 5,
+      "12": 4,
+      "13": 4,
+      "14": 4,
+      "15": 4,
+      "16": 5,
+      "17": 4
+     },
+     "b": {
+      "0": 6,
+      "1": 6,
+      "2": 3,
+      "3": 5,
+      "4": 5,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 5,
+      "9": 4,
+      "10": 3,
+      "11": 6,
+      "12": 5,
+      "13": 4,
+      "14": 3,
+      "15": 5,
+      "16": 5,
+      "17": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "nassau",
+    "players": [
+     "a",
+     "b"
+    ],
+    "sides": {
+     "a": 1,
+     "b": 2
+    },
+    "settings": {
+     "press": true
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 0
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 2
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 2
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 0
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 2
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 2
+     }
+    ],
+    "veddemaal": [
+     {
+      "del": "front",
+      "status": "won",
+      "forste": 0,
+      "siste": 8,
+      "margin": 2,
+      "vinner": 1,
+      "verdi": 10
+     },
+     {
+      "del": "press",
+      "status": "halved",
+      "forste": 5,
+      "siste": 8,
+      "margin": 0,
+      "verdi": 10,
+      "pressPaa": "front"
+     },
+     {
+      "del": "back",
+      "status": "halved",
+      "forste": 9,
+      "siste": 17,
+      "margin": 0,
+      "verdi": 10
+     },
+     {
+      "del": "press",
+      "status": "won",
+      "forste": 11,
+      "siste": 17,
+      "margin": 2,
+      "vinner": 1,
+      "verdi": 10,
+      "pressPaa": "back"
+     },
+     {
+      "del": "press",
+      "status": "halved",
+      "forste": 13,
+      "siste": 17,
+      "margin": 0,
+      "verdi": 10,
+      "pressPaa": "back"
+     },
+     {
+      "del": "total",
+      "status": "won",
+      "forste": 0,
+      "siste": 17,
+      "margin": 2,
+      "vinner": 1,
+      "verdi": 10
+     }
+    ],
+    "oppgjor": {
+     "a": 30,
+     "b": -30
+    },
+    "ferdig": true
+   }
+  },
+  {
+   "navn": "Nassau slag, 2 mot 2, 9 hull fra hull 10",
+   "utledning": "9 hull fra banens hull 10: par 3 4 5 4 3 4 5 4 4, indeks 2 18 10 6 16 4 8 14 12 gir rang 1 9 5 3 8 2 4 7 6. a hcp 2 får slag på rang 1–2 (runde-hull 1 og 6), d hcp 4 på rang 1–4 (hull 1, 4, 6, 7). Beste ball: a/b 3 4 5 4 3 4 5 4 4 = 36, c/d 3 4 5 4 3 4 5 3 4 = 35 (d sitt slag på hull 7 avgjør). 9 hull: bare totalen. c og d vinner, a og b gir 10 hver.",
+   "runde": {
+    "holeCount": 9,
+    "holeStart": 9,
+    "locked": true,
+    "course": {
+     "id": "bane",
+     "par": 72,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1
+      },
+      {
+       "par": 4,
+       "si": 3
+      },
+      {
+       "par": 4,
+       "si": 5
+      },
+      {
+       "par": 4,
+       "si": 7
+      },
+      {
+       "par": 4,
+       "si": 9
+      },
+      {
+       "par": 4,
+       "si": 11
+      },
+      {
+       "par": 4,
+       "si": 13
+      },
+      {
+       "par": 4,
+       "si": 15
+      },
+      {
+       "par": 4,
+       "si": 17
+      },
+      {
+       "par": 3,
+       "si": 2
+      },
+      {
+       "par": 4,
+       "si": 18
+      },
+      {
+       "par": 5,
+       "si": 10
+      },
+      {
+       "par": 4,
+       "si": 6
+      },
+      {
+       "par": 3,
+       "si": 16
+      },
+      {
+       "par": 4,
+       "si": 4
+      },
+      {
+       "par": 5,
+       "si": 8
+      },
+      {
+       "par": 4,
+       "si": 14
+      },
+      {
+       "par": 4,
+       "si": 12
+      }
+     ]
+    },
+    "playingHandicaps": {
+     "a": 2,
+     "b": 0,
+     "c": 0,
+     "d": 4
+    },
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 4,
+      "2": 5,
+      "3": 5,
+      "4": 3,
+      "5": 5,
+      "6": 6,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 3,
+      "1": 5,
+      "2": 6,
+      "3": 4,
+      "4": 4,
+      "5": 4,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     },
+     "c": {
+      "0": 3,
+      "1": 4,
+      "2": 6,
+      "3": 4,
+      "4": 3,
+      "5": 5,
+      "6": 6,
+      "7": 4,
+      "8": 5
+     },
+     "d": {
+      "0": 5,
+      "1": 5,
+      "2": 5,
+      "3": 5,
+      "4": 4,
+      "5": 5,
+      "6": 6,
+      "7": 3,
+      "8": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "nassau",
+    "players": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "sides": {
+     "a": 1,
+     "b": 1,
+     "c": 2,
+     "d": 2
+    },
+    "settings": {
+     "scoring": "stroke",
+     "handicap": {
+      "fromLowest": false
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     }
+    ],
+    "veddemaal": [
+     {
+      "del": "total",
+      "status": "won",
+      "forste": 0,
+      "siste": 8,
+      "margin": -1,
+      "vinner": 2,
+      "verdi": 10
+     }
+    ],
+    "oppgjor": {
+     "a": -10,
+     "b": -10,
+     "c": 10,
+     "d": 10
+    },
+    "ferdig": true
+   }
+  },
+  {
+   "navn": "Nassau underveis: første ni avgjort tidlig, resten venter",
+   "utledning": "Brutto. a vinner hull 1–5 (5 opp, 4 igjen: avgjort), hull 6–9 delt. Siste ni: b vinner hull 10, 11–12 delt. Hull 13 mangler b, så resten venter. Bare første ni er avgjort: a +10.",
+   "runde": {
+    "holeCount": 18,
+    "locked": false,
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4,
+      "9": 4,
+      "10": 3,
+      "11": 5,
+      "12": 4
+     },
+     "b": {
+      "0": 5,
+      "1": 6,
+      "2": 4,
+      "3": 5,
+      "4": 5,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4,
+      "9": 3,
+      "10": 3,
+      "11": 5
+     }
+    }
+   },
+   "spill": {
+    "kind": "nassau",
+    "players": [
+     "a",
+     "b"
+    ],
+    "sides": {
+     "a": 1,
+     "b": 2
+    },
+    "settings": {
+     "handicap": {
+      "net": false
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 2
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 3
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 4
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 5
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 5
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 5
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 5
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 5
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 4
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 4
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 4
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     },
+     {
+      "status": "pending"
+     }
+    ],
+    "veddemaal": [
+     {
+      "del": "front",
+      "status": "won",
+      "forste": 0,
+      "siste": 8,
+      "margin": 5,
+      "vinner": 1,
+      "verdi": 10
+     },
+     {
+      "del": "back",
+      "status": "pending",
+      "forste": 9,
+      "siste": 17,
+      "margin": -1,
+      "verdi": 10
+     },
+     {
+      "del": "total",
+      "status": "pending",
+      "forste": 0,
+      "siste": 17,
+      "margin": 4,
+      "verdi": 10
+     }
+    ],
+    "oppgjor": {
+     "a": 10,
+     "b": -10
+    },
+    "ferdig": false
+   }
+  },
+  {
+   "navn": "Nassau i avkortet runde (felles etter hull 12)",
+   "utledning": "Som over, avkortet etter 12 hull: runden er ferdig og bare hull 1–12 teller. Siste ni er hull 10–12: b 1 opp, vinner. Totalen hull 1–12: a 4 opp. a +10 −10 +10.",
+   "runde": {
+    "holeCount": 18,
+    "locked": false,
+    "avkortRegel": "felles",
+    "avkortetEtter": 12,
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4,
+      "9": 4,
+      "10": 3,
+      "11": 5,
+      "12": 4
+     },
+     "b": {
+      "0": 5,
+      "1": 6,
+      "2": 4,
+      "3": 5,
+      "4": 5,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4,
+      "9": 3,
+      "10": 3,
+      "11": 5
+     }
+    }
+   },
+   "spill": {
+    "kind": "nassau",
+    "players": [
+     "a",
+     "b"
+    ],
+    "sides": {
+     "a": 1,
+     "b": 2
+    },
+    "settings": {
+     "handicap": {
+      "net": false
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 2
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 3
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 4
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "opp": 5
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 5
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 5
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 5
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 5
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "opp": 4
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 4
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 4
+     }
+    ],
+    "veddemaal": [
+     {
+      "del": "front",
+      "status": "won",
+      "forste": 0,
+      "siste": 8,
+      "margin": 5,
+      "vinner": 1,
+      "verdi": 10
+     },
+     {
+      "del": "back",
+      "status": "won",
+      "forste": 9,
+      "siste": 11,
+      "margin": -1,
+      "vinner": 2,
+      "verdi": 10
+     },
+     {
+      "del": "total",
+      "status": "won",
+      "forste": 0,
+      "siste": 11,
+      "margin": 4,
+      "vinner": 1,
+      "verdi": 10
+     }
+    ],
+    "oppgjor": {
+     "a": 10,
+     "b": -10
+    },
+    "ferdig": true
+   }
+  },
+  {
+   "navn": "Nassau 1 mot 2: potten deles med avrunding og rest som Bets.payouts",
+   "utledning": "9 hull, brutto, verdi 5. b birdier hull 4, ellers likt: b/c 1 opp. a gir 5, b og c deler: 2,5 rundes til 3 hver (6), resten −1 tas fra laveste id (b): b +2, c +3.",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 3,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     },
+     "c": {
+      "0": 5,
+      "1": 6,
+      "2": 4,
+      "3": 5,
+      "4": 5,
+      "5": 4,
+      "6": 6,
+      "7": 5,
+      "8": 5
+     }
+    }
+   },
+   "spill": {
+    "kind": "nassau",
+    "players": [
+     "a",
+     "b",
+     "c"
+    ],
+    "sides": {
+     "a": 1,
+     "b": 2,
+     "c": 2
+    },
+    "settings": {
+     "handicap": {
+      "net": false
+     },
+     "total": 5
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 0
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 0
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 0
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b",
+       "c"
+      ],
+      "opp": -1
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": -1
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": -1
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": -1
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": -1
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": -1
+     }
+    ],
+    "veddemaal": [
+     {
+      "del": "total",
+      "status": "won",
+      "forste": 0,
+      "siste": 8,
+      "margin": -1,
+      "vinner": 2,
+      "verdi": 5
+     }
+    ],
+    "oppgjor": {
+     "a": -5,
+     "b": 2,
+     "c": 3
+    },
+    "ferdig": true
+   }
+  },
+  {
+   "navn": "Wolf: rotasjon, partner, alene, blind, delt og manglende valg",
+   "utledning": "Brutto, rekkefølge a b c d. Hull 1 a+c mot b+d 4–4 delt. Hull 2 b alene 4 mot 5: b 4. Hull 3 c+d 3 mot 4: c, d 2. Hull 4 d blind 5 mot 4: a, b, c 2. Hull 5 a+b 4 mot c+d 3: c, d 3. Hull 6 b uten valg i låst runde: teller ikke. Hull 7 c alene 6 mot 5: a, b, d 1. Hull 8 d+a 4 mot 5: d, a 2. Hull 9 a blind 3 mot 4: a 6. Poeng a 11, b 7, c 7, d 8 (sum 33). Oppgjør 4·poeng − 33: a 11, b −5, c −5, d −1.",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 4,
+      "3": 4,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 3
+     },
+     "b": {
+      "0": 5,
+      "1": 4,
+      "2": 4,
+      "3": 5,
+      "4": 4,
+      "5": 3,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     },
+     "c": {
+      "0": 5,
+      "1": 5,
+      "2": 3,
+      "3": 5,
+      "4": 3,
+      "5": 3,
+      "6": 6,
+      "7": 5,
+      "8": 4
+     },
+     "d": {
+      "0": 4,
+      "1": 5,
+      "2": 4,
+      "3": 5,
+      "4": 5,
+      "5": 3,
+      "6": 5,
+      "7": 4,
+      "8": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "wolf",
+    "players": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "settings": {
+     "handicap": {
+      "net": false
+     }
+    }
+   },
+   "markeringer": {
+    "wolf": {
+     "0": {
+      "mode": "partner",
+      "partner": "c"
+     },
+     "1": {
+      "mode": "alone"
+     },
+     "2": {
+      "mode": "partner",
+      "partner": "d"
+     },
+     "3": {
+      "mode": "blind"
+     },
+     "4": {
+      "mode": "partner",
+      "partner": "b"
+     },
+     "6": {
+      "mode": "alone"
+     },
+     "7": {
+      "mode": "partner",
+      "partner": "a"
+     },
+     "8": {
+      "mode": "blind"
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "halved",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "a"
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 4,
+      "wolf": "b",
+      "poeng": {
+       "b": 4
+      }
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ],
+      "verdi": 4,
+      "wolf": "c",
+      "poeng": {
+       "c": 2,
+       "d": 2
+      }
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b",
+       "c"
+      ],
+      "verdi": 6,
+      "wolf": "d",
+      "poeng": {
+       "a": 2,
+       "b": 2,
+       "c": 2
+      }
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ],
+      "verdi": 6,
+      "wolf": "a",
+      "poeng": {
+       "c": 3,
+       "d": 3
+      }
+     },
+     {
+      "status": "void",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "b"
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b",
+       "d"
+      ],
+      "verdi": 3,
+      "wolf": "c",
+      "poeng": {
+       "a": 1,
+       "b": 1,
+       "d": 1
+      }
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "d",
+       "a"
+      ],
+      "verdi": 4,
+      "wolf": "d",
+      "poeng": {
+       "d": 2,
+       "a": 2
+      }
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a"
+      ],
+      "verdi": 6,
+      "wolf": "a",
+      "poeng": {
+       "a": 6
+      }
+     }
+    ],
+    "poeng": {
+     "a": 11,
+     "b": 7,
+     "c": 7,
+     "d": 8
+    },
+    "oppgjor": {
+     "a": 11,
+     "b": -5,
+     "c": -5,
+     "d": -1
+    },
+    "ferdig": true
+   }
+  },
+  {
+   "navn": "Wolf underveis, netto, blind ikke lov",
+   "utledning": "c hcp 2 får slag på hull 1 og 2. Hull 1 a+b 4 mot c+d (c netto 3): c, d 3. Hull 2 b melder blind, men blind er ikke lov, så alene: b 4 mot (a 5, c netto 5, d 6): b 4 (ikke 6). Hull 3: alle har ført, men c har ikke valgt: venter. Hull 4 d alene 3 mot 4: d 4. Hull 5: d mangler score: venter. Poeng a 0, b 4, c 3, d 7 (sum 14): 4·poeng − 14.",
+   "runde": {
+    "holeCount": 18,
+    "locked": false,
+    "playingHandicaps": {
+     "a": 0,
+     "b": 0,
+     "c": 2,
+     "d": 0
+    },
+    "holeScores": {
+     "a": {
+      "0": 4,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 4
+     },
+     "b": {
+      "0": 5,
+      "1": 4,
+      "2": 3,
+      "3": 4,
+      "4": 4
+     },
+     "c": {
+      "0": 4,
+      "1": 6,
+      "2": 3,
+      "3": 4,
+      "4": 4
+     },
+     "d": {
+      "0": 5,
+      "1": 6,
+      "2": 3,
+      "3": 3
+     }
+    }
+   },
+   "spill": {
+    "kind": "wolf",
+    "players": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "settings": {
+     "blindAllowed": false
+    }
+   },
+   "markeringer": {
+    "wolf": {
+     "0": {
+      "mode": "partner",
+      "partner": "b"
+     },
+     "1": {
+      "mode": "blind"
+     },
+     "3": {
+      "mode": "alone"
+     },
+     "4": {
+      "mode": "partner",
+      "partner": "d"
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ],
+      "verdi": 6,
+      "wolf": "a",
+      "poeng": {
+       "c": 3,
+       "d": 3
+      }
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 4,
+      "wolf": "b",
+      "poeng": {
+       "b": 4
+      }
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "c"
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "d"
+      ],
+      "verdi": 4,
+      "wolf": "d",
+      "poeng": {
+       "d": 4
+      }
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "a"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "b"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "c"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "d"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "a"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "b"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "c"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "d"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "a"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "b"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "c"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "d"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "a"
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0,
+      "wolf": "b"
+     }
+    ],
+    "poeng": {
+     "a": 0,
+     "b": 4,
+     "c": 3,
+     "d": 7
+    },
+    "oppgjor": {
+     "a": -14,
+     "b": 2,
+     "c": -2,
+     "d": 14
+    },
+    "ferdig": false
+   }
+  },
+  {
+   "navn": "Bingo-bango-bongo, låst runde (malen)",
+   "utledning": "1 poeng for hver. Hull 1: a 2, b 1. Hull 2: c 3. Hull 3: b 1 (x er ikke med i spillet). Hull 4–8 uten markering i låst runde: teller ikke. Hull 9: a 2, b 1. a 4, b 3, c 3 (sum 10). Oppgjør 3·poeng − 10.",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "holeScores": {}
+   },
+   "spill": {
+    "kind": "bbb",
+    "players": [
+     "a",
+     "b",
+     "c"
+    ]
+   },
+   "markeringer": {
+    "bingoBangoBongo": {
+     "0": {
+      "bingo": "a",
+      "bango": "b",
+      "bongo": "a"
+     },
+     "1": {
+      "bingo": "c",
+      "bango": "c",
+      "bongo": "c"
+     },
+     "2": {
+      "bingo": "b",
+      "bango": "x"
+     },
+     "8": {
+      "bingo": "a",
+      "bango": "a",
+      "bongo": "b"
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b"
+      ],
+      "verdi": 3,
+      "poeng": {
+       "a": 2,
+       "b": 1
+      }
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c"
+      ],
+      "verdi": 3,
+      "poeng": {
+       "c": 3
+      }
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 1,
+      "poeng": {
+       "b": 1
+      }
+     },
+     {
+      "status": "void",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "void",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "void",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "void",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "void",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b"
+      ],
+      "verdi": 3,
+      "poeng": {
+       "a": 2,
+       "b": 1
+      }
+     }
+    ],
+    "poeng": {
+     "a": 4,
+     "b": 3,
+     "c": 3
+    },
+    "oppgjor": {
+     "a": 2,
+     "b": -1,
+     "c": -1
+    },
+    "ferdig": true
+   }
+  },
+  {
+   "navn": "Bingo-bango-bongo med overstyrte verdier, underveis",
+   "utledning": "Bango 2, poengverdi 5, 18 hull, ikke låst. Hull 1: a 2 (bingo, bongo), b 2. Hull 2: c 4. Hull 3: b 1. Hull 9: a 3, b 1. a 5, b 4, c 4 (sum 13). (3·poeng − 13) · 5: a 10, b −5, c −5. Hull uten markering venter.",
+   "runde": {
+    "holeCount": 18,
+    "locked": false,
+    "holeScores": {}
+   },
+   "spill": {
+    "kind": "bbb",
+    "players": [
+     "a",
+     "b",
+     "c"
+    ],
+    "settings": {
+     "bango": 2,
+     "pointValue": 5
+    }
+   },
+   "markeringer": {
+    "bingoBangoBongo": {
+     "0": {
+      "bingo": "a",
+      "bango": "b",
+      "bongo": "a"
+     },
+     "1": {
+      "bingo": "c",
+      "bango": "c",
+      "bongo": "c"
+     },
+     "2": {
+      "bingo": "b",
+      "bango": "x"
+     },
+     "8": {
+      "bingo": "a",
+      "bango": "a",
+      "bongo": "b"
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b"
+      ],
+      "verdi": 4,
+      "poeng": {
+       "a": 2,
+       "b": 2
+      }
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c"
+      ],
+      "verdi": 4,
+      "poeng": {
+       "c": 4
+      }
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "b"
+      ],
+      "verdi": 1,
+      "poeng": {
+       "b": 1
+      }
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b"
+      ],
+      "verdi": 4,
+      "poeng": {
+       "a": 3,
+       "b": 1
+      }
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     },
+     {
+      "status": "pending",
+      "vinnere": [],
+      "verdi": 0
+     }
+    ],
+    "poeng": {
+     "a": 5,
+     "b": 4,
+     "c": 4
+    },
+    "oppgjor": {
+     "a": 10,
+     "b": -5,
+     "c": -5
+    },
+    "ferdig": false
+   }
+  },
+  {
+   "navn": "2 mot 2 best ball, match (90 % fra laveste)",
+   "utledning": "Spillehandicap · 0,9 rundet: a 1, b 0, c 3 (2,7), d 5 (4,5 → 5); laveste er 0. Slag (9 hull): a hull 1, c hull 1–3, d hull 1–5. Beste netto a/b: 4 5 3 3 4 3 4 4 4, c/d: 4 4 2 4 3 3 5 4 4. Hull: delt, c/d, c/d, a/b, c/d, delt, a/b, delt, delt → c/d 1 opp. a og b gir 10 hver.",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "playingHandicaps": {
+     "a": 1,
+     "b": 0,
+     "c": 3,
+     "d": 5
+    },
+    "holeScores": {
+     "a": {
+      "0": 5,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 5,
+      "5": 3,
+      "6": 4,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 4,
+      "1": 6,
+      "2": 4,
+      "3": 3,
+      "4": 4,
+      "5": 4,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     },
+     "c": {
+      "0": 5,
+      "1": 6,
+      "2": 3,
+      "3": 5,
+      "4": 4,
+      "5": 3,
+      "6": 6,
+      "7": 4,
+      "8": 4
+     },
+     "d": {
+      "0": 6,
+      "1": 5,
+      "2": 4,
+      "3": 5,
+      "4": 4,
+      "5": 4,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "best_ball",
+    "players": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "sides": {
+     "a": 1,
+     "b": 1,
+     "c": 2,
+     "d": 2
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": 0
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ],
+      "opp": -1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ],
+      "opp": -2
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b"
+      ],
+      "opp": -1
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ],
+      "opp": -2
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": -2
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b"
+      ],
+      "opp": -1
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": -1
+     },
+     {
+      "status": "halved",
+      "vinnere": [],
+      "opp": -1
+     }
+    ],
+    "veddemaal": [
+     {
+      "del": "match",
+      "status": "won",
+      "forste": 0,
+      "siste": 8,
+      "margin": -1,
+      "vinner": 2,
+      "verdi": 10
+     }
+    ],
+    "oppgjor": {
+     "a": -10,
+     "b": -10,
+     "c": 10,
+     "d": 10
+    },
+    "ferdig": true
+   }
+  },
+  {
+   "navn": "2 mot 2 best ball, stableford (85 %), uavgjort",
+   "utledning": "Handicap · 0,85 rundet: a 1 (0,85), b 0, c 3 (2,55), d 4 (4,25), ikke fra laveste. Stableford max(0, par − netto + 2). Lagets beste per hull a/b: 2 2 2 3 2 2 3 2 2 = 20, c/d: 2 3 3 2 2 2 2 2 2 = 20. Likt: ingen poeng flytter seg.",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "playingHandicaps": {
+     "a": 1,
+     "b": 0,
+     "c": 3,
+     "d": 5
+    },
+    "holeScores": {
+     "a": {
+      "0": 5,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 5,
+      "5": 3,
+      "6": 4,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 4,
+      "1": 6,
+      "2": 4,
+      "3": 3,
+      "4": 4,
+      "5": 4,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     },
+     "c": {
+      "0": 5,
+      "1": 6,
+      "2": 3,
+      "3": 5,
+      "4": 4,
+      "5": 3,
+      "6": 6,
+      "7": 4,
+      "8": 4
+     },
+     "d": {
+      "0": 6,
+      "1": 5,
+      "2": 4,
+      "3": 5,
+      "4": 4,
+      "5": 4,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "best_ball",
+    "players": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "sides": {
+     "a": 1,
+     "b": 1,
+     "c": 2,
+     "d": 2
+    },
+    "settings": {
+     "scoring": "stableford"
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     }
+    ],
+    "veddemaal": [
+     {
+      "del": "match",
+      "status": "halved",
+      "forste": 0,
+      "siste": 8,
+      "margin": 0,
+      "verdi": 10
+     }
+    ],
+    "poeng": {
+     "a": 20,
+     "b": 20,
+     "c": 20,
+     "d": 20
+    },
+    "oppgjor": {
+     "a": 0,
+     "b": 0,
+     "c": 0,
+     "d": 0
+    },
+    "ferdig": true
+   }
+  },
+  {
+   "navn": "2 mot 2 best ball, stableford med fullt handicap (overstyrt)",
+   "utledning": "Andel 1: d får 5 slag (hull 1–5), og hull 5 gir d netto 3, 3 poeng. c/d 21 mot a/b 20: c og d vinner, a og b gir 10 hver.",
+   "runde": {
+    "holeCount": 9,
+    "locked": true,
+    "playingHandicaps": {
+     "a": 1,
+     "b": 0,
+     "c": 3,
+     "d": 5
+    },
+    "holeScores": {
+     "a": {
+      "0": 5,
+      "1": 5,
+      "2": 3,
+      "3": 4,
+      "4": 5,
+      "5": 3,
+      "6": 4,
+      "7": 4,
+      "8": 4
+     },
+     "b": {
+      "0": 4,
+      "1": 6,
+      "2": 4,
+      "3": 3,
+      "4": 4,
+      "5": 4,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     },
+     "c": {
+      "0": 5,
+      "1": 6,
+      "2": 3,
+      "3": 5,
+      "4": 4,
+      "5": 3,
+      "6": 6,
+      "7": 4,
+      "8": 4
+     },
+     "d": {
+      "0": 6,
+      "1": 5,
+      "2": 4,
+      "3": 5,
+      "4": 4,
+      "5": 4,
+      "6": 5,
+      "7": 5,
+      "8": 4
+     }
+    }
+   },
+   "spill": {
+    "kind": "best_ball",
+    "players": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "sides": {
+     "a": 1,
+     "b": 1,
+     "c": 2,
+     "d": 2
+    },
+    "settings": {
+     "scoring": "stableford",
+     "stablefordHandicap": {
+      "allowance": 1
+     }
+    }
+   },
+   "forventet": {
+    "hull": [
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b"
+      ]
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "c",
+       "d"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "won",
+      "vinnere": [
+       "a",
+       "b"
+      ]
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     },
+     {
+      "status": "halved",
+      "vinnere": []
+     }
+    ],
+    "veddemaal": [
+     {
+      "del": "match",
+      "status": "won",
+      "forste": 0,
+      "siste": 8,
+      "margin": -1,
+      "vinner": 2,
+      "verdi": 10
+     }
+    ],
+    "poeng": {
+     "a": 20,
+     "b": 20,
+     "c": 21,
+     "d": 21
+    },
+    "oppgjor": {
+     "a": -10,
+     "b": -10,
+     "c": 10,
+     "d": 10
+    },
+    "ferdig": true
+   }
+  }
+ ]
+}
