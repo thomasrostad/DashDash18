@@ -3,7 +3,7 @@ import Foundation
 /// Lagring av «Hvor spiller dere?» på runden (`rounds.venue`, sql/015_runde_sted.sql).
 /// Av til 015 er godkjent og kjørt: valget vises i oppsettet, men sendes ikke, og kolonnen hentes ikke.
 nonisolated enum VenueFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 /// Hvor runden spilles. Samme regler begge steder; bare navnet på gruppene skiller (bås / flight),

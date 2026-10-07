@@ -327,8 +327,8 @@ Besluttet 07.10.2026 (deg):
 
 - [x] Arrangørsiden: ny struktur med «I kveld» øverst (neste kveld, påmeldte, start runden) og sjeldnere ting under.
 - [x] Hurtigstart for ny runde med forslag ferdig utfylt (bane og oppsett fra forrige kveld, båser fra påmeldte).
-- [ ] Simulator / ekte bane som valg på runden (lagres), med bås ↔ flight i hele appen. Krever trolig SQL (til godkjenning). *(07.10: bygget bak `VenueFeature`, venter på 015.)*
-- [x] Banene: enklere å legge inn og forstå «klar», tydelig skille mellom simulatorbane og ekte bane. *(07.10: banetypen venter på 016.)*
+- [x] Simulator / ekte bane som valg på runden (lagres), med bås ↔ flight i hele appen. Krever trolig SQL (til godkjenning). *(07.10: 015 kjørt, slått på. Hurtigstarten viser banene som passer stedet.)**
+- [x] Banene: enklere å legge inn og forstå «klar», tydelig skille mellom simulatorbane og ekte bane. *(07.10: 016 kjørt, banetype slått på.)**
 - [x] Sesong og regler: Golfgutu-oppsettet som standard, endringer i klart språk, avanserte valg skjult.
 
 **Ferdig når:**

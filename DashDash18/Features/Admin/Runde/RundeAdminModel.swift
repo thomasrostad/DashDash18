@@ -116,7 +116,8 @@ final class RundeAdminModel {
             let activeSeason = seasons.first { $0.status == .active }
             events = Terminliste.eveningsForSeason(allEvents, activeSeasonID: activeSeason?.id)
             members = KveldQueries.sortedByName(roster)
-            allCourses = CourseListItem.make(courses: courseList, holes: holes)
+            let kinds = try await CourseLibraryModel.loadKinds(client: client, clubID: clubID)
+            allCourses = CourseListItem.make(courses: courseList, holes: holes, kinds: kinds)
             courses = allCourses.filter(\.isReady)
 
             if selectedEventID == nil || !events.contains(where: { $0.id == selectedEventID }) {

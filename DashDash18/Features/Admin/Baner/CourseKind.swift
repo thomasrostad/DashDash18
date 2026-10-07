@@ -4,7 +4,7 @@ import Foundation
 /// (forslag, ikke kjørt). Så lenge flagget er av, leser og skriver appen ikke kolonnen,
 /// typevalget vises ikke, og typen avledes (se `CourseKind.resolve`).
 nonisolated enum CourseKindFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 /// Simulatorbane eller ekte bane. Rå-verdiene er de samme som i `courses.kind` (016).

@@ -29,6 +29,8 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 | `010_kontroll.sql` | Samlet kontroll for 010, én rad per sjekk | Hjelpefil |
 | `011_varsler_en_gang.sql` | Unike indekser: stor score (runde, spiller, hull), ledelsen (runde, sjekkpunkt, fra 009) og «ny runde» (runde) bare én gang, så to telefoner ikke gir dobbel push | Godkjent og kjørt på test 07.10.2026 (tre indekser på plass). Erstatter 009. Ikke prod |
 | `012_veddemaal.sql` | Veddemål med poeng (fase 10): `bets`, `bet_stakes`, sperra `bet_accepts_stakes`, poengbanken regnet av `bet_points` (ikke lagret), RPC-ene `create_bet`, `place_bet_stake`, `resolve_bet`, `mark_bets_closed` | **Godkjent og kjørt på test 07.10.2026** (kontrollen 12 av 12 ok). Ikke prod. Lokalt: kjørt to ganger, `lokal/012_prove.sql` 60 av 60 ok, kontrollen 10 av 10, rullebakken prøvd |
+| `015_runde_sted.sql` | `rounds.venue` (simulator/course), bås ↔ flight | Godkjent og kjørt på test 07.10.2026. Ikke prod |
+| `016_banetype.sql` | `courses.kind` (simulator/course) | Godkjent og kjørt på test 07.10.2026. Ikke prod |
 | `014_par_uten_markor.sql` | `confirm_round_par` som PWA-ens `kanBekrefteBaneoppsett`: uten båser, eller i en bås uten markør, kan alle som spiller bekrefte parene | Godkjent og kjørt på test 07.10.2026. Ikke prod |
 | `lokal/012_prove.sql` | Lokal rolleprøve for 012. **Aldri mot Supabase.** | Hjelpefil |
 | `import/export_pwa.sql` | Fase 9: ren SELECT som lager et øyeblikksbilde (JSON) av **PWA-basen**. Kjøres i PWA-ens SQL Editor, og svaret lagres i `import-snapshot/` (ikke i git). Se `docs/import-plan.md` | Bare lesing. Ingen godkjenning trengs for å kjøre den, men den gir persondata |

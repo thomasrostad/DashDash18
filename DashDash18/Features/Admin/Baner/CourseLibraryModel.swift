@@ -65,7 +65,7 @@ final class CourseLibraryModel {
                     .execute()
                     .value
             }
-            let kinds = try await loadKinds(client: client, clubID: clubID)
+            let kinds = try await Self.loadKinds(client: client, clubID: clubID)
             items = CourseListItem.make(courses: courses, holes: holes, kinds: kinds)
             hasLoaded = true
             error = nil
@@ -174,14 +174,14 @@ final class CourseLibraryModel {
             .eq("course_id", value: id)
             .execute()
             .value
-        let kinds = try await loadKinds(client: client, clubID: clubID, courseID: id)
+        let kinds = try await Self.loadKinds(client: client, clubID: clubID, courseID: id)
         return CourseListItem(course: course, holes: holes, storedKind: kinds[id])
     }
 
     // MARK: Banetype (sql/016)
 
     /// `courses.kind` per bane. Tom så lenge `CourseKindFeature` er av (kolonnen finnes ikke før 016).
-    private func loadKinds(client: SupabaseClient, clubID: UUID, courseID: UUID? = nil) async throws -> [UUID: CourseKind] {
+    static func loadKinds(client: SupabaseClient, clubID: UUID, courseID: UUID? = nil) async throws -> [UUID: CourseKind] {
         guard CourseKindFeature.isEnabled else { return [:] }
         struct Row: Decodable { let id: UUID; let kind: CourseKind }
         var query = client.from("courses").select("id, kind").eq("club_id", value: clubID)

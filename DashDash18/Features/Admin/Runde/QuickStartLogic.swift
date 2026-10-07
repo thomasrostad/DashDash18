@@ -38,6 +38,13 @@ nonisolated struct QuickStartStart: Equatable, Hashable, Sendable {
 
 /// Ren logikk for hurtigstarten: forslag fra forrige runde, automatisk fordeling, startvalg og mangler.
 nonisolated enum QuickStart {
+    /// Banene som passer stedet: simulatorbaner for Simulator, ekte baner for Ekte bane.
+    /// Valgt bane blir alltid med, så et bytte av sted ikke tømmer valget.
+    static func courses(_ courses: [CourseListItem], for venue: Venue, selected: UUID?) -> [CourseListItem] {
+        let kind: CourseKind = venue == .course ? .course : .simulator
+        return courses.filter { $0.kind == kind || $0.id == selected }
+    }
+
     // MARK: Forslag fra forrige runde
 
     /// Forrige runde i sesongen: den siste som er startet (pågår eller låst) på en kveld til og med

@@ -152,7 +152,7 @@ struct RundeQuickStartView: View {
                     if let selected = selectedCourse, !selected.isReady {
                         Text("\(selected.course.name) (ikke klar)").tag(Optional(selected.id))
                     }
-                    ForEach(model.courses) { course in
+                    ForEach(QuickStart.courses(model.courses, for: draft.venue, selected: draft.courseID)) { course in
                         Text(course.course.name).tag(Optional(course.id))
                     }
                 }

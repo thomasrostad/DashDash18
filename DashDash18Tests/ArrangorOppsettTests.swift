@@ -101,8 +101,22 @@ struct BanetypeTests {
         #expect(BanerFixtures.item(pars: [], external: nil).kind == .simulator)
     }
 
-    @Test func flaggetErAvTil016ErKjort() {
-        #expect(CourseKindFeature.isEnabled == false)
+    /// 016 er kjørt på test (07.10.2026).
+    @Test func flaggetErPaaEtter016() {
+        #expect(CourseKindFeature.isEnabled)
+    }
+
+    /// Hurtigstarten viser banene som passer stedet, og beholder valgt bane.
+    @Test func hurtigstartenFiltrererBaneneEtterSted() {
+        func bane(_ kind: CourseKind) -> CourseListItem {
+            var item = BanerFixtures.item(name: kind.rawValue, pars: Course.defaultPar)
+            item.storedKind = kind
+            return item
+        }
+        let sim = bane(.simulator), ute = bane(.course)
+        #expect(QuickStart.courses([sim, ute], for: .simulator, selected: nil).map(\.id) == [sim.id])
+        #expect(QuickStart.courses([sim, ute], for: .course, selected: nil).map(\.id) == [ute.id])
+        #expect(QuickStart.courses([sim, ute], for: .course, selected: sim.id).map(\.id) == [sim.id, ute.id])
     }
 
     @Test func rawVerdierSomISkjemaet() {
