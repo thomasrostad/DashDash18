@@ -12,7 +12,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 |---|---|
 | **Nåværende fase** | Fase 9 og 10 forarbeid ferdig. Importverktøy (`Packages/DashImport`) ferdig. Veddemål med poeng er slått på mot test (012 kjørt). |
 | **Sist gjort** | 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
-| **Neste oppgave** | Godkjenne 015 (sted på runden) og 016 (banetype), så slå på simulator/ekte bane. Prøve fase 11 på telefon. Trykk på push åpner riktig skjerm. Prøveimport (fase 9). |
+| **Neste oppgave** | Beslutningene i `docs/visjon-apen-app.md`, så fase 12 (fundament for åpen app). Trykk på push åpner riktig skjerm. |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
@@ -339,25 +339,18 @@ Besluttet 07.10.2026 (deg):
 
 ---
 
-### Fase 12 – Flere turneringer samtidig (morroturneringer)
+### Fase 12–17 – Åpen app med flere bruksområder
 
-**Mål:** Klubben kan kjøre en liten morroturnering i samme periode som hovedturneringen (jakkeracet), uten at noen må melde seg inn på nytt.
+**Besluttet 07.10.2026 (deg):** appen skal være åpen for alle og dekke løse runder med venner, spill på runden, flere konkurranser samtidig og egen statistikk. Hele planen står i `docs/visjon-apen-app.md`. Kort fortalt:
 
-Besluttet 07.10.2026 (deg):
-- **Sesong blir «turnering».** En klubb kan ha flere aktive turneringer samtidig. Én er **hovedturneringen** (jakkeracet); de andre er morroturneringer med egne regler, terminliste og tabell.
-- **Begge deler:** en morroturnering kan ha **egne kvelder**, og en runde kan **telle i flere turneringer** (f.eks. en kveld i jakkeracet som også teller i morrocupen).
-- **Bare påmeldte er med:** hver turnering har sin egen deltakerliste. Arrangøren melder på, eller spilleren melder seg på selv.
+- **Fase 12 – Fundament:** runden er kjernen, og klubb er valgfritt. Planen har profiler, gjester og konkurranser som eget lag. Jakkeracet blir én konkurranse, og pariteten står.
+- **Fase 13 – Løs runde med venner:** ny runde på sekunder, invitasjon med lenke eller QR, felles banebibliotek.
+- **Fase 14 – Spill på runden:** skins, Nassau, Wolf, bingo-bango-bongo og 2 mot 2, i poeng.
+- **Fase 15 – Flere konkurranser:** liga, cup og morroturneringer samtidig (erstatter tidligere fase 12-utkast), med «Teller også i …».
+- **Fase 16 – Statistikk:** historikk, snitt, rekorder og handicaputvikling.
+- **Fase 17 – Åpent for alle (App Store):** onboarding uten klubb, sletting av konto, personvern, rapporter og blokker, Google-innlogging og prod.
 
-- [ ] Skjema (SQL til godkjenning): `seasons.is_main`, én aktiv hovedturnering per klubb (i stedet for én aktiv sesong), deltakere per turnering, og kobling runde ↔ ekstra turneringer. Sesongens regelsett, terminliste og tabell gjenbrukes.
-- [ ] Tavla: velger mellom aktive turneringer, tabellen regnes med turneringens regelsett og bare for deltakerne.
-- [ ] Kveld: kvelder fra alle aktive turneringer, merket med turneringsnavn når det ikke er hovedturneringen.
-- [ ] Arrangør: «Ny turnering» (navn, periode, regler fra mal eller hovedturneringen, deltakere), og i hurtigstarten «Teller også i …».
-- [ ] Spiller: meld deg på / av en åpen turnering.
-
-**Ferdig når:**
-- En morrocup med 6 av 12 spillere går over fire uker, med to egne kvelder og to kvelder som også teller i jakkeracet, og begge tabellene er riktige.
-
-**Anslag:** 4–6 økter.
+**Venter på deg:** rekkefølgen (fase 12 før byttet i fase 9?), banedata (B15), navn og merke, forretningsmodell og penger (fortsatt poeng?). Se «Beslutninger som trengs» i visjonsdokumentet.
 
 ---
 
