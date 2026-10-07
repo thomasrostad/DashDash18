@@ -30,6 +30,7 @@ struct RundeView: View {
                     let eventID = game.snapshot.round.eventID
                     KveldExtrasButtons(model: KveldExtrasModel(context: model.clubContext, eventID: eventID))
                         .id(eventID)
+                    VeddKnapp(game: game, me: model.viewer.memberID)
                 }
                 .padding(.horizontal, DDSpacing.gutter)
                 .padding(.vertical, DDSpacing.l)
