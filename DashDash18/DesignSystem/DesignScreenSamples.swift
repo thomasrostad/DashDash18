@@ -7,7 +7,9 @@ import SwiftUI
 /// `varsler`, `trad`, `hurtigstart`, `arrangor`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
 /// `statoversikt`, `stathistorikk`, `statrekorder`, `stattom`, `statforing`,
 /// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
-/// og spill på runden: `spill`, `spillnytt`, `spillresultat`).
+/// og spill på runden: `spill`, `spillnytt`, `spillresultat`,
+/// og åpent for alle (fase 17): `apenvalg`, `apenlogin`, `apendeg`, `apenslett`, `apenrapport`,
+/// `apenrapporter`, `apenblokkerte`, `apenbetaling`, `apenregning`).
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor
@@ -19,6 +21,8 @@ struct DesignScreenSamples: View {
         case losspill, losny, losbane, losinviter, losblimed, losrunde, losresultat
         // Spill på runden (fase 14).
         case spill, spillnytt, spillresultat
+        // Åpent for alle (fase 17).
+        case apenvalg, apenlogin, apendeg, apenslett, apenrapport, apenrapporter, apenblokkerte, apenbetaling, apenregning
     }
     @State var screen: Screen = .hullkort
 
@@ -78,6 +82,8 @@ struct DesignScreenSamples: View {
             SpillSampleScreen(screen: screen)
         case .spill, .spillresultat:
             GamesSampleScreen(finished: screen == .spillresultat)
+        case .apenvalg, .apenlogin, .apendeg, .apenslett, .apenrapport, .apenrapporter, .apenblokkerte, .apenbetaling, .apenregning:
+            ApenSampleScreen(screen: screen)
         case .spillnytt:
             SpillNyttSampleScreen()
         case .liste:
