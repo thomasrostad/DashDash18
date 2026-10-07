@@ -36,9 +36,42 @@ nonisolated struct WidgetSnapshot: Codable, Equatable, Sendable {
     var nextEvening: NextEvening?
     var seasonName: String?
     var top: [Leader] = []
+    /// Tavla har lastet minst én gang. Nil i filer fra før feltet fantes, og etter installasjon:
+    /// da er topp 3 tom fordi appen ikke har hentet tabellen, ikke fordi den er tom.
+    var tavlaLoaded: Bool?
     var updatedAt: Date = .distantPast
 
     static let empty = WidgetSnapshot()
+
+    /// Oslo-kalenderen: kveldene er norske, uansett hvor telefonen er.
+    static let osloCalendar: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Oslo") ?? .current
+        return calendar
+    }()
+
+    /// `YYYY-MM-DD` for dagen `date` faller på i Oslo.
+    static func osloDay(_ date: Date) -> String {
+        let c = osloCalendar.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
+    }
+
+    /// Kvelden som kommer, sett fra `now`. Nil når ingen er satt opp, og når den lagrede er over
+    /// (dagen etter har begynt i Oslo) uten at appen har skrevet en ny.
+    func upcomingEvening(at now: Date) -> NextEvening? {
+        guard let nextEvening, nextEvening.eventDate >= Self.osloDay(now) else { return nil }
+        return nextEvening
+    }
+
+    /// Den lagrede kvelden er spilt, og appen har ikke vært åpnet siden.
+    func eveningIsOver(at now: Date) -> Bool {
+        nextEvening != nil && upcomingEvening(at: now) == nil
+    }
+
+    /// Teksten når topp 3 er tom.
+    var topThreeEmptyText: String {
+        tavlaLoaded == true ? "Ingen tabell ennå" : "Åpne Tavla i appen"
+    }
 
     /// Samme innhold, uansett når det ble skrevet.
     func sameContent(as other: WidgetSnapshot) -> Bool {

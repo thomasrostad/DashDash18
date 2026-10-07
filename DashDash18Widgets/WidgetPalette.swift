@@ -59,11 +59,7 @@ nonisolated enum WidgetPalette {
 
 /// Små tekstbiter som både widgetene og Live Activity bruker.
 nonisolated enum WidgetText {
-    static let osloCalendar: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Europe/Oslo") ?? .current
-        return calendar
-    }()
+    static var osloCalendar: Calendar { WidgetSnapshot.osloCalendar }
 
     /// Hele dager fra `now` til `date`, i Oslo (som `EveningDates.daysBetween`).
     static func days(from now: Date, to date: Date) -> Int {

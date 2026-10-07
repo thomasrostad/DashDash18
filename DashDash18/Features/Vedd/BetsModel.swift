@@ -51,7 +51,7 @@ final class BetsModel {
         do {
             _ = try await BetsQueries.create(client: client, draft.params(clubID: context.clubID))
         } catch {
-            throw DataError.from(error)
+            throw await rejected(error)
         }
         await load()
     }
@@ -65,7 +65,7 @@ final class BetsModel {
         do {
             try await BetsQueries.stake(client: client, betID: item.id, side: side, points: points)
         } catch {
-            throw DataError.from(error)
+            throw await rejected(error)
         }
         await load()
     }
@@ -81,9 +81,23 @@ final class BetsModel {
         do {
             try await BetsQueries.resolve(client: client, betID: item.id, verdict: verdict)
         } catch {
-            throw DataError.from(error)
+            throw await rejected(error)
         }
         await load()
+    }
+
+    /// Feilen fra RPC-en på forståelig norsk (`BetErrors`). Avviste serveren, hentes lista på nytt:
+    /// veddemålet kan ha stengt eller blitt avgjort i mellomtiden, og kortet skal vise det som gjelder.
+    private func rejected(_ error: any Error) async -> DataError {
+        let mapped: DataError
+        if let postgrest = error as? PostgrestError,
+           let text = BetErrors.text(sqlState: postgrest.code, message: postgrest.message) {
+            mapped = .invalid(text)
+        } else {
+            mapped = DataError.from(error)
+        }
+        if case .invalid = mapped { await load() }
+        return mapped
     }
 
     /// Arrangørens telefon avgjør det vilkårene gir svar på (`feiMarkeder`), og annullerer delt

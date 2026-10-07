@@ -23,6 +23,13 @@ nonisolated struct ResultShare: Equatable, Hashable, Sendable {
     /// «Jakkeracet · Sesong 2026»: tittelen i delingsarket og første linje i teksten.
     var heading: String { "\(eyebrow) · \(title)" }
 
+    /// Filnavnet på bildet: tittelen uten tegn som ikke tåles i et filnavn («Sesong 2026.png»).
+    var fileName: String {
+        let cleaned = title.map { "/\\:".contains($0) ? "-" : $0 }
+        let name = String(cleaned).trimmingCharacters(in: .whitespacesAndNewlines)
+        return (name.isEmpty ? "DashDash18" : name) + ".png"
+    }
+
     /// Tekstversjonen, som fallback når mottakeren ikke tar bilder.
     var text: String { Self.text(self) }
 

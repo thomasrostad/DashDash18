@@ -223,6 +223,7 @@ private struct BetCard: View {
     @State private var error: String?
     @State private var showStakers = false
     @State private var confirmResolve = false
+    @State private var busy = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -277,6 +278,7 @@ private struct BetCard: View {
             } else if item.canResolve {
                 Button("Avgjør veddemålet …") { confirmResolve = true }
                     .buttonStyle(.dd(.text, compact: true))
+                    .disabled(busy || model.isSaving)
                     .confirmationDialog("Avgjør «\(item.row.question)»", isPresented: $confirmResolve, titleVisibility: .visible) {
                         Button("JA vant") { resolve(.yes) }
                         Button("NEI vant") { resolve(.no) }
@@ -294,6 +296,11 @@ private struct BetCard: View {
 
     private var amount: Int { points ?? board.rules.bets.defaultStake }
 
+    /// Hva som er galt med innsatsen som er valgt, før den sendes (samme sjekk som databasen).
+    private var problem: String? {
+        BetStakeCheck.problem(item, side: item.mySide ?? side, points: amount, board: board)
+    }
+
     @ViewBuilder
     private var stakeControls: some View {
         if item.mySide == nil {
@@ -308,18 +315,29 @@ private struct BetCard: View {
             ForEach(board.rules.bets.stakeOptions, id: \.self) { n in
                 Button("\(n)") { points = n }
                     .buttonStyle(DDChoiceButtonStyle(selected: amount == n))
+                    .accessibilityLabel("\(n) poeng")
             }
         }
+        Text(board.stakeHint(already: item.myPoints))
+            .font(.ddCaption)
+            .foregroundStyle(Color.ddInkSecondary)
         Button("Sats \(amount) poeng på \(BetTexts.sideShort(item.mySide ?? side))") {
             stake()
         }
         .buttonStyle(.dd(.money, fullWidth: true))
-        .disabled(model.isSaving)
+        .disabled(busy || model.isSaving || problem != nil)
+        if error == nil, let problem {
+            Text(problem).ddErrorStyle()
+        }
     }
 
+    /// `busy` settes med en gang trykket kommer, så et dobbelttrykk ikke sender to ganger.
     private func stake() {
+        guard !busy else { return }
+        busy = true
         error = nil
         Task {
+            defer { busy = false }
             do {
                 try await model.stake(item, side: item.mySide ?? side, points: amount)
             } catch {
@@ -329,8 +347,11 @@ private struct BetCard: View {
     }
 
     private func resolve(_ verdict: BetVerdict) {
+        guard !busy else { return }
+        busy = true
         error = nil
         Task {
+            defer { busy = false }
             do {
                 try await model.resolve(item, verdict: verdict)
             } catch {

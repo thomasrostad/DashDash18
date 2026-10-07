@@ -138,5 +138,6 @@ private struct BetsTableContent: View {
             }
         }
         .task { await model.load() }
+        .refreshable { await model.load() }
     }
 }

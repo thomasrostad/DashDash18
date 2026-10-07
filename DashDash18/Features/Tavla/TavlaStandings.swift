@@ -114,6 +114,15 @@ nonisolated struct TavlaStandings: Sendable {
 
     var isEmpty: Bool { rows.isEmpty }
 
+    /// Minst én kveld har gitt poeng. Før det er tabellen bare troppen i navnerekkefølge: ingen
+    /// plasser, ingenting å dele, og ingen topp 3 i widgeten.
+    var hasResults: Bool { eveningsPlayed > 0 && !rows.isEmpty }
+
+    /// Plassen slik tabellen viser den: «3.», eller «–» før første kveld.
+    func placeText(_ row: Row) -> String {
+        hasResults ? "\(row.place)." : "–"
+    }
+
     func row(_ member: UUID) -> Row? {
         rows.first { $0.memberID == member }
     }

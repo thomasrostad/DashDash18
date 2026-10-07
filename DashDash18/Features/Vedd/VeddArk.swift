@@ -7,6 +7,8 @@ struct VeddArk: View {
     let model: BetsModel
     @State var draft: BetSheetDraft
     @State private var error: String?
+    /// Settes med en gang trykket kommer, så et dobbelttrykk ikke legger ut to veddemål.
+    @State private var busy = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -45,16 +47,21 @@ struct VeddArk: View {
                         ForEach(stakeOptions, id: \.self) { n in
                             Button("\(n)") { draft.points = n }
                                 .buttonStyle(DDChoiceButtonStyle(selected: draft.points == n))
+                                .accessibilityLabel("\(n) poeng")
                         }
                     }
                 } header: {
                     DDHeader("Poeng")
+                } footer: {
+                    if let board = model.board {
+                        DDFooter(board.stakeHint())
+                    }
                 }
 
                 Section {
                     Button(draft.buttonTitle) { submit() }
                         .buttonStyle(.dd(.money, fullWidth: true))
-                        .disabled(problem != nil || model.isSaving)
+                        .disabled(problem != nil || busy || model.isSaving)
                     if let text = problem ?? error {
                         Text(text).ddErrorStyle()
                     }
@@ -86,8 +93,11 @@ struct VeddArk: View {
     }
 
     private func submit() {
+        guard !busy else { return }
+        busy = true
         error = nil
         Task {
+            defer { busy = false }
             do {
                 try await model.create(draft)
                 dismiss()

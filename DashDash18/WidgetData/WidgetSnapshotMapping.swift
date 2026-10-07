@@ -23,9 +23,11 @@ nonisolated extension WidgetSnapshot.NextEvening {
 }
 
 nonisolated extension WidgetSnapshot {
-    /// Topp 3 i tabellens rekkefølge, med plass og poeng slik Tavla viser dem.
+    /// Topp 3 i tabellens rekkefølge, med plass og poeng slik Tavla viser dem. Tom før første
+    /// kveld: da er rekkefølgen bare alfabetisk, og widgeten sier «Ingen tabell ennå».
     static func topThree(_ standings: TavlaStandings) -> [Leader] {
-        topThree(standings.rows, format: standings.points)
+        guard standings.hasResults else { return [] }
+        return topThree(standings.rows, format: standings.points)
     }
 
     static func topThree(_ rows: [TavlaStandings.Row], format: (Double) -> String) -> [Leader] {
@@ -48,6 +50,7 @@ enum WidgetSnapshotPublisher {
     static func publish(standings: TavlaStandings?) {
         guard WidgetFeature.isEnabled else { return }
         WidgetSnapshotStore.shared.update { snapshot in
+            snapshot.tavlaLoaded = true
             snapshot.seasonName = standings?.seasonName
             snapshot.top = standings.map(WidgetSnapshot.topThree) ?? []
         }

@@ -46,6 +46,8 @@ struct ResultShareCard: View {
         .frame(width: 390)
         .background(Color.ddBackground)
         .environment(\.colorScheme, .light)
+        // Bildet er det samme for alle: fast tekststørrelse, ikke avsenderens.
+        .environment(\.dynamicTypeSize, .large)
     }
 
     private func row(_ line: ResultShare.Line) -> some View {
@@ -60,10 +62,13 @@ struct ResultShareCard: View {
                 .foregroundStyle(Color.ddForestInk)
                 .lineLimit(1)
             Spacer(minLength: DDSpacing.s)
+            // Et langt navn kortes av; verdien skal alltid stå helt.
             Text(line.value)
                 .font(.ddNumber)
                 .monospacedDigit()
                 .foregroundStyle(Color.ddInk)
+                .fixedSize()
+                .layoutPriority(1)
         }
         .padding(.vertical, 10)
     }
@@ -93,7 +98,7 @@ nonisolated struct ResultShareItem: Transferable {
             }
             return data
         }
-        .suggestedFileName { "\($0.share.title).png" }
+        .suggestedFileName { $0.share.fileName }
         ProxyRepresentation { item in item.share.text }
     }
 }
