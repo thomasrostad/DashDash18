@@ -58,7 +58,8 @@ private struct KveldContent: View {
                             event: event,
                             committee: model.committee,
                             daysUntil: model.daysUntil,
-                            referenceYear: EveningDates.year(of: model.today)
+                            referenceYear: EveningDates.year(of: model.today),
+                            funCompetitions: model.funCompetitions
                         )
                         .ddCard(.large)
                         if let entry = model.calendarEntry {

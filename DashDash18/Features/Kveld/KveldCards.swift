@@ -6,6 +6,8 @@ struct NextEveningCard: View {
     let committee: [String]
     let daysUntil: Int?
     let referenceYear: Int?
+    /// Morroturneringene kvelden hører til (fase 15).
+    var funCompetitions: [String] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -19,6 +21,15 @@ struct NextEveningCard: View {
                     DDPill(EveningDates.countdownText(days: daysUntil), tone: .sun)
                         .fixedSize()
                 }
+            }
+            if !funCompetitions.isEmpty {
+                HStack(spacing: 6) {
+                    ForEach(funCompetitions, id: \.self) { name in
+                        DDPill(name, tone: .lime, systemImage: "party.popper")
+                    }
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Teller også i \(NorwegianList.join(funCompetitions))")
             }
             if let time = EveningDates.timeText(event.startTime) {
                 Label("Kl. \(time)", systemImage: "clock")

@@ -38,6 +38,8 @@ struct RundeQuickStartView: View {
     @State private var showsPlayers = false
     @State private var showsMore = false
     @State private var scrollTarget: String?
+    /// «Teller også i …» (fase 15). Nil når `CompetitionsFeature` er av.
+    @State var links: CompetitionLinkModel?
 
     private var rules: Ruleset { model.rules }
     private var term: GroupTerm { draft.groupTerm }
@@ -49,6 +51,9 @@ struct RundeQuickStartView: View {
                 venueSection
                 courseSection
                 playersSection
+                if let links {
+                    CountsAlsoInSection(model: links, candidates: links.candidates(players: linkPlayers))
+                }
                 setupSection
             }
             .onChange(of: scrollTarget) { _, target in
@@ -93,6 +98,13 @@ struct RundeQuickStartView: View {
         .onAppear {
             draft.prepareSetup(rules: rules, roster: model.members)
             bayCount = max(1, draft.bays.bayCount)
+        }
+        .task {
+            guard CompetitionsFeature.isActive, links == nil else { return }
+            let context = model.clubContext
+            let links = CompetitionLinkModel(client: context.client, access: context.competitionAccess)
+            self.links = links
+            await links.load(clubID: context.clubID, roundID: draft.isSaved ? draft.roundID : nil)
         }
         .onChange(of: draft.participants) { _, _ in
             draft.prepareSetup(rules: rules, roster: model.members)
@@ -248,6 +260,21 @@ struct RundeQuickStartView: View {
         }
     }
 
+    /// Spillerne slik konkurransene kjenner dem: medlemmene i klubben, med innloggingen.
+    private var linkPlayers: [CompetitionLinking.Player] {
+        draft.participants.map { id in
+            CompetitionLinking.Player(playerID: id, clubID: model.clubContext.clubID,
+                                      profileID: model.members.first { $0.id == id }?.userID)
+        }
+    }
+
+    /// Lagrer «Teller også i …» etter at runden er lagret eller startet. Gir en tilleggsmelding når
+    /// koblingen feilet.
+    private func saveLinks() async -> String? {
+        guard let links else { return nil }
+        return await links.save(roundID: draft.roundID, players: linkPlayers)
+    }
+
     // MARK: Oppsett
 
     private var setupSection: some View {
@@ -371,7 +398,8 @@ struct RundeQuickStartView: View {
             defer { isBusy = false }
             do {
                 try await model.saveDraft(draft)
-                onDone("\(RoundListing.title(roundNo: draft.roundNo, courseName: selectedCourse?.course.name)) er lagret som kladd. Bare arrangørene ser den.")
+                let extra = await saveLinks().map { " " + $0 } ?? ""
+                onDone("\(RoundListing.title(roundNo: draft.roundNo, courseName: selectedCourse?.course.name)) er lagret som kladd. Bare arrangørene ser den." + extra)
             } catch {
                 draft.isSaved = model.rounds.contains { $0.id == draft.roundID }
                 self.error = DataError.from(error).message
@@ -386,7 +414,8 @@ struct RundeQuickStartView: View {
             defer { isBusy = false }
             do {
                 try await model.start(draft)
-                onDone("\(RoundListing.title(roundNo: draft.roundNo, courseName: selectedCourse?.course.name)) er startet.")
+                let extra = await saveLinks().map { " " + $0 } ?? ""
+                onDone("\(RoundListing.title(roundNo: draft.roundNo, courseName: selectedCourse?.course.name)) er startet." + extra)
             } catch {
                 draft.isSaved = model.rounds.contains { $0.id == draft.roundID }
                 self.error = DataError.from(error).message

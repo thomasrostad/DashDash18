@@ -9,7 +9,8 @@ import SwiftUI
 /// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
 /// og spill på runden: `spill`, `spillnytt`, `spillresultat`,
 /// og åpent for alle (fase 17): `apenvalg`, `apenlogin`, `apendeg`, `apenslett`, `apenrapport`,
-/// `apenrapporter`, `apenblokkerte`, `apenbetaling`, `apenregning`).
+/// `apenrapporter`, `apenblokkerte`, `apenbetaling`, `apenregning`,
+/// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkny`, `konkteller`, `konkkveld`).
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor
@@ -23,6 +24,8 @@ struct DesignScreenSamples: View {
         case spill, spillnytt, spillresultat
         // Åpent for alle (fase 17).
         case apenvalg, apenlogin, apendeg, apenslett, apenrapport, apenrapporter, apenblokkerte, apenbetaling, apenregning
+        // Flere konkurranser (fase 15).
+        case konktavla, konkliste, konkliga, konkcup, konkny, konkteller, konkkveld
     }
     @State var screen: Screen = .hullkort
 
@@ -86,6 +89,8 @@ struct DesignScreenSamples: View {
             ApenSampleScreen(screen: screen)
         case .spillnytt:
             SpillNyttSampleScreen()
+        case .konktavla, .konkliste, .konkliga, .konkcup, .konkny, .konkteller, .konkkveld:
+            KonkurranseSampleScreen(screen: screen)
         case .liste:
             NavigationStack { DDListSample() }
                 .tint(Color.ddForestInk)

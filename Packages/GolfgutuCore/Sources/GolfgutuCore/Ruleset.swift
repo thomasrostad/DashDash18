@@ -24,10 +24,14 @@ public struct Ruleset: Hashable, Sendable {
     /// Hullene (antall hull fra start) der ledelsen underveis meldes, stigende, 1…18
     /// (PWA: `LEDELSE_SJEKKPUNKT`). Tom liste: ledelsen meldes ikke.
     public var leadCheckpoints: [Int]
+    /// Liga, cup og morroturnering (fase 15, Competitions.swift). `nil`: malene gjelder. Golfgutu-
+    /// oppsettet har ingen, så jakkeracet og JSON-en for sesongen er som før.
+    public var competition: CompetitionRules?
 
     public init(evenings: Int, scoring: ScoringRules, table: TableRules, sidePrizes: SidePrizeRules,
                 handicap: HandicapRules, formats: FormatRules, tips: TipsRules = .golfgutu,
-                bets: BetRules = .golfgutu, leadCheckpoints: [Int] = Ruleset.golfgutuLeadCheckpoints) {
+                bets: BetRules = .golfgutu, leadCheckpoints: [Int] = Ruleset.golfgutuLeadCheckpoints,
+                competition: CompetitionRules? = nil) {
         self.evenings = evenings
         self.scoring = scoring
         self.table = table
@@ -37,6 +41,7 @@ public struct Ruleset: Hashable, Sendable {
         self.tips = tips
         self.bets = bets
         self.leadCheckpoints = leadCheckpoints
+        self.competition = competition
     }
 
     // MARK: Gruppene
@@ -330,7 +335,7 @@ public struct Ruleset: Hashable, Sendable {
 
 extension Ruleset: Codable {
     private enum CodingKeys: String, CodingKey {
-        case version, evenings, scoring, table, sidePrizes, handicap, formats, tips, bets, leadCheckpoints
+        case version, evenings, scoring, table, sidePrizes, handicap, formats, tips, bets, leadCheckpoints, competition
     }
 
     /// Versjon 1: flat.
@@ -358,6 +363,7 @@ extension Ruleset: Codable {
             tips = try c.decodeIfPresent(TipsRules.self, forKey: .tips) ?? g.tips
             bets = try c.decodeIfPresent(BetRules.self, forKey: .bets) ?? g.bets
             leadCheckpoints = try c.decodeIfPresent([Int].self, forKey: .leadCheckpoints) ?? g.leadCheckpoints
+            competition = try c.decodeIfPresent(CompetitionRules.self, forKey: .competition)
             return
         }
         // Versjon 1. `countingEvenings` gjaldt matcher (`TELLENDE_MATCHER`), `stablefordCountingEvenings` runder.
@@ -396,6 +402,8 @@ extension Ruleset: Codable {
         try c.encode(tips, forKey: .tips)
         try c.encode(bets, forKey: .bets)
         try c.encode(leadCheckpoints, forKey: .leadCheckpoints)
+        // Bare når konkurransen har egne regler, så sesongens JSON er som før.
+        try c.encodeIfPresent(competition, forKey: .competition)
     }
 }
 

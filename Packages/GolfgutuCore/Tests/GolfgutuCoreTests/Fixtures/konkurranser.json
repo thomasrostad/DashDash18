@@ -1,0 +1,213 @@
+{
+ "_kilde": "Konkurranser over flere runder (fase 15). Forventede verdier er regnet for hånd fra reglene i Competitions.swift og malene (LeagueRules.league: plassering 10/8/6/5/4/3/2/1 + 1 for å spille, alle teller, skille seire > beste runde > stableford; LeagueRules.fun: stableford rett fram, skille beste runde > seire; CupRules.standard: trekning, sudden death). Liga: spillere som ikke er påmeldt, strykes før plassene regnes; delt plass deler summen av plassenes poeng. Cup: seedplassene 1-8-4-5-2-7-3-6, de beste seedene får bye, vinneren av kamp s møter vinneren av kamp s^1 i neste runde (kamp s/2). Trekningen er Fisher-Yates bakfra med SplitMix64 over id-ene sortert stigende, j = neste() mod (i+1); tallene er sjekket mot en uavhengig Python-utgave (SplitMix64(0) gir 0xe220a8397b1dcdaf først).",
+ "liga": [
+  {
+   "navn": "Ligamalen: delt 2.-plass deler 8+6, x er ikke påmeldt og tar ingen plass, b og c skilles på stableford",
+   "regler": {},
+   "malen": "league",
+   "pameldte": ["a", "b", "c", "d"],
+   "runder": [
+    {"id": "r1", "stableford": {"a": 36, "b": 32, "c": 32, "d": 28}},
+    {"id": "r2", "stableford": {"a": 30, "b": 35, "d": 30}},
+    {"id": "r3", "stableford": {"c": 40, "x": 45, "a": 20}}
+   ],
+   "forventet": [
+    {"id": "a", "plass": 1, "total": 28, "spilt": 3, "seire": 1, "beste": 11, "stableford": 86, "runder": [["r1", 1, 11, true], ["r2", 2, 8, true], ["r3", 2, 9, true]]},
+    {"id": "c", "plass": 2, "total": 19, "spilt": 2, "seire": 1, "beste": 11, "stableford": 72, "runder": [["r1", 2, 8, true], ["r3", 1, 11, true]]},
+    {"id": "b", "plass": 3, "total": 19, "spilt": 2, "seire": 1, "beste": 11, "stableford": 67, "runder": [["r1", 2, 8, true], ["r2", 1, 11, true]]},
+    {"id": "d", "plass": 4, "total": 14, "spilt": 2, "seire": 0, "beste": 8, "stableford": 58, "runder": [["r1", 4, 6, true], ["r2", 2, 8, true]]}
+   ]
+  },
+  {
+   "navn": "Beste 2 runder: a mister r2 (8 er lavest), stablefordsummen tar bare de tellende",
+   "regler": {"bestRounds": 2},
+   "malen": "league",
+   "pameldte": ["a", "b", "c", "d"],
+   "runder": [
+    {"id": "r1", "stableford": {"a": 36, "b": 32, "c": 32, "d": 28}},
+    {"id": "r2", "stableford": {"a": 30, "b": 35, "d": 30}},
+    {"id": "r3", "stableford": {"c": 40, "x": 45, "a": 20}}
+   ],
+   "forventet": [
+    {"id": "a", "plass": 1, "total": 20, "spilt": 3, "seire": 1, "beste": 11, "stableford": 56, "runder": [["r1", 1, 11, true], ["r2", 2, 8, false], ["r3", 2, 9, true]]},
+    {"id": "c", "plass": 2, "total": 19, "spilt": 2, "seire": 1, "beste": 11, "stableford": 72, "runder": [["r1", 2, 8, true], ["r3", 1, 11, true]]},
+    {"id": "b", "plass": 3, "total": 19, "spilt": 2, "seire": 1, "beste": 11, "stableford": 67, "runder": [["r1", 2, 8, true], ["r2", 1, 11, true]]},
+    {"id": "d", "plass": 4, "total": 14, "spilt": 2, "seire": 0, "beste": 8, "stableford": 58, "runder": [["r1", 4, 6, true], ["r2", 2, 8, true]]}
+   ]
+  },
+  {
+   "navn": "Morromalen: stableford rett fram; e har ikke spilt og står sist med 0",
+   "regler": {},
+   "malen": "fun",
+   "pameldte": ["a", "b", "c", "d", "e"],
+   "runder": [
+    {"id": "r1", "stableford": {"a": 36, "b": 32, "c": 32, "d": 28}},
+    {"id": "r2", "stableford": {"a": 30, "b": 35, "d": 30}},
+    {"id": "r3", "stableford": {"c": 40, "x": 45, "a": 20}}
+   ],
+   "forventet": [
+    {"id": "a", "plass": 1, "total": 86, "spilt": 3, "seire": 1, "beste": 36, "stableford": 86, "runder": [["r1", 1, 36, true], ["r2", 2, 30, true], ["r3", 2, 20, true]]},
+    {"id": "c", "plass": 2, "total": 72, "spilt": 2, "seire": 1, "beste": 40, "stableford": 72, "runder": [["r1", 2, 32, true], ["r3", 1, 40, true]]},
+    {"id": "b", "plass": 3, "total": 67, "spilt": 2, "seire": 1, "beste": 35, "stableford": 67, "runder": [["r1", 2, 32, true], ["r2", 1, 35, true]]},
+    {"id": "d", "plass": 4, "total": 58, "spilt": 2, "seire": 0, "beste": 30, "stableford": 58, "runder": [["r1", 4, 28, true], ["r2", 2, 30, true]]},
+    {"id": "e", "plass": 5, "total": 0, "spilt": 0, "seire": 0, "beste": null, "stableford": 0, "runder": []}
+   ]
+  },
+  {
+   "navn": "Helt likt på alt: delt førsteplass, rekkefølgen inn (navn) avgjør bare visningen",
+   "regler": {},
+   "malen": "league",
+   "pameldte": ["p", "q"],
+   "runder": [
+    {"id": "r1", "stableford": {"p": 30}},
+    {"id": "r2", "stableford": {"q": 30}}
+   ],
+   "forventet": [
+    {"id": "p", "plass": 1, "total": 11, "spilt": 1, "seire": 1, "beste": 11, "stableford": 30, "runder": [["r1", 1, 11, true]]},
+    {"id": "q", "plass": 1, "total": 11, "spilt": 1, "seire": 1, "beste": 11, "stableford": 30, "runder": [["r2", 1, 11, true]]}
+   ]
+  },
+  {
+   "navn": "Egne plasseringspoeng 3/2/1 uten deltakerpoeng: tre delt på 2.-plass deler (2 + 1 + 0) / 3 = 1",
+   "regler": {"placementPoints": [3, 2, 1], "participationPoints": 0},
+   "malen": "league",
+   "pameldte": ["a", "b", "c", "d"],
+   "runder": [
+    {"id": "r1", "stableford": {"a": 40, "b": 30, "c": 30, "d": 30}}
+   ],
+   "forventet": [
+    {"id": "a", "plass": 1, "total": 3, "spilt": 1, "seire": 1, "beste": 3, "stableford": 40, "runder": [["r1", 1, 3, true]]},
+    {"id": "b", "plass": 2, "total": 1, "spilt": 1, "seire": 0, "beste": 1, "stableford": 30, "runder": [["r1", 2, 1, true]]},
+    {"id": "c", "plass": 2, "total": 1, "spilt": 1, "seire": 0, "beste": 1, "stableford": 30, "runder": [["r1", 2, 1, true]]},
+    {"id": "d", "plass": 2, "total": 1, "spilt": 1, "seire": 0, "beste": 1, "stableford": 30, "runder": [["r1", 2, 1, true]]}
+   ]
+  }
+ ],
+ "seedplasser": {
+  "2": [1, 2],
+  "4": [1, 4, 2, 3],
+  "8": [1, 8, 4, 5, 2, 7, 3, 6],
+  "16": [1, 16, 8, 9, 4, 13, 5, 12, 2, 15, 7, 10, 3, 14, 6, 11]
+ },
+ "seeding": [
+  {
+   "navn": "Handicap: lavest først, likt handicap på navn (norsk), uten handicap sist",
+   "regler": {"seeding": "handicap"},
+   "frø": 0,
+   "deltakere": [
+    {"id": "A", "name": "Anders", "handicap": 10},
+    {"id": "B", "name": "Bjørn", "handicap": 4.5},
+    {"id": "C", "name": "Carl"},
+    {"id": "D", "name": "Dag", "handicap": 18},
+    {"id": "E", "name": "Eva", "handicap": 4.5}
+   ],
+   "forventet": ["B", "E", "A", "D", "C"]
+  },
+  {
+   "navn": "Rangering: plassen først, uten plass etter handicap",
+   "regler": {"seeding": "ranking"},
+   "frø": 0,
+   "deltakere": [
+    {"id": "A", "name": "Anders", "handicap": 10, "rank": 2},
+    {"id": "B", "name": "Bjørn", "handicap": 4.5},
+    {"id": "C", "name": "Carl", "rank": 1},
+    {"id": "D", "name": "Dag", "handicap": 18},
+    {"id": "E", "name": "Æsa", "handicap": 4.5, "rank": 3}
+   ],
+   "forventet": ["C", "A", "E", "B", "D"]
+  },
+  {
+   "navn": "Trekning med frø 42 (SplitMix64, Fisher-Yates bakfra over sortert id)",
+   "regler": {"seeding": "random"},
+   "frø": 42,
+   "deltakere": [
+    {"id": "f"}, {"id": "a"}, {"id": "c"}, {"id": "e"}, {"id": "b"}, {"id": "d"}
+   ],
+   "forventet": ["e", "d", "a", "c", "f", "b"]
+  },
+  {
+   "navn": "Trekning med frø 2026: rekkefølgen inn betyr ingenting",
+   "regler": {"seeding": "random"},
+   "frø": 2026,
+   "deltakere": [
+    {"id": "a"}, {"id": "b"}, {"id": "c"}, {"id": "d"}, {"id": "e"}, {"id": "f"}
+   ],
+   "forventet": ["d", "e", "a", "c", "f", "b"]
+  }
+ ],
+ "tre": [
+  {
+   "navn": "Fem i et tre for åtte: seed 1, 2 og 3 får bye; Carl vinner, Anders går videre på walkover",
+   "seedet": ["B", "E", "A", "D", "C"],
+   "forsteRunde": [
+    {"slot": 0, "a": "B", "b": null},
+    {"slot": 1, "a": "D", "b": "C"},
+    {"slot": 2, "a": "E", "b": null},
+    {"slot": 3, "a": "A", "b": null}
+   ],
+   "resultater": [
+    {"round": 1, "slot": 1, "winner": "C", "walkover": false},
+    {"round": 2, "slot": 0, "winner": "B", "walkover": false},
+    {"round": 2, "slot": 1, "winner": "A", "walkover": true},
+    {"round": 3, "slot": 0, "winner": "D", "walkover": false}
+   ],
+   "forventet": {
+    "runder": [
+     [["B", null, "B"], ["D", "C", "C"], ["E", null, "E"], ["A", null, "A"]],
+     [["B", "C", "B"], ["E", "A", "A"]],
+     [["B", "A", null]]
+    ],
+    "mester": null,
+    "klare": [[3, 0]],
+    "motstander": {"B": "A", "A": "B", "C": null, "E": null},
+    "ute": ["C", "D", "E"],
+    "_merknad": "Resultatet i finalen (D) hoppes over: D er ikke i finalen."
+   }
+  },
+  {
+   "navn": "Seks fra trekningen med frø 42: to byes, finale avgjort",
+   "seedet": ["e", "d", "a", "c", "f", "b"],
+   "forsteRunde": [
+    {"slot": 0, "a": "e", "b": null},
+    {"slot": 1, "a": "c", "b": "f"},
+    {"slot": 2, "a": "d", "b": null},
+    {"slot": 3, "a": "a", "b": "b"}
+   ],
+   "resultater": [
+    {"round": 1, "slot": 1, "winner": "f", "walkover": false},
+    {"round": 1, "slot": 3, "winner": "a", "walkover": false},
+    {"round": 2, "slot": 0, "winner": "f", "walkover": false},
+    {"round": 2, "slot": 1, "winner": "d", "walkover": false},
+    {"round": 3, "slot": 0, "winner": "f", "walkover": false}
+   ],
+   "forventet": {
+    "runder": [
+     [["e", null, "e"], ["c", "f", "f"], ["d", null, "d"], ["a", "b", "a"]],
+     [["e", "f", "f"], ["d", "a", "d"]],
+     [["f", "d", "f"]]
+    ],
+    "mester": "f",
+    "klare": [],
+    "motstander": {"f": null, "d": null},
+    "ute": ["a", "b", "c", "d", "e"]
+   }
+  },
+  {
+   "navn": "To deltakere: bare en finale",
+   "seedet": ["x", "y"],
+   "forsteRunde": [
+    {"slot": 0, "a": "x", "b": "y"}
+   ],
+   "resultater": [],
+   "forventet": {
+    "runder": [
+     [["x", "y", null]]
+    ],
+    "mester": null,
+    "klare": [[1, 0]],
+    "motstander": {"x": "y", "y": "x"},
+    "ute": []
+   }
+  }
+ ]
+}
