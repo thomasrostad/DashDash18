@@ -340,8 +340,9 @@ import Testing
 // MARK: - Radene mot kolonnenavnene i 017
 
 @MainActor struct FundamentRaderTests {
-    @Test func flaggetErAv() {
-        #expect(FoundationFeature.isEnabled == false)
+    /// 017 er kjørt på test (07.10.2026, kontrollen 14 av 14).
+    @Test func flaggetErPaa() {
+        #expect(FoundationFeature.isEnabled)
     }
 
     @Test func konkurranseDekodesFraDatabasen() throws {

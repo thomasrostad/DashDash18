@@ -11,7 +11,7 @@ import GolfgutuCore
 /// Fundamentet (sql/017). Av til 017 er godkjent og kjørt på test; da hentes profiler, løse runder
 /// og konkurranser. Ingen skjerm bruker det ennå (fase 13 og 15).
 nonisolated enum FoundationFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 /// Én person per innlogging (`profiles`). `id` er innloggingens id (`auth.users.id`), den samme som

@@ -6,7 +6,7 @@ import GolfgutuCore
 /// Statistikk under Deg og fra spillerprofilen, og den valgfrie føringen per hull. Av til 021 er
 /// godkjent og kjørt på test.
 nonisolated enum StatsFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 /// Om spilleren vil føre fairway, green og putter. Av som standard, én bryter per innlogging på
