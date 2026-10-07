@@ -9,13 +9,14 @@ struct DegView: View {
 
     var body: some View {
         DDList {
-            Section {
-                DegHeader(membership: membership)
-                    .padding(.vertical, 6)
-            }
             if let context {
                 DegProfileSection(context: context)
                     .id(context.memberID)
+            } else {
+                Section {
+                    DegHeader(membership: membership)
+                        .padding(.vertical, 6)
+                }
             }
             DDSection("Klubb") {
                 LabeledContent("Klubb", value: membership.club.name)
@@ -60,11 +61,7 @@ struct DegView: View {
                     }
                 }
             }
-            DDSection("Konto") {
-                LabeledContent("Logget inn som", value: user.email ?? "ukjent e-post")
-                SignOutButton()
-                    .foregroundStyle(Color.ddRustText)
-            }
+            DegAccountSection(user: user)
             DDSection("Om appen") {
                 LabeledContent("Miljø", value: config.environment.displayName)
                 LabeledContent("Database") {
@@ -76,30 +73,5 @@ struct DegView: View {
 
     private var otherActiveClubs: [Membership] {
         club.memberships.filter { $0.status == .active && $0.clubID != membership.clubID }
-    }
-}
-
-/// Øverst på Deg: avatar, navnet i troppen, klubben og rollen.
-private struct DegHeader: View {
-    let membership: Membership
-
-    var body: some View {
-        HStack(spacing: 14) {
-            DDAvatar(name: membership.displayName, size: 56)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(membership.displayName)
-                    .font(.ddTitle)
-                    .foregroundStyle(Color.ddForestInk)
-                Text(membership.club.name)
-                    .font(.ddCallout)
-                    .foregroundStyle(Color.ddInkSecondary)
-            }
-            Spacer(minLength: 8)
-            if membership.isOrganizer {
-                DDPill("Arrangør", tone: .lime)
-                    .fixedSize()
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 }

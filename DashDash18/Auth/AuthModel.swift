@@ -66,6 +66,32 @@ final class AuthModel {
         }
     }
 
+    /// Innloggingsmåtene kontoen har. Hentes fra serveren, så en nylig koblet måte er med;
+    /// uten nett brukes økten på telefonen.
+    func identities() async -> [LinkedIdentity] {
+        let fromServer = try? await auth.userIdentities()
+        let identities = fromServer ?? auth.currentUser?.identities ?? []
+        return identities.map {
+            LinkedIdentity(provider: $0.provider, email: $0.identityData?["email"]?.stringValue)
+        }
+    }
+
+    /// Kobler Apple til kontoen du er logget inn med (ID-token og nonce som ved innlogging).
+    /// Krever manuell kobling i Supabase Auth (`AccountLinkingFeature`).
+    func linkApple(idToken: String, rawNonce: String) async throws(LinkIdentityError) {
+        do {
+            try await auth.linkIdentityWithIdToken(
+                credentials: OpenIDConnectCredentials(provider: .apple, idToken: idToken, nonce: rawNonce)
+            )
+        } catch {
+            if let authError = error as? AuthError {
+                throw LinkIdentityError.from(errorCode: authError.errorCode.rawValue, fallback: authError.localizedDescription)
+            }
+            if error is URLError { throw .offline }
+            throw .unknown(error.localizedDescription)
+        }
+    }
+
     /// Lokal utlogging, som i PWA-en: en global utlogging kunne henge.
     func signOut() async {
         await willSignOut?()

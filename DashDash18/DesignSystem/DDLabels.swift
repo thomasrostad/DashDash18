@@ -206,14 +206,26 @@ extension DDInfoStripe where Content == Text {
 struct DDAvatar: View {
     let name: String
     var size: CGFloat = 30
+    /// Portrettet når det finnes (`.gg-avatar.bilde`), ellers initialene.
+    var image: UIImage? = nil
 
     var body: some View {
-        Text(Self.initials(name))
-            .font(.dd(.sans, size: size * 0.4, weight: .semibold, relativeTo: .caption))
-            .foregroundStyle(Color.ddLimeInk)
-            .frame(width: size, height: size)
-            .background(Circle().fill(Color.ddLimeBackground))
-            .accessibilityHidden(true)
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: size, height: size)
+                    .clipShape(Circle())
+            } else {
+                Text(Self.initials(name))
+                    .font(.dd(.sans, size: size * 0.4, weight: .semibold, relativeTo: .caption))
+                    .foregroundStyle(Color.ddLimeInk)
+                    .frame(width: size, height: size)
+                    .background(Circle().fill(Color.ddLimeBackground))
+            }
+        }
+        .accessibilityHidden(true)
     }
 
     nonisolated static func initials(_ name: String) -> String {

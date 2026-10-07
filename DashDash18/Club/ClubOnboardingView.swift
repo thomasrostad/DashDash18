@@ -65,28 +65,37 @@ struct PendingMembershipView: View {
     }
 }
 
+/// «Logg ut» med bekreftelse (PWA: `bekreftLoggUt`). Push for telefonen avregistreres før
+/// økten forsvinner (`AuthModel.willSignOut`).
 struct SignOutButton: View {
+    /// Hvordan du kommer inn igjen (`LoginMethods.signOutMessage`).
+    var loginHint: String = LoginMethods.signOutMessage(identities: [])
     @Environment(AuthModel.self) private var auth
     @Environment(OutboxStatus.self) private var outbox
     @State private var confirming = false
+    @State private var isSigningOut = false
 
     var body: some View {
-        Button("Logg ut", role: .destructive) {
-            if outbox.pendingCount > 0 {
-                confirming = true
-            } else {
-                Task { await auth.signOut() }
-            }
+        Button("Logg ut …", role: .destructive) {
+            confirming = true
         }
-        .confirmationDialog(
-            SignOutButton.warning(pending: outbox.pendingCount),
-            isPresented: $confirming,
-            titleVisibility: .visible
-        ) {
-            Button("Logg ut likevel", role: .destructive) {
-                Task { await auth.signOut() }
+        .disabled(isSigningOut)
+        .confirmationDialog("Logge ut?", isPresented: $confirming, titleVisibility: .visible) {
+            Button(outbox.pendingCount > 0 ? "Logg ut likevel" : "Logg ut", role: .destructive) {
+                isSigningOut = true
+                Task {
+                    await auth.signOut()
+                    isSigningOut = false
+                }
             }
+        } message: {
+            Text(SignOutButton.confirmation(pending: outbox.pendingCount, loginHint: loginHint))
         }
+    }
+
+    /// Teksten i bekreftelsen: hull som ikke er sendt først, så hvordan du kommer inn igjen.
+    nonisolated static func confirmation(pending: Int, loginHint: String) -> String {
+        pending > 0 ? warning(pending: pending) + " " + loginHint : loginHint
     }
 
     /// Hull i kø sendes bare når den samme logger inn igjen (utboksen er knyttet til bruker).
