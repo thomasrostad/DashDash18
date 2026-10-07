@@ -5,9 +5,11 @@ import Foundation
 // vilkaarUtfall, skalLukkes, oppdaterMarkeder), malene i app-nytt.js (utfordringMaler) og
 // oppgjøret (marketNetFor, veddemaalPoster og nettoingen i skyldOversikt). Kroner er poeng.
 //
-// Utvidelser utenfor PWA-en (endrer ikke svaret for Golfgutu-oppsettet): `void` (annullert,
-// alle får innsatsen tilbake), poengbanken (startbeholdning, saldo, ledig) og sjekken av en
-// innsats (tak, saldo, én side). Se docs/veddemaal-poeng.md.
+// Utvidelser utenfor PWA-en, besluttet 07.10.2026 (docs/veddemaal-poeng.md): `void` (annullert,
+// alle får innsatsen tilbake), automatisk annullering av delt hull og likt resultat
+// (`voidTies`), oppgjør i hele poeng (`payoutDecimals`), poengbanken (startbeholdning, saldo,
+// ledig) og sjekken av en innsats (tak, saldo, én side). Med `Ruleset.BetRules.pwa` (to
+// desimaler, ingen automatisk annullering) gir motoren PWA-ens svar; det kjører paritetstestene.
 
 // MARK: - Regelsettet
 
@@ -26,26 +28,41 @@ extension Ruleset {
         /// Poengbanken: det hver spiller starter sesongen med. `nil`: ingen bank, saldoen kan gå
         /// under null og bare taket per veddemål gjelder (som PWA-ens skyldliste).
         public var startingPoints: Int?
+        /// Antall desimaler i oppgjøret. 0: hele poeng. Hver vinners gevinst rundes med
+        /// `floor(x + 0.5)`, og resten fordeles på vinnerne etter største innsats (så id), så
+        /// et veddemål verken skaper eller fjerner poeng. PWA-en hadde to (`rund2`).
+        public var payoutDecimals: Int
+        /// Delt hull, delt match og likt resultat annulleres av feiingen (alle får innsatsen
+        /// tilbake). `false`: arrangøren tar dem for hånd, som i PWA-en.
+        public var voidTies: Bool
 
         public init(lockAheadHoles: Int, maxStakePerBet: Int, stakeOptions: [Int], defaultStake: Int,
-                    startingPoints: Int?) {
+                    startingPoints: Int?, payoutDecimals: Int = 0, voidTies: Bool = true) {
             self.lockAheadHoles = lockAheadHoles
             self.maxStakePerBet = maxStakePerBet
             self.stakeOptions = stakeOptions
             self.defaultStake = defaultStake
             self.startingPoints = startingPoints
+            self.payoutDecimals = payoutDecimals
+            self.voidTies = voidTies
         }
 
-        /// Golfgutu: forsprang 1, tak 200, knappene 50/100/200, 100 valgt. Startbeholdningen
-        /// 1000 er et forslag (PWA-en hadde ingen bank, se docs/veddemaal-poeng.md).
+        /// Golfgutu: forsprang 1, tak 200, knappene 50/100/200, 100 valgt (som PWA-en), og
+        /// brukerens valg 07.10.2026: 1000 i startbeholdning per sesong, oppgjør i hele poeng og
+        /// automatisk annullering av delt hull og likt resultat.
         public static let golfgutu = BetRules(lockAheadHoles: 1, maxStakePerBet: 200, stakeOptions: [50, 100, 200],
-                                              defaultStake: 100, startingPoints: 1000)
+                                              defaultStake: 100, startingPoints: 1000, payoutDecimals: 0, voidTies: true)
+
+        /// PWA-ens oppgjør og feiing: to desimaler, ingen automatisk annullering, ingen bank.
+        /// Paritetstestene mot `db-nytt.js` kjører med dette.
+        public static let pwa = BetRules(lockAheadHoles: 1, maxStakePerBet: 200, stakeOptions: [50, 100, 200],
+                                         defaultStake: 100, startingPoints: nil, payoutDecimals: 2, voidTies: false)
     }
 }
 
 extension Ruleset.BetRules: Codable {
     private enum CodingKeys: String, CodingKey {
-        case lockAheadHoles, maxStakePerBet, stakeOptions, defaultStake, startingPoints
+        case lockAheadHoles, maxStakePerBet, stakeOptions, defaultStake, startingPoints, payoutDecimals, voidTies
     }
 
     public init(from decoder: Decoder) throws {
@@ -58,6 +75,8 @@ extension Ruleset.BetRules: Codable {
         // `null` er et valg (ingen bank); mangler feltet, gjelder Golfgutu.
         startingPoints = c.contains(.startingPoints)
             ? try c.decodeIfPresent(Int.self, forKey: .startingPoints) : g.startingPoints
+        payoutDecimals = try c.decodeIfPresent(Int.self, forKey: .payoutDecimals) ?? g.payoutDecimals
+        voidTies = try c.decodeIfPresent(Bool.self, forKey: .voidTies) ?? g.voidTies
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -67,6 +86,8 @@ extension Ruleset.BetRules: Codable {
         try c.encode(stakeOptions, forKey: .stakeOptions)
         try c.encode(defaultStake, forKey: .defaultStake)
         try c.encode(startingPoints, forKey: .startingPoints)
+        try c.encode(payoutDecimals, forKey: .payoutDecimals)
+        try c.encode(voidTies, forKey: .voidTies)
     }
 }
 
@@ -222,19 +243,44 @@ public enum BetPhase: String, Codable, Hashable, Sendable {
     case void
 }
 
+/// Avgjøringen av et veddemål: JA, NEI eller annullert (alle får innsatsen tilbake).
+public enum BetVerdict: String, Codable, Hashable, Sendable, CaseIterable {
+    case yes
+    case no
+    case void
+
+    public init(_ side: BetSide) { self = side == .yes ? .yes : .no }
+
+    /// Siden som vant, eller `nil` når veddemålet annulleres.
+    public var side: BetSide? {
+        switch self {
+        case .yes: .yes
+        case .no: .no
+        case .void: nil
+        }
+    }
+}
+
 /// Hva en feiing skal skrive på ett veddemål (`oppdaterMarkeder`).
 public struct BetUpdate: Hashable, Sendable {
     public var betID: String?
     /// Sett stempelet `lukket_at` nå.
     public var close: Bool
-    /// Avgjør med dette utfallet.
-    public var outcome: BetSide?
+    /// Avgjør med dette: JA, NEI, eller annullert ved delt resultat (`voidTies`).
+    public var verdict: BetVerdict?
 
-    public init(betID: String?, close: Bool, outcome: BetSide?) {
+    public init(betID: String?, close: Bool, verdict: BetVerdict?) {
         self.betID = betID
         self.close = close
-        self.outcome = outcome
+        self.verdict = verdict
     }
+
+    public init(betID: String?, close: Bool, outcome: BetSide?) {
+        self.init(betID: betID, close: close, verdict: outcome.map(BetVerdict.init))
+    }
+
+    /// Siden som vant (`nil` også når veddemålet annulleres).
+    public var outcome: BetSide? { verdict?.side }
 }
 
 /// En ferdig påstand i vedd-arket (`utfordringMaler`). Teksten lager appen.
@@ -341,6 +387,8 @@ public enum Bets {
     public static let stakeLimits = 1...10_000
     /// Største startbeholdning databasen og regelsettet godtar. Ikke en regelverdi.
     public static let bankLimit = 1_000_000
+    /// Desimalene oppgjøret kan rundes til (`payoutDecimals`). Databasen godtar det samme.
+    public static let payoutDecimalsLimits = 0...2
 
     // MARK: Låsing
 
@@ -400,10 +448,38 @@ public enum Bets {
 
     // MARK: Utfallet
 
-    /// `vilkaarUtfall`: utfallet, eller `nil` når det ennå ikke er sikkert (eller er delt, og da er
-    /// det arrangørens sak). Et veddemål som avgjøres for tidlig er verre enn ett som avgjøres sent.
+    /// `vilkaarUtfall`: utfallet, eller `nil` når det ennå ikke er sikkert eller er delt. Et
+    /// veddemål som avgjøres for tidlig er verre enn ett som avgjøres sent.
     public static func outcome(_ round: Round, condition c: BetCondition, roster: [Player], claims: [SideClaim] = [],
                                rules: Ruleset = .golfgutu) -> BetSide? {
+        result(round, condition: c, roster: roster, claims: claims, rules: rules)?.side
+    }
+
+    /// Som `outcome`, men skiller delt fra ukjent: `.void` når utfallet er kjent og delt (delt
+    /// hull, delt match, likt resultat) og regelsettet annullerer slike (`voidTies`). Ellers
+    /// `nil`, og da er det arrangørens sak, som i PWA-en.
+    public static func verdict(_ round: Round, condition c: BetCondition, roster: [Player], claims: [SideClaim] = [],
+                               rules: Ruleset = .golfgutu) -> BetVerdict? {
+        switch result(round, condition: c, roster: roster, claims: claims, rules: rules) {
+        case .side(let side): BetVerdict(side)
+        case .tie: rules.bets.voidTies ? .void : nil
+        case nil: nil
+        }
+    }
+
+    private enum Result {
+        case side(BetSide)
+        /// Kjent og delt.
+        case tie
+
+        var side: BetSide? {
+            if case .side(let s) = self { return s }
+            return nil
+        }
+    }
+
+    private static func result(_ round: Round, condition c: BetCondition, roster: [Player], claims: [SideClaim],
+                               rules: Ruleset) -> Result? {
         guard round.id == c.round else { return nil }
         let course = round.courseHoles()
         let count = round.numberOfHoles
@@ -421,42 +497,43 @@ public enum Bets {
             let limit = c.kind == .birdie ? -1 : 0
             if let p = c.player, !p.isEmpty {
                 guard let d = netToPar(p, c.hole) else { return nil }
-                return d <= limit ? .yes : .no
+                return .side(d <= limit ? .yes : .no)
             }
             // «Noen»: JA så snart én klarer det, NEI først når alle i runden har ført hullet.
             var allDone = !round.holeScores.isEmpty
             for pid in round.holeScores.keys {
                 let d = netToPar(pid, c.hole)
-                if let d, d <= limit { return .yes }
+                if let d, d <= limit { return .side(.yes) }
                 if d == nil { allDone = false }
             }
-            return (allDone || round.locked) ? .no : nil
+            return (allDone || round.locked) ? .side(.no) : nil
 
         case .hole:
-            guard let ha = netToPar(c.a, c.hole), let hb = netToPar(c.b, c.hole), ha != hb else { return nil }
-            return ha < hb ? .yes : .no
+            guard let ha = netToPar(c.a, c.hole), let hb = netToPar(c.b, c.hole) else { return nil }
+            if ha == hb { return .tie }
+            return .side(ha < hb ? .yes : .no)
 
         case .beats:
             guard round.locked else { return nil }
             let a = Scoring.roundNetTotal(round, player: roster.first { $0.id == c.a }, roster: roster, rules: rules)
             let b = Scoring.roundNetTotal(round, player: roster.first { $0.id == c.b }, roster: roster, rules: rules)
-            if a == b { return nil }
-            return a > b ? .yes : .no
+            if a == b { return .tie }
+            return .side(a > b ? .yes : .no)
 
         case .drive, .kp:
             guard round.locked else { return nil }
             let list = SidePrizes.claims(c.kind == .drive ? .drive : .kp, in: round, claims: claims)
             guard let first = list.first else { return nil }
-            return first.playerId == c.player ? .yes : .no
+            return .side(first.playerId == c.player ? .yes : .no)
 
         case .match:
             guard let p = c.player,
                   let m = round.matches.first(where: { MatchPlay.involves($0, playerID: p, in: round) }),
                   let st = MatchPlay.standing(m, from: p, in: round, roster: roster, rules: rules) else { return nil }
             if !st.decided && !round.locked { return nil }
-            if st.up > 0 { return .yes }
-            if st.up < 0 { return .no }
-            return nil
+            if st.up > 0 { return .side(.yes) }
+            if st.up < 0 { return .side(.no) }
+            return .tie
         }
     }
 
@@ -468,16 +545,17 @@ public enum Bets {
     }
 
     /// `oppdaterMarkeder` uten skrivingen: hva arrangørens telefon skal skrive etter at `hole` er
-    /// ført (eller etter en henting, `hole == nil`). Bare åpne veddemål med vilkår i runden.
+    /// ført (eller etter en henting, `hole == nil`). Bare åpne veddemål med vilkår i runden. Med
+    /// `voidTies` annulleres delt hull, delt match og likt resultat i samme feiing.
     public static func sweep(_ bets: [Bet], round: Round, hole: Int?, roster: [Player], claims: [SideClaim] = [],
                              rules: Ruleset = .golfgutu) -> [BetUpdate] {
         bets.compactMap { bet in
             guard bet.status == .open, let c = bet.condition, c.round == round.id else { return nil }
             let stamp = hole.map { shouldClose(bet, round: round, hole: $0) } ?? false
-            let result = outcome(round, condition: c, roster: roster, claims: claims, rules: rules)
+            let result = verdict(round, condition: c, roster: roster, claims: claims, rules: rules)
             let close = stamp || (result != nil && bet.closedAt == nil)
             guard close || result != nil else { return nil }
-            return BetUpdate(betID: bet.id, close: close, outcome: result)
+            return BetUpdate(betID: bet.id, close: close, verdict: result)
         }
     }
 
@@ -516,15 +594,57 @@ public enum Bets {
 
     // MARK: Oppgjøret
 
+    /// Hver spillers resultat i ett avgjort veddemål: gevinsten for vinnerne, minus innsatsen for
+    /// taperne. Vinnersiden deler taperpotten etter innsats. Gevinsten rundes til
+    /// `payoutDecimals` med `floor(x + 0.5)`, og resten (det avrundingen skapte eller fjernet)
+    /// fordeles én enhet om gangen på vinnerne etter største innsats, så spiller-id. Summen er
+    /// alltid null. Tomt når ingen poeng flytter seg: åpent, annullert, ingen på vinnersiden
+    /// eller ingen tapere (alle får innsatsen tilbake). Samme regnestykke som `bet_points_for`
+    /// i `sql/012_veddemaal.sql`.
+    public static func payouts(_ bet: Bet, rules: Ruleset = .golfgutu) -> [String: Double] {
+        guard bet.status == .resolved, let res = bet.resolution else { return [:] }
+        // Per spiller: summen av innsatsene, og siden (alltid én side per spiller).
+        var order: [String] = []
+        var sums: [String: (side: BetSide, points: Double)] = [:]
+        for s in bet.stakes {
+            if sums[s.playerID] == nil { order.append(s.playerID); sums[s.playerID] = (s.side, 0) }
+            sums[s.playerID]!.points += s.points
+        }
+        let winners = order.filter { sums[$0]!.side == res }
+            .sorted { a, b in
+                let x = sums[a]!.points, y = sums[b]!.points
+                return x != y ? x > y : a < b
+            }
+        let losers = order.filter { sums[$0]!.side != res }
+        let win = winners.reduce(0) { $0 + sums[$1]!.points }
+        let lose = losers.reduce(0) { $0 + sums[$1]!.points }
+        guard win > 0, lose > 0 else { return [:] }
+
+        let scale = pow(10, Double(max(0, rules.bets.payoutDecimals)))
+        // Enheter (hele poeng ved 0 desimaler). Innsatsene er hele poeng, så produktet er eksakt.
+        var units = winners.map { JS.round(sums[$0]!.points * lose * scale / win) }
+        let rest = Int((lose * scale - units.reduce(0, +)).rounded())
+        for k in 0..<abs(rest) {
+            units[k % units.count] += rest > 0 ? 1 : -1
+        }
+        var out: [String: Double] = [:]
+        for (i, pid) in winners.enumerated() { out[pid] = units[i] / scale }
+        for pid in losers { out[pid] = -sums[pid]!.points }
+        return out
+    }
+
     /// `veddemaalPoster`: taperne gir vinnerne poeng i forhold til innsats. Hver taperinnsats
     /// fordeles på vinnersiden etter vinnerinnsats. Ingen på vinnersiden, eller ingen tapere:
-    /// alle får innsatsen tilbake, og det blir ingen overføringer. Rundet til to desimaler.
-    public static func transfers(_ bet: Bet) -> [BetTransfer] {
+    /// alle får innsatsen tilbake, og det blir ingen overføringer. Hver overføring rundes for
+    /// seg til `payoutDecimals` (PWA-en: to). Regnestykket per motpart; saldoen regnes av
+    /// `payouts`, og summen av overføringene kan avvike med avrundingen (som i PWA-en).
+    public static func transfers(_ bet: Bet, rules: Ruleset = .golfgutu) -> [BetTransfer] {
         guard bet.status == .resolved, let res = bet.resolution else { return [] }
         let winners = bet.stakes.filter { $0.side == res }
         let losers = bet.stakes.filter { $0.side != res }
         let pot = winners.reduce(0) { $0 + $1.points }
         guard pot != 0, !losers.isEmpty else { return [] }
+        let scale = pow(10, Double(max(0, rules.bets.payoutDecimals)))
         var order: [String] = []
         var sums: [String: (from: String, to: String, points: Double)] = [:]
         for t in losers {
@@ -536,31 +656,15 @@ public enum Bets {
         }
         return order.compactMap { key in
             let s = sums[key]!
-            let points = JS.round2(s.points)
+            let points = JS.round(s.points * scale) / scale
             return points > 0 ? BetTransfer(from: s.from, to: s.to, points: points) : nil
         }
     }
 
-    /// `marketNetFor`: vunnet minus tapt i avgjorte veddemål. Det som står i åpne (og annullerte)
-    /// teller ikke. Vinnersiden deler taperpotten etter innsats.
-    public static func net(for playerID: String, in bets: [Bet]) -> Double {
-        var net = 0.0
-        for bet in bets {
-            let mine = bet.stakes.filter { $0.playerID == playerID }
-            let staked = mine.reduce(0) { $0 + $1.points }
-            guard bet.status == .resolved, let res = bet.resolution else { continue }
-            net -= staked
-            let winPool = bet.pool(res)
-            let losePool = bet.pool(res.opposite)
-            if winPool > 0 {
-                for s in mine where s.side == res {
-                    net += s.points + (s.points / winPool) * losePool
-                }
-            } else {
-                net += staked
-            }
-        }
-        return net
+    /// `marketNetFor`: vunnet minus tapt i avgjorte veddemål (`payouts`, rundet etter
+    /// regelsettet). Det som står i åpne og annullerte teller ikke.
+    public static func net(for playerID: String, in bets: [Bet], rules: Ruleset = .golfgutu) -> Double {
+        bets.reduce(0) { $0 + (payouts($1, rules: rules)[playerID] ?? 0) }
     }
 
     /// Det spilleren har stående i veddemål som ikke er avgjort.
@@ -573,7 +677,7 @@ public enum Bets {
 
     /// Saldoen i poengbanken: startbeholdning + netto. `nil` uten bank.
     public static func balance(for playerID: String, in bets: [Bet], rules: Ruleset = .golfgutu) -> Double? {
-        rules.bets.startingPoints.map { Double($0) + net(for: playerID, in: bets) }
+        rules.bets.startingPoints.map { Double($0) + net(for: playerID, in: bets, rules: rules) }
     }
 
     /// Det som kan settes: saldo minus det som står i åpne veddemål. `nil` uten bank.
@@ -621,7 +725,7 @@ public enum Bets {
         let rows = players.map { p in
             let mine = bets.filter { b in b.stakes.contains { $0.playerID == p.id } }
             let won = mine.filter { b in b.status == .resolved && b.resolution != nil && b.position(of: p.id)?.side == b.resolution }
-            return BetTableRow(playerID: p.id, name: p.name, net: net(for: p.id, in: bets),
+            return BetTableRow(playerID: p.id, name: p.name, net: net(for: p.id, in: bets, rules: rules),
                                atStake: atStake(for: p.id, in: bets),
                                balance: balance(for: p.id, in: bets, rules: rules),
                                available: available(for: p.id, in: bets, rules: rules),
@@ -632,6 +736,15 @@ public enum Bets {
             if x != y { return x > y }
             return NorwegianSort.areInIncreasingOrder(a.name, b.name)
         }
+    }
+
+    // MARK: Avgjøringen
+
+    /// Kan `playerID` (en arrangør) avgjøre veddemålet for hånd? Bare et åpent veddemål, og bare
+    /// når han ikke har innsats i det: den som avgjør, vedder ikke (besluttet 07.10.2026). Samme
+    /// regel som `resolve_bet`. Feiingen (vilkåret avgjør) er ikke arrangørens skjønn og gjelder ikke.
+    public static func canResolve(_ bet: Bet, by playerID: String) -> Bool {
+        bet.status == .open && bet.position(of: playerID) == nil
     }
 
     // MARK: Innsatsen

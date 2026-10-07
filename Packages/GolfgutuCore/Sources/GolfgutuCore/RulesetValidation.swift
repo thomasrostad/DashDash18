@@ -137,6 +137,9 @@ extension Ruleset {
         if let start = bets.startingPoints, !(0...Bets.bankLimit).contains(start) {
             add("bets.startingPoints", "Startbeholdningen må være mellom 0 og \(Bets.bankLimit) poeng, eller tom for ingen bank.")
         }
+        if !Bets.payoutDecimalsLimits.contains(bets.payoutDecimals) {
+            add("bets.payoutDecimals", "Oppgjøret kan ha fra 0 (hele poeng) til \(Bets.payoutDecimalsLimits.upperBound) desimaler.")
+        }
 
         // Ledelsen underveis.
         if leadCheckpoints.contains(where: { !(1...18).contains($0) }) {

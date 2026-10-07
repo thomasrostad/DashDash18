@@ -6,6 +6,16 @@
 -- Kjøres først på TEST etter ja fra brukeren, så kontrollen nederst. Prod først
 -- etter ny godkjenning.
 --
+-- Oppdatert etter brukerens valg 07.10.2026 (docs/veddemaal-poeng.md, «Besluttet»):
+--   * Poengbank 1000 per sesong; ny sesong = ny bank (saldoen regnes per sesong).
+--   * Oppgjør i HELE POENG (regelverdien payoutDecimals, Golfgutu 0). Resten etter
+--     avrundingen går til største innsats, så hvert veddemål går i null.
+--   * Den som avgjør, vedder ikke: resolve_bet avviser en arrangør med innsats.
+--   * Delt hull, delt match og likt resultat annulleres automatisk av feiingen
+--     (settle_bet med 'void').
+--   * Push bare for nye og avgjorte veddemål. Én side per spiller.
+--   * Tippekupongen har egen bank (fase 7), ikke denne.
+--
 -- Krever 001 (tabeller og hjelpefunksjoner), 008 (activity) og 010 (push_queue,
 -- kategorien 'bet' finnes alt i activity.category og i push-kategoriene).
 --
@@ -18,10 +28,14 @@
 --     ledig regnes av bet_points() her og av Bets.swift i appen, med samme
 --     regnestykke (som PWA-ens spiller_saldo og balanceFor). Grunnen: en saldo
 --     som lagres kan komme i utakt med innsatsene; en sum kan ikke det.
---   * All skriving går gjennom tre RPC-er, hver i én transaksjon:
+--   * All skriving går gjennom fire RPC-er, hver i én transaksjon:
 --       create_bet       veddemålet, din første innsats og aktivitetslinja
 --       place_bet_stake  en innsats til (tak, samme side, ledige poeng, sperra)
---       resolve_bet      arrangøren avgjør (yes / no) eller annullerer (void)
+--       resolve_bet      arrangøren avgjør for hånd (yes / no) eller annullerer
+--                        (void). Ikke på et veddemål hun selv har satset på.
+--       settle_bet       feiingen på arrangørens telefon: vilkåret avgjør (yes /
+--                        no), delt resultat annulleres (void). Bare veddemål med
+--                        vilkår, og bare når scorene kan ha gitt svar.
 --     pluss mark_bets_closed, arrangørens journalstempel (lukket_at i PWA-en).
 --     Tabellene har ingen insert/update/delete for klienten.
 --
@@ -36,9 +50,10 @@
 --     om den med (cascade), som PWA-ens slett_runde.
 --   * revoke … from public, anon står ETTER hver create or replace.
 --
--- Regelverdier: SQL leser sesongens regelsett (forsprang, tak, startbeholdning).
--- Mangler feltet, gjelder Golfgutu-verdien, samme regel som Ruleset-dekoderen i
--- appen (forsprang 1, tak 200, startbeholdning 1000; null = ingen bank).
+-- Regelverdier: SQL leser sesongens regelsett (forsprang, tak, startbeholdning,
+-- desimaler i oppgjøret). Mangler feltet, gjelder Golfgutu-verdien, samme regel
+-- som Ruleset-dekoderen i appen (forsprang 1, tak 200, startbeholdning 1000,
+-- payoutDecimals 0; null = ingen bank). voidTies leses bare av appens feiing.
 --
 -- Én transaksjon. Idempotent der det er naturlig.
 -- ===========================================================================
@@ -248,8 +263,14 @@ revoke all on function public.bet_accepts_stakes(uuid) from public, anon;
 grant execute on function public.bet_accepts_stakes(uuid) to authenticated;
 
 -- --- bet_points: netto, stående og ledig for ett medlem i én sesong ----------
--- Netto (marketNetFor): vinnersiden deler taperpotten etter innsats. Ingen på
--- vinnersiden: alle får innsatsen tilbake. Åpne og annullerte teller ikke.
+-- Netto (marketNetFor, Bets.payouts i appen): vinnersiden deler taperpotten
+-- etter innsats. Ingen på vinnersiden eller ingen tapere: alle får innsatsen
+-- tilbake. Åpne og annullerte teller ikke.
+-- Hele poeng (payoutDecimals, Golfgutu 0, høyst 2): hver vinners gevinst rundes
+-- med floor(x + 0.5), regnet i heltall: (2·innsats·tapt·10^d + vunnet) div
+-- (2·vunnet). Resten (taperpotten minus summen av de rundede gevinstene) gis
+-- eller tas én enhet om gangen fra vinnerne etter største innsats, så laveste
+-- medlems-id. Summen i hvert veddemål er da nøyaktig null.
 -- Saldo = startbeholdning + netto. Ledig = saldo − det som står i åpne.
 -- balance og available er null når sesongen ikke har poengbank.
 create or replace function public.bet_points_for(p_season_id uuid, p_member_id uuid)
@@ -259,27 +280,49 @@ stable
 security definer
 set search_path = ''
 as $$
-  with b as (
+  with d as (
+    select greatest(0, least(2, coalesce(public.bet_rule(p_season_id, 'payoutDecimals', 0), 0))) as decimals
+  ),
+  sc as (select d.decimals, (10 ^ d.decimals)::bigint as scale from d),
+  b as (
     select id, resolution from public.bets
     where season_id = p_season_id and status = 'resolved'
   ),
-  pools as (
-    select s.bet_id,
-           coalesce(sum(s.points) filter (where s.side = b.resolution), 0)::numeric as win,
-           coalesce(sum(s.points) filter (where s.side <> b.resolution), 0)::numeric as lose
+  per as (   -- én rad per veddemål og medlem: summen og om siden vant
+    select s.bet_id, s.member_id, sum(s.points)::bigint as pts, bool_and(s.side = b.resolution) as won
     from public.bet_stakes s join b on b.id = s.bet_id
-    group by s.bet_id
+    group by s.bet_id, s.member_id
   ),
-  n as (
-    select coalesce(sum(
-             case when p.win = 0 then 0
-                  when s.side = b.resolution then s.points * p.lose / p.win
-                  else -s.points end), 0) as net
-    from public.bet_stakes s
-    join b on b.id = s.bet_id
-    join pools p on p.bet_id = s.bet_id
-    where s.member_id = p_member_id
+  pools as (
+    select bet_id,
+           coalesce(sum(pts) filter (where won), 0)::bigint as win,
+           coalesce(sum(pts) filter (where not won), 0)::bigint as lose
+    from per group by bet_id
   ),
+  w as (   -- vinnerne i veddemål der poeng flytter seg: gevinsten i enheter
+    select p.bet_id, p.member_id, p.pts,
+           (2 * p.pts * pl.lose * sc.scale + pl.win) / (2 * pl.win) as units,
+           pl.lose * sc.scale as total
+    from per p join pools pl on pl.bet_id = p.bet_id cross join sc
+    where p.won and pl.win > 0 and pl.lose > 0
+  ),
+  r as (
+    select w.member_id, w.units,
+           w.total - sum(w.units) over (partition by w.bet_id) as rest,
+           row_number() over (partition by w.bet_id order by w.pts desc, w.member_id) as rn
+    from w
+  ),
+  mine as (
+    select round((r.units + case when r.rn <= abs(r.rest) then sign(r.rest)::bigint else 0 end)::numeric / sc.scale,
+                 sc.decimals) as amount
+    from r cross join sc
+    where r.member_id = p_member_id
+    union all
+    select -p.pts::numeric
+    from per p join pools pl on pl.bet_id = p.bet_id
+    where p.member_id = p_member_id and not p.won and pl.win > 0 and pl.lose > 0
+  ),
+  n as (select coalesce(sum(amount), 0)::numeric as net from mine),
   st as (
     select coalesce(sum(s.points), 0)::numeric as at_stake
     from public.bet_stakes s join public.bets o on o.id = s.bet_id
@@ -522,7 +565,8 @@ revoke all on function public.create_bet(uuid, uuid, uuid, text, jsonb, uuid, te
 grant execute on function public.create_bet(uuid, uuid, uuid, text, jsonb, uuid, text, integer) to authenticated;
 
 -- --- place_bet_stake: en innsats på et veddemål som finnes ------------------
--- Ingen aktivitetslinje (PWA-ens «satset»-linje ga mye push); se åpne spørsmål.
+-- Ingen aktivitetslinje: push bare for nye og avgjorte veddemål (besluttet
+-- 07.10.2026; PWA-ens «satset»-linje ga mye push).
 create or replace function public.place_bet_stake(p_bet_id uuid, p_side text, p_points integer)
 returns uuid
 language plpgsql
@@ -548,10 +592,11 @@ $$;
 revoke all on function public.place_bet_stake(uuid, text, integer) from public, anon;
 grant execute on function public.place_bet_stake(uuid, text, integer) to authenticated;
 
--- --- resolve_bet: arrangøren avgjør eller annullerer -------------------------
--- p_resolution: 'yes', 'no' eller 'void' (alle får innsatsen tilbake). Også
--- veddemål med vilkår: appen på arrangørens telefon feier og avgjør dem
--- (Bets.sweep), og knappen står som nødutgang. Kan ikke angres.
+-- --- resolve_bet: arrangøren avgjør eller annullerer for hånd ----------------
+-- p_resolution: 'yes', 'no' eller 'void' (alle får innsatsen tilbake). Fri
+-- tekst, og nødutgangen for veddemål med vilkår (feiingen bruker settle_bet).
+-- Den som avgjør, vedder ikke: en arrangør med innsats i veddemålet avvises, og
+-- en annen arrangør må gjøre det (besluttet 07.10.2026). Kan ikke angres.
 create or replace function public.resolve_bet(p_bet_id uuid, p_resolution text)
 returns public.bets
 language plpgsql
@@ -579,6 +624,10 @@ begin
     raise exception 'Veddemålet er alt avgjort' using errcode = '55000';
   end if;
   v_me := public.my_member_id(v_bet.club_id);
+  if exists (select 1 from public.bet_stakes s where s.bet_id = p_bet_id and s.member_id = v_me) then
+    raise exception 'Du har satset på dette veddemålet og kan ikke avgjøre det. En annen arrangør må gjøre det.'
+      using errcode = '55000';
+  end if;
 
   update public.bets b
      set status      = case when p_resolution = 'void' then 'void' else 'resolved' end,
@@ -598,6 +647,113 @@ end;
 $$;
 revoke all on function public.resolve_bet(uuid, text) from public, anon;
 grant execute on function public.resolve_bet(uuid, text) to authenticated;
+
+-- --- bet_outcome_known: kan scorene ha gitt svar? ----------------------------
+-- Vakt for settle_bet, ikke en fasit: databasen regner ikke netto mot par. Låst
+-- runde: ja. Hullvilkår: hullet er ført for den/dem det gjelder («noen»: for
+-- minst én). Match: runden er i gang (kan avgjøres før siste hull). Slår i
+-- runden, longest drive og nærmest pinnen: først når runden er låst.
+create or replace function public.bet_outcome_known(p_bet public.bets)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_status text;
+  v_hole   integer;
+  v_kind   text := p_bet.condition ->> 'kind';
+  v_player uuid := nullif(p_bet.condition ->> 'player', '')::uuid;
+begin
+  if p_bet.condition is null or p_bet.round_id is null then
+    return false;
+  end if;
+  select r.status into v_status from public.rounds r where r.id = p_bet.round_id;
+  if v_status is null then
+    return false;
+  end if;
+  if v_status = 'locked' then
+    return true;
+  end if;
+  v_hole := (p_bet.condition ->> 'hole')::integer;
+  return case
+    when v_kind in ('birdie', 'par') then exists (
+      select 1 from public.hole_scores hs
+      where hs.round_id = p_bet.round_id and hs.hole_index = v_hole
+        and (v_player is null or hs.member_id = v_player))
+    when v_kind = 'hole' then (
+      select count(distinct hs.member_id) = 2 from public.hole_scores hs
+      where hs.round_id = p_bet.round_id and hs.hole_index = v_hole
+        and hs.member_id in ((p_bet.condition ->> 'a')::uuid, (p_bet.condition ->> 'b')::uuid))
+    when v_kind = 'match' then exists (select 1 from public.hole_scores hs where hs.round_id = p_bet.round_id)
+    else false
+  end;
+end;
+$$;
+revoke all on function public.bet_outcome_known(public.bets) from public, anon, authenticated;
+
+-- --- settle_bet: feiingen avgjør det vilkåret gir svar på ---------------------
+-- Kalles av appen på arrangørens telefon (Bets.sweep). 'yes' / 'no' når
+-- vilkåret har gitt svar, 'void' når det er delt (delt hull, delt match, likt
+-- resultat: alle får innsatsen tilbake, besluttet 07.10.2026). Bare veddemål med
+-- vilkår; fri tekst avgjøres for hånd (resolve_bet). Gjelder også veddemål
+-- arrangøren har satset på: det er scorene som avgjør, ikke hun. resolved_by
+-- blir tom (avgjort av scorene). Kan ikke angres.
+create or replace function public.settle_bet(p_bet_id uuid, p_resolution text)
+returns public.bets
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_bet  public.bets%rowtype;
+begin
+  if auth.uid() is null then
+    raise exception 'Du må være logget inn' using errcode = '42501';
+  end if;
+  if p_resolution is null or p_resolution not in ('yes', 'no', 'void') then
+    raise exception 'Utfallet må være yes, no eller void' using errcode = '22023';
+  end if;
+  select * into v_bet from public.bets b where b.id = p_bet_id for update;
+  if not found or not public.is_club_member(v_bet.club_id) then
+    raise exception 'Fant ikke veddemålet' using errcode = 'P0002';
+  end if;
+  if not public.is_club_organizer(v_bet.club_id) then
+    raise exception 'Bare arrangørens telefon avgjør veddemål automatisk' using errcode = '42501';
+  end if;
+  if v_bet.status <> 'open' then
+    raise exception 'Veddemålet er alt avgjort' using errcode = '55000';
+  end if;
+  if v_bet.condition is null then
+    raise exception 'Fri tekst avgjøres av arrangøren for hånd' using errcode = '22023';
+  end if;
+  if p_resolution = 'void' and v_bet.condition ->> 'kind' not in ('hole', 'beats', 'match') then
+    raise exception 'Bare delt hull, delt match og likt resultat annulleres automatisk' using errcode = '22023';
+  end if;
+  if not public.bet_outcome_known(v_bet) then
+    raise exception 'Utfallet er ikke kjent ennå' using errcode = '55000';
+  end if;
+
+  update public.bets b
+     set status      = case when p_resolution = 'void' then 'void' else 'resolved' end,
+         resolution  = case when p_resolution = 'void' then null else p_resolution end,
+         resolved_by = null,
+         resolved_at = now(),
+         closed_at   = coalesce(b.closed_at, now())
+   where b.id = p_bet_id
+  returning * into v_bet;
+
+  insert into public.activity (club_id, kind, category, data, event_id, round_id)
+  values (v_bet.club_id, 'bet_resolved', 'bet',
+          jsonb_build_object('bet_id', v_bet.id, 'question', v_bet.question, 'resolution', p_resolution,
+                             'auto', true),
+          v_bet.event_id, v_bet.round_id);
+  return v_bet;
+end;
+$$;
+revoke all on function public.settle_bet(uuid, text) from public, anon;
+grant execute on function public.settle_bet(uuid, text) to authenticated;
 
 -- --- mark_bets_closed: journalstempelet (lukket_at) --------------------------
 -- Arrangørens feiing setter det når et hull lukker et veddemål uten at det kan
@@ -672,7 +828,8 @@ commit;
 --   where n.nspname = 'public'
 --     and p.proname in ('bet_condition_valid', 'bet_rule', 'bet_first_open_hole', 'bet_accepts_stakes',
 --                       'bet_points_for', 'bet_points', 'bet_insert_stake', 'create_bet',
---                       'place_bet_stake', 'resolve_bet', 'mark_bets_closed')
+--                       'place_bet_stake', 'resolve_bet', 'bet_outcome_known', 'settle_bet',
+--                       'mark_bets_closed')
 -- ),
 -- g as (
 --   select table_name, string_agg(privilege_type, ', ' order by privilege_type) as rettigheter
@@ -691,18 +848,19 @@ commit;
 -- select 3, 'authenticated: bare SELECT på begge',
 --        (select count(*) = 2 and bool_and(rettigheter = 'SELECT') from g)
 -- union all
--- select 4, 'Alle elleve funksjonene finnes', (select count(*) = 11 from f)
+-- select 4, 'Alle tretten funksjonene finnes', (select count(*) = 13 from f)
 -- union all
 -- select 5, 'anon kan ikke kjøre noen veddemålsfunksjon', not exists (select 1 from f where anon_kan)
 -- union all
--- select 6, 'authenticated kan kjøre appens sju funksjoner',
---        (select count(*) = 7 and bool_and(auth_kan) from f
+-- select 6, 'authenticated kan kjøre appens åtte funksjoner',
+--        (select count(*) = 8 and bool_and(auth_kan) from f
 --         where proname in ('bet_condition_valid', 'bet_accepts_stakes', 'bet_points', 'create_bet',
---                           'place_bet_stake', 'resolve_bet', 'mark_bets_closed'))
+--                           'place_bet_stake', 'resolve_bet', 'settle_bet', 'mark_bets_closed'))
 -- union all
 -- select 7, 'authenticated kan ikke kjøre de indre hjelperne',
 --        not exists (select 1 from f where auth_kan
---                    and proname in ('bet_rule', 'bet_first_open_hole', 'bet_points_for', 'bet_insert_stake'))
+--                    and proname in ('bet_rule', 'bet_first_open_hole', 'bet_points_for', 'bet_insert_stake',
+--                                    'bet_outcome_known'))
 -- union all
 -- select 8, 'Kategorien bet finnes i activity',
 --        exists (select 1 from pg_constraint
@@ -717,6 +875,16 @@ commit;
 --        public.bet_condition_valid('{"kind":"par","hole":4,"player":"11111111-0000-0000-0000-000000000001"}')
 --        and not public.bet_condition_valid('{"kind":"par","hole":18,"player":"11111111-0000-0000-0000-000000000001"}')
 --        and not public.bet_condition_valid('{"kind":"skins"}')
+-- union all
+-- select 11, 'resolve_bet avviser arrangør med innsats',
+--        exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+--                where n.nspname = 'public' and p.proname = 'resolve_bet'
+--                  and p.prosrc like '%En annen arrangør må gjøre det%')
+-- union all
+-- select 12, 'Oppgjøret i hele poeng (bet_points_for leser payoutDecimals, standard 0)',
+--        exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+--                where n.nspname = 'public' and p.proname = 'bet_points_for'
+--                  and p.prosrc like '%''payoutDecimals'', 0%')
 -- order by nr;
 --
 -- Rolleprøven sql/lokal/012_prove.sql er KUN for lokal Postgres.
@@ -741,6 +909,8 @@ commit;
 --   end if;
 -- end $$;
 -- drop function if exists public.mark_bets_closed(uuid[]);
+-- drop function if exists public.settle_bet(uuid, text);
+-- drop function if exists public.bet_outcome_known(public.bets);
 -- drop function if exists public.resolve_bet(uuid, text);
 -- drop function if exists public.place_bet_stake(uuid, text, integer);
 -- drop function if exists public.create_bet(uuid, uuid, uuid, text, jsonb, uuid, text, integer);

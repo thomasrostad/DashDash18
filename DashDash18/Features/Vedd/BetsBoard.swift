@@ -40,8 +40,13 @@ nonisolated struct BetsBoard: Sendable {
         let resolvedByName: String?
         /// Hvem som har satset, største innsats først.
         let stakers: [Staker]
-        /// Vilkåret gir ikke svar (fri tekst, delt eller manuell): arrangøren må avgjøre.
+        /// Vilkåret gir ikke svar (fri tekst eller manuell): arrangøren må avgjøre. Delt hull og
+        /// likt resultat annulleres av feiingen når regelsettet sier det (`voidTies`).
         let needsOrganizer: Bool
+        /// Du er arrangør, det er åpent, og du har ikke satset: du kan avgjøre det for hånd.
+        let canResolve: Bool
+        /// Du er arrangør med innsats: en annen arrangør må avgjøre det.
+        let resolverHasStake: Bool
 
         var id: UUID { row.id }
         var isOpen: Bool { row.status == .open }
@@ -100,10 +105,10 @@ nonisolated struct BetsBoard: Sendable {
             let position = bet.position(of: meKey)
             var result: Double?
             if position != nil, row.status != .open {
-                result = Bets.net(for: meKey, in: [bet])
+                result = Bets.net(for: meKey, in: [bet], rules: rules)
             }
-            let outcome = bet.condition.flatMap { c in
-                game.flatMap { Bets.outcome($0.round, condition: c, roster: $0.roster, claims: $0.coreSideClaims, rules: rules) }
+            let verdict = bet.condition.flatMap { c in
+                game.flatMap { Bets.verdict($0.round, condition: c, roster: $0.roster, claims: $0.coreSideClaims, rules: rules) }
             }
             let stakers = input.stakes.filter { $0.betID == row.id }
                 .map { Item.Staker(name: name($0.memberID), side: $0.side, points: Double($0.points)) }
@@ -117,8 +122,10 @@ nonisolated struct BetsBoard: Sendable {
                 creatorName: name(row.creatorID), againstName: row.againstID.map { name($0) },
                 resolvedByName: row.resolvedBy.map { name($0) },
                 stakers: stakers,
-                needsOrganizer: row.status == .open && outcome == nil
-                    && (bet.condition == nil || round?.locked == true || !accepts)
+                needsOrganizer: row.status == .open && verdict == nil
+                    && (bet.condition == nil || round?.locked == true || !accepts),
+                canResolve: isOrganizer && Bets.canResolve(bet, by: meKey),
+                resolverHasStake: isOrganizer && row.status == .open && position != nil
             )
         }
         let newestFirst: (Item, Item) -> Bool = { $0.row.createdAt > $1.row.createdAt }
@@ -158,17 +165,18 @@ nonisolated struct BetsBoard: Sendable {
         games.values.filter { $0.status == .active }.max { ($0.snapshot.eventDate ?? "") < ($1.snapshot.eventDate ?? "") }
     }
 
-    /// Feiingen (`oppdaterMarkeder` på arrangørens telefon): det vilkårene nå gir svar på.
-    /// Tom for andre enn arrangøren.
-    var sweepPlan: [(betID: UUID, outcome: BetSide)] {
+    /// Feiingen (`oppdaterMarkeder` på arrangørens telefon): det vilkårene nå gir svar på, og
+    /// delt hull eller likt resultat som annulleres (`voidTies`). Tom for andre enn arrangøren.
+    /// Gjelder også veddemål arrangøren har satset på: det er vilkåret som avgjør, ikke han.
+    var sweepPlan: [(betID: UUID, verdict: BetVerdict)] {
         guard isOrganizer else { return [] }
         let open = (challenged + mine + others).map(\.bet)
         return games.values.flatMap { game in
             Bets.sweep(open, round: game.round, hole: nil, roster: game.roster, claims: game.coreSideClaims, rules: rules)
         }
         .compactMap { u in
-            guard let outcome = u.outcome, let id = u.betID.flatMap(UUID.init(uuidString:)) else { return nil }
-            return (id, outcome)
+            guard let verdict = u.verdict, let id = u.betID.flatMap(UUID.init(uuidString:)) else { return nil }
+            return (id, verdict)
         }
         .sorted { $0.betID.uuidString < $1.betID.uuidString }
     }

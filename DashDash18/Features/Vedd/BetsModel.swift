@@ -70,9 +70,12 @@ final class BetsModel {
         await load()
     }
 
-    /// Arrangøren avgjør (JA, NEI) eller annullerer. Kan ikke angres.
+    /// Arrangøren avgjør (JA, NEI) eller annullerer. Kan ikke angres. Ikke når hun selv har
+    /// satset på veddemålet (`resolve_bet` avviser det også).
     func resolve(_ item: BetsBoard.Item, verdict: BetVerdict) async throws(DataError) {
         guard BetsFeature.isEnabled, context.isOrganizer, !isSaving else { return }
+        if item.resolverHasStake { throw .invalid(BetTexts.resolverHasStake) }
+        guard item.canResolve else { return }
         isSaving = true
         defer { isSaving = false }
         do {
@@ -83,16 +86,17 @@ final class BetsModel {
         await load()
     }
 
-    /// Arrangørens telefon avgjør det vilkårene gir svar på (`feiMarkeder`). Feiler et kall,
-    /// står veddemålet åpent til neste henting eller til arrangøren tar det for hånd.
+    /// Arrangørens telefon avgjør det vilkårene gir svar på (`feiMarkeder`), og annullerer delt
+    /// hull og likt resultat (`settle_bet`). Feiler et kall, står veddemålet åpent til neste
+    /// henting eller til en arrangør tar det for hånd.
     private func sweep() async {
         guard let plan = board?.sweepPlan, !plan.isEmpty, !isSweeping else { return }
         isSweeping = true
         defer { isSweeping = false }
         var changed = false
-        for (id, outcome) in plan {
+        for (id, verdict) in plan {
             do {
-                try await BetsQueries.resolve(client: client, betID: id, verdict: outcome == .yes ? .yes : .no)
+                try await BetsQueries.settle(client: client, betID: id, verdict: verdict)
                 changed = true
             } catch {
                 continue

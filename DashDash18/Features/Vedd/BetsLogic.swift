@@ -139,7 +139,7 @@ nonisolated struct PlaceStakeParams: Encodable, Equatable, Sendable {
     let p_points: Int
 }
 
-/// `resolve_bet`: `yes`, `no` eller `void`.
+/// `resolve_bet` (arrangøren for hånd) og `settle_bet` (feiingen): `yes`, `no` eller `void`.
 nonisolated struct ResolveBetParams: Encodable, Equatable, Sendable {
     let p_bet_id: UUID
     let p_resolution: String
@@ -148,11 +148,6 @@ nonisolated struct ResolveBetParams: Encodable, Equatable, Sendable {
 /// `mark_bets_closed`.
 nonisolated struct CloseBetsParams: Encodable, Equatable, Sendable {
     let p_bet_ids: [UUID]
-}
-
-/// Arrangørens avgjøring.
-nonisolated enum BetVerdict: String, CaseIterable, Sendable {
-    case yes, no, void
 }
 
 // MARK: - Mapping til regelmotoren
@@ -260,6 +255,14 @@ nonisolated enum BetTexts {
         case .otherSide(let side): "Du har alt satset \(sideShort(side)) på dette."
         case .insufficient(let available): "Du har \(points(available)) ledige poeng."
         }
+    }
+
+    /// Den som avgjør, vedder ikke (besluttet 07.10.2026). Samme ordlyd som `resolve_bet`.
+    static let resolverHasStake = "Du har satset på dette veddemålet og kan ikke avgjøre det. En annen arrangør må gjøre det."
+
+    /// Hvem som avgjorde: arrangøren for hånd, eller scorene (feiingen, `resolved_by` tom).
+    static func resolvedBy(_ name: String?) -> String {
+        name.map { "avgjort av \($0)" } ?? "avgjort av scorene"
     }
 
     /// Poeng med norsk desimalkomma og to desimaler på det meste («33,33»).

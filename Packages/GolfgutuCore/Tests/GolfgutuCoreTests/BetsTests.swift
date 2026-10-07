@@ -5,8 +5,16 @@ import Testing
 /// Veddemål med poeng (fase 10). Tall: Fixtures/veddemaal.json, regnet ut av db-nytt.js og
 /// app-nytt.js på scenarioene fra vilkaar-test.js, lockout-test.js, kveld-test.js,
 /// status-del-test.js og poster-test.js («egen» = scenario uten PWA-test, svaret er fortsatt
-/// PWA-ens). Kroner er poeng.
+/// PWA-ens). Kroner er poeng. Oppgjøret og feiingen kjøres med PWA-ens regler (`pwa`: to
+/// desimaler, ingen automatisk annullering); Golfgutu-malen har hele poeng og annullerer delt.
 struct BetsTests {
+    /// Golfgutu-oppsettet med PWA-ens oppgjør og feiing (`Ruleset.BetRules.pwa`).
+    static let pwa: Ruleset = {
+        var r = Ruleset.golfgutu
+        r.bets = .pwa
+        return r
+    }()
+
     struct Fil: Decodable {
         let utfall: [Utfall]
         let laasing: [Laasing]
@@ -175,7 +183,7 @@ struct BetsTests {
     @Test func feiingenSkriverDetSammeSomPWA() {
         #expect(fil.feiing.count == 8)
         for sak in fil.feiing {
-            let svar = Bets.sweep(sak.veddemaal, round: sak.runde, hole: sak.hull, roster: sak.spillere)
+            let svar = Bets.sweep(sak.veddemaal, round: sak.runde, hole: sak.hull, roster: sak.spillere, rules: Self.pwa)
             #expect(svar.map(\.betID) == sak.forventet.map(\.id), "\(sak.navn)")
             #expect(svar.map(\.close) == sak.forventet.map(\.lukkes), "\(sak.navn)")
             #expect(svar.map(\.outcome) == sak.forventet.map(\.utfall), "\(sak.navn)")
@@ -205,7 +213,7 @@ struct BetsTests {
     @Test func overforingeneErSomVeddemaalPoster() {
         #expect(fil.poster.count == 8)
         for sak in fil.poster {
-            let svar = Bets.transfers(sak.veddemaal)
+            let svar = Bets.transfers(sak.veddemaal, rules: Self.pwa)
             #expect(svar == sak.forventet.map { BetTransfer(from: $0.fra, to: $0.til, points: $0.poeng) }, "\(sak.navn)")
             // Summen av netto over alle spillere er 0.
             var perSpiller: [String: Double] = [:]
@@ -217,18 +225,18 @@ struct BetsTests {
         }
     }
 
+    /// marketNetFor runder ikke; med to desimaler er hvert veddemål høyst en hundredel unna.
     @Test func nettoPerSpillerErSomMarketNetFor() throws {
         let sak = try #require(fil.netto.first)
         for (pid, ventet) in sak.forventet {
-            #expect(abs(Bets.net(for: pid, in: sak.veddemaal) - ventet) < 1e-9, "\(pid)")
+            #expect(abs(Bets.net(for: pid, in: sak.veddemaal, rules: Self.pwa) - ventet) < 0.01, "\(pid)")
         }
+        #expect(Bets.net(for: "t", in: sak.veddemaal, rules: Self.pwa) == -116.67)
         // Nullsum.
-        #expect(abs(sak.forventet.keys.reduce(0) { $0 + Bets.net(for: $1, in: sak.veddemaal) }) < 1e-9)
+        #expect(abs(sak.forventet.keys.reduce(0) { $0 + Bets.net(for: $1, in: sak.veddemaal, rules: Self.pwa) }) < 1e-9)
         // Tabellen uten bank sorterer som marketLeaderboardNytt.
-        var ingenBank = Ruleset.golfgutu
-        ingenBank.bets.startingPoints = nil
         let spillere = sak.forventet.keys.sorted().map { Player(id: $0, name: $0) }
-        let tabell = Bets.table(players: spillere, bets: sak.veddemaal, rules: ingenBank)
+        let tabell = Bets.table(players: spillere, bets: sak.veddemaal, rules: Self.pwa)
         #expect(tabell.map(\.playerID) == sak.rekkefolge)
         #expect(tabell.allSatisfy { $0.balance == nil && $0.available == nil })
     }
@@ -237,12 +245,13 @@ struct BetsTests {
     /// overføringene, med høyst én hundredel avvik per overføring (avrundingen i veddemaalPoster).
     @Test func tabellenStemmerMedOverforingene() throws {
         let sak = try #require(fil.netto.first)
-        let overforinger = sak.veddemaal.flatMap(Bets.transfers)
+        let overforinger = sak.veddemaal.flatMap { Bets.transfers($0, rules: Self.pwa) }
         for pid in sak.forventet.keys {
             let fraOverforinger = overforinger.reduce(0.0) { s, t in
                 s + (t.to == pid ? t.points : 0) - (t.from == pid ? t.points : 0)
             }
-            #expect(abs(fraOverforinger - Bets.net(for: pid, in: sak.veddemaal)) <= 0.01 * Double(overforinger.count), "\(pid)")
+            #expect(abs(fraOverforinger - Bets.net(for: pid, in: sak.veddemaal, rules: Self.pwa))
+                    <= 0.01 * Double(overforinger.count), "\(pid)")
         }
     }
 
@@ -355,7 +364,11 @@ struct BetsTests {
         #expect(g.stakeOptions == [50, 100, 200])
         #expect(g.defaultStake == 100)
         #expect(g.startingPoints == 1000)
+        // Brukerens valg 07.10.2026: hele poeng og automatisk annullering av delt.
+        #expect(g.payoutDecimals == 0)
+        #expect(g.voidTies)
         #expect(Ruleset.golfgutu.validate().isEmpty)
+        #expect(Self.pwa.validate().isEmpty)
 
         let egne = try JSONDecoder().decode(Ruleset.self, from: Data("""
         {"version": 2, "bets": {"lockAheadHoles": 2, "startingPoints": null}}
@@ -363,6 +376,10 @@ struct BetsTests {
         #expect(egne.bets.lockAheadHoles == 2)
         #expect(egne.bets.startingPoints == nil)
         #expect(egne.bets.maxStakePerBet == 200)
+        #expect(egne.bets.payoutDecimals == 0 && egne.bets.voidTies)
+        let pwaJSON = try JSONDecoder().decode(Ruleset.self, from: Data(
+            #"{"version": 2, "bets": {"payoutDecimals": 2, "voidTies": false}}"#.utf8))
+        #expect(pwaJSON.bets.payoutDecimals == 2 && !pwaJSON.bets.voidTies)
         let rundtur = try JSONDecoder().decode(Ruleset.self, from: JSONEncoder().encode(egne))
         #expect(rundtur == egne)
         let uten = try JSONDecoder().decode(Ruleset.self, from: Data(#"{"version": 2}"#.utf8))
@@ -379,5 +396,107 @@ struct BetsTests {
         #expect(felt { $0.bets.defaultStake = 250 } == ["bets.defaultStake"])
         #expect(felt { $0.bets.startingPoints = -1 } == ["bets.startingPoints"])
         #expect(felt { $0.bets.startingPoints = nil }.isEmpty)
+        #expect(felt { $0.bets.payoutDecimals = 3 } == ["bets.payoutDecimals"])
+        #expect(felt { $0.bets.payoutDecimals = -1 } == ["bets.payoutDecimals"])
+    }
+
+    // MARK: Besluttet 07.10.2026: hele poeng, automatisk annullering, arrangør uten innsats
+
+    /// 100 delt på tre vinnere med like innsatser: 33 hver, og poenget som ble til overs går til
+    /// største innsats (likt: laveste id). Summen er null.
+    @Test func helePoengFordelerResten() {
+        let bet = Bet(status: .resolved, resolution: .yes, stakes: [
+            BetStake(playerID: "c", side: .yes, points: 50), BetStake(playerID: "a", side: .yes, points: 50),
+            BetStake(playerID: "b", side: .yes, points: 50), BetStake(playerID: "x", side: .no, points: 100),
+        ])
+        #expect(Bets.payouts(bet) == ["a": 34, "b": 33, "c": 33, "x": -100])
+        #expect(Bets.net(for: "a", in: [bet]) == 34)
+        // To desimaler: 33,34 / 33,33 / 33,33.
+        #expect(Bets.payouts(bet, rules: Self.pwa) == ["a": 33.34, "b": 33.33, "c": 33.33, "x": -100])
+        // Overføringene rundes hver for seg, som veddemaalPoster.
+        #expect(Bets.transfers(bet).map(\.points) == [33, 33, 33])
+    }
+
+    /// For mye etter avrundingen: 60/30/10 mot 55 gir 33 + 16,5 + 5,5. floor(x + 0.5) gir 33, 17
+    /// og 6 = 56, og poenget for mye tas fra største innsats.
+    @Test func helePoengTarOverskuddetFraStorsteInnsats() {
+        let bet = Bet(status: .resolved, resolution: .no, stakes: [
+            BetStake(playerID: "b", side: .no, points: 30), BetStake(playerID: "a", side: .no, points: 60),
+            BetStake(playerID: "c", side: .no, points: 10), BetStake(playerID: "x", side: .yes, points: 55),
+        ])
+        #expect(Bets.payouts(bet) == ["a": 32, "b": 17, "c": 6, "x": -55])
+        // Flere innsatser fra samme spiller summeres før avrundingen.
+        let delt = Bet(status: .resolved, resolution: .no, stakes: [
+            BetStake(playerID: "a", side: .no, points: 20), BetStake(playerID: "b", side: .no, points: 30),
+            BetStake(playerID: "a", side: .no, points: 40), BetStake(playerID: "c", side: .no, points: 10),
+            BetStake(playerID: "x", side: .yes, points: 55),
+        ])
+        #expect(Bets.payouts(delt) == Bets.payouts(bet))
+    }
+
+    /// Nord og sør: over mange veddemål (deterministisk generert) er hvert oppgjør hele poeng,
+    /// summen i hvert veddemål er null, hver gevinst er høyst halvannet poeng fra den eksakte, og
+    /// summen av netto over alle spillere i sesongen er null.
+    @Test func helePoengSkaperEllerFjernerIngenPoeng() {
+        var seed: UInt64 = 0x9E37_79B9_7F4A_7C15
+        func next(_ n: Int) -> Int {
+            seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+            return Int((seed >> 33) % UInt64(n))
+        }
+        let players = (0..<9).map { "p\($0)" }
+        var bets: [Bet] = []
+        for i in 0..<400 {
+            var stakes: [BetStake] = []
+            for p in players where next(3) > 0 {
+                stakes.append(BetStake(playerID: p, side: next(2) == 0 ? .yes : .no, points: Double(1 + next(200))))
+            }
+            let status: Bet.Status = i % 10 == 0 ? .void : .resolved
+            bets.append(Bet(id: "\(i)", status: status, resolution: status == .resolved ? (next(2) == 0 ? .yes : .no) : nil,
+                            stakes: stakes))
+        }
+        for bet in bets {
+            let p = Bets.payouts(bet)
+            #expect(p.values.allSatisfy { $0 == $0.rounded() }, "\(bet.id ?? "")")
+            #expect(p.values.reduce(0, +) == 0, "\(bet.id ?? "")")
+            guard let res = bet.resolution, !p.isEmpty else { continue }
+            let win = bet.pool(res), lose = bet.pool(res.opposite)
+            for (pid, x) in p where x >= 0 {
+                let exact = bet.position(of: pid)!.points * lose / win
+                #expect(abs(x - exact) <= 1.5, "\(bet.id ?? ""): \(pid)")
+            }
+        }
+        #expect(players.reduce(0) { $0 + Bets.net(for: $1, in: bets) } == 0)
+        let tabell = Bets.table(players: players.map { Player(id: $0, name: $0) }, bets: bets)
+        #expect(tabell.reduce(0) { $0 + ($1.balance ?? 0) } == Double(1000 * players.count))
+    }
+
+    /// Delt hull: ukjent for PWA-en (arrangøren tar det), annullert av feiingen i Golfgutu-malen.
+    @Test func deltHullAnnulleresAutomatisk() {
+        let course = Course(id: "b", par: 36, courseRating: 36, slopeRating: 113,
+                            holes: [4, 4, 3, 4, 5, 3, 4, 4, 5].enumerated().map { CourseHole(par: $0.element, si: $0.offset + 1) })
+        var round = Round(id: "r1", holeCount: 9, course: course, hcpAllowance: 1, hcpExtern: true)
+        let duell = Bet(id: "d", condition: BetCondition(kind: .hole, round: "r1", hole: 2, a: "a", b: "b"))
+        round.holeScores = ["a": [0: 4, 1: 4, 2: 3], "b": [0: 5, 1: 4]]
+        #expect(Bets.verdict(round, condition: duell.condition!, roster: []) == nil)
+        round.holeScores["b"]![2] = 3
+        #expect(Bets.outcome(round, condition: duell.condition!, roster: []) == nil)
+        #expect(Bets.verdict(round, condition: duell.condition!, roster: []) == .void)
+        #expect(Bets.verdict(round, condition: duell.condition!, roster: [], rules: Self.pwa) == nil)
+        #expect(Bets.sweep([duell], round: round, hole: 2, roster: []) == [BetUpdate(betID: "d", close: true, verdict: .void)])
+        #expect(Bets.sweep([duell], round: round, hole: 2, roster: [], rules: Self.pwa)
+                == [BetUpdate(betID: "d", close: true, outcome: nil)])
+        // Ikke delt: avgjøres som før.
+        round.holeScores["b"]![2] = 4
+        #expect(Bets.verdict(round, condition: duell.condition!, roster: []) == .yes)
+        #expect(Bets.sweep([duell], round: round, hole: 2, roster: []).first?.outcome == .yes)
+    }
+
+    /// Den som avgjør, vedder ikke: arrangøren med innsats kan ikke avgjøre for hånd.
+    @Test func arrangorenMedInnsatsAvgjorIkke() {
+        let bet = Bet(stakes: [BetStake(playerID: "arr", side: .yes, points: 50), BetStake(playerID: "b", side: .no, points: 50)])
+        #expect(!Bets.canResolve(bet, by: "arr"))
+        #expect(Bets.canResolve(bet, by: "arr2"))
+        #expect(!Bets.canResolve(Bet(status: .void), by: "arr2"))
+        #expect(!Bets.canResolve(Bet(status: .resolved, resolution: .yes), by: "arr2"))
     }
 }
