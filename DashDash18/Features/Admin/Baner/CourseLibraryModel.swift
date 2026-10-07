@@ -12,7 +12,8 @@ final class CourseLibraryModel {
     private(set) var hasLoaded = false
     var error: DataError?
 
-    private let context: ClubContext
+    /// nil bare i skjermprøvene (`init(preview:)`): da går ingenting til nettet.
+    private let context: ClubContext?
     private let courseSet: GolfgutuCourseSet?
 
     init(context: ClubContext, courseSet: GolfgutuCourseSet? = try? GolfgutuCourseSet.load()) {
@@ -20,7 +21,21 @@ final class CourseLibraryModel {
         self.courseSet = courseSet
     }
 
-    private var client: SupabaseClient { context.client }
+    #if DEBUG
+    /// Skjermprøve med oppdiktede baner, uten nett.
+    init(preview items: [CourseListItem]) {
+        context = nil
+        courseSet = nil
+        self.items = CourseListItem.sorted(items)
+        hasLoaded = true
+    }
+    #endif
+
+    /// Klienten og klubben, eller `.notAllowed` i en skjermprøve.
+    private func connection() throws(DataError) -> (client: SupabaseClient, clubID: UUID) {
+        guard let context else { throw .notAllowed }
+        return (context.client, context.clubID)
+    }
 
     static let courseColumns = "id, club_id, name, external_name, course_rating, slope_rating, in_use, confirmed_by, confirmed_at"
 
@@ -30,13 +45,15 @@ final class CourseLibraryModel {
     }
 
     func load() async {
+        guard let connection = try? connection() else { return }
+        let (client, clubID) = connection
         isLoading = true
         defer { isLoading = false }
         do {
             let courses: [CourseRow] = try await client
                 .from("courses")
                 .select(Self.courseColumns)
-                .eq("club_id", value: context.clubID)
+                .eq("club_id", value: clubID)
                 .execute()
                 .value
             var holes: [CourseHoleRecord] = []
@@ -48,7 +65,8 @@ final class CourseLibraryModel {
                     .execute()
                     .value
             }
-            items = CourseListItem.make(courses: courses, holes: holes)
+            let kinds = try await loadKinds(client: client, clubID: clubID)
+            items = CourseListItem.make(courses: courses, holes: holes, kinds: kinds)
             hasLoaded = true
             error = nil
         } catch {
@@ -103,8 +121,9 @@ final class CourseLibraryModel {
             }
         }
         do {
+            let (client, clubID) = try connection()
             let params = Params(
-                p_club_id: context.clubID,
+                p_club_id: clubID,
                 p_course_id: id,
                 p_name: values.name,
                 p_external_name: values.externalName,
@@ -117,6 +136,7 @@ final class CourseLibraryModel {
                 }
             )
             let savedID: UUID = try await client.rpc("save_course", params: params).execute().value
+            try await saveKind(values.kind, id: savedID, client: client)
             let item = try await fetchItem(savedID)
             guard item.holes.count == values.holes.count else { throw DataError.notAllowed }
             replace(item)
@@ -130,6 +150,7 @@ final class CourseLibraryModel {
     func confirm(_ item: CourseListItem) async throws(DataError) {
         struct Params: Encodable { let p_course_id: UUID }
         do {
+            let (client, _) = try connection()
             _ = try await client.rpc("confirm_course", params: Params(p_course_id: item.id)).execute()
             replace(try await fetchItem(item.id))
         } catch {
@@ -139,6 +160,7 @@ final class CourseLibraryModel {
 
     /// Leser én bane med hull, slik den ligger på serveren.
     private func fetchItem(_ id: UUID) async throws -> CourseListItem {
+        let (client, clubID) = try connection()
         let course: CourseRow = try await client
             .from("courses")
             .select(Self.courseColumns)
@@ -152,13 +174,37 @@ final class CourseLibraryModel {
             .eq("course_id", value: id)
             .execute()
             .value
-        return CourseListItem(course: course, holes: holes)
+        let kinds = try await loadKinds(client: client, clubID: clubID, courseID: id)
+        return CourseListItem(course: course, holes: holes, storedKind: kinds[id])
+    }
+
+    // MARK: Banetype (sql/016)
+
+    /// `courses.kind` per bane. Tom så lenge `CourseKindFeature` er av (kolonnen finnes ikke før 016).
+    private func loadKinds(client: SupabaseClient, clubID: UUID, courseID: UUID? = nil) async throws -> [UUID: CourseKind] {
+        guard CourseKindFeature.isEnabled else { return [:] }
+        struct Row: Decodable { let id: UUID; let kind: CourseKind }
+        var query = client.from("courses").select("id, kind").eq("club_id", value: clubID)
+        if let courseID { query = query.eq("id", value: courseID) }
+        let rows: [Row] = try await query.execute().value
+        return Dictionary(rows.map { ($0.id, $0.kind) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Skriver typen etter `save_course` (som ikke kjenner den). Sjekker at raden kom tilbake.
+    private func saveKind(_ kind: CourseKind, id: UUID, client: SupabaseClient) async throws {
+        guard CourseKindFeature.isEnabled else { return }
+        struct Patch: Encodable { let kind: CourseKind }
+        struct Updated: Decodable { let id: UUID }
+        let rows: [Updated] = try await client.from("courses").update(Patch(kind: kind))
+            .eq("id", value: id).select("id").execute().value
+        guard !rows.isEmpty else { throw DataError.notAllowed }
     }
 
     /// Sletter banen og hullene (cascade). Databasen stopper det når runder bruker banen.
     func delete(_ item: CourseListItem) async throws(DataError) {
         struct Deleted: Decodable { let id: UUID }
         do {
+            let (client, _) = try connection()
             let deleted: [Deleted] = try await client
                 .from("courses")
                 .delete()

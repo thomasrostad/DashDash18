@@ -24,6 +24,8 @@ nonisolated struct CourseDraft: Equatable, Sendable {
     var courseRatingText: String = ""
     var slopeText: String = ""
     var inUse: Bool = true
+    /// Simulator eller ekte bane. Lagres bare når `CourseKindFeature.isEnabled` (sql/016).
+    var kind: CourseKind = .simulator
     var holes: [HoleDraft]
 
     /// Hvor mange hull en bane kan ha (`baneErKlar`).
@@ -35,8 +37,9 @@ nonisolated struct CourseDraft: Equatable, Sendable {
     }
 
     /// Fra lagrede rader. Hull som mangler i databasen blir tomme.
-    init(course: CourseRow, holes rows: [CourseHoleRecord]) {
+    init(course: CourseRow, holes rows: [CourseHoleRecord], kind: CourseKind = .simulator) {
         name = course.name
+        self.kind = kind
         externalName = course.externalName ?? ""
         courseRatingText = course.courseRating.map(CourseInput.decimalText) ?? ""
         slopeText = course.slopeRating.map(String.init) ?? ""
@@ -69,6 +72,36 @@ nonisolated struct CourseDraft: Equatable, Sendable {
     /// Summen av parene som er skrevet inn, eller nil hvis noen mangler.
     var par: Int? { CourseMath.par(holes.map(\.par)) }
 
+    /// «Klar» eller hva som mangler, slik banen blir hvis den lagres nå.
+    var readiness: CourseReadiness { CourseReadiness(pars: holes.map(\.par)) }
+
+    /// Navnet i simulatoren gjelder bare simulatorbaner.
+    var usesExternalName: Bool { kind == .simulator }
+
+    /// Hullene som ikke har par ennå.
+    var holesMissingPar: [Int] { holes.filter { $0.par == nil }.map(\.number) }
+
+    /// Standardbanen (`DEFAULT_PAR`, par 72 over 18 hull, par 36 over 9) for antall hull.
+    var standardPars: [Int] { Array(Course.defaultPar.prefix(holes.count)) }
+
+    /// Summen av standardparene, til knappen «Fyll standard par 72».
+    var standardPar: Int { standardPars.reduce(0, +) }
+
+    /// Et forslag arrangøren ber om selv: fyller hullene uten par med standardbanen.
+    /// Par som alt er skrevet inn, røres ikke. Appen gjetter ellers aldri par (`baneSkjema`).
+    mutating func fillStandardPar() {
+        let pars = standardPars
+        for i in holes.indices where holes[i].par == nil && pars.indices.contains(i) {
+            holes[i].par = pars[i]
+        }
+    }
+
+    /// Hurtigknappen for par: trykk på valgt par igjen tømmer hullet.
+    mutating func tapPar(_ par: Int, hole number: Int) {
+        guard let i = holes.firstIndex(where: { $0.number == number }) else { return }
+        holes[i].par = holes[i].par == par ? nil : par
+    }
+
     /// Sjekker skjemaet. Gir banen klar til lagring når ingen feil sperrer.
     func validate() -> CourseValidation {
         var issues: [CourseIssue] = []
@@ -79,7 +112,7 @@ nonisolated struct CourseDraft: Equatable, Sendable {
         } else if trimmedName.count > CourseInput.maxNameLength {
             issues.append(.nameTooLong)
         }
-        let trimmedExternal = externalName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedExternal = usesExternalName ? externalName.trimmingCharacters(in: .whitespacesAndNewlines) : ""
         if trimmedExternal.count > CourseInput.maxNameLength {
             issues.append(.externalNameTooLong)
         }
@@ -186,7 +219,8 @@ nonisolated struct CourseDraft: Equatable, Sendable {
             courseRating: courseRating,
             slopeRating: slope,
             inUse: inUse,
-            holes: noParAtAll ? [] : validHoles
+            holes: noParAtAll ? [] : validHoles,
+            kind: kind
         )
         return CourseValidation(issues: issues, values: input)
     }
@@ -212,6 +246,7 @@ nonisolated struct CourseInputValues: Equatable, Sendable {
     var slopeRating: Int?
     var inUse: Bool
     var holes: [CourseHoleInput]
+    var kind: CourseKind = .simulator
 
     /// GolfgutuCore-banen, for `baneErKlar` og lengdesjekken.
     var coreCourse: Course {
