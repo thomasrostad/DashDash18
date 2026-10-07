@@ -316,6 +316,29 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 ---
 
+### Fase 11 – Enklere arrangøroppsett
+
+**Mål:** En arrangør setter opp kvelden på under ett minutt uten å lure på noe. Tilbakemelding 07.10: start, bane og simulator/ekte bane er ikke intuitivt.
+
+Besluttet 07.10.2026 (deg):
+- **Hurtigstart** for «Ny runde»: én skjerm med *Hvor spiller dere?* (Simulator / Ekte bane), bane, start (hull og antall), tid og spillere. Alt annet tar standard fra regelsettet. «Flere valg» åpner matcher, LD/KP, vekt, lag og handicap ved behov.
+- **Simulator / ekte bane** er et eget valg. På ekte bane heter gruppene **flight** i stedet for **bås**. Ellers samme regler.
+- Alle fire delene skal gjennomgås: Ny runde/oppsett, Banene, Sesong og regler, og Arrangørsiden som helhet.
+
+- [ ] Arrangørsiden: ny struktur med «I kveld» øverst (neste kveld, påmeldte, start runden) og sjeldnere ting under.
+- [ ] Hurtigstart for ny runde med forslag ferdig utfylt (bane og oppsett fra forrige kveld, båser fra påmeldte).
+- [ ] Simulator / ekte bane som valg på runden (lagres), med bås ↔ flight i hele appen. Krever trolig SQL (til godkjenning).
+- [ ] Banene: enklere å legge inn og forstå «klar», tydelig skille mellom simulatorbane og ekte bane.
+- [ ] Sesong og regler: Golfgutu-oppsettet som standard, endringer i klart språk, avanserte valg skjult.
+
+**Ferdig når:**
+- Du setter opp en vanlig kveld med tre trykk etter at påmeldingen er klar.
+- En ny arrangør klarer det uten hjelp.
+
+**Anslag:** 4–6 økter.
+
+---
+
 **Totalt:** ca. 76–111 økter. Usikkerheten er størst i fase 2 (paritet), 5 (offline) og 9 (import).
 
 Etter v1: Android (B13), Apple Watch, GPS.
