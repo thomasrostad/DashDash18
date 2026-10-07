@@ -257,6 +257,22 @@ nonisolated enum BetTexts {
         }
     }
 
+    /// Det du har å gå på, vist før du satser: «Du har 900 ledige poeng · maks 200 per veddemål».
+    /// Har du alt satset på veddemålet, står det hvor mye som er igjen under taket. Uten
+    /// poengbank (`available` nil) bare taket.
+    static func stakeHint(available: Double?, maxStake: Int, already: Double) -> String {
+        var parts: [String] = []
+        if let available { parts.append("Du har \(points(max(0, available))) ledige poeng") }
+        if already > 0 {
+            let room = max(0, Double(maxStake) - already)
+            parts.append("\(points(room)) til kan settes her (maks \(maxStake))")
+        } else {
+            parts.append("maks \(maxStake) per veddemål")
+        }
+        let text = parts.joined(separator: " · ")
+        return text.prefix(1).uppercased() + text.dropFirst()
+    }
+
     /// Den som avgjør, vedder ikke (besluttet 07.10.2026). Samme ordlyd som `resolve_bet`.
     static let resolverHasStake = "Du har satset på dette veddemålet og kan ikke avgjøre det. En annen arrangør må gjøre det."
 
@@ -277,4 +293,33 @@ nonisolated enum BetTexts {
         if r < 0 { return "−" + points(-r) }
         return "0"
     }
+}
+
+// MARK: - Feilene fra RPC-ene
+
+/// Feilmeldingene fra `create_bet`, `place_bet_stake` og `resolve_bet` (`sql/012_veddemaal.sql`)
+/// slik spilleren skal lese dem. De fleste er alt norske og står som de er; her rettes de som er
+/// tekniske, og de som ellers ville blitt «Du har ikke tilgang til dette.» (42501).
+nonisolated enum BetErrors {
+    /// Teksten som skal vises, eller nil når den vanlige oversettingen (`DataError`) holder.
+    static func text(sqlState: String?, message: String) -> String? {
+        let m = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let fixed = replacements[m] { return fixed }
+        // «Maks 200 poeng per veddemål. Du har 0 på det fra før.»: nullen sier ingenting.
+        let none = " Du har 0 på det fra før."
+        if m.hasSuffix(none) { return String(m.dropLast(none.count)) }
+        // Tilgangsfeilene fra RPC-ene sier hva som mangler. RLS-feil (engelsk) får den vanlige teksten.
+        if sqlState == "42501", ownAccessMessages.contains(where: m.hasPrefix) { return m }
+        return nil
+    }
+
+    private static let replacements: [String: String] = [
+        "Runden er låst": "Runden er ferdig, så den kan ikke veddes på lenger.",
+        "Veddemålet tar ikke imot innsatser nå: utfallet har begynt å bli kjent":
+            "Veddemålet er stengt: utfallet har begynt å bli kjent.",
+        "Utfallet må være yes, no eller void": "Velg JA, NEI eller annuller.",
+        "Veddemålet er alt avgjort": "Veddemålet er alt avgjort. Lista er hentet på nytt.",
+    ]
+
+    private static let ownAccessMessages = ["Du må være logget inn", "Du er ikke aktivt medlem", "Bare arrangøren"]
 }

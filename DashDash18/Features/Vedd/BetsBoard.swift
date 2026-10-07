@@ -156,6 +156,16 @@ nonisolated struct BetsBoard: Sendable {
     /// Din rad i poengtabellen.
     var myRow: BetTableRow? { table.first { $0.isMe }?.row }
 
+    /// Det du kan sette nå (saldo minus det som står ute). Nil uten poengbank.
+    var available: Double? {
+        Bets.available(for: BetMapping.key(me), in: (challenged + mine + others + settled).map(\.bet), rules: rules)
+    }
+
+    /// Ledige poeng og taket, vist før du satser. `already` er det du har på veddemålet fra før.
+    func stakeHint(already: Double = 0) -> String {
+        BetTexts.stakeHint(available: available, maxStake: rules.bets.maxStakePerBet, already: already)
+    }
+
     func item(_ id: UUID) -> Item? {
         (challenged + mine + others + settled).first { $0.id == id }
     }
