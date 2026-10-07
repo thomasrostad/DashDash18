@@ -219,13 +219,20 @@ enum CompetitionQueries {
 
     // MARK: Invitasjon (private konkurranser)
 
-    /// Koden til konkurransen (`competition_invite`): den som finnes, eller en ny.
-    static func invite(client: SupabaseClient, competitionID: UUID) async throws -> InviteCode {
-        struct Params: Encodable { let p_competition_id: UUID }
+    /// Koden til konkurransen (`competition_invite`): den som gjelder. Bare eieren lager en ny når
+    /// den mangler, og fornyer (`renew`: ny kode, den gamle slutter å virke).
+    static func invite(client: SupabaseClient, competitionID: UUID, renew: Bool = false) async throws -> InviteCode {
+        struct Params: Encodable { let p_competition_id: UUID; let p_renew: Bool }
         let invite: LooseRoundQueries.Invite = try await client
-            .rpc("competition_invite", params: Params(p_competition_id: competitionID)).execute().value
+            .rpc("competition_invite", params: Params(p_competition_id: competitionID, p_renew: renew)).execute().value
         guard let code = InviteCode(invite.code) else { throw DataError.invalid("Serveren ga en ugyldig kode.") }
         return code
+    }
+
+    /// Eieren trekker koden tilbake (`revoke_competition_invite`). De påmeldte er fortsatt med.
+    static func revokeInvite(client: SupabaseClient, competitionID: UUID) async throws {
+        struct Params: Encodable { let p_competition_id: UUID }
+        _ = try await client.rpc("revoke_competition_invite", params: Params(p_competition_id: competitionID)).execute()
     }
 
     static func invitePreview(client: SupabaseClient, code: InviteCode) async throws -> CompetitionInvitePreview {

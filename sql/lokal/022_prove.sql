@@ -340,6 +340,7 @@ select pg_temp.feil($$select public.draw_cup(gen_random_uuid(), '[]')$$, '42501'
 select pg_temp.feil($$select public.record_cup_result(gen_random_uuid(), 1, 0, null)$$, '42501');
 select pg_temp.feil($$select * from public.competition_invites$$, '42501');
 select pg_temp.feil($$select public.competition_invite(gen_random_uuid())$$, '42501');
+select pg_temp.feil($$select public.revoke_competition_invite(gen_random_uuid())$$, '42501');
 select pg_temp.feil($$select public.competition_invite_preview('ABCDEFGH23')$$, '42501');
 select pg_temp.feil($$select public.claim_competition_invite('ABCDEFGH23')$$, '42501');
 reset role;
@@ -351,6 +352,7 @@ select pg_temp.feil($$select public.join_competition(gen_random_uuid())$$, '4250
 select pg_temp.feil($$select public.set_round_competitions(gen_random_uuid(), '{}')$$, '42501');
 select pg_temp.feil($$select public.record_cup_result(gen_random_uuid(), 1, 0, null)$$, '42501');
 select pg_temp.feil($$select public.competition_invite(gen_random_uuid())$$, '42501');
+select pg_temp.feil($$select public.revoke_competition_invite(gen_random_uuid())$$, '42501');
 select pg_temp.feil($$select public.competition_invite_preview('ABCDEFGH23')$$, '42501');
 select pg_temp.feil($$select public.claim_competition_invite('ABCDEFGH23')$$, '42501');
 reset role;
@@ -416,9 +418,48 @@ select pg_temp.som(:'u4'); set role authenticated;
 select pg_temp.feil(format($$select public.competition_invite_preview(%L)$$, :'kode'), 'P0002');
 select pg_temp.feil(format($$select public.claim_competition_invite(%L)$$, :'kode'), 'P0002');
 reset role;
+-- Bare eieren lager en ny (sikkerhetsrevisjonen).
+select pg_temp.som(:'u9'); set role authenticated;
+select pg_temp.feil(format($$select public.competition_invite(%L)$$, :'venn'), '55000');
+reset role;
 select pg_temp.som(:'u2'); set role authenticated;
 select public.competition_invite(:'venn') ->> 'code' as kode2 \gset
-select pg_temp.lik(:'kode2' <> :'kode', true, 'ny kode når den gamle har gått ut');
+select pg_temp.lik(:'kode2' <> :'kode', true, 'eieren får ny kode når den gamle har gått ut');
+reset role;
+
+-- Fornye og trekke tilbake: bare eieren. De påmeldte deler koden som gjelder.
+select pg_temp.som(:'u1'); set role authenticated;
+select pg_temp.lik(public.competition_invite(:'venn') ->> 'code', :'kode2', 'Thomas (påmeldt) får koden som gjelder');
+select pg_temp.feil(format($$select public.competition_invite(%L, true)$$, :'venn'), '42501');
+select pg_temp.feil(format($$select public.revoke_competition_invite(%L)$$, :'venn'), '42501');
+reset role;
+select pg_temp.som(:'u9'); set role authenticated;
+select pg_temp.feil(format($$select public.revoke_competition_invite(%L)$$, :'venn'), '42501');
+reset role;
+select pg_temp.som(:'u4'); set role authenticated;
+select pg_temp.feil(format($$select public.revoke_competition_invite(%L)$$, :'venn'), 'P0002');
+reset role;
+select pg_temp.som(:'u2'); set role authenticated;
+select pg_temp.lik(public.revoke_competition_invite(:'venn'), true, 'Anders trekker koden tilbake');
+select pg_temp.lik(public.revoke_competition_invite(:'venn'), false, 'igjen: ingen kode å trekke tilbake');
+reset role;
+select pg_temp.som(:'u4'); set role authenticated;
+select pg_temp.feil(format($$select public.competition_invite_preview(%L)$$, :'kode2'), 'P0002');
+select pg_temp.feil(format($$select public.claim_competition_invite(%L)$$, :'kode2'), 'P0002');
+reset role;
+select pg_temp.som(:'u1'); set role authenticated;
+select pg_temp.feil(format($$select public.competition_invite(%L)$$, :'venn'), '55000');
+select pg_temp.lik((select count(*) from public.competition_participants where competition_id = :'venn' and status = 'active'),
+                   4::bigint, 'de påmeldte er fortsatt med etter at koden er trukket tilbake');
+reset role;
+select pg_temp.som(:'u2'); set role authenticated;
+select public.competition_invite(:'venn', true) ->> 'code' as kode3 \gset
+select public.competition_invite(:'venn', true) ->> 'code' as kode2 \gset
+select pg_temp.lik(:'kode2' <> :'kode3', true, 'eieren fornyer: ny kode');
+reset role;
+select pg_temp.som(:'u4'); set role authenticated;
+select pg_temp.feil(format($$select public.competition_invite_preview(%L)$$, :'kode3'), 'P0002');
+select pg_temp.lik(public.competition_invite_preview(:'kode2') ->> 'name', 'Vennecupen', 'den nye koden virker, den gamle ikke');
 reset role;
 
 -- Trekning: Anders – Thomas og Hanne – Bjørn. Da tar cupen ingen nye.

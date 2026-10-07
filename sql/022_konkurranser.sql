@@ -34,14 +34,16 @@
 --   * competition_invites: én kode per privat konkurranse (10 tegn Crockford
 --     base32 = 50 bit, utløper etter 7 dager, samme form og kodefunksjoner
 --     som round_invites i 018). Lenken er dashdash://konkurranse/<KODE>.
---     Bare eieren og de påmeldte ser koden.
+--     Bare eieren og de påmeldte ser koden; bare eieren lager, fornyer og
+--     trekker den tilbake.
 --   * RPC-er (hver i én transaksjon):
 --       create_competition_with_entrants  ny konkurranse med påmeldte
 --       join_competition / leave_competition  meld meg på / av
 --       set_round_competitions  «Teller også i …» for en runde
 --       draw_cup  trekningen (første runde), på nytt til første resultat
 --       record_cup_result  vinneren av en kamp (eller fjerne den)
---       competition_invite  koden til en privat konkurranse
+--       competition_invite  koden til en privat konkurranse (eieren fornyer)
+--       revoke_competition_invite  eieren trekker koden tilbake
 --       competition_invite_preview  navn, type, eier og antall påmeldte
 --       claim_competition_invite  «Bli med»: melder deg på
 --   * Ingen regelverdier i SQL. Ligaens poeng, beste N, seeding og regelen
@@ -64,7 +66,9 @@
 --     gjelder: en spiller som fører etter at resultatet står, avvises (55000),
 --     og bare arrangøren / eieren kan endre eller fjerne det.
 --   * Invitasjon: bare private konkurranser (uten klubb). Eieren og de
---     påmeldte henter koden. Den som har koden, ser navn, type, eier og antall
+--     påmeldte henter koden som gjelder; bare eieren lager, fornyer og trekker
+--     den tilbake (sikkerhetsrevisjonen 07.10.2026). Den som har koden, ser
+--     navn, type, eier og antall
 --     påmeldte, og kan melde seg på. Koden gjelder ikke når konkurransen er
 --     ferdig, og en trukket cup tar ingen nye.
 --
@@ -750,20 +754,27 @@ grant select on table public.competition_invites to authenticated;
 
 
 -- --- competition_invite: koden til konkurransen ---------------------------------
--- Eieren eller en påmeldt. Bare private liga-, cup- og morroturneringer som
--- ikke er ferdige, og ikke en trukket cup. Gir koden som finnes, eller lager
--- en ny når den mangler eller har gått ut. Returnerer {competition_id, code,
--- expires_at}.
-create or replace function public.competition_invite(p_competition_id uuid)
+-- Bare private liga-, cup- og morroturneringer som ikke er ferdige, og ikke en
+-- trukket cup. Returnerer {competition_id, code, expires_at}.
+--   * De påmeldte får koden som gjelder, så de kan dele den videre. Finnes
+--     ingen gyldig kode, svarer den 55000 (be eieren lage en ny).
+--   * Bare eieren lager, fornyer (p_renew = true: ny kode, den gamle slutter
+--     å virke) eller trekker tilbake koden (revoke_competition_invite).
+--     Sikkerhetsrevisjonen 07.10.2026: en påmeldt skal ikke kunne fornye en
+--     kode eieren har trukket tilbake.
+-- (Første utkast hadde bare p_competition_id; den gamle signaturen fjernes.)
+drop function if exists public.competition_invite(uuid);
+create or replace function public.competition_invite(p_competition_id uuid, p_renew boolean default false)
 returns jsonb
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
-  v_c    public.competitions;
-  v_row  public.competition_invites%rowtype;
-  v_try  integer := 0;
+  v_c      public.competitions;
+  v_admin  boolean;
+  v_row    public.competition_invites%rowtype;
+  v_try    integer := 0;
 begin
   if auth.uid() is null then
     raise exception 'Du må være logget inn' using errcode = '42501';
@@ -776,8 +787,12 @@ begin
   if v_c.club_id is not null then
     raise exception 'Klubbens konkurranser deles i klubben, ikke med kode' using errcode = '22023';
   end if;
-  if not (public.is_competition_admin(v_c.id) or public.is_competition_participant(v_c.id)) then
+  v_admin := public.is_competition_admin(v_c.id);
+  if not (v_admin or public.is_competition_participant(v_c.id)) then
     raise exception 'Fant ikke konkurransen' using errcode = 'P0002';
+  end if;
+  if coalesce(p_renew, false) and not v_admin then
+    raise exception 'Bare eieren kan lage en ny kode' using errcode = '42501';
   end if;
   if v_c.kind not in ('league', 'cup', 'fun') then
     raise exception 'Bare en liga, cup eller morroturnering kan deles med kode' using errcode = '22023';
@@ -789,13 +804,15 @@ begin
     raise exception 'Cupen er trukket. Ingen nye kan bli med.' using errcode = '55000';
   end if;
 
-  perform public.ensure_profile();
-
   select * into v_row from public.competition_invites i where i.competition_id = v_c.id;
-  if found and v_row.expires_at > now() then
+  if found and v_row.expires_at > now() and not coalesce(p_renew, false) then
     return jsonb_build_object('competition_id', v_row.competition_id, 'code', v_row.code, 'expires_at', v_row.expires_at);
   end if;
+  if not v_admin then
+    raise exception 'Ingen gyldig kode. Be eieren lage en ny.' using errcode = '55000';
+  end if;
 
+  perform public.ensure_profile();
   loop
     v_try := v_try + 1;
     begin
@@ -817,8 +834,40 @@ begin
   return jsonb_build_object('competition_id', v_row.competition_id, 'code', v_row.code, 'expires_at', v_row.expires_at);
 end;
 $$;
-revoke all on function public.competition_invite(uuid) from public, anon;
-grant execute on function public.competition_invite(uuid) to authenticated;
+revoke all on function public.competition_invite(uuid, boolean) from public, anon;
+grant execute on function public.competition_invite(uuid, boolean) to authenticated;
+
+
+-- --- revoke_competition_invite: trekk tilbake koden ------------------------------
+-- Bare eieren. Koden slettes og slutter å virke med én gang (lenker og QR som
+-- er delt). De som alt er påmeldt, er fortsatt med. Gir true når det fantes en
+-- kode.
+create or replace function public.revoke_competition_invite(p_competition_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_n integer;
+begin
+  if auth.uid() is null then
+    raise exception 'Du må være logget inn' using errcode = '42501';
+  end if;
+  if not exists (select 1 from public.competitions c where c.id = p_competition_id)
+     or not public.can_read_competition(p_competition_id) then
+    raise exception 'Fant ikke konkurransen' using errcode = 'P0002';
+  end if;
+  if not public.is_competition_admin(p_competition_id) then
+    raise exception 'Bare eieren kan trekke tilbake koden' using errcode = '42501';
+  end if;
+  delete from public.competition_invites i where i.competition_id = p_competition_id;
+  get diagnostics v_n = row_count;
+  return v_n > 0;
+end;
+$$;
+revoke all on function public.revoke_competition_invite(uuid) from public, anon;
+grant execute on function public.revoke_competition_invite(uuid) to authenticated;
 
 
 -- --- competition_invite_preview: hva du blir med i -------------------------------
@@ -957,7 +1006,8 @@ commit;
 --   where n.nspname = 'public'
 --     and p.proname in ('competition_round_entrants', 'create_competition_with_entrants', 'join_competition',
 --                       'leave_competition', 'set_round_competitions', 'draw_cup', 'record_cup_result',
---                       'competition_invite', 'competition_invite_preview', 'claim_competition_invite')
+--                       'competition_invite', 'competition_invite_preview', 'claim_competition_invite',
+--                       'revoke_competition_invite')
 -- )
 -- select 1 as nr, 'competitions.signup_open finnes (av som standard)' as sjekk,
 --        exists (select 1 from information_schema.columns
@@ -980,11 +1030,11 @@ commit;
 --                        where table_schema = 'public' and table_name = 'competition_matches'
 --                          and grantee in ('anon', 'PUBLIC'))
 -- union all
--- select 5, 'Alle ti funksjonene finnes', (select count(*) = 10 from f)
+-- select 5, 'Alle elleve funksjonene finnes (competition_invite bare med (uuid, boolean))', (select count(*) = 11 from f)
 -- union all
 -- select 6, 'anon kan ikke kjøre noen av dem', not exists (select 1 from f where anon_kan)
 -- union all
--- select 7, 'authenticated kan kjøre de ni RPC-ene, ikke den indre hjelperen',
+-- select 7, 'authenticated kan kjøre de ti RPC-ene, ikke den indre hjelperen',
 --        (select bool_and(auth_kan = (proname <> 'competition_round_entrants')) from f)
 -- union all
 -- select 8, 'Kampene peker på påmeldte i samme konkurranse',
@@ -1040,7 +1090,8 @@ commit;
 -- begin;
 -- drop function if exists public.claim_competition_invite(text);
 -- drop function if exists public.competition_invite_preview(text);
--- drop function if exists public.competition_invite(uuid);
+-- drop function if exists public.revoke_competition_invite(uuid);
+-- drop function if exists public.competition_invite(uuid, boolean);
 -- drop table if exists public.competition_invites;
 -- drop function if exists public.record_cup_result(uuid, integer, integer, uuid, boolean, text, uuid);
 -- drop function if exists public.draw_cup(uuid, jsonb);

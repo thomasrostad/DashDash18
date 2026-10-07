@@ -632,6 +632,35 @@ nonisolated private struct FakePurchaseBackend: PurchaseBackend {
         #expect(claim.joined == .rejoined && claim.competitionID == p.competitionID)
     }
 
+    /// Sikkerhetsrevisjonen: bare eieren fornyer og trekker tilbake koden. De påmeldte får bare
+    /// koden som gjelder.
+    @Test func eierenFornyerOgTrekkerTilbake() async throws {
+        let first = try #require(InviteCode("ABCDEFGH23"))
+        let second = try #require(InviteCode("ZYXWVTSRQ9"))
+        let target = InviteTarget.competition(name: "Vennecupen")
+        let participant = InviteModel(target: target) { first }
+        await participant.load()
+        #expect(participant.code == first && participant.manage == nil)
+        await participant.revoke()
+        #expect(participant.code == first && !participant.isRevoked)
+
+        let owner = InviteModel(target: target, manage: .init(renew: { second }, revoke: {})) { first }
+        await owner.load()
+        await owner.revoke()
+        #expect(owner.code == nil && owner.isRevoked)
+        // Etter tilbaketrekking hentes ingen kode av seg selv.
+        await owner.load()
+        #expect(owner.code == nil)
+        await owner.renew()
+        #expect(owner.code == second && !owner.isRevoked)
+
+        let refused = InviteModel(target: target, manage: .init(renew: { throw DataError.notAllowed },
+                                                                revoke: { throw DataError.notAllowed })) { first }
+        await refused.load()
+        await refused.revoke()
+        #expect(refused.code == first && !refused.isRevoked && refused.error == DataError.notAllowed.message)
+    }
+
     @Test func kodenSkrevetInnEllerLimtInn() throws {
         let preview = CompetitionInvitePreview(competitionID: F.id(1), name: "Vennecupen", kind: .cup, ownerName: "Anders",
                                                entrants: 2, entered: false)

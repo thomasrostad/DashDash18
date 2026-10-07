@@ -1,4 +1,5 @@
 import GolfgutuCore
+import Supabase
 import SwiftUI
 
 /// Én konkurranse fra lista: lager modellen og henter.
@@ -46,10 +47,7 @@ struct CompetitionDetailView: View {
             .sheet(isPresented: $showsInvite) {
                 if let client = list?.client {
                     NavigationStack {
-                        InviteView(model: InviteModel(target: .competition(name: model.competition.name)) {
-                            [id = model.competition.id] in
-                            try await CompetitionQueries.invite(client: client, competitionID: id)
-                        })
+                        InviteView(model: inviteModel(client: client))
                     }
                 }
             }
@@ -110,6 +108,18 @@ struct CompetitionDetailView: View {
             }
             .padding(.horizontal, DDSpacing.gutter)
             .padding(.vertical, DDSpacing.l)
+        }
+    }
+
+    /// Koden til konkurransen. Eieren kan fornye og trekke den tilbake (sql/022).
+    private func inviteModel(client: SupabaseClient) -> InviteModel {
+        let id = model.competition.id
+        let manage = model.isAdmin
+            ? InviteModel.Manage(renew: { try await CompetitionQueries.invite(client: client, competitionID: id, renew: true) },
+                                 revoke: { try await CompetitionQueries.revokeInvite(client: client, competitionID: id) })
+            : nil
+        return InviteModel(target: .competition(name: model.competition.name), manage: manage) {
+            try await CompetitionQueries.invite(client: client, competitionID: id)
         }
     }
 
