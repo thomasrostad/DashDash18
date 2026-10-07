@@ -350,7 +350,7 @@ Besluttet 07.10.2026 (deg):
 - **Fase 16 – Statistikk:** historikk, snitt, rekorder og handicaputvikling.
 - **Fase 17 – Åpent for alle (App Store):** onboarding uten klubb, sletting av konto, personvern, rapporter og blokker, Google-innlogging og prod.
 
-**Venter på deg:** rekkefølgen (fase 12 før byttet i fase 9?), banedata (B15), navn og merke, forretningsmodell og penger (fortsatt poeng?). Se «Beslutninger som trengs» i visjonsdokumentet.
+**Besluttet 07.10.2026:** fase 12 før byttet (fase 9). Brukerne legger inn baner nå, og skjemaet gjøres klart for en ekstern kilde. Navnet er **DashDash**. Appen er gratis, med kjøp i appen for å kjøre turnering. Veddemål er bare poeng, og Vipps brukes til å dele felles utgifter. Se `docs/visjon-apen-app.md`.
 
 ---
 
