@@ -1,0 +1,72 @@
+{
+  "identifier" : "4F6A2C1E-17D7-4D3B-9A5E-DA5D0A51F017",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "99.0",
+      "familyShareable" : false,
+      "internalID" : "6740000001",
+      "localizations" : [
+        {
+          "description" : "Lås opp én turnering (liga, cup eller morroturnering) så lenge den varer.",
+          "displayName" : "Kjør turneringen",
+          "locale" : "nb"
+        }
+      ],
+      "productID" : "no.dashdash.turnering.sesong",
+      "referenceName" : "Kjør én turnering",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6740000000",
+    "_developerTeamID" : "",
+    "_locale" : "nb",
+    "_storefront" : "NOR",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21700001",
+      "localizations" : [
+
+      ],
+      "name" : "Arrangør",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "399.0",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6740000002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Alle turneringene du eller klubben kjører i ett år.",
+              "displayName" : "Arrangør i ett år",
+              "locale" : "nb"
+            }
+          ],
+          "productID" : "no.dashdash.turnering.ar",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Arrangør årlig",
+          "subscriptionGroupID" : "21700001",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
