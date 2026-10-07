@@ -10,7 +10,9 @@ struct RundeView: View {
         ScrollView {
             if let game = model.game {
                 VStack(alignment: .leading, spacing: 14) {
-                    if model.needsParConfirmation {
+                    if game.status == .locked, model.looseContext != nil {
+                        DDInfoStripe("Runden er avsluttet. Resultatet står under, og du kan dele det.")
+                    } else if model.needsParConfirmation {
                         ParBekreftelseCard(game: game, canConfirm: model.canConfirmPar) {
                             try await model.confirmPar()
                         }
@@ -27,10 +29,14 @@ struct RundeView: View {
                     if !game.isDecidedHoleByHole, let matches {
                         MatchkortSection(card: matches)
                     }
-                    let eventID = game.snapshot.round.eventID
-                    KveldExtrasButtons(model: KveldExtrasModel(context: model.clubContext, eventID: eventID))
-                        .id(eventID)
-                    VeddKnapp(game: game, me: model.viewer.memberID)
+                    if let context = model.clubContext, let eventID = game.snapshot.round.eventID {
+                        KveldExtrasButtons(model: KveldExtrasModel(context: context, eventID: eventID))
+                            .id(eventID)
+                        VeddKnapp(game: game, me: model.viewer.memberID)
+                    }
+                    if model.looseContext != nil {
+                        LooseRoundActions(model: model)
+                    }
                 }
                 .padding(.horizontal, DDSpacing.gutter)
                 .padding(.vertical, DDSpacing.l)
@@ -38,7 +44,7 @@ struct RundeView: View {
             }
         }
         .refreshable { await model.load() }
-        .navigationTitle(model.game?.snapshot.course?.name ?? "Kvelden")
+        .navigationTitle(model.game?.snapshot.course?.name ?? (model.looseContext == nil ? "Kvelden" : "Runden"))
         .ddNavigationChrome()
         .toolbar {
             if let game = model.game, !game.snapshot.players.isEmpty {

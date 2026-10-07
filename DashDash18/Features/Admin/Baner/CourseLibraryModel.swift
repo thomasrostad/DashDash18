@@ -12,20 +12,58 @@ final class CourseLibraryModel {
     private(set) var hasLoaded = false
     var error: DataError?
 
-    /// nil bare i skjermprøvene (`init(preview:)`): da går ingenting til nettet.
+    /// nil bare i skjermprøvene (`init(preview:)`) og for det felles biblioteket: da går ingenting
+    /// til klubben.
     private let context: ClubContext?
     private let courseSet: GolfgutuCourseSet?
+    /// Det felles biblioteket (sql/017–018, løse runder): baner uten klubb, som alle leser og den som
+    /// la dem inn, retter. nil for klubbens bibliotek.
+    private let shared: SharedLibrary?
+
+    struct SharedLibrary {
+        let client: SupabaseClient
+        /// Den innloggede, for å vite hvilke baner du har lagt inn (og kan rette).
+        let userID: UUID
+    }
 
     init(context: ClubContext, courseSet: GolfgutuCourseSet? = try? GolfgutuCourseSet.load()) {
         self.context = context
         self.courseSet = courseSet
+        shared = nil
+    }
+
+    /// Det felles biblioteket (løse runder, `LooseRoundsFeature`).
+    init(shared client: SupabaseClient, userID: UUID) {
+        context = nil
+        courseSet = nil
+        shared = SharedLibrary(client: client, userID: userID)
+    }
+
+    /// Det felles biblioteket, ikke klubbens.
+    var isShared: Bool { shared != nil }
+
+    /// Kan du rette banen? I klubben avgjør arrangørrollen (skjermen). I det felles biblioteket bare
+    /// den som la den inn.
+    func canEdit(_ item: CourseListItem) -> Bool {
+        guard let shared else { return true }
+        return item.course.createdByProfile == shared.userID
     }
 
     #if DEBUG
+    /// Skjermprøve av det felles biblioteket, uten nett (henting feiler stille).
+    init(previewShared items: [CourseListItem], client: SupabaseClient, userID: UUID) {
+        context = nil
+        courseSet = nil
+        shared = SharedLibrary(client: client, userID: userID)
+        self.items = CourseListItem.sorted(items)
+        hasLoaded = true
+    }
+
     /// Skjermprøve med oppdiktede baner, uten nett.
     init(preview items: [CourseListItem]) {
         context = nil
         courseSet = nil
+        shared = nil
         self.items = CourseListItem.sorted(items)
         hasLoaded = true
     }
@@ -45,6 +83,10 @@ final class CourseLibraryModel {
     }
 
     func load() async {
+        if let shared {
+            await loadShared(shared)
+            return
+        }
         guard let connection = try? connection() else { return }
         let (client, clubID) = connection
         isLoading = true
@@ -78,6 +120,7 @@ final class CourseLibraryModel {
     /// transaksjon (RPC `save_course`, sql/002). Gir den lagrede banen slik serveren har den.
     @discardableResult
     func save(_ values: CourseInputValues, id: UUID?) async throws(DataError) -> CourseListItem {
+        if let shared { return try await saveShared(values, id: id, in: shared) }
         struct Hole: Encodable {
             let hole_number: Int
             let par: Int
@@ -148,6 +191,8 @@ final class CourseLibraryModel {
 
     /// «Bekreft mot skjermen»: serveren setter hvem og når (RPC `confirm_course`, sql/002).
     func confirm(_ item: CourseListItem) async throws(DataError) {
+        // Det felles biblioteket har ingen klubb å bekrefte for (`confirm_course` er per klubb).
+        guard shared == nil else { throw .notAllowed }
         struct Params: Encodable { let p_course_id: UUID }
         do {
             let (client, _) = try connection()
@@ -204,7 +249,7 @@ final class CourseLibraryModel {
     func delete(_ item: CourseListItem) async throws(DataError) {
         struct Deleted: Decodable { let id: UUID }
         do {
-            let (client, _) = try connection()
+            let client = try shared?.client ?? connection().client
             let deleted: [Deleted] = try await client
                 .from("courses")
                 .delete()
@@ -231,6 +276,91 @@ final class CourseLibraryModel {
             added += 1
         }
         return added
+    }
+
+    // MARK: Det felles biblioteket (sql/017–018)
+
+    static let sharedColumns = courseColumns + ", created_by_profile, kind"
+
+    /// Banene uten klubb, med hullene og typen.
+    private func loadShared(_ shared: SharedLibrary) async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let rows: [SharedCourseRow] = try await shared.client.from("courses")
+                .select(Self.sharedColumns)
+                .is("club_id", value: nil)
+                .execute().value
+            var holes: [CourseHoleRecord] = []
+            if !rows.isEmpty {
+                holes = try await shared.client.from("course_holes")
+                    .select("course_id, hole_number, par, stroke_index, length_m")
+                    .in("course_id", values: rows.map(\.course.id.uuidString))
+                    .execute().value
+            }
+            items = CourseListItem.make(courses: rows.map(\.course), holes: holes,
+                                        kinds: Dictionary(rows.map { ($0.course.id, $0.kind) }, uniquingKeysWith: { a, _ in a }))
+            hasLoaded = true
+            error = nil
+        } catch {
+            self.error = DataError.from(error)
+        }
+    }
+
+    /// Bane og hull i én transaksjon (`save_library_course`, sql/018). RLS avgjør: alle kan legge
+    /// inn, bare den som la inn banen, kan rette den.
+    private func saveShared(_ values: CourseInputValues, id: UUID?, in shared: SharedLibrary) async throws(DataError) -> CourseListItem {
+        struct Hole: Encodable {
+            let hole_number: Int
+            let par: Int
+            let stroke_index: Int?
+            let length_m: Int?
+        }
+        struct Params: Encodable {
+            let p_course_id: UUID?
+            let p_name: String
+            let p_kind: String
+            let p_course_rating: Double?
+            let p_slope_rating: Int?
+            let p_holes: [Hole]
+
+            func encode(to encoder: any Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(p_course_id, forKey: .p_course_id)
+                try c.encode(p_name, forKey: .p_name)
+                try c.encode(p_kind, forKey: .p_kind)
+                try c.encode(p_course_rating, forKey: .p_course_rating)
+                try c.encode(p_slope_rating, forKey: .p_slope_rating)
+                try c.encode(p_holes, forKey: .p_holes)
+            }
+
+            enum CodingKeys: String, CodingKey {
+                case p_course_id, p_name, p_kind, p_course_rating, p_slope_rating, p_holes
+            }
+        }
+        do {
+            let params = Params(
+                p_course_id: id, p_name: values.name, p_kind: values.kind.rawValue,
+                p_course_rating: values.courseRating, p_slope_rating: values.slopeRating,
+                p_holes: values.holes.map {
+                    let r = $0.record(courseID: id ?? UUID())
+                    return Hole(hole_number: r.holeNumber, par: r.par, stroke_index: r.strokeIndex, length_m: r.lengthM)
+                }
+            )
+            let savedID: UUID = try await shared.client.rpc("save_library_course", params: params).execute().value
+            let rows: [SharedCourseRow] = try await shared.client.from("courses")
+                .select(Self.sharedColumns).eq("id", value: savedID).execute().value
+            guard let row = rows.first else { throw DataError.notAllowed }
+            let holes: [CourseHoleRecord] = try await shared.client.from("course_holes")
+                .select("course_id, hole_number, par, stroke_index, length_m")
+                .eq("course_id", value: savedID).execute().value
+            let item = CourseListItem(course: row.course, holes: holes, storedKind: row.kind)
+            guard item.holes.count == values.holes.count else { throw DataError.notAllowed }
+            replace(item)
+            return item
+        } catch {
+            throw Self.saveError(error, name: values.name)
+        }
     }
 
     private func replace(_ item: CourseListItem) {
@@ -319,4 +449,17 @@ nonisolated struct HoleWrite: Encodable, Sendable {
         try c.encode(record.strokeIndex, forKey: .strokeIndex)
         try c.encode(record.lengthM, forKey: .lengthM)
     }
+}
+
+/// En bane i det felles biblioteket med typen (`courses.kind`, sql/016).
+nonisolated struct SharedCourseRow: Decodable, Sendable {
+    let course: CourseRow
+    let kind: CourseKind
+
+    init(from decoder: any Decoder) throws {
+        course = try CourseRow(from: decoder)
+        kind = try decoder.container(keyedBy: CodingKeys.self).decode(CourseKind.self, forKey: .kind)
+    }
+
+    enum CodingKeys: String, CodingKey { case kind }
 }
