@@ -1,28 +1,73 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Et desimaltall med ledetekst til venstre og feltet til høyre.
+/// Tall i regelfeltene som tekst: norsk komma eller punktum inn, komma ut.
+nonisolated enum RuleNumberText {
+    private static let locale = Locale(identifier: "nb_NO")
+
+    /// «1,5», «1.5», « 95 », «-2». `nil` for tomt eller noe som ikke er et vanlig desimaltall.
+    static func parse(_ raw: String) -> Double? {
+        let text = String(raw.filter { !$0.isWhitespace })
+            .replacingOccurrences(of: ",", with: ".")
+            .replacingOccurrences(of: "\u{2212}", with: "-")
+        guard text.wholeMatch(of: /-?([0-9]+(\.[0-9]*)?|\.[0-9]+)/) != nil,
+              let value = Double(text), value.isFinite else { return nil }
+        return value
+    }
+
+    /// Høyst to desimaler, uten tusenskille: 0,5 og 95.
+    static func format(_ value: Double) -> String {
+        value.formatted(.number.precision(.fractionLength(0...2)).grouping(.never).locale(locale))
+    }
+
+    /// Teksten feltet skal vise når verdien er endret utenfra (f.eks. «Tilbakestill»).
+    /// `nil` når teksten alt betyr det samme, så «1,» ikke mister kommaet mens du skriver.
+    static func text(replacing current: String, for value: Double) -> String? {
+        if let typed = parse(current), format(typed) == format(value) { return nil }
+        return format(value)
+    }
+}
+
+/// Et desimaltall med ledetekst til venstre og feltet til høyre. Verdien oppdateres for hvert
+/// tegn. `TextField(value:format:)` tar den først ved retur, og talltastaturet har ingen retur,
+/// så «Lagre» rett etter skriving lagret den gamle verdien (eller var grå).
 struct RuleNumberField: View {
     let title: String
     @Binding var value: Double
     var suffix: String?
+    @State private var text: String
 
     init(_ title: String, value: Binding<Double>, suffix: String? = nil) {
         self.title = title
         _value = value
         self.suffix = suffix
+        _text = State(initialValue: RuleNumberText.format(value.wrappedValue))
     }
+
+    private var isValid: Bool { RuleNumberText.parse(text) != nil }
 
     var body: some View {
         LabeledContent(title) {
             HStack(spacing: 4) {
-                TextField(title, value: $value, format: .number.precision(.fractionLength(0...2)))
+                TextField(title, text: $text)
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
+                    .foregroundStyle(isValid ? Color.ddInk : Color.ddError)
                     .frame(maxWidth: 90)
+                    .accessibilityValue(isValid ? text : "\(text), ikke et tall")
                 if let suffix {
                     Text(suffix).foregroundStyle(Color.ddInkSecondary)
                 }
+            }
+        }
+        .onChange(of: text) { _, new in
+            if let parsed = RuleNumberText.parse(new), parsed != value {
+                value = parsed
+            }
+        }
+        .onChange(of: value) { _, new in
+            if let replacement = RuleNumberText.text(replacing: text, for: new) {
+                text = replacement
             }
         }
     }

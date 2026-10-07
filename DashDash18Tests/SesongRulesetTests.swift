@@ -322,3 +322,35 @@ struct SesongLivslopTests {
         #expect(grupper[1].seasons.map(\.name) == ["b", "d"])
     }
 }
+
+/// Tallfeltene i regelsettet: norsk komma, og verdien oppdateres mens du skriver.
+struct RuleNumberTextTests {
+    @Test(arguments: [
+        ("1,5", 1.5), ("1.5", 1.5), (" 95 ", 95.0), ("0,95", 0.95), ("1,", 1.0), (",5", 0.5),
+        ("-2", -2.0), ("\u{2212}2", -2.0), ("87,5", 87.5),
+    ])
+    func tolker(_ input: String, _ forventet: Double) {
+        #expect(RuleNumberText.parse(input) == forventet)
+    }
+
+    @Test(arguments: ["", ",", "abc", "1,2,3", "1e3", "inf", "0x1A", "-"])
+    func avviser(_ input: String) {
+        #expect(RuleNumberText.parse(input) == nil)
+    }
+
+    @Test func viserMedKomma() {
+        #expect(RuleNumberText.format(0.5) == "0,5")
+        #expect(RuleNumberText.format(95) == "95")
+        #expect(RuleNumberText.format(1234.5) == "1234,5")
+        #expect(RuleNumberText.format(0.95 * 100) == "95")
+    }
+
+    @Test func endringUtenfraByttesInn() {
+        // Halvskrevet «1,» betyr 1: kommaet skal stå.
+        #expect(RuleNumberText.text(replacing: "1,", for: 1) == nil)
+        #expect(RuleNumberText.text(replacing: "95", for: 0.95 * 100) == nil)
+        // «Tilbakestill til Golfgutu» setter en ny verdi.
+        #expect(RuleNumberText.text(replacing: "3", for: 1) == "1")
+        #expect(RuleNumberText.text(replacing: "", for: 0.5) == "0,5")
+    }
+}

@@ -30,11 +30,12 @@ final class AuthModel {
     func observe() async {
         for await (_, session) in auth.authStateChanges {
             // En utløpt lagret økt fornyes automatisk. Vi regner deg som innlogget så lenge
-            // det finnes en økt, så appen virker uten nett (offline-først).
-            if let session {
-                state = .signedIn(AuthUser(id: session.user.id, email: session.user.email))
-            } else {
-                state = .signedOut
+            // det finnes en økt, så appen virker uten nett (offline-først). Stille fornying
+            // (`tokenRefreshed`) gir samme bruker, og da rører vi ikke tilstanden, så ingen
+            // skjerm tegnes på nytt midt i en runde.
+            let next: AuthState = session.map { .signedIn(AuthUser(id: $0.user.id, email: $0.user.email)) } ?? .signedOut
+            if next != state {
+                state = next
             }
         }
     }

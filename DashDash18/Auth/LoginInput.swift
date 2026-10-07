@@ -18,6 +18,24 @@ nonisolated enum LoginInput {
         }
         return code
     }
+
+    /// Koden når den kom inn i ett jafs: autofyll fra Mail eller Meldinger (`oneTimeCode`)
+    /// eller innliming. Da sendes den med en gang. Skriving gir ett tegn om gangen, og da
+    /// venter vi på «Logg inn», fordi vi ikke vet om koden har 6 eller 8 sifre.
+    static func autoSubmittableCode(previous: String, current: String) -> String? {
+        guard current.count - previous.count > 1 else { return nil }
+        return normalizedCode(current)
+    }
+
+    /// Hvor lenge Supabase vil at vi venter mellom to koder til samme adresse (standard 60 s).
+    static let resendInterval: TimeInterval = 60
+
+    /// Sekunder til «Send ny kode» kan trykkes igjen. 0 betyr nå.
+    static func secondsUntilResend(lastSent: Date?, now: Date, interval: TimeInterval = resendInterval) -> Int {
+        guard let lastSent else { return 0 }
+        let left = interval - now.timeIntervalSince(lastSent)
+        return left > 0 ? Int(left.rounded(.up)) : 0
+    }
 }
 
 /// Det brukeren får se når innloggingen feiler.

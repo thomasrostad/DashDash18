@@ -26,13 +26,12 @@ struct TroppAddView: View {
             .ddNavigationChrome()
             .navigationBarTitleDisplayMode(.inline)
             .disabled(isBusy)
+            .discardChangesGuard(hasChanges: !(name.isEmpty && handicapText.isEmpty) && !isBusy, alwaysShowsCancel: true)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Avbryt") { dismiss() }
-                }
                 ToolbarItem(placement: .confirmationAction) {
+                    // Verktøylinja arves ikke av `.disabled` over, så dobbelttrykk sperres her.
                     Button("Legg til", action: add)
-                        .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .disabled(isBusy || name.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
             .troppErrorAlert(model: model)

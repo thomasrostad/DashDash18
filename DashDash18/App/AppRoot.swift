@@ -35,9 +35,11 @@ struct AppRoot: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            // Send hull i kø når appen blir aktiv (bare innlogget, ellers avviser serveren).
-            if phase == .active, case .signedIn = services.auth.state {
+            // Send hull i kø når appen blir aktiv (bare innlogget, ellers avviser serveren),
+            // og hent medlemskapet på nytt, så ny rolle eller godkjenning slår inn uten omstart.
+            if phase == .active, case .signedIn(let user) = services.auth.state {
                 Task { await services.outbox.flush() }
+                Task { await services.club.refresh(userID: user.id) }
             }
         }
     }
