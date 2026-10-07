@@ -31,6 +31,8 @@ nonisolated struct RoundDraft: Equatable, Sendable {
     var weight: Double
     var externalHandicap: Bool
     var allowance: Double
+    /// Simulator eller ekte bane. Lagres bare når `VenueFeature` er på.
+    var venue: Venue = .simulator
 
     var form: CompetitionForm { CompetitionForm.form(id: formID) }
 
@@ -72,8 +74,31 @@ nonisolated struct RoundDraft: Equatable, Sendable {
             matches: matches.sorted { $0.matchNo < $1.matchNo }.map(MatchDraft.init),
             ldEnabled: round.ldEnabled, ldHoleIndex: round.ldHoleIndex,
             kpEnabled: round.kpEnabled, kpHoleIndex: round.kpHoleIndex,
-            weight: round.weight, externalHandicap: round.externalHandicap, allowance: round.handicapAllowance
+            weight: round.weight, externalHandicap: round.externalHandicap, allowance: round.handicapAllowance,
+            venue: Venue(stored: round.venue)
         )
+    }
+
+    /// Ordet for gruppene: «bås» i simulatoren, «flight» på ekte bane.
+    var groupTerm: GroupTerm { .for(venue) }
+
+    /// Bytter mellom simulator og ekte bane. Trackman deler bare ut slag i simulatoren, så på ekte bane
+    /// fører dere brutto; tilbake i simulatoren gjelder regelsettets valg igjen.
+    mutating func setVenue(_ venue: Venue, rules: Ruleset) {
+        guard venue != self.venue else { return }
+        self.venue = venue
+        externalHandicap = venue == .simulator ? rules.handicap.externalHandicap : false
+    }
+
+    /// Lag og matcher klare for oppsettet (`handleStartRunde`): forslag til lag i en lagform uten lag,
+    /// og matchene trekkes på nytt når de lagrede ikke kan stå med de som er med.
+    mutating func prepareSetup(rules: Ruleset, roster: [ClubMemberRow]) {
+        if form.isTeamForm && teams.isEmpty {
+            teams = TeamPlanner.suggested(participants: participants, form: form, maxPerBay: rules.formats.maxPerBay)
+        }
+        if !MatchPlanner.canKeep(matches, participants: participants, teams: teams, isTeamForm: form.isTeamForm) {
+            redrawMatches(roster: roster)
+        }
     }
 
     /// Runden slik regelmotoren ser den: for forslag til LD- og KP-hull og for spillehandicap.
@@ -164,7 +189,10 @@ nonisolated enum RoundSetupIssue: Equatable, Sendable {
         }
     }
 
-    var message: String {
+    var message: String { message(.bay) }
+
+    /// Meldingen med rundens ord for gruppene (bås / flight).
+    func message(_ term: GroupTerm) -> String {
         switch self {
         case .noCourse:
             "Velg en bane. Uten kjenner ikke appen parene."
@@ -173,9 +201,7 @@ nonisolated enum RoundSetupIssue: Equatable, Sendable {
         case .tooFewPlayers:
             "Det må være minst to spillere med."
         case .bayWithoutMarker(let bays):
-            bays.count == 1
-                ? "Bås \(bays[0]) har ingen markør."
-                : "Bås \(bays.map(String.init).joined(separator: " og ")) har ingen markør."
+            "\(term.numberedList(bays)) har ingen markør."
         case .formNotAllowed(let name):
             "\(name) er ikke tillatt i sesongens regelsett."
         case .formNotSupported(let name):
@@ -251,6 +277,8 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
     let ldHoleIndex: Int
     let kpEnabled: Bool
     let kpHoleIndex: Int
+    /// `simulator` / `course`, eller nil når `VenueFeature` er av.
+    let venue: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -269,9 +297,10 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         case ldHoleIndex = "ld_hole_index"
         case kpEnabled = "kp_enabled"
         case kpHoleIndex = "kp_hole_index"
+        case venue
     }
 
-    init(draft: RoundDraft, clubID: UUID, course: Course?) {
+    init(draft: RoundDraft, clubID: UUID, course: Course?, includeVenue: Bool = VenueFeature.isEnabled) {
         id = draft.roundID
         self.clubID = clubID
         eventID = draft.eventID
@@ -290,6 +319,7 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         ldHoleIndex = draft.ldHole(course: course)
         kpEnabled = draft.kpEnabled
         kpHoleIndex = draft.kpHole(course: course)
+        venue = includeVenue ? draft.venue.rawValue : nil
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -310,6 +340,8 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         try c.encode(ldHoleIndex, forKey: .ldHoleIndex)
         try c.encode(kpEnabled, forKey: .kpEnabled)
         try c.encode(kpHoleIndex, forKey: .kpHoleIndex)
+        // Kolonnen finnes først etter sql/015. Uten flagget sendes den ikke.
+        try c.encodeIfPresent(venue, forKey: .venue)
     }
 }
 

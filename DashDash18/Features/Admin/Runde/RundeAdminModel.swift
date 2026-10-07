@@ -32,6 +32,10 @@ final class RundeAdminModel {
     private(set) var playersByRound: [UUID: [RoundPlayerRow]] = [:]
     /// Runden som går i klubben nå, på hvilken som helst kveld.
     private(set) var activeRound: RoundRow?
+    /// Er alle hull ført i runden som går?
+    private(set) var activeComplete = false
+    /// Rundene på sesongens kvelder, for forslaget fra forrige runde.
+    private(set) var seasonRounds: [RoundRow] = []
 
     private let context: ClubContext
 
@@ -42,11 +46,7 @@ final class RundeAdminModel {
     private var client: SupabaseClient { context.client }
     private var clubID: UUID { context.clubID }
 
-    static let roundColumns = """
-        id, club_id, event_id, course_id, round_no, name, status, hole_count, first_hole, tee_time, format, \
-        handicap_allowance, external_handicap, weight, ld_enabled, ld_hole_index, kp_enabled, kp_hole_index, \
-        cut_rule, cut_after, par_confirmed_by, par_confirmed_at, started_at, locked_at
-        """
+    static let roundColumns = RundeQueries.roundColumns
     static let playerColumns =
         "round_id, member_id, club_id, handicap_index, seed_group, playing_handicap, bay_no, is_marker, team_no"
     static let matchColumns = "round_id, match_no, player_a, player_b, player_c, team_a, team_b, result"
@@ -123,6 +123,8 @@ final class RundeAdminModel {
                 selectedEventID = try await defaultEventID()
             }
             try await loadEvent()
+            await loadSeasonRounds()
+            await loadActiveProgress()
             state = .loaded
         } catch {
             if case .loaded = state { return }  // behold det som vises ved en feilet oppfrisking
@@ -190,18 +192,62 @@ final class RundeAdminModel {
         playersByRound = Dictionary(grouping: players, by: \.roundID)
     }
 
+    /// Rundene i sesongen (alle kveldene), for forslaget fra forrige runde. Feiler hentingen,
+    /// starter hurtigstarten fra regelsettets standard.
+    private func loadSeasonRounds() async {
+        guard !events.isEmpty else { seasonRounds = []; return }
+        seasonRounds = (try? await client.from("rounds")
+            .select(Self.roundColumns)
+            .in("event_id", values: events.map(\.id.uuidString))
+            .execute().value) ?? []
+    }
+
+    /// Hvor langt runden som går har kommet: førte hull og antall spillere. For «Avslutt kvelden»
+    /// på arrangørsiden. Feiler hentingen, regnes runden som ikke ferdig.
+    private func loadActiveProgress() async {
+        guard let round = activeRound else { activeComplete = false; return }
+        struct Row: Decodable { let member_id: UUID }
+        do {
+            async let scoreRows: [Row] = client.from("hole_scores")
+                .select("member_id")
+                .eq("round_id", value: round.id)
+                .execute().value
+            async let playerRows: [Row] = client.from("round_players")
+                .select("member_id")
+                .eq("round_id", value: round.id)
+                .execute().value
+            let scores = try await scoreRows
+            let players = try await playerRows
+            activeComplete = Tonight.isComplete(scoredHoles: scores.count, players: players.count, round: round)
+        } catch {
+            activeComplete = false
+        }
+    }
+
     // MARK: Utkast
 
-    /// Ny runde på den valgte kvelden: de påmeldte, regelsettets standarder og første klare bane.
+    /// Ny runde på den valgte kvelden: de påmeldte, forslaget fra forrige runde i sesongen (ellers
+    /// regelsettets standard og første klare bane), og gruppene fordelt automatisk.
     func newDraft() -> RoundDraft? {
         guard let event = selectedEvent else { return nil }
         let (ids, source) = RoundParticipants.initial(roster: members, signups: signups)
         var draft = RoundDraft.new(eventID: event.id, roundNo: RoundListing.nextRoundNo(existing: rounds),
                                    teeTime: event.startTime, participants: ids, source: source, rules: rules)
         draft.courseID = courses.first?.id
-        draft.redrawMatches(roster: members)
-        draft.reshuffleBays(count: BayPlan.defaultBayCount(players: ids.count, maxPerBay: rules.formats.maxPerBay))
+        QuickStart.applySuggestion(from: previousRound(for: event), to: &draft, courses: courses, rules: rules)
+        QuickStart.autoArrange(&draft, rules: rules, roster: members)
         return draft
+    }
+
+    /// Forrige startede runde i sesongen, til og med den valgte kvelden.
+    func previousRound(for event: EventRow) -> RoundRow? {
+        QuickStart.previousRound(rounds: seasonRounds + rounds, events: events, upTo: event)
+    }
+
+    /// Kladden med id, slik den er lagret.
+    func draft(id: UUID) async throws(DataError) -> RoundDraft? {
+        guard let round = rounds.first(where: { $0.id == id }) else { return nil }
+        return try await draft(for: round)
     }
 
     /// Kladden (eller runden) slik den er lagret, med deltakere og matcher.
@@ -246,7 +292,7 @@ final class RundeAdminModel {
     /// «Lagre som kladd». Gir rundens id.
     @discardableResult
     func saveDraft(_ draft: RoundDraft) async throws(DataError) -> UUID {
-        if let issue = issues(draft, forStart: false).first { throw .invalid(issue.message) }
+        if let issue = issues(draft, forStart: false).first { throw .invalid(issue.message(draft.groupTerm)) }
         let id = try await writeRound(draft)
         try await writeSetup(draft, roundID: id, withPlayingHandicap: false)
         await reload()
@@ -256,7 +302,7 @@ final class RundeAdminModel {
     /// «Start runden»: lagrer oppsettet med spillehandicap og setter status til pågår.
     /// Databasen tillater én pågående runde per klubb (23505).
     func start(_ draft: RoundDraft) async throws(DataError) {
-        if let issue = issues(draft, forStart: true).first { throw .invalid(issue.message) }
+        if let issue = issues(draft, forStart: true).first { throw .invalid(issue.message(draft.groupTerm)) }
         try await refreshActiveRound()
         if let blocking = blockingRound(for: draft) {
             throw .invalid("\(title(blocking)) går allerede. Lås den før du starter en ny, eller lagre denne som kladd.")
@@ -406,5 +452,55 @@ final class RundeAdminModel {
     private func reload() async {
         try? await refreshActiveRound()
         try? await loadEvent()
+        await loadActiveProgress()
     }
 }
+
+#if DEBUG
+extension RundeAdminModel {
+    /// Oppdiktet kveld for skjermprøvene (`-DDDesignScreen hurtigstart` og `arrangor`). Uten nett:
+    /// en feilet henting beholder det som står.
+    static func sample() -> RundeAdminModel {
+        let club = UUID()
+        let client = SupabaseClient(supabaseURL: URL(string: "https://forhandsvisning.supabase.co")!,
+                                    supabaseKey: "sb_publishable_forhandsvisning")
+        let model = RundeAdminModel(context: ClubContext(client: client, user: .preview, membership: .preview))
+        let names = ["Anders", "Bjørn", "Cato", "Dag", "Erik", "Frode", "Gunnar", "Halvor", "Ivar", "Jon",
+                     "Kåre", "Lars", "Magne", "Nils"]
+        model.members = names.map {
+            ClubMemberRow(id: UUID(), clubID: club, userID: UUID(), displayName: $0, handicapIndex: 12, seedGroup: nil,
+                          isOrganizer: false, isTreasurer: false, status: .active, avatarPath: nil)
+        }
+        let earlier = EventRow(id: UUID(), clubID: club, seasonID: nil, eventDate: "2026-09-24",
+                               startTime: "18:00:00", venue: "Golfstudio Bryn", note: nil)
+        let tonight = EventRow(id: UUID(), clubID: club, seasonID: nil, eventDate: EveningDates.today(),
+                               startTime: "18:00:00", venue: "Golfstudio Bryn", note: nil)
+        model.events = [earlier, tonight]
+        model.selectedEventID = tonight.id
+        model.signups = model.members.prefix(12).map {
+            SignupRow(eventID: tonight.id, memberID: $0.id, clubID: club, status: .yes, comment: nil)
+        } + [SignupRow(eventID: tonight.id, memberID: model.members[12].id, clubID: club, status: .maybe, comment: nil)]
+        let courses = ["Pebble Beach", "St Andrews Old Course", "Valderrama"].map { name in
+            let row = CourseRow(id: UUID(), clubID: club, name: name, externalName: nil, courseRating: 72,
+                                slopeRating: 128, inUse: true, confirmedBy: nil, confirmedAt: nil)
+            let pars = [4, 5, 4, 4, 3, 5, 3, 4, 4, 4, 4, 3, 4, 5, 4, 4, 3, 5]
+            let holes = pars.enumerated().map {
+                CourseHoleRecord(courseID: row.id, holeNumber: $0.offset + 1, par: $0.element,
+                                 strokeIndex: ($0.offset * 7) % 18 + 1, lengthM: nil)
+            }
+            return CourseListItem(course: row, holes: holes)
+        }
+        model.allCourses = courses
+        model.courses = courses
+        model.seasonRounds = [
+            RoundRow(id: UUID(), clubID: club, eventID: earlier.id, courseID: courses[0].id, roundNo: 1, name: nil,
+                     status: .locked, holeCount: 18, firstHole: 1, teeTime: "18:00:00", format: "stableford",
+                     handicapAllowance: 1, externalHandicap: false, weight: 1, ldEnabled: true, ldHoleIndex: 17,
+                     kpEnabled: true, kpHoleIndex: 6, cutRule: nil, cutAfter: nil, parConfirmedBy: nil,
+                     parConfirmedAt: nil, startedAt: nil, lockedAt: nil),
+        ]
+        model.state = .loaded
+        return model
+    }
+}
+#endif

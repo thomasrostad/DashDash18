@@ -1,7 +1,8 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Steg 2: hvem som er med, og båsene. Trykk et navn for å flytte ham, gjøre ham til markør eller ta ham ut.
+/// Steg 2: hvem som er med, og båsene (flightene på ekte bane). Trykk et navn for å flytte ham, gjøre ham
+/// til markør eller ta ham ut. Brukes også bak «Endre» på hurtigstarten.
 struct RundeBaysStep: View {
     let model: RundeAdminModel
     @Binding var draft: RoundDraft
@@ -10,6 +11,7 @@ struct RundeBaysStep: View {
     @State private var selected: ClubMemberRow?
 
     private var maxPerBay: Int { model.rules.formats.maxPerBay }
+    private var term: GroupTerm { draft.groupTerm }
 
     var body: some View {
         let included = Set(draft.participants)
@@ -19,7 +21,7 @@ struct RundeBaysStep: View {
         DDList {
             Section {
                 // 12 er databasens grense for båsnummer (`round_players.bay_no`).
-                Stepper("Båser: \(bayCount)", value: $bayCount, in: 1...max(1, min(12, draft.participants.count)))
+                Stepper("\(term.pluralTitle): \(bayCount)", value: $bayCount, in: 1...max(1, min(12, draft.participants.count)))
                 Button("Bland på nytt", systemImage: "shuffle") { reshuffle() }
             } header: {
                 DDHeader(headline)
@@ -35,7 +37,7 @@ struct RundeBaysStep: View {
                     }
                 } header: {
                     HStack {
-                        Text("Bås \(bay)")
+                        Text(term.numbered(bay))
                         Spacer()
                         Text("\(ids.count)" + (ids.count > maxPerBay ? " · over \(maxPerBay)" : ""))
                             .foregroundStyle(ids.count > maxPerBay ? Color.ddRustText : Color.ddInkSecondary)
@@ -66,7 +68,7 @@ struct RundeBaysStep: View {
                 } header: {
                     DDHeader("Ikke med")
                 } footer: {
-                    DDFooter("Trykk for å ta med. Han havner i båsen med færrest.")
+                    DDFooter("Trykk for å ta med. Han havner i \(term.definite) med færrest.")
                 }
             }
         }
@@ -87,7 +89,7 @@ struct RundeBaysStep: View {
         case .everyone, .saved: "\(count) med"
         }
         let bays = draft.bays.bayNumbers.count
-        return source + (bays > 0 ? " · " + (bays == 1 ? "1 bås" : "\(bays) båser") : "")
+        return source + (bays > 0 ? " · " + term.count(bays) : "")
     }
 
     private var footer: String {
@@ -95,9 +97,9 @@ struct RundeBaysStep: View {
         case .everyone:
             "Ingen har svart «Kommer» ennå, så alle står som med. Ta ut dem som ikke kommer."
         case .signups:
-            "De som har svart «Kommer» er med. «Bland på nytt» fordeler på \(bayCount) " + (bayCount == 1 ? "bås" : "båser") + ", med duellpartnere i samme bås og én markør i hver."
+            "De som har svart «Kommer» er med. «Bland på nytt» fordeler på \(term.count(bayCount)), med duellpartnere i samme \(term.singular) og én markør i hver."
         case .saved:
-            "De som er satt opp i kladden. «Bland på nytt» fordeler på \(bayCount) " + (bayCount == 1 ? "bås" : "båser") + "."
+            "De som er satt opp i kladden. «Bland på nytt» fordeler på \(term.count(bayCount))."
         }
     }
 
@@ -126,7 +128,7 @@ struct RundeBaysStep: View {
         let highest = max(draft.bays.bayCount, bayCount)
         ForEach(1...(highest + 1), id: \.self) { bay in
             if bay != seat?.bay {
-                Button(bay > highest ? "Flytt til ny bås \(bay)" : "Flytt til bås \(bay)") {
+                Button(bay > highest ? "Flytt til ny \(term.numberedLower(bay))" : "Flytt til \(term.numberedLower(bay))") {
                     withAnimation { draft.bays.move(member.id, to: bay) }
                 }
             }

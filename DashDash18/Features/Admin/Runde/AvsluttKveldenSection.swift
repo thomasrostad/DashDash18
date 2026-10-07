@@ -4,11 +4,33 @@ import SwiftUI
 /// «Avslutt kvelden …» i rundelisten: spør om avkorting når noen mangler hull, og låser
 /// alle pågående runder på kvelden.
 struct AvsluttKveldenSection: View {
-    @Environment(\.clubContext) private var context
     /// Kveldens runder.
     let rounds: [RoundRow]
     let title: (RoundRow) -> String
     /// Etter låsing: meldingen som skal vises. Lista lastes på nytt av den som kaller.
+    var onDone: (String) async -> Void
+
+    private var active: [RoundRow] { rounds.filter { $0.status == .active } }
+
+    var body: some View {
+        if !active.isEmpty {
+            Section {
+                AvsluttKveldenButton(rounds: rounds, title: title, prominent: false, onDone: onDone)
+            } footer: {
+                DDFooter("Låser \(active.count == 1 ? "runden som går" : "rundene som går"). Mangler noen hull, får du spørsmål om å avkorte først.")
+            }
+        }
+    }
+}
+
+/// Knappen «Avslutt kvelden» med hele flyten: spørsmålet, avkorting og låsing. Som rad i lista,
+/// eller som stor hovedknapp på arrangørsiden.
+struct AvsluttKveldenButton: View {
+    @Environment(\.clubContext) private var context
+    let rounds: [RoundRow]
+    let title: (RoundRow) -> String
+    /// Stor gul hovedknapp i stedet for en rad.
+    var prominent = false
     var onDone: (String) async -> Void
 
     @State private var pending: Pending?
@@ -25,20 +47,8 @@ struct AvsluttKveldenSection: View {
     private var active: [RoundRow] { rounds.filter { $0.status == .active } }
 
     var body: some View {
-        if !active.isEmpty {
-            Section {
-                Button {
-                    ask()
-                } label: {
-                    HStack {
-                        Label("Avslutt kvelden …", systemImage: "flag.checkered")
-                        if isBusy { Spacer(); ProgressView() }
-                    }
-                }
-                .disabled(isBusy || context == nil)
-            } footer: {
-                DDFooter("Låser \(active.count == 1 ? "runden som går" : "rundene som går"). Mangler noen hull, får du spørsmål om å avkorte først.")
-            }
+        button
+            .disabled(isBusy || context == nil || active.isEmpty)
             .confirmationDialog(pending?.prompt.title ?? "", isPresented: Binding(
                 get: { pending != nil }, set: { if !$0 { pending = nil } }
             ), titleVisibility: .visible, presenting: pending) { item in
@@ -59,6 +69,29 @@ struct AvsluttKveldenSection: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(error ?? "")
+            }
+    }
+
+    @ViewBuilder
+    private var button: some View {
+        if prominent {
+            Button {
+                ask()
+            } label: {
+                HStack(spacing: 8) {
+                    Text("Avslutt kvelden")
+                    if isBusy { ProgressView() }
+                }
+            }
+            .buttonStyle(.dd(.primary, fullWidth: true))
+        } else {
+            Button {
+                ask()
+            } label: {
+                HStack {
+                    Label("Avslutt kvelden …", systemImage: "flag.checkered")
+                    if isBusy { Spacer(); ProgressView() }
+                }
             }
         }
     }

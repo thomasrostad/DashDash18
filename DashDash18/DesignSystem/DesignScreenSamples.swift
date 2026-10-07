@@ -4,10 +4,10 @@ import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
 /// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `profil`, `sesong`,
-/// `varsler`, `trad`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`).
+/// `varsler`, `trad`, `hurtigstart`, `arrangor`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`).
 struct DesignScreenSamples: View {
     enum Screen: String {
-        case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste
+        case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor
         // Arrangør: banene og sesong og regler (fase 11).
         case baner, nybane, regler, reglerendre, nysesong
     }
@@ -15,6 +15,15 @@ struct DesignScreenSamples: View {
 
     var body: some View {
         switch screen {
+        case .hurtigstart:
+            let model = RundeAdminModel.sample()
+            NavigationStack {
+                RundeQuickStartView(model: model, draft: model.newDraft()!, onDone: { _ in }, onStepByStep: { _ in })
+            }
+            .tint(Color.ddForestInk)
+        case .arrangor:
+            NavigationStack { AdminHubSample() }
+                .tint(Color.ddForestInk)
         case .tavla, .tavlaferdig:
             NavigationStack {
                 TavlaList(standings: TavlaSamples.standings(finished: screen == .tavlaferdig))
