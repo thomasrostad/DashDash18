@@ -24,9 +24,10 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 | `006_runder.sql` | `start_round` (oppsett og start i én transaksjon) | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `007_foring.sql` | `confirm_round_par` (markør eller arrangør bekrefter par) | Godkjent, kjørt på test 06.10.2026. Ikke prod |
 | `008_sosialt.sql` | Aktivitet, reaksjoner, kveldens tråd, tippekupong, push-tokens (APNs), bøttene `avatars` og `thread` | Godkjent og kjørt på test 06.10.2026. Ikke prod |
-| `009_ledelse_en_gang.sql` | Unik indeks: ledelsesvarsel bare én gang per runde og sjekkpunkt | Forslag, ikke kjørt |
+| `009_ledelse_en_gang.sql` | Unik indeks: ledelsesvarsel bare én gang per runde og sjekkpunkt | Forslag, ikke kjørt. Tatt med i 011 |
 | `010_push.sql` | Push (fase 8): `push_devices` (erstatter `push_tokens`), `push_preferences`, `clubs.push_disabled_categories`, `push_queue` med triggere, RPC-er for appen og senderen | Godkjent og kjørt på test 07.10.2026 (`010_kontroll.sql`: 12 av 12 ok). Ikke prod |
 | `010_kontroll.sql` | Samlet kontroll for 010, én rad per sjekk | Hjelpefil |
+| `011_varsler_en_gang.sql` | Unike indekser: stor score (runde, spiller, hull), ledelsen (runde, sjekkpunkt, fra 009) og «ny runde» (runde) bare én gang, så to telefoner ikke gir dobbel push | Forslag, ikke kjørt |
 | `lokal/010_prove.sql` | Lokal rolleprøve for 010. **Aldri mot Supabase.** | Hjelpefil |
 | `lokal/stub.sql`, `lokal/001_prove.sql` | Lokal syntaks- og rolleprøve. **Aldri mot Supabase.** | Hjelpefiler |
 | `lokal/stub_storage.sql`, `lokal/008_prove.sql` | Lokal Storage-etterligning og rolleprøve for 008. **Aldri mot Supabase.** | Hjelpefiler |

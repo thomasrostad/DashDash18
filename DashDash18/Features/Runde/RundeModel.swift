@@ -34,6 +34,10 @@ final class RundeModel {
 
     private let context: ClubContext
     private var queued: [QueuedHole] = []
+    /// Hull i kø som ble ført for første gang: logges når serveren har dem (store scorer, ledelsen).
+    private var queuedFresh: [Int: [RoundGame.FreshScore]] = [:]
+    /// Det denne telefonen har logget i runden, så samme hendelse ikke går to ganger.
+    private var loggedOnce = ActivityOnceLog()
     private var placedRound: UUID?
     private var isLoading = false
     private var reloadAgain = false
@@ -104,6 +108,7 @@ final class RundeModel {
         defer { RoundActivityController.shared.sync(game: game, viewer: viewer) }
         guard let snapshot else { game = nil; return }
         pendingHoles = submitter?.pendingHoles(roundID: snapshot.round.id) ?? []
+        logConfirmedQueuedHoles(server: snapshot)
         // Hull som er bekreftet av serveren, trenger ikke ligge oppå lenger.
         queued.removeAll { !pendingHoles.contains($0.hole) }
         game = RoundGame(snapshot.overlaying(queued))
@@ -123,6 +128,8 @@ final class RundeModel {
             placedRound = game.roundID
             drafts = HoleDrafts()
             queued = []
+            queuedFresh = [:]
+            loggedOnce = ActivityOnceLog()
             currentHole = game.bayHole(for: viewer)
         } else if following {
             currentHole = game.bayHole(for: viewer)
@@ -221,14 +228,15 @@ final class RundeModel {
             case .queued:
                 queued.removeAll { $0.hole == hole }
                 queued.append(QueuedHole(hole: hole, entries: submission.entries))
+                // Varsler bare for det serveren har: hullet logges når køen er sendt (rebuild).
+                if !fresh.isEmpty { queuedFresh[hole] = fresh }
             }
             drafts.clear(hole: hole)
             rebuild()
             if let updated = self.game {
                 celebration = updated.celebration(hole: hole, saved: fresh)
-                // Varsler bare for det serveren har: et hull i kø logges ikke.
                 if case .saved = outcome {
-                    logQuietly(updated.eventsAfterSaving(hole: hole, fresh: fresh), in: updated)
+                    logAfterSaving(hole: hole, fresh: fresh, in: updated)
                 }
             }
             advance(from: hole)
@@ -237,8 +245,39 @@ final class RundeModel {
         }
     }
 
+    /// Store scorer med en gang. Ledelsen ved et sjekkpunkt regnes på runden slik serveren har
+    /// den nå (de andre båsene kan ha ført siden siste realtime-henting); feiler hentingen, brukes
+    /// runden slik den vises.
+    private func logAfterSaving(hole: Int, fresh: [RoundGame.FreshScore], in game: RoundGame) {
+        logQuietly(game.bigScoreEventsAfterSaving(hole: hole, fresh: fresh), in: game)
+        guard game.shouldCheckLead(afterSaving: hole, fresh: fresh) else { return }
+        let client = client, round = game.snapshot.round
+        Task {
+            let server = try? await RundeQueries.snapshot(client: client, round: round)
+            let current = server.map { RoundGame($0) } ?? game
+            if let lead = current.leadEventIfActive(afterSaving: hole) {
+                logQuietly([lead], in: current)
+            }
+        }
+    }
+
+    /// Hull i kø som serveren nå har: logges som om de nettopp ble lagret. Kalles før `queued`
+    /// ryddes, med runden slik serveren har den.
+    private func logConfirmedQueuedHoles(server snapshot: RoundSnapshot) {
+        guard !queuedFresh.isEmpty else { return }
+        guard placedRound == snapshot.round.id else { queuedFresh = [:]; return }
+        let server = RoundGame(snapshot)
+        for hole in queuedFresh.keys.sorted() where !pendingHoles.contains(hole) {
+            let fresh = server.confirmed(queuedFresh.removeValue(forKey: hole) ?? [], hole: hole)
+            logQuietly(server.eventsAfterSaving(hole: hole, fresh: fresh), in: server)
+        }
+    }
+
     /// Logger i bakgrunnen, så føringen ikke venter på varslene. En feil stopper ingenting.
+    /// Det som bare skal stå én gang per runde (`ActivityOnce`), og alt er logget fra denne
+    /// telefonen, sendes ikke igjen.
     private func logQuietly(_ events: [ActivityEvent], in game: RoundGame) {
+        let events = loggedOnce.admit(events, roundID: game.roundID)
         guard !events.isEmpty else { return }
         let log = ActivityLog(client: client, clubID: context.clubID)
         let roundID = game.roundID, eventID = game.snapshot.round.eventID

@@ -278,6 +278,70 @@ Deno.test("ledelsesskifte", () => {
     "Anders, Bjørn og Cato endte likt etter 18 hull · 36 poeng");
 });
 
+Deno.test("ledelsesskifte: alle utfallene (loggLedelseHvisEndret)", () => {
+  const lead = (outcome: string, leaders: string[], after: number, points: number) =>
+    text(activity("lead_changed", "lead", { after_hole: after, leaders, points, outcome })).text;
+  is(lead("leads", [ANDERS], 3, 8), "Anders leder etter 3 hull · 8 poeng");
+  is(lead("took_lead", [BJORN], 6, 13), "Bjørn har tatt ledelsen etter 6 hull · 13 poeng");
+  is(lead("shares", [ANDERS, BJORN], 9, 19), "Anders og Bjørn deler ledelsen etter 9 hull · 19 poeng");
+  is(lead("won", [ANDERS], 18, 38), "Anders vant runden etter 18 hull · 38 poeng");
+  is(lead("snatched", [BJORN], 9, 20), "Bjørn snappet runden på siste hull etter 9 hull · 20 poeng");
+  is(lead("tied_finish", [ANDERS, BJORN], 18, 36), "Anders og Bjørn endte likt etter 18 hull · 36 poeng");
+  // Ukjent utfall eller ingen ledere: nøytral tekst.
+  is(lead("noe_annet", [ANDERS], 3, 8), "Ny hendelse i klubben");
+  is(lead("leads", [], 3, 8), "Ny hendelse i klubben");
+});
+
+Deno.test("store scorer, ledelsen og ny runde går til alle andre, og kan slås av hver for seg", () => {
+  const lead = activity("lead_changed", "lead", { after_hole: 3, leaders: [BJORN], points: 8, outcome: "leads" });
+  const started = activity("round_started", "round", { round_no: 1 }, { actor_member_id: THOMAS });
+  eq(to(job(EAGLE)), [BJORN, CATO, THOMAS].sort());
+  eq(to(job(lead)), [BJORN, CATO, THOMAS].sort());
+  eq(to(job(started)), [ANDERS, BJORN, CATO].sort());
+  // Spilleren slår av store scorer: får fortsatt ledelsen og ny runde.
+  const m = members({ [BJORN]: { disabled_categories: ["score"] } });
+  eq(to(job(EAGLE, { members: m })), [CATO, THOMAS].sort());
+  eq(to(job(lead, { members: m })), [BJORN, CATO, THOMAS].sort());
+  // Klubben slår av ledelsen og rundene.
+  eq(planPush(job(lead, { club: ["lead"] }), NOW).skipped, "lead er av for klubben");
+  eq(planPush(job(started, { club: ["round"] }), NOW).skipped, "round er av for klubben");
+});
+
+Deno.test("alle typene appen skriver har en norsk tekst (ActivityEvent.knownKinds)", () => {
+  // Minste data hver type trenger, slik appen skriver den (ActivityEvent.data).
+  const minimal: Record<string, [string, Record<string, unknown>]> = {
+    round_started: ["round", { round_no: 1 }],
+    round_locked: ["round", { round_no: 1 }],
+    round_deleted: ["round", { round_no: 1 }],
+    big_score: ["score", { member: ANDERS, hole: 5, hole_index: 4, name: "eagle", strokes: 3, par: 5 }],
+    lead_changed: ["lead", { after_hole: 3, leaders: [ANDERS], points: 8, outcome: "leads" }],
+    side_prize: ["side_prize", { kind: "kp", member: ANDERS, hole: 3, meters: 2.4 }],
+    score_corrected: ["setup", { member: ANDERS, hole: 5 }],
+    signup: ["signup", { member: ANDERS, status: "yes" }],
+    nudge: ["nudge", {}],
+    reminder: ["reminder", {}],
+    announcement: ["announcement", { text: "Hei" }],
+    committee_drawn: ["social", {}],
+    member_joined: ["club", { member: ANDERS }],
+    tips_king: ["tips", { members: [ANDERS], correct: 4, possible: 5 }],
+  };
+  for (const [kind, [category, data]] of Object.entries(minimal)) {
+    const shown = text(activity(kind, category, data));
+    ok(shown.text !== "Ny hendelse i klubben", `${kind} mangler tekst`);
+    ok(shown.emoji !== "🔔", `${kind} mangler emoji`);
+  }
+});
+
+Deno.test("påmelding, påminnelse og purring uten dato", () => {
+  is(text(activity("signup", "signup", { member: ANDERS, status: "yes", event_date: "2026-10-08" })).text,
+    "Anders meldte seg på torsdag 8. oktober");
+  is(text(activity("signup", "signup", { member: ANDERS, status: "maybe" })).text, "Anders er likevel usikker");
+  is(text(activity("reminder", "reminder", {})).text, "Påminnelse: neste kveld nærmer seg");
+  is(text(activity("nudge", "nudge", {})).text, "Hvem kommer? Svar i appen.");
+  is(text(activity("round_deleted", "round", { round_no: 3, course_name: "St Andrews" }, { actor_member_id: THOMAS })).text,
+    "Thomas slettet Runde 3 – St Andrews");
+});
+
 Deno.test("ny runde", () => {
   is(text(activity("round_started", "round", { round_no: 1, course_name: "Pebble Beach", hole_count: 18, bays: 3, ld_hole: 7 })).text,
     "Ny runde: Runde 1 – Pebble Beach · 18 hull — longest drive på hull 7, 3 båser");

@@ -51,11 +51,47 @@ struct InnkoblingRundeLoggTests {
     @Test func sjekkpunkteneKommerFraRegelsettet() {
         // Etter to hull: Anders 2 + 2, Bjørn 2 + 2, Cato 2 + 1. Golfgutu melder ikke hull 2.
         #expect(game(tidligKveld).eventsAfterSaving(hole: 1, fresh: []).isEmpty)
-        #expect(game(tidligKveld, checkpoints: [2]).eventsAfterSaving(hole: 1, fresh: [])
+        #expect(game(tidligKveld, checkpoints: [2]).eventsAfterSaving(hole: 1, fresh: [(cato, 6)])
                 == [.leadChanged(afterHole: 2, leaders: [anders, bjorn], points: 4, outcome: .shares)])
         // Tom liste: ledelsen meldes aldri.
         #expect(game(tidligKveld, checkpoints: []).eventsAfterSaving(hole: 2, fresh: [])
                 .allSatisfy { if case .leadChanged = $0 { false } else { true } })
+    }
+
+    @Test func rettingMelderIkkeLedelsenPåNytt() {
+        // Hull 3 lagres igjen uten at noen førte det for første gang: ingen ny linje.
+        let g = game(tidligKveld)
+        #expect(g.eventsAfterSaving(hole: 2, fresh: []).isEmpty)
+        #expect(!g.shouldCheckLead(afterSaving: 2, fresh: []))
+        #expect(g.shouldCheckLead(afterSaving: 2, fresh: [(cato, 3)]))
+        // Ikke et sjekkpunkt (Golfgutu: 3, 6, 9 …), eller runden går ikke.
+        #expect(!g.shouldCheckLead(afterSaving: 1, fresh: [(cato, 6)]))
+        #expect(!game(tidligKveld, status: .locked).shouldCheckLead(afterSaving: 2, fresh: [(cato, 3)]))
+        #expect(game(tidligKveld, status: .locked).leadEventIfActive(afterSaving: 2) == nil)
+    }
+
+    @Test func ledelsenRegnesPåRundenSlikServerenHarDen() {
+        // Cato lagrer hull 3 sist. Telefonen hans har ikke fått Bjørns hull 3 ennå: ingen ledelse.
+        let local = game(card(1, [4, 5, 1]) + card(2, [4, 5]) + card(3, [4, 6, 3]))
+        #expect(local.shouldCheckLead(afterSaving: 2, fresh: [(cato, 3)]))
+        #expect(local.leadEventIfActive(afterSaving: 2) == nil)
+        // Serveren har alle tre: Anders leder (PWA: refresh() før loggLedelseHvisEndret).
+        #expect(game(tidligKveld).leadEventIfActive(afterSaving: 2)
+                == .leadChanged(afterHole: 3, leaders: [anders], points: 8, outcome: .leads))
+    }
+
+    @Test func hullIKøLoggesBareMedTalleneServerenHar() {
+        let server = game(tidligKveld)
+        // Anders' hole in one er lagret; Bjørns 2 på hull 3 ble rettet til 3 før køen gikk.
+        let fresh = server.confirmed([(anders, 1), (bjorn, 2)], hole: 2)
+        #expect(fresh.map(\.member) == [anders])
+        #expect(server.eventsAfterSaving(hole: 2, fresh: fresh) == [
+            .bigScore(member: anders, hole: 3, holeIndex: 2, name: .holeInOne, strokes: 1, par: 3),
+            .leadChanged(afterHole: 3, leaders: [anders], points: 8, outcome: .leads),
+        ])
+        // Serveren har ikke hullet i det hele tatt (avvist): ingenting.
+        #expect(server.confirmed([(anders, 4)], hole: 5).isEmpty)
+        #expect(server.eventsAfterSaving(hole: 5, fresh: []).isEmpty)
     }
 
     @Test func sidepremieIKladdLoggerIkke() throws {
@@ -84,6 +120,50 @@ struct InnkoblingRundeLoggTests {
         #expect(RoundActivity.locked(F.round(status: .active), courseName: "Testbanen") == nil)
         #expect(!RoundActivity.isLoggable(.draft))
         #expect(RoundActivity.isLoggable(.active) && RoundActivity.isLoggable(.locked))
+    }
+}
+
+// MARK: - Én gang per hendelse
+
+struct InnkoblingEnGangTests {
+    let round = F.roundID
+    let eagle = ActivityEvent.bigScore(member: anders, hole: 2, holeIndex: 1, name: .eagle, strokes: 3, par: 5)
+    let started = ActivityEvent.roundStarted(roundNo: 1, courseName: "Testbanen", holeCount: 18, bays: 2,
+                                             ldHole: 7, kpHole: nil)
+
+    @Test func nøklerSomDeUnikeIndeksene() {
+        let r = round.uuidString
+        #expect(ActivityOnce.key(eagle, roundID: round) == "big_score:\(r):\(anders.uuidString):i1")
+        #expect(ActivityOnce.key(.leadChanged(afterHole: 9, leaders: [bjorn], points: 19, outcome: .tookLead),
+                                 roundID: round) == "lead_changed:\(r):9")
+        #expect(ActivityOnce.key(started, roundID: round) == "round_started:\(r)")
+        // Kan stå flere ganger: låst, sidepremie, retting. Uten runde: ingen grense.
+        #expect(ActivityOnce.key(.roundLocked(roundNo: 1, courseName: nil), roundID: round) == nil)
+        #expect(ActivityOnce.key(.sidePrize(kind: .drive, member: anders, hole: 7, meters: 231, passed: nil,
+                                            passedMeters: nil), roundID: round) == nil)
+        #expect(ActivityOnce.key(eagle, roundID: nil) == nil)
+    }
+
+    @Test func sammeHendelseSlippesBareGjennomÉnGang() {
+        var log = ActivityOnceLog()
+        let lead = ActivityEvent.leadChanged(afterHole: 3, leaders: [anders], points: 8, outcome: .leads)
+        #expect(log.admit([eagle, lead], roundID: round) == [eagle, lead])
+        // Hullet kommer tilbake fra køen, eller lagres igjen: ingenting nytt.
+        #expect(log.admit([eagle], roundID: round).isEmpty)
+        // Ledelsen etter hull 3 er meldt, selv om utfallet nå regnes annerledes.
+        #expect(log.admit([.leadChanged(afterHole: 3, leaders: [bjorn], points: 8, outcome: .shares)],
+                          roundID: round).isEmpty)
+        // Neste sjekkpunkt, et annet hull og en annen runde går.
+        let next = ActivityEvent.leadChanged(afterHole: 6, leaders: [anders], points: 14, outcome: .leads)
+        let otherHole = ActivityEvent.bigScore(member: anders, hole: 3, holeIndex: 2, name: .holeInOne, strokes: 1, par: 3)
+        #expect(log.admit([next, otherHole], roundID: round) == [next, otherHole])
+        #expect(log.admit([eagle], roundID: F.id(999)) == [eagle])
+        // To like i samme kall: bare den første.
+        var fresh = ActivityOnceLog()
+        #expect(fresh.admit([started, started], roundID: round) == [started])
+        // Det som kan stå flere ganger, slippes alltid gjennom.
+        let locked = ActivityEvent.roundLocked(roundNo: 1, courseName: nil)
+        #expect(fresh.admit([locked, locked], roundID: round) == [locked, locked])
     }
 }
 
