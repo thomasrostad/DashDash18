@@ -115,11 +115,13 @@ nonisolated enum ClubInput {
     /// Handicapindeks som på scorekortet: komma eller punktum, «+» betyr plusshandicap
     /// (lagres negativt). Tomt felt = ikke oppgitt. Gyldig −10…54, én desimal.
     /// PWA-en tolket komma på samme måte (`parseHcp`), fordi norsk tastatur gir komma.
+    /// Mellomrom (også hardt mellomrom fra innliming) ignoreres, så «+ 2,3» og «12 ,4» går.
+    /// Bare vanlige desimaltall godtas (ikke «1e1» eller «0x1A», som `Double` ellers tolker).
     static func handicapIndex(_ raw: String) -> Result<Double?, ClubError> {
-        var text = raw.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+        var text = String(raw.filter { !$0.isWhitespace }).replacingOccurrences(of: ",", with: ".")
         if text.isEmpty { return .success(nil) }
         // Minus er tvetydig (noen skriver plusshandicap som minus). Be om «+» i stedet.
-        if text.hasPrefix("-") {
+        if text.hasPrefix("-") || text.hasPrefix("\u{2212}") {
             return .failure(.invalidInput("Plusshandicap skrives med «+», f.eks. +2,3."))
         }
         var sign = 1.0
@@ -127,7 +129,8 @@ nonisolated enum ClubInput {
             sign = -1
             text.removeFirst()
         }
-        guard let value = Double(text), value.isFinite else {
+        guard text.wholeMatch(of: /[0-9]+(\.[0-9]*)?|\.[0-9]+/) != nil,
+              let value = Double(text), value.isFinite else {
             return .failure(.invalidInput("Handicap må være et tall, f.eks. 18,4."))
         }
         let index = (sign * value * 10).rounded() / 10

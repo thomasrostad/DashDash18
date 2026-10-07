@@ -33,12 +33,18 @@ struct ClubInputTests {
         ("+2", -2.0),
         ("+2,3", -2.3),
         ("12,34", 12.3),
+        ("12, 4", 12.4),
+        ("+ 2,3", -2.3),
+        ("\u{00A0}7,0\u{00A0}", 7.0),
+        ("12,", 12.0),
+        (",5", 0.5),
+        ("+0", 0.0),
     ])
     func gyldigHandicap(_ input: String, _ forventet: Double?) throws {
         #expect(try ClubInput.handicapIndex(input).get() == forventet)
     }
 
-    @Test(arguments: ["abc", "54,1", "+10,1", "-3"])
+    @Test(arguments: ["abc", "54,1", "+10,1", "-3", "\u{2212}3", "1e1", "0x1A", "12,4,1", "+", ",", "inf", "nan", "++2"])
     func ugyldigHandicap(_ input: String) {
         // «-3» er ugyldig fordi plusshandicap skrives med «+», ikke minus.
         if case .success = ClubInput.handicapIndex(input) {

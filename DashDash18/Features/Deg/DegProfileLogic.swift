@@ -66,6 +66,14 @@ nonisolated struct DegProfileChange: Equatable, Sendable {
     }
 }
 
+/// Handicapet i toppen av Deg (PWA: `hcpTekst`, «hcp 12,4»). Plusshandicap med «+».
+nonisolated enum DegHandicapText {
+    static func short(_ index: Double?) -> String {
+        guard let index else { return "hcp ikke oppgitt" }
+        return "hcp " + TroppInput.handicapText(index)
+    }
+}
+
 nonisolated enum DegProfile {
     /// Kolonnene spilleren kan skrive på egen rad uten å være arrangør.
     static let ownWritableColumns: Set<String> = ["display_name", "handicap_index", "avatar_path"]
