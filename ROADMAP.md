@@ -12,7 +12,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 |---|---|
 | **Nåværende fase** | Fase 9 og 10 forarbeid ferdig. Importverktøy (`Packages/DashImport`) ferdig. Veddemål med poeng er slått på mot test (012 kjørt). |
 | **Sist gjort** | 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
-| **Neste oppgave** | Fase 11: enklere arrangøroppsett. Godkjenne 014 (par-bekreftelse uten markør). Trykk på push åpner riktig skjerm. Prøveimport (fase 9). |
+| **Neste oppgave** | Godkjenne 015 (sted på runden) og 016 (banetype), så slå på simulator/ekte bane. Prøve fase 11 på telefon. Trykk på push åpner riktig skjerm. Prøveimport (fase 9). |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
@@ -325,11 +325,11 @@ Besluttet 07.10.2026 (deg):
 - **Simulator / ekte bane** er et eget valg. På ekte bane heter gruppene **flight** i stedet for **bås**. Ellers samme regler.
 - Alle fire delene skal gjennomgås: Ny runde/oppsett, Banene, Sesong og regler, og Arrangørsiden som helhet.
 
-- [ ] Arrangørsiden: ny struktur med «I kveld» øverst (neste kveld, påmeldte, start runden) og sjeldnere ting under.
-- [ ] Hurtigstart for ny runde med forslag ferdig utfylt (bane og oppsett fra forrige kveld, båser fra påmeldte).
-- [ ] Simulator / ekte bane som valg på runden (lagres), med bås ↔ flight i hele appen. Krever trolig SQL (til godkjenning).
-- [ ] Banene: enklere å legge inn og forstå «klar», tydelig skille mellom simulatorbane og ekte bane.
-- [ ] Sesong og regler: Golfgutu-oppsettet som standard, endringer i klart språk, avanserte valg skjult.
+- [x] Arrangørsiden: ny struktur med «I kveld» øverst (neste kveld, påmeldte, start runden) og sjeldnere ting under.
+- [x] Hurtigstart for ny runde med forslag ferdig utfylt (bane og oppsett fra forrige kveld, båser fra påmeldte).
+- [ ] Simulator / ekte bane som valg på runden (lagres), med bås ↔ flight i hele appen. Krever trolig SQL (til godkjenning). *(07.10: bygget bak `VenueFeature`, venter på 015.)*
+- [x] Banene: enklere å legge inn og forstå «klar», tydelig skille mellom simulatorbane og ekte bane. *(07.10: banetypen venter på 016.)*
+- [x] Sesong og regler: Golfgutu-oppsettet som standard, endringer i klart språk, avanserte valg skjult.
 
 **Ferdig når:**
 - Du setter opp en vanlig kveld med tre trykk etter at påmeldingen er klar.
