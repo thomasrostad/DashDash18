@@ -7,11 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2C5FD7003076319C00BC864C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C5FD6FF3076319C00BC864C /* WidgetKit.framework */; };
+		2C5FD7023076319C00BC864C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C5FD7013076319C00BC864C /* SwiftUI.framework */; };
+		2C5FD70F3076319E00BC864C /* DashDash18WidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2C5FD6FE3076319C00BC864C /* DashDash18WidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2CB42A133074F81B007ECDFB /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 2CB42A123074F81B007ECDFB /* Supabase */; };
 		2CB42A2D30750875007ECDFB /* GolfgutuCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2CB42A2C30750875007ECDFB /* GolfgutuCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		2C5FD70D3076319E00BC864C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2CB429D93074DA5D007ECDFB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2C5FD6FD3076319C00BC864C;
+			remoteInfo = DashDash18WidgetsExtension;
+		};
 		2CB429F13074DA5F007ECDFB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 2CB429D93074DA5D007ECDFB /* Project object */;
@@ -28,15 +38,62 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		2C5FD7143076319E00BC864C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				2C5FD70F3076319E00BC864C /* DashDash18WidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		2C5FD6FE3076319C00BC864C /* DashDash18WidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DashDash18WidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2C5FD6FF3076319C00BC864C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		2C5FD7013076319C00BC864C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		2C5FD724307633BB00BC864C /* DashDash18WidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DashDash18WidgetsExtension.entitlements; sourceTree = "<group>"; };
 		2CB429E13074DA5D007ECDFB /* DashDash18.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DashDash18.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CB429F03074DA5F007ECDFB /* DashDash18Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DashDash18Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CB429FA3074DA5F007ECDFB /* DashDash18UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DashDash18UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2C5FD7103076319E00BC864C /* Exceptions for "DashDash18Widgets" folder in "DashDash18WidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2C5FD6FD3076319C00BC864C /* DashDash18WidgetsExtension */;
+		};
+		2C5FD722307632C900BC864C /* Exceptions for "DashDash18" folder in "DashDash18WidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				LiveActivity/RoundActivityAttributes.swift,
+				WidgetData/WidgetSnapshot.swift,
+			);
+			target = 2C5FD6FD3076319C00BC864C /* DashDash18WidgetsExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		2C5FD7033076319C00BC864C /* DashDash18Widgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2C5FD7103076319E00BC864C /* Exceptions for "DashDash18Widgets" folder in "DashDash18WidgetsExtension" target */,
+			);
+			path = DashDash18Widgets;
+			sourceTree = "<group>";
+		};
 		2CB429E33074DA5D007ECDFB /* DashDash18 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2C5FD722307632C900BC864C /* Exceptions for "DashDash18" folder in "DashDash18WidgetsExtension" target */,
+			);
 			path = DashDash18;
 			sourceTree = "<group>";
 		};
@@ -53,6 +110,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		2C5FD6FB3076319C00BC864C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C5FD7023076319C00BC864C /* SwiftUI.framework in Frameworks */,
+				2C5FD7003076319C00BC864C /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2CB429DE3074DA5D007ECDFB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -82,9 +148,11 @@
 		2CB429D83074DA5D007ECDFB = {
 			isa = PBXGroup;
 			children = (
+				2C5FD724307633BB00BC864C /* DashDash18WidgetsExtension.entitlements */,
 				2CB429E33074DA5D007ECDFB /* DashDash18 */,
 				2CB429F33074DA5F007ECDFB /* DashDash18Tests */,
 				2CB429FD3074DA5F007ECDFB /* DashDash18UITests */,
+				2C5FD7033076319C00BC864C /* DashDash18Widgets */,
 				2CB42A113074F81B007ECDFB /* Frameworks */,
 				2CB429E23074DA5D007ECDFB /* Products */,
 			);
@@ -96,6 +164,7 @@
 				2CB429E13074DA5D007ECDFB /* DashDash18.app */,
 				2CB429F03074DA5F007ECDFB /* DashDash18Tests.xctest */,
 				2CB429FA3074DA5F007ECDFB /* DashDash18UITests.xctest */,
+				2C5FD6FE3076319C00BC864C /* DashDash18WidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -103,6 +172,8 @@
 		2CB42A113074F81B007ECDFB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2C5FD6FF3076319C00BC864C /* WidgetKit.framework */,
+				2C5FD7013076319C00BC864C /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -110,6 +181,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		2C5FD6FD3076319C00BC864C /* DashDash18WidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2C5FD7113076319E00BC864C /* Build configuration list for PBXNativeTarget "DashDash18WidgetsExtension" */;
+			buildPhases = (
+				2C5FD6FA3076319C00BC864C /* Sources */,
+				2C5FD6FB3076319C00BC864C /* Frameworks */,
+				2C5FD6FC3076319C00BC864C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				2C5FD7033076319C00BC864C /* DashDash18Widgets */,
+			);
+			name = DashDash18WidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = DashDash18WidgetsExtension;
+			productReference = 2C5FD6FE3076319C00BC864C /* DashDash18WidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		2CB429E03074DA5D007ECDFB /* DashDash18 */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2CB42A043074DA5F007ECDFB /* Build configuration list for PBXNativeTarget "DashDash18" */;
@@ -117,10 +210,12 @@
 				2CB429DD3074DA5D007ECDFB /* Sources */,
 				2CB429DE3074DA5D007ECDFB /* Frameworks */,
 				2CB429DF3074DA5D007ECDFB /* Resources */,
+				2C5FD7143076319E00BC864C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				2C5FD70E3076319E00BC864C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				2CB429E33074DA5D007ECDFB /* DashDash18 */,
@@ -190,6 +285,9 @@
 				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 2660;
 				TargetAttributes = {
+					2C5FD6FD3076319C00BC864C = {
+						CreatedOnToolsVersion = 26.6;
+					};
 					2CB429E03074DA5D007ECDFB = {
 						CreatedOnToolsVersion = 26.6;
 					};
@@ -224,11 +322,19 @@
 				2CB429E03074DA5D007ECDFB /* DashDash18 */,
 				2CB429EF3074DA5F007ECDFB /* DashDash18Tests */,
 				2CB429F93074DA5F007ECDFB /* DashDash18UITests */,
+				2C5FD6FD3076319C00BC864C /* DashDash18WidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		2C5FD6FC3076319C00BC864C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2CB429DF3074DA5D007ECDFB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -253,6 +359,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		2C5FD6FA3076319C00BC864C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2CB429DD3074DA5D007ECDFB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -277,6 +390,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		2C5FD70E3076319E00BC864C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2C5FD6FD3076319C00BC864C /* DashDash18WidgetsExtension */;
+			targetProxy = 2C5FD70D3076319E00BC864C /* PBXContainerItemProxy */;
+		};
 		2CB429F23074DA5F007ECDFB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 2CB429E03074DA5D007ECDFB /* DashDash18 */;
@@ -290,6 +408,72 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		2C5FD7123076319E00BC864C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = DashDash18WidgetsExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JNMQJPCV24;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DashDash18Widgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DashDash18Widgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dashdash18.app.DashDash18Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2C5FD7133076319E00BC864C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = DashDash18WidgetsExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JNMQJPCV24;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DashDash18Widgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DashDash18Widgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dashdash18.app.DashDash18Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		2CB42A023074DA5F007ECDFB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -423,6 +607,9 @@
 				DEVELOPMENT_TEAM = JNMQJPCV24;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "DashDash18 bruker kameraet til å ta bilder til kveldens tråd.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_NSSupportsLiveActivitiesFrequentUpdates = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -434,6 +621,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				NEW_SETTING = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.dashdash18.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -459,6 +647,9 @@
 				DEVELOPMENT_TEAM = JNMQJPCV24;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "DashDash18 bruker kameraet til å ta bilder til kveldens tråd.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_NSSupportsLiveActivitiesFrequentUpdates = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -470,6 +661,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				NEW_SETTING = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.dashdash18.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -572,6 +764,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2C5FD7113076319E00BC864C /* Build configuration list for PBXNativeTarget "DashDash18WidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2C5FD7123076319E00BC864C /* Debug */,
+				2C5FD7133076319E00BC864C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		2CB429DC3074DA5D007ECDFB /* Build configuration list for PBXProject "DashDash18" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

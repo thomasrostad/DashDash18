@@ -3,7 +3,7 @@ import Foundation
 /// Widgetene er av til widget-targetet (DashDash18Widgets) og App Group-en finnes.
 /// Se docs/widgets-oppsett.md.
 nonisolated enum WidgetFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 // Kveld og Tavla → widget-data. Bare oppslag og formatering av det modellene allerede har.

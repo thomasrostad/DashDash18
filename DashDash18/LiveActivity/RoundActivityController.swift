@@ -4,7 +4,7 @@ import Foundation
 /// Live Activity er av til widget-targetet (DashDash18Widgets) finnes og appen har
 /// `NSSupportsLiveActivities = YES`. Uten dem feiler `Activity.request`. Se docs/widgets-oppsett.md.
 nonisolated enum LiveActivityFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 /// Starter, oppdaterer og avslutter Live Activity for runden som går. `RundeModel` kaller

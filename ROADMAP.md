@@ -10,10 +10,10 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 8 – Native løft. Kamera, kalender og deling er ferdige. Forslag 010 (push) venter på godkjenning. Live Activity og widgets er skrevet, men venter på nytt target i Xcode. |
+| **Nåværende fase** | Fase 8 – Native løft. Kamera, kalender og deling er ferdige. Forslag 010 (push) venter på godkjenning. Live Activity og widgets er slått på (target DashDash18WidgetsExtension). |
 | **Sist gjort** | 07.10: kamera i tråden, «Legg i kalender» på Kveld, deling av Tavla og kveldsresultat (bilde + tekst). Forslag 010 for push (SQL, Edge Function `push-send`, appkode bak flagg). Forarbeid til Live Activity og widgets (`DashDash18Widgets/`, flagg av). 587 enhetstester grønne. |
-| **Neste oppgave** | Brukeren prøver kamera, kalender og deling på telefon og godkjenner 010 (se `sql/README.md`). Opprett widget-targetet etter `docs/widgets-oppsett.md`, så skrur vi på Live Activity og widgets. |
-| **Venter på deg** | `INFOPLIST_KEY_NSCameraUsageDescription` i Xcode. Godkjenne 009 og 010. APNs-nøkkel og Push-capability (`docs/push-oppsett.md`). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
+| **Neste oppgave** | Brukeren prøver kamera, kalender og deling på telefon og godkjenner 010 (se `sql/README.md`). Prøv widgets og Live Activity på telefon. Deretter push (010, APNs-nøkkel, secrets). |
+| **Venter på deg** | Godkjenne 009 og 010. APNs-nøkkel og Push-capability (`docs/push-oppsett.md`). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
 
@@ -243,9 +243,9 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 - [ ] **APNs-push:** tabell for enhetstokens (SQL til godkjenning) og en sender (Supabase Edge Function), med kategorier som kan slås av og på per spiller og av arrangør. *(07.10: forslag `sql/010_push.sql`, `supabase/functions/push-send/`, appkode bak `PushFeature.isEnabled = false`. Venter på godkjenning, APNs-nøkkel og capability. Se `docs/push-oppsett.md`.)*
 - [ ] Varsler for store scorer, ledelsesskifte, ny runde, påminnelse før kveld, purring, tråd (nevnt/alle/av).
-- [ ] **Live Activity** under runde: hull, egen score, stilling i bås og match. *(07.10: kode klar bak `LiveActivityFeature.isEnabled = false`. Venter på extension-target, se `docs/widgets-oppsett.md`.)*
-- [ ] **Widgets:** neste kveld og tabell-topp. *(07.10: kode klar bak `WidgetFeature.isEnabled = false`. Venter på extension-target og App Group.)*
-- [x] **Kamera** i tråden. *(07.10. Krever `NSCameraUsageDescription` i Xcode. Ikke prøvd på telefon.)*
+- [x] **Live Activity** under runde: hull, egen score, stilling i bås og match. *(07.10: target DashDash18WidgetsExtension, slått på. Oppdateres bare fra appen; push-oppdatering kommer med APNs. Ikke prøvd på telefon.)*
+- [x] **Widgets:** neste kveld og tabell-topp. *(07.10: App Group `group.com.dashdash18.app`, slått på. Ikke prøvd på telefon.)*
+- [x] **Kamera** i tråden. *(07.10. Ikke prøvd på telefon.)*
 - [x] **Kalender:** «Legg i kalender» via EventKit. *(07.10: på Kveld, uten kalendertilgang. Ikke prøvd på telefon.)*
 - [x] Deling av tabell og resultater via delingsark. *(07.10: Tavla og Runde, bilde + tekst. Ikke prøvd på telefon.)*
 
