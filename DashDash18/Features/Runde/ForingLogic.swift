@@ -180,10 +180,16 @@ nonisolated struct HoleDrafts: Equatable, Sendable {
 nonisolated extension RoundGame {
     /// Kan `viewer` bekrefte parene? Samme regel som `confirm_round_par`: arrangøren alltid;
     /// ellers en markør i runden, og bare mens den går.
+    /// Samme regel som `confirm_round_par` (sql/014): arrangøren alltid, ellers en
+    /// spiller i runden mens den går, så lenge båsen hans ikke har en annen markør
+    /// (PWA: `kanBekrefteBaneoppsett`).
     func canConfirmPar(_ viewer: Viewer) -> Bool {
         if viewer.isOrganizer { return true }
-        guard status == .active else { return false }
-        return snapshot.players.contains { $0.memberID == viewer.memberID && $0.isMarker }
+        guard status == .active,
+              let me = snapshot.players.first(where: { $0.memberID == viewer.memberID }) else { return false }
+        guard let bay = me.bayNo, bay >= 1 else { return true }
+        let marker = snapshot.players.last { $0.bayNo == bay && $0.isMarker }?.memberID
+        return marker == nil || marker == viewer.memberID
     }
 }
 

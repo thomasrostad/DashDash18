@@ -31,9 +31,13 @@ struct ForingParTests {
         #expect(!Self.game(.locked).canConfirmPar(F.viewer(F.anders)))
     }
 
-    @Test func utenBaaserIngenMarkor() {
+    /// 014: uten båser kan alle som spiller bekrefte (PWA: `kanBekrefteBaneoppsett`).
+    @Test func utenBaaserKanAlleSomSpillerBekrefte() {
         let g = RoundGame(F.snapshot(F.markorPlayers(bays: false), round: F.round(parConfirmed: false)))
-        #expect(!g.canConfirmPar(F.viewer(F.anders)))
+        #expect(g.canConfirmPar(F.viewer(F.anders)))
+        #expect(g.canConfirmPar(F.viewer(F.bjorn)))
+        let utkast = RoundGame(F.snapshot(F.markorPlayers(bays: false), round: F.round(status: .draft, parConfirmed: false)))
+        #expect(!utkast.canConfirmPar(F.viewer(F.bjorn)))
     }
 
     @Test func feilmeldingene() {
