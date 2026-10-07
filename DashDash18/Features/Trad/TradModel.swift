@@ -44,6 +44,10 @@ final class TradModel {
     /// Portrettene i troppen, per medlem. Ny fil får ny sti, så et byttet portrett vises.
     private(set) var avatarPaths: [UUID: String] = [:]
     private(set) var avatarURLs = TradSignedURLCache()
+    /// Medlem → innlogging, så en blokkering (fase 17) treffer alle meldingene til personen.
+    private(set) var userForMember: [UUID: UUID] = [:]
+    /// Det som er skjult for deg: blokkerte og meldinger du har rapportert (`ModerationFeature`).
+    private(set) var moderation = ModerationFilter()
     /// Realtime-kanalen er oppe.
     private(set) var isLive = false
     /// Skjermen står framme. Da merkes tråden som lest når nye meldinger kommer.
@@ -92,7 +96,10 @@ final class TradModel {
         let confirmed = Set(messages.map(\.id))
         let shown = TradOrder.sorted(messages).map { ($0, false) }
             + pending.filter { !confirmed.contains($0.id) }.map { ($0, true) }
-        return shown.map { message, isPending in
+        return shown.filter { message, _ in
+            message.memberID == viewer
+                || moderation.shows(messageID: message.id, memberID: message.memberID, userForMember: userForMember)
+        }.map { message, isPending in
             Item(message: message, author: names[message.memberID] ?? "Ukjent",
                  isMine: message.memberID == viewer, isPending: isPending,
                  canDelete: !isPending && TradPermissions.canDelete(message, viewer: viewer, isOrganizer: isOrganizer),
@@ -162,6 +169,8 @@ final class TradModel {
 
     private func apply(members: [ClubMemberRow]) {
         names = Dictionary(members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { a, _ in a })
+        userForMember = Dictionary(members.compactMap { m in m.userID.map { (m.id, $0) } },
+                                   uniquingKeysWith: { a, _ in a })
         avatarPaths = Dictionary(members.compactMap { m in m.avatarPath.map { (m.id, $0) } },
                                  uniquingKeysWith: { a, _ in a })
         // Arkiverte vises med navn i gamle meldinger, men kan ikke nevnes.
@@ -175,6 +184,30 @@ final class TradModel {
         let current = readStore.lastSeen(memberID: viewer, eventID: eventID)
         if let mark = TradUnread.readMark(messages, viewer: viewer, current: current) {
             readStore.setLastSeen(mark, memberID: viewer, eventID: eventID)
+        }
+    }
+
+    // MARK: Rapporter og blokker (fase 17)
+
+    /// Rapporterer meldingen eller bildet, og blokkerer avsenderen når `block` er sann. Det som er
+    /// rapportert, skjules for deg med en gang.
+    func report(_ target: ReportTarget, reason: ReportReason, note: String, block: Bool) async throws {
+        guard let client else { throw DataError.offline }
+        let service = ModerationService(client: client)
+        _ = try await service.report(kind: target.kind, targetID: target.targetID, reason: reason, note: note)
+        if target.kind == .message || target.kind == .image { moderation.reportedMessages.insert(target.targetID) }
+        if block, let member = target.memberID {
+            moderation.blockedUsers.insert(try await service.block(memberID: member))
+        }
+    }
+
+    /// Blokkerer innloggingen bak medlemmet. Meldingene deres forsvinner for deg.
+    func block(memberID: UUID) async {
+        guard let client else { return }
+        do {
+            moderation.blockedUsers.insert(try await ModerationService(client: client).block(memberID: memberID))
+        } catch {
+            errorMessage = DataError.from(error).message
         }
     }
 
