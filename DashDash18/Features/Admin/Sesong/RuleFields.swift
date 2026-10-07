@@ -35,19 +35,23 @@ struct RuleNumberField: View {
     let title: String
     @Binding var value: Double
     var suffix: String?
+    var help: String?
+    var changeNote: String?
     @State private var text: String
 
-    init(_ title: String, value: Binding<Double>, suffix: String? = nil) {
+    init(_ title: String, value: Binding<Double>, suffix: String? = nil, help: String? = nil, changeNote: String? = nil) {
         self.title = title
         _value = value
         self.suffix = suffix
+        self.help = help
+        self.changeNote = changeNote
         _text = State(initialValue: RuleNumberText.format(value.wrappedValue))
     }
 
     private var isValid: Bool { RuleNumberText.parse(text) != nil }
 
     var body: some View {
-        LabeledContent(title) {
+        LabeledContent {
             HStack(spacing: 4) {
                 TextField(title, text: $text)
                     .keyboardType(.decimalPad)
@@ -59,6 +63,8 @@ struct RuleNumberField: View {
                     Text(suffix).foregroundStyle(Color.ddInkSecondary)
                 }
             }
+        } label: {
+            RuleFieldLabel(title: title, help: help, changeNote: changeNote)
         }
         .onChange(of: text) { _, new in
             if let parsed = RuleNumberText.parse(new), parsed != value {
@@ -89,11 +95,16 @@ struct RuleStepper: View {
     let title: String
     @Binding var value: Int
     var range: ClosedRange<Int>?
+    var help: String?
+    var changeNote: String?
 
-    init(_ title: String, value: Binding<Int>, in range: ClosedRange<Int>? = nil) {
+    init(_ title: String, value: Binding<Int>, in range: ClosedRange<Int>? = nil, help: String? = nil,
+         changeNote: String? = nil) {
         self.title = title
         _value = value
         self.range = range
+        self.help = help
+        self.changeNote = changeNote
     }
 
     var body: some View {
@@ -105,7 +116,61 @@ struct RuleStepper: View {
     }
 
     private var label: some View {
-        LabeledContent(title, value: "\(value)")
+        LabeledContent {
+            Text("\(value)").monospacedDigit()
+        } label: {
+            RuleFieldLabel(title: title, help: help, changeNote: changeNote)
+        }
+    }
+}
+
+/// Ledeteksten i et regelfelt: navnet, en kort forklaring under, og «Endret · standard 1»
+/// når valget ikke er som i Golfgutu-oppsettet.
+struct RuleFieldLabel: View {
+    let title: String
+    var help: String?
+    var changeNote: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+            if let help {
+                Text(help)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddInkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if let changeNote {
+                RuleChangeBadge(text: changeNote)
+            }
+        }
+    }
+}
+
+/// Seksjonsoverskrift med «Endret · standard …» når delen ikke er som i Golfgutu-oppsettet.
+struct RuleSectionHeader: View {
+    let title: String
+    var changeNote: String?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            DDHeader(title)
+            if let changeNote {
+                RuleChangeBadge(text: changeNote)
+                    .textCase(nil)
+            }
+        }
+    }
+}
+
+/// Lite merke for et valg som er endret fra standard.
+struct RuleChangeBadge: View {
+    let text: String
+
+    var body: some View {
+        DDChip(text, tone: .sun, compact: true)
+            .fixedSize()
+            .accessibilityLabel(text)
     }
 }
 

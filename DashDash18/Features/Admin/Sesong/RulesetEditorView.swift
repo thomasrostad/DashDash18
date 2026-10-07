@@ -1,8 +1,10 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Redigering av hele regelsettet for en sesong. Meldingene fra `Ruleset.validate()` vises mens
-/// arrangøren endrer, og lagring er sperret så lenge det er feil.
+/// Redigering av regelsettet for en sesong. Sammendraget står øverst, så de vanligste valgene med
+/// forklaring, og resten under «Avanserte valg». Valg som ikke er som i Golfgutu-oppsettet, får
+/// merket «Endret · standard …». Meldingene fra `Ruleset.validate()` vises mens arrangøren endrer,
+/// og lagring er sperret så lenge det er feil.
 struct RulesetEditorView: View {
     let model: SesongAdminModel
     let season: SeasonRow
@@ -12,40 +14,56 @@ struct RulesetEditorView: View {
     @State private var error: DataError?
     @State private var savedMessage: String?
     @State private var confirmsReset = false
+    @State private var showsAdvanced: Bool
 
     init(model: SesongAdminModel, season: SeasonRow) {
         self.model = model
         self.season = season
-        _draft = State(initialValue: RulesetDraft(season.rules))
+        let draft = RulesetDraft(season.rules)
+        _draft = State(initialValue: draft)
+        // Avanserte valg er åpne når noe der er endret eller må rettes, så ingenting skjules.
+        _showsAdvanced = State(initialValue: draft.changedAdvancedCount > 0 || Self.hasAdvancedIssues(draft))
+    }
+
+    /// Feil i delene som ligger under «Avanserte valg».
+    private static func hasAdvancedIssues(_ draft: RulesetDraft) -> Bool {
+        draft.issues.contains { issue in
+            let f = issue.field
+            return f.hasPrefix("scoring") || f.hasPrefix("table.trianglePoints") || f.hasPrefix("table.stablefordCounting")
+                || f.hasPrefix("table.tiebreaks") || f.hasPrefix("table.roundingStep") || f.hasPrefix("handicap.seedingGroups")
+                || f.hasPrefix("handicap.teamHandicap") || f.hasPrefix("formats")
+        }
     }
 
     private var isReadOnly: Bool { season.status == .finished }
 
     var body: some View {
         DDForm {
-            DDSection("Slik telles det") {
-                Text(RulesetExplanation.text(for: draft.rules))
-                    .font(.dd(.sans, size: 15, relativeTo: .callout))
-            }
+            RulesetSummarySection(rules: draft.rules, title: draft.hasChanges ? "Slik blir det" : "Slik er det nå")
             if !draft.issues.isEmpty {
                 DDSection("Må rettes før lagring") {
                     RuleIssuesList(issues: draft.issues)
                 }
             }
             Group {
-                seasonSection
-                scoringSection
-                RulesetTableSections(draft: $draft)
-                sidePrizeSection
-                RulesetHandicapSection(draft: $draft)
-                RulesetFormatSection(draft: $draft)
+                RulesetCommonSections(draft: $draft)
+                advancedToggle
+                if showsAdvanced {
+                    scoringSection
+                    RulesetTableSections(draft: $draft)
+                    RulesetHandicapSection(draft: $draft)
+                    RulesetFormatSection(draft: $draft)
+                }
             }
             .disabled(isReadOnly)
             if !isReadOnly {
                 Section {
-                    Button("Tilbakestill til Golfgutu", role: .destructive) { confirmsReset = true }
+                    Button("Tilbakestill til Golfgutu-oppsettet", role: .destructive) { confirmsReset = true }
+                        .disabled(draft.isGolfgutu)
                 } footer: {
-                    DDFooter("Setter alle reglene til Golfgutu-oppsettet. Ingenting lagres før du trykker «Lagre».")
+                    DDFooter(draft.isGolfgutu
+                             ? "Reglene er Golfgutu-oppsettet."
+                             : "Setter alle valgene tilbake til Golfgutu-oppsettet, også de avanserte. Ingenting lagres før du trykker «Lagre».")
                 }
             }
             if let error {
@@ -77,22 +95,45 @@ struct RulesetEditorView: View {
             }
         }
         .discardChangesGuard(hasChanges: !isReadOnly && draft.hasChanges && !isSaving)
-        .confirmationDialog("Tilbakestille til Golfgutu?", isPresented: $confirmsReset, titleVisibility: .visible) {
+        .confirmationDialog("Tilbakestille til Golfgutu-oppsettet?", isPresented: $confirmsReset, titleVisibility: .visible) {
             Button("Tilbakestill", role: .destructive) { draft.resetToGolfgutu() }
         } message: {
-            Text("Alle endringer i reglene erstattes av Golfgutu-oppsettet.")
+            let count = RulesetField.changed(draft.rules).count
+            Text(count == 1
+                 ? "1 valg settes tilbake til standard. Du ser resultatet før du lagrer."
+                 : "\(count) valg settes tilbake til standard. Du ser resultatet før du lagrer.")
         }
     }
 
     // MARK: Delene
 
-    private var seasonSection: some View {
+    /// «Avanserte valg»: åpner og lukker resten av regelsettet.
+    private var advancedToggle: some View {
         Section {
-            RuleStepper("Kvelder", value: $draft.rules.evenings)
-        } header: {
-            DDHeader(RulesetSection.season.title)
-        } footer: {
-            RuleSectionFooter(text: "Antall kvelder i sesongen.", issues: draft.issues(in: .season))
+            Button {
+                withAnimation { showsAdvanced.toggle() }
+            } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Avanserte valg")
+                            .foregroundStyle(Color.ddInk)
+                        Text("Stableford, trekant, skilletegn, avrunding, seeding, lagshandicap og former.")
+                            .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                            .foregroundStyle(Color.ddInkSecondary)
+                        if draft.changedAdvancedCount > 0 {
+                            RuleChangeBadge(text: draft.changedAdvancedCount == 1
+                                            ? "1 endret fra standard"
+                                            : "\(draft.changedAdvancedCount) endret fra standard")
+                        }
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .rotationEffect(.degrees(showsAdvanced ? 0 : -90))
+                        .foregroundStyle(Color.ddInkSecondary)
+                        .accessibilityHidden(true)
+                }
+            }
+            .accessibilityValue(showsAdvanced ? "Åpne" : "Lukket")
         }
     }
 
@@ -101,29 +142,10 @@ struct RulesetEditorView: View {
             RuleStepper("Netto par gir", value: $draft.rules.scoring.netParPoints)
             RuleStepper("Laveste poeng", value: $draft.rules.scoring.minimumPoints)
         } header: {
-            DDHeader(RulesetSection.scoring.title)
+            RuleSectionHeader(title: RulesetSection.scoring.title, changeNote: draft.changeNote(.scoring))
         } footer: {
             RuleSectionFooter(text: "Poeng per hull: netto par gir det første tallet, ett slag bedre gir ett mer. Et hull gir aldri mindre enn laveste poeng.",
                               issues: draft.issues(in: .scoring))
-        }
-    }
-
-    private var sidePrizeSection: some View {
-        Section {
-            Toggle("Longest drive", isOn: $draft.rules.sidePrizes.longestDrive.enabled)
-            if draft.rules.sidePrizes.longestDrive.enabled {
-                RuleNumberField("Poeng for longest drive", value: $draft.rules.sidePrizes.longestDrive.points)
-            }
-            Toggle("Nærmest pinnen", isOn: $draft.rules.sidePrizes.closestToPin.enabled)
-            if draft.rules.sidePrizes.closestToPin.enabled {
-                RuleNumberField("Poeng for nærmest pinnen", value: $draft.rules.sidePrizes.closestToPin.points)
-            }
-            Toggle("Del poenget ved likt", isOn: $draft.rules.sidePrizes.splitTies)
-        } header: {
-            DDHeader(RulesetSection.sidePrizes.title)
-        } footer: {
-            RuleSectionFooter(text: "Delt: to på likt får halvparten hver. Ikke delt: alle på delt førsteplass får fullt.",
-                              issues: draft.issues(in: .sidePrizes))
         }
     }
 

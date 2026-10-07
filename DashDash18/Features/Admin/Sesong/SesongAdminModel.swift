@@ -15,19 +15,38 @@ final class SesongAdminModel {
 
     private(set) var seasons: [SeasonRow] = []
     private(set) var loadState: LoadState = .loading
-    private let context: ClubContext
+    /// nil bare i skjermprøvene (`init(preview:)`): da går ingenting til nettet.
+    private let context: ClubContext?
 
     init(context: ClubContext) {
         self.context = context
     }
 
-    private var table: PostgrestQueryBuilder { context.client.from("seasons") }
+    #if DEBUG
+    /// Skjermprøve med oppdiktede sesonger, uten nett.
+    init(preview seasons: [SeasonRow]) {
+        context = nil
+        self.seasons = seasons
+        loadState = .loaded
+    }
+    #endif
+
+    /// Klubbens tilkobling, eller `.notAllowed` i en skjermprøve.
+    private func connection() throws(DataError) -> ClubContext {
+        guard let context else { throw .notAllowed }
+        return context
+    }
+
+    private var table: PostgrestQueryBuilder {
+        get throws(DataError) { try connection().client.from("seasons") }
+    }
 
     func season(id: UUID) -> SeasonRow? {
         seasons.first { $0.id == id }
     }
 
     func load() async {
+        guard let context else { return }
         do {
             seasons = try await table
                 .select("id, club_id, name, status, rules")
@@ -43,7 +62,7 @@ final class SesongAdminModel {
 
     @discardableResult
     func create(name: String, template: SeasonLifecycle.Template) async throws(DataError) -> SeasonRow {
-        let payload = NewSeasonPayload(clubID: context.clubID, name: name, status: .planned,
+        let payload = NewSeasonPayload(clubID: try connection().clubID, name: name, status: .planned,
                                        rules: SeasonLifecycle.rules(for: template, seasons: seasons))
         let row: SeasonRow = try await write {
             try await table.insert(payload).select().single().execute().value
@@ -65,7 +84,7 @@ final class SesongAdminModel {
     func activate(_ season: SeasonRow, finishing other: SeasonRow?) async throws(DataError) {
         struct Params: Encodable { let p_season_id: UUID }
         let row: SeasonRow = try await write {
-            try await context.client.rpc("activate_season", params: Params(p_season_id: season.id)).execute().value
+            try await connection().client.rpc("activate_season", params: Params(p_season_id: season.id)).execute().value
         }
         for i in seasons.indices where seasons[i].status == .active && seasons[i].id != row.id {
             seasons[i].status = .finished

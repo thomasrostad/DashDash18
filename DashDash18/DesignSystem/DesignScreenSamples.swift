@@ -4,9 +4,13 @@ import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
 /// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `profil`, `sesong`,
-/// `varsler`, `trad`).
+/// `varsler`, `trad`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`).
 struct DesignScreenSamples: View {
-    enum Screen: String { case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste }
+    enum Screen: String {
+        case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste
+        // Arrangør: banene og sesong og regler (fase 11).
+        case baner, nybane, regler, reglerendre, nysesong
+    }
     @State var screen: Screen = .hullkort
 
     var body: some View {
@@ -33,6 +37,12 @@ struct DesignScreenSamples: View {
                 .tint(Color.ddForestInk)
         case .trad:
             TradSampleScreen()
+                .tint(Color.ddForestInk)
+        case .baner, .nybane:
+            BanerSampleScreen(newCourse: screen == .nybane)
+                .tint(Color.ddForestInk)
+        case .regler, .reglerendre, .nysesong:
+            SesongSampleScreen(screen: screen)
                 .tint(Color.ddForestInk)
         case .liste:
             NavigationStack { DDListSample() }

@@ -1,7 +1,7 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Én sesong: «Slik telles det» øverst, så regelsettet og statusen.
+/// Én sesong: sammendraget av reglene øverst, så «Endre reglene» og statusen.
 struct SesongDetailView: View {
     let model: SesongAdminModel
     let seasonID: UUID
@@ -30,15 +30,12 @@ struct SesongDetailView: View {
 
     private func list(_ season: SeasonRow) -> some View {
         DDList {
-            DDSection("Slik telles det") {
-                Text(RulesetExplanation.text(for: season.rules))
-                    .font(.dd(.sans, size: 15, relativeTo: .callout))
-            }
+            RulesetSummarySection(rules: season.rules)
             Section {
                 NavigationLink {
                     RulesetEditorView(model: model, season: season)
                 } label: {
-                    Label(season.status == .finished ? "Se reglene" : "Rediger reglene", systemImage: "slider.horizontal.3")
+                    Label(season.status == .finished ? "Se reglene" : "Endre reglene", systemImage: "slider.horizontal.3")
                 }
             } footer: {
                 if season.status == .active {
