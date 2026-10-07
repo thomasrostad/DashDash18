@@ -114,18 +114,36 @@ struct MappingTests {
         #expect(byMember[StableID.member(Fixture.pwaPlayer(3))]?.comment == nil)
     }
 
-    @Test("Terminlista: første klokkeslett, tipslinje bare x,5, innsats i kroner tas ikke med")
+    @Test("Terminlista: første klokkeslett, tipslinje bare x,5, innsats i kroner blir poeng 1:1")
     func events() throws {
         let p = try Fixture.plan()
         let first = p.events.first { $0.eventDate == "2026-05-07" }!
         #expect(first.startTime == "18:00")
         #expect(first.tipsLine == 2.5)
-        #expect(first.tipsStakePoints == nil)
+        #expect(first.tipsStakePoints == 50)   // 50 kr → 50 poeng
         let second = p.events.first { $0.eventDate == "2026-05-14" }!
         #expect(second.startTime == "18:30")
         #expect(second.tipsLine == nil)
-        #expect(p.events.contains { $0.eventDate == "2026-05-21" && $0.id == StableID.eventForDate("2026-05-21") })
+        #expect(second.tipsStakePoints == 0)   // 0 kr → for æra
+        let made = p.events.first { $0.eventDate == "2026-05-21" }!
+        #expect(made.id == StableID.eventForDate("2026-05-21"))
+        #expect(made.tipsStakePoints == nil)   // laget av runden: regelsettets standard
         #expect(p.committee.count == 2)
+    }
+
+    @Test("Tippeinnsats: som tipsInnsats i PWA-en; tom eller negativ gir standard, over taket gir merknad")
+    func tipsStake() throws {
+        let rows: [(String, Double?)] = [("2026-06-01", nil), ("2026-06-02", -10), ("2026-06-03", 12.5),
+                                         ("2026-06-04", 20), ("2026-06-05", 1000), ("2026-06-06", 1500), ("2026-06-07", 1e300)]
+        let s = PWASnapshot(players: [.init(id: "a", name: "A")],
+                            schedule: rows.enumerated().map { i, r in .init(id: "e\(i)", date: r.0, tipsInnsats: r.1) })
+        let p = try Mapper.plan(s)
+        let stakes = rows.map { r in p.events.first { $0.eventDate == r.0 }!.tipsStakePoints }
+        #expect(stakes == [nil, nil, 13, 20, 1000, nil, nil])   // Math.round(12.5) = 13
+        #expect(p.warnings.filter { $0.contains("tippeinnsatsen") }.count == 2)
+        // Appen leser null som regelsettets standard, slik PWA-en gjør med tom eller negativ innsats.
+        #expect(Tips.stake(stakes[0]) == Ruleset.golfgutu.tips.defaultStakePoints)
+        #expect(Tips.stake(stakes[2]) == 13)
     }
 
     @Test("Runder: status, 9 hull med siste ni, ekstern handicap, form, avkorting, nummer per kveld")
@@ -251,6 +269,15 @@ struct SQLTests {
             #expect(sql.contains("delete from public.\(table) t"))
         }
         #expect(sql.contains("to_regclass('public.players')"))   // vern mot PWA-basen
+    }
+
+    @Test("Kveldene får tippeinnsatsen i poeng, også ved ny import")
+    func eventStake() throws {
+        let sql = try ImportRun.sql(snapshotDirectory: Fixture.directory).sql
+        #expect(sql.contains("insert into public.events (id, club_id, season_id, event_date, start_time, tips_line, tips_stake_points) values"))
+        #expect(sql.contains("'2026-05-07'::date, '18:00'::time, 2.5, 50)"))
+        #expect(sql.contains("'2026-05-14'::date, '18:30'::time, null, 0)"))
+        #expect(sql.contains("  tips_stake_points = excluded.tips_stake_points"))
     }
 
     @Test("Ledige navn: importen setter aldri user_id og rører ikke invitasjonskoden")

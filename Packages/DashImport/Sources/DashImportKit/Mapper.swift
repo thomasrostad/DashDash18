@@ -129,7 +129,7 @@ public enum Mapper {
                 line = nil
             }
             events.append(ImportPlan.Event(id: id, eventDate: date, startTime: firstClockTime(row.time),
-                                           tipsLine: line, tipsStakePoints: nil))
+                                           tipsLine: line, tipsStakePoints: stakePoints(row.tipsInnsats, date: date, warn: warn)))
             var seen = Set<UUID>()
             for social in [row.social1, row.social2] {
                 guard let m = member(social), seen.insert(m).inserted else { continue }
@@ -421,6 +421,19 @@ public enum Mapper {
         encoder.outputFormatting = [.sortedKeys]
         let data = (try? encoder.encode(rules)) ?? Data("{\"version\":2}".utf8)
         return String(decoding: data, as: UTF8.self)
+    }
+
+    /// Tippeinnsatsen: kroner i PWA-en blir poeng 1:1 (beslutning 07.10.2026, B10). Som `tipsInnsats`:
+    /// tom eller negativ verdi gir regelsettets standard (null), ellers `Math.round`. 0 = for æra.
+    /// Over databasens tak (`Tips.stakeLimits`) blir den også null, med merknad.
+    static func stakePoints(_ kroner: Double?, date: String, warn: (String) -> Void) -> Int? {
+        guard let k = kroner, k.isFinite, k >= 0 else { return nil }
+        let points = (k + 0.5).rounded(.down)
+        guard points <= Double(Tips.stakeLimits.upperBound) else {
+            warn("Kveld \(date): tippeinnsatsen \(Int(min(points, 1e9))) er over \(Tips.stakeLimits.upperBound) poeng. Kvelden bruker regelsettets standard.")
+            return nil
+        }
+        return Int(points)
     }
 
     /// Første klokkeslett i teksten («18:00–22:00» → «18:00»). `nil` når det ikke finnes.

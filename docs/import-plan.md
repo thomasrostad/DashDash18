@@ -59,7 +59,8 @@ Id-ene er stabile: UUIDv5 av `"<type>:<PWA-id>"` i et fast navnerom (`StableID.n
 | course_holes.hcp_index, distance_meters | stroke_index, length_m | Lengde utenfor 50–700 blir tom |
 | schedule.date, time | events.event_date, start_time | Første klokkeslett i «18:00–22:00» |
 | schedule.social_1/2 | event_committee | |
-| schedule.tips_linje | events.tips_line | Bare x,5. `tips_innsats` er kroner og tas ikke med (B10) |
+| schedule.tips_linje | events.tips_line | Bare x,5 |
+| schedule.tips_innsats | events.tips_stake_points | Kroner blir poeng 1:1 (50 kr → 50 poeng, 0 = for æra). Som `tipsInnsats`: tom eller negativ blir null (regelsettets standard), ellers `Math.round`. Over 1000 blir null, med merknad |
 | signups.status `kommer`/`usikker`/`kommer_ikke` | `yes`/`maybe`/`no` | Ukjent status leses som `yes`, som i PWA-en |
 | rounds.date | rounds.event_id | Mangler datoen i terminlista, lages kvelden. `round_no` følger `created_at` |
 | locked / kladd | status `locked` / `draft` / `active` | Mer enn én pågående runde stopper importen |
@@ -141,13 +142,15 @@ swift run dashimport ../../import-snapshot/<dato> ../../import-out/<dato>.sql   
 - [ ] PWA-en er fryst («Vi har flyttet til appen»). Det er en endring i PWA-ens kode, ikke i basen, og krever ditt ja.
 - [ ] Snapshot- og SQL-filene er slettet lokalt når byttet er bekreftet.
 
-## 10. Åpne spørsmål
+## 10. Besluttet 07.10.2026
 
-1. **Klubben:** skal importen lage en ny klubb (standard, stabil id), eller gå inn i en klubb du allerede har på test (`--club-id`)? En eksisterende klubb kan ha en aktiv sesong, en kveld på samme dato eller et navn som kolliderer. Da stopper importen med 23505.
-2. **Arrangører:** PWA-en har 3 arrangører. De importeres med arrangørflagget, og den som tar navnet blir arrangør med en gang. Er det greit, eller skal flagget settes for hånd etterpå?
-3. **Sesongen:** terminlista går fra oktober 2026 til april 2027, og `settings.year` er 2026. Alt legges i én sesong, «Golfgutu Invitational 2026». Er navnet riktig?
-4. **Tippeinnsats:** PWA-ens `tips_innsats` er kroner (50). Den tas ikke med, så kvelden bruker regelsettets standard i poeng. Skal 50 kroner bli 50 poeng?
-5. **Hendelsesloggen** (93 linjer) og reaksjonene: er det greit at de ikke tas med?
-6. **Bilder i tråden:** én melding har bilde. Bildet flyttes ikke (det ligger i PWA-ens Storage). Holder teksten?
-7. **Andre klubb på samme konto:** appen kan ha flere medlemskap. Kan du bli med i den importerte klubben fra appen når du allerede er med i en testklubb? Det må prøves i appen.
-8. **Android-brukere** (B13) har ingen app etter byttet. Spør gjengen før datoen settes.
+1. **Klubben:** importen lager en ny klubb (standard, stabil id). `--club-id` brukes ikke.
+2. **Arrangører:** de 3 arrangørene importeres med arrangørflagget og blir arrangører når de tar navnet sitt.
+3. **Sesongen:** alt legges i én sesong, «Golfgutu Invitational 2026».
+4. **Tippeinnsats:** `tips_innsats` i kroner blir poeng 1:1 i `events.tips_stake_points` (50 kr → 50 poeng). Vernet mot å endre innsatsen etter første kupong (`events_guard_tips`) gjelder bare innloggede brukere, så en ny import fra SQL Editor stoppes ikke av det.
+5. **Hendelsesloggen** (93 linjer), reaksjonene og bildene i tråden tas ikke med. Teksten i meldingene holder.
+
+## 11. Åpne spørsmål
+
+1. **Andre klubb på samme konto:** appen kan ha flere medlemskap. Kan du bli med i den importerte klubben fra appen når du allerede er med i en testklubb? Det må prøves i appen.
+2. **Android-brukere** (B13) har ingen app etter byttet. Spør gjengen før datoen settes.

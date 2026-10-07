@@ -90,13 +90,13 @@ public enum SQLWriter {
                     plan.courseHoles.map { [q($0.courseID), q($0.holeNumber), q($0.par), q($0.strokeIndex), q($0.lengthM)] },
                     conflict: "course_id, hole_number", update: ["par", "stroke_index", "length_m"]))
 
-        emit("-- Terminlista. Innsatsen (kroner i PWA-en) tas ikke med (B10).")
-        emit(upsert("events", ["id", "club_id", "season_id", "event_date", "start_time", "tips_line"],
+        emit("-- Terminlista. Tippeinnsatsen i kroner blir poeng 1:1 (B10). null = regelsettets standard.")
+        emit(upsert("events", ["id", "club_id", "season_id", "event_date", "start_time", "tips_line", "tips_stake_points"],
                     plan.events.map { e in
                         [q(e.id), club, q(plan.season.id), q(e.eventDate) + "::date",
-                         e.startTime.map { q($0) + "::time" } ?? "null", q(e.tipsLine)]
+                         e.startTime.map { q($0) + "::time" } ?? "null", q(e.tipsLine), q(e.tipsStakePoints)]
                     },
-                    conflict: "id", update: ["season_id", "event_date", "start_time", "tips_line"]))
+                    conflict: "id", update: ["season_id", "event_date", "start_time", "tips_line", "tips_stake_points"]))
         let eventIDs = plan.events.map(\.id)
         emit(deleteMissing("event_committee", scope: "event_id", scopeIDs: eventIDs, keys: ["event_id", "member_id"],
                            rows: plan.committee.map { [q($0.eventID), q($0.memberID)] }))
