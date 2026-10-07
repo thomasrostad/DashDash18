@@ -348,7 +348,7 @@ Besluttet 07.10.2026 (deg):
 - **Fase 14 – Spill på runden** *(07.10: 020 kjørt på test, slått på; motor med 20 håndregnede scenarier)*: skins, Nassau, Wolf, bingo-bango-bongo og 2 mot 2, i poeng.
 - **Fase 15 – Flere konkurranser:** liga, cup og morroturneringer samtidig (erstatter tidligere fase 12-utkast), med «Teller også i …».
 - **Fase 16 – Statistikk** *(07.10: ferdig, 021 kjørt, slått på)*: historikk, snitt, rekorder og handicaputvikling.
-- **Fase 17 – Åpent for alle (App Store):** onboarding uten klubb, sletting av konto, personvern, rapporter og blokker, Google-innlogging og prod.
+- **Fase 17 – Åpent for alle (App Store)** *(07.10: bygget bak flagg; venter på 019, 023, Edge Functions og oppsett i App Store Connect/Google, se `docs/app-store.md`)*: onboarding uten klubb, sletting av konto, personvern, rapporter og blokker, Google-innlogging og prod.
 
 **Besluttet 07.10.2026:** fase 12 før byttet (fase 9). Brukerne legger inn baner nå, og skjemaet gjøres klart for en ekstern kilde. Navnet er **DashDash**. Appen er gratis, med kjøp i appen for å kjøre turnering. Veddemål er bare poeng, og Vipps brukes til å dele felles utgifter. Se `docs/visjon-apen-app.md`.
 
