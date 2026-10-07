@@ -201,6 +201,8 @@ nonisolated struct RoundRow: Codable, Equatable, Identifiable, Sendable {
     var parConfirmedAt: Date?
     var startedAt: Date?
     var lockedAt: Date?
+    /// `simulator` eller `course` (sql/015). Hentes bare når `VenueFeature` er på; `nil` = simulator.
+    var venue: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -227,6 +229,7 @@ nonisolated struct RoundRow: Codable, Equatable, Identifiable, Sendable {
         case parConfirmedAt = "par_confirmed_at"
         case startedAt = "started_at"
         case lockedAt = "locked_at"
+        case venue
     }
 }
 

@@ -5,11 +5,12 @@ import Supabase
 /// Spørringene for runden som går. Bare lesing, pluss par-bekreftelsen for arrangøren.
 /// Score skrives aldri herfra (se `ScoreSubmitting`).
 enum RundeQueries {
+    /// `venue` er med bare når sql/015 er kjørt (`VenueFeature`); før det finnes ikke kolonnen.
     static let roundColumns = """
         id, club_id, event_id, course_id, round_no, name, status, hole_count, first_hole, tee_time, format, \
         handicap_allowance, external_handicap, weight, ld_enabled, ld_hole_index, kp_enabled, kp_hole_index, \
         cut_rule, cut_after, par_confirmed_by, par_confirmed_at, started_at, locked_at
-        """
+        """ + (VenueFeature.isEnabled ? ", venue" : "")
     static let playerColumns =
         "round_id, member_id, club_id, handicap_index, seed_group, playing_handicap, bay_no, is_marker, team_no"
     static let scoreColumns = "round_id, member_id, hole_index, strokes, recorded_at, updated_by, updated_at"

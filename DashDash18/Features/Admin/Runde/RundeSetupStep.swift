@@ -33,7 +33,7 @@ struct RundeSetupStep: View {
             let issues = model.issues(draft, forStart: true)
             if !issues.isEmpty {
                 DDSection("Før runden kan starte") {
-                    ForEach(issues.map(\.message), id: \.self) { text in
+                    ForEach(issues.map { $0.message(draft.groupTerm) }, id: \.self) { text in
                         Label(text, systemImage: "exclamationmark.triangle")
                             .foregroundStyle(Color.ddRustText)
                     }
@@ -159,7 +159,7 @@ struct RundeSetupStep: View {
             Button("Ny match", systemImage: "plus") {
                 editingMatch = MatchEditItem(index: nil, match: form.isTeamForm ? .teams(1, 2) : MatchDraft())
             }
-            Button("Sett matchene sammen i båsene", systemImage: "square.grid.2x2") {
+            Button("Sett matchene sammen i \(draft.groupTerm.definitePlural)", systemImage: "square.grid.2x2") {
                 draft.reshuffleBays(count: bayCount)
             }
         } header: {
@@ -233,7 +233,10 @@ struct RundeSetupStep: View {
     @ViewBuilder
     private func handicapSection(_ form: CompetitionForm) -> some View {
         Section {
-            Toggle("Trackman fordeler slagene", isOn: $draft.externalHandicap)
+            // Trackman deler bare ut slag i simulatoren.
+            if draft.venue == .simulator {
+                Toggle("Trackman fordeler slagene", isOn: $draft.externalHandicap)
+            }
             if !draft.externalHandicap {
                 Stepper("Handicapandel: \(Int((draft.allowance * 100).rounded())) %",
                         value: $draft.allowance, in: 0...1, step: 0.05)

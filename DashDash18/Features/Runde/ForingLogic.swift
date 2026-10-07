@@ -306,7 +306,7 @@ nonisolated extension RoundGame {
             : "Hull \(holeNumber(index)) · \(index + 1) av \(count) i runden"
 
         let header: String
-        if players.count > 1 { header = "Båsen" }
+        if players.count > 1 { header = groupTerm.definiteTitle }
         else if let only = players.first { header = only == viewer.memberID ? "Deg" : name(only) }
         else { header = "" }
 
@@ -366,16 +366,16 @@ nonisolated extension RoundGame {
         guard hasBays else { return nil }
         let me = viewer.memberID
         guard let bay = bay(of: me) else {
-            return "Du står ikke i noen bås i denne runden. Si fra til arrangøren."
+            return "Du står ikke i noen \(groupTerm.singular) i denne runden. Si fra til arrangøren."
         }
         let others = bay.players.filter { $0 != me }.map(name)
         if bay.marker == me {
-            return "Du er markør i bås \(bay.number)" + (others.isEmpty ? "" : " · \(others.joined(separator: ", ")) og deg")
+            return "Du er markør i \(groupTerm.numberedLower(bay.number))" + (others.isEmpty ? "" : " · \(others.joined(separator: ", ")) og deg")
         }
         if let marker = bay.marker {
-            return "Bås \(bay.number) · \(name(marker)) fører · du ser det live"
+            return "\(groupTerm.numbered(bay.number)) · \(name(marker)) fører · du ser det live"
         }
-        return "Bås \(bay.number) · ingen markør satt · du fører din egen"
+        return "\(groupTerm.numbered(bay.number)) · ingen markør satt · du fører din egen"
     }
 
     /// `renderBaasStripe`: står du på et annet hull enn båsen? Nil når du er der.
@@ -383,7 +383,7 @@ nonisolated extension RoundGame {
         guard hasBays, bay(of: viewer.memberID) != nil, status == .active else { return nil }
         let bh = bayHole(for: viewer)
         guard currentHole != bh else { return nil }
-        return ("Du ser på hull \(holeNumber(currentHole)). Båsen er på hull \(holeNumber(bh)).",
+        return ("Du ser på hull \(holeNumber(currentHole)). \(groupTerm.definiteTitle) er på hull \(holeNumber(bh)).",
                 "Til hull \(holeNumber(bh)) →", bh)
     }
 }

@@ -21,7 +21,7 @@ struct RundeView: View {
                     if game.isDecidedHoleByHole, let matches {
                         MatchkortSection(card: matches)
                     }
-                    BayenNaaListe(rows: game.bayenNaa(viewer: model.viewer)) { member in
+                    BayenNaaListe(rows: game.bayenNaa(viewer: model.viewer), term: game.groupTerm) { member in
                         scorecardFor = ScorecardTarget(memberID: member)
                     }
                     if !game.isDecidedHoleByHole, let matches {

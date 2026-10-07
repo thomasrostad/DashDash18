@@ -132,6 +132,9 @@ nonisolated struct RoundGame: Sendable {
 
     // MARK: Spillere og båser
 
+    /// «bås» i simulatoren, «flight» på ekte bane (`rounds.venue`).
+    var groupTerm: GroupTerm { .for(stored: snapshot.round.venue) }
+
     var roundID: UUID { snapshot.round.id }
     var holeCount: Int { round.numberOfHoles }
     var status: RoundStatus { snapshot.round.status }

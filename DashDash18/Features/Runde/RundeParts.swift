@@ -262,9 +262,12 @@ struct ParBekreftelseCard: View {
             parts.append("hull \(game.holeNumber(0))–\(game.holeNumber(8))")
         }
         parts.append("par \(holes.reduce(0) { $0 + $1.par })")
+        let isCourse = Venue(stored: game.snapshot.round.venue) == .course
         var text = parts.joined(separator: " · ")
-            + ". Sammenlign med banen som er lastet i båsen. Står det noe annet der, er det skjermen som har rett."
-        if let external = game.snapshot.course?.externalName, !external.isEmpty {
+            + (isCourse
+               ? ". Sammenlign med scorekortet. Står det noe annet der, er det scorekortet som har rett."
+               : ". Sammenlign med banen som er lastet i båsen. Står det noe annet der, er det skjermen som har rett.")
+        if !isCourse, let external = game.snapshot.course?.externalName, !external.isEmpty {
             text += " På simulatoren heter banen «\(external)»."
         }
         return text

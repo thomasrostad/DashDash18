@@ -77,14 +77,14 @@ struct RundeWizardView: View {
     private var blockedReason: String? {
         switch step {
         case .course:
-            return model.issues(draft, forStart: false).first(where: \.isCourseIssue)?.message
+            return model.issues(draft, forStart: false).first(where: \.isCourseIssue)?.message(draft.groupTerm)
         case .bays:
             return draft.participants.isEmpty ? "«Neste» åpner når minst én er med." : nil
         case .setup:
             if let blocking = model.blockingRound(for: draft) {
                 return "\(model.title(blocking)) går fortsatt. Lagre denne som kladd, og start den når den andre er låst."
             }
-            return model.issues(draft, forStart: true).first?.message
+            return model.issues(draft, forStart: true).first?.message(draft.groupTerm)
         }
     }
 
@@ -130,15 +130,7 @@ struct RundeWizardView: View {
     private func go(to next: Step) {
         if next == .setup {
             // Matchene står når de samme er med; ellers trekkes de på nytt (`behold` i handleStartRunde).
-            let form = draft.form
-            if form.isTeamForm && draft.teams.isEmpty {
-                draft.teams = TeamPlanner.suggested(participants: draft.participants, form: form,
-                                                    maxPerBay: model.rules.formats.maxPerBay)
-            }
-            if !MatchPlanner.canKeep(draft.matches, participants: draft.participants, teams: draft.teams,
-                                     isTeamForm: form.isTeamForm) {
-                draft.redrawMatches(roster: model.members)
-            }
+            draft.prepareSetup(rules: model.rules, roster: model.members)
         }
         withAnimation { step = next }
     }

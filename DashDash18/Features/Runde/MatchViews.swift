@@ -167,6 +167,8 @@ struct HullMatchLinjer: View {
 /// «Bayen nå»: plass og poeng, eller stilling når runden avgjøres hull for hull.
 struct BayenNaaListe: View {
     let rows: [BayenRow]
+    /// «bås» / «flight» etter hvor runden spilles.
+    var term: GroupTerm = .bay
     let onSelect: (UUID) -> Void
 
     var body: some View {
@@ -184,7 +186,7 @@ struct BayenNaaListe: View {
                                 Text(row.name + (row.isMe ? " (deg)" : ""))
                                     .font(row.isMe ? .ddBodyEmphasis : .ddBody)
                                     .foregroundStyle(Color.ddStatText)
-                                Text("thru \(row.thru)" + (row.bay.map { " · bås \($0)" } ?? ""))
+                                Text("thru \(row.thru)" + (row.bay.map { " · \(term.numberedLower($0))" } ?? ""))
                                     .font(.dd(.sans, size: 12, relativeTo: .caption))
                                     .foregroundStyle(Color.ddStatSecondary)
                             }
