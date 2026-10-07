@@ -39,7 +39,7 @@ struct RundeQuickStartView: View {
     @State private var showsMore = false
     @State private var scrollTarget: String?
     /// «Teller også i …» (fase 15). Nil når `CompetitionsFeature` er av.
-    @State private var links: CompetitionLinkModel?
+    @State var links: CompetitionLinkModel?
 
     private var rules: Ruleset { model.rules }
     private var term: GroupTerm { draft.groupTerm }

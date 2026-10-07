@@ -216,7 +216,7 @@ struct CupTreeView: View {
     let canRecord: Bool
     let onRecord: (CupStandings.Game) -> Void
 
-    private let cardHeight: CGFloat = 92
+    private let cardHeight: CGFloat = 126
     private let gap: CGFloat = 10
 
     var body: some View {
@@ -278,6 +278,7 @@ struct CupGameCard: View {
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color.ddCard, in: .rect(cornerRadius: 18))
+        .clipShape(.rect(cornerRadius: 18))
         .overlay {
             if game.a?.isMe == true || game.b?.isMe == true {
                 RoundedRectangle(cornerRadius: 18).stroke(Color.ddForestInk.opacity(0.5), lineWidth: 1.5)
