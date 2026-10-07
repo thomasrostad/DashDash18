@@ -2,25 +2,20 @@ import Foundation
 import Observation
 import Supabase
 
-enum ClubState: Equatable {
-    case loading
-    /// Innlogget, men ikke med i noen klubb ennå.
-    case noClub
-    case pending(Membership)
-    case active(Membership)
-    case failed(ClubError)
-}
-
 /// Hvilken klubb den innloggede er med i, og handlingene for å lage eller bli med i en.
 @Observable
 final class ClubModel {
     private(set) var state: ClubState = .loading
     private(set) var memberships: [Membership] = []
+    /// En henting pågår (så retur fra bakgrunnen ikke starter en til).
+    private(set) var isRefreshing = false
     private let client: SupabaseClient
+    private let cache: MembershipCache
     private static let rememberedKey = "valgtKlubb"
 
-    init(client: SupabaseClient) {
+    init(client: SupabaseClient, cache: MembershipCache = MembershipCache()) {
         self.client = client
+        self.cache = cache
     }
 
     var current: Membership? {
@@ -30,7 +25,17 @@ final class ClubModel {
         }
     }
 
-    func load(userID: UUID) async {
+    /// Henter medlemskapene. Ved oppstart vises det sist kjente med en gang (uten nett eller
+    /// med treg dekning), og byttes når svaret kommer. Feiler hentingen mens noe vises,
+    /// blir det stående: da kastes ingen ut av en runde eller et halvferdig skjema.
+    /// Returnerer feilen, så «Sjekk igjen» kan si fra.
+    @discardableResult
+    func load(userID: UUID) async -> ClubError? {
+        if state == .loading, let cached = cache.load(userID: userID) {
+            apply(cached)
+        }
+        isRefreshing = true
+        defer { isRefreshing = false }
         do {
             let rows: [Membership] = try await client
                 .from("club_members")
@@ -38,10 +43,24 @@ final class ClubModel {
                 .eq("user_id", value: userID)
                 .execute()
                 .value
+            cache.save(rows, userID: userID)
             apply(rows)
+            return nil
         } catch {
-            state = .failed(Self.clubError(from: error))
+            let failure = Self.clubError(from: error)
+            switch state {
+            case .loading, .failed: state = .failed(failure)
+            case .noClub, .pending, .active: break
+            }
+            return failure
         }
+    }
+
+    /// Når appen kommer tilbake fra bakgrunnen: ny rolle (arrangør), godkjenning eller
+    /// arkivering slår inn uten omstart.
+    func refresh(userID: UUID) async {
+        guard !isRefreshing else { return }
+        await load(userID: userID)
     }
 
     func select(_ membership: Membership) {
@@ -49,9 +68,11 @@ final class ClubModel {
         apply(memberships)
     }
 
+    /// Ved utlogging. Det lagrede medlemskapet slettes også.
     func reset() {
         state = .loading
         memberships = []
+        cache.clear()
     }
 
     func createClub(name: String, displayName: String, handicapIndex: Double?, userID: UUID) async throws(ClubError) {
@@ -114,13 +135,11 @@ final class ClubModel {
     }
 
     private func apply(_ rows: [Membership]) {
-        memberships = rows
+        if memberships != rows { memberships = rows }
         let remembered = UserDefaults.standard.string(forKey: Self.rememberedKey).flatMap(UUID.init(uuidString:))
-        guard let chosen = Membership.choose(from: rows, remembered: remembered) else {
-            state = .noClub
-            return
-        }
-        state = chosen.status == .active ? .active(chosen) : .pending(chosen)
+        let next = Membership.state(for: rows, remembered: remembered)
+        // Samme svar som før: ikke tegn appen på nytt.
+        if next != state { state = next }
     }
 
     private static func clubError(from error: any Error) -> ClubError {

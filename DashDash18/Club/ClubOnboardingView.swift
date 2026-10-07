@@ -42,6 +42,7 @@ struct PendingMembershipView: View {
     let membership: Membership
     let user: AuthUser
     @Environment(ClubModel.self) private var club
+    @State private var checkResult: String?
 
     var body: some View {
         NavigationStack {
@@ -50,10 +51,21 @@ struct PendingMembershipView: View {
             } description: {
                 Text("Du har bedt om å bli med i \(membership.club.name) som \(membership.displayName). Arrangøren må godkjenne deg før du ser noe.")
             } actions: {
-                Button("Sjekk igjen") {
-                    Task { await club.load(userID: user.id) }
+                Button {
+                    check()
+                } label: {
+                    HStack(spacing: DDSpacing.s) {
+                        Text("Sjekk igjen")
+                        if club.isRefreshing { ProgressView() }
+                    }
                 }
                 .buttonStyle(.dd(.primary))
+                .disabled(club.isRefreshing)
+                if let checkResult {
+                    Text(checkResult)
+                        .font(.ddCallout)
+                        .foregroundStyle(Color.ddInkSecondary)
+                }
             }
             .ddScreenBackground()
             .toolbar {
@@ -61,6 +73,15 @@ struct PendingMembershipView: View {
                     SignOutButton()
                 }
             }
+        }
+    }
+
+    /// Godkjent: appen bytter skjerm av seg selv. Ellers sier vi fra, så knappen ikke virker død.
+    private func check() {
+        checkResult = nil
+        Task {
+            let failure = await club.load(userID: user.id)
+            checkResult = failure?.message ?? "Ikke godkjent ennå. Du kan lukke appen; den sjekker igjen når du åpner den."
         }
     }
 }

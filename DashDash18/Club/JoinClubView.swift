@@ -12,6 +12,8 @@ struct JoinClubView: View {
     @State private var handicapText = ""
     @State private var isBusy = false
     @State private var error: ClubError?
+    /// Navnet som venter på «Ja, det er meg».
+    @State private var claiming: ClubPreview.OpenMember?
 
     var body: some View {
         DDForm {
@@ -30,6 +32,18 @@ struct JoinClubView: View {
         .navigationTitle(preview?.name ?? "Bli med")
         .ddNavigationChrome()
         .disabled(isBusy)
+        // Et feiltrykk kobler deg til en annens navn, og bare arrangøren kan løse det opp.
+        .confirmationDialog(
+            claiming.map { "Er du \($0.displayName)?" } ?? "",
+            isPresented: Binding(get: { claiming != nil }, set: { if !$0 { claiming = nil } }),
+            titleVisibility: .visible,
+            presenting: claiming
+        ) { member in
+            Button("Ja, jeg er \(member.displayName)") { join(memberID: member.id) }
+            Button("Avbryt", role: .cancel) {}
+        } message: { _ in
+            Text("Du blir koblet til navnet og er med med én gang. Velger du feil, må arrangøren frigjøre det.")
+        }
     }
 
     private var codeSection: some View {
@@ -49,11 +63,30 @@ struct JoinClubView: View {
 
     @ViewBuilder
     private func previewSections(_ preview: ClubPreview) -> some View {
+        if preview.myStatus == .archived {
+            Section {
+                Label("Du er arkivert i \(preview.name). Be arrangøren gjenopprette deg i troppen.", systemImage: "archivebox")
+            } footer: {
+                loggedInFooter
+            }
+        } else {
+            joinSections(preview)
+        }
+        Section {
+            Button("Bruk en annen kode") {
+                self.preview = nil
+                error = nil
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func joinSections(_ preview: ClubPreview) -> some View {
         if !preview.openMembers.isEmpty {
             Section {
-                ForEach(preview.openMembers) { member in
+                ForEach(preview.sortedOpenMembers) { member in
                     Button {
-                        join(memberID: member.id)
+                        claiming = member
                     } label: {
                         Label(member.displayName, systemImage: "person")
                     }
@@ -76,13 +109,18 @@ struct JoinClubView: View {
         } header: {
             DDHeader(preview.openMembers.isEmpty ? "Bli med som ny" : "Står du ikke på lista?")
         } footer: {
-            DDFooter("Arrangøren må godkjenne deg før du ser noe.")
-        }
-        Section {
-            Button("Bruk en annen kode") {
-                self.preview = nil
-                error = nil
+            VStack(alignment: .leading, spacing: DDSpacing.s) {
+                DDFooter("Arrangøren må godkjenne deg før du ser noe.")
+                loggedInFooter
             }
+        }
+    }
+
+    /// Navnet ditt henger på innloggingen. Står det som tatt, er det ofte en annen e-post.
+    @ViewBuilder
+    private var loggedInFooter: some View {
+        if let email = user.email {
+            DDFooter("Logget inn som \(email). Står navnet ditt ikke som ledig, har du kanskje brukt en annen e-post før.")
         }
     }
 
@@ -108,14 +146,31 @@ struct JoinClubView: View {
     }
 
     private func join(memberID: UUID) {
-        run {
-            try await club.join(code: code, memberID: memberID, displayName: nil, handicapIndex: nil, userID: user.id)
+        let code = code
+        error = nil
+        isBusy = true
+        Task {
+            do {
+                try await club.join(code: code, memberID: memberID, displayName: nil, handicapIndex: nil, userID: user.id)
+            } catch {
+                let failure = (error as? ClubError) ?? .unknown(error.localizedDescription)
+                self.error = failure
+                // Noen rakk det først: vis lista slik den er nå.
+                if failure == .nameTaken, let fresh = try? await club.preview(code: code) {
+                    preview = fresh
+                }
+            }
+            isBusy = false
         }
     }
 
     private func joinAsNew() {
         guard let name = ClubInput.normalizedName(newName) else {
             error = .invalidInput("Skriv inn navnet ditt (høyst 40 tegn).")
+            return
+        }
+        if let conflict = ClubInput.openNameConflict(name, openMembers: preview?.openMembers ?? []) {
+            error = conflict
             return
         }
         let handicap: Double?
@@ -126,7 +181,11 @@ struct JoinClubView: View {
             return
         }
         run {
-            try await club.join(code: code, memberID: nil, displayName: name, handicapIndex: handicap, userID: user.id)
+            do {
+                try await club.join(code: code, memberID: nil, displayName: name, handicapIndex: handicap, userID: user.id)
+            } catch ClubError.duplicateName {
+                throw ClubInput.nameTakenByOtherLogin(name)
+            }
         }
     }
 

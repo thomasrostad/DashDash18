@@ -1,4 +1,15 @@
 import Foundation
+import GolfgutuCore
+
+/// Hva appen viser etter innlogging.
+nonisolated enum ClubState: Equatable, Sendable {
+    case loading
+    /// Innlogget, men ikke med i noen klubb ennå.
+    case noClub
+    case pending(Membership)
+    case active(Membership)
+    case failed(ClubError)
+}
 
 /// Status på en rad i troppen (`club_members.status`).
 nonisolated enum MemberStatus: String, Codable, Sendable {
@@ -8,8 +19,8 @@ nonisolated enum MemberStatus: String, Codable, Sendable {
 }
 
 /// Mitt medlemskap i én klubb, slik det leses fra `club_members` med klubben innebygd.
-nonisolated struct Membership: Decodable, Equatable, Identifiable, Sendable {
-    struct ClubInfo: Decodable, Equatable, Sendable {
+nonisolated struct Membership: Codable, Equatable, Identifiable, Sendable {
+    struct ClubInfo: Codable, Equatable, Sendable {
         let name: String
         let joinCode: String?
 
@@ -58,6 +69,41 @@ nonisolated struct Membership: Decodable, Equatable, Identifiable, Sendable {
         }
         return active.first ?? memberships.first { $0.status == .pending }
     }
+
+    /// Hva appen viser for disse radene: klubben, venting eller klubbvalg.
+    static func state(for memberships: [Membership], remembered: UUID?) -> ClubState {
+        guard let chosen = choose(from: memberships, remembered: remembered) else { return .noClub }
+        return chosen.status == .active ? .active(chosen) : .pending(chosen)
+    }
+}
+
+/// Siste kjente medlemskap per innlogging, så appen starter uten nett (på banen, i kjelleren)
+/// i stedet for å stoppe på «Fikk ikke hentet klubben». Slettes ved utlogging.
+nonisolated struct MembershipCache {
+    let defaults: UserDefaults
+    private static let prefix = "medlemskap."
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    func load(userID: UUID) -> [Membership]? {
+        guard let data = defaults.data(forKey: Self.key(userID)) else { return nil }
+        return try? JSONDecoder().decode([Membership].self, from: data)
+    }
+
+    func save(_ memberships: [Membership], userID: UUID) {
+        guard let data = try? JSONEncoder().encode(memberships) else { return }
+        defaults.set(data, forKey: Self.key(userID))
+    }
+
+    func clear() {
+        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(Self.prefix) {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
+    private static func key(_ userID: UUID) -> String { prefix + userID.uuidString.lowercased() }
 }
 
 /// Svaret fra `club_preview(kode)`: klubbnavn og ledige navn i troppen.
@@ -76,6 +122,11 @@ nonisolated struct ClubPreview: Decodable, Equatable, Sendable {
     let name: String
     let myStatus: MemberStatus?
     let openMembers: [OpenMember]
+
+    /// De ledige navnene i norsk rekkefølge (databasen sorterer Æ, Ø og Å feil).
+    var sortedOpenMembers: [OpenMember] {
+        openMembers.sorted { NorwegianSort.areInIncreasingOrder($0.displayName, $1.displayName) }
+    }
 
     enum CodingKeys: String, CodingKey {
         case clubID = "club_id"
@@ -103,6 +154,22 @@ nonisolated enum ClubInput {
         let code = raw.uppercased().filter { !$0.isWhitespace && $0 != "-" }
         guard code.wholeMatch(of: /[A-Z0-9]{6,16}/) != nil else { return nil }
         return code
+    }
+
+    /// Et nytt navn som allerede står ledig i troppen: da skal spilleren trykke på det i stedet
+    /// (PWA: `handleAddSelfAndJoin`). Sammenlignes som i databasen, `lower(btrim(navn))`.
+    static func openNameConflict(_ name: String, openMembers: [ClubPreview.OpenMember]) -> ClubError? {
+        let key = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard let match = openMembers.first(where: {
+            $0.displayName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == key
+        }) else { return nil }
+        return .invalidInput("«\(match.displayName)» står allerede i troppen. Trykk på navnet over i stedet.")
+    }
+
+    /// Når «Be om å bli med» stopper på et navn som er tatt (23505). Det vanlige er at det er
+    /// ditt eget navn, tatt av en annen innlogging (PWA, 17.09: «leses som en app i ulage»).
+    static func nameTakenByOtherLogin(_ name: String) -> ClubError {
+        .invalidInput("«\(name)» er tatt av en annen innlogging. Er det deg, har du kanskje logget inn med en annen e-post før. Logg ut og prøv den, eller be arrangøren frigjøre navnet.")
     }
 
     /// Navn i troppen: 1–40 tegn etter trimming (som i skjemaet).

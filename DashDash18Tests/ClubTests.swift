@@ -110,4 +110,84 @@ struct MembershipTests {
         #expect(p.openMembers.map(\.displayName) == ["Per"])
         #expect(p.myStatus == nil)
     }
+
+    @Test func tilstandForRadene() {
+        let a = UUID()
+        let aktiv = medlem(a, .active), venter = medlem(a, .pending)
+        #expect(Membership.state(for: [aktiv], remembered: nil) == .active(aktiv))
+        #expect(Membership.state(for: [venter], remembered: nil) == .pending(venter))
+        #expect(Membership.state(for: [medlem(a, .archived)], remembered: nil) == .noClub)
+        #expect(Membership.state(for: [], remembered: nil) == .noClub)
+    }
+}
+
+/// Sist kjente medlemskap, så appen starter uten nett.
+struct MembershipCacheTests {
+    private func lager() -> (MembershipCache, UserDefaults) {
+        let suite = "klubbcache-test-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        return (MembershipCache(defaults: defaults), defaults)
+    }
+
+    private let rad = Membership(
+        id: UUID(), clubID: UUID(), displayName: "Øyvind", status: .active,
+        isOrganizer: true, isTreasurer: false, club: .init(name: "Golfgutu Invitational", joinCode: "A1B2C3D4E5")
+    )
+
+    @Test func tarVarePaaPerBruker() {
+        let (cache, _) = lager()
+        let meg = UUID(), annen = UUID()
+        #expect(cache.load(userID: meg) == nil)
+        cache.save([rad], userID: meg)
+        #expect(cache.load(userID: meg) == [rad])
+        #expect(cache.load(userID: annen) == nil)
+        cache.save([], userID: annen)
+        #expect(cache.load(userID: annen) == [])
+    }
+
+    @Test func utloggingSletterAlt() {
+        let (cache, defaults) = lager()
+        let meg = UUID()
+        defaults.set("x", forKey: "valgtKlubb")
+        cache.save([rad], userID: meg)
+        cache.clear()
+        #expect(cache.load(userID: meg) == nil)
+        // Andre innstillinger røres ikke.
+        #expect(defaults.string(forKey: "valgtKlubb") == "x")
+    }
+}
+
+/// Bli med: ledige navn og navn som er tatt (PWA: `handleAddSelfAndJoin`).
+struct JoinNameTests {
+    private func ledig(_ navn: String) -> ClubPreview.OpenMember {
+        ClubPreview.OpenMember(id: UUID(), displayName: navn)
+    }
+
+    @Test func nyttNavnSomStaarLedig() {
+        let ledige = [ledig("Per"), ledig("Åse")]
+        #expect(ClubInput.openNameConflict("  per ", openMembers: ledige) != nil)
+        #expect(ClubInput.openNameConflict("ÅSE", openMembers: ledige) != nil)
+        #expect(ClubInput.openNameConflict("Pål", openMembers: ledige) == nil)
+        #expect(ClubInput.openNameConflict("Per", openMembers: []) == nil)
+    }
+
+    @Test func meldingenPekerPaaNavnet() {
+        guard case .invalidInput(let tekst) = ClubInput.openNameConflict("per", openMembers: [ledig("Per")]) else {
+            Issue.record("forventet invalidInput")
+            return
+        }
+        #expect(tekst.contains("«Per»"))
+        guard case .invalidInput(let tatt) = ClubInput.nameTakenByOtherLogin("Per") else {
+            Issue.record("forventet invalidInput")
+            return
+        }
+        #expect(tatt.contains("annen e-post"))
+    }
+
+    @Test func ledigeNavnINorskRekkefolge() {
+        let p = ClubPreview(clubID: UUID(), name: "K", myStatus: nil,
+                            openMembers: [ledig("Åse"), ledig("Øyvind"), ledig("Ærlige"), ledig("Bjørn"), ledig("Zorro")])
+        #expect(p.sortedOpenMembers.map(\.displayName) == ["Bjørn", "Zorro", "Ærlige", "Øyvind", "Åse"])
+    }
 }
