@@ -28,6 +28,8 @@ struct TroppAdminView: View {
 private struct TroppListView: View {
     @Bindable var model: TroppModel
     @State private var isAdding = false
+    /// Avvis spør først, som på spillersiden.
+    @State private var rejecting: ClubMemberRow?
 
     var body: some View {
         let sections = model.sections
@@ -40,7 +42,7 @@ private struct TroppListView: View {
                                 Button("Godkjenn") { run(.approve, row) }.tint(.green)
                             }
                             .swipeActions(edge: .trailing) {
-                                Button("Avvis", role: .destructive) { run(.reject, row) }
+                                Button("Avvis", role: .destructive) { rejecting = row }
                             }
                     }
                 } header: {
@@ -77,6 +79,17 @@ private struct TroppListView: View {
             TroppAddView(model: model)
         }
         .troppErrorAlert(model: model, isActive: !isAdding)
+        .confirmationDialog(
+            rejecting.map { "Avvise \($0.displayName)?" } ?? "",
+            isPresented: Binding(get: { rejecting != nil }, set: { if !$0 { rejecting = nil } }),
+            titleVisibility: .visible,
+            presenting: rejecting
+        ) { row in
+            Button("Avvis", role: .destructive) { run(.reject, row) }
+            Button("Avbryt", role: .cancel) {}
+        } message: { _ in
+            Text("Raden arkiveres og innloggingen frigjøres, så personen kan prøve igjen med riktig navn.")
+        }
     }
 
     private func memberLink(_ row: ClubMemberRow) -> some View {

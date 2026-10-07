@@ -76,6 +76,7 @@ struct RulesetEditorView: View {
                     .padding(.bottom, 16)
             }
         }
+        .discardChangesGuard(hasChanges: !isReadOnly && draft.hasChanges && !isSaving)
         .confirmationDialog("Tilbakestille til Golfgutu?", isPresented: $confirmsReset, titleVisibility: .visible) {
             Button("Tilbakestill", role: .destructive) { draft.resetToGolfgutu() }
         } message: {

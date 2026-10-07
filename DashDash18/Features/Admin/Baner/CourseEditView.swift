@@ -96,12 +96,8 @@ struct CourseEditView: View {
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .disabled(isBusy)
+        .discardChangesGuard(hasChanges: draft != original && !isBusy, alwaysShowsCancel: item == nil)
         .toolbar {
-            if item == nil {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Avbryt") { dismiss() }
-                }
-            }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Lagre") { save(validation) }
                     .disabled(isBusy || (item != nil && draft == original))

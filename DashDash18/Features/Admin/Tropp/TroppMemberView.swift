@@ -10,6 +10,7 @@ struct TroppMemberView: View {
     @State private var name = ""
     @State private var handicapText = ""
     @State private var confirming: TroppAction?
+    @State private var isSaving = false
 
     var body: some View {
         Group {
@@ -23,6 +24,7 @@ struct TroppMemberView: View {
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .disabled(model.isBusy(memberID))
+        .discardChangesGuard(hasChanges: model.row(memberID).map(isEdited) ?? false)
         .onAppear(perform: resetFields)
     }
 
@@ -72,12 +74,15 @@ struct TroppMemberView: View {
                 .keyboardType(.numbersAndPunctuation)
             if isEdited(row) {
                 Button("Lagre") {
+                    isSaving = true
                     Task {
                         if await model.saveDetails(of: memberID, name: name, handicap: handicapText) {
                             resetFields()
                         }
+                        isSaving = false
                     }
                 }
+                .disabled(isSaving)
             }
         } header: {
             DDHeader("Navn og handicap")
