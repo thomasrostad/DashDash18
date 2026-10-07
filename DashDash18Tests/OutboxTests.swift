@@ -250,6 +250,26 @@ struct OutboxTests {
         restarted.stop()
     }
 
+    /// Runde-skjermen legger køen oppå serverens tall, også etter omstart: tallene, eldst først,
+    /// med det nyeste per spiller.
+    @Test func koenKanLesesEtterOmstart() async throws {
+        sender.mode = .offline
+        do {
+            let outbox = makeOutbox()
+            _ = try await outbox.submit(hole(4, at: 20, [(anna, 6), (bjorn, 5)]))
+            _ = try await outbox.submit(hole(3, at: 10, [(anna, 4)]))
+            _ = try await outbox.submit(hole(4, at: 30, [(anna, 7)]))
+            _ = try await outbox.submit(hole(1, round: UUID(), [(anna, 4)]))
+        }
+        let restarted = makeOutbox()
+        let pending = restarted.pendingSubmissions(roundID: roundID)
+        #expect(pending.map(\.holeIndex) == [3, 4, 4])
+        let overlay = RoundSnapshot(round: ForingFixture.round()).overlaying(pending.map(QueuedHole.init))
+        let hole4 = overlay.scores.filter { $0.holeIndex == 4 }
+        #expect(hole4.first { $0.memberID == anna }?.strokes == 7)
+        #expect(hole4.first { $0.memberID == bjorn }?.strokes == 5)
+    }
+
     @Test func koenErKnyttetTilBruker() async throws {
         let thomas = UUID(), per = UUID()
         sender.mode = .offline

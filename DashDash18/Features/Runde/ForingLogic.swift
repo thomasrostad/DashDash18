@@ -137,6 +137,12 @@ nonisolated struct QueuedHole: Equatable, Sendable {
     let entries: [HoleSubmission.Entry]
 }
 
+nonisolated extension QueuedHole {
+    init(_ submission: HoleSubmission) {
+        self.init(hole: submission.holeIndex, entries: submission.entries)
+    }
+}
+
 /// Tallene markøren har trykket fram, før de er lagret. En verdi som finnes ER bekreftelsen
 /// (PWA-ens `scoreUtkast`). Overlever realtime-hentinger.
 nonisolated struct HoleDrafts: Equatable, Sendable {

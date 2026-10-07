@@ -129,6 +129,16 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         return Set(((try? context.fetch(descriptor)) ?? []).filter(belongsToCurrentUser).map(\.holeIndex))
     }
 
+    /// Eldst først, så en nyere innsending for samme spiller legges sist (og vinner).
+    func pendingSubmissions(roundID: UUID) -> [HoleSubmission] {
+        let pending = OutboxItem.State.pending.rawValue
+        let descriptor = FetchDescriptor<OutboxItem>(
+            predicate: #Predicate { $0.roundID == roundID && $0.stateRaw == pending },
+            sortBy: [SortDescriptor(\.recordedAt), SortDescriptor(\.createdAt)]
+        )
+        return ((try? context.fetch(descriptor)) ?? []).filter(belongsToCurrentUser).map(\.submission)
+    }
+
     // MARK: - Sending av køen
 
     /// Sender køen i rekkefølge (eldst `recordedAt` først). Stopper ved første nettfeil.

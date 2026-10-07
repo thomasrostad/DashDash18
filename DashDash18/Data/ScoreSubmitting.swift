@@ -32,6 +32,13 @@ protocol ScoreSubmitting: AnyObject {
     func submit(_ submission: HoleSubmission) async throws -> SubmitOutcome
     /// Hull i runden som ligger i kø og ikke er bekreftet av serveren ennå.
     func pendingHoles(roundID: UUID) -> Set<Int>
+    /// Innsendingene som ligger i kø for runden, eldst først. Runde-skjermen legger dem oppå
+    /// serverens tall, så hullene står også etter at appen er startet på nytt.
+    func pendingSubmissions(roundID: UUID) -> [HoleSubmission]
+}
+
+extension ScoreSubmitting {
+    func pendingSubmissions(roundID: UUID) -> [HoleSubmission] { [] }
 }
 
 /// Sender et hull rett til `save_hole` (én transaksjon for hele båsen).

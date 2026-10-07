@@ -202,6 +202,24 @@ struct ForingLagringTests {
         #expect(after.scores(id(F.anders))[0] == nil)   // tømt på serveren
         #expect(after.scores(id(F.bjorn))[0] == 4)
     }
+
+    /// Hull i kø står også etter omstart: båsen er videre, og hullet er ført (ikke par med «Lagre»).
+    @Test func hullIKoStaarEtterOmstart() {
+        let s = F.snapshot(F.markorPlayers())
+        let bay = [F.anders, F.bjorn, F.cato, F.dag]
+        let queued = HoleSubmission(roundID: F.roundID, holeIndex: 0,
+                                    entries: bay.map { HoleSubmission.Entry(memberID: id($0), strokes: 5) },
+                                    recordedAt: Date(timeIntervalSince1970: 0))
+        let anders = F.viewer(F.anders)
+        #expect(RoundGame(s).bayHole(for: anders) == 0)
+
+        let g = RoundGame(s.overlaying([QueuedHole(queued)]))
+        #expect(g.bayHole(for: anders) == 1)
+        let card = g.card(hole: 0, drafts: HoleDrafts(), viewer: anders)
+        #expect(card.rows.allSatisfy { $0.saved == 5 })
+        #expect(card.action == .next(title: "Neste hull → hull 2", hole: 1))
+        #expect(g.submission(hole: 0, drafts: HoleDrafts(), viewer: anders, recordedAt: .now) == nil)
+    }
 }
 
 /// Mapping rader → GolfgutuCore.
