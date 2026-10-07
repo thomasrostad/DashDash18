@@ -42,7 +42,7 @@ export interface PurchaseRecord {
   club_id: string | null;
 }
 
-export type PurchaseErrorCode = "bad_request" | "wrong_app" | "unknown_product" | "wrong_account";
+export type PurchaseErrorCode = "bad_request" | "wrong_app" | "unknown_product" | "wrong_account" | "sandbox_not_allowed";
 
 export class PurchaseError extends Error {
   readonly code: PurchaseErrorCode;
@@ -92,17 +92,31 @@ export function decodeJwsPayload<T>(jws: string): T {
 
 const iso = (ms?: number) => (typeof ms === "number" && ms > 0 ? new Date(ms).toISOString() : null);
 
-/** Gjør Apples transaksjon om til en rad for entitlements, eller avviser den. */
+/** Miljøet til transaksjonen. Bare «Production» er produksjon; alt annet regnes som sandkasse. */
+export function environmentOf(tx: TransactionPayload): "sandbox" | "production" {
+  return tx.environment === "Production" ? "production" : "sandbox";
+}
+
+/** Gjør Apples transaksjon om til en rad for entitlements, eller avviser den.
+ *
+ * Sikkerhetsrevisjonen 07.10.2026:
+ *  - H3: et sandkassekjøp (TestFlight, Xcode) låser ikke opp i produksjon. Det godtas bare når
+ *    `allowSandbox` er satt (secret APPSTORE_ALLOW_SANDBOX=true, bare på test-prosjektet).
+ *  - M4: appAccountToken MÅ finnes og være den innloggede brukerens id (appen setter den ved
+ *    kjøpet). Ellers kunne første konto som sendte en transaksjons-id, ta kjøpet. */
 export function recordFromTransaction(
   tx: TransactionPayload,
-  options: { userId: string; bundleId: string; request: VerifyRequest; now: Date },
+  options: { userId: string; bundleId: string; request: VerifyRequest; now: Date; allowSandbox: boolean },
 ): PurchaseRecord {
   if (tx.bundleId !== options.bundleId) throw new PurchaseError("wrong_app", "Kjøpet er fra en annen app");
   const kind = PRODUCTS[tx.productId];
   if (!kind) throw new PurchaseError("unknown_product", `Ukjent produkt ${tx.productId}`);
-  // appAccountToken settes av appen til profil-id-en ved kjøpet. Er den satt, må den stemme.
-  if (tx.appAccountToken && tx.appAccountToken.toLowerCase() !== options.userId.toLowerCase()) {
-    throw new PurchaseError("wrong_account", "Kjøpet er gjort av en annen konto");
+  const environment = environmentOf(tx);
+  if (environment === "sandbox" && !options.allowSandbox) {
+    throw new PurchaseError("sandbox_not_allowed", "Testkjøp (sandkasse) låser ikke opp i produksjon");
+  }
+  if (!tx.appAccountToken || tx.appAccountToken.toLowerCase() !== options.userId.toLowerCase()) {
+    throw new PurchaseError("wrong_account", "Kjøpet er ikke gjort av denne kontoen");
   }
   let status: PurchaseRecord["status"] = "active";
   if (tx.revocationDate) status = "refunded";
@@ -114,12 +128,12 @@ export function recordFromTransaction(
     product_kind: kind,
     original_transaction_id: tx.originalTransactionId,
     transaction_id: tx.transactionId,
-    environment: tx.environment === "Production" ? "production" : "sandbox",
+    environment,
     status,
     purchased_at: iso(tx.purchaseDate),
     expires_at: iso(tx.expiresDate),
     revoked_at: iso(tx.revocationDate),
-    app_account_token: tx.appAccountToken ? tx.appAccountToken.toLowerCase() : null,
+    app_account_token: tx.appAccountToken.toLowerCase(),
     competition_id: kind === "consumable" ? options.request.competitionId : null,
     club_id: kind === "subscription" ? options.request.clubId : null,
   };

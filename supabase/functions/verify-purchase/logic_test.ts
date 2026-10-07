@@ -35,6 +35,7 @@ const options = (body: unknown = { transactionId: "2000000001", competitionId: C
   bundleId: BUNDLE,
   request: parseRequest(body),
   now: NOW,
+  allowSandbox: true,
 });
 
 Deno.test("forespørselen: transaksjons-id er tall, turnering og klubb er uuid", () => {
@@ -70,6 +71,33 @@ Deno.test("feil app, ukjent produkt og annen konto avvises", () => {
   is(statusForError(new PurchaseError("wrong_account", "x")), 422);
   is(statusForError(new PurchaseError("bad_request", "x")), 400);
   is(statusForError(new Error("nett")), 502);
+});
+
+Deno.test("sandkassekjøp godtas bare når testmiljøet sier det (H3)", () => {
+  throws(
+    () => recordFromTransaction(tx(), { ...options(), allowSandbox: false }),
+    (e) => (e as PurchaseError).code === "sandbox_not_allowed",
+  );
+  // Ukjent miljø regnes som sandkasse.
+  throws(
+    () => recordFromTransaction(tx({ environment: undefined }), { ...options(), allowSandbox: false }),
+    (e) => (e as PurchaseError).code === "sandbox_not_allowed",
+  );
+  const prod = recordFromTransaction(tx({ environment: "Production" }), { ...options(), allowSandbox: false });
+  is(prod.environment, "production");
+  is(recordFromTransaction(tx(), options()).environment, "sandbox");
+});
+
+Deno.test("appAccountToken må finnes og være den innloggede (M4)", () => {
+  throws(
+    () => recordFromTransaction(tx({ appAccountToken: undefined }), options()),
+    (e) => (e as PurchaseError).code === "wrong_account",
+  );
+  throws(
+    () => recordFromTransaction(tx({ appAccountToken: "" }), options()),
+    (e) => (e as PurchaseError).code === "wrong_account",
+  );
+  is(recordFromTransaction(tx({ appAccountToken: USER.toUpperCase() }), options()).app_account_token, USER);
 });
 
 Deno.test("refusjon og utløpt abonnement", () => {

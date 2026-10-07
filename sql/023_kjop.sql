@@ -149,6 +149,12 @@ grant execute on function public.competition_is_unlocked(uuid) to authenticated;
 --     revoked_at, app_account_token, club_id, competition_id}
 -- Upsert på original_transaction_id. Samme kjøp fra en annen profil = 42501
 -- (en kvittering kan ikke «lånes»). Returnerer raden som jsonb.
+-- Sikkerhetsrevisjonen 07.10.2026 (i tillegg til sjekkene i verify-purchase):
+--   * M4: app_account_token må finnes og være profil-id-en (appen setter den
+--     ved kjøpet), ellers 42501.
+--   * H3: environment må være oppgitt ('sandbox' eller 'production') og
+--     lagres. Det er ingen standard: et kjøp uten miljø blir aldri
+--     «production». verify-purchase avviser sandkassen utenfor test.
 create or replace function public.record_purchase(p jsonb)
 returns jsonb
 language plpgsql
@@ -162,6 +168,8 @@ declare
   v_status       text := coalesce(nullif(p ->> 'status', ''), 'active');
   v_competition  uuid := nullif(p ->> 'competition_id', '')::uuid;
   v_club         uuid := nullif(p ->> 'club_id', '')::uuid;
+  v_env          text := nullif(p ->> 'environment', '');
+  v_token        uuid := nullif(p ->> 'app_account_token', '')::uuid;
   v_existing     public.entitlements;
   v_row          public.entitlements;
 begin
@@ -170,6 +178,12 @@ begin
   end if;
   if not exists (select 1 from public.profiles pr where pr.id = v_profile) then
     raise exception 'Fant ikke profilen' using errcode = 'P0002';
+  end if;
+  if v_env is null or v_env not in ('sandbox', 'production') then
+    raise exception 'Mangler miljø (sandbox eller production)' using errcode = '22023';
+  end if;
+  if v_token is null or v_token <> v_profile then
+    raise exception 'Kjøpet er ikke gjort av denne kontoen (appAccountToken)' using errcode = '42501';
   end if;
 
   select * into v_existing from public.entitlements e where e.original_transaction_id = v_original for update;
@@ -198,9 +212,9 @@ begin
                                         transaction_id, environment, status, purchased_at, expires_at,
                                         revoked_at, app_account_token, competition_id)
   values (v_profile, v_club, p ->> 'product_id', v_kind, v_original,
-          nullif(p ->> 'transaction_id', ''), coalesce(nullif(p ->> 'environment', ''), 'production'), v_status,
+          nullif(p ->> 'transaction_id', ''), v_env, v_status,
           nullif(p ->> 'purchased_at', '')::timestamptz, nullif(p ->> 'expires_at', '')::timestamptz,
-          nullif(p ->> 'revoked_at', '')::timestamptz, nullif(p ->> 'app_account_token', '')::uuid, v_competition)
+          nullif(p ->> 'revoked_at', '')::timestamptz, v_token, v_competition)
   on conflict (original_transaction_id) do update
     set transaction_id = excluded.transaction_id,
         status         = excluded.status,
@@ -324,6 +338,10 @@ commit;
 -- select 8, 'bare liga og cup krever kjøp (morro, sesong og spill er gratis)',
 --        pg_get_functiondef('public.competitions_require_purchase()'::regprocedure) like '%(''league'', ''cup'')%'
 --        and pg_get_functiondef('public.competitions_require_purchase()'::regprocedure) not like '%''fun''%'
+-- union all
+-- select 9, 'hvert kjøp har miljø og appAccountToken = kjøperen (H3, M4)',
+--        not exists (select 1 from public.entitlements
+--                    where environment is null or app_account_token is distinct from profile_id)
 -- order by nr;
 
 

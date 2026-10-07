@@ -13,6 +13,8 @@
 //
 // Secrets (Supabase → Edge Functions → Secrets), aldri i repoet:
 //   APPSTORE_ISSUER_ID, APPSTORE_KEY_ID, APPSTORE_PRIVATE_KEY, APPSTORE_BUNDLE_ID
+// Valgfri: APPSTORE_ALLOW_SANDBOX=true BARE på test-prosjektet. Uten den avvises sandkassekjøp
+// (TestFlight og Xcode), så et testkjøp aldri låser opp i produksjon.
 // Satt av Supabase selv: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
 //
 // Senere: App Store Server Notifications V2 (refusjon, fornyelse) til en egen funksjon som
@@ -79,6 +81,7 @@ Deno.serve(async (request) => {
       bundleId: env.APPSTORE_BUNDLE_ID,
       request: verifyRequest,
       now: new Date(),
+      allowSandbox: Deno.env.get("APPSTORE_ALLOW_SANDBOX") === "true",
     });
 
     const saved = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/record_purchase`, {

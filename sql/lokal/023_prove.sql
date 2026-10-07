@@ -25,13 +25,15 @@ $$;
 create function pg_temp.som(p_uid text) returns void language sql as $$
   select set_config('request.jwt.claim.sub', p_uid, false);
 $$;
--- Som Edge Function verify-purchase: service_role, uten auth.uid().
+-- Som Edge Function verify-purchase: service_role, uten auth.uid(). Som
+-- verify-purchase sender den miljøet og appAccountToken (= kjøperen) når
+-- testen ikke sier noe annet.
 create function pg_temp.kjop(p jsonb) returns jsonb language plpgsql as $$
 declare v jsonb;
 begin
   perform set_config('request.jwt.claim.sub', '', false);
   set local role service_role;
-  v := public.record_purchase(p);
+  v := public.record_purchase(jsonb_build_object('environment', 'sandbox', 'app_account_token', p ->> 'profile_id') || p);
   reset role;
   return v;
 end $$;
@@ -93,6 +95,16 @@ select pg_temp.lik(pg_temp.kjop(jsonb_build_object('profile_id', :'uH', 'product
                                                    'environment', 'sandbox')) ->> 'competition_id',
                    :'cup', 'samme kjøp på nytt uten turnering (gjenoppretting) beholder koblingen');
 select pg_temp.feil($$select pg_temp.kjop('{"profile_id": "$$ || :'uK' || $$", "product_id": "x", "original_transaction_id": "t1"}')$$, '42501');
+-- Sikkerhetsrevisjonen: appAccountToken må være kjøperen (M4), og miljøet må stå (H3).
+select pg_temp.feil(format($$select pg_temp.kjop('{"profile_id": "%s", "product_id": "x", "original_transaction_id": "t7", "app_account_token": null}')$$, :'uH'), '42501');
+select pg_temp.feil(format($$select pg_temp.kjop('{"profile_id": "%s", "product_id": "x", "original_transaction_id": "t7", "app_account_token": "%s"}')$$, :'uH', :'uK'), '42501');
+select pg_temp.feil(format($$select pg_temp.kjop('{"profile_id": "%s", "product_id": "x", "original_transaction_id": "t7", "environment": null}')$$, :'uH'), '22023');
+select pg_temp.feil(format($$select pg_temp.kjop('{"profile_id": "%s", "product_id": "x", "original_transaction_id": "t7", "environment": "staging"}')$$, :'uH'), '22023');
+select pg_temp.lik((select count(*) from public.entitlements where original_transaction_id = 't7'), 0::bigint,
+                   'ingen av de avviste kjøpene ble lagret');
+select pg_temp.lik(pg_temp.kjop(jsonb_build_object('profile_id', :'uH', 'product_id', :'P', 'original_transaction_id', 't8',
+                                                   'environment', 'production')) ->> 'environment',
+                   'production', 'miljøet lagres som det kom');
 -- Et nytt kjøp for en turnering som alt er låst opp, blir en ledig kreditt.
 select pg_temp.lik(pg_temp.kjop(jsonb_build_object('profile_id', :'uH', 'product_id', :'P', 'original_transaction_id', 't2',
                                                    'competition_id', :'cup')) ->> 'competition_id',
