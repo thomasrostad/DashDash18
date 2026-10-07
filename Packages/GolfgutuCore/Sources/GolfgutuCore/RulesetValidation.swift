@@ -121,6 +121,23 @@ extension Ruleset {
             add("tips.lineStep", "Linja må flyttes i hele slag, så den blir stående på et halvt.")
         }
 
+        // Veddemål. Grensene er databasens (bet_stakes.points, sql/012_veddemaal.sql).
+        if !(1...17).contains(bets.lockAheadHoles) {
+            add("bets.lockAheadHoles", "Forspranget må være fra 1 til 17 hull.")
+        }
+        if !Bets.stakeLimits.contains(bets.maxStakePerBet) {
+            add("bets.maxStakePerBet", "Taket per veddemål må være mellom 1 og \(Bets.stakeLimits.upperBound) poeng.")
+        }
+        if bets.stakeOptions.isEmpty || bets.stakeOptions.contains(where: { $0 < 1 || $0 > bets.maxStakePerBet }) {
+            add("bets.stakeOptions", "Beløpsknappene må være fra 1 poeng og opp til taket.")
+        }
+        if bets.defaultStake < 1 || bets.defaultStake > bets.maxStakePerBet {
+            add("bets.defaultStake", "Beløpet som er valgt må være fra 1 poeng og opp til taket.")
+        }
+        if let start = bets.startingPoints, !(0...Bets.bankLimit).contains(start) {
+            add("bets.startingPoints", "Startbeholdningen må være mellom 0 og \(Bets.bankLimit) poeng, eller tom for ingen bank.")
+        }
+
         // Ledelsen underveis.
         if leadCheckpoints.contains(where: { !(1...18).contains($0) }) {
             add("leadCheckpoints", "Sjekkpunktene for ledelsen må være hull fra 1 til 18.")

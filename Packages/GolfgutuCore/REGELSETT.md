@@ -32,6 +32,11 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `formats.allowedFormIDs` | liste | Formene arrangøren kan velge. |
 | `formats.maxPerBay` | tall | Største lag i en bås. |
 | `formats.matchStrokes` | `lowestFromScratch` / `fullHandicap` | Slag i match. |
+| `bets.lockAheadHoles` | tall | Veddemål: hvor mange hull foran spilleren det første åpne hullet ligger. |
+| `bets.maxStakePerBet` | tall | Veddemål: mest én spiller kan ha på ett veddemål. |
+| `bets.stakeOptions` | liste | Veddemål: beløpsknappene i vedd-arket. |
+| `bets.defaultStake` | tall | Veddemål: beløpet som er valgt når arket åpnes. |
+| `bets.startingPoints` | tall eller `null` | Poengbanken: startbeholdning per sesong. `null`: ingen bank, bare taket gjelder. |
 
 Felt som mangler i JSON-en, får Golfgutu-verdien. `null` er et valg der feltet tillater det
 (`best`, `roundingStep`, `allowanceOverride`). Skjemaets standard `{"version": 1}` blir Golfgutu-oppsettet.
@@ -244,6 +249,21 @@ maks per bås under 1; ingen tillatte former, ukjent form, og standardform som i
 - `round`: som `evening`, men per runde.
 - Stablefordsummen: `round` (Golfgutu, beste 5 runder) eller `evening` (summen av kveldens runder).
 - Med `best: null` gir alle enhetene samme svar: alt teller.
+
+## Veddemål
+
+Se `Bets.swift` og `docs/veddemaal-poeng.md`. Fixture: `veddemaal.json`.
+
+| Verdi | Brukes i | Ruleset | Golfgutu |
+|---|---|---|---|
+| Forsprang (`VEDDEMAAL_FORSPRANG`) | `Bets.firstOpenHole`, `acceptsStakes`, `templates` | `bets.lockAheadHoles` | 1 |
+| Tak per veddemål (`VEDD_TAK`) | `Bets.stakeProblem` | `bets.maxStakePerBet` | 200 |
+| Beløpsknapper (`VEDD_BELOP`) | vedd-arket | `bets.stakeOptions` | 50, 100, 200 |
+| Valgt beløp når arket åpnes | vedd-arket | `bets.defaultStake` | 100 |
+| Startbeholdning (ny, ikke i PWA-en) | `Bets.balance`, `available`, `table` | `bets.startingPoints` | 1000 (forslag) |
+| Grenser for birdie (≤ −1) og par (≤ 0) netto mot par | `Bets.outcome` | bli (vilkårets definisjon) | – |
+| Vinnersiden deler taperpotten etter innsats, to desimaler (`rund2`) | `Bets.transfers`, `net` | bli (oppgjørsmodellen) | – |
+| Største innsats og startbeholdning databasen godtar | `Bets.stakeLimits`, `bankLimit` | bli (datagrense) | 10 000 og 1 000 000 |
 
 ## Hvorfor noe blir i koden
 
