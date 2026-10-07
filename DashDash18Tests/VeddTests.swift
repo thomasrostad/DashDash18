@@ -227,9 +227,57 @@ struct VeddTests {
         ]
         let board = BetsBoard(Self.input(bets: bets), me: Self.cato, isOrganizer: true)
         #expect(board.sweepPlan.map(\.betID) == [F.id(1)])
-        #expect(board.sweepPlan.map(\.outcome) == [.yes])
+        #expect(board.sweepPlan.map(\.verdict) == [.yes])
         #expect(board.item(F.id(3))?.needsOrganizer == true)
         #expect(board.item(F.id(2))?.needsOrganizer == false)
+    }
+
+    /// Delt hull annulleres av feiingen (besluttet 07.10.2026), også når arrangøren selv har
+    /// satset: det er scorene som avgjør. Med PWA-ens regler venter det på arrangøren.
+    @Test func deltHullAnnulleresAvFeiingen() {
+        let bets = [Self.bet(1, condition: BetConditionRecord(kind: .hole, hole: 0, a: Self.bjorn, b: Self.me))]
+        let stakes = [Self.stake(11, 1, Self.cato, .yes, 50), Self.stake(12, 1, Self.me, .no, 50)]
+        let scores = [(F.anders, 0, 4), (F.bjorn, 0, 4)]
+        let board = BetsBoard(Self.input(bets: bets, stakes: stakes, scores: scores), me: Self.cato, isOrganizer: true)
+        #expect(board.sweepPlan.map(\.betID) == [F.id(1)])
+        #expect(board.sweepPlan.map(\.verdict) == [.void])
+        #expect(board.item(F.id(1))?.needsOrganizer == false)
+        var pwa = Ruleset.golfgutu
+        pwa.bets = .pwa
+        let manuell = BetsBoard(Self.input(bets: bets, stakes: stakes, rules: pwa, scores: scores), me: Self.cato, isOrganizer: true)
+        #expect(manuell.sweepPlan.isEmpty)
+        #expect(manuell.item(F.id(1))?.needsOrganizer == true)
+    }
+
+    /// Den som avgjør, vedder ikke: «Avgjør» bare for en arrangør uten innsats.
+    @Test func arrangorenMedInnsatsKanIkkeAvgjore() throws {
+        let bets = [Self.bet(1), Self.bet(2)]
+        let stakes = [Self.stake(11, 1, Self.cato, .yes, 50), Self.stake(12, 2, Self.me, .no, 50)]
+        let cato = BetsBoard(Self.input(bets: bets, stakes: stakes), me: Self.cato, isOrganizer: true)
+        let medInnsats = try #require(cato.item(F.id(1)))
+        #expect(!medInnsats.canResolve && medInnsats.resolverHasStake)
+        let utenInnsats = try #require(cato.item(F.id(2)))
+        #expect(utenInnsats.canResolve && !utenInnsats.resolverHasStake)
+        // En spiller avgjør aldri, med eller uten innsats.
+        let anders = BetsBoard(Self.input(bets: bets, stakes: stakes), me: Self.me, isOrganizer: false)
+        #expect(anders.item(F.id(1))?.canResolve == false && anders.item(F.id(2))?.canResolve == false)
+        #expect(anders.item(F.id(2))?.resolverHasStake == false)
+        #expect(BetTexts.resolverHasStake.contains("En annen arrangør"))
+        #expect(BetTexts.resolvedBy("Cato") == "avgjort av Cato")
+        #expect(BetTexts.resolvedBy(nil) == "avgjort av scorene")
+    }
+
+    /// Hele poeng: Bjørns 100 delt på Anders (100) og Cato (50) blir hele tall, og
+    /// summen i poengtabellen er startbeholdningen ganger antall spillere.
+    @Test func helePoengITabellen() throws {
+        let bets = [Self.bet(1, status: .resolved, resolution: .yes, resolvedAt: "2026-10-08T19:00:00Z")]
+        let stakes = [Self.stake(11, 1, Self.me, .yes, 100), Self.stake(12, 1, Self.cato, .yes, 50),
+                      Self.stake(13, 1, Self.bjorn, .no, 100)]
+        let board = BetsBoard(Self.input(bets: bets, stakes: stakes), me: Self.me, isOrganizer: false)
+        // 100 · 100/150 = 66,67 → 67, 100 · 50/150 = 33,33 → 33.
+        #expect(board.item(F.id(1))?.myResult == 67)
+        #expect(board.table.map(\.row.net) == [67, 33, -100])
+        #expect(board.table.reduce(0) { $0 + ($1.row.balance ?? 0) } == 3000)
     }
 
     // MARK: Vedd-arket

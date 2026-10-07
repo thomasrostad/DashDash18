@@ -270,7 +270,11 @@ private struct BetCard: View {
             if let error {
                 Text(error).ddErrorStyle()
             }
-            if board.isOrganizer && item.isOpen {
+            if item.resolverHasStake {
+                Text("Du har satset på dette, så en annen arrangør må avgjøre det.")
+                    .font(.ddCaption)
+                    .foregroundStyle(Color.ddInkSecondary)
+            } else if item.canResolve {
                 Button("Avgjør veddemålet …") { confirmResolve = true }
                     .buttonStyle(.dd(.text, compact: true))
                     .confirmationDialog("Avgjør «\(item.row.question)»", isPresented: $confirmResolve, titleVisibility: .visible) {
@@ -393,7 +397,7 @@ private struct SettledRow: View {
         if let side = item.mySide {
             return "\(outcome) · du satset \(BetTexts.points(item.myPoints)) på \(BetTexts.sideShort(side))"
         }
-        return outcome + (item.resolvedByName.map { " · avgjort av \($0)" } ?? "")
+        return outcome + " · " + BetTexts.resolvedBy(item.resolvedByName)
     }
 }
 
@@ -429,7 +433,8 @@ struct BetPointsTableView: View {
     }
 
     private var footer: String {
-        let start = board.rules.bets.startingPoints.map { "Alle starter sesongen med \($0) poeng. " } ?? ""
-        return start + "Vinnersiden deler taperpotten etter innsats. Tabellen teller ikke i jakkeracet."
+        let start = board.rules.bets.startingPoints.map { "Alle starter sesongen med \($0) poeng, og ny sesong gir ny bank. " } ?? ""
+        let whole = board.rules.bets.payoutDecimals == 0 ? " Oppgjøret er i hele poeng." : ""
+        return start + "Vinnersiden deler taperpotten etter innsats." + whole + " Tabellen teller ikke i jakkeracet."
     }
 }

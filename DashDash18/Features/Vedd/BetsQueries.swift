@@ -43,8 +43,15 @@ enum BetsQueries {
             .execute()
     }
 
+    /// Arrangøren for hånd. Avvises når hun har innsats i veddemålet.
     static func resolve(client: SupabaseClient, betID: UUID, verdict: BetVerdict) async throws {
         try await client.rpc("resolve_bet", params: ResolveBetParams(p_bet_id: betID, p_resolution: verdict.rawValue))
+            .execute()
+    }
+
+    /// Feiingen på arrangørens telefon: bare veddemål med vilkår, og bare når scorene kan ha gitt svar.
+    static func settle(client: SupabaseClient, betID: UUID, verdict: BetVerdict) async throws {
+        try await client.rpc("settle_bet", params: ResolveBetParams(p_bet_id: betID, p_resolution: verdict.rawValue))
             .execute()
     }
 
