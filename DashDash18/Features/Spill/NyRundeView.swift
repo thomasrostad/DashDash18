@@ -6,6 +6,7 @@ import SwiftUI
 struct NyRundeView: View {
     @State var model: NyRundeModel
     let onStarted: (UUID) -> Void
+    @Environment(\.clubContext) private var clubContext
 
     @Environment(\.dismiss) private var dismiss
     @State private var guestName = ""
@@ -19,6 +20,9 @@ struct NyRundeView: View {
             guestsSection
             scoringSection
             formSection
+            if let links = model.links {
+                CountsAlsoInSection(model: links, candidates: links.candidates(players: model.linkPlayers))
+            }
         }
         .navigationTitle("Ny runde")
         .ddNavigationChrome()
@@ -31,6 +35,7 @@ struct NyRundeView: View {
             }
         }
         .task { await model.load() }
+        .task { await model.prepareLinks(access: clubContext?.competitionAccess, clubID: clubContext?.clubID) }
     }
 
     // MARK: Bane og start

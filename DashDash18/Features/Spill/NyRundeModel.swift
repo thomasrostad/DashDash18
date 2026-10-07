@@ -71,6 +71,27 @@ final class NyRundeModel {
         return options
     }
 
+    // MARK: «Teller også i …» (fase 15)
+
+    /// Konkurransene runden kan telle i. Nil når `CompetitionsFeature` er av.
+    private(set) var links: CompetitionLinkModel?
+
+    /// Henter konkurransene du styrer. `access` har klubbmedlemskapet ditt når appen har en klubb.
+    func prepareLinks(access: CompetitionAccess?, clubID: UUID?) async {
+        guard CompetitionsFeature.isActive, let client, links == nil else { return }
+        let model = CompetitionLinkModel(client: client,
+                                         access: access ?? CompetitionAccess(profileID: userID, memberships: []))
+        links = model
+        await model.load(clubID: clubID, roundID: nil)
+    }
+
+    /// Spillerne slik konkurransene kjenner dem: deg og vennene (profiler) og gjestene.
+    var linkPlayers: [CompetitionLinking.Player] {
+        [CompetitionLinking.Player(playerID: userID, clubID: nil, profileID: userID)]
+            + draft.friends.map { CompetitionLinking.Player(playerID: $0, clubID: nil, profileID: $0) }
+            + draft.guests.map { CompetitionLinking.Player(playerID: $0.id, clubID: nil, profileID: nil) }
+    }
+
     func select(course: CourseListItem) {
         draft.setCourse(course.id, courseHoles: course.holeCount)
     }
@@ -83,7 +104,12 @@ final class NyRundeModel {
         error = nil
         defer { isStarting = false }
         do {
-            return try await LooseRoundQueries.start(client: client, setup)
+            let id = try await LooseRoundQueries.start(client: client, setup)
+            if let links, let message = await links.save(roundID: id, players: linkPlayers) {
+                // Runden er startet; bare koblingen feilet.
+                self.error = message
+            }
+            return id
         } catch {
             self.error = DataError.from(error).message
             return nil

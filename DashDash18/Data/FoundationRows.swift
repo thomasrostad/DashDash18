@@ -167,6 +167,8 @@ nonisolated struct CompetitionRow: Codable, Equatable, Identifiable, Sendable {
     /// StoreKit: krever kjøp. Settes bare av serveren.
     var requiresPurchase: Bool
     var entitlementID: UUID?
+    /// Åpen påmelding (`signup_open`, sql/022). Tom når kolonnen ikke er hentet (før 022).
+    var signupOpen: Bool? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -183,10 +185,16 @@ nonisolated struct CompetitionRow: Codable, Equatable, Identifiable, Sendable {
         case isMain = "is_main"
         case requiresPurchase = "requires_purchase"
         case entitlementID = "entitlement_id"
+        case signupOpen = "signup_open"
     }
 
     static let columns = "id, kind, name, club_id, owner_id, season_id, status, entry, rules, starts_on, ends_on, "
         + "is_main, requires_purchase, entitlement_id"
+    /// Med åpen påmelding. Krever 022 (`CompetitionsFeature`).
+    static let columnsWithSignup = columns + ", signup_open"
+
+    /// Påmeldingen er åpen.
+    var isSignupOpen: Bool { signupOpen ?? false }
 }
 
 /// Påmeldt i en konkurranse (`competition_participants`): et klubbmedlem eller en profil.

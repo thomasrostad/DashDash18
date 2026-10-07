@@ -224,6 +224,16 @@ struct CompetitionsTests {
         #expect(Cup.bracket(draw: [], results: []).rounds.isEmpty)
     }
 
+    /// Rader som ikke passer (to kamper på samme plass, et hull i rekken), gir et tre uten krasj.
+    @Test func ugyldigTrekningKrasjerIkke() {
+        let b = Cup.bracket(draw: [Cup.Pairing(slot: 0, a: "a", b: "b"), Cup.Pairing(slot: 0, a: "c", b: "d"),
+                                   Cup.Pairing(slot: 2, a: "e", b: nil)],
+                            results: [Cup.Result(round: 1, slot: 0, winner: "c")])
+        #expect(b.rounds.map(\.count) == [4, 2, 1])
+        #expect(b.rounds[0].map(\.a) == ["c", nil, "e", nil])
+        #expect(b.rounds[1][0].a == "c" && b.rounds[1][1].a == "e" && b.rounds[1][1].b == nil)
+    }
+
     // MARK: Kampen i en runde
 
     /// 9 hull uten bane (indeks = hullnummer), frosset spillehandicap.

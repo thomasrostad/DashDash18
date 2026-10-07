@@ -542,7 +542,10 @@ public enum Cup {
     /// ikke i kampen, kampen er ikke klar), hoppes over.
     public static func bracket(draw: [Pairing], results: [Result]) -> Bracket {
         guard !draw.isEmpty else { return Bracket(rounds: [], champion: nil) }
-        let slots = draw.count
+        // Én kamp per plass (den siste vinner), og plassene fylt opp til en toerpotens, så treet tåler
+        // rader som ikke passer (de blir tomme kamper).
+        let byslot = Dictionary(draw.map { ($0.slot, $0) }, uniquingKeysWith: { _, last in last })
+        let slots = bracketSize(entrants: ((byslot.keys.max() ?? 0) + 1) * 2) / 2
         var roundCount = 1
         while (1 << roundCount) < slots * 2 { roundCount += 1 }
         let byKey = Dictionary(results.map { ("\($0.round):\($0.slot)", $0) }, uniquingKeysWith: { _, last in last })
@@ -555,8 +558,12 @@ public enum Cup {
         }
 
         var rounds: [[Match]] = []
-        var first = draw.sorted { $0.slot < $1.slot }.enumerated().map { i, p in
-            Match(round: 1, slot: i, a: p.a, b: p.b, winner: p.b == nil ? p.a : nil, isBye: p.b == nil, walkover: false)
+        var first = (0..<slots).map { i in
+            guard let p = byslot[i] else {
+                return Match(round: 1, slot: i, a: nil, b: nil, winner: nil, isBye: false, walkover: false)
+            }
+            return Match(round: 1, slot: i, a: p.a, b: p.b, winner: p.b == nil ? p.a : nil, isBye: p.b == nil,
+                         walkover: false)
         }
         for i in first.indices { apply(&first[i]) }
         rounds.append(first)

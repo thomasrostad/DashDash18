@@ -45,6 +45,7 @@ final class RundeAdminModel {
 
     private var client: SupabaseClient { context.client }
     private var clubID: UUID { context.clubID }
+    var clubContext: ClubContext { context }
 
     static let roundColumns = RundeQueries.roundColumns
     static let playerColumns =
