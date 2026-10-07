@@ -24,7 +24,7 @@ struct DegProfileSection: View {
             }
         } footer: {
             if model.row != nil {
-                DDFooter("Portrettet står ved navnet ditt i appen.")
+                DDFooter("Portrettet står her og ved meldingene dine i kveldens tråd.")
             }
         }
         Section {
@@ -61,7 +61,10 @@ struct DegProfileSection: View {
         }
         .task {
             if model.row == nil { await model.load() }
-            if let row = model.row { draft = DegProfileDraft(row: row) }
+            // Tilbake fra en annen fane: det du har skrevet og ikke lagret, står.
+            if let row = model.row, draft == DegProfileDraft(name: "", handicap: "") || !draft.hasChanges(from: row) {
+                draft = DegProfileDraft(row: row)
+            }
         }
         .alert(
             "Kunne ikke lagre",
@@ -132,6 +135,7 @@ private struct DegPortraitButtons: View {
     let model: DegProfileModel
     @State private var photoItem: PhotosPickerItem?
     @State private var showsCamera = false
+    @State private var cameraDenied = false
     @State private var confirmingRemove = false
 
     private var hasPortrait: Bool { model.row?.avatarPath != nil }
@@ -173,6 +177,7 @@ private struct DegPortraitButtons: View {
             }
             .ignoresSafeArea()
         }
+        .cameraDeniedAlert(isPresented: $cameraDenied)
         .confirmationDialog(
             "Fjerne bildet? Da står initialene igjen.",
             isPresented: $confirmingRemove,
@@ -194,7 +199,11 @@ private struct DegPortraitButtons: View {
                     .labelStyle(DDIconLabelStyle())
             }
         case .camera:
-            Button { showsCamera = true } label: {
+            Button {
+                Task {
+                    if await CameraAccess.requestIfNeeded() { showsCamera = true } else { cameraDenied = true }
+                }
+            } label: {
                 Label("Ta bilde", systemImage: source.systemImage)
                     .labelStyle(DDIconLabelStyle())
             }

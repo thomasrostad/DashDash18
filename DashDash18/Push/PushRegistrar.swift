@@ -70,10 +70,27 @@ final class PushRegistrar {
             guard let self else { return }
             Task { await self.receive(result) }
         }
+        await refreshAuthorization()
+    }
+
+    /// Leser tillatelsen på nytt, f.eks. når du kommer tilbake fra Innstillinger. Er den
+    /// nettopp gitt, registreres telefonen hos APNs; er den tatt bort, vises det.
+    func refreshAuthorization() async {
+        guard PushFeature.isEnabled, userID != nil else { return }
         let settings = await UNUserNotificationCenter.current().notificationSettings()
-        update(from: settings.authorizationStatus)
+        status = Self.nextStatus(Self.permission(settings.authorizationStatus), current: status)
         if status == .registering {
             UIApplication.shared.registerForRemoteNotifications()
+        }
+    }
+
+    /// Ny status etter at tillatelsen er lest. En telefon som alt er registrert i denne
+    /// økten, blir stående som registrert.
+    static func nextStatus(_ permission: PushPermission, current: Status) -> Status {
+        switch permission {
+        case .notDetermined: .notDetermined
+        case .denied: .denied
+        case .allowed: current == .registered ? .registered : .registering
         }
     }
 
@@ -92,24 +109,37 @@ final class PushRegistrar {
 
     /// Før utlogging: fjern telefonen, så den forrige innloggingen ikke får push her.
     /// Må skje mens økten finnes (RPC-en krever innlogging).
+    /// Uten nett gis det opp etter `unregisterTimeLimit`, så utloggingen ikke henger. Raden tas
+    /// da over av neste som logger inn på telefonen (`register_push_device`).
     func unregister() async {
         guard PushFeature.isEnabled, let deviceID else { return }
-        _ = try? await client.rpc("unregister_push_device", params: DeviceParam(p_device_id: deviceID)).execute()
+        let client = client
+        let call = Task {
+            _ = try? await client.rpc("unregister_push_device", params: DeviceParam(p_device_id: deviceID)).execute()
+        }
+        let timer = Task {
+            try? await Task.sleep(for: Self.unregisterTimeLimit)
+            call.cancel()
+        }
+        await call.value
+        timer.cancel()
         lastSent = nil
         userID = nil
     }
+
+    static let unregisterTimeLimit: Duration = .seconds(5)
 
     func stop() {
         userID = nil
         lastSent = nil
     }
 
-    private func update(from authorization: UNAuthorizationStatus) {
+    private static func permission(_ authorization: UNAuthorizationStatus) -> PushPermission {
         switch authorization {
-        case .notDetermined: status = .notDetermined
-        case .denied: status = .denied
-        case .authorized, .provisional, .ephemeral: status = .registering
-        @unknown default: status = .notDetermined
+        case .denied: .denied
+        case .authorized, .provisional, .ephemeral: .allowed
+        case .notDetermined: .notDetermined
+        @unknown default: .notDetermined
         }
     }
 
@@ -154,11 +184,51 @@ final class PushRegistrar {
 /// iOS kaller disse bare etter `registerForRemoteNotifications()`, som bare skjer når
 /// `PushFeature.isEnabled` er på.
 final class PushAppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        // Må settes før oppstarten er ferdig, ellers går et trykk på pushen tapt.
+        if PushFeature.isEnabled { UNUserNotificationCenter.current().delegate = self }
+        return true
+    }
+
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         PushTokenRelay.shared.deliver(.success(deviceToken))
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: any Error) {
         PushTokenRelay.shared.deliver(.failure(error))
+    }
+}
+
+/// Push mens appen står åpen, og trykk på en push. Uten denne viser iOS ingenting når appen
+/// er framme, og bjella står stille til appen åpnes på nytt.
+extension PushAppDelegate: UNUserNotificationCenterDelegate {
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                            willPresent notification: UNNotification) async
+        -> UNNotificationPresentationOptions {
+        let target = PushTarget(userInfo: notification.request.content.userInfo)
+        let show = await MainActor.run {
+            PushInbox.didReceive()
+            return PushForeground.shouldShow(target, visibleThreadEventID: PushInbox.visibleThreadEventID)
+        }
+        return show ? [.banner, .list, .sound] : []
+    }
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                            didReceive response: UNNotificationResponse) async {
+        await MainActor.run { PushInbox.didReceive() }
+    }
+}
+
+/// Det appen trenger å vite når en push kommer: hvilken tråd som står framme, og hvem som vil
+/// vite at det kom noe (bjella henter antall uleste på nytt).
+enum PushInbox {
+    /// Tråden som vises nå (settes av `TradView`).
+    static var visibleThreadEventID: UUID?
+
+    static let received = Notification.Name("DashDash18.pushReceived")
+
+    static func didReceive() {
+        NotificationCenter.default.post(name: received, object: nil)
     }
 }

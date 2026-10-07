@@ -35,6 +35,10 @@ actor FakeTradBackend: TradBackend {
     func messages(eventID: UUID) async throws -> [ThreadMessageRow] { rows.filter { $0.eventID == eventID } }
     func members(clubID: UUID) async throws -> [ClubMemberRow] { memberRows }
 
+    /// Lagrer meldingen, men svaret kommer aldri fram (nettet faller ut etter lagringen).
+    var loseInsertAnswer = false
+    func set(loseInsertAnswer: Bool) { self.loseInsertAnswer = loseInsertAnswer }
+
     func insert(_ message: ThreadMessageInsert) async throws -> ThreadMessageRow {
         inserted.append(message)
         if let insertError { throw insertError }
@@ -42,6 +46,7 @@ actor FakeTradBackend: TradBackend {
                                    memberID: message.memberID, body: message.body, mentions: message.mentions,
                                    imagePath: message.imagePath, createdAt: serverTime)
         rows.append(row)
+        if loseInsertAnswer { throw URLError(.networkConnectionLost) }
         return row
     }
 
@@ -59,6 +64,13 @@ actor FakeTradBackend: TradBackend {
     }
 
     func removeImages(paths: [String]) async throws { removed.append(paths) }
+
+    private(set) var avatarCalls: [[String]] = []
+
+    func avatarURLs(paths: [String], expiresIn: Int) async throws -> [String: URL] {
+        avatarCalls.append(paths)
+        return Dictionary(uniqueKeysWithValues: paths.map { ($0, URL(string: "https://portretter/\($0)")!) })
+    }
 
     func signedURLs(paths: [String], expiresIn: Int) async throws -> [String: URL] {
         signCalls.append((paths, expiresIn))
@@ -136,6 +148,28 @@ struct TradModelTests {
         #expect(model.directory.mentions(in: "@Ola", sender: kare).isEmpty)
     }
 
+    @Test func portretterForDemSomHarSkrevet() async {
+        let kareFace = "\(kare.uuidString.lowercased())/aaaaaaaa-0000-4000-8000-000000000001.jpg"
+        let carlFace = "\(carl.uuidString.lowercased())/aaaaaaaa-0000-4000-8000-000000000002.jpg"
+        var kareRow = member(kare, "Kåre Ås")
+        kareRow.avatarPath = kareFace
+        var carlRow = member(carl, "Carl Moe")
+        carlRow.avatarPath = carlFace
+        await backend.set(members: [member(thomasR, "Thomas Rostad"), kareRow, carlRow])
+        await backend.set(rows: [row(1, from: kare, minutes: 0), row(2, from: thomasR, minutes: 1)])
+        let model = TradModel(eventID: event, clubID: club, viewer: thomasR, isOrganizer: false, backend: backend,
+                              readStore: store, images: TradImageStore(),
+                              now: { Date(timeIntervalSince1970: 2_500_000) })
+        await model.load()
+        #expect(model.items.map(\.avatarPath) == [kareFace, nil])
+        // Bare Kåre har skrevet og har portrett; Carl har ikke skrevet.
+        #expect(await backend.avatarCalls == [[kareFace]])
+        #expect(model.avatarURL(for: kareFace) != nil)
+        // Ny henting med fersk lenke ber ikke om den igjen.
+        await model.load()
+        #expect(await backend.avatarCalls.count == 1)
+    }
+
     @Test func vistTraadMerkesLest() async {
         let rows = [row(1, from: thomasR, minutes: 0), row(2, from: kare, minutes: 10)]
         let model = await makeModel(viewer: kare, rows: rows)
@@ -184,6 +218,21 @@ struct TradModelTests {
         #expect(model.pending.isEmpty)
         #expect(model.draft == "Denne feiler")
         #expect(model.errorMessage?.hasPrefix("Klarte ikke å sende") == true)
+    }
+
+    @Test func lagretMenSvaretGikkTaptGirIkkeDobbel() async throws {
+        let model = await makeModel(viewer: thomasS)
+        await backend.set(loseInsertAnswer: true)
+        model.draft = "Kommer straks"
+        await model.attach(imageData: try TradImageCompressorTests.jpeg(width: 400, height: 300))
+        await model.send()
+        // Meldingen står én gang, teksten er ikke lagt tilbake, og bildet er ikke fjernet.
+        #expect(model.items.map(\.message.body) == ["Kommer straks"])
+        #expect(model.items.first?.isPending == false)
+        #expect(model.draft.isEmpty)
+        #expect(model.attachment == nil)
+        #expect(model.errorMessage == nil)
+        #expect(await backend.removed.isEmpty)
     }
 
     @Test func tomOgForLangSendesIkke() async {

@@ -156,7 +156,10 @@ final class VarslerModel {
         self.channel = channel
         listenTasks = [
             Task { [weak self] in
-                for await status in statuses { self?.isLive = status == .subscribed }
+                // Oppe igjen etter brudd i nettet: hent det som kom mens kanalen var nede.
+                for await status in statuses {
+                    if self?.setLive(status == .subscribed) == true { await self?.load() }
+                }
             },
             Task { [weak self] in
                 for await _ in activity { await self?.load() }
@@ -166,6 +169,12 @@ final class VarslerModel {
             },
             Task { try? await channel.subscribeWithError() },
         ]
+    }
+
+    /// Gir true når kanalen nettopp kom opp.
+    private func setLive(_ live: Bool) -> Bool {
+        defer { isLive = live }
+        return live && !isLive
     }
 
     func stopRealtime() async {

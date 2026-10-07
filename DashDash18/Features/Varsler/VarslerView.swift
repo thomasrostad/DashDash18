@@ -233,6 +233,10 @@ struct VarslerBell: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await badge.refresh() } }
         }
+        // En push mens appen står åpen: noe nytt har skjedd.
+        .onReceive(NotificationCenter.default.publisher(for: PushInbox.received)) { _ in
+            Task { await badge.refresh() }
+        }
     }
 }
 

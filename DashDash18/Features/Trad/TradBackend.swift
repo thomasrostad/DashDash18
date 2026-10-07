@@ -14,6 +14,13 @@ nonisolated protocol TradBackend: Sendable {
     func removeImages(paths: [String]) async throws
     /// Signerte lenker per sti. Stier som ikke kunne signeres, mangler i svaret.
     func signedURLs(paths: [String], expiresIn: Int) async throws -> [String: URL]
+    /// Signerte lenker til portrettene (bøtta `avatars`). Stier som ikke kunne signeres, mangler.
+    func avatarURLs(paths: [String], expiresIn: Int) async throws -> [String: URL]
+}
+
+nonisolated extension TradBackend {
+    /// Uten portretter (skjermprøver og tester som ikke bryr seg): initialene vises.
+    func avatarURLs(paths: [String], expiresIn: Int) async throws -> [String: URL] { [:] }
 }
 
 /// Tråden mot Supabase: tabellen `thread_messages` og bøtta `thread`.
@@ -64,6 +71,14 @@ nonisolated struct SupabaseTradBackend: TradBackend {
     }
 
     func signedURLs(paths: [String], expiresIn: Int) async throws -> [String: URL] {
+        try await Self.sign(paths, in: bucket, expiresIn: expiresIn)
+    }
+
+    func avatarURLs(paths: [String], expiresIn: Int) async throws -> [String: URL] {
+        try await Self.sign(paths, in: client.storage.from(DegAvatarPath.bucket), expiresIn: expiresIn)
+    }
+
+    private static func sign(_ paths: [String], in bucket: StorageFileApi, expiresIn: Int) async throws -> [String: URL] {
         guard !paths.isEmpty else { return [:] }
         let results: [SignedURLResult] = try await bucket.createSignedURLs(paths: paths, expiresIn: expiresIn)
         var urls: [String: URL] = [:]

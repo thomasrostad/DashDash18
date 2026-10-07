@@ -197,3 +197,44 @@ nonisolated struct ClubPushSettings: Codable, Equatable, Sendable {
 
     var blocksThread: Bool { disabledCategories.contains(PushCategories.threadKey) }
 }
+
+// MARK: - Push mens appen er åpen
+
+/// Hva en push gjelder, lest fra `dd18` i pushen (`push-send`: `type`, `event_id`).
+nonisolated struct PushTarget: Equatable, Sendable {
+    enum Kind: String, Equatable, Sendable {
+        case activity
+        case thread
+    }
+
+    let kind: Kind?
+    let eventID: UUID?
+
+    init(kind: Kind?, eventID: UUID?) {
+        self.kind = kind
+        self.eventID = eventID
+    }
+
+    /// Fra `userInfo`. Ukjent eller manglende innhold gir en tom `PushTarget`.
+    init(userInfo: [AnyHashable: Any]) {
+        let data = userInfo["dd18"] as? [String: Any] ?? [:]
+        kind = (data["type"] as? String).flatMap(Kind.init(rawValue:))
+        eventID = (data["event_id"] as? String).flatMap(UUID.init(uuidString:))
+    }
+}
+
+/// Om en push vises som banner når appen står åpen (iOS viser ingenting av seg selv da).
+/// Tråden du ser på, varsles ikke: meldingen dukker opp i tråden.
+nonisolated enum PushForeground {
+    static func shouldShow(_ target: PushTarget, visibleThreadEventID: UUID?) -> Bool {
+        guard target.kind == .thread, let event = target.eventID else { return true }
+        return event != visibleThreadEventID
+    }
+}
+
+/// Varseltillatelsen fra iOS, forenklet til det appen bryr seg om.
+nonisolated enum PushPermission: Equatable, Sendable {
+    case notDetermined
+    case denied
+    case allowed
+}

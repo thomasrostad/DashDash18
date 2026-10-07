@@ -29,6 +29,14 @@ private struct TipsContent: View {
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { Task { await model.load() } }
             }
+            // Står skjermen åpen over fristen, låses kupongen her også.
+            .task(id: model.board?.deadline) {
+                while let wait = model.board?.secondsUntilLockCheck(now: .now) {
+                    try? await Task.sleep(for: .seconds(wait))
+                    if Task.isCancelled { return }
+                    await model.load()
+                }
+            }
     }
 
     @ViewBuilder
@@ -450,6 +458,11 @@ private struct TipsFinishedSections: View {
             Color.ddCard
             if isMe { Color.ddYouRow }
         })
-        .accessibilityElement(children: .combine)
+        // Merkene (✓ ✗ ·) leses dårlig av VoiceOver; si det med ord.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(TipsBoard.resultAccessibilityLabel(
+            place: board.place(of: row), name: isMe ? "Deg" : board.shortName(row.playerID),
+            isWinner: board.result.winners.contains(row.playerID), points: row.points,
+            possible: board.result.possible))
     }
 }

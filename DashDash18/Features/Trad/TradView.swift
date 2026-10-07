@@ -23,6 +23,7 @@ private struct TradContent: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var confirmingDelete: ThreadMessageRow?
     @State private var showsCamera = false
+    @State private var cameraDenied = false
 
     var body: some View {
         messageList
@@ -30,7 +31,7 @@ private struct TradContent: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 TradComposer(model: model, focused: $composerFocused, photoItem: $photoItem,
                              sources: TradImageSource.available(cameraAvailable: TradCameraPicker.isAvailable),
-                             onCamera: { showsCamera = true })
+                             onCamera: openCamera)
             }
             .navigationTitle("Kveldens tråd")
             .ddNavigationChrome()
@@ -38,11 +39,14 @@ private struct TradContent: View {
             .onAppear {
                 model.isVisible = true
                 model.markReadIfVisible()
+                PushInbox.visibleThreadEventID = model.eventID
             }
             .onDisappear {
                 model.isVisible = false
+                if PushInbox.visibleThreadEventID == model.eventID { PushInbox.visibleThreadEventID = nil }
                 Task { await model.stopRealtime() }
             }
+            .cameraDeniedAlert(isPresented: $cameraDenied)
             // Realtime sender ikke det som kom mens appen sto i bakgrunnen.
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { Task { await model.load() } }
@@ -51,12 +55,12 @@ private struct TradContent: View {
                 guard let item else { return }
                 photoItem = nil
                 Task {
-                    do {
-                        guard let data = try await item.loadTransferable(type: Data.self) else { return }
-                        await model.attach(imageData: data)
-                    } catch {
+                    // Et bilde som bare ligger i iCloud og ikke kan hentes, gir nil eller feil.
+                    guard let data = try? await item.loadTransferable(type: Data.self) else {
                         model.errorMessage = TradImageCompressor.Failure.unreadable.message
+                        return
                     }
+                    await model.attach(imageData: data)
                 }
             }
             .fullScreenCover(isPresented: $showsCamera) {
@@ -88,6 +92,12 @@ private struct TradContent: View {
             } message: {
                 Text(model.errorMessage ?? "")
             }
+    }
+
+    private func openCamera() {
+        Task {
+            if await CameraAccess.requestIfNeeded() { showsCamera = true } else { cameraDenied = true }
+        }
     }
 
     private var messageList: some View {
@@ -161,7 +171,7 @@ private struct TradBubble: View {
             if item.isMine {
                 Spacer(minLength: 48)
             } else {
-                DDAvatar(name: item.author, size: 30)
+                TradAvatar(name: item.author, path: item.avatarPath, model: model)
             }
             VStack(alignment: item.isMine ? .trailing : .leading, spacing: 4) {
                 if !item.isMine {
@@ -201,6 +211,29 @@ private struct TradBubble: View {
             result += part
         }
         return result
+    }
+}
+
+/// Portrettet ved meldingen, eller initialene til det er hentet (eller når det ikke finnes).
+private struct TradAvatar: View {
+    let name: String
+    let path: String?
+    let model: TradModel
+    @State private var loaded: (path: String, image: UIImage)?
+
+    private var image: UIImage? {
+        guard let path else { return nil }
+        if let loaded, loaded.path == path { return loaded.image }
+        return model.images.cached(path)
+    }
+
+    var body: some View {
+        DDAvatar(name: name, size: 30, image: image)
+            .task(id: path.flatMap(model.avatarURL)) {
+                guard let path, image == nil, let url = model.avatarURL(for: path),
+                      let fetched = try? await model.images.image(for: path, url: url) else { return }
+                loaded = (path, fetched)
+            }
     }
 }
 
