@@ -455,3 +455,52 @@ final class RundeAdminModel {
         await loadActiveProgress()
     }
 }
+
+#if DEBUG
+extension RundeAdminModel {
+    /// Oppdiktet kveld for skjermprøvene (`-DDDesignScreen hurtigstart` og `arrangor`). Uten nett:
+    /// en feilet henting beholder det som står.
+    static func sample() -> RundeAdminModel {
+        let club = UUID()
+        let client = SupabaseClient(supabaseURL: URL(string: "https://forhandsvisning.supabase.co")!,
+                                    supabaseKey: "sb_publishable_forhandsvisning")
+        let model = RundeAdminModel(context: ClubContext(client: client, user: .preview, membership: .preview))
+        let names = ["Anders", "Bjørn", "Cato", "Dag", "Erik", "Frode", "Gunnar", "Halvor", "Ivar", "Jon",
+                     "Kåre", "Lars", "Magne", "Nils"]
+        model.members = names.map {
+            ClubMemberRow(id: UUID(), clubID: club, userID: UUID(), displayName: $0, handicapIndex: 12, seedGroup: nil,
+                          isOrganizer: false, isTreasurer: false, status: .active, avatarPath: nil)
+        }
+        let earlier = EventRow(id: UUID(), clubID: club, seasonID: nil, eventDate: "2026-09-24",
+                               startTime: "18:00:00", venue: "Golfstudio Bryn", note: nil)
+        let tonight = EventRow(id: UUID(), clubID: club, seasonID: nil, eventDate: EveningDates.today(),
+                               startTime: "18:00:00", venue: "Golfstudio Bryn", note: nil)
+        model.events = [earlier, tonight]
+        model.selectedEventID = tonight.id
+        model.signups = model.members.prefix(12).map {
+            SignupRow(eventID: tonight.id, memberID: $0.id, clubID: club, status: .yes, comment: nil)
+        } + [SignupRow(eventID: tonight.id, memberID: model.members[12].id, clubID: club, status: .maybe, comment: nil)]
+        let courses = ["Pebble Beach", "St Andrews Old Course", "Valderrama"].map { name in
+            let row = CourseRow(id: UUID(), clubID: club, name: name, externalName: nil, courseRating: 72,
+                                slopeRating: 128, inUse: true, confirmedBy: nil, confirmedAt: nil)
+            let pars = [4, 5, 4, 4, 3, 5, 3, 4, 4, 4, 4, 3, 4, 5, 4, 4, 3, 5]
+            let holes = pars.enumerated().map {
+                CourseHoleRecord(courseID: row.id, holeNumber: $0.offset + 1, par: $0.element,
+                                 strokeIndex: ($0.offset * 7) % 18 + 1, lengthM: nil)
+            }
+            return CourseListItem(course: row, holes: holes)
+        }
+        model.allCourses = courses
+        model.courses = courses
+        model.seasonRounds = [
+            RoundRow(id: UUID(), clubID: club, eventID: earlier.id, courseID: courses[0].id, roundNo: 1, name: nil,
+                     status: .locked, holeCount: 18, firstHole: 1, teeTime: "18:00:00", format: "stableford",
+                     handicapAllowance: 1, externalHandicap: false, weight: 1, ldEnabled: true, ldHoleIndex: 17,
+                     kpEnabled: true, kpHoleIndex: 6, cutRule: nil, cutAfter: nil, parConfirmedBy: nil,
+                     parConfirmedAt: nil, startedAt: nil, lockedAt: nil),
+        ]
+        model.state = .loaded
+        return model
+    }
+}
+#endif

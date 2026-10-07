@@ -14,6 +14,17 @@ struct AdminHubView: View {
     }
 }
 
+#if DEBUG
+/// Arrangørsiden med en oppdiktet kveld (`-DDDesignScreen arrangor`).
+struct AdminHubSample: View {
+    @State private var model = RundeAdminModel.sample()
+
+    var body: some View {
+        AdminHubContent(model: model)
+    }
+}
+#endif
+
 /// Runden som settes opp i arket.
 private struct SetupItem: Identifiable {
     let id = UUID()
