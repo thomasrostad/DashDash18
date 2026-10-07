@@ -53,6 +53,7 @@ struct AppRoot: View {
                 services.push.stop()
                 purchases?.stop()
                 purchases = nil
+                SignedOutCleanup.run()
             }
         }
         .onChange(of: scenePhase) { _, phase in

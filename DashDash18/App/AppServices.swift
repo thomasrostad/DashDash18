@@ -17,6 +17,8 @@ final class AppServices {
 
     init(config: AppConfig) {
         self.config = config
+        // Før klienten lages: en økt fra en tidligere installasjon skal ikke brukes.
+        FreshInstallGuard.run()
         client = SupabaseClient(
             supabaseURL: config.supabaseURL,
             supabaseKey: config.publishableKey,
@@ -28,6 +30,11 @@ final class AppServices {
         push = PushRegistrar(client: client)
         // Telefonen fjernes mens økten finnes, så den forrige innloggingen ikke får push her.
         auth.willSignOut = { [push] in await push.unregister() }
+        // Slettet konto: hullene som ikke ble sendt, og innstillingene for kontoen, fjernes også her.
+        auth.didDeleteAccount = { [outbox] userID in
+            outbox.removeAll(userID: userID)
+            LocalDataReset.removeAccountData(userID: userID)
+        }
     }
 
     /// Egen lagringsfil for utboksen. Går ikke det, brukes minnet så appen likevel starter

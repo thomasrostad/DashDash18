@@ -62,6 +62,11 @@ final class RoundActivityController {
         }
     }
 
+    /// Ved utlogging: alle rundeaktiviteter forsvinner fra låseskjermen med en gang.
+    func endAll() {
+        end(final: nil)
+    }
+
     /// Avslutter alle rundeaktiviteter (unntatt den for `keeping`). Med sluttstilling blir den
     /// stående på låseskjermen en stund; uten forsvinner den med en gang.
     private func end(final state: State?, keeping roundID: UUID? = nil) {

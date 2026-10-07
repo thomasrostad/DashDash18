@@ -14,6 +14,11 @@ build/
 *.xcconfig.local
 Secrets*.xcconfig
 .env*
+# Nøkler fra Apple (App Store Server API, APNs) og andre private nøkler
+*.p8
+*.p12
+*.pem
+*.mobileprovision
 
 # Supabase-konfig per miljø (ikke i git)
 DashDash18/Config/Supabase-*.plist

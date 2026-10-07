@@ -22,6 +22,8 @@ final class AuthModel {
     private let auth: AuthClient
     /// Kjøres før utlogging, mens økten fortsatt finnes (push: fjern telefonen).
     @ObservationIgnored var willSignOut: (() async -> Void)?
+    /// Kjøres når kontoen er slettet på serveren, før den lokale økten fjernes (rydd telefonen).
+    @ObservationIgnored var didDeleteAccount: ((UUID) -> Void)?
 
     init(client: SupabaseClient) {
         auth = client.auth
@@ -89,6 +91,7 @@ final class AuthModel {
     /// Etter «Slett konto»: innloggingen finnes ikke lenger på serveren, så bare den lokale økten
     /// fjernes. Push er alt slettet av serveren (`delete_account_data`).
     func signOutAfterDeletion() async {
+        if case .signedIn(let user) = state { didDeleteAccount?(user.id) }
         try? await auth.signOut(scope: .local)
         state = .signedOut
     }
