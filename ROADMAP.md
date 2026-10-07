@@ -339,6 +339,28 @@ Besluttet 07.10.2026 (deg):
 
 ---
 
+### Fase 12 – Flere turneringer samtidig (morroturneringer)
+
+**Mål:** Klubben kan kjøre en liten morroturnering i samme periode som hovedturneringen (jakkeracet), uten at noen må melde seg inn på nytt.
+
+Besluttet 07.10.2026 (deg):
+- **Sesong blir «turnering».** En klubb kan ha flere aktive turneringer samtidig. Én er **hovedturneringen** (jakkeracet); de andre er morroturneringer med egne regler, terminliste og tabell.
+- **Begge deler:** en morroturnering kan ha **egne kvelder**, og en runde kan **telle i flere turneringer** (f.eks. en kveld i jakkeracet som også teller i morrocupen).
+- **Bare påmeldte er med:** hver turnering har sin egen deltakerliste. Arrangøren melder på, eller spilleren melder seg på selv.
+
+- [ ] Skjema (SQL til godkjenning): `seasons.is_main`, én aktiv hovedturnering per klubb (i stedet for én aktiv sesong), deltakere per turnering, og kobling runde ↔ ekstra turneringer. Sesongens regelsett, terminliste og tabell gjenbrukes.
+- [ ] Tavla: velger mellom aktive turneringer, tabellen regnes med turneringens regelsett og bare for deltakerne.
+- [ ] Kveld: kvelder fra alle aktive turneringer, merket med turneringsnavn når det ikke er hovedturneringen.
+- [ ] Arrangør: «Ny turnering» (navn, periode, regler fra mal eller hovedturneringen, deltakere), og i hurtigstarten «Teller også i …».
+- [ ] Spiller: meld deg på / av en åpen turnering.
+
+**Ferdig når:**
+- En morrocup med 6 av 12 spillere går over fire uker, med to egne kvelder og to kvelder som også teller i jakkeracet, og begge tabellene er riktige.
+
+**Anslag:** 4–6 økter.
+
+---
+
 **Totalt:** ca. 76–111 økter. Usikkerheten er størst i fase 2 (paritet), 5 (offline) og 9 (import).
 
 Etter v1: Android (B13), Apple Watch, GPS.
