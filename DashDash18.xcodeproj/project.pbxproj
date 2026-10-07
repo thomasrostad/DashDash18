@@ -78,6 +78,13 @@
 			);
 			target = 2C5FD6FD3076319C00BC864C /* DashDash18WidgetsExtension */;
 		};
+		2C5FD7B73076A97F00BC864C /* Exceptions for "DashDash18" folder in "DashDash18" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2CB429E03074DA5D007ECDFB /* DashDash18 */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -92,6 +99,7 @@
 		2CB429E33074DA5D007ECDFB /* DashDash18 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				2C5FD7B73076A97F00BC864C /* Exceptions for "DashDash18" folder in "DashDash18" target */,
 				2C5FD722307632C900BC864C /* Exceptions for "DashDash18" folder in "DashDash18WidgetsExtension" target */,
 			);
 			path = DashDash18;
@@ -608,6 +616,7 @@
 				DEVELOPMENT_TEAM = JNMQJPCV24;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DashDash18/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "DashDash18 bruker kameraet til å ta bilder til kveldens tråd.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
@@ -649,6 +658,7 @@
 				DEVELOPMENT_TEAM = JNMQJPCV24;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DashDash18/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "DashDash18 bruker kameraet til å ta bilder til kveldens tråd.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;

@@ -10,7 +10,7 @@ import GolfgutuCore
 /// appen seg nøyaktig som før.
 nonisolated enum LooseRoundsFeature {
     /// `sql/018_lose_runder.sql` er kjørt på test.
-    static let schemaReady = false
+    static let schemaReady = true
     /// Krever fundamentet (017) og 018.
     static let isEnabled = FoundationFeature.isEnabled && schemaReady
 }
