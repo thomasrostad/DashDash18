@@ -1,3 +1,4 @@
+import AuthenticationServices
 import Foundation
 import Observation
 import Supabase
@@ -67,6 +68,31 @@ final class AuthModel {
         }
     }
 
+    /// Logg inn med Google (B9, `GoogleLoginFeature`): Supabase OAuth i et
+    /// `ASWebAuthenticationSession`-vindu, som kommer tilbake til `GoogleLogin.redirectURL`.
+    func signInWithGoogle() async throws(LoginError) {
+        do {
+            try await auth.signInWithOAuth(provider: .google, redirectTo: GoogleLogin.redirectURL) { session in
+                // Delt Safari-økt: er du alt logget inn på Google, slipper du å skrive passordet.
+                session.prefersEphemeralWebBrowserSession = false
+            }
+        } catch {
+            if GoogleLogin.isCancellation(error) { return }
+            if let authError = error as? AuthError {
+                throw LoginError.from(errorCode: authError.errorCode.rawValue, fallback: authError.localizedDescription)
+            }
+            if error is URLError { throw .offline }
+            throw .googleFailed
+        }
+    }
+
+    /// Etter «Slett konto»: innloggingen finnes ikke lenger på serveren, så bare den lokale økten
+    /// fjernes. Push er alt slettet av serveren (`delete_account_data`).
+    func signOutAfterDeletion() async {
+        try? await auth.signOut(scope: .local)
+        state = .signedOut
+    }
+
     /// Innloggingsmåtene kontoen har. Hentes fra serveren, så en nylig koblet måte er med;
     /// uten nett brukes økten på telefonen.
     func identities() async -> [LinkedIdentity] {
@@ -108,5 +134,21 @@ final class AuthModel {
             return .offline
         }
         return .unknown(error.localizedDescription)
+    }
+}
+
+/// Google-innlogging via Supabase OAuth (B9).
+nonisolated enum GoogleLogin {
+    /// Hit sender Supabase deg tilbake etter Google. Må stå i Supabase → Auth → URL Configuration →
+    /// Redirect URLs. `ASWebAuthenticationSession` fanger adressen selv, så den trenger ikke å
+    /// registreres som URL-skjema i appen.
+    static let redirectURL = URL(string: "dashdash://login-callback")!
+
+    /// Brukeren lukket vinduet: ikke en feil.
+    static func isCancellation(_ error: any Error) -> Bool {
+        if let web = error as? ASWebAuthenticationSessionError, web.code == .canceledLogin { return true }
+        let ns = error as NSError
+        return ns.domain == ASWebAuthenticationSessionError.errorDomain
+            && ns.code == ASWebAuthenticationSessionError.Code.canceledLogin.rawValue
     }
 }
