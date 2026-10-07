@@ -43,6 +43,7 @@ struct RootView: View {
         }
         // Aktiv fane i gult (golfee), mørk oker i lys modus så etiketten holder 4,5:1.
         .tint(Color.ddYellowText)
+        .environment(\.selectTab) { selectedTab = $0 }
         .task(id: context?.clubID) { makeBadge() }
     }
 
@@ -62,6 +63,11 @@ struct RootView: View {
         case .deg: DegView(config: config, user: user, membership: membership)
         }
     }
+}
+
+extension EnvironmentValues {
+    /// Bytter fane fra et view inne i en fane (arrangørsidens «Gå til runden»).
+    @Entry var selectTab: (AppTab) -> Void = { _ in }
 }
 
 /// Merke i verktøylinjen så det aldri er tvil om at appen ikke kjører mot prod.
