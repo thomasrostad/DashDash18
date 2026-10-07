@@ -25,3 +25,7 @@ DashDash18/Config/Supabase-*.plist
 .build/
 .swiftpm/
 supabase/.temp/
+
+# Import fra PWA-en (fase 9): øyeblikksbilder og generert SQL inneholder navn
+import-snapshot/
+import-out/
