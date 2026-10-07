@@ -1,7 +1,7 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Kveldens runder for arrangøren: kladd, pågår og låst, med veiviseren for nye runder.
+/// Kveldens runder for arrangøren: kladd, pågår og låst, med hurtigstarten for nye runder.
 struct RundeAdminView: View {
     @Environment(\.clubContext) private var context
 
@@ -14,7 +14,7 @@ struct RundeAdminView: View {
     }
 }
 
-/// Utkastet som vises i veiviseren.
+/// Utkastet som vises i hurtigstarten (eller veiviseren).
 private struct WizardItem: Identifiable {
     let id = UUID()
     let draft: RoundDraft
@@ -101,13 +101,10 @@ private struct RundeAdminContent: View {
                 }
             }
             .sheet(item: $wizard) { item in
-                NavigationStack {
-                    RundeWizardView(model: model, draft: item.draft) { result in
-                        wizard = nil
-                        message = result
-                    }
+                RoundSetupFlow(model: model, draft: item.draft) { result in
+                    wizard = nil
+                    message = result
                 }
-                .interactiveDismissDisabled()
             }
     }
 
@@ -231,7 +228,7 @@ private struct RundeAdminContent: View {
         var parts = ["\(round.holeCount) hull" + (round.firstHole == 10 ? " fra hull 10" : "")]
         parts.append(CompetitionForm.form(id: round.format).name)
         if players > 0 { parts.append("\(players) med") }
-        if bays > 0 { parts.append(bays == 1 ? "1 bås" : "\(bays) båser") }
+        if bays > 0 { parts.append(GroupTerm.for(stored: round.venue).count(bays)) }
         if let tee = EveningDates.timeText(round.teeTime) { parts.append(tee) }
         return parts.joined(separator: " · ")
     }
