@@ -1,0 +1,819 @@
+{
+ "kilde": "Fase 16. Forventede tall er regnet for hånd fra hullene.",
+ "runder": [
+  {
+   "id": "r1",
+   "date": "2026-05-01",
+   "kind": "club",
+   "clubName": "Golfgutu",
+   "courseID": "c1",
+   "courseName": "Bjaavann",
+   "holes": [
+    {
+     "par": 4,
+     "strokeIndex": 7,
+     "number": 1
+    },
+    {
+     "par": 5,
+     "strokeIndex": 1,
+     "number": 2
+    },
+    {
+     "par": 3,
+     "strokeIndex": 17,
+     "number": 3
+    },
+    {
+     "par": 4,
+     "strokeIndex": 3,
+     "number": 4
+    },
+    {
+     "par": 4,
+     "strokeIndex": 11,
+     "number": 5
+    },
+    {
+     "par": 3,
+     "strokeIndex": 15,
+     "number": 6
+    },
+    {
+     "par": 5,
+     "strokeIndex": 5,
+     "number": 7
+    },
+    {
+     "par": 4,
+     "strokeIndex": 9,
+     "number": 8
+    },
+    {
+     "par": 4,
+     "strokeIndex": 13,
+     "number": 9
+    },
+    {
+     "par": 4,
+     "strokeIndex": 8,
+     "number": 10
+    },
+    {
+     "par": 3,
+     "strokeIndex": 16,
+     "number": 11
+    },
+    {
+     "par": 5,
+     "strokeIndex": 2,
+     "number": 12
+    },
+    {
+     "par": 4,
+     "strokeIndex": 10,
+     "number": 13
+    },
+    {
+     "par": 4,
+     "strokeIndex": 4,
+     "number": 14
+    },
+    {
+     "par": 3,
+     "strokeIndex": 18,
+     "number": 15
+    },
+    {
+     "par": 4,
+     "strokeIndex": 12,
+     "number": 16
+    },
+    {
+     "par": 5,
+     "strokeIndex": 6,
+     "number": 17
+    },
+    {
+     "par": 4,
+     "strokeIndex": 14,
+     "number": 18
+    }
+   ],
+   "playingHandicap": 18,
+   "handicapIndex": 16.0,
+   "courseRating": 71.0,
+   "slopeRating": 125,
+   "scores": {
+    "0": 5,
+    "1": 4,
+    "2": 6,
+    "3": 6,
+    "4": 4,
+    "5": 3,
+    "6": 5,
+    "7": 4,
+    "8": 4,
+    "9": 4,
+    "10": 3,
+    "11": 5,
+    "12": 4,
+    "13": 4,
+    "14": 3,
+    "15": 4,
+    "16": 5,
+    "17": 4
+   },
+   "details": {
+    "0": {
+     "putts": 2,
+     "fairway": "hit",
+     "greenInRegulation": false
+    },
+    "1": {
+     "putts": 1,
+     "fairway": "left",
+     "greenInRegulation": true
+    },
+    "2": {
+     "putts": 2,
+     "fairway": "hit",
+     "greenInRegulation": false,
+     "bunker": true
+    },
+    "3": {
+     "putts": 2,
+     "fairway": "right",
+     "greenInRegulation": false,
+     "penalties": 1
+    },
+    "4": {
+     "putts": 2,
+     "bunker": true
+    },
+    "5": {
+     "putts": 2
+    },
+    "6": {
+     "putts": 2
+    },
+    "7": {
+     "putts": 2
+    },
+    "8": {
+     "putts": 2
+    },
+    "9": {
+     "putts": 2
+    },
+    "10": {
+     "putts": 2
+    },
+    "11": {
+     "putts": 2
+    },
+    "12": {
+     "putts": 2
+    },
+    "13": {
+     "putts": 2
+    },
+    "14": {
+     "putts": 2
+    },
+    "15": {
+     "putts": 2
+    },
+    "16": {
+     "putts": 2
+    },
+    "17": {
+     "putts": 2
+    }
+   }
+  },
+  {
+   "id": "r2",
+   "date": "2026-06-10",
+   "kind": "loose",
+   "courseID": "c1",
+   "courseName": "Bjaavann",
+   "holes": [
+    {
+     "par": 4,
+     "strokeIndex": 7,
+     "number": 1
+    },
+    {
+     "par": 5,
+     "strokeIndex": 1,
+     "number": 2
+    },
+    {
+     "par": 3,
+     "strokeIndex": 17,
+     "number": 3
+    },
+    {
+     "par": 4,
+     "strokeIndex": 3,
+     "number": 4
+    },
+    {
+     "par": 4,
+     "strokeIndex": 11,
+     "number": 5
+    },
+    {
+     "par": 3,
+     "strokeIndex": 15,
+     "number": 6
+    },
+    {
+     "par": 5,
+     "strokeIndex": 5,
+     "number": 7
+    },
+    {
+     "par": 4,
+     "strokeIndex": 9,
+     "number": 8
+    },
+    {
+     "par": 4,
+     "strokeIndex": 13,
+     "number": 9
+    },
+    {
+     "par": 4,
+     "strokeIndex": 8,
+     "number": 10
+    },
+    {
+     "par": 3,
+     "strokeIndex": 16,
+     "number": 11
+    },
+    {
+     "par": 5,
+     "strokeIndex": 2,
+     "number": 12
+    },
+    {
+     "par": 4,
+     "strokeIndex": 10,
+     "number": 13
+    },
+    {
+     "par": 4,
+     "strokeIndex": 4,
+     "number": 14
+    },
+    {
+     "par": 3,
+     "strokeIndex": 18,
+     "number": 15
+    },
+    {
+     "par": 4,
+     "strokeIndex": 12,
+     "number": 16
+    },
+    {
+     "par": 5,
+     "strokeIndex": 6,
+     "number": 17
+    },
+    {
+     "par": 4,
+     "strokeIndex": 14,
+     "number": 18
+    }
+   ],
+   "playingHandicap": 18,
+   "handicapIndex": 15.0,
+   "courseRating": 71.0,
+   "slopeRating": 125,
+   "scores": {
+    "0": 4,
+    "1": 5,
+    "2": 3,
+    "3": 4,
+    "4": 4,
+    "5": 2,
+    "6": 3,
+    "7": 4,
+    "8": 4,
+    "9": 4,
+    "10": 3,
+    "11": 5,
+    "12": 4,
+    "13": 4,
+    "14": 3,
+    "15": 4,
+    "16": 5,
+    "17": 4
+   }
+  },
+  {
+   "id": "r3",
+   "date": "2026-07-01",
+   "kind": "club",
+   "clubName": "Golfgutu",
+   "courseID": "c2",
+   "courseName": "Larvik",
+   "holes": [
+    {
+     "par": 4,
+     "strokeIndex": 1,
+     "number": 1
+    },
+    {
+     "par": 4,
+     "strokeIndex": 2,
+     "number": 2
+    },
+    {
+     "par": 3,
+     "strokeIndex": 3,
+     "number": 3
+    },
+    {
+     "par": 5,
+     "strokeIndex": 4,
+     "number": 4
+    },
+    {
+     "par": 4,
+     "strokeIndex": 5,
+     "number": 5
+    },
+    {
+     "par": 4,
+     "strokeIndex": 6,
+     "number": 6
+    },
+    {
+     "par": 3,
+     "strokeIndex": 7,
+     "number": 7
+    },
+    {
+     "par": 4,
+     "strokeIndex": 8,
+     "number": 8
+    },
+    {
+     "par": 5,
+     "strokeIndex": 9,
+     "number": 9
+    }
+   ],
+   "playingHandicap": 9,
+   "scores": {
+    "0": 5,
+    "1": 5,
+    "2": 4,
+    "3": 6,
+    "4": 5,
+    "5": 5,
+    "6": 4,
+    "7": 5,
+    "8": 6
+   }
+  },
+  {
+   "id": "r4",
+   "date": "2026-07-15",
+   "kind": "club",
+   "clubName": "Golfgutu",
+   "courseID": "c1",
+   "courseName": "Bjaavann",
+   "holes": [
+    {
+     "par": 4,
+     "strokeIndex": 7,
+     "number": 1
+    },
+    {
+     "par": 5,
+     "strokeIndex": 1,
+     "number": 2
+    },
+    {
+     "par": 3,
+     "strokeIndex": 17,
+     "number": 3
+    },
+    {
+     "par": 4,
+     "strokeIndex": 3,
+     "number": 4
+    },
+    {
+     "par": 4,
+     "strokeIndex": 11,
+     "number": 5
+    },
+    {
+     "par": 3,
+     "strokeIndex": 15,
+     "number": 6
+    },
+    {
+     "par": 5,
+     "strokeIndex": 5,
+     "number": 7
+    },
+    {
+     "par": 4,
+     "strokeIndex": 9,
+     "number": 8
+    },
+    {
+     "par": 4,
+     "strokeIndex": 13,
+     "number": 9
+    },
+    {
+     "par": 4,
+     "strokeIndex": 8,
+     "number": 10
+    },
+    {
+     "par": 3,
+     "strokeIndex": 16,
+     "number": 11
+    },
+    {
+     "par": 5,
+     "strokeIndex": 2,
+     "number": 12
+    },
+    {
+     "par": 4,
+     "strokeIndex": 10,
+     "number": 13
+    },
+    {
+     "par": 4,
+     "strokeIndex": 4,
+     "number": 14
+    },
+    {
+     "par": 3,
+     "strokeIndex": 18,
+     "number": 15
+    },
+    {
+     "par": 4,
+     "strokeIndex": 12,
+     "number": 16
+    },
+    {
+     "par": 5,
+     "strokeIndex": 6,
+     "number": 17
+    },
+    {
+     "par": 4,
+     "strokeIndex": 14,
+     "number": 18
+    }
+   ],
+   "playingHandicap": 18,
+   "handicapIndex": 15.0,
+   "courseRating": 71.0,
+   "slopeRating": 125,
+   "scores": {
+    "0": 4,
+    "1": 5,
+    "2": 3,
+    "3": 4,
+    "4": 4,
+    "5": 3,
+    "6": 5,
+    "7": 4,
+    "8": 4
+   }
+  },
+  {
+   "id": "r5",
+   "date": "2026-04-01",
+   "kind": "club",
+   "clubName": "Golfgutu",
+   "courseID": "c1",
+   "courseName": "Bjaavann",
+   "holes": [
+    {
+     "par": 4,
+     "strokeIndex": 7,
+     "number": 1
+    },
+    {
+     "par": 5,
+     "strokeIndex": 1,
+     "number": 2
+    },
+    {
+     "par": 3,
+     "strokeIndex": 17,
+     "number": 3
+    },
+    {
+     "par": 4,
+     "strokeIndex": 3,
+     "number": 4
+    },
+    {
+     "par": 4,
+     "strokeIndex": 11,
+     "number": 5
+    },
+    {
+     "par": 3,
+     "strokeIndex": 15,
+     "number": 6
+    },
+    {
+     "par": 5,
+     "strokeIndex": 5,
+     "number": 7
+    },
+    {
+     "par": 4,
+     "strokeIndex": 9,
+     "number": 8
+    },
+    {
+     "par": 4,
+     "strokeIndex": 13,
+     "number": 9
+    },
+    {
+     "par": 4,
+     "strokeIndex": 8,
+     "number": 10
+    },
+    {
+     "par": 3,
+     "strokeIndex": 16,
+     "number": 11
+    },
+    {
+     "par": 5,
+     "strokeIndex": 2,
+     "number": 12
+    },
+    {
+     "par": 4,
+     "strokeIndex": 10,
+     "number": 13
+    },
+    {
+     "par": 4,
+     "strokeIndex": 4,
+     "number": 14
+    },
+    {
+     "par": 3,
+     "strokeIndex": 18,
+     "number": 15
+    },
+    {
+     "par": 4,
+     "strokeIndex": 12,
+     "number": 16
+    },
+    {
+     "par": 5,
+     "strokeIndex": 6,
+     "number": 17
+    },
+    {
+     "par": 4,
+     "strokeIndex": 14,
+     "number": 18
+    }
+   ],
+   "playingHandicap": 18,
+   "scores": {}
+  }
+ ],
+ "forventet": {
+  "linjer": [
+   {
+    "id": "r1",
+    "hullFort": 18,
+    "fullfort": true,
+    "brutto": 77,
+    "par": 72,
+    "netto": 59,
+    "stableford": 49,
+    "putter": 35,
+    "differential": 5.4
+   },
+   {
+    "id": "r2",
+    "hullFort": 18,
+    "fullfort": true,
+    "brutto": 69,
+    "par": 72,
+    "netto": 51,
+    "stableford": 57,
+    "putter": null,
+    "differential": -1.8
+   },
+   {
+    "id": "r3",
+    "hullFort": 9,
+    "fullfort": true,
+    "brutto": 45,
+    "par": 36,
+    "netto": 36,
+    "stableford": 18,
+    "putter": null,
+    "differential": null
+   },
+   {
+    "id": "r4",
+    "hullFort": 9,
+    "fullfort": false,
+    "brutto": 36,
+    "par": 36,
+    "netto": 27,
+    "stableford": 27,
+    "putter": null,
+    "differential": null
+   }
+  ],
+  "rekkefolge": [
+   "r4",
+   "r3",
+   "r2",
+   "r1"
+  ],
+  "snitt": [
+   {
+    "hull": 18,
+    "runder": 2,
+    "brutto": 73.0,
+    "motPar": 1.0,
+    "netto": 55.0,
+    "stableford": 53.0
+   },
+   {
+    "hull": 9,
+    "runder": 1,
+    "brutto": 45.0,
+    "motPar": 9.0,
+    "netto": 36.0,
+    "stableford": 18.0
+   }
+  ],
+  "parTyper": [
+   {
+    "par": 3,
+    "hull": 12,
+    "brutto": 40
+   },
+   {
+    "par": 4,
+    "hull": 30,
+    "brutto": 128
+   },
+   {
+    "par": 5,
+    "hull": 12,
+    "brutto": 59
+   }
+  ],
+  "fordeling": {
+   "eagleOrBetter": 1,
+   "birdie": 2,
+   "par": 39,
+   "bogey": 10,
+   "doubleOrWorse": 2
+  },
+  "slag": {
+   "fairwayHoles": 3,
+   "fairwayHit": 1,
+   "fairwayLeft": 1,
+   "fairwayRight": 1,
+   "girHoles": 4,
+   "girHit": 1,
+   "puttHoles": 18,
+   "puttTotal": 35,
+   "puttRounds": 1,
+   "puttRoundTotal": 35,
+   "bunkerHoles": 2,
+   "bunkerVisits": 2,
+   "sandSaves": 1,
+   "penaltyHoles": 1,
+   "penaltyTotal": 1
+  },
+  "rekorder": [
+   {
+    "bane": "c1",
+    "hull": "1-18",
+    "runder": 2,
+    "bestBrutto": "r2",
+    "bestNetto": "r2"
+   },
+   {
+    "bane": "c2",
+    "hull": "1-9",
+    "runder": 1,
+    "bestBrutto": "r3",
+    "bestNetto": "r3"
+   }
+  ],
+  "handicap": [
+   {
+    "id": "r1",
+    "differential": 5.4,
+    "indeks": null
+   },
+   {
+    "id": "r2",
+    "differential": -1.8,
+    "indeks": null
+   }
+  ],
+  "beststableford": [
+   "r2",
+   "r1"
+  ],
+  "bestbrutto": [
+   "r2",
+   "r1",
+   "r3"
+  ],
+  "filtre": [
+   {
+    "navn": "klubb",
+    "filter": {
+     "kind": "club"
+    },
+    "runder": [
+     "r4",
+     "r3",
+     "r1"
+    ],
+    "handicap": [
+     "r1"
+    ]
+   },
+   {
+    "navn": "løse",
+    "filter": {
+     "kind": "loose"
+    },
+    "runder": [
+     "r2"
+    ],
+    "handicap": [
+     "r2"
+    ]
+   },
+   {
+    "navn": "bane c2",
+    "filter": {
+     "courseID": "c2"
+    },
+    "runder": [
+     "r3"
+    ],
+    "handicap": []
+   },
+   {
+    "navn": "fra juni",
+    "filter": {
+     "from": "2026-06-01"
+    },
+    "runder": [
+     "r4",
+     "r3",
+     "r2"
+    ],
+    "handicap": [
+     "r2"
+    ]
+   },
+   {
+    "navn": "til juni",
+    "filter": {
+     "to": "2026-06-10"
+    },
+    "runder": [
+     "r2",
+     "r1"
+    ],
+    "handicap": [
+     "r1",
+     "r2"
+    ]
+   }
+  ]
+ }
+}
