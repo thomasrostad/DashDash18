@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import Testing
 import UIKit
@@ -5,6 +6,14 @@ import UIKit
 
 /// Kamera i tråden: hvilke kilder som vises, og at kamerabildet går gjennom samme krymping.
 struct TradCameraTests {
+    @Test func nektetKameraForklaresIStedetForSvartSkjerm() {
+        #expect(CameraAccess.step(for: .authorized) == .open)
+        #expect(CameraAccess.step(for: .notDetermined) == .ask)
+        #expect(CameraAccess.step(for: .denied) == .explain)
+        #expect(CameraAccess.step(for: .restricted) == .explain)
+        #expect(CameraAccess.deniedMessage.contains("Innstillinger"))
+    }
+
     @Test func utenKameraVisesBareBiblioteket() {
         #expect(TradImageSource.available(cameraAvailable: false) == [.library])
     }

@@ -22,6 +22,8 @@ final class TradModel {
         /// Vises fra telefonen og er ikke bekreftet av serveren ennå.
         let isPending: Bool
         let canDelete: Bool
+        /// Portrettet til den som skrev (bøtta `avatars`), eller nil: initialene.
+        var avatarPath: String? = nil
         var id: UUID { message.id }
     }
 
@@ -39,6 +41,9 @@ final class TradModel {
     private(set) var directory = MentionDirectory(people: [])
     private(set) var names: [UUID: String] = [:]
     private(set) var signedURLs = TradSignedURLCache()
+    /// Portrettene i troppen, per medlem. Ny fil får ny sti, så et byttet portrett vises.
+    private(set) var avatarPaths: [UUID: String] = [:]
+    private(set) var avatarURLs = TradSignedURLCache()
     /// Realtime-kanalen er oppe.
     private(set) var isLive = false
     /// Skjermen står framme. Da merkes tråden som lest når nye meldinger kommer.
@@ -90,7 +95,8 @@ final class TradModel {
         return shown.map { message, isPending in
             Item(message: message, author: names[message.memberID] ?? "Ukjent",
                  isMine: message.memberID == viewer, isPending: isPending,
-                 canDelete: !isPending && TradPermissions.canDelete(message, viewer: viewer, isOrganizer: isOrganizer))
+                 canDelete: !isPending && TradPermissions.canDelete(message, viewer: viewer, isOrganizer: isOrganizer),
+                 avatarPath: avatarPaths[message.memberID])
         }
     }
 
@@ -143,7 +149,9 @@ final class TradModel {
             state = .loaded
             markReadIfVisible()
             signedURLs.retryFailed()
+            avatarURLs.retryFailed()
             await refreshImageURLs()
+            await refreshAvatarURLs()
             await startRealtime()
         } catch {
             // Behold det som vises når en oppfrisking feiler.
@@ -154,6 +162,8 @@ final class TradModel {
 
     private func apply(members: [ClubMemberRow]) {
         names = Dictionary(members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { a, _ in a })
+        avatarPaths = Dictionary(members.compactMap { m in m.avatarPath.map { (m.id, $0) } },
+                                 uniquingKeysWith: { a, _ in a })
         // Arkiverte vises med navn i gamle meldinger, men kan ikke nevnes.
         let people = members.filter { $0.status != .archived }.map { TradPerson(id: $0.id, name: $0.displayName) }
         directory = MentionDirectory(people: people)
@@ -235,6 +245,12 @@ final class TradModel {
             messages.removeAll { $0.id == saved.id }
             messages.append(saved)
         } catch {
+            // Svaret kan ha gått tapt etter at meldingen ble lagret (dårlig dekning). Da er den
+            // sendt; å legge teksten tilbake ville gitt den dobbelt når du sender igjen.
+            if let rows = try? await backend.messages(eventID: eventID), rows.contains(where: { $0.id == id }) {
+                await load()
+                return
+            }
             if let path { try? await backend.removeImages(paths: [path]) }
             rollBack(id: id, text: text, image: image, path: path,
                      message: "Klarte ikke å sende: " + DataError.from(error).message)
@@ -303,6 +319,23 @@ final class TradModel {
         }
     }
 
+    func avatarURL(for path: String) -> URL? { avatarURLs.url(for: path, now: now()) }
+
+    /// Signerte lenker til portrettene til dem som har skrevet i tråden, uten de som alt er
+    /// hentet. Feiler det, står initialene.
+    func refreshAvatarURLs() async {
+        let authors = Set(messages.map(\.memberID))
+        let paths = authors.compactMap { avatarPaths[$0] }.sorted().filter { images.cached($0) == nil }
+        let needed = avatarURLs.pathsToSign(paths, now: now())
+        guard !needed.isEmpty else { return }
+        do {
+            let urls = try await backend.avatarURLs(paths: needed, expiresIn: TradSignedURLCache.lifetimeSeconds)
+            avatarURLs.store(signed: urls, requested: needed, now: now())
+        } catch {
+            avatarURLs.markFailed(needed)
+        }
+    }
+
     // MARK: Realtime
 
     private func startRealtime() async {
@@ -318,7 +351,9 @@ final class TradModel {
         listenTasks = [
             Task { [weak self] in
                 for await status in statuses {
-                    self?.isLive = status == .subscribed
+                    // Oppe igjen (første gang, eller etter brudd i nettet): hent det som kom
+                    // mens kanalen var nede.
+                    if self?.setLive(status == .subscribed) == true { await self?.load() }
                 }
             },
             Task { [weak self] in
@@ -336,6 +371,12 @@ final class TradModel {
                 try? await channel.subscribeWithError()
             },
         ]
+    }
+
+    /// Gir true når kanalen nettopp kom opp.
+    private func setLive(_ live: Bool) -> Bool {
+        defer { isLive = live }
+        return live && !isLive
     }
 
     private func removeDeleted(_ id: UUID) {

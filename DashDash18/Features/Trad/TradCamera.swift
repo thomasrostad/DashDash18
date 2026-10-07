@@ -1,3 +1,4 @@
+import AVFoundation
 import SwiftUI
 import UIKit
 
@@ -35,6 +36,63 @@ nonisolated enum TradCameraCapture {
     static func imageData(from info: [UIImagePickerController.InfoKey: Any]) -> Data? {
         let image = (info[.editedImage] as? UIImage) ?? (info[.originalImage] as? UIImage)
         return image?.jpegData(compressionQuality: intermediateQuality)
+    }
+}
+
+/// Kameratilgangen før kameraet åpnes. Er den nektet, viser iOS bare et svart kamera; da
+/// forklarer appen det og lenker til Innstillinger i stedet.
+nonisolated enum CameraAccess {
+    enum Step: Equatable, Sendable {
+        /// Tilgang gitt: åpne kameraet.
+        case open
+        /// Ikke spurt ennå: spør iOS først.
+        case ask
+        /// Nektet eller sperret (f.eks. skjermtid): forklar.
+        case explain
+    }
+
+    static func step(for status: AVAuthorizationStatus) -> Step {
+        switch status {
+        case .authorized: .open
+        case .notDetermined: .ask
+        case .denied, .restricted: .explain
+        @unknown default: .explain
+        }
+    }
+
+    static let deniedTitle = "Ingen tilgang til kameraet"
+    static let deniedMessage = "Slå på kameraet for DashDash18 i Innstillinger for å ta bilder i appen."
+
+    /// Spør om nødvendig. Gir true når kameraet kan åpnes.
+    static func requestIfNeeded() async -> Bool {
+        switch step(for: AVCaptureDevice.authorizationStatus(for: .video)) {
+        case .open: true
+        case .ask: await AVCaptureDevice.requestAccess(for: .video)
+        case .explain: false
+        }
+    }
+}
+
+extension View {
+    /// Forklaringen når kameraet er nektet, med lenke til Innstillinger.
+    func cameraDeniedAlert(isPresented: Binding<Bool>) -> some View {
+        modifier(CameraDeniedAlert(isPresented: isPresented))
+    }
+}
+
+private struct CameraDeniedAlert: ViewModifier {
+    @Binding var isPresented: Bool
+    @Environment(\.openURL) private var openURL
+
+    func body(content: Content) -> some View {
+        content.alert(CameraAccess.deniedTitle, isPresented: $isPresented) {
+            Button("Åpne Innstillinger") {
+                if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+            }
+            Button("Avbryt", role: .cancel) {}
+        } message: {
+            Text(CameraAccess.deniedMessage)
+        }
     }
 }
 
