@@ -12,8 +12,8 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 |---|---|
 | **Nåværende fase** | Fase 8 – Native løft, i hovedsak ferdig. Push kjører på test. Første TestFlight-bygg (1.0 (1)) ligger til Beta App Review. |
 | **Sist gjort** | 07.10: kamera, kalender, deling, widgets og Live Activity prøvd på telefon. Push på test (010, `push-send`, webhook, cron). Arrangørskjermene «Hva blir push» og «Hvem har push». Varsler for store scorer og ledelsesskifte uten duplikater. Deg: handicap, portrett, innloggingsmåter, logg ut. App-ikon og TestFlight. 632 enhetstester grønne. |
-| **Neste oppgave** | Push mellom to kontoer når TestFlight er godkjent. Godkjenne og kjøre 011. Live Activity oppdatert via push. Fase 9 (import og bytte). |
-| **Venter på deg** | Godkjenne 011 (erstatter 009). Øke byggnummer i Xcode før neste TestFlight. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
+| **Neste oppgave** | Push mellom to kontoer når TestFlight er godkjent. Live Activity oppdatert via push. Fase 9 (import og bytte). |
+| **Venter på deg** | Sette opp Xcode Cloud-workflowen (miljøvariabler, delt skjema). «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
 
