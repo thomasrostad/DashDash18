@@ -31,6 +31,8 @@ final class KveldExtrasModel {
 /// Kortene «Kveldens tråd» og «Tippekupongen» på Kveld (før runden).
 struct KveldExtrasCards: View {
     @State var model: KveldExtrasModel
+    /// Øker når Kveld hentes på nytt (dra ned, realtime): da hentes kortene også.
+    var refresh = 0
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -62,6 +64,7 @@ struct KveldExtrasCards: View {
         .buttonStyle(.plain)
         // Også tilbake fra tråden eller kupongen: uleste og status kan være endret.
         .onAppear { Task { await model.load() } }
+        .onChange(of: refresh) { Task { await model.load() } }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await model.load() } }
         }

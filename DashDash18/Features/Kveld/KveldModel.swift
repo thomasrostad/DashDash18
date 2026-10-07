@@ -19,8 +19,12 @@ final class KveldModel {
     private(set) var today = EveningDates.today()
     /// Kveldens nummer i sesongen (plassen i terminlista), når det kan hentes.
     private(set) var eveningNumber: Int?
+    /// Telles opp for hver henting, så kortene for tråd og tips kan hente på nytt samtidig.
+    private(set) var loadCount = 0
 
     private let context: ClubContext
+    private var isLoading = false
+    private var reloadAgain = false
 
     init(context: ClubContext) {
         self.context = context
@@ -44,7 +48,20 @@ final class KveldModel {
         event.flatMap { EveningDates.daysBetween(today, $0.eventDate) }
     }
 
+    /// Henter kvelden. Kommer et nytt kall mens en henting pågår (realtime, retur fra
+    /// bakgrunnen, dra ned), kjøres én til etterpå i stedet for to samtidig.
     func load() async {
+        if isLoading { reloadAgain = true; return }
+        isLoading = true
+        defer { isLoading = false }
+        repeat {
+            reloadAgain = false
+            await fetch()
+        } while reloadAgain
+        loadCount += 1
+    }
+
+    private func fetch() async {
         today = EveningDates.today()
         do {
             async let eventRows: [EventRow] = client.from("events")
@@ -173,6 +190,30 @@ final class KveldModel {
     }
 
     private var activityLog: ActivityLog { ActivityLog(client: client, clubID: clubID) }
+
+    // MARK: Realtime
+
+    /// Følger svar, kvelder og sosialkomité i klubben, som PWA-en, til oppgaven avbrytes
+    /// (skjermen forsvinner). Det som kom mens appen var borte, hentes ved retur fra bakgrunnen.
+    func followChanges() async {
+        // Eget navn hver gang: kommer skjermen tilbake før den gamle kanalen er fjernet,
+        // skal vi ikke få den igjen fra klienten.
+        let channel = client.channel("kveld-\(clubID.uuidString.lowercased())-\(UUID().uuidString.prefix(8))")
+        let streams = ["signups", "events", "event_committee"].map { table in
+            channel.postgresChange(AnyAction.self, schema: "public", table: table, filter: .eq("club_id", value: clubID))
+        }
+        await withTaskGroup(of: Void.self) { group in
+            for stream in streams {
+                group.addTask {
+                    for await _ in stream { await self.load() }
+                }
+            }
+            group.addTask { try? await channel.subscribeWithError() }
+        }
+        // Avbrutt: fjernes utenfor den avbrutte oppgaven, så avmeldingen rekker å gå.
+        let client = client
+        Task { await client.removeChannel(channel) }
+    }
 }
 
 /// Raden som sendes til `signups`. Kommentaren sendes som null når den er tom, så den tømmes.

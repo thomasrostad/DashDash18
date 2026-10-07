@@ -23,6 +23,8 @@ private struct KveldContent: View {
     var body: some View {
         content
             .task { await model.load() }
+            // Andres svar dukker opp uten at du må dra ned.
+            .task { await model.followChanges() }
             .refreshable { await model.load() }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
@@ -62,7 +64,8 @@ private struct KveldContent: View {
                         if let entry = model.calendarEntry {
                             AddToCalendarButton(entry: entry)
                         }
-                        KveldExtrasCards(model: KveldExtrasModel(context: model.clubContext, eventID: event.id))
+                        KveldExtrasCards(model: KveldExtrasModel(context: model.clubContext, eventID: event.id),
+                                         refresh: model.loadCount)
                             .id(event.id)
                         SignupSection(model: model)
                             .padding(.top, DDSpacing.l)

@@ -208,6 +208,13 @@ private struct EventEditor: View {
 
     var body: some View {
         DDForm {
+            // Øverst, ved «Lagre»: lenger ned havner den under troppen og ses ikke.
+            if let error {
+                Section {
+                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Color.ddError)
+                }
+            }
+
             Section {
                 DatePicker("Dato", selection: $draft.date, displayedComponents: .date)
                 Toggle("Klokkeslett", isOn: $draft.hasTime)
@@ -242,12 +249,6 @@ private struct EventEditor: View {
                 DDHeader("Sosialkomité (\(draft.committee.count))")
             }
 
-            if let error {
-                Section {
-                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Color.ddError)
-                }
-            }
-
             if draft.id != nil {
                 Section {
                     Button("Slett kvelden", role: .destructive) { confirmDelete = true }
@@ -259,6 +260,7 @@ private struct EventEditor: View {
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .disabled(isBusy)
+        .interactiveDismissDisabled(isBusy)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Avbryt", action: done)

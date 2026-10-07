@@ -51,7 +51,8 @@ struct AvsluttKveldenSection: View {
             }
             .sheet(item: $cutting) { round in
                 NavigationStack {
-                    AvkortSheet(round: round, title: title(round)) { _ in }
+                    // Avkortet: lista hentes på nytt og meldingen vises, så «Avslutt kvelden» kan trykkes igjen.
+                    AvkortSheet(round: round, title: title(round)) { text in Task { await onDone(text) } }
                 }
             }
             .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {

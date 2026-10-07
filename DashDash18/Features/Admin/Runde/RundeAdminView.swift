@@ -85,7 +85,7 @@ private struct RundeAdminContent: View {
                     Button("Ny runde", systemImage: "plus") {
                         if let draft = model.newDraft() { wizard = WizardItem(draft: draft) }
                     }
-                    .disabled(model.state != .loaded || model.selectedEvent == nil)
+                    .disabled(model.state != .loaded || model.selectedEvent == nil || isBusy)
                 }
             }
             .task { await model.load() }
@@ -139,7 +139,10 @@ private struct RundeAdminContent: View {
                 } else {
                     Picker("Kveld", selection: Binding(
                         get: { model.selectedEventID },
-                        set: { id in if let id { Task { await model.select(eventID: id) } } }
+                        set: { id in
+                            guard let id, id != model.selectedEventID else { return }
+                            run { try await model.select(eventID: id) }
+                        }
                     )) {
                         ForEach(model.events) { event in
                             Text(EveningDates.longText(event.eventDate, capitalized: true)).tag(Optional(event.id))

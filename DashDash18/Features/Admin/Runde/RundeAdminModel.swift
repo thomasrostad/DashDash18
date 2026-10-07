@@ -130,12 +130,15 @@ final class RundeAdminModel {
         }
     }
 
-    func select(eventID: UUID) async {
+    /// Bytter kveld. Feiler hentingen, står den forrige kvelden valgt, med rundene sine.
+    func select(eventID: UUID) async throws(DataError) {
+        let previous = selectedEventID
         selectedEventID = eventID
         do {
             try await loadEvent()
         } catch {
-            state = .failed(DataError.from(error).message)
+            if selectedEventID == eventID { selectedEventID = previous }
+            throw DataError.from(error)
         }
     }
 
@@ -171,7 +174,7 @@ final class RundeAdminModel {
             .eq("event_id", value: eventID)
             .execute().value
         let loaded = try await roundRows
-        signups = try await signupRows
+        let loadedSignups = try await signupRows
 
         var players: [RoundPlayerRow] = []
         if !loaded.isEmpty {
@@ -180,6 +183,9 @@ final class RundeAdminModel {
                 .in("round_id", values: loaded.map(\.id.uuidString))
                 .execute().value
         }
+        // Er en annen kveld valgt mens vi hentet, hører svaret ikke til den.
+        guard selectedEventID == eventID else { return }
+        signups = loadedSignups
         rounds = loaded
         playersByRound = Dictionary(grouping: players, by: \.roundID)
     }

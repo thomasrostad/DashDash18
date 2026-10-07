@@ -48,6 +48,7 @@ struct SignupSection: View {
     @State private var isBusy = false
     @State private var error: String?
     @FocusState private var commentFocused: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var current: SignupStatus? { model.mySignup?.status }
 
@@ -55,7 +56,9 @@ struct SignupSection: View {
         VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
             DDSectionLabel(current == nil ? "Kommer du?" : "Ditt svar")
             VStack(alignment: .leading, spacing: DDSpacing.m) {
-                HStack(spacing: 8) {
+                // Med stor tekst står knappene under hverandre, så «Kommer ikke» ikke kappes.
+                let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+                layout {
                     ForEach(SignupStatus.allCases, id: \.self) { status in
                         answerButton(status)
                     }
