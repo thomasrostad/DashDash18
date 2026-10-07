@@ -17,6 +17,10 @@ struct LoginView: View {
     @State private var codeText = ""
     @State private var isBusy = false
     @State private var error: LoginError?
+    /// Når siste kode ble sendt, for nedtellingen på «Send ny kode».
+    @State private var lastSentAt: Date?
+    /// «Ny kode er sendt» etter et nytt forsøk.
+    @State private var info: String?
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -37,6 +41,10 @@ struct LoginView: View {
                             Label(error.message, systemImage: "exclamationmark.triangle")
                                 .font(.ddCallout)
                                 .foregroundStyle(Color.ddError)
+                        } else if let info {
+                            Label(info, systemImage: "envelope")
+                                .font(.ddCallout)
+                                .foregroundStyle(Color.ddForestInk)
                         }
                     }
                     .padding(.horizontal, DDSpacing.xxl)
@@ -97,6 +105,7 @@ struct LoginView: View {
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .accessibilityLabel("E-post")
                 .focused($focused)
                 .submitLabel(.send)
                 .onSubmit(sendCode)
@@ -130,6 +139,14 @@ struct LoginView: View {
                 .keyboardType(.numberPad)
                 .focused($focused)
                 .onSubmit { verify(email: email) }
+                .onChange(of: codeText) { old, new in
+                    // Autofyll fra Mail/Meldinger eller innliming: logg inn uten å trykke.
+                    if !isBusy, LoginInput.autoSubmittableCode(previous: old, current: new) != nil {
+                        verify(email: email)
+                    } else if error != nil, new != old {
+                        error = nil
+                    }
+                }
                 .font(.dd(.mono, size: 20, weight: .medium, relativeTo: .title3))
                 .ddField()
             Button { verify(email: email) } label: {
@@ -137,16 +154,38 @@ struct LoginView: View {
             }
             .buttonStyle(.ddPrimary)
             .padding(.top, DDSpacing.s)
-            HStack {
-                Button("Send ny kode") { resend(to: email) }
-                Spacer()
-                Button("Bruk en annen e-post") {
-                    step = .email
-                    codeText = ""
-                    error = nil
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    resendButton(email: email)
+                    Spacer()
+                    otherEmailButton
+                }
+                // Store tekststørrelser: under hverandre i stedet for å klippe.
+                VStack(alignment: .leading, spacing: DDSpacing.s) {
+                    resendButton(email: email)
+                    otherEmailButton
                 }
             }
             .buttonStyle(.ddText)
+        }
+    }
+
+    /// «Send ny kode», med nedtelling til Supabase tar imot en ny (ellers får du «for mange forsøk»).
+    private func resendButton(email: String) -> some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let wait = LoginInput.secondsUntilResend(lastSent: lastSentAt, now: context.date)
+            Button(wait > 0 ? "Ny kode om \(wait) s" : "Send ny kode") { resend(to: email) }
+                .disabled(wait > 0)
+                .monospacedDigit()
+        }
+    }
+
+    private var otherEmailButton: some View {
+        Button("Bruk en annen e-post") {
+            step = .email
+            codeText = ""
+            error = nil
+            info = nil
         }
     }
 
@@ -167,6 +206,7 @@ struct LoginView: View {
         }
         run {
             try await auth.sendCode(to: email)
+            lastSentAt = .now
             step = .code(email: email)
             codeText = ""
             focused = true
@@ -174,7 +214,13 @@ struct LoginView: View {
     }
 
     private func resend(to email: String) {
-        run { try await auth.sendCode(to: email) }
+        run {
+            try await auth.sendCode(to: email)
+            lastSentAt = .now
+            codeText = ""
+            info = "Ny kode er sendt. Bruk den nyeste."
+            focused = true
+        }
     }
 
     private func verify(email: String) {
@@ -206,6 +252,7 @@ struct LoginView: View {
 
     private func run(_ action: @escaping () async throws -> Void) {
         error = nil
+        info = nil
         isBusy = true
         Task {
             do {
