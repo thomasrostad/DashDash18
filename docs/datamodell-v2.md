@@ -182,3 +182,14 @@ Prisen ved additivt: noe overlapp i overgangen. Sesongens navn, status og regler
 4. **Hvem ser en løs runde i en konkurranse:** nå ser alle som kan se konkurransen, alle startede runder i den, med navn. Er det riktig for åpne konkurranser?
 5. **Anonymisering ved sletting:** se Apple-kravene over.
 6. **Hovedturnering:** 017 lar bare sesongen være hovedturnering. Skal arrangøren kunne velge en annen konkurranse som hovedturnering?
+
+## Foreslåtte svar på de åpne spørsmålene (07.10.2026, kan overstyres)
+
+Disse legges til grunn for fase 13–17 til brukeren sier noe annet.
+
+1. **Profilen lages begge steder:** triggeren på `auth.users` og `ensure_profile()` fra appen, som sikkerhetsnett.
+2. **Navnet:** profilen eier navnet. En klubb kan vise et eget kallenavn (troppens navn) inne i klubben.
+3. **Gjester i klubbrunder:** ja, som i løse runder. De teller ikke i klubbens hovedkonkurranse med mindre arrangøren sier det.
+4. **Åpne konkurranser:** deltakerne ser rundene som teller, med navn. Andre ser bare tabellen.
+5. **Slettet konto:** navnet erstattes med «Slettet spiller». Scorene blir stående, så tabellene ikke endres.
+6. **Hovedturnering:** som standard sesongen. Arrangøren kan velge en annen konkurranse senere (fase 15).

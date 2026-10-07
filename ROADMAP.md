@@ -12,7 +12,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 |---|---|
 | **Nåværende fase** | Fase 9 og 10 forarbeid ferdig. Importverktøy (`Packages/DashImport`) ferdig. Veddemål med poeng er slått på mot test (012 kjørt). |
 | **Sist gjort** | 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
-| **Neste oppgave** | Beslutningene i `docs/visjon-apen-app.md`, så fase 12 (fundament for åpen app). Trykk på push åpner riktig skjerm. |
+| **Neste oppgave** | Fase 13, 14 og 16 bygges bak flagg. Godkjenne og kjøre 017 (fundament). |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
 ---
@@ -343,7 +343,7 @@ Besluttet 07.10.2026 (deg):
 
 **Besluttet 07.10.2026 (deg):** appen skal være åpen for alle og dekke løse runder med venner, spill på runden, flere konkurranser samtidig og egen statistikk. Hele planen står i `docs/visjon-apen-app.md`. Kort fortalt:
 
-- **Fase 12 – Fundament:** runden er kjernen, og klubb er valgfritt. Planen har profiler, gjester og konkurranser som eget lag. Jakkeracet blir én konkurranse, og pariteten står.
+- **Fase 12 – Fundament** *(07.10: datamodell-v2, 017 som forslag, datalaget bak `FoundationFeature`; jakkeracet likt via konkurranser)*: runden er kjernen, og klubb er valgfritt. Planen har profiler, gjester og konkurranser som eget lag. Jakkeracet blir én konkurranse, og pariteten står.
 - **Fase 13 – Løs runde med venner:** ny runde på sekunder, invitasjon med lenke eller QR, felles banebibliotek.
 - **Fase 14 – Spill på runden:** skins, Nassau, Wolf, bingo-bango-bongo og 2 mot 2, i poeng.
 - **Fase 15 – Flere konkurranser:** liga, cup og morroturneringer samtidig (erstatter tidligere fase 12-utkast), med «Teller også i …».
