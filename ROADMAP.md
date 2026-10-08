@@ -131,7 +131,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 - [x] Påmelding: Kommer / Usikker / Kommer ikke + kommentar, angre, purring av de som ikke har svart. *(06.10: svar og kommentar. Purring bygget senere. 08.10: angre som i PWA-en: svaret vises med en gang, sendes etter 8 s eller når appen legges bort, og først da får de andre hendelsen. Ikke prøvd på telefon.)*
 - [x] Kveld-skjerm, rolig: neste kveld, påmeldte, sosialkomité. *(06.10.)*
-- [x] Start runde-veiviser i tre steg: bane og tid, hvem og båser, oppsett. Lagre som kladd, rediger kladd, start (blokkert hvis en runde går). *(06.10. Ikke prøvd mot database.)*
+- [x] Start runde-veiviser i tre steg: bane og tid, hvem og båser, oppsett. Lagre som kladd, rediger kladd, start (blokkert hvis en runde går). *(06.10. Ikke prøvd mot database. 08.10: veiviseren er erstattet av hurtigstarten, fase 11.)*
 - [x] Båser og markør (`foreslaatteBaaser`), matcher for hånd, lag, forslag om form (`oppsettForAntall`, `formerSomPasser`), `trekkMatcher`. *(06.10: trekning på navn til tabellen finnes, fase 6.)*
 - [x] Forslag til LD- og KP-hull. Par-bekreftelse før føring. *(06.10: markør bekrefter med confirm_round_par, sql/007.)*
 - [x] Flere runder samme kveld. *(06.10.)*

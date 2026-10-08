@@ -76,7 +76,7 @@ Arbeidsmåte:
 - `DashDash18.xcodeproj`
 - `Packages/GolfgutuCore/` – regelmotoren som lokal Swift-pakke (ren Swift, Swift Testing, JSON-fixtures). Testes med `swift test`
 - `DashDash18/Config/Supabase-*.plist` – miljøkonfig, ikke i git
-- `sql/` – migreringer for den nye Supabase-en (opprettes ved første migrering)
+- `sql/` – migreringer for den nye Supabase-en, med status per fil i `sql/README.md`
 - `referanse/` – skrivebeskyttet, ikke i git (inneholder nøkler)
 - `SPEC.md` – kartlegging av PWA-en
 - `ROADMAP.md` – faser, status og beslutninger

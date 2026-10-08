@@ -1,12 +1,6 @@
-//
-//  DashDash18UITestsLaunchTests.swift
-//  DashDash18UITests
-//
-//  Created by Thomas Rostad on 06/10/2026.
-//
-
 import XCTest
 
+/// Skjermbilde av oppstarten i hver UI-konfigurasjon (lys/mørk, retning).
 final class DashDash18UITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
@@ -21,11 +15,6 @@ final class DashDash18UITestsLaunchTests: XCTestCase {
     func testLaunch() throws {
         let app = XCUIApplication()
         app.launch()
-
-        // Insert steps here to perform after app launch but before taking a screenshot,
-        // such as logging into a test account or navigating somewhere in the app
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
 
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Launch Screen"
