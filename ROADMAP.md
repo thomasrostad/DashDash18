@@ -12,7 +12,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 |---|---|
 | **Nåværende fase** | Fase 12–17 bygget. På test er 011–024 kjørt (08.10). Slått på: alt unntatt onboarding uten klubb, Google-innlogging og kjøp, som venter på oppsett i App Store Connect og Google og på publisert personvern (`docs/gjoremal.md`). |
 | **Sist gjort** | 08.10: arrangørsiden gjennomgått mot beste praksis og omstrukturert (fase 11, `docs/arrangorsiden-vurdering.md`): Kveldene/Kvelden, én rundeliste, én oppsettsflyt, «Kom i gang», sesong lander på aktiv. Hjem-feed vurdert i `docs/hjem-feed.md`. Før det, 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
-| **Neste oppgave** | Fase 12–17 er bygget, og 019–026 er kjørt på test. `delete-account` er deployet. Gjenstår: oppsett i App Store Connect og Google (`docs/gjoremal.md` C), så `verify-purchase` med IAP-nøkkelen og flaggene for kjøp, Google og onboarding. Prøve arrangørflyten på telefon. Deretter byttet for gjengen (fase 9) og prod. |
+| **Neste oppgave** | Fase 12–17 er bygget, og 019–027 er kjørt på test. `delete-account` er deployet. Gjenstår: oppsett i App Store Connect og Google (`docs/gjoremal.md` C), så `verify-purchase` med IAP-nøkkelen og flaggene for kjøp, Google og onboarding. Prøve arrangørflyten på telefon. Deretter byttet for gjengen (fase 9) og prod. |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. B15: slope.no dekker CR/slope for nordiske baner (fase 20); GolfAPI.io trengs bare for par og indeks per hull. Google-innlogging. |
 
 ---
@@ -374,7 +374,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - **Innhold:** bragder (brutto eagle og bedre), tabellendringer (plassbytte), egne runder, sidepremier, tippekonge, melding til alle, påmeldinger. Ikke alle andres runder. Reaksjoner på alt. Push som i dag («Hva blir push»).
 - **Data:** alle klubbene du er med i, dine turneringer og løse runder. SQL (til godkjenning) bare der det trengs.
 
-- [ ] Data og logikk: samlet feed på tvers av klubber, turneringer og løse runder; plassbytte som hendelse; «sist sett» på tvers; ren feedmodell med tester. SQL som forslag.
+- [x] Data og logikk: samlet feed på tvers av klubber, turneringer og løse runder; plassbytte som hendelse; «sist sett» på tvers; ren feedmodell med tester. *(08.10: PR #7. 027 kjørt på test, push-send v4 deployet, plassbytte slått på.)*
 - [ ] Hjem-fanen i appen: kortene fra designet, filterpiller, oppsummering, Pågår nå og Neste kveld; Kveld-fanen erstattes; bjella viser bare det som angår deg.
 - [ ] Prøve på telefon mot test.
 

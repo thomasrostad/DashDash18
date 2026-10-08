@@ -5,10 +5,9 @@ import Supabase
 /// Hjem-feeden (fase 19). Flaggene står her, så del 2 (fanen) og SQL-en kan slås på hver for seg.
 nonisolated enum HomeFeedFeature {
     /// Logger plassbytte (`table_changed`) når arrangøren låser en runde eller avslutter kvelden.
-    /// **Av** til push-send med teksten for `table_changed` er deployet (ellers får klubben en push
-    /// med «Ny hendelse i klubben») og `sql/027_tabellendring.sql` er kjørt (én linje per runde og
-    /// konkurranse, også når to telefoner låser samtidig). Hjem leser linjene uansett.
-    static let logsTableChanges = false
+    /// På siden 08.10.2026: push-send v4 har teksten for `table_changed`, og `sql/027_tabellendring.sql`
+    /// sørger for én linje per runde og konkurranse, også når to telefoner låser samtidig.
+    static let logsTableChanges = true
 }
 
 /// Logger plassbyttet i klubbens konkurranser etter at runder er låst: tabellen regnes med og uten
