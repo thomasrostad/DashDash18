@@ -8,10 +8,10 @@ Oppdatert 07.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 - [ ] **2. Xcode Cloud-workflowen** (App Store Connect → Xcode Cloud → Workflows → TestFlight fra main → Edit):
   - Environment → **Xcode Version = Xcode 26.6** (ikke «Latest Release»).
   - Sjekk at `SUPABASE_PUBLISHABLE_KEY` starter med `sb_publishable_`. Skriv den gjerne inn på nytt: ⌘V, uten mellomrom foran.
-- [ ] **3. Kjør SQL på test, i denne rekkefølgen.** Claude legger fila på utklippstavla og sjekker den etterpå.
+- [x] **3. Kjør SQL på test, i denne rekkefølgen.** Claude legger fila på utklippstavla og sjekker den etterpå.
   - [x] **024** sikkerhet (kjørt 08.10, kontrollen 8/8)
   - [x] **022** konkurranser (kjørt 08.10, kontrollen 15/15)
-  - [ ] **023** kjøp
+  - [x] **023** kjøp (kjørt 08.10, kontrollen 9/9)
 
 ## B. Snart (for TestFlight og testing)
 

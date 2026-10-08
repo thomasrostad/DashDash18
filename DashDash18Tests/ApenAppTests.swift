@@ -47,13 +47,15 @@ struct ApenOnboardingTests {
         #expect(store.load(userID: a) == nil)
     }
 
-    @Test func flaggeneErAvTilDetErGodkjent() {
+    /// 08.10.2026: 019 kjørt og `delete-account` deployet på test, så sletting, moderering og
+    /// «Del regningen» er på. Google, kjøp og onboarding uten klubb venter på oppsett.
+    @Test func flaggeneEtterGodkjenning() {
         #expect(!OpenAppFeature.isEnabled)
-        #expect(!AccountDeletionFeature.isEnabled)
-        #expect(!ModerationFeature.isEnabled)
+        #expect(AccountDeletionFeature.isEnabled)
+        #expect(ModerationFeature.isEnabled)
         #expect(!GoogleLoginFeature.isEnabled)
         #expect(!PurchaseFeature.isEnabled)
-        #expect(!BillSplitFeature.isEnabled)
+        #expect(BillSplitFeature.isEnabled)
         // Med flaggene av og uten publiserte lenker ser innloggingen og Deg ut som før.
         #expect(!LegalLinks.isVisible)
         #expect(!LoginMethod.google.isAvailable)

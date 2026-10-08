@@ -456,8 +456,9 @@ import Testing
         #expect(q.p_club_id == nil && q.p_member_ids.isEmpty && !q.p_signup_open && q.p_starts_on == "2026-10-07")
     }
 
-    @Test func flaggeneErAv() {
-        #expect(!CompetitionsFeature.isEnabled)
+    /// 022 og 023 er kjørt på test (08.10.2026); kjøp er fortsatt av.
+    @Test func flaggene() {
+        #expect(CompetitionsFeature.isEnabled)
         #expect(!PurchaseFeature.isEnabled)
         // Med kjøp av er alt låst opp, som før.
         #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, entitlements: []))

@@ -14,13 +14,13 @@ nonisolated enum OpenAppFeature {
 /// «Slett konto» under Deg. Krever `sql/019_konto_og_moderering.sql` og at Edge Function
 /// `delete-account` er deployet.
 nonisolated enum AccountDeletionFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 /// Rapporter og blokker i tråden, «Blokkerte» under Deg, rapportene for arrangøren og godkjenning
 /// av vilkårene. Krever `sql/019_konto_og_moderering.sql`.
 nonisolated enum ModerationFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 /// Logg inn med Google (B9). Krever OAuth-klient i Google Cloud og Google slått på i Supabase Auth,
@@ -37,7 +37,7 @@ nonisolated enum PurchaseFeature {
 
 /// «Del regningen» med Vipps (felles utgifter, aldri veddemål). Trenger ingenting på serveren.
 nonisolated enum BillSplitFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 /// Personvernerklæringen og vilkårene (docs/personvern.md og docs/vilkar.md). Fyll inn adressene

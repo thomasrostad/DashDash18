@@ -5,7 +5,7 @@ import Foundation
 /// på Kveld. Av til `sql/022_konkurranser.sql` er godkjent og kjørt på test (åpen påmelding,
 /// cupkampene og RPC-ene). Forutsetter `FoundationFeature` (017). Med flagget av er appen som før.
 nonisolated enum CompetitionsFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 
     /// Begge flaggene må være på.
     static var isActive: Bool { isEnabled && FoundationFeature.isEnabled }

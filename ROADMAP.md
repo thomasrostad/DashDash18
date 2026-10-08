@@ -10,7 +10,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 12–17 (åpen app) er bygget. På test er 011–018, 020 og 021 kjørt og slått på. 019, 022 og 023 venter på godkjenning. |
+| **Nåværende fase** | Fase 12–17 bygget. På test er 011–024 kjørt (08.10). Slått på: alt unntatt onboarding uten klubb, Google-innlogging og kjøp, som venter på oppsett i App Store Connect og Google og på publisert personvern (`docs/gjoremal.md`). |
 | **Sist gjort** | 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
 | **Neste oppgave** | Fase 12–17 er bygget. Godkjenne og kjøre 019, 022 og 023, deploye `delete-account` og `verify-purchase`, oppsett i App Store Connect og Google (`docs/app-store.md`), så slå på flaggene ett for ett. Deretter byttet for gjengen (fase 9) og prod. |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
