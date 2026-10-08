@@ -184,3 +184,34 @@ struct SignupUndoTests {
         #expect(SignupUndo.window == .seconds(8))
     }
 }
+
+/// Ventingen i angre-vinduet (`KveldModel.answer` / `flush`).
+@MainActor
+struct SignupUndoTimerTests {
+    /// `flush()` stopper timeren før den sender. Kalt fra timeren selv må ikke det avbryte
+    /// sendingen (da feilet svaret med «avbrutt» hver gang vinduet gikk ut av seg selv).
+    @Test func avbrytFraHandlingenAvbryterIkkeSendingen() async {
+        let timer = SignupUndoTimer()
+        let cancelled = await withCheckedContinuation { (done: CheckedContinuation<Bool, Never>) in
+            timer.schedule(after: .milliseconds(10)) {
+                timer.cancel()
+                done.resume(returning: Task.isCancelled)
+            }
+        }
+        #expect(!cancelled)
+    }
+
+    @Test func nyttSvarOgAngreStopperVentingen() async throws {
+        let timer = SignupUndoTimer()
+        var fired: [String] = []
+        timer.schedule(after: .milliseconds(30)) { fired.append("første") }
+        timer.schedule(after: .milliseconds(30)) { fired.append("andre") }
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(fired == ["andre"])
+
+        timer.schedule(after: .milliseconds(30)) { fired.append("angret") }
+        timer.cancel()
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(fired == ["andre"])
+    }
+}

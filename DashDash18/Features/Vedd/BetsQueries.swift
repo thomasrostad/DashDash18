@@ -54,9 +54,4 @@ enum BetsQueries {
         try await client.rpc("settle_bet", params: ResolveBetParams(p_bet_id: betID, p_resolution: verdict.rawValue))
             .execute()
     }
-
-    static func markClosed(client: SupabaseClient, betIDs: [UUID]) async throws {
-        guard !betIDs.isEmpty else { return }
-        try await client.rpc("mark_bets_closed", params: CloseBetsParams(p_bet_ids: betIDs)).execute()
-    }
 }

@@ -2,7 +2,7 @@ import Foundation
 
 /// Datoer og klokkeslett for kveldene, alltid i Europe/Oslo. Databasen lagrer dato som
 /// `YYYY-MM-DD` og klokkeslett som `HH:MM:SS` (lokal tid), og her regnes og vises de.
-/// Ren logikk uten SwiftUI og nettverk, så den kan testes og brukes av widgets senere.
+/// Ren logikk uten SwiftUI og nettverk, så den kan testes og brukes av widget-dataene.
 nonisolated enum EveningDates {
     static let osloTimeZone = TimeZone(identifier: "Europe/Oslo")!
 

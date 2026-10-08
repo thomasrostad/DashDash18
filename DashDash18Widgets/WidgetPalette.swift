@@ -25,16 +25,10 @@ nonisolated enum WidgetPalette {
     /// `DDToken.accentYellow` og `accentYellowInk`.
     static let yellow = fixed(0xF5C842)
     static let yellowInk = fixed(0x1E1A05)
-    /// `DDToken.yellowText`: gul som tekst (mørk oker i lys modus).
-    static let yellowText = dynamic(light: 0x7A5C00, dark: 0xF5C842)
     /// `DDToken.accentLime`: «opp» i matchen på mørk flate.
     static let lime = fixed(0x6BE07A)
     /// `DDToken.statRust`: «ned» i matchen på mørk flate.
     static let rustOnDark = fixed(0xE4762F)
-    /// `DDToken.rustText`: rust som tekst på lys flate.
-    static let rustText = dynamic(light: 0xA84A10, dark: 0xE4762F)
-    /// `DDToken.limeInk`: «opp» som tekst på lys flate.
-    static let limeInk = dynamic(light: 0x21451F, dark: 0xD9EBD0)
     /// `DDToken.youRow`: raden min.
     static let youRow = fixed(0xE4C767, alpha: 0.13)
     /// `DDToken.hairline`.
@@ -75,7 +69,4 @@ nonisolated enum WidgetText {
         default: "Om \(days) dager"
         }
     }
-
-    /// «1.», «2.», «3.».
-    static func place(_ n: Int) -> String { "\(n)." }
 }

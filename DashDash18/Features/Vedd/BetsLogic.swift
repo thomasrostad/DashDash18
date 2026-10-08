@@ -5,7 +5,7 @@ import GolfgutuCore
 // regelmotorens `Bet`, og tekstene i vedd-arket og på kortene. Ren logikk, uten nettverk og
 // SwiftUI. Regnestykket (låsing, utfall, oppgjør, poengbank) ligger i GolfgutuCore (`Bets`).
 
-/// Veddemålene er av til 012 er godkjent og kjørt. Da kaller ingenting RPC-er som ikke finnes.
+/// Bryter for veddemålene. Av: ingenting kaller RPC-ene fra `sql/012_veddemaal.sql`.
 nonisolated enum BetsFeature {
     static let isEnabled = true
 }
@@ -143,11 +143,6 @@ nonisolated struct PlaceStakeParams: Encodable, Equatable, Sendable {
 nonisolated struct ResolveBetParams: Encodable, Equatable, Sendable {
     let p_bet_id: UUID
     let p_resolution: String
-}
-
-/// `mark_bets_closed`.
-nonisolated struct CloseBetsParams: Encodable, Equatable, Sendable {
-    let p_bet_ids: [UUID]
 }
 
 // MARK: - Mapping til regelmotoren

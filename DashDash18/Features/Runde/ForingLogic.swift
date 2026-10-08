@@ -46,11 +46,6 @@ nonisolated extension RoundGame {
         return viewer.memberID == target
     }
 
-    /// `spillereJegForerFor`: alle i runden `viewer` kan føre for, i rundens rekkefølge.
-    func playersScorable(by viewer: Viewer) -> [UUID] {
-        snapshot.players.map(\.memberID).filter { canScore(viewer, for: $0) }
-    }
-
     // MARK: Kortet
 
     /// `hullkortSpillere`: båsen din med deg først. Uten båsoppsett eller uten bås: bare deg.
@@ -115,7 +110,6 @@ nonisolated extension RoundGame {
         let ids = mates.compactMap(UUID.init(uuidString:)).filter(isPlaying)
         return ids.isEmpty ? [member] : [member] + ids.filter { $0 != member }
     }
-
 }
 
 nonisolated extension RoundSnapshot {
@@ -178,9 +172,7 @@ nonisolated struct HoleDrafts: Equatable, Sendable {
 // MARK: - Par-bekreftelsen
 
 nonisolated extension RoundGame {
-    /// Kan `viewer` bekrefte parene? Samme regel som `confirm_round_par`: arrangøren alltid;
-    /// ellers en markør i runden, og bare mens den går.
-    /// Samme regel som `confirm_round_par` (sql/014): arrangøren alltid, ellers en
+    /// Kan `viewer` bekrefte parene? Samme regel som `confirm_round_par` (sql/014): arrangøren alltid, ellers en
     /// spiller i runden mens den går, så lenge båsen hans ikke har en annen markør
     /// (PWA: `kanBekrefteBaneoppsett`).
     func canConfirmPar(_ viewer: Viewer) -> Bool {

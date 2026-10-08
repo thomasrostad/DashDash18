@@ -127,7 +127,7 @@ final class RundeModel {
 
     /// Par-bekreftelsen tar plassen til hullkortet til noen har bekreftet.
     var needsParConfirmation: Bool { snapshot?.round.parConfirmedAt == nil }
-    /// Arrangøren, eller en markør i runden som går (`confirm_round_par`).
+    /// Arrangøren, eller en spiller i runden som går uten annen markør (`confirm_round_par`).
     var canConfirmPar: Bool { game?.canConfirmPar(viewer) ?? viewer.isOrganizer }
 
     // MARK: Henting

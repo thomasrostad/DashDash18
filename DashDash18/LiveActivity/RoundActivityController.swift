@@ -1,8 +1,8 @@
 import ActivityKit
 import Foundation
 
-/// Live Activity er av til widget-targetet (DashDash18Widgets) finnes og appen har
-/// `NSSupportsLiveActivities = YES`. Uten dem feiler `Activity.request`. Se docs/widgets-oppsett.md.
+/// Bryter for Live Activity. Krever widget-targetet (DashDash18Widgets) og
+/// `NSSupportsLiveActivities = YES`; uten dem feiler `Activity.request`. Se docs/widgets-oppsett.md.
 nonisolated enum LiveActivityFeature {
     static let isEnabled = true
 }

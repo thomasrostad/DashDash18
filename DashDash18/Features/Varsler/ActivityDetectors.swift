@@ -116,10 +116,6 @@ nonisolated extension RoundGame {
                       ldHole: longestDriveHole.map(holeNumber), kpHole: closestToPinHole.map(holeNumber))
     }
 
-    var lockedEvent: ActivityEvent {
-        .roundLocked(roundNo: snapshot.round.roundNo, courseName: snapshot.course?.name)
-    }
-
     /// Store scorer blant hullene som nettopp ble lagret for første gang (ikke rettinger).
     func bigScoreEvents(hole index: Int, saved: [(member: UUID, strokes: Int)]) -> [ActivityEvent] {
         guard holes.indices.contains(index) else { return [] }
