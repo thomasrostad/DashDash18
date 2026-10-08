@@ -14,7 +14,7 @@ nonisolated enum RulesetExplanation {
         var out: [String] = []
         let table = rules.table
 
-        out.append(rules.evenings == 1 ? "Sesongen har 1 kveld." : "Sesongen har \(rules.evenings) kvelder.")
+        out.append(rules.evenings == 1 ? "Turneringen har 1 kveld." : "Turneringen har \(rules.evenings) kvelder.")
 
         let mp = table.matchPoints
         if table.pointsSource == .stableford {

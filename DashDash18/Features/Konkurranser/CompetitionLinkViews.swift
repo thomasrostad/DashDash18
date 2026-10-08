@@ -71,7 +71,7 @@ final class CompetitionLinkModel {
             try await CompetitionQueries.setRoundCompetitions(client: client, roundID: roundID, ids: ids)
             return nil
         } catch {
-            return "Runden ble ikke lagt i konkurransene. \(DataError.from(error).message)"
+            return "Runden ble ikke lagt i turneringene. \(DataError.from(error).message)"
         }
     }
 }
@@ -97,7 +97,7 @@ struct CountsAlsoInSection: View {
             } header: {
                 DDHeader("Teller også i …")
             } footer: {
-                DDFooter("Bare konkurranser du styrer, der noen av spillerne er med. De som ikke er med, telles ikke.")
+                DDFooter("Bare turneringer du styrer, der noen av spillerne er med. De som ikke er med, telles ikke.")
             }
         }
     }
@@ -166,7 +166,7 @@ struct TavlaCompetitions<Main: View>: View {
                 NavigationLink {
                     CompetitionsListView(model: model)
                 } label: {
-                    Label("Konkurranser", systemImage: "trophy")
+                    Label("Turneringer", systemImage: "trophy")
                 }
                 .tint(Color.ddOnDark)
             }

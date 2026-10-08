@@ -93,7 +93,7 @@ struct JoinCompetitionView: View {
                 codeSection
             case .loading:
                 Section {
-                    HStack { Spacer(); ProgressView("Finner konkurransen …"); Spacer() }
+                    HStack { Spacer(); ProgressView("Finner turneringen …"); Spacer() }
                 }
             case .preview(let preview):
                 summary(preview)
@@ -101,7 +101,7 @@ struct JoinCompetitionView: View {
             case .joined(let preview):
                 summary(preview)
                 Section {
-                    Label("Du er påmeldt. Finn den under Konkurranser.", systemImage: "checkmark.seal")
+                    Label("Du er påmeldt. Finn den under Turneringer.", systemImage: "checkmark.seal")
                         .foregroundStyle(Color.ddForestInk)
                     Button("Ferdig") { dismiss() }
                         .buttonStyle(.dd(.primary, fullWidth: true))
@@ -131,7 +131,7 @@ struct JoinCompetitionView: View {
                 .focused($codeFocused)
                 .submitLabel(.go)
                 .onSubmit { Task { await model.lookUp() } }
-            Button("Finn konkurransen") { Task { await model.lookUp() } }
+            Button("Finn turneringen") { Task { await model.lookUp() } }
                 .disabled(model.typedCode == nil)
             if case .failed(let message) = model.step {
                 Label(message, systemImage: "exclamationmark.triangle").ddErrorStyle()
@@ -139,7 +139,7 @@ struct JoinCompetitionView: View {
         } header: {
             DDHeader("Koden fra invitasjonen")
         } footer: {
-            DDFooter("Eieren og de påmeldte finner koden under «Inviter» i konkurransen. Du kan også lime inn lenken.")
+            DDFooter("Eieren og de påmeldte finner koden under «Inviter» i turneringen. Du kan også lime inn lenken.")
         }
         .onAppear { codeFocused = true }
     }
@@ -161,7 +161,7 @@ struct JoinCompetitionView: View {
             }
             .padding(.vertical, 4)
         } header: {
-            DDHeader("Konkurransen")
+            DDHeader("Turneringen")
         }
     }
 

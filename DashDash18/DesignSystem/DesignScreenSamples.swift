@@ -3,14 +3,14 @@ import GolfgutuCore
 import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
-/// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `tavlaferdig`, `profil`, `sesong`,
-/// `varsler`, `trad`, `liste`, `hurtigstart`, `flerevalg`, `arrangor`, `arrangorstart`, `runder`, `kveldene`, `kvelden`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
+/// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `tavlaferdig`, `tavlastableford`, `profil`, `sesong`,
+/// `varsler`, `trad`, `liste`, `hurtigstart`, `flerevalg`, `arrangor`, `arrangorstart`, `runder`, `kveldene`, `kvelden`, `baner`, `nybane`, `regler`, `reglerendre`, `nyturnering`, `nyturnering2`, `turneringer`,
 /// `statoversikt`, `stathistorikk`, `statrekorder`, `stattom`, `statforing`,
 /// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
 /// og spill på runden: `spill`, `spillnytt`, `spillresultat`,
 /// og åpent for alle (fase 17): `apenvalg`, `apenlogin`, `apendeg`, `apenslett`, `apenrapport`,
 /// `apenrapporter`, `apenblokkerte`, `apenbetaling`, `apenregning`,
-/// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkny`, `konkteller`, `konkkveld`, `konklast`, `konklastdeltaker`).
+/// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkteller`, `konkkveld`, `konklast`, `konklastdeltaker`).
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
@@ -21,7 +21,9 @@ struct DesignScreenSamples: View {
         // Kveldene og Kvelden (fase 11).
         case kveldene, kvelden
         // Arrangør: banene og sesong og regler (fase 11).
-        case baner, nybane, regler, reglerendre, nysesong
+        case baner, nybane, regler, reglerendre
+        // Turnering med fire oppsett (fase 18).
+        case nyturnering, nyturnering2, turneringer, tavlastableford
         // Statistikk (fase 16).
         case statoversikt, stathistorikk, statrekorder, stattom, statforing
         // Løse runder med venner (fase 13).
@@ -31,7 +33,7 @@ struct DesignScreenSamples: View {
         // Åpent for alle (fase 17).
         case apenvalg, apenlogin, apendeg, apenslett, apenrapport, apenrapporter, apenblokkerte, apenbetaling, apenregning
         // Flere konkurranser (fase 15).
-        case konktavla, konkliste, konkliga, konkcup, konkny, konkteller, konkkveld
+        case konktavla, konkliste, konkliga, konkcup, konkteller, konkkveld
         // Låst konkurranse: betalingsknappen for eieren, teksten for deltakerne (fase 17).
         case konklast, konklastdeltaker
     }
@@ -86,9 +88,18 @@ struct DesignScreenSamples: View {
         case .baner, .nybane:
             BanerSampleScreen(newCourse: screen == .nybane)
                 .tint(Color.ddForestInk)
-        case .regler, .reglerendre, .nysesong:
+        case .regler, .reglerendre:
             SesongSampleScreen(screen: screen)
                 .tint(Color.ddForestInk)
+        case .nyturnering, .nyturnering2, .turneringer:
+            TurneringSampleScreen(screen: screen)
+        case .tavlastableford:
+            NavigationStack {
+                TavlaList(standings: TavlaSamples.standings(stableford: true))
+                    .navigationTitle("Tavla")
+                    .ddNavigationChrome()
+            }
+            .tint(Color.ddForestInk)
         case .statoversikt, .stattom:
             NavigationStack { StatsView(model: StatsSamples.model(empty: screen == .stattom)) }
                 .tint(Color.ddForestInk)
@@ -109,7 +120,7 @@ struct DesignScreenSamples: View {
             ApenSampleScreen(screen: screen)
         case .spillnytt:
             SpillNyttSampleScreen()
-        case .konktavla, .konkliste, .konkliga, .konkcup, .konkny, .konkteller, .konkkveld, .konklast, .konklastdeltaker:
+        case .konktavla, .konkliste, .konkliga, .konkcup, .konkteller, .konkkveld, .konklast, .konklastdeltaker:
             KonkurranseSampleScreen(screen: screen)
         case .liste:
             NavigationStack { DDListSample() }

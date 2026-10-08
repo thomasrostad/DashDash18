@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// Arrangørsiden. Øverst neste steg: «Kom i gang» når noe mangler (sesong, baner, tropp, neste kveld),
+/// Arrangørsiden. Øverst neste steg: «Kom i gang» når noe mangler (turnering, baner, tropp, neste kveld),
 /// så neste kveld med én hovedknapp og raden «Kveldene». Overskriften sier «I kveld» bare når kvelden
 /// er i dag, og trykk på kortet åpner Kvelden. Under ligger det som gjøres sjeldnere: oppsettet
-/// (sesong og regler, troppen, banene) og varsler og rapporter. Vises bare for arrangører, fra Deg og
+/// (turneringen, troppen, banene) og varsler og rapporter. Vises bare for arrangører, fra Deg og
 /// fra verktøylinja i Kveld.
 struct AdminHubView: View {
     @Environment(\.clubContext) private var context
@@ -41,6 +41,7 @@ private struct AdminHubContent: View {
 
     @State private var showsKveldene = false
     @State private var showsKvelden = false
+    @State private var showsNewTournament = false
 
     init(model: RundeAdminModel) {
         _model = State(initialValue: model)
@@ -55,8 +56,8 @@ private struct AdminHubContent: View {
             tonightSection
             DDSection("Oppsett") {
                 NavigationLink { SesongAdminView() } label: {
-                    AdminHubRow("Sesong og regler", "Antall kvelder, hva som teller, poeng, handicap og former.",
-                                systemImage: "list.number")
+                    AdminHubRow("Turneringen", "Hovedturneringen, reglene og alle turneringer.",
+                                systemImage: "trophy")
                 }
                 NavigationLink { TroppAdminView() } label: {
                     AdminHubRow("Troppen", "Spillerne, handicap, roller og nye som venter på godkjenning.",
@@ -94,6 +95,15 @@ private struct AdminHubContent: View {
             }
         }
         .roundAdminActions(actions)
+        .sheet(isPresented: $showsNewTournament, onDismiss: { Task { await model.load() } }) {
+            NavigationStack {
+                NyTurneringView(model: NewTournamentModel(list: CompetitionsModel(context: model.clubContext),
+                                                          seasons: SesongAdminModel(context: model.clubContext),
+                                                          offersPrivate: false)) {
+                    showsNewTournament = false
+                }
+            }
+        }
     }
 
     // MARK: Kom i gang
@@ -110,6 +120,19 @@ private struct AdminHubContent: View {
             ForEach(steps) { step in
                 if step.isDone {
                     GettingStartedRow(step: step)
+                } else if GettingStarted.opensNewTournament(step) {
+                    Button { showsNewTournament = true } label: {
+                        HStack {
+                            GettingStartedRow(step: step)
+                            Spacer(minLength: 8)
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(Color.ddInkSecondary)
+                                .accessibilityHidden(true)
+                        }
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
                 } else {
                     NavigationLink { destination(for: step.item) } label: {
                         GettingStartedRow(step: step)

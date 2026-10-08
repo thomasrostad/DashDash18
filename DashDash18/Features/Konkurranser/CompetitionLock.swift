@@ -28,7 +28,7 @@ nonisolated enum CompetitionLockNotice: Equatable, Sendable {
             "Liga og cup låses opp med et kjøp i appen, og det er ikke koblet noe kjøp til denne. "
                 + "Har du betalt uten at det ble registrert, trykker du «Gjenopprett kjøp» på neste side."
         case .useCredit:
-            "Du har et kjøp som ikke er brukt på noen turnering. Bruk det her, så er konkurransen låst opp. "
+            "Du har et kjøp som ikke er brukt på noen turnering. Bruk det her, så er turneringen låst opp. "
                 + "Du betaler ikke på nytt."
         case .waitForOrganizer(let isClub):
             "\(isClub ? "Arrangøren" : "Eieren") må låse den opp med et kjøp i appen."
@@ -37,7 +37,7 @@ nonisolated enum CompetitionLockNotice: Equatable, Sendable {
 
     var buttonTitle: String? {
         switch self {
-        case .purchase: "Lås opp konkurransen"
+        case .purchase: "Lås opp turneringen"
         case .useCredit: "Bruk kjøpet ditt"
         case .hidden, .waitForOrganizer: nil
         }

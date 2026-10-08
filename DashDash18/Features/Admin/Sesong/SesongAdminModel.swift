@@ -60,15 +60,18 @@ final class SesongAdminModel {
         }
     }
 
+    /// Ny sesong (en serie i «Ny turnering»). Den lages planlagt og aktiveres så med `activate_season`
+    /// når `activate` er satt, samme vei som «Aktiver turneringen».
     @discardableResult
-    func create(name: String, template: SeasonLifecycle.Template) async throws(DataError) -> SeasonRow {
-        let payload = NewSeasonPayload(clubID: try connection().clubID, name: name, status: .planned,
-                                       rules: SeasonLifecycle.rules(for: template, seasons: seasons))
+    func create(name: String, rules: Ruleset, activate: Bool) async throws(DataError) -> SeasonRow {
+        let payload = NewSeasonPayload(clubID: try connection().clubID, name: name, status: .planned, rules: rules)
         let row: SeasonRow = try await write {
             try await table.insert(payload).select().single().execute().value
         }
         seasons.insert(row, at: 0)
-        return row
+        guard activate else { return row }
+        try await self.activate(row)
+        return season(id: row.id) ?? row
     }
 
     func saveRules(_ rules: Ruleset, for season: SeasonRow) async throws(DataError) {
@@ -97,7 +100,7 @@ final class SesongAdminModel {
     /// Sletter en planlagt sesong. Aktive og ferdige slettes ikke fra appen.
     func delete(_ season: SeasonRow) async throws(DataError) {
         guard season.status == .planned else {
-            throw .invalid("Bare planlagte sesonger kan slettes.")
+            throw .invalid("Bare planlagte turneringer kan slettes.")
         }
         let deleted: [SeasonRow]
         do {
@@ -108,7 +111,7 @@ final class SesongAdminModel {
         } catch {
             // 23503 (blir `.invalid`): kvelder i terminlista peker på sesongen (on delete restrict).
             if case .invalid = error {
-                throw .invalid("Sesongen har kvelder i terminlista. Flytt eller slett dem først.")
+                throw .invalid("Turneringen har kvelder i terminlista. Flytt eller slett dem først.")
             }
             throw error
         }

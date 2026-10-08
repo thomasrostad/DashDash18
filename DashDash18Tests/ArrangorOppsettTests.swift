@@ -277,39 +277,6 @@ struct EndretFraStandardTests {
     }
 }
 
-struct NySesongForslagTests {
-    private static let club = UUID()
-    private static let oct2026 = Date(timeIntervalSince1970: 1_791_367_200) // 7. oktober 2026, 12:00 i Oslo
-
-    private static var oslo: Calendar {
-        var c = Calendar(identifier: .gregorian)
-        c.timeZone = TimeZone(identifier: "Europe/Oslo")!
-        return c
-    }
-
-    private static func season(_ name: String, rules: Ruleset = .golfgutu) -> SeasonRow {
-        SeasonRow(id: UUID(), clubID: club, name: name, status: .finished, rules: rules)
-    }
-
-    @Test func navnMedAret() {
-        #expect(SeasonLifecycle.suggestedName(seasons: [], now: Self.oct2026, calendar: Self.oslo) == "Sesongen 2026")
-    }
-
-    @Test func tattNavnGirNesteAr() {
-        let seasons = [Self.season(" sesongen 2026 "), Self.season("Sesongen 2027")]
-        #expect(SeasonLifecycle.suggestedName(seasons: seasons, now: Self.oct2026, calendar: Self.oslo) == "Sesongen 2028")
-    }
-
-    @Test func reglerKopieresFraForrigeSesong() {
-        var rules = Ruleset.golfgutu
-        rules.evenings = 9
-        let seasons = [Self.season("Sesongen 2026", rules: rules), Self.season("Sesongen 2025")]
-        let template = SeasonLifecycle.defaultTemplate(seasons: seasons)
-        #expect(SeasonLifecycle.rules(for: template, seasons: seasons) == rules)
-        #expect(SeasonLifecycle.rules(for: SeasonLifecycle.defaultTemplate(seasons: []), seasons: []) == .golfgutu)
-    }
-}
-
 private enum BanerFixtures {
     static let club = UUID()
 

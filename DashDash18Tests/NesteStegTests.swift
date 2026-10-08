@@ -31,14 +31,14 @@ struct KomIGangTests {
 
     @Test func rekkefolgenErSesongBanerTroppKveld() {
         #expect(GettingStarted.steps(allDone).map(\.item) == [.season, .courses, .roster, .evening])
-        #expect(GettingStarted.Item.allCases.map(\.title) == ["Sesong og regler", "Banene", "Troppen", "Kveldene"])
+        #expect(GettingStarted.Item.allCases.map(\.title) == ["Turneringen", "Banene", "Troppen", "Kveldene"])
     }
 
     @Test func skjultNaarAltErIOrden() {
         let steps = GettingStarted.steps(allDone)
         #expect(steps.filter(\.isDone).count == 4)
         #expect(!GettingStarted.isVisible(steps))
-        #expect(steps.map(\.detail) == ["Aktiv sesong er satt opp.", "2 baner er klare.", "12 i troppen.",
+        #expect(steps.map(\.detail) == ["En turnering er i gang.", "2 baner er klare.", "12 i troppen.",
                                         "3 kommende kvelder."])
     }
 

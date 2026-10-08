@@ -24,36 +24,6 @@ nonisolated enum SeasonLifecycle {
         seasons.first { $0.status == .active && $0.id != season.id && $0.clubID == season.clubID }
     }
 
-    /// Regelsettet ny sesong får. Malen er Golfgutu-oppsettet eller en kopi av en annen sesongs regler.
-    enum Template: Hashable, Sendable {
-        case golfgutu
-        case copy(UUID)
-    }
-
-    static func rules(for template: Template, seasons: [SeasonRow]) -> Ruleset {
-        switch template {
-        case .golfgutu: .golfgutu
-        case .copy(let id): seasons.first { $0.id == id }?.rules ?? .golfgutu
-        }
-    }
-
-    /// Standardmalen: kopi av forrige sesong (den første i listen, som er nyest), ellers Golfgutu.
-    static func defaultTemplate(seasons: [SeasonRow]) -> Template {
-        seasons.first.map { .copy($0.id) } ?? .golfgutu
-    }
-
-    /// Forslaget til navn på ny sesong: «Sesongen <år>», med første år fra `now` som ikke er tatt
-    /// (uten hensyn til store og små bokstaver eller mellomrom).
-    static func suggestedName(seasons: [SeasonRow], now: Date = .now, calendar: Calendar = .current) -> String {
-        let taken = Set(seasons.map { $0.name.trimmingCharacters(in: .whitespaces).lowercased() })
-        let year = calendar.component(.year, from: now)
-        for candidate in year...(year + 50) {
-            let name = "Sesongen \(candidate)"
-            if !taken.contains(name.lowercased()) { return name }
-        }
-        return "Sesongen \(year)"
-    }
-
     /// Sesongene i visningsrekkefølgen: aktiv, planlagt, ferdig. Innenfor hver status som fra databasen (nyest først).
     static func grouped(_ seasons: [SeasonRow]) -> [(status: SeasonStatus, seasons: [SeasonRow])] {
         [SeasonStatus.active, .planned, .finished].compactMap { status in
@@ -62,11 +32,11 @@ nonisolated enum SeasonLifecycle {
         }
     }
 
-    /// Hvor «Sesong og regler» lander.
+    /// Hvor «Turneringen» lander.
     enum Landing: Equatable, Sendable {
         /// Rett på den aktive sesongen.
         case season(UUID)
-        /// Lista over sesongene, fordi ingen er aktiv.
+        /// Lista over turneringene, fordi ingen sesong er aktiv.
         case list
     }
 
@@ -81,8 +51,8 @@ nonisolated enum SeasonLifecycle {
     static func listPrompt(_ seasons: [SeasonRow]) -> String? {
         guard !seasons.isEmpty, landing(seasons) == .list else { return nil }
         return seasons.contains { $0.status == .planned }
-            ? "Ingen sesong er i gang. Åpne en planlagt sesong og aktiver den, eller lag en ny."
-            : "Ingen sesong er i gang. Lag en ny sesong og aktiver den når dere er klare."
+            ? "Ingen serie er i gang. Åpne en planlagt og aktiver den, eller lag en ny turnering."
+            : "Ingen serie er i gang. Lag en ny turnering."
     }
 
     static func title(_ status: SeasonStatus) -> String {
