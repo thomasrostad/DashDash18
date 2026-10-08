@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
 /// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `profil`, `sesong`,
-/// `varsler`, `trad`, `hurtigstart`, `arrangor`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
+/// `varsler`, `trad`, `hurtigstart`, `arrangor`, `runder`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
 /// `statoversikt`, `stathistorikk`, `statrekorder`, `stattom`, `statforing`,
 /// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
 /// og spill på runden: `spill`, `spillnytt`, `spillresultat`,
@@ -13,7 +13,7 @@ import SwiftUI
 /// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkny`, `konkteller`, `konkkveld`).
 struct DesignScreenSamples: View {
     enum Screen: String {
-        case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor
+        case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
         // Arrangør: banene og sesong og regler (fase 11).
         case baner, nybane, regler, reglerendre, nysesong
         // Statistikk (fase 16).
@@ -39,6 +39,9 @@ struct DesignScreenSamples: View {
             .tint(Color.ddForestInk)
         case .arrangor:
             NavigationStack { AdminHubSample() }
+                .tint(Color.ddForestInk)
+        case .runder:
+            NavigationStack { RundeAdminSample() }
                 .tint(Color.ddForestInk)
         case .tavla, .tavlaferdig:
             NavigationStack {

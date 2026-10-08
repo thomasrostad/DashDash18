@@ -331,6 +331,16 @@ Besluttet 07.10.2026 (deg):
 - [x] Banene: enklere å legge inn og forstå «klar», tydelig skille mellom simulatorbane og ekte bane. *(07.10: 016 kjørt, banetype slått på.)**
 - [x] Sesong og regler: Golfgutu-oppsettet som standard, endringer i klart språk, avanserte valg skjult.
 
+Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i prioritert rekkefølge:
+
+- [x] Rundelistene slått sammen: «Alle runder» → «Runder» → «Rundene» er én liste «Runder», gruppert per kveld, nyeste først. Rader navigerer (kladd åpner oppsettet, startet/låst åpner rundens skjerm). Avkort, lås, slett og rett hull ligger på rundens skjerm. Slett kladd med sveip. *(08.10.)*
+- [ ] Huben: datoen som overskrift i stedet for «I kveld», og en sjekkliste (sesong, baner, tropp, neste kveld) når noe mangler.
+- [ ] Kvelden som ett objekt: terminliste, runder, purring, melding til alle og avslutt kvelden på én skjerm.
+- [ ] Sesong og regler lander på den aktive sesongen.
+- [ ] Én oppsettsflyt: hurtigstarten beholdes, veiviseren fjernes, flyten pushes i stedet for ark.
+- [ ] Samle varsler; flytt invitasjonskode og rapporter inn på arrangørsiden.
+- [ ] Egen Arrangør-fane for arrangører.
+
 **Ferdig når:**
 - Du setter opp en vanlig kveld med tre trykk etter at påmeldingen er klar.
 - En ny arrangør klarer det uten hjelp.

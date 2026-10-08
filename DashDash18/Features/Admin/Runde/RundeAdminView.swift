@@ -1,7 +1,8 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Kveldens runder for arrangøren: kladd, pågår og låst, med hurtigstarten for nye runder.
+/// Runder: alle rundene i klubben, gruppert per kveld, nyeste først. Kladder åpner oppsettet,
+/// startede og låste runder åpner rundens skjerm, der avkorting, låsing, sletting og retting ligger.
 struct RundeAdminView: View {
     @Environment(\.clubContext) private var context
 
@@ -14,13 +15,24 @@ struct RundeAdminView: View {
     }
 }
 
+#if DEBUG
+/// Runder med oppdiktede kvelder (`-DDDesignScreen runder`).
+struct RundeAdminSample: View {
+    @State private var model = RundeAdminModel.sample()
+
+    var body: some View {
+        RundeAdminContent(model: model)
+    }
+}
+#endif
+
 /// Utkastet som vises i hurtigstarten (eller veiviseren).
 private struct WizardItem: Identifiable {
     let id = UUID()
     let draft: RoundDraft
 }
 
-/// Runden som skal slettes, med det som følger med.
+/// Kladden som skal slettes, med det som følger med.
 private struct PendingDelete: Identifiable {
     let round: RoundRow
     let summary: RoundDeleteSummary
@@ -31,29 +43,28 @@ private struct RundeAdminContent: View {
     @State var model: RundeAdminModel
     @State private var wizard: WizardItem?
     @State private var pendingDelete: PendingDelete?
-    @State private var pendingLock: RoundRow?
-    @State private var reviewing: RoundRow?
-    @State private var cutting: RoundRow?
     @State private var message: String?
     @State private var error: String?
     @State private var isBusy = false
 
     var body: some View {
-        withDialogs
-            .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(error ?? "")
+        content
+            .navigationTitle("Runder")
+            .ddNavigationChrome()
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Ny runde", systemImage: "plus") { newRound(on: model.selectedEvent) }
+                        .disabled(model.state != .loaded || model.selectedEvent == nil || isBusy)
+                }
             }
-            .alert("Ferdig", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(message ?? "")
+            .task { await model.load() }
+            .refreshable { await model.load() }
+            .sheet(item: $wizard) { item in
+                RoundSetupFlow(model: model, draft: item.draft) { result in
+                    wizard = nil
+                    message = result
+                }
             }
-    }
-
-    private var withDialogs: some View {
-        base
             .confirmationDialog(
                 pendingDelete.map { "Slett \($0.summary.noun) · \(model.title($0.round))" } ?? "",
                 isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
@@ -64,47 +75,15 @@ private struct RundeAdminContent: View {
             } message: { item in
                 Text(item.summary.message)
             }
-            .confirmationDialog(
-                "Låse runden?",
-                isPresented: Binding(get: { pendingLock != nil }, set: { if !$0 { pendingLock = nil } }),
-                titleVisibility: .visible,
-                presenting: pendingLock
-            ) { round in
-                Button("Lås \(model.title(round))") { lock(round) }
-            } message: { _ in
-                Text("Runden er ferdig og teller i sesongen. En låst runde kan ikke bli kladd igjen eller slettes herfra.")
+            .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(error ?? "")
             }
-    }
-
-    private var base: some View {
-        content
-            .navigationTitle("Runder")
-            .ddNavigationChrome()
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Ny runde", systemImage: "plus") {
-                        if let draft = model.newDraft() { wizard = WizardItem(draft: draft) }
-                    }
-                    .disabled(model.state != .loaded || model.selectedEvent == nil || isBusy)
-                }
-            }
-            .task { await model.load() }
-            .refreshable { await model.load() }
-            .navigationDestination(isPresented: Binding(get: { reviewing != nil }, set: { if !$0 { reviewing = nil } })) {
-                if let round = reviewing {
-                    RoundTableView(round: round, title: model.title(round))
-                }
-            }
-            .sheet(item: $cutting, onDismiss: { Task { await model.load() } }) { round in
-                NavigationStack {
-                    AvkortSheet(round: round, title: model.title(round)) { message = $0 }
-                }
-            }
-            .sheet(item: $wizard) { item in
-                RoundSetupFlow(model: model, draft: item.draft) { result in
-                    wizard = nil
-                    message = result
-                }
+            .alert("Ferdig", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(message ?? "")
             }
     }
 
@@ -123,105 +102,101 @@ private struct RundeAdminContent: View {
                     .buttonStyle(.dd(.primary))
             }
         case .loaded:
-            list
+            if model.events.isEmpty && model.allRounds.isEmpty {
+                ContentUnavailableView {
+                    Label("Ingen kvelder i terminlista", systemImage: "calendar")
+                } description: {
+                    Text("Legg inn en kveld under «Terminliste» først. Da kan du sette opp runden her.")
+                }
+            } else {
+                list
+            }
         }
     }
 
     private var list: some View {
         DDList {
-            Section {
-                if model.events.isEmpty {
-                    Text("Ingen kvelder i terminlista. Legg inn en under «Terminliste» først.")
-                        .foregroundStyle(Color.ddInkSecondary)
-                } else {
-                    Picker("Kveld", selection: Binding(
-                        get: { model.selectedEventID },
-                        set: { id in
-                            guard let id, id != model.selectedEventID else { return }
-                            run { try await model.select(eventID: id) }
-                        }
-                    )) {
-                        ForEach(model.events) { event in
-                            Text(EveningDates.longText(event.eventDate, capitalized: true)).tag(Optional(event.id))
-                        }
+            ForEach(model.groups) { group in
+                groupSection(group)
+                if group.hasActive {
+                    AvsluttKveldenSection(rounds: group.rounds, title: model.title) { text in
+                        await model.load()
+                        message = text
                     }
                 }
-            }
-
-            if let active = model.activeRound, active.eventID != model.selectedEventID {
-                Section {
-                    Label("\(model.title(active)) går på en annen kveld. Lås den før du starter en ny.",
-                          systemImage: "exclamationmark.circle")
-                        .foregroundStyle(Color.ddInkSecondary)
-                }
-            }
-
-            if model.selectedEvent != nil {
-                Section {
-                    if model.rounds.isEmpty {
-                        Text("Ingen runder ennå. Trykk + for å sette opp kveldens første.")
-                            .foregroundStyle(Color.ddInkSecondary)
-                    }
-                    ForEach(model.rounds) { round in
-                        row(round)
-                    }
-                } header: {
-                    DDHeader("Kveldens runder")
-                } footer: {
-                    DDFooter("Kladder ser bare arrangørene. Én runde kan gå om gangen i klubben.")
-                }
-
-                AvsluttKveldenSection(rounds: model.rounds, title: model.title) { text in
-                    await model.load()
-                    message = text
-                }
-            }
-
-            Section {
-                NavigationLink { RundeneView() } label: {
-                    Label("Rundene", systemImage: "tablecells")
-                }
-            } footer: {
-                DDFooter("Hele runden som tabell, og retting av hull, også i låste runder.")
             }
         }
         .disabled(isBusy)
         .overlay { if isBusy { ProgressView() } }
     }
 
-    private func row(_ round: RoundRow) -> some View {
-        let players = model.playersByRound[round.id] ?? []
-        let bays = Set(players.compactMap(\.bayNo)).count
-        return Menu {
-            switch round.status {
-            case .draft:
-                Button("Rediger kladden", systemImage: "pencil") { edit(round) }
-                Button("Start runden", systemImage: "play") { run { try await model.start(round) } }
-            case .active:
-                Button("Se hele runden", systemImage: "tablecells") { reviewing = round }
-                Button("Avkort runden …", systemImage: "scissors") { cutting = round }
-                Button("Lås runden", systemImage: "lock") { pendingLock = round }
-            case .locked:
-                Button("Se hele runden", systemImage: "tablecells") { reviewing = round }
+    private func groupSection(_ group: RoundGroup) -> some View {
+        let isNext = group.event?.id == model.selectedEventID
+        let allowsNew = group.event.map(model.allowsNewRound) ?? false
+        return Section {
+            if group.rounds.isEmpty {
+                Text("Ingen runder ennå.")
+                    .foregroundStyle(Color.ddInkSecondary)
             }
-            if round.status != .locked {
-                Button(round.status == .draft ? "Slett kladden" : "Slett runden", systemImage: "trash", role: .destructive) {
-                    askDelete(round)
+            ForEach(group.rounds) { round in
+                row(round)
+            }
+            if allowsNew, let event = group.event {
+                Button {
+                    newRound(on: event)
+                } label: {
+                    Label("Ny runde på denne kvelden", systemImage: "plus")
+                        .foregroundStyle(Color.ddForestInk)
                 }
             }
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(model.title(round))
-                        .foregroundStyle(.primary)
-                    Text(subtitle(round, players: players.count, bays: bays))
-                        .font(.dd(.sans, size: 13, relativeTo: .footnote))
-                        .foregroundStyle(Color.ddInkSecondary)
-                }
-                Spacer()
-                StatusBadge(status: round.status)
+        } header: {
+            DDHeader(group.title + (isNext ? " · står for tur" : ""))
+        } footer: {
+            if isNext {
+                DDFooter("Kladder ser bare arrangørene. Én runde kan gå om gangen i klubben.")
             }
         }
+    }
+
+    /// En kladd åpner oppsettet. En startet eller låst runde åpner rundens skjerm.
+    @ViewBuilder
+    private func row(_ round: RoundRow) -> some View {
+        switch round.status {
+        case .draft:
+            Button {
+                edit(round)
+            } label: {
+                rowLabel(round)
+            }
+            .swipeActions {
+                Button("Slett", systemImage: "trash", role: .destructive) { askDelete(round) }
+            }
+        case .active, .locked:
+            NavigationLink {
+                RoundTableView(round: round, title: model.title(round), admin: model) { text in
+                    message = text
+                }
+            } label: {
+                rowLabel(round)
+            }
+        }
+    }
+
+    private func rowLabel(_ round: RoundRow) -> some View {
+        let players = model.playersByRound[round.id] ?? []
+        let bays = Set(players.compactMap(\.bayNo)).count
+        return HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.title(round))
+                    .foregroundStyle(Color.ddInk)
+                Text(subtitle(round, players: players.count, bays: bays))
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddInkSecondary)
+            }
+            Spacer()
+            StatusBadge(status: round.status)
+        }
+        .contentShape(.rect)
     }
 
     private func subtitle(_ round: RoundRow, players: Int, bays: Int) -> String {
@@ -233,8 +208,22 @@ private struct RundeAdminContent: View {
         return parts.joined(separator: " · ")
     }
 
+    /// Ny runde på kvelden: velger kvelden først, så påmeldingen og rundenummeret stemmer.
+    private func newRound(on event: EventRow?) {
+        guard let event else { return }
+        run {
+            if event.id != model.selectedEventID {
+                try await model.select(eventID: event.id)
+            }
+            if let draft = model.newDraft() { wizard = WizardItem(draft: draft) }
+        }
+    }
+
     private func edit(_ round: RoundRow) {
         run {
+            if let eventID = round.eventID, eventID != model.selectedEventID {
+                try await model.select(eventID: eventID)
+            }
             let draft = try await model.draft(for: round)
             wizard = WizardItem(draft: draft)
         }
@@ -245,10 +234,6 @@ private struct RundeAdminContent: View {
             let summary = try await model.deleteSummary(round)
             pendingDelete = PendingDelete(round: round, summary: summary)
         }
-    }
-
-    private func lock(_ round: RoundRow) {
-        run { try await model.lock(round) }
     }
 
     private func delete(_ round: RoundRow) {

@@ -3,7 +3,7 @@ import GolfgutuCore
 import Testing
 @testable import DashDash18
 
-// Fase 7: avkorting, avslutt kvelden, rett en score og Rundene-tabellen.
+// Fase 7: avkorting, avslutt kvelden, rett en score og rundetabellen.
 // Tallene er fra avkorting-test.js og rundene-test.js.
 
 private enum Fixture {
@@ -326,14 +326,38 @@ struct RundeneTabellTests {
         #expect(CorrectionNotice.text(for: .active) == nil)
     }
 
-    @Test func listaErNyesteFoerst() {
-        func item(_ no: Int, _ date: String?) -> RundeneItem {
-            var r = F.row(status: .locked)
-            r.roundNo = no
-            return RundeneItem(round: r, eventDate: date, courseName: "Pebble Beach", players: 2)
+    @Test func rundeneGrupperesPerKveldNyesteFoerst() {
+        func event(_ n: Int, _ date: String) -> EventRow {
+            EventRow(id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", n))!, clubID: F.club,
+                     seasonID: nil, eventDate: date, startTime: nil, venue: nil, note: nil)
         }
-        let sorted = RundeneList.sorted([item(1, "2026-08-20"), item(1, "2026-09-10"), item(2, "2026-09-10")])
-        #expect(sorted.map { "\($0.eventDate!)#\($0.round.roundNo)" } == ["2026-09-10#2", "2026-09-10#1", "2026-08-20#1"])
-        #expect(sorted.first?.title == "Runde 2 – Pebble Beach")
+        func round(_ no: Int, on event: EventRow?, status: RoundStatus = .locked) -> RoundRow {
+            RoundRow(id: UUID(), clubID: F.club, eventID: event?.id, courseID: nil, roundNo: no, name: nil,
+                     status: status, holeCount: 18, firstHole: 1, teeTime: nil, format: "stableford",
+                     handicapAllowance: 1, externalHandicap: false, weight: 1,
+                     ldEnabled: false, ldHoleIndex: nil, kpEnabled: false, kpHoleIndex: nil,
+                     cutRule: nil, cutAfter: nil, parConfirmedBy: nil, parConfirmedAt: nil,
+                     startedAt: nil, lockedAt: nil)
+        }
+        let august = event(1, "2026-08-20"), september = event(2, "2026-09-10"), next = event(3, "2026-10-15")
+        let rounds = [round(1, on: august), round(2, on: september, status: .active), round(1, on: september),
+                      round(1, on: nil)]
+        let groups = RoundGroups.make(rounds: rounds, events: [august, september, next], including: next.id)
+
+        // Kvelden som står for tur først, selv uten runder; så nyeste; runder uten kveld sist.
+        #expect(groups.map(\.title) == ["Torsdag 15. oktober", "Torsdag 10. september", "Torsdag 20. august", "Uten kveld"])
+        #expect(groups[0].rounds.isEmpty)
+        #expect(groups[1].rounds.map(\.roundNo) == [1, 2])
+        #expect(groups[1].hasActive)
+        #expect(!groups[2].hasActive)
+        #expect(groups[3].event == nil)
+
+        // Uten `including` står ikke en tom kveld i lista.
+        #expect(RoundGroups.make(rounds: rounds, events: [august, september, next]).map(\.title).first == "Torsdag 10. september")
+
+        // Ny runde fra lista: kvelden som står for tur, og kvelder som ikke er passert.
+        #expect(RoundGroups.allowsNewRound(september, today: "2026-10-08", defaultID: next.id) == false)
+        #expect(RoundGroups.allowsNewRound(september, today: "2026-10-08", defaultID: september.id))
+        #expect(RoundGroups.allowsNewRound(next, today: "2026-10-08", defaultID: nil))
     }
 }

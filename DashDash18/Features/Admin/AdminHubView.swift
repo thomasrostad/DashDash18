@@ -132,7 +132,7 @@ private struct AdminHubContent: View {
                 .padding(.vertical, DDSpacing.s)
             }
             NavigationLink { RundeAdminView() } label: {
-                AdminHubRow("Alle runder", "Kladder, runden som går og låste runder. Avkort, lås og rett hull.",
+                AdminHubRow("Runder", "Alle kveldenes runder. Trykk en runde for å starte, avkorte, låse eller rette hull.",
                             systemImage: "flag.2.crossed")
             }
         } header: {

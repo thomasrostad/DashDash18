@@ -78,7 +78,7 @@ private struct AvkortContent: View {
                         .font(.dd(.sans, size: 13, relativeTo: .footnote))
                 }
                 if game.status == .locked {
-                    Label("Runden er låst og kan ikke avkortes. Enkelthull rettes under Rundene.", systemImage: "lock")
+                    Label("Runden er låst og kan ikke avkortes. Enkelthull rettes med «Rett en score».", systemImage: "lock")
                         .font(.dd(.sans, size: 13, relativeTo: .footnote))
                         .foregroundStyle(Color.ddRustText)
                 }

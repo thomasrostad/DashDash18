@@ -19,6 +19,8 @@ final class RundeAdminModel {
     private(set) var state: LoadState = .loading
     /// Kveldene i sesongen, eldste først.
     private(set) var events: [EventRow] = []
+    /// Alle kveldene i klubben, også fra tidligere sesonger. For grupperingen i «Runder».
+    private(set) var allEvents: [EventRow] = []
     private(set) var selectedEventID: UUID?
     private(set) var seasons: [SeasonRow] = []
     /// Banene som er klare, i bibliotekets rekkefølge.
@@ -27,8 +29,11 @@ final class RundeAdminModel {
     /// Aktive medlemmer, sortert på navn.
     private(set) var members: [ClubMemberRow] = []
     private(set) var signups: [SignupRow] = []
+    /// Alle rundene i klubben, alle statuser. Kladder ser bare arrangørene (RLS).
+    private(set) var allRounds: [RoundRow] = []
     /// Rundene på den valgte kvelden, i rundenummerets rekkefølge.
     private(set) var rounds: [RoundRow] = []
+    /// Deltakerne i alle rundene.
     private(set) var playersByRound: [UUID: [RoundPlayerRow]] = [:]
     /// Runden som går i klubben nå, på hvilken som helst kveld.
     private(set) var activeRound: RoundRow?
@@ -53,6 +58,16 @@ final class RundeAdminModel {
     static let matchColumns = "round_id, match_no, player_a, player_b, player_c, team_a, team_b, result"
 
     var selectedEvent: EventRow? { events.first { $0.id == selectedEventID } }
+
+    /// Rundene gruppert per kveld, nyeste først, med kvelden som står for tur selv uten runder.
+    var groups: [RoundGroup] {
+        RoundGroups.make(rounds: allRounds, events: allEvents, including: selectedEventID)
+    }
+
+    /// Kan en ny runde settes opp på kvelden fra lista?
+    func allowsNewRound(_ event: EventRow) -> Bool {
+        RoundGroups.allowsNewRound(event, today: EveningDates.today(), defaultID: selectedEventID)
+    }
 
     /// Regelsettet for den valgte kvelden.
     var rules: Ruleset { RoundListing.rules(for: selectedEvent, seasons: seasons) }
@@ -114,6 +129,7 @@ final class RundeAdminModel {
             }
 
             self.seasons = seasons
+            self.allEvents = allEvents
             let activeSeason = seasons.first { $0.status == .active }
             events = Terminliste.eveningsForSeason(allEvents, activeSeasonID: activeSeason?.id)
             members = KveldQueries.sortedByName(roster)
@@ -124,8 +140,8 @@ final class RundeAdminModel {
             if selectedEventID == nil || !events.contains(where: { $0.id == selectedEventID }) {
                 selectedEventID = try await defaultEventID()
             }
+            try await loadRounds()
             try await loadEvent()
-            await loadSeasonRounds()
             await loadActiveProgress()
             state = .loaded
         } catch {
@@ -161,25 +177,14 @@ final class RundeAdminModel {
         return RoundListing.defaultEvent(events, today: today, finished: finished)?.id
     }
 
-    private func loadEvent() async throws {
-        guard let eventID = selectedEventID else {
-            rounds = []
-            signups = []
-            playersByRound = [:]
-            return
-        }
-        async let roundRows: [RoundRow] = client.from("rounds")
+    /// Alle rundene i klubben med deltakerne. Rundene på sesongens kvelder gir forslaget fra
+    /// forrige runde.
+    private func loadRounds() async throws {
+        let loaded: [RoundRow] = try await client.from("rounds")
             .select(Self.roundColumns)
-            .eq("event_id", value: eventID)
+            .eq("club_id", value: clubID)
             .order("round_no")
             .execute().value
-        async let signupRows: [SignupRow] = client.from("signups")
-            .select("event_id, member_id, club_id, status, comment")
-            .eq("event_id", value: eventID)
-            .execute().value
-        let loaded = try await roundRows
-        let loadedSignups = try await signupRows
-
         var players: [RoundPlayerRow] = []
         if !loaded.isEmpty {
             players = try await client.from("round_players")
@@ -187,21 +192,33 @@ final class RundeAdminModel {
                 .in("round_id", values: loaded.map(\.id.uuidString))
                 .execute().value
         }
+        allRounds = loaded
+        playersByRound = Dictionary(grouping: players, by: \.roundID)
+        let seasonEventIDs = Set(events.map(\.id))
+        seasonRounds = loaded.filter { $0.eventID.map(seasonEventIDs.contains) ?? false }
+        rounds = roundsForSelectedEvent()
+    }
+
+    private func roundsForSelectedEvent() -> [RoundRow] {
+        guard let eventID = selectedEventID else { return [] }
+        return allRounds.filter { $0.eventID == eventID }.sorted { $0.roundNo < $1.roundNo }
+    }
+
+    /// Påmeldingene på den valgte kvelden, og kveldens runder fra `allRounds`.
+    private func loadEvent() async throws {
+        guard let eventID = selectedEventID else {
+            rounds = []
+            signups = []
+            return
+        }
+        let loadedSignups: [SignupRow] = try await client.from("signups")
+            .select("event_id, member_id, club_id, status, comment")
+            .eq("event_id", value: eventID)
+            .execute().value
         // Er en annen kveld valgt mens vi hentet, hører svaret ikke til den.
         guard selectedEventID == eventID else { return }
         signups = loadedSignups
-        rounds = loaded
-        playersByRound = Dictionary(grouping: players, by: \.roundID)
-    }
-
-    /// Rundene i sesongen (alle kveldene), for forslaget fra forrige runde. Feiler hentingen,
-    /// starter hurtigstarten fra regelsettets standard.
-    private func loadSeasonRounds() async {
-        guard !events.isEmpty else { seasonRounds = []; return }
-        seasonRounds = (try? await client.from("rounds")
-            .select(Self.roundColumns)
-            .in("event_id", values: events.map(\.id.uuidString))
-            .execute().value) ?? []
+        rounds = roundsForSelectedEvent()
     }
 
     /// Hvor langt runden som går har kommet: førte hull og antall spillere. For «Avslutt kvelden»
@@ -243,7 +260,7 @@ final class RundeAdminModel {
 
     /// Forrige startede runde i sesongen, til og med den valgte kvelden.
     func previousRound(for event: EventRow) -> RoundRow? {
-        QuickStart.previousRound(rounds: seasonRounds + rounds, events: events, upTo: event)
+        QuickStart.previousRound(rounds: seasonRounds, events: events, upTo: event)
     }
 
     /// Kladden med id, slik den er lagret.
@@ -453,6 +470,7 @@ final class RundeAdminModel {
 
     private func reload() async {
         try? await refreshActiveRound()
+        try? await loadRounds()
         try? await loadEvent()
         await loadActiveProgress()
     }
@@ -478,6 +496,7 @@ extension RundeAdminModel {
         let tonight = EventRow(id: UUID(), clubID: club, seasonID: nil, eventDate: EveningDates.today(),
                                startTime: "18:00:00", venue: "Golfstudio Bryn", note: nil)
         model.events = [earlier, tonight]
+        model.allEvents = model.events
         model.selectedEventID = tonight.id
         model.signups = model.members.prefix(12).map {
             SignupRow(eventID: tonight.id, memberID: $0.id, clubID: club, status: .yes, comment: nil)
@@ -494,13 +513,14 @@ extension RundeAdminModel {
         }
         model.allCourses = courses
         model.courses = courses
-        model.seasonRounds = [
+        model.allRounds = [
             RoundRow(id: UUID(), clubID: club, eventID: earlier.id, courseID: courses[0].id, roundNo: 1, name: nil,
                      status: .locked, holeCount: 18, firstHole: 1, teeTime: "18:00:00", format: "stableford",
                      handicapAllowance: 1, externalHandicap: false, weight: 1, ldEnabled: true, ldHoleIndex: 17,
                      kpEnabled: true, kpHoleIndex: 6, cutRule: nil, cutAfter: nil, parConfirmedBy: nil,
                      parConfirmedAt: nil, startedAt: nil, lockedAt: nil),
         ]
+        model.seasonRounds = model.allRounds
         model.state = .loaded
         return model
     }

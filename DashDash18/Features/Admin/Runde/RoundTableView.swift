@@ -1,94 +1,23 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Rundene: alle startede runder, nyeste først. Trykk en for å se hele runden og rette et hull.
-struct RundeneView: View {
-    @Environment(\.clubContext) private var context
-
-    var body: some View {
-        if let context {
-            RundeneContent(model: RundeneModel(context: context))
-        } else {
-            ContentUnavailableView("Ingen klubb", systemImage: "flag.2.crossed")
-        }
-    }
-}
-
-private struct RundeneContent: View {
-    @State var model: RundeneModel
-
-    var body: some View {
-        content
-            .navigationTitle("Rundene")
-            .ddNavigationChrome()
-            .task { await model.load() }
-            .refreshable { await model.load() }
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        switch model.state {
-        case .loading:
-            ProgressView("Henter rundene …")
-        case .failed(let text):
-            ContentUnavailableView {
-                Label("Fikk ikke hentet rundene", systemImage: "wifi.exclamationmark")
-            } description: {
-                Text(text)
-            } actions: {
-                Button("Prøv igjen") { Task { await model.load() } }
-                    .buttonStyle(.dd(.primary))
-            }
-        case .loaded:
-            if model.items.isEmpty {
-                ContentUnavailableView("Ingen runder ennå", systemImage: "flag.2.crossed",
-                                       description: Text("Rundene står her når den første er startet."))
-            } else {
-                DDList {
-                    Section {
-                        ForEach(model.items) { item in
-                            NavigationLink {
-                                RoundTableView(round: item.round, title: item.title)
-                            } label: {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(item.title)
-                                        Text(subtitle(item))
-                                            .font(.dd(.sans, size: 13, relativeTo: .footnote))
-                                            .foregroundStyle(Color.ddInkSecondary)
-                                    }
-                                    Spacer()
-                                    StatusBadge(status: item.round.status)
-                                }
-                            }
-                        }
-                    } footer: {
-                        DDFooter("Trykk en runde for å se alle spillerne og hullene, og rette et hull, også i en låst runde.")
-                    }
-                }
-            }
-        }
-    }
-
-    private func subtitle(_ item: RundeneItem) -> String {
-        [item.eventDate.map { EveningDates.longText($0, capitalized: true) } ?? "Ingen dato",
-         "\(item.round.holeCount) hull",
-         item.players == 1 ? "1 spiller" : "\(item.players) spillere"]
-            .joined(separator: " · ")
-    }
-}
-
 // MARK: - Hele runden
 
-/// Spillere × hull med brutto, sum og poeng. Trykk en rute for å rette den.
+/// Rundens skjerm for arrangøren: spillere × hull med brutto, sum og poeng, og handlingene på
+/// runden (rett en score, avkort, lås, slett). Trykk en rute for å rette den.
 struct RoundTableView: View {
     @Environment(\.clubContext) private var context
     let round: RoundRow
     let title: String
+    /// Arrangørmodellen for lås og slett. Uten den finnes bare retting og avkorting.
+    var admin: RundeAdminModel?
+    /// Når runden er låst eller slettet herfra: meldingen til lista bak.
+    var onLeft: ((String) -> Void)?
 
     var body: some View {
         if let context {
-            RoundTableContent(model: RoundReviewModel(context: context, round: round, title: title))
+            RoundTableContent(model: RoundReviewModel(context: context, round: round, title: title),
+                              round: round, admin: admin, onLeft: onLeft)
         } else {
             ContentUnavailableView("Ingen klubb", systemImage: "flag.2.crossed")
         }
@@ -104,9 +33,17 @@ private struct CorrectionItem: Identifiable {
 
 private struct RoundTableContent: View {
     @State var model: RoundReviewModel
+    let round: RoundRow
+    var admin: RundeAdminModel?
+    var onLeft: ((String) -> Void)?
+    @Environment(\.dismiss) private var dismiss
     @State private var correcting: CorrectionItem?
     @State private var cutting = false
+    @State private var confirmsLock = false
+    @State private var pendingDelete: RoundDeleteSummary?
+    @State private var isBusy = false
     @State private var message: String?
+    @State private var error: String?
 
     private let rowHeight: CGFloat = 36
     private let cellWidth: CGFloat = 32
@@ -123,11 +60,36 @@ private struct RoundTableContent: View {
                             correcting = CorrectionItem(member: nil, hole: nil)
                         }
                         if model.game?.status == .active {
-                            Button("Avkort runden", systemImage: "scissors") { cutting = true }
+                            Button("Avkort runden …", systemImage: "scissors") { cutting = true }
+                            if admin != nil {
+                                Button("Lås runden …", systemImage: "lock") { confirmsLock = true }
+                                Button("Slett runden …", systemImage: "trash", role: .destructive) { askDelete() }
+                            }
                         }
                     }
-                    .disabled(model.game == nil)
+                    .disabled(model.game == nil || isBusy)
                 }
+            }
+            .disabled(isBusy)
+            .confirmationDialog("Låse runden?", isPresented: $confirmsLock, titleVisibility: .visible) {
+                Button("Lås \(model.title)") { lock() }
+            } message: {
+                Text("Runden er ferdig og teller i sesongen. En låst runde kan ikke bli kladd igjen eller slettes.")
+            }
+            .confirmationDialog(
+                pendingDelete.map { "Slett \($0.noun) · \(model.title)" } ?? "",
+                isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+                titleVisibility: .visible,
+                presenting: pendingDelete
+            ) { summary in
+                Button(summary.buttonTitle, role: .destructive) { delete() }
+            } message: { summary in
+                Text(summary.message)
+            }
+            .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(error ?? "")
             }
             .task { await model.load() }
             .refreshable { await model.load() }
@@ -189,6 +151,43 @@ private struct RoundTableContent: View {
                     }
                     .padding()
                 }
+            }
+        }
+    }
+
+    // MARK: Lås og slett
+
+    private func lock() {
+        guard let admin else { return }
+        run {
+            try await admin.lock(round)
+            onLeft?("\(model.title) er låst og teller i sesongen.")
+            dismiss()
+        }
+    }
+
+    private func askDelete() {
+        guard let admin else { return }
+        run { pendingDelete = try await admin.deleteSummary(round) }
+    }
+
+    private func delete() {
+        guard let admin else { return }
+        run {
+            let text = try await admin.delete(round)
+            onLeft?(text)
+            dismiss()
+        }
+    }
+
+    private func run(_ action: @escaping () async throws -> Void) {
+        isBusy = true
+        Task {
+            defer { isBusy = false }
+            do {
+                try await action()
+            } catch {
+                self.error = DataError.from(error).message
             }
         }
     }
