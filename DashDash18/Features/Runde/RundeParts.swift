@@ -35,53 +35,6 @@ struct HullprikkerView: View {
     }
 }
 
-/// «Bayen nå»: alle i kvelden, flest poeng først.
-struct BayenNaaSection: View {
-    let rows: [StandingRow]
-    let onSelect: (UUID) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            DDSectionLabel("Bayen nå")
-            VStack(spacing: 0) {
-                ForEach(Array(rows.enumerated()), id: \.element.id) { i, row in
-                    Button { onSelect(row.memberID) } label: {
-                        HStack(spacing: 10) {
-                            Text("\(i + 1).")
-                                .font(.ddCallout).monospacedDigit()
-                                .foregroundStyle(Color.ddStatSecondary)
-                                .frame(width: 28, alignment: .leading)
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(row.name + (row.isMe ? " (deg)" : ""))
-                                    .font(row.isMe ? .ddBodyEmphasis : .ddBody)
-                                    .foregroundStyle(Color.ddStatText)
-                                Text("thru \(row.thru)" + (row.bay.map { " · bås \($0)" } ?? ""))
-                                    .font(.ddCaption)
-                                    .foregroundStyle(Color.ddStatSecondary)
-                            }
-                            Spacer()
-                            Text("\(row.total)")
-                                .font(.ddNumberLarge).monospacedDigit()
-                                .foregroundStyle(row.isMe ? Color.ddYellow : Color.ddStatText)
-                        }
-                        .padding(.vertical, 8)
-                        .contentShape(.rect)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityHint("Åpner scorekortet")
-                    if i < rows.count - 1 {
-                        Rectangle().fill(Color.ddStatText.opacity(0.12)).frame(height: 1)
-                    }
-                }
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 8)
-            .ddCard(.stat, padding: 0)
-        }
-    }
-}
-
 /// Scorekortet til én spiller: Ut/Inn, par, slag og poeng per hull, sum.
 /// Svart statistikk-kort med hvite tall og fargede poeng (golfee + PWA-ens score-merker).
 struct ScorekortSheet: View {

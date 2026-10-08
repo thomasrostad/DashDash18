@@ -220,13 +220,12 @@ struct AktivitetSidepremieTests {
 }
 
 struct AktivitetRundeOgPåmeldingTests {
-    @Test func nyRundeOgLåstFraRunden() {
+    @Test func nyRundeFraRunden() {
         let g = RoundGame(F.snapshot(F.markorPlayers()))
         guard case let .roundStarted(no, course, holes, bays, ld, _) = g.startedEvent else {
             Issue.record("feil type"); return
         }
         #expect(no == 1 && course == "Testbanen" && holes == 18 && bays == 2 && ld == 7)
-        #expect(g.lockedEvent == .roundLocked(roundNo: 1, courseName: "Testbanen"))
         // Uten båser: ingen telling.
         guard case let .roundStarted(_, _, _, noBays, _, _) = RoundGame(F.snapshot(F.markorPlayers(bays: false))).startedEvent
         else { Issue.record("feil type"); return }

@@ -173,9 +173,6 @@ nonisolated struct TipsBoard: Sendable {
     /// Arrangøren kan endre innsats og linje til første kupong er levert (databasen: 55000).
     var canEditSettings: Bool { isOrganizer && phase == .open && submitted.isEmpty }
 
-    /// Kandidatene som skal stå på kupongen, også en du har tippet som ikke er i lista lenger.
-    var allCandidates: [Candidate] { firstCandidates + otherCandidates }
-
     /// `tipsFristTekst`: «torsdag 8. oktober kl. 17:00», i Oslo-tid.
     var deadlineText: String {
         guard let deadline else { return "ukjent frist" }

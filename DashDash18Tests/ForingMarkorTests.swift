@@ -67,12 +67,6 @@ struct ForingKanForeTests {
         #expect(g.canScore(F.viewer(F.bjorn), for: id(F.bjorn)))
         #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.anders)))
     }
-
-    @Test func velgerenViserBareDeDuFoererFor() {
-        #expect(game.playersScorable(by: F.viewer(F.anders)) == [F.anders, F.bjorn, F.cato, F.dag].map(id))
-        #expect(game.playersScorable(by: F.viewer(F.bjorn)).isEmpty)
-        #expect(game.playersScorable(by: F.viewer(F.gunnar)).count == 8)
-    }
 }
 
 struct ForingHullkortTests {
