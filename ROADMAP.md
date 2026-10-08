@@ -348,6 +348,21 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 
 **Anslag:** 4–6 økter.
 
+### Fase 18 – Turnering i stedet for sesong og konkurranse
+
+**Besluttet 08.10.2026 (Thomas):** «Det å arrangere en turnering og runde er ganske komplisert, og den følger Golfgutu-oppsettet som ikke nødvendigvis er riktig for den som arrangerer.» Fire oppsett i stedet for Golfgutu som fasit, og sesong og konkurranse slås sammen til ett begrep: **turnering**.
+
+- **Fire oppsett** i «Ny turnering»: *Stableford-serie* (enkel: stableford-poeng per kveld, beste kvelder teller, ingen matcher eller seeding), *Matchspill-serie* (dagens Golfgutu-oppsett), *Cup* (utslag) og *Morroturnering*. Golfgutu er ett av oppsettene, ikke målestokken. Detaljreglene ligger bak «Tilpass reglene».
+- **Ett begrep.** I en klubb er en serie en sesong (gratis, kvelder og Tavla). Uten klubb er en serie en liga (kjøp som i dag). Cup og morro er konkurranser som før. Datamodellen er allerede slik (`competitions.kind = season` speiler sesongen, sql/017), så ingen SQL trengs.
+- **Ny regel:** `TableRules` får hva tabellpoengene kommer fra: matcher (standard, Golfgutu uendret) eller stableford.
+- **Ny runde blir én bekreftelse:** bane, hvem og starttid, resten fra turneringen. Matcher og lag bare når formen krever det.
+- **Mindre tekst:** høyst én hjelpelinje per seksjon.
+
+- [ ] Regelmotoren: tabell fra stableford, de fire oppsettene, gjenkjenning av oppsett. Paritet uendret.
+- [ ] Ny runde: én bekreftelsesskjerm, færre valg og tekster.
+- [ ] Turnering i appen: «Ny turnering» med oppsettene, én liste over turneringer, arrangørsiden lander på hovedturneringen, Tavla for stableford-serie.
+- [ ] Prøve på telefon: sett opp en stableford-serie og en kveld fra null.
+
 ### Kodegjennomgang 08.10.2026: åpne funn
 
 Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rettet med test). Dette står igjen:
