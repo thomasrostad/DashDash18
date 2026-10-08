@@ -229,3 +229,26 @@ nonisolated enum SignupUndo {
     /// «Svaret ditt: Kommer».
     static func text(_ status: SignupStatus) -> String { "Svaret ditt: \(status.title)" }
 }
+
+/// Venter ut angre-vinduet og kjører så `action`. Et nytt `schedule` eller `cancel` stopper ventingen.
+/// Når vinduet er over, slippes oppgaven før `action` kjører: et `cancel` fra `action` (eller et
+/// nytt svar mens det sendes) avbryter da ikke sendingen som pågår.
+final class SignupUndoTimer {
+    private var task: Task<Void, Never>?
+
+    func schedule(after window: Duration, _ action: @escaping () async -> Void) {
+        task?.cancel()
+        // Sterk referanse til `action`: svaret skal ut selv om skjermen forsvinner i vinduet.
+        task = Task {
+            try? await Task.sleep(for: window)
+            guard !Task.isCancelled else { return }
+            self.task = nil
+            await action()
+        }
+    }
+
+    func cancel() {
+        task?.cancel()
+        task = nil
+    }
+}

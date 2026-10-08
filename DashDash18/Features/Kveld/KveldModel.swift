@@ -22,7 +22,7 @@ final class KveldModel {
     var answerError: String?
     private var members: [ClubMemberRow] = []
     private var signups: [SignupRow] = []
-    private var flushTask: Task<Void, Never>?
+    private let undoTimer = SignupUndoTimer()
     private(set) var today = EveningDates.today()
     /// Kveldens nummer i sesongen (plassen i terminlista), når det kan hentes.
     private(set) var eveningNumber: Int?
@@ -171,26 +171,18 @@ final class KveldModel {
         answerError = nil
         pendingAnswer = SignupUndo.begin(pendingAnswer, saved: savedSignup, eventID: event.id,
                                          status: status, comment: mySignup?.comment)
-        flushTask?.cancel()
-        // Sterk referanse: svaret skal ut selv om skjermen forsvinner i vinduet.
-        flushTask = Task {
-            try? await Task.sleep(for: SignupUndo.window)
-            guard !Task.isCancelled else { return }
-            await self.flush()
-        }
+        undoTimer.schedule(after: SignupUndo.window) { await self.flush() }
     }
 
     /// «Angre»: tilbake til det som lå lagret. Ingenting er sendt.
     func undoAnswer() {
-        flushTask?.cancel()
-        flushTask = nil
+        undoTimer.cancel()
         pendingAnswer = nil
     }
 
     /// Sender svaret som venter nå (vinduet er over, eller appen legges bort).
     func flush() async {
-        flushTask?.cancel()
-        flushTask = nil
+        undoTimer.cancel()
         guard let pending = pendingAnswer else { return }
         do throws(DataError) {
             try await write(status: pending.status, comment: pending.comment, saved: pending.saved)
@@ -211,8 +203,7 @@ final class KveldModel {
             throw .invalid("Svar først, så kan du skrive en kommentar.")
         }
         let saved = pendingAnswer.map(\.saved) ?? savedSignup
-        flushTask?.cancel()
-        flushTask = nil
+        undoTimer.cancel()
         pendingAnswer = nil
         try await write(status: status, comment: text, saved: saved)
     }
