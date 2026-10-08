@@ -48,9 +48,13 @@ final class RundeAdminModel {
     let slopeCatalog: SlopeCatalogModel?
 
     private let context: ClubContext
+    /// Turneringen kveldene hører til (fase 21). nil: hovedturneringen (den aktive). Klar for en
+    /// turneringsvelger når en klubb kjører flere samtidig.
+    let tournamentID: UUID?
 
-    init(context: ClubContext, slopeCatalog: SlopeCatalogModel? = nil) {
+    init(context: ClubContext, tournamentID: UUID? = nil, slopeCatalog: SlopeCatalogModel? = nil) {
         self.context = context
+        self.tournamentID = tournamentID
         self.slopeCatalog = slopeCatalog
             ?? (SlopeNoFeature.isEnabled && SlopeNoFeature.usesHoles ? SlopeCatalogModel(client: context.client) : nil)
     }
@@ -60,6 +64,9 @@ final class RundeAdminModel {
     var clubContext: ClubContext { context }
 
     var selectedEvent: EventRow? { events.first { $0.id == selectedEventID } }
+
+    /// Turneringen arrangørsiden viser: den valgte, ellers hovedturneringen.
+    var tournament: SeasonRow? { Terminliste.tournament(seasons, id: tournamentID) }
 
     /// Rundene gruppert per kveld, nyeste først («Alle runder»). Bare kvelder med runder.
     var groups: [RoundGroup] {
@@ -168,8 +175,7 @@ final class RundeAdminModel {
 
             self.seasons = seasons
             self.allEvents = allEvents
-            let activeSeason = seasons.first { $0.status == .active }
-            events = Terminliste.eveningsForSeason(allEvents, activeSeasonID: activeSeason?.id)
+            events = Terminliste.eveningsForSeason(allEvents, activeSeasonID: tournament?.id)
             members = KveldQueries.sortedByName(roster)
             let kinds = try await CourseLibraryModel.loadKinds(client: client, clubID: clubID)
             let tees = try await CourseLibraryModel.loadTees(client: client, courseIDs: courseList.map(\.id))
@@ -178,7 +184,7 @@ final class RundeAdminModel {
             courses = allCourses.filter(\.isReady)
 
             if selectedEventID == nil || !events.contains(where: { $0.id == selectedEventID }) {
-                selectedEventID = try await defaultEventID()
+                selectedEventID = defaultEventID()
             }
             try await loadRounds()
             await loadSourceCourses()
@@ -203,19 +209,9 @@ final class RundeAdminModel {
         }
     }
 
-    /// Neste kveld i terminlista som ikke er ferdig (alle runder låst), ellers den siste.
-    private func defaultEventID() async throws -> UUID? {
-        let today = EveningDates.today()
-        let todays = events.filter { $0.eventDate == today }.map(\.id)
-        var finished: Set<UUID> = []
-        if !todays.isEmpty {
-            let rows: [RoundStatusRow] = try await client.from("rounds")
-                .select("event_id, status")
-                .in("event_id", values: todays.map(\.uuidString))
-                .execute().value
-            finished = NextEvening.finishedEventIDs(rounds: rows.map { ($0.eventID, $0.status) })
-        }
-        return RoundListing.defaultEvent(events, today: today, finished: finished)?.id
+    /// Kvelden som står for tur (`Tonight.focusEvent`): der en runde går, i dag, ellers neste.
+    private func defaultEventID() -> UUID? {
+        Tonight.focusEvent(events, today: EveningDates.today(), activeRound: activeRound)?.id
     }
 
     /// Alle rundene i klubben med deltakerne. Rundene på sesongens kvelder gir forslaget fra
@@ -528,6 +524,8 @@ extension RundeAdminModel {
         case liveEvening
         /// Ny klubb der banene og neste kveld mangler (`arrangorstart`).
         case gettingStarted
+        /// Kvelden i dag er ferdig: to runder låst (`arrangorferdig`).
+        case finished
     }
 
     /// Oppdiktet kveld for skjermprøvene. Uten nett: en feilet henting beholder det som står.
@@ -558,9 +556,10 @@ extension RundeAdminModel {
                      venue: "Golfstudio Bryn", note: nil)
         }
         let earlier = event(later(-14))
+        let lastWeek = event(later(-7))
         let tonight = event(today)
         let upcoming = [event(later(7)), event(later(14))]
-        model.events = variant == .gettingStarted ? [earlier] : [earlier, tonight] + upcoming
+        model.events = variant == .gettingStarted ? [earlier] : [earlier, lastWeek, tonight] + upcoming
         model.allEvents = model.events
         model.selectedEventID = variant == .gettingStarted ? nil : tonight.id
         if variant != .gettingStarted {
@@ -592,6 +591,14 @@ extension RundeAdminModel {
                      parConfirmedAt: nil, startedAt: nil, lockedAt: nil)
         }
         model.allRounds = [round(1, on: earlier, course: 0, status: .locked)]
+        if variant != .gettingStarted {
+            model.allRounds += [round(1, on: lastWeek, course: 1, status: .locked),
+                                round(2, on: lastWeek, course: 2, status: .locked)]
+        }
+        if variant == .finished {
+            model.allRounds += [round(1, on: tonight, course: 1, status: .locked),
+                                round(2, on: tonight, course: 2, status: .locked)]
+        }
         if variant == .liveEvening {
             let live = round(1, on: tonight, course: 1, status: .active)
             model.allRounds += [live, round(2, on: tonight, course: 2, status: .draft)]

@@ -1,15 +1,16 @@
 import Foundation
 
 /// «Kom i gang» på arrangørsiden: det som må være på plass før en runde kan settes opp,
-/// i den rekkefølgen det gjøres. Lista vises bare når noe mangler.
+/// i den rekkefølgen det gjøres: turneringen, troppen, banene, kveldene. Står øverst på arrangørsiden
+/// i stedet for kvelden når noe mangler.
 nonisolated enum GettingStarted {
     enum Item: CaseIterable, Equatable, Sendable {
         /// En turnering i gang (aktiv sesong med regelsett).
         case season
-        /// Minst én bane med par på alle hull.
-        case courses
         /// Nok aktive i troppen til en runde.
         case roster
+        /// Minst én bane med par på alle hull.
+        case courses
         /// En kveld i dag eller senere i terminlista.
         case evening
 
@@ -37,6 +38,8 @@ nonisolated enum GettingStarted {
         /// Hva som står, eller hva som mangler.
         let detail: String
         var id: Item { item }
+        /// Nummeret i lista: 1 Turneringen, 2 Troppen, 3 Banene, 4 Kveldene.
+        var number: Int { (Item.allCases.firstIndex(of: item) ?? 0) + 1 }
     }
 
     /// Like mange som en runde trenger for å kunne startes.
@@ -55,7 +58,7 @@ nonisolated enum GettingStarted {
         step.item == .season && !step.isDone
     }
 
-    /// Alle punktene i rekkefølge: turnering, baner, tropp, kveld.
+    /// Alle punktene i rekkefølge: turnering, tropp, baner, kveld.
     static func steps(_ input: Input) -> [Step] {
         Item.allCases.map { item in
             switch item {

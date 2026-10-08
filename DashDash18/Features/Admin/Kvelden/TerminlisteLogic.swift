@@ -89,6 +89,13 @@ nonisolated enum EventInput {
 
 /// Hvilke kvelder terminlista viser, og hvordan.
 nonisolated enum Terminliste {
+    /// Turneringen med id, ellers hovedturneringen (den aktive). Arrangørsiden og kveldene viser én
+    /// turnering om gangen (fase 21), så en velger kan legges til senere.
+    static func tournament(_ seasons: [SeasonRow], id: UUID?) -> SeasonRow? {
+        if let id { return seasons.first { $0.id == id } }
+        return seasons.first { $0.status == .active }
+    }
+
     /// Kveldene som hører til sesongen: den aktive sesongens, og dem uten sesong.
     /// Uten aktiv sesong vises bare kvelder uten sesong.
     static func eveningsForSeason(_ events: [EventRow], activeSeasonID: UUID?) -> [EventRow] {

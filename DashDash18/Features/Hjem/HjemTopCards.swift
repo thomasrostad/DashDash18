@@ -150,7 +150,7 @@ struct HjemLiveCard: View {
     }
 }
 
-/// «Neste kveld»: dato, nedtelling, tid og sted, svarknappene og arrangørens hovedknapp.
+/// «Neste kveld»: dato, nedtelling, tid og sted, svarknappene og arrangørens knapp for neste steg.
 /// Trykk på toppen åpner Kveld-skjermen.
 struct HjemEveningCard: View {
     let evening: HomeNextEvening
@@ -160,7 +160,8 @@ struct HjemEveningCard: View {
     let onOpen: () -> Void
     let onAnswer: (SignupStatus) -> Void
     let onUndo: () -> Void
-    let onAdmin: () -> Void
+    /// Arrangørens knapp for neste steg.
+    var organizer: HjemOrganizerStep?
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -195,12 +196,16 @@ struct HjemEveningCard: View {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .ddErrorStyle()
             }
-            if evening.isOrganizer {
-                Button(action: onAdmin) {
-                    Label("Sett opp kvelden", systemImage: "slider.horizontal.3")
+            if evening.isOrganizer, let organizer {
+                Button(action: organizer.perform) {
+                    HStack(spacing: 8) {
+                        Text(organizer.title)
+                        if organizer.isBusy { ProgressView() }
+                    }
                 }
                 .buttonStyle(.dd(.primary, fullWidth: true))
-                .accessibilityHint("Åpner Arrangørsiden.")
+                .disabled(organizer.isBusy)
+                .accessibilityHint(organizer.hint)
             }
         }
         .animation(.default, value: pendingText)

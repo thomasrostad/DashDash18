@@ -222,7 +222,11 @@ struct HjemSampleScreen: View {
                                  actions: HjemActions(select: { model.filter = $0 },
                                                       toggle: { r, t in Task { await model.toggle(r, on: t) } },
                                                       hasReacted: { model.hasReacted($0, on: $1) },
-                                                      share: { model.share(round: $0) }),
+                                                      share: { model.share(round: $0) },
+                                                      organizer: variant == .organizer
+                                                        ? HjemOrganizerStep(title: TonightAction.setUp.buttonTitle ?? "",
+                                                                            hint: "", perform: {})
+                                                        : nil),
                                  scrollAnchor: variant == .bottom ? .bottom : variant == .middle ? .center : nil)
                         .navigationTitle("Hjem")
                         .ddNavigationChrome()

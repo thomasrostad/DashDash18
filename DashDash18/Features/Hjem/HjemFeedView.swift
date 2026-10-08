@@ -1,18 +1,28 @@
 import SwiftUI
 
+/// Arrangørens knapp på «Neste kveld»: samme ord som neste steg på arrangørsiden og Kvelden.
+struct HjemOrganizerStep {
+    let title: String
+    var isBusy = false
+    /// Hva knappen gjør, for VoiceOver: «Åpner oppsettet av runden.»
+    var hint: String
+    let perform: () -> Void
+}
+
 /// Det Hjem kan gjøre fra kortene. `HjemView` kobler dem til modellene og navigasjonen;
 /// skjermprøvene lar dem stå tomme.
 struct HjemActions {
     var select: (HomeFeedFilter) -> Void = { _ in }
     var openRound: () -> Void = {}
     var openEvening: () -> Void = {}
-    var openAdmin: () -> Void = {}
     var answer: (SignupStatus) -> Void = { _ in }
     var undoAnswer: () -> Void = {}
     var toggle: (ActivityReaction, HomeReactions) -> Void = { _, _ in }
     var hasReacted: (ActivityReaction, HomeReactions) -> Bool = { r, t in t.chips.contains { $0.reaction == r && $0.isMine } }
     var openTable: (UUID) -> Void = { _ in }
     var share: (UUID) -> ResultShare? = { _ in nil }
+    /// Arrangørens knapp for neste steg på «Neste kveld» (fase 21). nil: ingen knapp.
+    var organizer: HjemOrganizerStep?
 }
 
 /// Hjem fra topp til bunn (retning 1a med 1b-oppsummeringen): filterpillene, «Siden sist» når noe
@@ -60,7 +70,7 @@ struct HjemFeedView: View {
         if let evening = feed.evening, HjemDisplay.showsEvening(filter: feed.filter) {
             HjemEveningCard(evening: evening, pendingText: pendingAnswer, error: answerError,
                             onOpen: actions.openEvening, onAnswer: actions.answer, onUndo: actions.undoAnswer,
-                            onAdmin: actions.openAdmin)
+                            organizer: actions.organizer)
         }
     }
 

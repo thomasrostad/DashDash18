@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Alle runder: arkivet over klubbens runder, gruppert per kveld, nyeste først, også fra tidligere
-/// sesonger. Nederst i «Kveldene». Ny runde og «Avslutt kvelden» ligger på kvelden selv (Kvelden),
+/// turneringer. Under «Arkiv» nederst på arrangørsiden. Planleggingslistene (tidslinja og rundene
+/// på kvelden) står eldst først; arkivet står nyest først fordi det brukes til å slå opp. Ny runde og «Avslutt kvelden» ligger på kvelden selv (Kvelden),
 /// ikke her. Kladder åpner oppsettet, startede og låste runder åpner rundens skjerm.
 struct RundeAdminView: View {
     @Environment(\.clubContext) private var context
@@ -63,7 +64,7 @@ private struct RundeAdminContent: View {
                 ContentUnavailableView {
                     Label("Ingen runder ennå", systemImage: "flag.2.crossed")
                 } description: {
-                    Text("Rundene settes opp fra kvelden, under «Kveldene».")
+                    Text("Rundene settes opp fra kvelden på arrangørsiden.")
                 }
             } else {
                 list

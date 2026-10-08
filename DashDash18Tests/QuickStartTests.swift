@@ -279,32 +279,10 @@ struct QuickStartProblemTests {
     }
 }
 
-// MARK: - Arrangørsiden: «I kveld»
+// MARK: - Arrangørsiden: «I kveld» (stegene og neste steg: EveningStepsTests)
 
 struct TonightTests {
     private let tonight = event(503, "2026-10-01")
-
-    @Test func hovedknappenEtterTilstand() {
-        #expect(Tonight.action(event: nil, rounds: [], activeRound: nil, activeComplete: false) == .noEvening)
-        #expect(Tonight.action(event: tonight, rounds: [], activeRound: nil, activeComplete: false) == .setUp)
-        let drafts = [round(1, event: 503, no: 1, status: .draft), round(2, event: 503, no: 2, status: .draft)]
-        #expect(Tonight.action(event: tonight, rounds: drafts, activeRound: nil, activeComplete: false) == .continueDraft(id(2)))
-        let active = round(3, event: 503, status: .active)
-        #expect(Tonight.action(event: tonight, rounds: drafts + [active], activeRound: active, activeComplete: false)
-                == .goToRound(id(3)))
-        #expect(Tonight.action(event: tonight, rounds: [active], activeRound: active, activeComplete: true)
-                == .closeEvening(id(3)))
-        // En runde som går på en annen kveld, vinner over en ny runde.
-        #expect(Tonight.action(event: nil, rounds: [], activeRound: active, activeComplete: false) == .goToRound(id(3)))
-        #expect(Tonight.action(event: tonight, rounds: [round(4, event: 503)], activeRound: nil, activeComplete: false) == .setUp)
-    }
-
-    @Test func knappetekstene() {
-        #expect(TonightAction.setUp.buttonTitle == "Sett opp runden")
-        #expect(TonightAction.continueDraft(id(1)).buttonTitle == "Fortsett kladd")
-        #expect(TonightAction.goToRound(id(1)).buttonTitle == "Gå til runden")
-        #expect(TonightAction.closeEvening(id(1)).buttonTitle == "Avslutt kvelden")
-    }
 
     @Test func ferdigNaarAlleHullErFoert() {
         let r = round(1, event: 503, status: .active)
@@ -325,7 +303,6 @@ struct TonightTests {
         #expect(Tonight.signupText([signup(2, .maybe), signup(3, .maybe)], rosterCount: 12) == "0 av 12 kommer · 2 usikre")
 
         #expect(Tonight.statusText(action: .setUp, rounds: [], activeTitle: nil) == "Ikke satt opp")
-        #expect(Tonight.statusText(action: .setUp, rounds: [round(1, event: 503)], activeTitle: nil) == "1 runde ferdig")
         #expect(Tonight.statusText(action: .goToRound(id(1)), rounds: [], activeTitle: "Runde 1 – Pebble Beach")
                 == "Runde 1 – Pebble Beach pågår")
         #expect(Tonight.statusText(action: .continueDraft(id(1)), rounds: [], activeTitle: nil) == "Kladd lagret · ikke startet")

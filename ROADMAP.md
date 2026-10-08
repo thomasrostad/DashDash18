@@ -388,6 +388,16 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Kreditering: «Slope og course rating fra slope.no» med lenke der tee-data vises, og i Om appen. *(08.10.)*
 - [x] Hull per tee fra slope.no (par, indeks, lengde): SQL 030 kjørt på test, slope-sync v2, 937 baner og 6146 tees med hull (160 av 161 norske). Hentede baner spilles direkte, teens hull og par fryses på runden. `SlopeNoFeature.usesHoles` på. *(08.10. Ikke prøvd på telefon.)*
 
+### Fase 21 – Arrangørsiden som tidslinje
+
+**08.10.2026 (Thomas):** «Liker fortsatt ikke oppsettet i arrangørsiden, det er veldig kronglete og ikke alt ligger i kronologisk rekkefølge.»
+
+- [x] Arrangørsiden i datorekkefølge: tidligere kvelder, så kortet for kvelden som står for tur med stegrekka Påmelding → Oppsett → Spilles → Ferdig og én knapp for neste steg, så kommende kvelder. Før sesongen er klar: «Kom i gang» med 1 Turneringen → 2 Troppen → 3 Banene → 4 Kveldene. Oppsett nederst og sammenfoldet. Kveldene-skjermen er slått inn i arrangørsiden. *(08.10.)*
+- [x] Kvelden i tre seksjoner: Før, Under og Etter kvelden, med samme stegrekke. *(08.10.)*
+- [x] Hjem-knappen heter det samme som neste steg og går rett dit: to trykk fra Hjem til «Start runden» (før: fire). *(08.10.)*
+- [x] Bygget rundt én valgt turnering (hovedturneringen som standard), så en turneringsvelger kan legges til i fase 23. *(08.10.)*
+- [ ] Prøve på telefon mot ekte data.
+
 ### Kodegjennomgang 08.10.2026: åpne funn
 
 Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rettet med test). Dette står igjen:

@@ -1,7 +1,7 @@
 import GolfgutuCore
 import SwiftUI
 
-/// «Ny runde» og «Rediger kladd»: én rolig bekreftelse. Øverst står forslaget som rader (bane, start,
+/// «Sett opp runden» og «Fortsett kladd»: én rolig bekreftelse. Øverst står forslaget som rader (bane, start,
 /// spillere), ferdig utfylt fra forrige runde i sesongen (ellers regelsettet) og med gruppene fordelt fra
 /// de påmeldte. Hver rad åpner et vanlig undernivå; alt annet ligger under «Flere valg». Tilbake spør før
 /// ulagrede endringer forkastes.
@@ -43,7 +43,7 @@ struct RundeQuickStartView: View {
         // Klokka er Oslo-tid (som databasen), også når telefonen står i en annen tidssone.
         .environment(\.timeZone, EveningDates.osloTimeZone)
         .disabled(isBusy)
-        .navigationTitle(draft.isSaved ? "Rediger kladd" : "Ny runde")
+        .navigationTitle(draft.isSaved ? "Fortsett kladd" : "Sett opp runden")
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) { bottomPanel }
