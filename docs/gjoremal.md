@@ -18,8 +18,8 @@ Oppdatert 08.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 - [ ] **4. Xcode, kamerateksten (valgfritt):** teksten står allerede i `InfoPlist.xcstrings`. Sett også grunnteksten `Privacy – Camera Usage Description` = «Atten bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.»
 - [ ] **5. Xcode, appnavnet (valgfritt):** appen heter **Atten**, og navnet står i `InfoPlist.xcstrings`. Sett også `Bundle Display Name` = **Atten** (target DashDash18 → General → Display Name) og widget-utvidelsens Display Name (`DashDash18Widgets`) = **Atten**.
 - [x] **6. Supabase → Settings → Infrastructure:** *(08.10: Auth 2.197.0 – OK)* sjekk at Auth er **2.185.0 eller nyere** (kjent hull i Apple-innloggingen i eldre versjoner).
-- [ ] **7. Supabase → Authentication:** slå på **Leaked password protection** og sett minstelengde på passord. Sett lave **rate limits**.
-- [ ] **8. Supabase → Data API:** sjekk at bare `public` er eksponert.
+- [x] **7. Supabase → Authentication:** *(08.10)* slå på **Leaked password protection** og sett minstelengde på passord. Sett lave **rate limits**.
+- [x] **8. Supabase → Data API:** *(08.10)* sjekk at bare `public` er eksponert.
 
 ## C. Før appen åpnes for alle (fase 17)
 
