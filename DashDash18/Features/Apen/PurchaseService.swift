@@ -94,7 +94,7 @@ final class PurchaseService {
     private(set) var lastUnlocked: UUID?
 
     private let backend: any PurchaseBackend
-    private let profileID: UUID
+    let profileID: UUID
     private let pending: PendingPurchaseStore
     @ObservationIgnored private var listener: Task<Void, Never>?
 
@@ -153,7 +153,7 @@ final class PurchaseService {
     /// Kjøp for en turnering (forbrukbar) eller abonnement (for deg, eller klubben når `clubID` er satt).
     /// Har du en ledig kreditt, brukes den i stedet for et nytt kjøp.
     func purchase(_ product: PurchaseProduct, competitionID: UUID?, clubID: UUID? = nil) async {
-        if product.kind == .consumable, let competitionID, let credit = CompetitionUnlock.unusedCredit(in: entitlements) {
+        if product.kind == .consumable, let competitionID, let credit = CompetitionUnlock.unusedCredit(in: entitlements, owner: profileID) {
             await use(credit: credit, for: competitionID)
             return
         }

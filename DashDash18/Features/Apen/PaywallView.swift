@@ -128,7 +128,7 @@ struct PaywallView: View {
         if let competitionID, service?.lastUnlocked == competitionID {
             return ("Turneringen er låst opp. God runde!", "checkmark.seal", false)
         }
-        if competitionID == nil, let service, CompetitionUnlock.unusedCredit(in: service.entitlements) != nil {
+        if competitionID == nil, let service, CompetitionUnlock.unusedCredit(in: service.entitlements, owner: service.profileID) != nil {
             return ("Kjøpet er klart. Lukk og trykk «Lag», så brukes det på turneringen.", "checkmark.seal", false)
         }
         if case .failed(let error) = service?.state {

@@ -28,7 +28,7 @@ nonisolated enum CompetitionPurchase {
                            enabled: Bool = PurchaseFeature.isEnabled, now: Date = .now) -> Bool {
         guard enabled, requiresPurchase(kind) else { return true }
         return coveredBySubscription(clubID: clubID, userID: userID, entitlements: entitlements, now: now)
-            || CompetitionUnlock.unusedCredit(in: entitlements) != nil
+            || CompetitionUnlock.unusedCredit(in: entitlements, owner: userID) != nil
     }
 
     /// Fra kjøpene `PurchaseService` har hentet. Uten tjenesten (ikke logget inn ennå) er en
@@ -46,7 +46,7 @@ nonisolated enum CompetitionPurchase {
                             enabled: Bool = PurchaseFeature.isEnabled, now: Date = .now) -> Bool {
         guard enabled, requiresPurchase(kind) else { return false }
         return !coveredBySubscription(clubID: clubID, userID: userID, entitlements: entitlements, now: now)
-            && CompetitionUnlock.unusedCredit(in: entitlements) != nil
+            && CompetitionUnlock.unusedCredit(in: entitlements, owner: userID) != nil
     }
 
     /// Linja under typen i «Ny konkurranse», eller nil når kjøp er av.

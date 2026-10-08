@@ -111,8 +111,11 @@ nonisolated enum CompetitionUnlock {
     }
 
     /// En ledig kreditt å bruke på turneringen, hvis du har en.
-    static func unusedCredit(in entitlements: [EntitlementRow]) -> EntitlementRow? {
-        entitlements.first(where: \.isUnusedCredit)
+    /// Et ledig kjøp som `owner` selv har gjort. Arrangørene ser hverandres kjøp i klubben, men
+    /// `assign_purchase` godtar bare egne, så andres kjøp regnes ikke som ledige.
+    static func unusedCredit(in entitlements: [EntitlementRow], owner: UUID?) -> EntitlementRow? {
+        guard let owner else { return nil }
+        return entitlements.first { $0.isUnusedCredit && $0.profileID == owner }
     }
 }
 

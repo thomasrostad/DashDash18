@@ -206,9 +206,15 @@ struct ApenKjopTests {
     @Test func ledigKredittFinnes() {
         let used = entitlement(competition: UUID())
         let free = entitlement()
-        #expect(CompetitionUnlock.unusedCredit(in: [used]) == nil)
-        #expect(CompetitionUnlock.unusedCredit(in: [used, free])?.id == free.id)
-        #expect(CompetitionUnlock.unusedCredit(in: [entitlement(kind: "subscription")]) == nil)
+        #expect(CompetitionUnlock.unusedCredit(in: [used], owner: me) == nil)
+        #expect(CompetitionUnlock.unusedCredit(in: [used, free], owner: me)?.id == free.id)
+        #expect(CompetitionUnlock.unusedCredit(in: [entitlement(kind: "subscription")], owner: me) == nil)
+        // En annen arrangørs ledige kjøp i klubben kan ikke kobles (`assign_purchase`), så det teller ikke.
+        var others = entitlement()
+        others.profileID = UUID()
+        #expect(CompetitionUnlock.unusedCredit(in: [others], owner: me) == nil)
+        #expect(CompetitionUnlock.unusedCredit(in: [others, free], owner: me)?.id == free.id)
+        #expect(CompetitionUnlock.unusedCredit(in: [free], owner: nil) == nil)
     }
 
     @Test func ventendeKjopHuskerTurneringen() throws {
