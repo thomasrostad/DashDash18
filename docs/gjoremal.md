@@ -9,7 +9,7 @@ Oppdatert 07.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
   - Environment → **Xcode Version = Xcode 26.6** (ikke «Latest Release»).
   - Sjekk at `SUPABASE_PUBLISHABLE_KEY` starter med `sb_publishable_`. Skriv den gjerne inn på nytt: ⌘V, uten mellomrom foran.
 - [ ] **3. Kjør SQL på test, i denne rekkefølgen.** Claude legger fila på utklippstavla og sjekker den etterpå.
-  - [ ] **024** sikkerhet (ligger på utklippstavla)
+  - [x] **024** sikkerhet (kjørt 08.10, kontrollen 8/8)
   - [ ] **022** konkurranser
   - [ ] **023** kjøp
 
