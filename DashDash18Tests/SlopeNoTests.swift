@@ -59,7 +59,8 @@ private enum S {
 struct SlopeNoTeeChoiceTests {
     @Test func flaggetErPåNårSqlErKjørtOgSynkenHarGått() {
         #expect(SlopeNoFeature.isEnabled == true)
-        #expect(SlopeNoCredit.text == "Slope og course rating fra slope.no")
+        #expect(SlopeNoCredit.text == SlopeNoCredit.text(usesHoles: SlopeNoFeature.usesHoles))
+        #expect(SlopeNoCredit.text(usesHoles: false) == "Slope og course rating fra slope.no")
         #expect(SlopeNoCredit.url.absoluteString == "https://slope.no")
     }
 
