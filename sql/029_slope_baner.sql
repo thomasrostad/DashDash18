@@ -546,6 +546,10 @@ grant select, insert, update on table public.course_feeds to service_role;
 --     [{external_id, name, city, country, course_rating, slope_rating,
 --       tees: [{external_id, name, gender, course_rating, slope_rating, par, sort_order}]}]
 --   p_present: id-ene til ALLE banene i kildens eksport.
+--   p_data_version: kildens versjon. Store synker sendes i deler: alle delene
+--     unntatt den siste har tom versjon og bare skriver banene sine. Den siste
+--     (med versjon) markerer hva som er borte og skriver statusen. Feiler en
+--     del, er versjonen ikke lagret, og neste kjøring prøver alt på nytt.
 -- Hva den gjør:
 --   * upsert av banene på (source, external_id): felles bibliotek (club_id
 --     tom), ekte bane, i bruk. Navn, sted, land og banens CR/slope (fra
@@ -583,7 +587,7 @@ begin
   if jsonb_typeof(coalesce(p_courses, '[]'::jsonb)) <> 'array' then
     raise exception 'Banene må være en liste' using errcode = '22023';
   end if;
-  if coalesce(cardinality(p_present), 0) = 0 then
+  if p_data_version is not null and coalesce(cardinality(p_present), 0) = 0 then
     -- En tom eksport ville markert alle banene som borte. Da er noe galt hos kilden.
     raise exception 'Eksporten er tom' using errcode = '22023';
   end if;
@@ -640,6 +644,11 @@ begin
                        cross join lateral jsonb_array_elements(coalesce(e -> 'tees', '[]'::jsonb)) x
                       where x ->> 'external_id' = t.external_id);
   get diagnostics v_gonetees = row_count;
+
+  if p_data_version is null then
+    -- En del av en større synk: resten gjør siste del.
+    return jsonb_build_object('courses_written', v_courses, 'tees_written', v_tees, 'tees_missing', v_gonetees);
+  end if;
 
   -- Alle banene i eksporten er hentet nå. De andre fra kilden er borte.
   update public.courses c

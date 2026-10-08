@@ -66,6 +66,12 @@ select pg_temp.lik((select missing_at is not null from public.course_tees where 
 select pg_temp.lik((select course_rating from public.course_tees where external_id = '10762'), 73.4::numeric(4,1), 'Re-ratingen er skrevet');
 select pg_temp.lik((select missing from public.course_feeds where source = 'slope'), 1, 'Statusen teller én borte');
 select pg_temp.feil($$select public.course_feed_apply('slope', '5023', now(), '[]'::jsonb, '{}'::text[])$$, '22023');
+-- En del av en større synk (uten versjon) skriver banene, men ikke versjonen.
+select pg_temp.lik((public.course_feed_apply('slope', null, null,
+  '[{"external_id":"12","name":"Bergen Golfklubb","city":"Bergen","country":"NO","course_rating":70,"slope_rating":125,"tees":[]}]'::jsonb,
+  null) ->> 'courses_written')::int, 1, 'En del uten versjon skriver banen');
+select pg_temp.lik((select data_version from public.course_feeds where source = 'slope'), '5022', 'En del uten versjon rører ikke versjonen');
+select pg_temp.lik((select missing_at from public.courses where external_id = '12'), null::timestamptz, 'En del uten versjon markerer ikke noe borte');
 select public.course_feed_note('slope', 'meta svarte 503');
 select pg_temp.lik((select last_error from public.course_feeds where source = 'slope'), 'meta svarte 503', 'Feilen er notert');
 select pg_temp.lik((select data_version from public.course_feeds where source = 'slope'), '5022', 'Notatet rører ikke versjonen');
@@ -75,6 +81,7 @@ select public.course_feed_apply('slope', '5024', now(),
      "tees":[{"external_id":"901","name":"Gul","gender":"men","course_rating":72.1,"slope_rating":130,"par":72,"sort_order":1}]}]'::jsonb,
   array['77', '9']) is not null;
 select pg_temp.lik((select missing_at from public.courses where external_id = '9'), null::timestamptz, 'Oslo GK er tilbake');
+select pg_temp.lik((select missing_at is not null from public.courses where external_id = '12'), true, 'Bergen GK var ikke i eksporten: borte');
 reset role;
 
 select id as slope_course from public.courses where source = 'slope' and external_id = '77' \gset
