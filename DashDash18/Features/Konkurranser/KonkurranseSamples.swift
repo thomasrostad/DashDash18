@@ -4,7 +4,7 @@ import GolfgutuCore
 import SwiftUI
 
 /// Oppdiktede konkurranser for skjermprøvene `konktavla`, `konkliste`, `konkliga`, `konkcup`,
-/// `konkny`, `konkteller` og `konkkveld` (DesignScreenSamples).
+/// `konkny`, `konkteller`, `konkkveld`, `konklast` og `konklastdeltaker` (DesignScreenSamples).
 enum KonkurranseSamples {
     static func id(_ n: Int) -> UUID { TavlaSamples.id(n) }
 
@@ -56,14 +56,19 @@ enum KonkurranseSamples {
 
     // MARK: Liga
 
-    static func league() -> CompetitionDetailModel {
+    static func league(lock: CompetitionLockNotice? = nil) -> CompetitionDetailModel {
+        var liga = liga
+        if lock != nil { liga.requiresPurchase = true }
         let rounds = (1...4).map { TavlaSamples.round($0, date: "2026-10-0\($0 + 1)") }
         let links = rounds.map { CompetitionRoundRow(competitionID: liga.id, roundID: $0.round.id, source: .manual) }
         let parts = overview.participants.filter { $0.competitionID == liga.id }
         let scope = CompetitionScope(competition: liga, links: links, participants: parts)
         let input = scope.input(candidates: rounds, directory: PersonDirectory(members: TavlaSamples.members))
-        return CompetitionDetailModel(preview: liga, content: .league(LeagueStandings(input, me: access.myEntrants)),
-                                      access: access)
+        let model = CompetitionDetailModel(preview: liga, content: .league(LeagueStandings(input, me: access.myEntrants)),
+                                           access: access)
+        // Låst konkurranse (fase 17): kjøp er av i appen, så det som vises, settes her.
+        model.lockPreview = lock
+        return model
     }
 
     // MARK: Cup
@@ -132,6 +137,11 @@ struct KonkurranseSampleScreen: View {
                 CompetitionsListView(model: KonkurranseSamples.list())
             case .konkliga:
                 CompetitionDetailView(model: KonkurranseSamples.league(), list: KonkurranseSamples.list())
+            case .konklast:
+                CompetitionDetailView(model: KonkurranseSamples.league(lock: .purchase), list: KonkurranseSamples.list())
+            case .konklastdeltaker:
+                CompetitionDetailView(model: KonkurranseSamples.league(lock: .waitForOrganizer(isClub: true)),
+                                      list: KonkurranseSamples.list())
             case .konkcup:
                 CompetitionDetailView(model: KonkurranseSamples.cupModel(), list: KonkurranseSamples.list())
             case .konkny:

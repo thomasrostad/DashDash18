@@ -27,10 +27,15 @@ struct CompetitionDetailView: View {
     @State private var resultFor: CupStandings.Game?
     @State private var confirmsDraw = false
     @State private var showsInvite = false
+    @State private var showsPaywall = false
+    /// Økes når betalingsveggen lukkes, så siden spør serveren på nytt.
+    @State private var unlockCheck = 0
+    @Environment(PurchaseService.self) private var purchases: PurchaseService?
 
     var body: some View {
         content
             .task { await model.load() }
+            .task(id: unlockCheck) { await model.checkUnlock(purchases: purchases) }
             .refreshable {
                 await model.load()
                 await list?.load()
@@ -50,6 +55,10 @@ struct CompetitionDetailView: View {
                         InviteView(model: inviteModel(client: client))
                     }
                 }
+            }
+            .sheet(isPresented: $showsPaywall, onDismiss: { unlockCheck += 1 }) {
+                PaywallView(service: purchases, competitionID: model.competition.id,
+                            competitionName: model.competition.name, clubID: model.competition.clubID)
             }
             .sheet(item: $resultFor) { game in
                 NavigationStack {
@@ -101,6 +110,8 @@ struct CompetitionDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
                 CompetitionHeaderCard(competition: model.competition, clubName: list?.clubName(of: model.competition))
+                CompetitionUnlockSection(notice: model.lockNotice(purchases: purchases), isWorking: model.isUnlocking,
+                                         error: model.unlockError, onUnlock: unlock)
                 if let list {
                     CompetitionSignupButton(model: list, competition: model.competition)
                 }
@@ -108,6 +119,20 @@ struct CompetitionDetailView: View {
             }
             .padding(.horizontal, DDSpacing.gutter)
             .padding(.vertical, DDSpacing.l)
+        }
+    }
+
+    /// Låser opp konkurransen: betalingsveggen for akkurat denne, eller en ledig kreditt.
+    private func unlock() {
+        switch model.lockNotice(purchases: purchases) {
+        case .purchase:
+            showsPaywall = true
+        case .useCredit:
+            Task {
+                if await model.useCredit(purchases: purchases) { await list?.load() }
+            }
+        case .hidden, .waitForOrganizer:
+            break
         }
     }
 

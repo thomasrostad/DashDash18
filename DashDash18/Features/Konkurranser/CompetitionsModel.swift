@@ -187,6 +187,13 @@ final class CompetitionDetailModel {
     private(set) var detail: CompetitionQueries.Detail?
     private(set) var isWorking = false
     var error: String?
+    /// Serverens svar på om den er låst opp (`competition_is_unlocked`), nil før det har kommet.
+    private(set) var serverUnlocked: Bool?
+    /// Koblingen av en ledig kreditt pågår, og feilen fra den.
+    private(set) var isUnlocking = false
+    private(set) var unlockError: String?
+    /// Skjermprøve: hva som vises om kjøpet, uten tjeneste og server.
+    var lockPreview: CompetitionLockNotice?
 
     let competition: CompetitionRow
     let access: CompetitionAccess
@@ -217,6 +224,37 @@ final class CompetitionDetailModel {
     #endif
 
     var isAdmin: Bool { access.isAdmin(competition) }
+
+    // MARK: Kjøp (låst konkurranse)
+
+    /// Hva siden viser om kjøpet (`CompetitionLock`).
+    func lockNotice(purchases: PurchaseService?) -> CompetitionLockNotice {
+        if let lockPreview { return lockPreview }
+        guard let purchases, purchases.lastUnlocked != competition.id else { return .hidden }
+        return CompetitionLock.notice(for: competition, access: access, serverUnlocked: serverUnlocked,
+                                      entitlements: purchases.entitlements)
+    }
+
+    /// Spør serveren om konkurransen er låst opp. Bare når kjøp er på og den krever kjøp.
+    func checkUnlock(purchases: PurchaseService?) async {
+        guard PurchaseFeature.isEnabled, competition.requiresPurchase, let purchases else { return }
+        if let answer = await purchases.serverIsUnlocked(competition.id) { serverUnlocked = answer }
+    }
+
+    /// «Bruk kjøpet ditt»: kobler en ledig kreditt til konkurransen (`assign_purchase`). Gir `true`
+    /// når den er låst opp.
+    func useCredit(purchases: PurchaseService?) async -> Bool {
+        guard let purchases, !isUnlocking else { return false }
+        isUnlocking = true
+        unlockError = nil
+        defer { isUnlocking = false }
+        if await purchases.useCredit(for: competition.id) {
+            serverUnlocked = true
+            return true
+        }
+        if case .failed(let failure) = purchases.state { unlockError = failure.message }
+        return false
+    }
 
     /// Kan du føre (eller endre) resultatet i kampen?
     func recordRight(_ game: CupStandings.Game) -> CupRecording.Right {
