@@ -116,13 +116,11 @@ struct AktivitetUlestTests {
         #expect(ActivitySeenStore(clubID: id(901), suite: suite).lastSeen == nil)
     }
 
-    @MainActor @Test func bjellaTellerOgViserNiPluss() {
-        let badge = UnreadBadge(clubID: UUID(), me: me)
-        #expect(badge.label == nil)
-        badge.update(from: rows)
-        #expect(badge.count == 3)
-        #expect(badge.label == "3")
-        #expect(UnreadBadge(clubID: club, me: me, count: 12).label == "9+")
+    @Test func bjellaTellerOgViserNiPluss() {
+        #expect(ActivityFeed.unreadCount(rows, lastSeen: nil, me: me) == 3)
+        #expect(HomeBell.label(0) == nil)
+        #expect(HomeBell.label(3) == "3")
+        #expect(HomeBell.label(12) == "9+")
     }
 }
 

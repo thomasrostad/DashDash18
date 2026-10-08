@@ -1,23 +1,8 @@
 import SwiftUI
 
-/// Varsler: «I dag» og «Tidligere», med uleste, reaksjoner og «Melding til alle» for arrangøren.
-/// Åpnes fra bjella i verktøylinjen.
-struct VarslerView: View {
-    @Environment(\.clubContext) private var context
-    var badge: UnreadBadge?
-
-    var body: some View {
-        if let context {
-            VarslerContent(model: VarslerModel(context: context, badge: badge))
-        } else {
-            ContentUnavailableView("Ingen klubb", systemImage: "bell.slash",
-                                   description: Text("Velg en klubb for å se varslene."))
-                .navigationTitle("Varsler")
-                .ddNavigationChrome()
-        }
-    }
-}
-
+/// Varsler for klubben: «I dag» og «Tidligere», med uleste, reaksjoner og «Melding til alle» for
+/// arrangøren. Fra fase 19 viser bjella bare det som angår deg (`HjemVarslerView`); denne lista
+/// (hele klubbens logg) står igjen til skjermprøven; modellen brukes også av arrangørens verktøy.
 struct VarslerContent: View {
     @State var model: VarslerModel
     @Environment(\.scenePhase) private var scenePhase
@@ -88,35 +73,50 @@ struct VarslerContent: View {
     }
 }
 
-/// Én linje: ikon, tekst, tid, ulest-prikk og reaksjonsbrikkene. Langt trykk gir hele settet.
+/// Én linje i Varsler (klubbens logg).
 struct ActivityRowView: View {
     let item: VarslerModel.Item
     let model: VarslerModel
 
     var body: some View {
+        ActivityLineView(display: item.display, time: item.time, isUnread: item.isUnread, chips: item.chips,
+                         hasReacted: { model.hasReacted($0, on: item.id) },
+                         toggle: { reaction in Task { await model.toggle(reaction, on: item.id) } })
+    }
+}
+
+/// Én linje: ikon, tekst, tid, ulest-prikk og reaksjonsbrikkene. Langt trykk gir hele settet.
+/// Brukes av Varsler i klubben og av bjella på Hjem (fase 19).
+struct ActivityLineView: View {
+    let display: ActivityDisplay
+    let time: String
+    let isUnread: Bool
+    let chips: [ReactionChip]
+    let hasReacted: (ActivityReaction) -> Bool
+    let toggle: (ActivityReaction) -> Void
+
+    var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            DDIconTile(systemImage: item.display.symbol)
+            DDIconTile(systemImage: display.symbol)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text(item.display.text)
-                    .font(item.isUnread ? .ddBodyEmphasis : .ddBody)
+                Text(display.text)
+                    .font(isUnread ? .ddBodyEmphasis : .ddBody)
                     .foregroundStyle(Color.ddInk)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 7)
-                if !item.chips.isEmpty {
-                    ReactionChipsView(chips: item.chips) { reaction in
-                        Task { await model.toggle(reaction, on: item.id) }
-                    }
+                if !chips.isEmpty {
+                    ReactionChipsView(chips: chips, onTap: toggle)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(alignment: .trailing, spacing: 6) {
-                Text(item.time)
+                Text(time)
                     .font(.ddMonoSmall)
                     .monospacedDigit()
                     .foregroundStyle(Color.ddInkSecondary)
-                if item.isUnread {
+                if isUnread {
                     DDUnreadDot()
                         .accessibilityLabel("Ulest")
                 }
@@ -127,14 +127,14 @@ struct ActivityRowView: View {
         .accessibilityElement(children: .combine)
         .contextMenu {
             ForEach(ActivityReaction.allCases, id: \.self) { reaction in
-                let mine = model.hasReacted(reaction, on: item.id)
+                let mine = hasReacted(reaction)
                 Button {
-                    Task { await model.toggle(reaction, on: item.id) }
+                    toggle(reaction)
                 } label: {
                     Text(reaction.rawValue + "  " + (mine ? "Fjern" : reaction.accessibilityName))
                 }
             }
-            let who = item.chips.map { $0.reaction.rawValue + " " + NorwegianList.join($0.names) }
+            let who = chips.map { $0.reaction.rawValue + " " + NorwegianList.join($0.names) }
             if !who.isEmpty {
                 Section("Har reagert") {
                     ForEach(who, id: \.self) { Text($0) }
@@ -222,38 +222,6 @@ struct AnnouncementSheet: View {
     }
 }
 
-/// Bjella i verktøylinjen: åpner Varsler og viser antall uleste. Henter tallet når den vises
-/// og når appen blir aktiv.
-struct VarslerBell: View {
-    let badge: UnreadBadge
-    @Environment(\.scenePhase) private var scenePhase
-
-    var body: some View {
-        NavigationLink {
-            VarslerView(badge: badge)
-        } label: {
-            // Bjella med rust tallmerke (PWA-ens bjelle i headeren). Fargen følger verktøylinja.
-            Image(systemName: "bell")
-                .overlay(alignment: .topTrailing) {
-                    if let label = badge.label {
-                        DDCountBadge(label)
-                            .fixedSize()
-                            .offset(x: 10, y: -9)
-                    }
-                }
-        }
-        .accessibilityLabel(badge.count > 0 ? "Varsler, \(badge.count) uleste" : "Varsler")
-        .task { await badge.refresh() }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await badge.refresh() } }
-        }
-        // En push mens appen står åpen: noe nytt har skjedd.
-        .onReceive(NotificationCenter.default.publisher(for: PushInbox.received)) { _ in
-            Task { await badge.refresh() }
-        }
-    }
-}
-
 // MARK: - Forhåndsvisning
 
 private enum VarslerPreviewData {
@@ -293,19 +261,8 @@ private enum VarslerPreviewData {
     }
 }
 
-#Preview("Bjella") {
-    NavigationStack {
-        Text("Kveld")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    VarslerBell(badge: UnreadBadge(clubID: VarslerPreviewData.club, me: VarslerPreviewData.thomas, count: 3))
-                }
-            }
-    }
-}
-
 #if DEBUG
-/// Varsler og bjella med oppdiktede linjer (`-DDDesignScreen varsler`).
+/// Varsler i klubben med oppdiktede linjer (`-DDDesignScreen varsler`).
 struct VarslerSampleScreen: View {
     var body: some View {
         NavigationStack {
@@ -313,12 +270,6 @@ struct VarslerSampleScreen: View {
                 preview: VarslerPreviewData.rows, reactions: VarslerPreviewData.reactions,
                 names: VarslerPreviewData.names, me: VarslerPreviewData.thomas, isOrganizer: true,
                 seenAt: Date.now.addingTimeInterval(-30 * 60)))
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    VarslerBell(badge: UnreadBadge(clubID: VarslerPreviewData.club, me: VarslerPreviewData.thomas,
-                                                   count: 3))
-                }
-            }
         }
     }
 }

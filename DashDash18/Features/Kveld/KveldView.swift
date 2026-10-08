@@ -1,39 +1,27 @@
 import SwiftUI
 
-/// Kveld-fanen: runden som går, ellers neste kveld, ditt svar og hvem som kommer.
+/// Kveld-skjermen: neste kveld, ditt svar med angre, hvem som kommer, tråd/tips/veddemål og
+/// arrangørens purring. Fra fase 19 åpnes den fra «Neste kveld» på Hjem, med samme `KveldModel`
+/// som Hjem (svaret står likt begge steder). Runden som går, åpnes fra «Pågår nå».
 struct KveldView: View {
-    @Environment(\.clubContext) private var context
+    let model: KveldModel
 
     var body: some View {
-        if let context {
-            // Går en runde, vises den i stedet for neste kveld.
-            RundeGate(context: context) {
-                KveldContent(model: KveldModel(context: context))
-            }
-        } else {
-            EmptyKveldView()
-        }
+        KveldContent(model: model)
+            .navigationTitle("Kvelden")
+            .ddNavigationChrome()
     }
 }
 
+/// Innholdet. Hjem eier modellen og følger endringene (realtime og retur fra bakgrunnen); her
+/// hentes det bare på nytt når skjermen åpnes eller dras ned.
 private struct KveldContent: View {
-    @State var model: KveldModel
-    @Environment(\.scenePhase) private var scenePhase
+    let model: KveldModel
 
     var body: some View {
         content
             .task { await model.load() }
-            // Andres svar dukker opp uten at du må dra ned.
-            .task { await model.followChanges() }
             .refreshable { await model.load() }
-            .onChange(of: scenePhase) { _, phase in
-                if phase == .active {
-                    Task { await model.load() }
-                } else if phase == .background {
-                    // Legges appen bort i angre-vinduet, sendes svaret nå (`angreSendAlle`).
-                    Task { await model.flush() }
-                }
-            }
     }
 
     @ViewBuilder
@@ -91,18 +79,12 @@ private struct KveldContent: View {
     }
 }
 
-private struct EmptyKveldView: View {
+struct EmptyKveldView: View {
     var body: some View {
         ContentUnavailableView(
             "Ingen kveld satt opp",
             systemImage: "flag",
             description: Text("Arrangøren legger inn neste kveld i terminlista.")
         )
-    }
-}
-
-#Preview {
-    NavigationStack {
-        KveldView()
     }
 }

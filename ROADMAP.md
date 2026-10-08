@@ -375,7 +375,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - **Data:** alle klubbene du er med i, dine turneringer og løse runder. SQL (til godkjenning) bare der det trengs.
 
 - [x] Data og logikk: samlet feed på tvers av klubber, turneringer og løse runder; plassbytte som hendelse; «sist sett» på tvers; ren feedmodell med tester. *(08.10: PR #7. 027 kjørt på test, push-send v4 deployet, plassbytte slått på.)*
-- [ ] Hjem-fanen i appen: kortene fra designet, filterpiller, oppsummering, Pågår nå og Neste kveld; Kveld-fanen erstattes; bjella viser bare det som angår deg.
+- [x] Hjem-fanen i appen: kortene fra designet, filterpiller, oppsummering, Pågår nå og Neste kveld; Kveld-fanen erstattes; bjella viser bare det som angår deg. *(08.10. Kveld-skjermen er ett trykk unna fra Neste kveld. Ikke prøvd mot ekte data.)*
 - [ ] Prøve på telefon mot test.
 
 ### Fase 20 – Baner fra slope.no

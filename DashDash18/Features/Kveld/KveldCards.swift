@@ -228,7 +228,7 @@ struct SignupOverviewSection: View {
     }
 }
 
-private extension SignupStatus {
+extension SignupStatus {
     /// Kommer = grønn pille (golfee), usikker = sol, kommer ikke = blush.
     var tint: DDChoiceTint {
         switch self {

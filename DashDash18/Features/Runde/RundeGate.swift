@@ -1,21 +1,16 @@
 import SwiftUI
 
-/// Viser runde-skjermen når klubben har en runde som går, ellers innholdet under
-/// (neste kveld og påmelding).
-struct RundeGate<Fallback: View>: View {
-    @State private var model: RundeModel
-    private let fallback: Fallback
+/// Holder klubbens runde levende mens skjermen er åpen (fase 19: Hjem, før Kveld-fanen):
+/// henter ved start, hvert 30. sekund når realtime ikke dekker det, når køen er sendt og når appen
+/// blir aktiv. Runde-skjermen selv åpnes fra «Pågår nå».
+struct RundeFollow: ViewModifier {
+    let model: RundeModel
 
     @Environment(\.scoreSubmitter) private var submitter
     @Environment(\.scenePhase) private var scenePhase
     @Environment(OutboxStatus.self) private var outbox: OutboxStatus?
 
-    init(context: ClubContext, @ViewBuilder fallback: () -> Fallback) {
-        _model = State(initialValue: RundeModel(context: context))
-        self.fallback = fallback()
-    }
-
-    var body: some View {
+    func body(content: Content) -> some View {
         content
             .task {
                 model.submitter = submitter
@@ -45,16 +40,11 @@ struct RundeGate<Fallback: View>: View {
                 }
             }
     }
+}
 
-    @ViewBuilder
-    private var content: some View {
-        if model.hasRound {
-            RundeView(model: model)
-        } else if model.state == .checking {
-            ProgressView("Henter kvelden …")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else {
-            fallback
-        }
+extension View {
+    /// Følger klubbens runde (`RundeFollow`).
+    func followsRound(_ model: RundeModel) -> some View {
+        modifier(RundeFollow(model: model))
     }
 }

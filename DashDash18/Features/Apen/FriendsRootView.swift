@@ -44,7 +44,7 @@ struct FriendsRootView: View {
             }
         case .deg:
             FriendsDegView(config: config, client: client, user: user)
-        case .kveld, .tavla:
+        case .hjem, .tavla:
             EmptyView()
         }
     }

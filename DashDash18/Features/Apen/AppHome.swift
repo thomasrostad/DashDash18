@@ -58,7 +58,7 @@ nonisolated struct AppHomeChoiceStore {
 }
 
 nonisolated extension AppTab {
-    /// Fanene uten klubb: Spill og Deg. Kveld og Tavla hører til klubben.
+    /// Fanene uten klubb: Spill og Deg. Hjem og Tavla hører til klubben.
     static func tabsWithoutClub() -> [AppTab] {
         [.spill, .deg]
     }

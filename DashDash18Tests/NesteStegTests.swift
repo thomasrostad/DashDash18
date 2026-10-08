@@ -88,9 +88,9 @@ struct KomIGangTests {
 }
 
 struct ArrangorInngangTests {
-    @Test func knappenBareIKveldForArrangorer() {
-        #expect(AppTab.kveld.showsAdminButton(isOrganizer: true))
-        #expect(!AppTab.kveld.showsAdminButton(isOrganizer: false))
+    @Test func knappenBareIHjemForArrangorer() {
+        #expect(AppTab.hjem.showsAdminButton(isOrganizer: true))
+        #expect(!AppTab.hjem.showsAdminButton(isOrganizer: false))
         #expect(!AppTab.deg.showsAdminButton(isOrganizer: true))
         #expect(!AppTab.tavla.showsAdminButton(isOrganizer: true))
         #expect(!AppTab.spill.showsAdminButton(isOrganizer: true))
