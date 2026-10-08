@@ -41,6 +41,25 @@ enum LooseRoundQueries {
         return answer.roundID
     }
 
+    /// Teen du brukte sist på banen i en løs runde (sql/029), eller nil.
+    static func previousTeeID(client: SupabaseClient, courseID: UUID, userID: UUID) async throws -> UUID? {
+        guard SlopeNoFeature.isEnabled else { return nil }
+        struct Row: Decodable {
+            let teeID: UUID?
+            enum CodingKeys: String, CodingKey { case teeID = "tee_id" }
+        }
+        let rows: [Row] = try await client.from("rounds")
+            .select("tee_id")
+            .eq("course_id", value: courseID)
+            .eq("owner_id", value: userID)
+            .is("club_id", value: nil)
+            .not("tee_id", operator: .is, value: "null")
+            .order("created_at", ascending: false)
+            .limit(1)
+            .execute().value
+        return rows.first?.teeID
+    }
+
     /// Runden med alt under, eller nil når du ikke kan se den (lenger).
     static func snapshot(client: SupabaseClient, roundID: UUID) async throws -> RoundSnapshot? {
         let rows: [RoundRow] = try await client.from("rounds")

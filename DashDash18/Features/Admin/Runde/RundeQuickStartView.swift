@@ -15,6 +15,7 @@ struct RundeQuickStartView: View {
     @State private var isBusy = false
     @State private var error: String?
     @State private var showsCourse = false
+    @State private var showsTee = false
     @State private var showsStart = false
     @State private var showsPlayers = false
     @State private var showsMore = false
@@ -52,6 +53,9 @@ struct RundeQuickStartView: View {
                 .navigationTitle("Bane")
                 .ddNavigationChrome()
                 .navigationBarTitleDisplayMode(.inline)
+        }
+        .navigationDestination(isPresented: $showsTee) {
+            TeePickerView(tees: selectedCourse?.tees ?? [], selected: $draft.teeID)
         }
         .navigationDestination(isPresented: $showsStart) {
             RundeStartStep(model: model, draft: $draft)
@@ -114,6 +118,12 @@ struct RundeQuickStartView: View {
                                                   showsVenue: showsVenue)) {
                 showsCourse = true
             }
+            // Teene finnes bare når sql/029 er kjørt og `SlopeNoFeature` er på (lastes ellers ikke).
+            if let course = selectedCourse, !course.tees.isEmpty {
+                summaryRow("Tee", value: TeeChoice.value(course.tee(draft.teeID))) {
+                    showsTee = true
+                }
+            }
             summaryRow("Start", value: RoundConfirm.startValue(firstHole: draft.firstHole, holeCount: draft.holeCount,
                                                                teeTime: draft.teeTime)) {
                 showsStart = true
@@ -166,7 +176,7 @@ struct RundeQuickStartView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Flere valg")
                             .foregroundStyle(Color.ddInk)
-                        Text(RoundConfirm.moreSummary(draft, course: selectedCourse?.coreCourse,
+                        Text(RoundConfirm.moreSummary(draft, course: model.coreCourse(for: draft),
                                                       showsMatches: RoundSetupOptions(draft: draft, rules: rules).showsMatches))
                             .font(.ddCaption)
                             .foregroundStyle(Color.ddInkSecondary)

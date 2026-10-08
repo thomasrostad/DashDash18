@@ -58,6 +58,13 @@ struct NyRundeView: View {
                     }
                 }
             }
+            if let course = model.course, !course.tees.isEmpty {
+                NavigationLink {
+                    TeePickerView(tees: course.tees, selected: $model.draft.teeID)
+                } label: {
+                    LabeledContent("Tee", value: TeeChoice.value(course.tee(model.draft.teeID)))
+                }
+            }
             if model.course != nil {
                 Picker("Start", selection: Binding(
                     get: { model.draft.start },
@@ -69,7 +76,14 @@ struct NyRundeView: View {
         } header: {
             DDHeader("Bane")
         } footer: {
-            DDFooter("Fra det felles biblioteket. Mangler banen, legger du den inn med «Ny bane».")
+            if let course = model.course, !course.tees.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    DDFooter("Teens course rating og slope gir banehandicapet.")
+                    SlopeNoCreditLink()
+                }
+            } else {
+                DDFooter("Fra det felles biblioteket. Mangler banen, legger du den inn med «Ny bane».")
+            }
         }
     }
 

@@ -77,6 +77,17 @@ final class RundeAdminModel {
         return allCourses.first { $0.id == id }
     }
 
+    /// Banen slik runden regner med den: teens CR og slope når en tee er valgt (sql/029).
+    func coreCourse(for draft: RoundDraft) -> Course? {
+        course(draft.courseID)?.coreCourse(tee: draft.teeID)
+    }
+
+    /// Forslaget til tee på banen: den som ble brukt sist i klubben, ellers første herre-tee.
+    func suggestedTeeID(for course: CourseListItem?) -> UUID? {
+        guard let course else { return nil }
+        return TeeChoice.suggested(course.tees, previous: TeeChoice.previousTeeID(rounds: allRounds, courseID: course.id))?.id
+    }
+
     func memberName(_ id: UUID) -> String {
         members.first { $0.id == id }?.displayName ?? "Ukjent"
     }
@@ -134,7 +145,8 @@ final class RundeAdminModel {
             events = Terminliste.eveningsForSeason(allEvents, activeSeasonID: activeSeason?.id)
             members = KveldQueries.sortedByName(roster)
             let kinds = try await CourseLibraryModel.loadKinds(client: client, clubID: clubID)
-            allCourses = CourseListItem.make(courses: courseList, holes: holes, kinds: kinds)
+            let tees = try await CourseLibraryModel.loadTees(client: client, courseIDs: courseList.map(\.id))
+            allCourses = CourseListItem.make(courses: courseList, holes: holes, kinds: kinds, tees: tees)
             courses = allCourses.filter(\.isReady)
 
             if selectedEventID == nil || !events.contains(where: { $0.id == selectedEventID }) {
@@ -253,6 +265,7 @@ final class RundeAdminModel {
                                    teeTime: event.startTime, participants: ids, source: source, rules: rules)
         draft.courseID = courses.first?.id
         QuickStart.applySuggestion(from: previousRound(for: event), to: &draft, courses: courses, rules: rules)
+        if draft.teeID == nil { draft.teeID = suggestedTeeID(for: course(draft.courseID)) }
         QuickStart.autoArrange(&draft, rules: rules, roster: members)
         return draft
     }
@@ -327,7 +340,7 @@ final class RundeAdminModel {
         }
         let id = try await writeRound(draft)
         let params = RoundSetupParams.make(roundID: id, draft: draft, roster: members,
-                                           course: course(draft.courseID)?.coreCourse, rules: rules,
+                                           course: coreCourse(for: draft), rules: rules,
                                            withPlayingHandicap: true)
         struct Started: Decodable { let players: Int; let matches: Int; let status: RoundStatus }
         do {
@@ -422,7 +435,7 @@ final class RundeAdminModel {
     }
 
     private func writeRound(_ draft: RoundDraft) async throws(DataError) -> UUID {
-        let write = RoundWrite(draft: draft, clubID: clubID, course: course(draft.courseID)?.coreCourse)
+        let write = RoundWrite(draft: draft, clubID: clubID, course: coreCourse(for: draft))
         do {
             // Upsert på id: en ny runde har fått id i appen, så et nytt forsøk etter en feil
             // oppdaterer samme rad i stedet for å lage en til. Status røres ikke her.
@@ -439,7 +452,7 @@ final class RundeAdminModel {
 
     private func writeSetup(_ draft: RoundDraft, roundID: UUID, withPlayingHandicap: Bool) async throws(DataError) {
         let params = RoundSetupParams.make(roundID: roundID, draft: draft, roster: members,
-                                           course: course(draft.courseID)?.coreCourse, rules: rules,
+                                           course: coreCourse(for: draft), rules: rules,
                                            withPlayingHandicap: withPlayingHandicap)
         struct Counts: Decodable { let players: Int; let matches: Int }
         do {
@@ -488,7 +501,8 @@ extension RundeAdminModel {
     }
 
     /// Oppdiktet kveld for skjermprøvene. Uten nett: en feilet henting beholder det som står.
-    static func sample(_ variant: SampleVariant = .tonight) -> RundeAdminModel {
+    /// - Parameter withTees: første bane er en ekte bane med teene fra slope.no (`hurtigstarttee`).
+    static func sample(_ variant: SampleVariant = .tonight, withTees: Bool = false) -> RundeAdminModel {
         let club = UUID()
         let client = SupabaseClient(supabaseURL: URL(string: "https://forhandsvisning.supabase.co")!,
                                     supabaseKey: "sb_publishable_forhandsvisning")
@@ -521,7 +535,9 @@ extension RundeAdminModel {
                 SignupRow(eventID: tonight.id, memberID: $0.id, clubID: club, status: .yes, comment: nil)
             } + [SignupRow(eventID: tonight.id, memberID: model.members[12].id, clubID: club, status: .maybe, comment: nil)]
         }
-        let courses = ["Pebble Beach", "St Andrews Old Course", "Valderrama"].map { name in
+        let courseNames = withTees ? ["Losby Golfklubb - Østmork", "Oslo Golfklubb", "Bærum Golfklubb"]
+                             : ["Pebble Beach", "St Andrews Old Course", "Valderrama"]
+        let courses = courseNames.enumerated().map { index, name in
             let row = CourseRow(id: UUID(), clubID: club, name: name, externalName: nil, courseRating: 72,
                                 slopeRating: 128, inUse: true, confirmedBy: nil, confirmedAt: nil)
             let pars = [4, 5, 4, 4, 3, 5, 3, 4, 4, 4, 4, 3, 4, 5, 4, 4, 3, 5]
@@ -529,7 +545,9 @@ extension RundeAdminModel {
                 CourseHoleRecord(courseID: row.id, holeNumber: $0.offset + 1, par: $0.element,
                                  strokeIndex: ($0.offset * 7) % 18 + 1, lengthM: nil)
             }
-            return CourseListItem(course: row, holes: variant == .gettingStarted ? [] : holes)
+            return CourseListItem(course: row, holes: variant == .gettingStarted ? [] : holes,
+                                  storedKind: withTees ? .course : nil,
+                                  tees: withTees && index == 0 ? SlopeNoSamples.losbyTees(course: row.id) : [])
         }
         model.allCourses = courses
         model.courses = courses.filter(\.isReady)

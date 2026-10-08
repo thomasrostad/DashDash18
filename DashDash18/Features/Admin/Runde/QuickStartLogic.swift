@@ -68,6 +68,7 @@ nonisolated enum QuickStart {
         draft.weight = previous.weight
         guard let course = courses.first(where: { $0.id == previous.courseID && $0.isReady }) else { return }
         draft.courseID = course.id
+        draft.teeID = course.tee(previous.teeID)?.id
         draft.holeCount = previous.holeCount
         draft.firstHole = RoundDraft.canStartAtTen(holeCount: previous.holeCount, courseHoles: course.holeCount)
             ? previous.firstHole : 1
@@ -107,6 +108,8 @@ nonisolated enum QuickStart {
     static func setCourse(_ id: UUID?, on draft: inout RoundDraft, courseHoles: Int?) {
         guard id != draft.courseID else { return }
         draft.courseID = id
+        // Teen hører til banen.
+        draft.teeID = nil
         draft.ldHoleIndex = nil
         draft.kpHoleIndex = nil
         if !RoundDraft.canStartAtTen(holeCount: draft.holeCount, courseHoles: courseHoles) { draft.firstHole = 1 }

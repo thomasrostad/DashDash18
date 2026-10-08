@@ -47,8 +47,8 @@ nonisolated extension StatsInput {
                 clubName: r.clubID.flatMap { clubNames[$0] }, courseID: r.courseID?.uuidString,
                 courseName: course?.name, holes: holes,
                 playingHandicap: playingHandicap(r, player: player, round: round, rules: rules),
-                handicapIndex: player.handicapIndex, courseRating: course?.courseRating,
-                slopeRating: course?.slopeRating.map(Double.init), scores: scoreMap, details: detailMap,
+                handicapIndex: player.handicapIndex, courseRating: r.courseRating ?? course?.courseRating,
+                slopeRating: (r.slopeRating ?? course?.slopeRating).map(Double.init), scores: scoreMap, details: detailMap,
                 scoring: rules.scoring
             )
         }
@@ -76,12 +76,13 @@ nonisolated extension StatsInput {
             (h.holeIndex, RoundHole(par: h.par, strokeIndex: h.strokeIndex, meters: h.lengthM.map(Double.init)))
         }, uniquingKeysWith: { first, _ in first })
         return Round(id: r.id.uuidString, gameType: r.format, holeCount: r.holeCount,
-                     holeStart: r.firstHole == 10 ? 9 : 0, course: makeCourse(r.courseID),
+                     holeStart: r.firstHole == 10 ? 9 : 0, course: makeCourse(r.courseID, round: r),
                      holes: overrides.isEmpty ? nil : overrides, hcpAllowance: r.handicapAllowance,
                      hcpExtern: r.externalHandicap)
     }
 
-    func makeCourse(_ id: UUID?) -> Course? {
+    /// Banen med hullene. Er runden spilt fra en tee (sql/029), gjelder rundens CR og slope.
+    func makeCourse(_ id: UUID?, round: StatsRoundRow? = nil) -> Course? {
         guard let id, let row = courses.first(where: { $0.id == id }) else { return nil }
         let mine = courseHoles.filter { $0.courseID == id }.map { h in
             CourseHoleRow(courseId: id.uuidString, holeNumber: h.holeNumber, par: h.par, hcpIndex: h.strokeIndex,
@@ -89,7 +90,7 @@ nonisolated extension StatsInput {
         }
         let played = Course.holesFromRows(mine)[id.uuidString] ?? nil
         let par = played.map { $0.reduce(0) { $0 + ($1.par ?? 0) } }
-        return Course(id: id.uuidString, name: row.name, par: par, courseRating: row.courseRating,
-                      slopeRating: row.slopeRating.map(Double.init), holes: played)
+        return Course(id: id.uuidString, name: row.name, par: par, courseRating: round?.courseRating ?? row.courseRating,
+                      slopeRating: (round?.slopeRating ?? row.slopeRating).map(Double.init), holes: played)
     }
 }

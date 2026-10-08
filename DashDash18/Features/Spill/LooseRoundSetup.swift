@@ -36,6 +36,8 @@ nonisolated struct LooseRoundDraft: Equatable, Sendable {
     }
 
     var courseID: UUID?
+    /// Teen på en ekte bane (sql/029, `SlopeNoFeature`). nil = banens CR og slope gjelder.
+    var teeID: UUID?
     var holeCount = 18
     /// 1, eller 10 for «siste ni» på en 18-hullsbane.
     var firstHole = 1
@@ -68,6 +70,8 @@ nonisolated struct LooseRoundDraft: Equatable, Sendable {
     mutating func setCourse(_ id: UUID?, courseHoles: Int?) {
         guard id != courseID else { return }
         courseID = id
+        // Teen hører til banen.
+        teeID = nil
         if courseHoles == 9 { holeCount = 9 }
         if !RoundDraft.canStartAtTen(holeCount: holeCount, courseHoles: courseHoles) { firstHole = 1 }
     }
@@ -242,6 +246,8 @@ nonisolated struct LooseRoundStart: Encodable, Equatable, Sendable {
     }
 
     let courseID: UUID
+    /// Teen (sql/029). Sendes bare når den er valgt; `start_loose_round` før 029 ville ignorert den.
+    var teeID: UUID?
     let holeCount: Int
     let firstHole: Int
     let format: String
@@ -257,6 +263,7 @@ nonisolated struct LooseRoundStart: Encodable, Equatable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case courseID = "course_id"
+        case teeID = "tee_id"
         case holeCount = "hole_count"
         case firstHole = "first_hole"
         case format, venue
@@ -287,6 +294,7 @@ nonisolated struct LooseRoundStart: Encodable, Equatable, Sendable {
         }
         return LooseRoundStart(
             courseID: course.id,
+            teeID: SlopeNoFeature.isEnabled ? course.tee(draft.teeID)?.id : nil,
             holeCount: draft.holeCount,
             firstHole: draft.firstHole,
             format: draft.formID,

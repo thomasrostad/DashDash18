@@ -10,6 +10,8 @@ nonisolated struct RoundDraft: Equatable, Sendable {
     var eventID: UUID
     var roundNo: Int
     var courseID: UUID?
+    /// Teen på en ekte bane (sql/029, `SlopeNoFeature`). nil = banens CR og slope gjelder.
+    var teeID: UUID? = nil
     var holeCount: Int
     /// 1, eller 10 for siste ni på en 18-hullsbane.
     var firstHole: Int
@@ -70,7 +72,7 @@ nonisolated struct RoundDraft: Equatable, Sendable {
         // sql/017). Mangler den likevel, avviser databasen lagringen (fremmednøkkelen til kvelden).
         return RoundDraft(
             roundID: round.id, isSaved: true, eventID: round.eventID ?? UUID(), roundNo: round.roundNo,
-            courseID: round.courseID,
+            courseID: round.courseID, teeID: round.teeID,
             holeCount: round.holeCount, firstHole: round.firstHole, teeTime: round.teeTime,
             participants: participants, participantSource: source, bays: BayPlan(seats: seats),
             formID: round.format, teams: teams,
@@ -278,6 +280,9 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
     let kpHoleIndex: Int
     /// `simulator` / `course`, eller nil når `VenueFeature` er av.
     let venue: String?
+    /// Teen (sql/029). Sendes bare når `SlopeNoFeature` er på; da også som null, så den tømmes.
+    let teeID: UUID?
+    let includesTee: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -297,9 +302,11 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         case kpEnabled = "kp_enabled"
         case kpHoleIndex = "kp_hole_index"
         case venue
+        case teeID = "tee_id"
     }
 
-    init(draft: RoundDraft, clubID: UUID, course: Course?, includeVenue: Bool = VenueFeature.isEnabled) {
+    init(draft: RoundDraft, clubID: UUID, course: Course?, includeVenue: Bool = VenueFeature.isEnabled,
+         includeTee: Bool = SlopeNoFeature.isEnabled) {
         id = draft.roundID
         self.clubID = clubID
         eventID = draft.eventID
@@ -319,6 +326,8 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         kpEnabled = draft.kpEnabled
         kpHoleIndex = draft.kpHole(course: course)
         venue = includeVenue ? draft.venue.rawValue : nil
+        includesTee = includeTee
+        teeID = includeTee ? draft.teeID : nil
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -341,6 +350,8 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         try c.encode(kpHoleIndex, forKey: .kpHoleIndex)
         // Kolonnen finnes først etter sql/015. Uten flagget sendes den ikke.
         try c.encodeIfPresent(venue, forKey: .venue)
+        // Kolonnen finnes først etter sql/029. Uten flagget sendes den ikke.
+        if includesTee { try c.encode(teeID, forKey: .teeID) }
     }
 }
 
