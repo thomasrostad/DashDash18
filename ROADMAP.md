@@ -12,7 +12,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 |---|---|
 | **Nåværende fase** | Fase 12–17 bygget. På test er 011–024 kjørt (08.10). Slått på: alt unntatt onboarding uten klubb, Google-innlogging og kjøp, som venter på oppsett i App Store Connect og Google og på publisert personvern (`docs/gjoremal.md`). |
 | **Sist gjort** | 08.10: arrangørsiden gjennomgått mot beste praksis og omstrukturert (fase 11, `docs/arrangorsiden-vurdering.md`): Kveldene/Kvelden, én rundeliste, én oppsettsflyt, «Kom i gang», sesong lander på aktiv. Hjem-feed vurdert i `docs/hjem-feed.md`. Før det, 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
-| **Neste oppgave** | Fase 12–17 er bygget, og 019–027 er kjørt på test. `delete-account` er deployet. Gjenstår: oppsett i App Store Connect og Google (`docs/gjoremal.md` C), så `verify-purchase` med IAP-nøkkelen og flaggene for kjøp, Google og onboarding. Prøve arrangørflyten på telefon. Deretter byttet for gjengen (fase 9) og prod. |
+| **Neste oppgave** | Fase 12–17 er bygget, og 019–027 og 029 er kjørt på test. `delete-account` er deployet. Gjenstår: oppsett i App Store Connect og Google (`docs/gjoremal.md` C), så `verify-purchase` med IAP-nøkkelen og flaggene for kjøp, Google og onboarding. Prøve arrangørflyten på telefon. Deretter byttet for gjengen (fase 9) og prod. |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. B15: slope.no dekker CR/slope for nordiske baner (fase 20); GolfAPI.io trengs bare for par og indeks per hull. Google-innlogging. |
 
 ---
@@ -382,7 +382,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 
 **08.10.2026 (Thomas):** slope.no har et åpent, gratis API for nordiske baner (`/wp-json/golfhs/v1/meta` og `/export`). Eieren ber bare om kreditering og lenke til slope.no i appen. Dataene sjekkes hver natt mot ~2 500 kilder og kontrolleres ukentlig. 1 306 baner (161 i Norge) med tees: navn, kjønn, course rating, slope og par. Ingen data per hull: par og indeks per hull legges fortsatt inn fra scorekortet.
 
-- [ ] Skjema for tees per bane, CR/slope på runden og synk-status (SQL 029, til godkjenning).
+- [x] Skjema for tees per bane, CR/slope på runden og synk-status (SQL 029, kjørt på test 08.10, kontrollen 12 av 12).
 - [ ] Synk som Edge Function `slope-sync`: meta først, eksport bare ved ny `data_version`, én gang i døgnet. Lokale rettelser overlever.
 - [ ] Appen: søk i slope.no-banene for ekte bane, tee-valg i runde-oppsett og løse runder, CR/slope fra teen i handicap.
 - [ ] Kreditering: «Slope og course rating fra slope.no» med lenke der tee-data vises, og i Om appen.
