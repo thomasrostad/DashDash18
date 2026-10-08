@@ -212,6 +212,10 @@ nonisolated enum RoundSetupIssue: Equatable, Sendable {
 }
 
 nonisolated enum RoundSetupCheck {
+    /// Færrest spillere en runde kan startes med. Ingen regelverdi: det er det minste en
+    /// konkurranse trenger, og det samme som «Kom i gang» på arrangørsiden krever av troppen.
+    static let minimumPlayers = 2
+
     /// Det som stopper en lagring. En kladd trenger en bane som er klar og en form som går an;
     /// start krever i tillegg minst to spillere, markør i hver bås, lag som går opp og gyldige matcher.
     static func issues(_ draft: RoundDraft, course: CourseListItem?, rules: Ruleset, roster: [ClubMemberRow],
@@ -232,7 +236,7 @@ nonisolated enum RoundSetupCheck {
 
         guard forStart else { return issues }
 
-        if draft.participants.count < 2 { issues.append(.tooFewPlayers) }
+        if draft.participants.count < minimumPlayers { issues.append(.tooFewPlayers) }
         let included = Set(draft.participants)
         var bays = draft.bays
         bays.keepOnly(included)

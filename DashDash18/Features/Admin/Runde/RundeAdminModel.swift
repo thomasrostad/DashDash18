@@ -478,9 +478,18 @@ final class RundeAdminModel {
 
 #if DEBUG
 extension RundeAdminModel {
-    /// Oppdiktet kveld for skjermprøvene (`-DDDesignScreen hurtigstart` og `arrangor`). Uten nett:
-    /// en feilet henting beholder det som står.
-    static func sample() -> RundeAdminModel {
+    /// Hvilken tilstand skjermprøven viser.
+    enum SampleVariant {
+        /// Alt er på plass, og kvelden i dag er ikke satt opp (`hurtigstart`, `arrangor`, `runder`).
+        case tonight
+        /// Kvelden i dag med én runde som går og én kladd (`kvelden`, `kveldene`).
+        case liveEvening
+        /// Ny klubb der banene og neste kveld mangler (`arrangorstart`).
+        case gettingStarted
+    }
+
+    /// Oppdiktet kveld for skjermprøvene. Uten nett: en feilet henting beholder det som står.
+    static func sample(_ variant: SampleVariant = .tonight) -> RundeAdminModel {
         let club = UUID()
         let client = SupabaseClient(supabaseURL: URL(string: "https://forhandsvisning.supabase.co")!,
                                     supabaseKey: "sb_publishable_forhandsvisning")
@@ -491,16 +500,28 @@ extension RundeAdminModel {
             ClubMemberRow(id: UUID(), clubID: club, userID: UUID(), displayName: $0, handicapIndex: 12, seedGroup: nil,
                           isOrganizer: false, isTreasurer: false, status: .active, avatarPath: nil)
         }
-        let earlier = EventRow(id: UUID(), clubID: club, seasonID: nil, eventDate: "2026-09-24",
-                               startTime: "18:00:00", venue: "Golfstudio Bryn", note: nil)
-        let tonight = EventRow(id: UUID(), clubID: club, seasonID: nil, eventDate: EveningDates.today(),
-                               startTime: "18:00:00", venue: "Golfstudio Bryn", note: nil)
-        model.events = [earlier, tonight]
+        let season = SeasonRow(id: UUID(), clubID: club, name: "Høst 2026", status: .active, rules: .golfgutu)
+        model.seasons = [season]
+        let today = EveningDates.today()
+        func later(_ days: Int) -> String {
+            let date = EveningDates.date(from: today).flatMap { Calendar.current.date(byAdding: .day, value: days, to: $0) }
+            return date.map(EveningDates.dateString) ?? today
+        }
+        func event(_ date: String) -> EventRow {
+            EventRow(id: UUID(), clubID: club, seasonID: season.id, eventDate: date, startTime: "18:00:00",
+                     venue: "Golfstudio Bryn", note: nil)
+        }
+        let earlier = event(later(-14))
+        let tonight = event(today)
+        let upcoming = [event(later(7)), event(later(14))]
+        model.events = variant == .gettingStarted ? [earlier] : [earlier, tonight] + upcoming
         model.allEvents = model.events
-        model.selectedEventID = tonight.id
-        model.signups = model.members.prefix(12).map {
-            SignupRow(eventID: tonight.id, memberID: $0.id, clubID: club, status: .yes, comment: nil)
-        } + [SignupRow(eventID: tonight.id, memberID: model.members[12].id, clubID: club, status: .maybe, comment: nil)]
+        model.selectedEventID = variant == .gettingStarted ? nil : tonight.id
+        if variant != .gettingStarted {
+            model.signups = model.members.prefix(12).map {
+                SignupRow(eventID: tonight.id, memberID: $0.id, clubID: club, status: .yes, comment: nil)
+            } + [SignupRow(eventID: tonight.id, memberID: model.members[12].id, clubID: club, status: .maybe, comment: nil)]
+        }
         let courses = ["Pebble Beach", "St Andrews Old Course", "Valderrama"].map { name in
             let row = CourseRow(id: UUID(), clubID: club, name: name, externalName: nil, courseRating: 72,
                                 slopeRating: 128, inUse: true, confirmedBy: nil, confirmedAt: nil)
@@ -509,17 +530,28 @@ extension RundeAdminModel {
                 CourseHoleRecord(courseID: row.id, holeNumber: $0.offset + 1, par: $0.element,
                                  strokeIndex: ($0.offset * 7) % 18 + 1, lengthM: nil)
             }
-            return CourseListItem(course: row, holes: holes)
+            return CourseListItem(course: row, holes: variant == .gettingStarted ? [] : holes)
         }
         model.allCourses = courses
-        model.courses = courses
-        model.allRounds = [
-            RoundRow(id: UUID(), clubID: club, eventID: earlier.id, courseID: courses[0].id, roundNo: 1, name: nil,
-                     status: .locked, holeCount: 18, firstHole: 1, teeTime: "18:00:00", format: "stableford",
+        model.courses = courses.filter(\.isReady)
+        func round(_ no: Int, on event: EventRow, course: Int, status: RoundStatus) -> RoundRow {
+            RoundRow(id: UUID(), clubID: club, eventID: event.id, courseID: courses[course].id, roundNo: no, name: nil,
+                     status: status, holeCount: 18, firstHole: 1, teeTime: "18:00:00", format: "stableford",
                      handicapAllowance: 1, externalHandicap: false, weight: 1, ldEnabled: true, ldHoleIndex: 17,
                      kpEnabled: true, kpHoleIndex: 6, cutRule: nil, cutAfter: nil, parConfirmedBy: nil,
-                     parConfirmedAt: nil, startedAt: nil, lockedAt: nil),
-        ]
+                     parConfirmedAt: nil, startedAt: nil, lockedAt: nil)
+        }
+        model.allRounds = [round(1, on: earlier, course: 0, status: .locked)]
+        if variant == .liveEvening {
+            let live = round(1, on: tonight, course: 1, status: .active)
+            model.allRounds += [live, round(2, on: tonight, course: 2, status: .draft)]
+            model.activeRound = live
+            model.playersByRound[live.id] = model.members.prefix(12).enumerated().map { index, member in
+                RoundPlayerRow(roundID: live.id, memberID: member.id, clubID: club, handicapIndex: 12, seedGroup: nil,
+                               playingHandicap: 12, bayNo: index / 4 + 1, isMarker: index % 4 == 0, teamNo: nil)
+            }
+        }
+        model.rounds = model.allRounds.filter { $0.eventID == model.selectedEventID }
         model.seasonRounds = model.allRounds
         model.state = .loaded
         return model

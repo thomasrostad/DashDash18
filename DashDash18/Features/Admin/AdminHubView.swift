@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Arrangørsiden: «I kveld» øverst med neste kveld og én hovedknapp, og det som gjøres sjeldnere under
-/// (sesongen, klubben, push). Vises bare for arrangører.
+/// Arrangørsiden: «Kom i gang» når noe mangler (sesong, baner, tropp, neste kveld), så neste kveld
+/// med én hovedknapp, og det som gjøres sjeldnere under (sesongen, klubben, push). Overskriften sier
+/// «I kveld» bare når kvelden er i dag. Vises bare for arrangører.
 struct AdminHubView: View {
     @Environment(\.clubContext) private var context
 
@@ -15,9 +16,13 @@ struct AdminHubView: View {
 }
 
 #if DEBUG
-/// Arrangørsiden med en oppdiktet kveld (`-DDDesignScreen arrangor`).
+/// Arrangørsiden med en oppdiktet kveld (`-DDDesignScreen arrangor`, og `arrangorstart` for «Kom i gang»).
 struct AdminHubSample: View {
-    @State private var model = RundeAdminModel.sample()
+    @State private var model: RundeAdminModel
+
+    init(_ variant: RundeAdminModel.SampleVariant = .tonight) {
+        _model = State(initialValue: RundeAdminModel.sample(variant))
+    }
 
     var body: some View {
         AdminHubContent(model: model)
@@ -46,6 +51,9 @@ private struct AdminHubContent: View {
 
     var body: some View {
         DDList {
+            if model.state == .loaded, GettingStarted.isVisible(gettingStarted) {
+                gettingStartedSection
+            }
             tonightSection
             DDSection("Sesongen") {
                 NavigationLink { TerminlisteAdminView() } label: {
@@ -106,7 +114,48 @@ private struct AdminHubContent: View {
         }
     }
 
-    // MARK: I kveld
+    // MARK: Kom i gang
+
+    private var gettingStarted: [GettingStarted.Step] {
+        GettingStarted.steps(GettingStarted.input(
+            seasons: model.seasons, readyCourses: model.courses.count, activeMembers: model.members.count,
+            events: model.events, today: EveningDates.today()))
+    }
+
+    private var gettingStartedSection: some View {
+        let steps = gettingStarted
+        return Section {
+            ForEach(steps) { step in
+                if step.isDone {
+                    GettingStartedRow(step: step)
+                } else {
+                    NavigationLink { destination(for: step.item) } label: {
+                        GettingStartedRow(step: step)
+                    }
+                }
+            }
+        } header: {
+            DDHeader("Kom i gang · " + GettingStarted.progressText(steps))
+        } footer: {
+            DDFooter("Når alt er på plass, kan du sette opp runden. Lista forsvinner av seg selv.")
+        }
+    }
+
+    @ViewBuilder
+    private func destination(for item: GettingStarted.Item) -> some View {
+        switch item {
+        case .season: SesongAdminView()
+        case .courses: BanerAdminView()
+        case .roster: TroppAdminView()
+        case .evening: TerminlisteAdminView()
+        }
+    }
+
+    // MARK: Neste kveld
+
+    private var daysUntil: Int? {
+        model.selectedEvent.flatMap { EveningDates.daysBetween(EveningDates.today(), $0.eventDate) }
+    }
 
     private var action: TonightAction {
         Tonight.action(event: model.selectedEvent, rounds: model.rounds, activeRound: model.activeRound,
@@ -143,7 +192,7 @@ private struct AdminHubContent: View {
                             systemImage: "flag.2.crossed")
             }
         } header: {
-            DDHeader("I kveld")
+            DDHeader(Tonight.sectionTitle(daysUntil: daysUntil))
         }
     }
 
@@ -253,6 +302,29 @@ private struct TonightCard: View {
     private func timeAndPlace(_ event: EventRow) -> String? {
         let parts = [EveningDates.timeText(event.startTime).map { "Kl. \($0)" }, event.venue].compactMap { $0 }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+}
+
+/// Et punkt i «Kom i gang»: ✓ når det er i orden, ellers en lenke dit det fikses.
+private struct GettingStartedRow: View {
+    let step: GettingStarted.Step
+
+    var body: some View {
+        Label {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(step.item.title)
+                    .foregroundStyle(Color.ddInk)
+                Text(step.detail)
+                    .font(.ddCaption)
+                    .foregroundStyle(Color.ddInkSecondary)
+            }
+        } icon: {
+            Image(systemName: step.isDone ? "checkmark.circle.fill" : "circle")
+                .foregroundStyle(step.isDone ? Color.ddLimeInk : Color.ddInkSecondary)
+        }
+        .labelStyle(DDIconLabelStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(step.isDone ? "I orden" : "Mangler")
     }
 }
 

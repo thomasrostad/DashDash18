@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
 /// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `profil`, `sesong`,
-/// `varsler`, `trad`, `hurtigstart`, `arrangor`, `runder`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
+/// `varsler`, `trad`, `hurtigstart`, `arrangor`, `arrangorstart`, `runder`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
 /// `statoversikt`, `stathistorikk`, `statrekorder`, `stattom`, `statforing`,
 /// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
 /// og spill på runden: `spill`, `spillnytt`, `spillresultat`,
@@ -14,6 +14,8 @@ import SwiftUI
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
+        // Arrangørsiden: «Kom i gang» (fase 11).
+        case arrangorstart
         // Arrangør: banene og sesong og regler (fase 11).
         case baner, nybane, regler, reglerendre, nysesong
         // Statistikk (fase 16).
@@ -37,8 +39,8 @@ struct DesignScreenSamples: View {
                 RundeQuickStartView(model: model, draft: model.newDraft()!, onDone: { _ in })
             }
             .tint(Color.ddForestInk)
-        case .arrangor:
-            NavigationStack { AdminHubSample() }
+        case .arrangor, .arrangorstart:
+            NavigationStack { AdminHubSample(screen == .arrangorstart ? .gettingStarted : .tonight) }
                 .tint(Color.ddForestInk)
         case .runder:
             NavigationStack { RundeAdminSample() }

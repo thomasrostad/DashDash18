@@ -160,9 +160,9 @@ nonisolated enum QuickStart {
     }
 }
 
-// MARK: - Arrangørsiden: «I kveld»
+// MARK: - Arrangørsiden: neste kveld
 
-/// Hovedknappen under «I kveld».
+/// Hovedknappen under neste kveld på arrangørsiden.
 nonisolated enum TonightAction: Equatable, Sendable {
     /// Ingen kveld i terminlista.
     case noEvening
@@ -184,6 +184,11 @@ nonisolated enum TonightAction: Equatable, Sendable {
 }
 
 nonisolated enum Tonight {
+    /// Overskriften over kortet: «I kveld» bare når kvelden er i dag, ellers «Neste kveld».
+    static func sectionTitle(daysUntil: Int?) -> String {
+        daysUntil == 0 ? "I kveld" : "Neste kveld"
+    }
+
     /// Hva arrangøren trolig vil gjøre nå. En runde som går, vinner (også på en annen kveld); så en
     /// kladd på kvelden (den siste); ellers en ny runde.
     static func action(event: EventRow?, rounds: [RoundRow], activeRound: RoundRow?, activeComplete: Bool) -> TonightAction {
