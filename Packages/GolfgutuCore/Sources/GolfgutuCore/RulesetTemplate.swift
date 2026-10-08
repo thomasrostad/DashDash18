@@ -81,25 +81,49 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
 
     /// Oppsettet regelsettet er helt likt, eller `nil` når det er tilpasset. Cup og morroturnering har
     /// samme regelsett; gi `among` etter turneringstypen for å skille dem (f.eks. `[.fun]`).
-    public static func matching(_ rules: Ruleset, among candidates: [RulesetTemplate] = allCases) -> RulesetTemplate? {
-        candidates.first { $0.rules == rules }
+    public static func matching(_ rules: Ruleset, among candidates: [RulesetTemplate] = allCases,
+                                asLeague: Bool = false) -> RulesetTemplate? {
+        candidates.first { (asLeague ? $0.leagueRules : $0.rules) == rules }
     }
 
     /// Oppsettet som ligger nærmest: færrest felt endret (`differences`). Likt: det første i `among`.
     /// `nil` bare når `among` er tom.
-    public static func closest(to rules: Ruleset, among candidates: [RulesetTemplate] = allCases) -> RulesetTemplate? {
+    public static func closest(to rules: Ruleset, among candidates: [RulesetTemplate] = allCases,
+                               asLeague: Bool = false) -> RulesetTemplate? {
         var best: (template: RulesetTemplate, count: Int)?
         for t in candidates {
-            let n = t.differences(in: rules).count
+            let n = t.differences(in: rules, asLeague: asLeague).count
             if best == nil || n < best!.count { best = (t, n) }
         }
         return best?.template
     }
 
     /// Feltene i `rules` som er endret fra oppsettet (`Ruleset.changedFields(from:)`).
-    public func differences(in rules: Ruleset) -> [String] {
-        rules.changedFields(from: self.rules)
+    public func differences(in rules: Ruleset, asLeague: Bool = false) -> [String] {
+        rules.changedFields(from: asLeague ? leagueRules : self.rules)
     }
+
+    /// Regelsettet når oppsettet lages som liga (en serie uten klubb, `kind = league`). For
+    /// stableford-serien regner ligaen tabellen (`League`), så ligareglene er serien sin: stableford-poeng
+    /// og de beste rundene. De andre oppsettene lages aldri som liga og gir `rules`.
+    public var leagueRules: Ruleset {
+        guard self == .stablefordSeries else { return rules }
+        var r = rules
+        var competition = CompetitionRules.standard
+        competition.league = .stablefordSeries
+        r.competition = competition
+        return r
+    }
+}
+
+extension LeagueRules {
+    /// Stableford-serien som liga: stableford-poeng uten deltakerpoeng, og like mange tellende runder
+    /// som serien har tellende kvelder.
+    public static let stablefordSeries: LeagueRules = {
+        var league = LeagueRules.fun
+        league.bestRounds = RulesetTemplate.stablefordSeries.rules.table.counting.best
+        return league
+    }()
 }
 
 extension Ruleset {

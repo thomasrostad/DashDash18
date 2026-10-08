@@ -18,7 +18,7 @@ nonisolated enum RulesetSummary {
 
     /// Oppsettet regelsettet ligger nærmest, blant kandidatene for typen.
     static func template(for rules: Ruleset, kind: CompetitionKind = .season) -> RulesetTemplate {
-        RulesetTemplate.closest(to: rules, among: candidates(for: kind, rules: rules)) ?? .matchSeries
+        RulesetTemplate.closest(to: rules, among: candidates(for: kind, rules: rules), asLeague: kind == .league) ?? .matchSeries
     }
 
     /// Er regelsettet likt oppsettet det ligger nærmest (ingen valg endret)?

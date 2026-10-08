@@ -125,4 +125,27 @@ struct RulesetTemplateTests {
         r.table.pointsSource = .matches
         #expect(r.validate().isEmpty)
     }
+
+    @Test func privatStablefordSerieKjennesIgjenSomLiga() {
+        // En serie uten klubb lagres som liga, med ligareglene under `competition`.
+        let league = RulesetTemplate.stablefordSeries.leagueRules
+        #expect(league.competition?.league == .stablefordSeries)
+        #expect(LeagueRules.stablefordSeries.scoring == .stableford)
+        #expect(LeagueRules.stablefordSeries.participationPoints == 0)
+        #expect(LeagueRules.stablefordSeries.bestRounds == 5)
+        #expect(league.validate().isEmpty)
+
+        #expect(RulesetTemplate.matching(league, among: [.stablefordSeries, .matchSeries], asLeague: true) == .stablefordSeries)
+        #expect(RulesetTemplate.matching(league, among: [.stablefordSeries, .matchSeries]) == nil)
+        #expect(RulesetTemplate.stablefordSeries.differences(in: league, asLeague: true).isEmpty)
+        #expect(RulesetTemplate.closest(to: league, among: [.matchSeries, .stablefordSeries], asLeague: true) == .stablefordSeries)
+
+        var tuned = league
+        tuned.competition?.league.bestRounds = 3
+        #expect(RulesetTemplate.matching(tuned, among: [.stablefordSeries], asLeague: true) == nil)
+        #expect(RulesetTemplate.stablefordSeries.differences(in: tuned, asLeague: true) == ["competition.league.bestRounds"])
+
+        // De andre oppsettene lages aldri som liga.
+        #expect(RulesetTemplate.matchSeries.leagueRules == RulesetTemplate.matchSeries.rules)
+    }
 }

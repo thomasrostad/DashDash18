@@ -74,11 +74,7 @@ nonisolated enum TournamentSetup {
 
     /// Ligareglene for en privat stableford-serie: stablefordpoengene teller rett fram, uten
     /// deltakerpoeng, og de beste rundene teller (like mange som kveldene i stableford-serien).
-    static var privateSeriesLeague: LeagueRules {
-        var league = LeagueRules.fun
-        league.bestRounds = RulesetTemplate.stablefordSeries.rules.table.counting.best
-        return league
-    }
+    static var privateSeriesLeague: LeagueRules { .stablefordSeries }
 
     // MARK: Navn
 
