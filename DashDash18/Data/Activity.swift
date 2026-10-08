@@ -120,6 +120,11 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
     var against: UUID?
     var side: String?
     var resolution: String?
+    /// `table_changed` (fase 19): konkurransen, navnet slik det var (push har ikke konkurransene),
+    /// og tabellen etter runden: topp 3 og alle som flyttet seg (`TableChange`).
+    var competition: UUID?
+    var competitionName: String?
+    var table: [ActivityTableSpot]?
 
     init(member: UUID? = nil, members: [UUID]? = nil, hole: Int? = nil, holeIndex: Int? = nil, name: String? = nil,
          strokes: Int? = nil, par: Int? = nil, afterHole: Int? = nil, leaders: [UUID]? = nil, points: Int? = nil,
@@ -128,7 +133,8 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
          courseName: String? = nil, holeCount: Int? = nil, bays: Int? = nil, ldHole: Int? = nil, kpHole: Int? = nil,
          text: String? = nil, from: Int? = nil, to: Int? = nil, coming: Int? = nil, unsure: Int? = nil,
          correct: Int? = nil, possible: Int? = nil, question: String? = nil, against: UUID? = nil,
-         side: String? = nil, resolution: String? = nil) {
+         side: String? = nil, resolution: String? = nil, competition: UUID? = nil, competitionName: String? = nil,
+         table: [ActivityTableSpot]? = nil) {
         self.member = member
         self.members = members
         self.hole = hole
@@ -163,6 +169,9 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         self.against = against
         self.side = side
         self.resolution = resolution
+        self.competition = competition
+        self.competitionName = competitionName
+        self.table = table
     }
 
     enum CodingKeys: String, CodingKey {
@@ -182,6 +191,9 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         case kpHole = "kp_hole"
         case text, from, to, coming, unsure, correct, possible
         case question, against, side, resolution
+        case competition
+        case competitionName = "competition_name"
+        case table
     }
 
     /// Tåler felt med feil type (en annen klient, en eldre versjon): feltet blir nil,
@@ -223,7 +235,30 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         against = get(.against)
         side = get(.side)
         resolution = get(.resolution)
+        competition = get(.competition)
+        competitionName = get(.competitionName)
+        table = get(.table)
     }
+}
+
+/// Én plass i tabellen etter en runde (`table_changed`). `from` er plassen før runden, nil når
+/// spilleren ikke sto i tabellen (eller tabellen var tom før første runde).
+nonisolated struct ActivityTableSpot: Codable, Equatable, Sendable {
+    var member: UUID
+    var place: Int
+    var from: Int?
+    /// Poengene etter runden, slik tabellen viser dem.
+    var points: Double?
+
+    init(member: UUID, place: Int, from: Int? = nil, points: Double? = nil) {
+        self.member = member
+        self.place = place
+        self.from = from
+        self.points = points
+    }
+
+    /// Plasser opp (positivt) eller ned (negativt). Nil når det ikke fantes en plass før.
+    var move: Int? { from.map { $0 - place } }
 }
 
 /// En rad i `activity`. Append-only: ingen oppdatering eller sletting fra appen.
@@ -375,13 +410,16 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     case betChallenge(question: String, against: UUID, side: String?, points: Int?)
     /// Avgjort av arrangøren eller av appen (`resolve_bet`, `settle_bet`). `void` = annullert.
     case betResolved(question: String, resolution: String)
+    /// Plassbytte i en konkurranses tabell etter at en runde er låst (fase 19). `roundNo` er antall
+    /// tellende runder i konkurransen etter runden. Kategori `round`: den kommer av at runden ble låst.
+    case tableChanged(competition: UUID, competitionName: String, roundNo: Int?, table: [ActivityTableSpot])
     case unknown(kind: String)
 
     /// Alle kjente nøkler, for tester og dokumentasjon.
     static let knownKinds = [
         "round_started", "round_locked", "round_deleted", "big_score", "lead_changed", "side_prize",
         "score_corrected", "signup", "nudge", "reminder", "announcement", "committee_drawn",
-        "member_joined", "tips_king", "bet_created", "bet_challenge", "bet_resolved",
+        "member_joined", "tips_king", "bet_created", "bet_challenge", "bet_resolved", "table_changed",
     ]
 
     var kind: String {
@@ -403,13 +441,14 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .betCreated: "bet_created"
         case .betChallenge: "bet_challenge"
         case .betResolved: "bet_resolved"
+        case .tableChanged: "table_changed"
         case .unknown(let kind): kind
         }
     }
 
     var category: ActivityCategory {
         switch self {
-        case .roundStarted, .roundLocked, .roundDeleted: .round
+        case .roundStarted, .roundLocked, .roundDeleted, .tableChanged: .round
         case .bigScore: .score
         case .leadChanged: .lead
         case .sidePrize: .sidePrize
@@ -462,6 +501,8 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             ActivityData(points: points, question: question, against: against, side: side)
         case let .betResolved(question, resolution):
             ActivityData(question: question, resolution: resolution)
+        case let .tableChanged(competition, competitionName, roundNo, table):
+            ActivityData(roundNo: roundNo, competition: competition, competitionName: competitionName, table: table)
         case .unknown:
             ActivityData()
         }
@@ -525,6 +566,10 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case "bet_resolved":
             guard let question = d.question, let resolution = d.resolution else { self = .unknown(kind: kind); return }
             self = .betResolved(question: question, resolution: resolution)
+        case "table_changed":
+            guard let competition = d.competition, let name = d.competitionName, let table = d.table,
+                  !table.isEmpty else { self = .unknown(kind: kind); return }
+            self = .tableChanged(competition: competition, competitionName: name, roundNo: d.roundNo, table: table)
         default:
             self = .unknown(kind: kind)
         }
@@ -708,6 +753,11 @@ nonisolated enum ActivityText {
             default:
                 return ActivityDisplay(symbol: "xmark.circle", emoji: "↩️", text: "Veddemål annullert: «\(question)»")
             }
+
+        case let .tableChanged(_, competitionName, roundNo, table):
+            let text = TableChangeText.headline(table: table, competitionName: competitionName, roundNo: roundNo,
+                                                name: { who($0) })
+            return ActivityDisplay(symbol: "list.number", emoji: "📊", text: text)
 
         case .unknown:
             return ActivityDisplay(symbol: "clock", emoji: "🔔", text: "Ny hendelse i klubben")

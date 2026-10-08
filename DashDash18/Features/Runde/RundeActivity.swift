@@ -33,6 +33,8 @@ nonisolated enum ActivityOnce {
             return "big_score:\(round):\(member.uuidString):\(spot)"
         case let .leadChanged(afterHole, _, _, _):
             return "lead_changed:\(round):\(afterHole)"
+        case let .tableChanged(competition, _, _, _):
+            return "table_changed:\(round):\(competition.uuidString)"
         default:
             return nil
         }

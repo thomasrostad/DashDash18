@@ -188,6 +188,7 @@ export interface BlockRow {
  *   big_score, side_prize, signup, member_joined: data.member (spilleren det
  *                  handler om, som ikke alltid er den som førte)
  *   lead_changed:  lederne; tips_king: tippekongene
+ *   table_changed: den linja handler om (ny leder eller den som klatret mest)
  * Ikke med: de som bare nevnes uten å ha gjort noe (den som ble passert på
  * sidepremien, den som fikk scoren rettet, sosialkomiteen som ble trukket,
  * mottakerlista på purringen).
@@ -217,6 +218,11 @@ export function pushOriginators(payload: JobPayload): string[] {
     case "tips_king":
       for (const id of ids(d.members) ?? []) out.add(id);
       break;
+    case "table_changed": {
+      const subject = tableSubject(tableSpots(d.table) ?? []);
+      if (subject) out.add(subject.spot.member);
+      break;
+    }
   }
   return [...out];
 }
@@ -321,8 +327,12 @@ function planActivity(payload: JobPayload, now: Date): PushPlan {
   const data: Record<string, string> = { type: "activity", activity_id: activity.id, kind: activity.kind };
   if (activity.event_id) data.event_id = activity.event_id;
   if (activity.round_id) data.round_id = activity.round_id;
+  // Et nyere varsel erstatter det forrige: ledelsen i runden, og tabellen i konkurransen.
+  const competition = str(activity.data?.competition);
   const collapseId = activity.kind === "lead_changed" && activity.round_id
     ? `lead-${activity.round_id}`.slice(0, 64)
+    : activity.kind === "table_changed" && competition
+    ? `table-${competition}`.slice(0, 64)
     : undefined;
 
   return {
@@ -446,6 +456,69 @@ const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : u
 const ids = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : undefined);
 
 const UNKNOWN: ActivityDisplay = { emoji: "🔔", text: "Ny hendelse i klubben" };
+
+// ---------------------------------------------------------------------------
+// Plassbytte i tabellen (table_changed, fase 19). Samme regler og ordlyd som
+// TableChangeText i appen (DashDash18/Features/Hjem/TableChange.swift).
+// ---------------------------------------------------------------------------
+
+/** Én plass i tabellen etter runden. from mangler når det ikke fantes en plass før. */
+export interface TableSpot {
+  member: string;
+  place: number;
+  from?: number;
+  points?: number;
+}
+
+/** data.table. Én rar plass gjør hele lista ugyldig, som i appen. */
+export function tableSpots(v: unknown): TableSpot[] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  const out: TableSpot[] = [];
+  for (const x of v) {
+    if (!x || typeof x !== "object") return undefined;
+    const o = x as Record<string, unknown>;
+    const member = str(o.member), place = num(o.place);
+    if (!member || place === undefined) return undefined;
+    out.push({ member, place, from: num(o.from), points: num(o.points) });
+  }
+  return out;
+}
+
+export type TableKind = "leads" | "took_lead" | "climbed";
+
+/**
+ * Den linja handler om: ny leder går foran (første runde: «leder»), ellers den
+ * som klatret flest plasser (likt: best plass). Undefined når ingen klatret.
+ */
+export function tableSubject(table: TableSpot[]): { spot: TableSpot; kind: TableKind } | undefined {
+  const leader = table.find((s) => s.place === 1);
+  if (leader) {
+    if (table.every((s) => s.from === undefined)) return { spot: leader, kind: "leads" };
+    if (leader.from !== 1) return { spot: leader, kind: "took_lead" };
+  }
+  let best: TableSpot | undefined;
+  for (const s of table) {
+    const move = s.from === undefined ? 0 : s.from - s.place;
+    if (move <= 0) continue;
+    const bestMove = best ? best.from! - best.place : 0;
+    if (!best || move > bestMove || (move === bestMove && s.place < best.place)) best = s;
+  }
+  return best ? { spot: best, kind: "climbed" } : undefined;
+}
+
+/** «Anders klatret til 3. plass i Jakkeracet etter runde 3» (TableChangeText.headline). */
+export function tableHeadline(table: TableSpot[], competitionName: string, roundNo: number | undefined,
+  name: NameLookup): string {
+  const tail = roundNo !== undefined && roundNo > 0 ? ` etter runde ${roundNo}` : "";
+  const subject = tableSubject(table);
+  if (!subject) return `Tabellen i ${competitionName} er oppdatert${tail}`;
+  const who = name(subject.spot.member);
+  switch (subject.kind) {
+    case "leads": return `${who} leder ${competitionName}${tail}`;
+    case "took_lead": return `${who} har tatt ledelsen i ${competitionName}${tail}`;
+    case "climbed": return `${who} klatret til ${subject.spot.place}. plass i ${competitionName}${tail}`;
+  }
+}
 
 /** Teksten for en linje. Mangler et felt hendelsen ikke klarer seg uten, blir den den nøytrale teksten. */
 export function activityDisplay(activity: ActivityPayload, name: NameLookup): ActivityDisplay {
@@ -598,6 +671,12 @@ export function activityDisplay(activity: ActivityPayload, name: NameLookup): Ac
         return { emoji: "🏆", text: `Veddemål avgjort: «${question}» → ${resolution === "yes" ? "JA" : "NEI"}` };
       }
       return { emoji: "↩️", text: `Veddemål annullert: «${question}»` };
+    }
+    case "table_changed": {
+      const competition = str(d.competition), competitionName = str(d.competition_name);
+      const table = tableSpots(d.table);
+      if (!competition || !competitionName || !table?.length) return UNKNOWN;
+      return { emoji: "📊", text: tableHeadline(table, competitionName, num(d.round_no), name) };
     }
     default:
       return UNKNOWN;
