@@ -3,8 +3,7 @@ import Foundation
 // Push (fase 8, `sql/010_push.sql`): rene typer uten UIKit og nettverk, så de kan testes
 // isolert. Tjenesten som snakker med iOS og Supabase ligger i `PushRegistrar`.
 
-/// Bryteren for hele push-delen. **Av** til `sql/010_push.sql` er godkjent og kjørt på test,
-/// Push Notifications er lagt til i Xcode og `push-send` er deployet (docs/push-oppsett.md).
+/// Bryteren for hele push-delen (`sql/010_push.sql` og `push-send`, docs/push-oppsett.md).
 /// Når den er av, spør appen ikke om varseltillatelse, registrerer seg ikke hos APNs, kaller
 /// ingen push-RPC-er og viser ikke innstillingene under Deg.
 nonisolated enum PushFeature {
@@ -97,11 +96,15 @@ nonisolated enum PushCategories {
     /// Nøkkelen for tråden i `clubs.push_disabled_categories`.
     static let threadKey = "thread"
 
-    /// Det innstillingene under Deg viser, i fast rekkefølge: de ROADMAP nevner først.
-    /// Veddemål (`bet`) venter til fase 10.
-    static let shownToPlayer: [ActivityCategory] = [
-        .score, .lead, .round, .reminder, .nudge, .sidePrize, .tips, .signup, .social, .setup, .club,
-    ]
+    /// Det innstillingene under Deg (og arrangørens «Hva blir push») viser, i fast rekkefølge:
+    /// de ROADMAP nevner først. Veddemål (`bet`) er med når veddemål er på (`BetsFeature`).
+    static let shownToPlayer: [ActivityCategory] = shown(bets: BetsFeature.isEnabled)
+
+    static func shown(bets: Bool) -> [ActivityCategory] {
+        [.score, .lead, .round, .reminder, .nudge, .sidePrize, .tips]
+            + (bets ? [.bet] : [])
+            + [.signup, .social, .setup, .club]
+    }
 
     /// Undertekst i innstillingene (PWA: `VARSEL_KATEGORIER.under`).
     static func subtitle(_ category: ActivityCategory) -> String {
@@ -111,7 +114,7 @@ nonisolated enum PushCategories {
         case .sidePrize: "Nærmest pinnen og longest drive"
         case .round: "Ny runde, runde låst eller slettet"
         case .setup: "Rettede scorer"
-        case .bet: "Veddemål"
+        case .bet: "Nye veddemål, utfordringer og oppgjør"
         case .signup: "Når noen melder seg på eller av"
         case .social: "Trekning av sosialkomiteen"
         case .club: "Nye spillere i klubben"

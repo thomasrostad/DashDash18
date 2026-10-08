@@ -8,7 +8,9 @@ import Testing
 struct ClubPushPlanTests {
     @Test func bryterneErKlubbkategorierPlussTraaden() {
         let keys = ClubPushPlan.toggles.map(\.key)
-        #expect(keys == ["score", "lead", "round", "reminder", "side_prize", "tips", "signup", "social", "setup", "club", "thread"])
+        let bet = BetsFeature.isEnabled ? ["bet"] : []
+        #expect(keys == ["score", "lead", "round", "reminder", "side_prize", "tips"] + bet
+                + ["signup", "social", "setup", "club", "thread"])
         // Alle må godtas av push_club_categories() i 010.
         let allowed = Set(PushCategories.clubToggleable.map(\.rawValue) + [PushCategories.threadKey])
         #expect(Set(keys).isSubset(of: allowed))
