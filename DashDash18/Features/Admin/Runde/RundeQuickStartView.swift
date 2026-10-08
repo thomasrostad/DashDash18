@@ -1,10 +1,10 @@
 import GolfgutuCore
 import SwiftUI
 
-/// «Ny runde» og «Rediger kladd»: én skjerm med sted, bane, start, tid og spillere, ferdig utfylt fra
-/// forrige runde i sesongen (ellers regelsettet) og med gruppene fordelt fra de påmeldte. Alt annet
-/// ligger under «Flere valg». Pushes i arrangørens navigasjon; «Spillere og båser» og «Flere valg» er
-/// vanlige undernivåer. Tilbake spør før ulagrede endringer forkastes.
+/// «Ny runde» og «Rediger kladd»: én rolig bekreftelse. Øverst står forslaget som rader (bane, start,
+/// spillere), ferdig utfylt fra forrige runde i sesongen (ellers regelsettet) og med gruppene fordelt fra
+/// de påmeldte. Hver rad åpner et vanlig undernivå; alt annet ligger under «Flere valg». Tilbake spør før
+/// ulagrede endringer forkastes.
 struct RundeQuickStartView: View {
     let model: RundeAdminModel
     @State var draft: RoundDraft
@@ -14,9 +14,10 @@ struct RundeQuickStartView: View {
     @State private var bayCount = 1
     @State private var isBusy = false
     @State private var error: String?
+    @State private var showsCourse = false
+    @State private var showsStart = false
     @State private var showsPlayers = false
     @State private var showsMore = false
-    @State private var scrollTarget: String?
     /// Kladden slik den så ut da skjermen åpnet (etter forslagene), for å se om noe er endret.
     @State private var original: RoundDraft?
     /// «Teller også i …» slik det var da valget var hentet.
@@ -27,23 +28,16 @@ struct RundeQuickStartView: View {
     private var rules: Ruleset { model.rules }
     private var term: GroupTerm { draft.groupTerm }
     private var selectedCourse: CourseListItem? { model.course(draft.courseID) }
+    private var showsVenue: Bool { RoundConfirm.showsVenueChoice(model.courses) }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            DDForm {
-                venueSection
-                courseSection
-                playersSection
-                if let links {
-                    CountsAlsoInSection(model: links, candidates: links.candidates(players: linkPlayers))
-                }
-                setupSection
+        DDForm {
+            summarySection
+            if let links {
+                // Skjules av seg selv når det ikke finnes noe å koble til.
+                CountsAlsoInSection(model: links, candidates: links.candidates(players: linkPlayers))
             }
-            .onChange(of: scrollTarget) { _, target in
-                guard let target else { return }
-                withAnimation { proxy.scrollTo(target, anchor: .top) }
-                scrollTarget = nil
-            }
+            moreSection
         }
         // Klokka er Oslo-tid (som databasen), også når telefonen står i en annen tidssone.
         .environment(\.timeZone, EveningDates.osloTimeZone)
@@ -53,6 +47,19 @@ struct RundeQuickStartView: View {
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) { bottomPanel }
         .discardChangesGuard(hasChanges: hasChanges && !isBusy)
+        .navigationDestination(isPresented: $showsCourse) {
+            RundeCourseStep(model: model, draft: $draft, showsVenue: showsVenue)
+                .navigationTitle("Bane")
+                .ddNavigationChrome()
+                .navigationBarTitleDisplayMode(.inline)
+        }
+        .navigationDestination(isPresented: $showsStart) {
+            RundeStartStep(model: model, draft: $draft)
+                .environment(\.timeZone, EveningDates.osloTimeZone)
+                .navigationTitle("Start")
+                .ddNavigationChrome()
+                .navigationBarTitleDisplayMode(.inline)
+        }
         .navigationDestination(isPresented: $showsPlayers) {
             RundeBaysStep(model: model, draft: $draft, bayCount: $bayCount)
                 .navigationTitle("Spillere og \(term.plural)")
@@ -68,6 +75,10 @@ struct RundeQuickStartView: View {
         .onAppear {
             draft.prepareSetup(rules: rules, roster: model.members)
             bayCount = max(1, draft.bays.bayCount)
+            // Uten valg mellom simulator og ekte bane følger stedet banen (bare i en ny runde).
+            if original == nil, !draft.isSaved, !showsVenue, let course = selectedCourse {
+                draft.setVenue(RoundConfirm.venue(for: course), rules: rules)
+            }
             // onAppear kommer også når man går tilbake fra et undernivå; utgangspunktet settes én gang.
             if original == nil { original = draft }
             if originalLinks == nil, let links, links.isLoaded { originalLinks = links.selected }
@@ -93,147 +104,82 @@ struct RundeQuickStartView: View {
         return false
     }
 
-    // MARK: Hvor
+    // MARK: Forslaget
 
-    private var venueSection: some View {
+    private var summarySection: some View {
         Section {
-            Picker("Hvor spiller dere?", selection: Binding(
-                get: { draft.venue },
-                set: { draft.setVenue($0, rules: rules) }
-            )) {
-                ForEach(Venue.allCases, id: \.self) { venue in
-                    Text(venue.title).tag(venue)
-                }
+            summaryRow("Bane", value: model.courses.isEmpty && selectedCourse == nil
+                       ? "Ingen klare baner"
+                       : RoundConfirm.courseValue(name: selectedCourse?.course.name, venue: draft.venue,
+                                                  showsVenue: showsVenue)) {
+                showsCourse = true
             }
-            .pickerStyle(.segmented)
-        } header: {
-            DDHeader("Hvor spiller dere?")
-        } footer: {
-            DDFooter(venueFooter)
-        }
-    }
-
-    private var venueFooter: String {
-        var text = draft.venue == .simulator
-            ? "Gruppene heter båser, og Trackman kan dele ut slagene."
-            : "Gruppene heter flighter. Dere fører brutto, og appen gir slagene."
-        if !VenueFeature.isEnabled && draft.venue == .course {
-            text += " Valget huskes ikke på runden ennå (venter på en databaseoppdatering)."
-        }
-        return text
-    }
-
-    // MARK: Bane, start og tid
-
-    private var courseSection: some View {
-        Section {
-            if model.courses.isEmpty {
-                Text("Ingen baner er klare. Legg inn parene under «Banene» først.")
-                    .foregroundStyle(Color.ddInkSecondary)
-            } else {
-                Picker("Bane", selection: Binding(
-                    get: { draft.courseID },
-                    set: { QuickStart.setCourse($0, on: &draft, courseHoles: model.course($0)?.holeCount) }
-                )) {
-                    if draft.courseID == nil {
-                        Text("Velg").tag(UUID?.none)
-                    }
-                    if let selected = selectedCourse, !selected.isReady {
-                        Text("\(selected.course.name) (ikke klar)").tag(Optional(selected.id))
-                    }
-                    ForEach(QuickStart.courses(model.courses, for: draft.venue, selected: draft.courseID)) { course in
-                        Text(course.course.name).tag(Optional(course.id))
-                    }
-                }
-                .id("course")
+            summaryRow("Start", value: RoundConfirm.startValue(firstHole: draft.firstHole, holeCount: draft.holeCount,
+                                                               teeTime: draft.teeTime)) {
+                showsStart = true
             }
-            if let selected = selectedCourse {
-                Text(courseNote(selected))
-                    .font(.ddCaption)
-                    .foregroundStyle(Color.ddInkSecondary)
-            }
-            Picker("Start", selection: Binding(
-                get: { QuickStartStart(firstHole: draft.firstHole, holeCount: draft.holeCount) },
-                set: { QuickStart.setStart($0, on: &draft, courseHoles: selectedCourse?.holeCount) }
-            )) {
-                ForEach(startOptions, id: \.self) { option in
-                    Text(option.title).tag(option)
-                }
-            }
-            if let tee = draft.teeTime {
-                DatePicker("Første tee", selection: Binding(
-                    get: { EveningDates.time(from: tee) ?? .now },
-                    set: { draft.teeTime = EveningDates.timeString(from: $0) }
-                ), displayedComponents: .hourAndMinute)
-            } else {
-                Button("Legg til første tee", systemImage: "clock") {
-                    draft.teeTime = model.selectedEvent?.startTime ?? "17:00:00"
-                }
+            summaryRow("Spillere", value: QuickStart.playersSummary(draft)) {
+                showsPlayers = true
             }
         } header: {
-            DDHeader("Bane og start")
-        } footer: {
             if let event = model.selectedEvent {
-                DDFooter("\(EveningDates.longText(event.eventDate, capitalized: true)). Runden blir «\(RoundListing.title(roundNo: draft.roundNo, courseName: selectedCourse?.course.name))».")
+                DDHeader(EveningDates.longText(event.eventDate, capitalized: true))
+            }
+        } footer: {
+            // Den eneste hjelpelinja: når ingen har svart, står hele troppen som med.
+            if draft.participantSource == .everyone {
+                DDFooter("Ingen har svart «Kommer» ennå, så hele troppen står som med.")
             }
         }
     }
 
-    /// Startvalgene, med det kladden har selv om det ikke lenger passer banen.
-    private var startOptions: [QuickStartStart] {
-        var options = QuickStart.startOptions(courseHoles: selectedCourse?.holeCount)
-        let current = QuickStartStart(firstHole: draft.firstHole, holeCount: draft.holeCount)
-        if !options.contains(current) { options.append(current) }
-        return options
-    }
-
-    private func courseNote(_ course: CourseListItem) -> String {
-        var text = course.summary
-        if draft.venue == .simulator, let external = course.differentExternalName {
-            text += ". Heter «\(external)» i simulatoren."
+    /// Én rad i forslaget: tittel, verdien og pil. Trykk åpner undernivået.
+    private func summaryRow(_ title: String, value: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(title)
+                    .foregroundStyle(Color.ddInk)
+                Spacer(minLength: 8)
+                Text(value)
+                    .foregroundStyle(Color.ddInkSecondary)
+                    .multilineTextAlignment(.trailing)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.ddInkSecondary)
+                    .accessibilityHidden(true)
+            }
+            .contentShape(.rect)
         }
-        return text
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Endre")
     }
 
-    // MARK: Spillere
+    // MARK: Flere valg
 
-    private var playersSection: some View {
+    private var moreSection: some View {
         Section {
             Button {
-                showsPlayers = true
+                showsMore = true
             } label: {
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(QuickStart.playersSummary(draft))
-                            .font(.ddBodyEmphasis)
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Flere valg")
                             .foregroundStyle(Color.ddInk)
-                        ForEach(QuickStart.groupLines(draft, name: model.memberName), id: \.self) { line in
-                            Text(line)
-                                .font(.ddCaption)
-                                .foregroundStyle(Color.ddInkSecondary)
-                        }
+                        Text(RoundConfirm.moreSummary(draft, course: selectedCourse?.coreCourse,
+                                                      showsMatches: RoundSetupOptions(draft: draft, rules: rules).showsMatches))
+                            .font(.ddCaption)
+                            .foregroundStyle(Color.ddInkSecondary)
                     }
                     Spacer()
-                    Text("Endre")
-                        .font(.ddCallout)
-                        .foregroundStyle(Color.ddForestInk)
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.ddInkSecondary)
+                        .accessibilityHidden(true)
                 }
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)
-            .id("players")
-        } header: {
-            DDHeader("Spillere")
-        } footer: {
-            DDFooter(playersFooter)
-        }
-    }
-
-    private var playersFooter: String {
-        switch draft.participantSource {
-        case .signups: "De som har svart «Kommer», fordelt med duellpartnerne i samme \(term.singular) og én markør i hver."
-        case .everyone: "Ingen har svart «Kommer» ennå, så hele troppen står som med. Trykk «Endre» og ta ut dem som ikke kommer."
-        case .saved: "Slik kladden er satt opp."
         }
     }
 
@@ -250,54 +196,6 @@ struct RundeQuickStartView: View {
     private func saveLinks() async -> String? {
         guard let links else { return nil }
         return await links.save(roundID: draft.roundID, players: linkPlayers)
-    }
-
-    // MARK: Oppsett
-
-    private var setupSection: some View {
-        Section {
-            LabeledContent("Form", value: draft.form.name)
-            Button {
-                showsMore = true
-            } label: {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Flere valg")
-                            .foregroundStyle(Color.ddInk)
-                        Text(moreSummary)
-                            .font(.ddCaption)
-                            .foregroundStyle(Color.ddInkSecondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.ddInkSecondary)
-                }
-                .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-            .id("more")
-        } header: {
-            DDHeader("Oppsett")
-        } footer: {
-            DDFooter("Formen og resten kommer fra sesongens regelsett. «Flere valg» har form, lag, matcher, sidepremier, vekt og handicap.")
-        }
-    }
-
-    /// «6 matcher · LD hull 7 · KP hull 3 · vanlig runde».
-    private var moreSummary: String {
-        let core = selectedCourse?.coreCourse
-        let offset = draft.firstHole == 10 ? 10 : 1
-        var parts: [String] = []
-        let matches = draft.matches.count
-        parts.append(matches == 0 ? "Ingen matcher" : matches == 1 ? "1 match" : "\(matches) matcher")
-        if draft.ldEnabled { parts.append("LD hull \(draft.ldHole(course: core) + offset)") }
-        if draft.kpEnabled { parts.append("KP hull \(draft.kpHole(course: core) + offset)") }
-        if let weight = RundeSetupStep.weights.first(where: { $0.value == draft.weight }), draft.weight != 1 {
-            parts.append(weight.title.lowercased())
-        }
-        if draft.externalHandicap { parts.append("Trackman gir slagene") }
-        return parts.joined(separator: " · ")
     }
 
     // MARK: Mangler og knapper
@@ -362,7 +260,7 @@ struct RundeQuickStartView: View {
 
     private func go(to target: QuickStartTarget) {
         switch target {
-        case .course: scrollTarget = "course"
+        case .course: showsCourse = true
         case .players: showsPlayers = true
         case .moreOptions: showsMore = true
         }
