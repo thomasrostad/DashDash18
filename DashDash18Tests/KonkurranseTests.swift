@@ -174,13 +174,6 @@ import Testing
         #expect(!scope.counts(RoundOriginRow(id: K.id(5), clubID: K.tClub, eventID: K.id(50), ownerID: nil, status: .locked)))
     }
 
-    @Test func hjemmetTilRunden() {
-        #expect(RoundOriginRow(id: K.id(1), clubID: K.tClub, eventID: K.id(50), ownerID: nil, status: .active).home
-                == .club(clubID: K.tClub, eventID: K.id(50)))
-        #expect(RoundOriginRow(id: K.id(1), clubID: nil, eventID: nil, ownerID: K.id(60), status: .active).home
-                == .loose(ownerID: K.id(60)))
-    }
-
     @Test func tellendeRunderITavlasRekkefolge() {
         let rounds = TavlaRulesetTests.fourEvenings()
         let scope = CompetitionScope(competition: Self.competition, links: K.links(Self.competition, rounds))
@@ -366,7 +359,7 @@ import Testing
         {"id": "00000000-0000-0000-0000-000000000030", "club_id": null, "event_id": null,
          "owner_id": "00000000-0000-0000-0000-000000000801", "status": "active"}
         """.utf8))
-        #expect(origin.home == .loose(ownerID: K.id(801)))
+        #expect(origin.clubID == nil && origin.eventID == nil && origin.ownerID == K.id(801))
 
         let guest = try JSONDecoder().decode(RoundParticipantRow.self, from: Data("""
         {"id": "00000000-0000-0000-0000-000000000302", "round_id": "00000000-0000-0000-0000-000000000030",
@@ -402,6 +395,7 @@ import Testing
         let round = TavlaSamples.round(1, date: "2026-05-14").round
         let origin = RoundOriginRow(round)
         let clubID = try #require(round.clubID), eventID = try #require(round.eventID)
-        #expect(origin.home == .club(clubID: clubID, eventID: eventID) && origin.status == round.status)
+        #expect(origin.clubID == clubID && origin.eventID == eventID && origin.ownerID == nil)
+        #expect(origin.status == round.status)
     }
 }

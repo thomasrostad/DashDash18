@@ -3,8 +3,8 @@ import GolfgutuCore
 import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
-/// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `profil`, `sesong`,
-/// `varsler`, `trad`, `hurtigstart`, `arrangor`, `arrangorstart`, `runder`, `kveldene`, `kvelden`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
+/// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `tavlaferdig`, `profil`, `sesong`,
+/// `varsler`, `trad`, `liste`, `hurtigstart`, `arrangor`, `arrangorstart`, `runder`, `kveldene`, `kvelden`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
 /// `statoversikt`, `stathistorikk`, `statrekorder`, `stattom`, `statforing`,
 /// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
 /// og spill på runden: `spill`, `spillnytt`, `spillresultat`,

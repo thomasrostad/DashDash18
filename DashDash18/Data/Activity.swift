@@ -572,7 +572,8 @@ nonisolated enum ActivityText {
             return ActivityDisplay(symbol: "chart.line.uptrend.xyaxis", emoji: "📈", text: list(leaders) + " " + verb + tail)
 
         case let .sidePrize(kind, member, hole, meters, passed, passedMeters):
-            let m = SideClaimFormat.meters(kind, meters)
+            // Meter som på hullkortet: «272,5 m» (`fmtMeter`).
+            let m = SidePrizes.formatMeters(meters)
             var text: String
             switch kind {
             case .drive: text = "\(who(member)) leder longest drive på hull \(hole) med \(m)"
@@ -580,7 +581,7 @@ nonisolated enum ActivityText {
             }
             if let passed {
                 text += " — forbi \(who(passed))"
-                if let passedMeters { text += " (\(SideClaimFormat.meters(kind, passedMeters)))" }
+                if let passedMeters { text += " (\(SidePrizes.formatMeters(passedMeters)))" }
             }
             return ActivityDisplay(symbol: kind == .drive ? "ruler" : "scope", emoji: kind == .drive ? "🚀" : "🎯",
                                    text: text)
@@ -645,13 +646,6 @@ nonisolated enum ActivityText {
         case .unknown:
             return ActivityDisplay(symbol: "clock", emoji: "🔔", text: "Ny hendelse i klubben")
         }
-    }
-}
-
-/// Meter som på hullkortet: én desimal, desimalkomma («272,5 m», «3,4 m»), `fmtMeter`.
-nonisolated enum SideClaimFormat {
-    static func meters(_ kind: SideClaimKind, _ meters: Double) -> String {
-        SidePrizes.formatMeters(meters)
     }
 }
 
@@ -803,19 +797,10 @@ nonisolated struct ActivityLog: Sendable {
 
     /// De siste `limit` hendelsene i klubben som du får se, nyeste først.
     func recent(limit: Int = ActivityLog.defaultLimit) async throws(DataError) -> [ActivityRow] {
-        do {
-            return try await client.from("activity")
-                .select(Self.columns)
-                .eq("club_id", value: clubID)
-                .order("created_at", ascending: false)
-                .limit(limit)
-                .execute().value
-        } catch {
-            throw DataError.from(error)
-        }
+        try await newer(than: nil, limit: limit)
     }
 
-    /// Hendelser nyere enn `date` (for bjella), uten dataene.
+    /// Hendelser nyere enn `date` (for bjella), nyeste først. Uten `date`: de siste `limit`.
     func newer(than date: Date?, limit: Int = ActivityLog.defaultLimit) async throws(DataError) -> [ActivityRow] {
         do {
             var query = client.from("activity").select(Self.columns).eq("club_id", value: clubID)

@@ -69,32 +69,6 @@ struct DDDropdownPill: View {
     }
 }
 
-/// Rund flytende knapp i glass (golfee sine runde knapper over kartet).
-struct DDGlassIconButtonStyle: ButtonStyle {
-    /// Grønn fylt variant (aktiv), ellers klart glass.
-    var prominent = false
-
-    func makeBody(configuration: Configuration) -> some View {
-        DDGlassIconBody(configuration: configuration, prominent: prominent)
-    }
-}
-
-private struct DDGlassIconBody: View {
-    let configuration: ButtonStyleConfiguration
-    let prominent: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        configuration.label
-            .font(.system(size: 17, weight: .semibold))
-            .foregroundStyle(prominent ? Color.ddLimeOnAccent : Color.ddInk)
-            .frame(width: 48, height: 48)
-            .glassEffect(prominent ? .regular.tint(Color.ddLime) : .regular, in: .circle)
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.92 : 1)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
-    }
-}
-
 /// Én linje i et svart statistikk-kort: etikett til venstre, tall til høyre (hvitt, eller gult når det utheves).
 struct DDStatRow: View {
     let label: String
@@ -121,23 +95,5 @@ struct DDStatRow: View {
             }
         }
         .accessibilityElement(children: .combine)
-    }
-}
-
-/// Overskrift i et statistikk-kort: «Distances • yds».
-struct DDStatHeader: View {
-    let title: String
-    var unit: String?
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Text(title).foregroundStyle(Color.ddStatText)
-            if let unit {
-                Text("•").foregroundStyle(Color.ddStatSecondary)
-                Text(unit).foregroundStyle(Color.ddYellow)
-            }
-        }
-        .font(.dd(.sans, size: 15, weight: .medium, relativeTo: .callout))
-        .accessibilityAddTraits(.isHeader)
     }
 }

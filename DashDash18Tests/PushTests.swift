@@ -63,9 +63,17 @@ struct PushKategoriTests {
         let shown = PushCategories.shownToPlayer
         #expect(Array(shown.prefix(5)) == [.score, .lead, .round, .reminder, .nudge])
         #expect(Set(shown).isSubset(of: Set(PushCategories.playerToggleable)))
-        #expect(!shown.contains(.bet))
         #expect(!shown.contains(.announcement))
         #expect(Set(shown).count == shown.count)
+    }
+
+    /// Serveren sender push for veddemål (`bet_created`, `bet_challenge`, `bet_resolved` i 012), så
+    /// bryteren må vises når veddemål er på. Før sto den skjult, og veddemål kunne ikke slås av.
+    @Test func veddemaalKanSlaasAvNaarVeddemaalErPaa() {
+        #expect(PushCategories.shown(bets: true).contains(.bet))
+        #expect(!PushCategories.shown(bets: false).contains(.bet))
+        #expect(PushCategories.shownToPlayer.contains(.bet) == BetsFeature.isEnabled)
+        #expect(PushCategories.shown(bets: false) == PushCategories.shown(bets: true).filter { $0 != .bet })
     }
 
     @Test func standardErAltPaaOgTraadenNaarJegNevnes() {
