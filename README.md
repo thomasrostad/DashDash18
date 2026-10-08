@@ -3,7 +3,7 @@
 Native iOS-app for golfturneringer blant venner. Den erstatter GolfGutu-PWA-en som Golfgutu Invitational bruker i dag. Brukerne ser navnet **Atten**. Repo, Xcode-prosjekt, bundle-id (`com.dashdash18.app`), domenet dashdash18.com og URL-skjemaet `dashdash://` heter fortsatt DashDash18.
 
 - SwiftUI, iOS 26+, Swift 6, Swift Testing
-- Backend: egen Supabase (test og prod) via `supabase-swift`
+- Backend: egen Supabase via `supabase-swift` (foreløpig bare test, prod kommer)
 - iPhone først, Android senere
 
 ## Dokumenter
@@ -81,7 +81,7 @@ Når `main` endres, sender Xcode Cloud et nytt bygg til TestFlight (15–30 min)
 
 ## Database (Supabase)
 
-To prosjekter: **test** (`tsekialrxuhrugscosgi`) og prod. PWA-ens database er bare kilde for import og skrives aldri til.
+Foreløpig ett prosjekt: **test** (`tsekialrxuhrugscosgi`). Prod opprettes før byttet for gjengen (fase 9). PWA-ens database er bare kilde for import og skrives aldri til.
 
 Endringer går slik (detaljer i [`sql/README.md`](sql/README.md)):
 
@@ -89,7 +89,7 @@ Endringer går slik (detaljer i [`sql/README.md`](sql/README.md)):
 2. Thomas leser og godkjenner SQL-en. Uten godkjenning kjøres ingenting.
 3. Kjøres på test, deretter kontrollspørringene.
 4. Prøves i appen mot test.
-5. Prod først etter ny godkjenning.
+5. Prod (når det finnes) først etter ny godkjenning.
 
 Filen legges i en PR som andre endringer. Status i `sql/README.md` oppdateres når den er kjørt.
 
