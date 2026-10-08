@@ -43,23 +43,10 @@ nonisolated struct WidgetSnapshot: Codable, Equatable, Sendable {
 
     static let empty = WidgetSnapshot()
 
-    /// Oslo-kalenderen: kveldene er norske, uansett hvor telefonen er.
-    static let osloCalendar: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Europe/Oslo") ?? .current
-        return calendar
-    }()
-
-    /// `YYYY-MM-DD` for dagen `date` faller på i Oslo.
-    static func osloDay(_ date: Date) -> String {
-        let c = osloCalendar.dateComponents([.year, .month, .day], from: date)
-        return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
-    }
-
     /// Kvelden som kommer, sett fra `now`. Nil når ingen er satt opp, og når den lagrede er over
     /// (dagen etter har begynt i Oslo) uten at appen har skrevet en ny.
     func upcomingEvening(at now: Date) -> NextEvening? {
-        guard let nextEvening, nextEvening.eventDate >= Self.osloDay(now) else { return nil }
+        guard let nextEvening, nextEvening.eventDate >= EveningDates.dateString(from: now) else { return nil }
         return nextEvening
     }
 
