@@ -98,13 +98,13 @@ nonisolated enum LoginMethods {
     /// for å logge inn igjen.»). Sier hvordan du kommer inn igjen, ut fra måtene kontoen har.
     static func signOutMessage(identities: [LinkedIdentity]) -> String {
         let providers = Set(identities.map { $0.provider.lowercased() })
-        let hasApple = providers.contains(LoginMethod.apple.rawValue)
-        let hasEmail = providers.contains(LoginMethod.email.rawValue)
-        switch (hasApple, hasEmail) {
-        case (true, true): return "Du logger inn igjen med Apple eller en ny kode på e-post."
-        case (true, false): return "Du logger inn igjen med Apple."
-        default: return "Du trenger en ny kode på e-post for å logge inn igjen."
-        }
+        // Apple og Google i den rekkefølgen, så e-postkoden sist (den har alle som ikke har noe annet).
+        var ways = [LoginMethod.apple, .google].filter { providers.contains($0.rawValue) }.map(\.title)
+        if ways.isEmpty { return "Du trenger en ny kode på e-post for å logge inn igjen." }
+        if providers.contains(LoginMethod.email.rawValue) { ways.append("en ny kode på e-post") }
+        let last = ways.removeLast()
+        let list = ways.isEmpty ? last : ways.joined(separator: ", ") + " eller " + last
+        return "Du logger inn igjen med \(list)."
     }
 }
 

@@ -60,6 +60,15 @@ struct DegSignOutTests {
         #expect(LoginMethods.signOutMessage(identities: [LinkedIdentity(provider: "apple")]) == "Du logger inn igjen med Apple.")
         #expect(LoginMethods.signOutMessage(identities: [LinkedIdentity(provider: "apple"), LinkedIdentity(provider: "email")])
             == "Du logger inn igjen med Apple eller en ny kode på e-post.")
+        // Google (før GoogleLoginFeature slås på): bare Google skal ikke få beskjed om e-postkode.
+        #expect(LoginMethods.signOutMessage(identities: [LinkedIdentity(provider: "google")]) == "Du logger inn igjen med Google.")
+        #expect(LoginMethods.signOutMessage(identities: [LinkedIdentity(provider: "google"), LinkedIdentity(provider: "email")])
+            == "Du logger inn igjen med Google eller en ny kode på e-post.")
+        #expect(LoginMethods.signOutMessage(identities: [LinkedIdentity(provider: "apple"), LinkedIdentity(provider: "google"),
+                                                         LinkedIdentity(provider: "email")])
+            == "Du logger inn igjen med Apple, Google eller en ny kode på e-post.")
+        #expect(LoginMethods.signOutMessage(identities: [LinkedIdentity(provider: "apple"), LinkedIdentity(provider: "google")])
+            == "Du logger inn igjen med Apple eller Google.")
     }
 
     @Test func hullIKoeNevnesFoerst() {
