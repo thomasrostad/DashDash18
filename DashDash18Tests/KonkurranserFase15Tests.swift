@@ -390,7 +390,7 @@ import Testing
 @MainActor struct KonkurranseNyTests {
     @Test func manglerOgRettOpp() {
         var d = CompetitionDraft(clubID: F.club, today: "2026-10-07")
-        #expect(d.issues() == ["Gi konkurransen et navn."])
+        #expect(d.issues() == ["Gi turneringen et navn."])
         d.name = "  Høstcupen "
         #expect(d.issues().isEmpty)
         d.hasPeriod = true

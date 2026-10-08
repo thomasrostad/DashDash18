@@ -4,7 +4,7 @@ import Foundation
 /// i den rekkefølgen det gjøres. Lista vises bare når noe mangler.
 nonisolated enum GettingStarted {
     enum Item: CaseIterable, Equatable, Sendable {
-        /// En aktiv sesong med regelsett.
+        /// En turnering i gang (aktiv sesong med regelsett).
         case season
         /// Minst én bane med par på alle hull.
         case courses
@@ -15,7 +15,7 @@ nonisolated enum GettingStarted {
 
         var title: String {
             switch self {
-            case .season: "Sesong og regler"
+            case .season: "Turneringen"
             case .courses: "Banene"
             case .roster: "Troppen"
             case .evening: "Kveldene"
@@ -50,14 +50,19 @@ nonisolated enum GettingStarted {
               upcomingEvenings: events.filter { $0.eventDate >= today }.count)
     }
 
-    /// Alle punktene i rekkefølge: sesong, baner, tropp, kveld.
+    /// Uferdige punkter som åpner «Ny turnering» i stedet for en side: turneringen, når ingen er i gang.
+    static func opensNewTournament(_ step: Step) -> Bool {
+        step.item == .season && !step.isDone
+    }
+
+    /// Alle punktene i rekkefølge: turnering, baner, tropp, kveld.
     static func steps(_ input: Input) -> [Step] {
         Item.allCases.map { item in
             switch item {
             case .season:
                 Step(item: item, isDone: input.hasActiveSeason,
-                     detail: input.hasActiveSeason ? "Aktiv sesong er satt opp."
-                                                   : "Lag sesongen og velg reglene.")
+                     detail: input.hasActiveSeason ? "En turnering er i gang."
+                                                   : "Lag turneringen og velg hvordan dere spiller.")
             case .courses:
                 Step(item: item, isDone: input.readyCourses > 0,
                      detail: input.readyCourses > 0 ? courseCount(input.readyCourses)

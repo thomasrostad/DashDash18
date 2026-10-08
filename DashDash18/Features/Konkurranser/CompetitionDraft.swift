@@ -1,8 +1,8 @@
 import Foundation
 import GolfgutuCore
 
-/// «Ny konkurranse»: navn, type, periode, regler (mal eller kopi av hovedturneringen), hvem som er
-/// med, åpen påmelding, og klubb eller privat. Ren logikk; skjemaet er `NewCompetitionView`, og
+/// Konkurransedelen av «Ny turnering» (`TournamentDraft`): navn, type, periode, regler, hvem som er
+/// med, åpen påmelding, og klubb eller privat. Ren logikk; skjemaet er `NyTurneringView`, og
 /// lagringen er `create_competition_with_entrants` (sql/022) i ett kall.
 nonisolated struct CompetitionDraft: Equatable, Sendable {
     /// Typene arrangøren kan lage (sesongen lages av sesongen, spill av runden).
@@ -24,6 +24,8 @@ nonisolated struct CompetitionDraft: Equatable, Sendable {
     var startsOn: String
     var endsOn: String
     var rulesSource: RulesSource = .template
+    /// Regelsettet fra oppsettet i «Ny turnering». Satt: grunnlaget i stedet for malen.
+    var baseRules: Ruleset?
     var league: LeagueRules = .league
     var fun: LeagueRules = .fun
     var cup: CupRules = .standard
@@ -66,7 +68,7 @@ nonisolated struct CompetitionDraft: Equatable, Sendable {
     /// Hva som mangler før konkurransen kan lagres.
     func issues() -> [String] {
         var out: [String] = []
-        if trimmedName.isEmpty { out.append("Gi konkurransen et navn.") }
+        if trimmedName.isEmpty { out.append("Gi turneringen et navn.") }
         if trimmedName.count > 60 { out.append("Navnet kan ha høyst 60 tegn.") }
         if hasPeriod, endsOn < startsOn { out.append("Perioden slutter før den starter.") }
         if !entryOptions.contains(entry) { out.append("\(CompetitionText.entry(entry)) passer ikke for denne typen.") }
@@ -81,7 +83,7 @@ nonisolated struct CompetitionDraft: Equatable, Sendable {
 
     /// Regelsettet som lagres: grunnlaget (mal eller hovedturneringen) med reglene for typen.
     func rules(main: Ruleset?) -> Ruleset {
-        var base = rulesSource == .copyMain ? (main ?? Ruleset.golfgutu) : Ruleset.golfgutu
+        var base = rulesSource == .copyMain ? (main ?? Ruleset.golfgutu) : (baseRules ?? Ruleset.golfgutu)
         var competition = base.competition ?? CompetitionRules.standard
         switch kind {
         case .league: competition.league = league
@@ -91,6 +93,18 @@ nonisolated struct CompetitionDraft: Equatable, Sendable {
         }
         base.competition = competition
         return base
+    }
+
+    /// «3 valgt pluss deg», «Hele troppen er med».
+    var participantsSummary: String {
+        let count = memberIDs.count + profileIDs.count
+        switch entry {
+        case .club: return "Hele troppen er med"
+        case .open: return "Alle som spiller en runde som teller"
+        case .listed:
+            let you = clubID == nil ? " pluss deg" : ""
+            return count == 0 ? "Ingen valgt\(you)" : (count == 1 ? "1 valgt\(you)" : "\(count) valgt\(you)")
+        }
     }
 
     func params(main: Ruleset?) -> CreateCompetitionParams {

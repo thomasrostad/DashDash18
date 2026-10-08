@@ -7,7 +7,7 @@ struct SesongForklaringTests {
     @Test func golfgutuTeksten() {
         let tekst = RulesetExplanation.text(for: .golfgutu)
         #expect(tekst == """
-        Sesongen har 7 kvelder. Seier gir 1 poeng, uavgjort 0,5. Trekanten gir 1 / 0,5 / 0 poeng etter plass. \
+        Turneringen har 7 kvelder. Seier gir 1 poeng, uavgjort 0,5. Trekanten gir 1 / 0,5 / 0 poeng etter plass. \
         Alle matcher teller. Longest drive og nærmest pinnen gir 1 poeng hver. Likt deler poenget. \
         Tabellpoengene rundes til nærmeste 0,5. Ved likt poeng skiller hulldifferanse, så stablefordsummen. \
         Stablefordsummen er de 5 beste rundene. Netto par gir 2 stablefordpoeng. Handicapandelen følger formen. \
@@ -34,7 +34,7 @@ struct SesongForklaringTests {
         r.formats.allowedFormIDs = ["stableford", "match", "fourball", "scramble-2"]
 
         let s = RulesetExplanation.sentences(for: r)
-        #expect(s.contains("Sesongen har 5 kvelder."))
+        #expect(s.contains("Turneringen har 5 kvelder."))
         #expect(s.contains("Seier gir 3 poeng, uavgjort 1."))
         #expect(s.contains("De 3 beste kveldene teller."))
         #expect(s.contains("Ingen sidepremier."))
@@ -61,7 +61,7 @@ struct SesongForklaringTests {
         r.scoring.minimumPoints = 1
 
         let s = RulesetExplanation.sentences(for: r)
-        #expect(s.contains("Sesongen har 1 kveld."))
+        #expect(s.contains("Turneringen har 1 kveld."))
         #expect(s.contains("Seier gir 2 poeng, uavgjort 1 og tap 0,5."))
         #expect(s.contains("Den beste runden teller."))
         #expect(s.contains("Stablefordsummen tar med alle runder."))
@@ -203,7 +203,7 @@ struct SesongRedigeringTests {
         var start = Ruleset.golfgutu
         start.evenings = 3
         var d = RulesetDraft(start)
-        d.resetToGolfgutu()
+        d.resetToTemplate()
         #expect(d.rules == .golfgutu)
         #expect(d.hasChanges) // Utgangspunktet var et annet regelsett.
         d.markSaved(d.rules)
@@ -304,17 +304,6 @@ struct SesongLivslopTests {
         #expect(SeasonLifecycle.activeConflict(activating: ny, in: [ny]) == nil)
     }
 
-    @Test func malForNySesong() {
-        let forrige = season("2026", .finished, evenings: 5)
-        let eldre = season("2025", .finished, evenings: 9)
-        let liste = [forrige, eldre]
-        #expect(SeasonLifecycle.defaultTemplate(seasons: liste) == .copy(forrige.id))
-        #expect(SeasonLifecycle.defaultTemplate(seasons: []) == .golfgutu)
-        #expect(SeasonLifecycle.rules(for: .copy(eldre.id), seasons: liste).evenings == 9)
-        #expect(SeasonLifecycle.rules(for: .golfgutu, seasons: liste) == .golfgutu)
-        #expect(SeasonLifecycle.rules(for: .copy(UUID()), seasons: liste) == .golfgutu)
-    }
-
     @Test func grupperingAktivPlanlagtFerdig() {
         let liste = [season("c", .finished), season("b", .planned), season("a", .active), season("d", .planned)]
         let grupper = SeasonLifecycle.grouped(liste)
@@ -333,8 +322,8 @@ struct SesongLivslopTests {
         #expect(SeasonLifecycle.landing([]) == .list)
         #expect(SeasonLifecycle.landing([season("2027", .planned), season("2025", .finished)]) == .list)
         #expect(SeasonLifecycle.listPrompt([]) == nil)
-        #expect(SeasonLifecycle.listPrompt([season("2027", .planned)])?.contains("Åpne en planlagt sesong") == true)
-        #expect(SeasonLifecycle.listPrompt([season("2025", .finished)])?.contains("Lag en ny sesong") == true)
+        #expect(SeasonLifecycle.listPrompt([season("2027", .planned)])?.contains("Åpne en planlagt") == true)
+        #expect(SeasonLifecycle.listPrompt([season("2025", .finished)])?.contains("Lag en ny turnering") == true)
     }
 
     @Test func flereAktiveGirDenForste() {

@@ -94,14 +94,14 @@ nonisolated enum InviteTarget: Equatable, Sendable {
             return code.shareText(courseName: courseName)
         case .competition(let name):
             return "Bli med i \(name) i Atten.\n\(url(code).absoluteString)\n"
-                + "Eller skriv inn koden \(code.display) under Konkurranser → Bli med med kode."
+                + "Eller skriv inn koden \(code.display) under Turneringer → Bli med med kode."
         }
     }
 
     var qrLabel: String {
         switch self {
         case .round: "QR-kode til runden"
-        case .competition: "QR-kode til konkurransen"
+        case .competition: "QR-kode til turneringen"
         }
     }
 
@@ -112,8 +112,8 @@ nonisolated enum InviteTarget: Equatable, Sendable {
                 + "Spill → Bli med med kode. Koden virker i 7 dager, og til runden avsluttes."
         case .competition:
             "Skann QR-koden med kameraet, eller trykk på lenken i meldingen. Uten lenke: skriv inn koden under "
-                + "Konkurranser → Bli med med kode. Den som blir med, meldes på. Koden virker i 7 dager, og til "
-                + "konkurransen er ferdig."
+                + "Turneringer → Bli med med kode. Den som blir med, meldes på. Koden virker i 7 dager, og til "
+                + "turneringen er ferdig."
         }
     }
 }

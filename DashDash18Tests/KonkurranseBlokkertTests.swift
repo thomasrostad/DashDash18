@@ -8,7 +8,7 @@ import Testing
 struct KonkurranseBlokkertTests {
     @Test func blockedClaimGivesNorwegianMessage() {
         let error = PostgrestError(code: "DDB01", message: "Du kan ikke bli med i denne konkurransen")
-        #expect(CompetitionInviteErrors.message(for: error) == "Du kan ikke bli med i denne konkurransen.")
+        #expect(CompetitionInviteErrors.message(for: error) == "Du kan ikke bli med i denne turneringen.")
         #expect(!CompetitionInviteErrors.message(for: error).lowercased().contains("blokk"))
         #expect(!CompetitionInviteErrors.message(for: error).hasPrefix("Noe gikk galt"))
     }

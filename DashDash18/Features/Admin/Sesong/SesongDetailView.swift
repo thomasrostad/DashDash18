@@ -12,13 +12,13 @@ struct SesongDetailView: View {
                 .navigationTitle(season.name)
                 .ddNavigationChrome()
         } else {
-            ContentUnavailableView("Sesongen finnes ikke lenger", systemImage: "list.number")
+            ContentUnavailableView("Turneringen finnes ikke lenger", systemImage: "trophy")
         }
     }
 }
 
 /// Innholdet til én sesong: sammendraget av reglene, «Endre reglene», status og handlingene.
-/// Brukes av `SesongDetailView` og av «Sesong og regler» når den lander på den aktive sesongen,
+/// Brukes av `SesongDetailView` og av «Turneringen» når den lander på den aktive sesongen,
 /// som viser navnet på sesongen og legger egne seksjoner nederst (`bottom`).
 struct SesongContentView<Bottom: View>: View {
     let model: SesongAdminModel
@@ -56,15 +56,16 @@ struct SesongContentView<Bottom: View>: View {
                 }
             } footer: {
                 if season.status == .active {
-                    Text("Sesongen er i gang. Endrede regler gjelder hele sesongen, også kvelder som er spilt.")
+                    Text("Endrede regler gjelder også kvelder som er spilt.")
                 } else if season.status == .finished {
-                    Text("Sesongen er ferdig. Reglene kan ikke endres.")
+                    Text("Turneringen er ferdig. Reglene kan ikke endres.")
                 }
             }
             Section {
                 if showsName {
-                    LabeledContent("Sesong", value: season.name)
+                    LabeledContent("Turnering", value: season.name)
                 }
+                LabeledContent("Type", value: TournamentSetup.typeText(kind: .season, rules: season.rules))
                 LabeledContent("Status", value: SeasonLifecycle.title(season.status))
                 ForEach(SeasonLifecycle.actions(for: season.status), id: \.self) { action in
                     actionButton(action, season)
@@ -82,7 +83,7 @@ struct SesongContentView<Bottom: View>: View {
 
     private func dialogs(_ view: some View, _ season: SeasonRow) -> some View {
         view
-            .confirmationDialog("Avslutte den aktive sesongen?", isPresented: Binding(get: { conflict != nil }, set: { if !$0 { conflict = nil } }),
+            .confirmationDialog("Avslutte turneringen som er i gang?", isPresented: Binding(get: { conflict != nil }, set: { if !$0 { conflict = nil } }),
                                 titleVisibility: .visible, presenting: conflict) { other in
                 Button("Avslutt «\(other.name)» og aktiver") {
                     conflict = nil
@@ -90,14 +91,14 @@ struct SesongContentView<Bottom: View>: View {
                 }
                 Button("Avbryt", role: .cancel) { conflict = nil }
             } message: { other in
-                Text("Klubben kan ha én aktiv sesong. «\(other.name)» blir ferdig.")
+                Text("Klubben kan ha én serie i gang. «\(other.name)» blir ferdig.")
             }
-            .confirmationDialog("Avslutte sesongen?", isPresented: $confirmsFinish, titleVisibility: .visible) {
-                Button("Avslutt sesongen") { run { try await model.finish(season) } }
+            .confirmationDialog("Avslutte turneringen?", isPresented: $confirmsFinish, titleVisibility: .visible) {
+                Button("Avslutt turneringen") { run { try await model.finish(season) } }
             } message: {
-                Text("Sesongen blir ferdig, og reglene låses.")
+                Text("Turneringen blir ferdig, og reglene låses.")
             }
-            .confirmationDialog("Slette sesongen?", isPresented: $confirmsDelete, titleVisibility: .visible) {
+            .confirmationDialog("Slette turneringen?", isPresented: $confirmsDelete, titleVisibility: .visible) {
                 Button("Slett", role: .destructive) {
                     run {
                         try await model.delete(season)
@@ -105,7 +106,7 @@ struct SesongContentView<Bottom: View>: View {
                     }
                 }
             } message: {
-                Text("Sesongen og reglene forsvinner. Det kan ikke angres.")
+                Text("Turneringen og reglene forsvinner. Det kan ikke angres.")
             }
     }
 
@@ -113,7 +114,7 @@ struct SesongContentView<Bottom: View>: View {
     private func actionButton(_ action: SeasonLifecycle.Action, _ season: SeasonRow) -> some View {
         switch action {
         case .activate:
-            Button(season.status == .finished ? "Aktiver igjen" : "Aktiver sesongen") {
+            Button(season.status == .finished ? "Aktiver igjen" : "Aktiver turneringen") {
                 if let other = SeasonLifecycle.activeConflict(activating: season, in: model.seasons) {
                     conflict = other
                 } else {
@@ -121,9 +122,9 @@ struct SesongContentView<Bottom: View>: View {
                 }
             }
         case .finish:
-            Button("Avslutt sesongen") { confirmsFinish = true }
+            Button("Avslutt turneringen") { confirmsFinish = true }
         case .delete:
-            Button("Slett sesongen", role: .destructive) { confirmsDelete = true }
+            Button("Slett turneringen", role: .destructive) { confirmsDelete = true }
         }
     }
 

@@ -10,7 +10,7 @@ import Supabase
 /// Resten går til den felles oversettelsen i `DataError`.
 nonisolated enum CompetitionInviteErrors {
     static let blockedSQLState = "DDB01"
-    static let blockedMessage = "Du kan ikke bli med i denne konkurransen."
+    static let blockedMessage = "Du kan ikke bli med i denne turneringen."
 
     static func message(sqlState: String?, fallback: DataError) -> String {
         sqlState == blockedSQLState ? blockedMessage : fallback.message

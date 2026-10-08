@@ -81,7 +81,7 @@ struct CompetitionDetailView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .failed(let message):
             ContentUnavailableView {
-                Label("Fikk ikke hentet konkurransen", systemImage: "wifi.exclamationmark")
+                Label("Fikk ikke hentet turneringen", systemImage: "wifi.exclamationmark")
             } description: {
                 Text(message)
             } actions: {

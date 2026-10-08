@@ -1,8 +1,9 @@
 import GolfgutuCore
 import SwiftUI
 
-/// «Sesong og regler». Lander rett på den aktive sesongen (reglene, «Endre reglene», status og handlingene),
-/// med «Alle sesonger» og «Ny sesong» nederst. Uten aktiv sesong vises lista over sesongene.
+/// «Turneringen» på arrangørsiden. Lander rett på hovedturneringen, den aktive sesongen (reglene,
+/// «Endre reglene», status og handlingene), med «Alle turneringer» og «Ny turnering» nederst. Uten
+/// aktiv sesong vises alle turneringene.
 struct SesongAdminView: View {
     @Environment(\.clubContext) private var context
 
@@ -10,9 +11,9 @@ struct SesongAdminView: View {
         if let context {
             SesongAdminRoot(context: context)
         } else {
-            ContentUnavailableView("Ingen klubb", systemImage: "list.number",
-                                   description: Text("Velg en klubb for å se sesongene."))
-                .navigationTitle("Sesong og regler")
+            ContentUnavailableView("Ingen klubb", systemImage: "trophy",
+                                   description: Text("Velg en klubb for å se turneringene."))
+                .navigationTitle("Turneringen")
                 .ddNavigationChrome()
         }
     }
@@ -20,30 +21,37 @@ struct SesongAdminView: View {
 
 private struct SesongAdminRoot: View {
     @State private var model: SesongAdminModel
+    @State private var competitions: CompetitionsModel
 
     init(context: ClubContext) {
         _model = State(initialValue: SesongAdminModel(context: context))
+        _competitions = State(initialValue: CompetitionsModel(context: context))
     }
 
     var body: some View {
-        SesongLandingView(model: model)
+        SesongLandingView(model: model, competitions: competitions)
     }
 }
 
-/// Landingen i «Sesong og regler»: den aktive sesongen, eller lista når ingen er aktiv (`SeasonLifecycle.landing`).
+/// Landingen i «Turneringen»: den aktive sesongen, eller alle turneringene når ingen er aktiv
+/// (`SeasonLifecycle.landing`).
 struct SesongLandingView: View {
     let model: SesongAdminModel
-    @State private var showsNewSeason = false
+    let competitions: CompetitionsModel
+    @State private var showsNew = false
 
     var body: some View {
         content
-            .navigationTitle("Sesong og regler")
+            .navigationTitle("Turneringen")
             .ddNavigationChrome()
-            .sheet(isPresented: $showsNewSeason) {
-                NavigationStack { NySesongView(model: model) }
-            }
-            .task { await model.load() }
-            .refreshable { await model.load() }
+            .newTournamentSheet(isPresented: $showsNew, seasons: model, competitions: competitions)
+            .task { await reload() }
+            .refreshable { await reload() }
+    }
+
+    private func reload() async {
+        await model.load()
+        if CompetitionsFeature.isActive { await competitions.load() }
     }
 
     @ViewBuilder private var content: some View {
@@ -52,11 +60,11 @@ struct SesongLandingView: View {
             ProgressView()
         case .failed(let error) where model.seasons.isEmpty:
             ContentUnavailableView {
-                Label("Fikk ikke hentet sesongene", systemImage: "exclamationmark.triangle")
+                Label("Fikk ikke hentet turneringene", systemImage: "exclamationmark.triangle")
             } description: {
                 Text(error.message)
             } actions: {
-                Button("Prøv igjen") { Task { await model.load() } }
+                Button("Prøv igjen") { Task { await reload() } }
             }
         default:
             switch SeasonLifecycle.landing(model.seasons) {
@@ -65,91 +73,149 @@ struct SesongLandingView: View {
                     activeSeason(season)
                 }
             case .list:
-                if model.seasons.isEmpty {
+                if items.isEmpty {
                     ContentUnavailableView {
-                        Label("Ingen sesonger ennå", systemImage: "list.number")
+                        Label("Ingen turneringer ennå", systemImage: "trophy")
                     } description: {
-                        Text("Lag den første sesongen. Golfgutu-oppsettet er en ferdig mal.")
+                        Text("Lag den første. Du velger hvordan dere vil spille.")
                     } actions: {
-                        Button("Ny sesong") { showsNewSeason = true }
+                        Button("Ny turnering") { showsNew = true }
+                            .buttonStyle(.dd(.primary))
                     }
                 } else {
-                    SeasonList(model: model) { showsNewSeason = true }
+                    TournamentListContent(model: model, competitions: competitions) { showsNew = true }
                         .toolbar {
                             ToolbarItem(placement: .primaryAction) {
-                                Button("Ny sesong", systemImage: "plus") { showsNewSeason = true }
+                                Button("Ny turnering", systemImage: "plus") { showsNew = true }
                             }
                         }
                 }
             }
         }
+    }
+
+    private var items: [TournamentList.Item] {
+        TournamentList.items(seasons: model.seasons, competitions: competitions.overview.competitions,
+                             clubID: competitions.clubID ?? UUID())
     }
 
     private func activeSeason(_ season: SeasonRow) -> some View {
         SesongContentView(model: model, season: season, showsName: true) {
             Section {
                 NavigationLink {
-                    AllSeasonsView(model: model)
+                    AlleTurneringerView(model: model, competitions: competitions)
                 } label: {
-                    Label("Alle sesonger", systemImage: "list.number")
+                    Label("Alle turneringer", systemImage: "trophy")
                 }
-                Button("Ny sesong", systemImage: "plus") { showsNewSeason = true }
+                Button("Ny turnering", systemImage: "plus") { showsNew = true }
             }
         }
     }
 }
 
-/// «Alle sesonger»: aktiv, planlagte og ferdige. Nås fra den aktive sesongen.
-private struct AllSeasonsView: View {
+/// «Alle turneringer»: klubbens sesonger og konkurranser i én liste, gruppert etter status.
+struct AlleTurneringerView: View {
     let model: SesongAdminModel
-    @State private var showsNewSeason = false
+    let competitions: CompetitionsModel
+    @State private var showsNew = false
 
     var body: some View {
-        SeasonList(model: model) { showsNewSeason = true }
-            .navigationTitle("Alle sesonger")
+        TournamentListContent(model: model, competitions: competitions) { showsNew = true }
+            .navigationTitle("Alle turneringer")
             .ddNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Ny sesong", systemImage: "plus") { showsNewSeason = true }
+                    Button("Ny turnering", systemImage: "plus") { showsNew = true }
                 }
             }
-            .sheet(isPresented: $showsNewSeason) {
-                NavigationStack { NySesongView(model: model) }
+            .newTournamentSheet(isPresented: $showsNew, seasons: model, competitions: competitions)
+            .refreshable {
+                await model.load()
+                if CompetitionsFeature.isActive { await competitions.load() }
             }
-            .refreshable { await model.load() }
     }
 }
 
-/// Sesongene gruppert etter status. Uten aktiv sesong står en oppfordring øverst.
-private struct SeasonList: View {
+/// Lista: pågår, planlagt, ferdig, med typen under navnet. Uten aktiv sesong står en oppfordring øverst.
+private struct TournamentListContent: View {
     let model: SesongAdminModel
-    let newSeason: () -> Void
+    let competitions: CompetitionsModel
+    let newTournament: () -> Void
 
     var body: some View {
+        let items = TournamentList.items(seasons: model.seasons, competitions: competitions.overview.competitions,
+                                         clubID: competitions.clubID ?? UUID())
         DDList {
             if let prompt = SeasonLifecycle.listPrompt(model.seasons) {
                 Section {
                     Text(prompt)
-                    Button("Ny sesong", systemImage: "plus", action: newSeason)
+                    Button("Ny turnering", systemImage: "plus", action: newTournament)
                 }
             }
-            ForEach(SeasonLifecycle.grouped(model.seasons), id: \.status) { group in
-                Section(SeasonLifecycle.title(group.status)) {
-                    ForEach(group.seasons) { season in
+            ForEach(TournamentList.grouped(items), id: \.status) { group in
+                Section {
+                    ForEach(group.items) { item in
                         NavigationLink {
-                            SesongDetailView(model: model, seasonID: season.id)
+                            destination(item)
                         } label: {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(season.name)
-                                Text(RulesetSummary.short(for: season.rules))
-                                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
-                                    .foregroundStyle(Color.ddInkSecondary)
-                                Text(RulesetSummary.badge(for: season.rules))
-                                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
-                                    .foregroundStyle(RulesetSummary.isGolfgutu(season.rules) ? Color.ddForestInk : Color.ddInkSecondary)
-                            }
+                            row(item)
                         }
                     }
+                } header: {
+                    DDHeader(group.title)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func destination(_ item: TournamentList.Item) -> some View {
+        switch item {
+        case .season(let season):
+            SesongDetailView(model: model, seasonID: season.id)
+        case .competition(let competition):
+            CompetitionDetailScreen(list: competitions, competition: competition)
+        }
+    }
+
+    private func row(_ item: TournamentList.Item) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon(item))
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color.ddForestInk)
+                .frame(width: 28)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.name)
+                    .font(.ddBodyEmphasis)
+                    .foregroundStyle(Color.ddInk)
+                Text(item.subtitle)
+                    .font(.ddCaption)
+                    .foregroundStyle(Color.ddInkSecondary)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func icon(_ item: TournamentList.Item) -> String {
+        switch item {
+        case .season(let s):
+            TournamentSetup.icon(s.rules.table.pointsSource == .stableford ? .stablefordSeries : .matchSeries)
+        case .competition(let c):
+            CompetitionListRow.icon(c.kind)
+        }
+    }
+}
+
+extension View {
+    /// «Ny turnering» i et ark. Lister lastes på nytt når arket lukkes.
+    func newTournamentSheet(isPresented: Binding<Bool>, seasons: SesongAdminModel?,
+                            competitions: CompetitionsModel, offersPrivate: Bool = false) -> some View {
+        sheet(isPresented: isPresented) {
+            NavigationStack {
+                NyTurneringView(model: NewTournamentModel(list: competitions, seasons: seasons,
+                                                          offersPrivate: offersPrivate)) {
+                    isPresented.wrappedValue = false
                 }
             }
         }

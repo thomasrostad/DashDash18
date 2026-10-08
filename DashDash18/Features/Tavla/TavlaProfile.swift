@@ -85,16 +85,9 @@ nonisolated extension TavlaStandings {
 }
 
 nonisolated extension PlayerProfile {
-    /// «4,5 fra 5 dueller · 1 fra sidepremier · +3 hull».
+    /// «4,5 fra 5 dueller · 1 fra sidepremier · +3 hull» (`TavlaStandings.basis`).
     func basis(_ standings: TavlaStandings) -> String? {
-        guard row.matches > 0 || row.side > 0 else { return nil }
-        var parts: [String] = []
-        if row.matches > 0 {
-            parts.append("\(standings.points(row.duel)) fra \(row.matches == 1 ? "én duell" : "\(row.matches) dueller")")
-        }
-        if row.side > 0 { parts.append("\(standings.points(row.side)) fra sidepremier") }
-        if row.matches > 0 { parts.append("\(row.holes > 0 ? "+" : "")\(row.holes) hull") }
-        return parts.joined(separator: " · ")
+        standings.basis(row)
     }
 
     /// «2–1 til Bjørn», «1–2 til deg», «1–1 · uavgjort».

@@ -125,7 +125,7 @@ struct RuleStepper: View {
 }
 
 /// Ledeteksten i et regelfelt: navnet, en kort forklaring under, og «Endret · standard 1»
-/// når valget ikke er som i Golfgutu-oppsettet.
+/// når valget ikke er som i oppsettet.
 struct RuleFieldLabel: View {
     let title: String
     var help: String?
@@ -147,7 +147,7 @@ struct RuleFieldLabel: View {
     }
 }
 
-/// Seksjonsoverskrift med «Endret · standard …» når delen ikke er som i Golfgutu-oppsettet.
+/// Seksjonsoverskrift med «Endret · standard …» når delen ikke er som i oppsettet.
 struct RuleSectionHeader: View {
     let title: String
     var changeNote: String?

@@ -34,6 +34,7 @@ nonisolated extension TavlaStandings {
 
         var basis = "\(points(champion.duel)) fra \(champion.matches == 1 ? "én duell" : "\(champion.matches) dueller")"
         if champion.side > 0 { basis += " · \(points(champion.side)) fra sidepremier" }
+        if countsStableford { basis = self.basis(champion) ?? basis }
 
         // Sesongens runde: flest stablefordpoeng i én runde. Likt: den tidligste, så tabellens rekkefølge.
         var best: (points: Int, member: UUID, round: Int)?

@@ -1,19 +1,37 @@
 import Foundation
 import GolfgutuCore
 
-/// Kortversjonen av et regelsett i klart språk, til toppen av «Sesong og regler».
+/// Kortversjonen av et regelsett i klart språk, til toppen av «Turneringen».
 /// Hele forklaringen står i `RulesetExplanation`. Alle tall kommer fra regelsettet.
 nonisolated enum RulesetSummary {
-    /// Er dette Golfgutu-oppsettet uendret?
-    static func isGolfgutu(_ rules: Ruleset) -> Bool {
-        rules == .golfgutu
+    /// Oppsettene en turnering av typen kan sammenlignes med: en serie (sesong eller liga) med
+    /// stableford- og matchspill-serien, cup og morro med sitt eget. For en serie står oppsettet som
+    /// teller det samme som `rules` (matcher eller stableford) først, så det vinner når de ligger like nær.
+    static func candidates(for kind: CompetitionKind, rules: Ruleset) -> [RulesetTemplate] {
+        switch kind {
+        case .season, .league, .game:
+            rules.table.pointsSource == .stableford ? [.stablefordSeries, .matchSeries] : [.matchSeries, .stablefordSeries]
+        case .cup: [.cup]
+        case .fun: [.fun]
+        }
     }
 
-    /// Merket ved sammendraget: «Golfgutu-oppsettet» eller hvor mye som er endret.
-    static func badge(for rules: Ruleset) -> String {
-        let changed = RulesetField.changed(rules).count
-        if changed == 0 { return "Golfgutu-oppsettet" }
-        return changed == 1 ? "1 valg endret fra Golfgutu" : "\(changed) valg endret fra Golfgutu"
+    /// Oppsettet regelsettet ligger nærmest, blant kandidatene for typen.
+    static func template(for rules: Ruleset, kind: CompetitionKind = .season) -> RulesetTemplate {
+        RulesetTemplate.closest(to: rules, among: candidates(for: kind, rules: rules)) ?? .matchSeries
+    }
+
+    /// Er regelsettet likt oppsettet det ligger nærmest (ingen valg endret)?
+    static func isTemplate(_ rules: Ruleset, kind: CompetitionKind = .season) -> Bool {
+        RulesetField.changed(rules, from: template(for: rules, kind: kind).rules).isEmpty
+    }
+
+    /// Merket ved sammendraget: «Stableford-serie», eller «2 valg endret fra Stableford-serie».
+    static func badge(for rules: Ruleset, kind: CompetitionKind = .season) -> String {
+        let template = template(for: rules, kind: kind)
+        let changed = RulesetField.changed(rules, from: template.rules).count
+        if changed == 0 { return template.title }
+        return changed == 1 ? "1 valg endret fra \(template.title)" : "\(changed) valg endret fra \(template.title)"
     }
 
     /// Det viktigste, én linje per tema: form, kvelder og telling, poeng, handicap, sidepremier.
@@ -23,7 +41,11 @@ nonisolated enum RulesetSummary {
         out.append("\(form.name), høyst \(rules.formats.maxPerBay) per bås")
         out.append(eveningsAndCounting(rules))
         let mp = rules.table.matchPoints
-        out.append("Seier \(RuleFormat.number(mp.win)) poeng, uavgjort \(RuleFormat.number(mp.draw)), tap \(RuleFormat.number(mp.loss))")
+        if rules.table.pointsSource == .stableford {
+            out.append("Stablefordpoengene er tabellpoengene")
+        } else {
+            out.append("Seier \(RuleFormat.number(mp.win)) poeng, uavgjort \(RuleFormat.number(mp.draw)), tap \(RuleFormat.number(mp.loss))")
+        }
         out.append(handicap(rules, form: form))
         let groups = rules.handicap.seedingGroups.sorted { $0.number < $1.number }
         if !groups.isEmpty {
@@ -34,7 +56,7 @@ nonisolated enum RulesetSummary {
         return out
     }
 
-    /// Én kort linje til sesonglista: «7 kvelder, alle matcher teller».
+    /// Én kort linje til lista: «7 kvelder, alle matcher teller».
     static func short(for rules: Ruleset) -> String {
         eveningsAndCounting(rules)
     }
@@ -80,7 +102,7 @@ nonisolated enum RulesetSummary {
 /// Sammen dekker valgene hele `Ruleset`, så ingen endring i regelsettet blir usynlig.
 nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
     // Det vanligste
-    case evenings, counting, win, draw, loss, allowance, longestDrive, closestToPin, splitTies
+    case pointsSource, evenings, counting, win, draw, loss, allowance, longestDrive, closestToPin, splitTies
     // Avanserte valg
     case scoring, trianglePoints, stablefordCounting, tiebreaks, rounding
     case seeding, externalHandicap, teamHandicap
@@ -90,13 +112,14 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
 
     var isCommon: Bool {
         switch self {
-        case .evenings, .counting, .win, .draw, .loss, .allowance, .longestDrive, .closestToPin, .splitTies: true
+        case .pointsSource, .evenings, .counting, .win, .draw, .loss, .allowance, .longestDrive, .closestToPin, .splitTies: true
         default: false
         }
     }
 
     var title: String {
         switch self {
+        case .pointsSource: "Tabellen teller"
         case .evenings: "Kvelder"
         case .counting: "Hva teller"
         case .win: "Seier"
@@ -125,6 +148,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
     /// Er valget forskjellig i `a` og `b`?
     func differs(_ a: Ruleset, _ b: Ruleset) -> Bool {
         switch self {
+        case .pointsSource: a.table.pointsSource != b.table.pointsSource
         case .evenings: a.evenings != b.evenings
         case .counting: a.table.counting != b.table.counting
         case .win: a.table.matchPoints.win != b.table.matchPoints.win
@@ -155,6 +179,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
     /// Verdien i `rules` i klart språk, til «standard: …» ved feltet.
     func valueText(_ rules: Ruleset) -> String {
         switch self {
+        case .pointsSource: return RuleNames.title(rules.table.pointsSource).lowercased()
         case .evenings: return "\(rules.evenings)"
         case .counting:
             let c = rules.table.counting
@@ -181,12 +206,12 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
             let groups = rules.handicap.seedingGroups.sorted { $0.number < $1.number }
             return groups.isEmpty ? "ingen" : groups.map { RuleFormat.number($0.handicap) }.joined(separator: " / ")
         case .externalHandicap: return rules.handicap.externalHandicap ? "på" : "av"
-        case .teamHandicap: return "Golfgutu-vektene"
+        case .teamHandicap: return "oppsettets vekter"
         case .defaultForm: return CompetitionForm.form(id: rules.formats.defaultFormID).name
         case .allowedForms: return "\(rules.allowedForms.count) av \(CompetitionForm.all.count)"
         case .maxPerBay: return "\(rules.formats.maxPerBay)"
         case .matchStrokes: return RuleNames.title(rules.formats.matchStrokes).lowercased()
-        case .other: return "Golfgutu"
+        case .other: return "oppsettets valg"
         }
     }
 
@@ -194,13 +219,13 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         p.enabled ? "\(RuleFormat.number(p.points)) poeng" : "av"
     }
 
-    /// Valgene som er endret fra `base` (standard: Golfgutu-oppsettet).
-    static func changed(_ rules: Ruleset, from base: Ruleset = .golfgutu) -> [RulesetField] {
+    /// Valgene som er endret fra `base` (oppsettet turneringen sammenlignes med).
+    static func changed(_ rules: Ruleset, from base: Ruleset) -> [RulesetField] {
         allCases.filter { $0.differs(rules, base) }
     }
 
     /// «Endret · standard 1», eller nil når valget er som i `base`.
-    func changeNote(_ rules: Ruleset, from base: Ruleset = .golfgutu) -> String? {
+    func changeNote(_ rules: Ruleset, from base: Ruleset) -> String? {
         guard differs(rules, base) else { return nil }
         if self == .teamHandicap || self == .other { return "Endret fra standard" }
         return "Endret · standard \(valueText(base))"

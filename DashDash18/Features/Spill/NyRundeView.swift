@@ -259,7 +259,7 @@ struct FriendsPickerView: View {
                     .accessibilityAddTraits(chosen ? .isSelected : [])
                 }
             } footer: {
-                DDFooter("Bare folk du deler en klubb, en runde eller en konkurranse med. Andre inviterer du med lenke eller QR.")
+                DDFooter("Bare folk du deler en klubb, en runde eller en turnering med. Andre inviterer du med lenke eller QR.")
             }
         }
         .searchable(text: $search, prompt: "Søk på navn")

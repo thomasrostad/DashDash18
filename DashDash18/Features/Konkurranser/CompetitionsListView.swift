@@ -1,16 +1,18 @@
 import GolfgutuCore
 import SwiftUI
 
-/// «Konkurranser»: alle du kan se, med påmelding og «Ny konkurranse». Åpnes fra Tavla.
+/// «Turneringer»: alle du kan se, med påmelding og «Ny turnering». Åpnes fra Tavla. Arrangøren styrer
+/// klubbens turneringer fra arrangørsiden («Turneringen» → «Alle turneringer»); her er de som spiller.
 struct CompetitionsListView: View {
     @Bindable var model: CompetitionsModel
+    @Environment(\.clubContext) private var context
 
     @State private var showsNew = false
     @State private var showsJoin = false
 
     var body: some View {
         content
-            .navigationTitle("Konkurranser")
+            .navigationTitle("Turneringer")
             .ddNavigationChrome()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -21,7 +23,7 @@ struct CompetitionsListView: View {
                 }
                 if model.canCreate {
                     ToolbarItem(placement: .primaryAction) {
-                        Button("Ny konkurranse", systemImage: "plus") { showsNew = true }
+                        Button("Ny turnering", systemImage: "plus") { showsNew = true }
                     }
                 }
             }
@@ -34,11 +36,7 @@ struct CompetitionsListView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showsNew) {
-                NavigationStack {
-                    NewCompetitionView(model: model) { showsNew = false }
-                }
-            }
+            .newTournamentSheet(isPresented: $showsNew, seasons: seasons, competitions: model, offersPrivate: true)
             .alert("Det gikk ikke", isPresented: Binding(get: { model.error != nil && !showsNew },
                                                          set: { if !$0 { model.error = nil } })) {
                 Button("OK", role: .cancel) {}
@@ -48,18 +46,24 @@ struct CompetitionsListView: View {
             .refreshable { await model.load() }
     }
 
+    /// Klubbens sesonger, når du er arrangør: da kan «Ny turnering» lage klubbens serie.
+    private var seasons: SesongAdminModel? {
+        guard let context, model.canCreateInClub, context.clubID == model.clubID else { return nil }
+        return SesongAdminModel(context: context)
+    }
+
     @ViewBuilder
     private var content: some View {
         let all = model.all
         if all.isEmpty {
             ScrollView {
                 ContentUnavailableView {
-                    Label("Ingen konkurranser ennå", systemImage: "trophy")
+                    Label("Ingen turneringer ennå", systemImage: "trophy")
                 } description: {
-                    Text("Lag en liga, cup eller morroturnering, så teller rundene der i tillegg.")
+                    Text("Lag en serie, cup eller morroturnering, så teller rundene der.")
                 } actions: {
                     if model.canCreate {
-                        Button("Ny konkurranse") { showsNew = true }
+                        Button("Ny turnering") { showsNew = true }
                             .buttonStyle(.dd(.primary))
                     }
                     Button("Bli med med kode") { showsJoin = true }

@@ -4,7 +4,7 @@ import GolfgutuCore
 import SwiftUI
 
 /// Oppdiktede konkurranser for skjermprøvene `konktavla`, `konkliste`, `konkliga`, `konkcup`,
-/// `konkny`, `konkteller`, `konkkveld`, `konklast` og `konklastdeltaker` (DesignScreenSamples).
+/// `konkteller`, `konkkveld`, `konklast` og `konklastdeltaker` (DesignScreenSamples).
 enum KonkurranseSamples {
     static func id(_ n: Int) -> UUID { TavlaSamples.id(n) }
 
@@ -92,18 +92,6 @@ enum KonkurranseSamples {
         return CompetitionDetailModel(preview: cup, content: .cup(standings), access: access)
     }
 
-    // MARK: Ny konkurranse
-
-    static func new(list: CompetitionsModel) -> NewCompetitionModel {
-        var draft = CompetitionDraft(clubID: club, today: "2026-10-07")
-        draft.name = "Høstcupen"
-        draft.kind = .cup
-        draft.hasPeriod = true
-        draft.endsOn = "2026-11-26"
-        draft.memberIDs = Set(TavlaSamples.members.prefix(6).map(\.id))
-        return NewCompetitionModel(preview: list, draft: draft, members: TavlaSamples.members, friends: [])
-    }
-
     // MARK: «Teller også i …» i hurtigstarten
 
     static func links(for model: RundeAdminModel) -> CompetitionLinkModel {
@@ -144,8 +132,6 @@ struct KonkurranseSampleScreen: View {
                                       list: KonkurranseSamples.list())
             case .konkcup:
                 CompetitionDetailView(model: KonkurranseSamples.cupModel(), list: KonkurranseSamples.list())
-            case .konkny:
-                NewCompetitionView(prepared: KonkurranseSamples.new(list: KonkurranseSamples.list())) {}
             case .konkteller:
                 let model = RundeAdminModel.sample()
                 RundeQuickStartView(model: model, draft: model.newDraft()!, onDone: { _ in },

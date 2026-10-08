@@ -87,7 +87,7 @@ struct KonkurranseLaastTests {
                                             serverUnlocked: false, localUnlocked: false, hasOwnCredit: false,
                                             enabled: true)
         #expect(notice == .purchase)
-        #expect(notice.buttonTitle == "Lås opp konkurransen")
+        #expect(notice.buttonTitle == "Lås opp turneringen")
     }
 
     @Test func eierenMedKredittKoblerDen() {

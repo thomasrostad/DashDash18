@@ -57,7 +57,7 @@ struct PlayerProfileView: View {
                 }
 
                 DDSectionLabel("Runde for runde") {
-                    Text("plass · duell · stableford").ddEyebrow()
+                    Text(standings.roundColumns).ddEyebrow()
                 }
                 .padding(.top, DDSpacing.l)
                 if p.rounds.isEmpty {
@@ -132,10 +132,12 @@ private struct RoundLineView: View {
                 .font(.ddMonoSmall)
                 .monospacedDigit()
                 .foregroundStyle(Color.ddInkSecondary)
-            Text(line.duel.map(standings.points) ?? "—")
-                .font(.ddNumber)
-                .monospacedDigit()
-                .frame(minWidth: 34, alignment: .trailing)
+            if !standings.countsStableford {
+                Text(line.duel.map(standings.points) ?? "—")
+                    .font(.ddNumber)
+                    .monospacedDigit()
+                    .frame(minWidth: 34, alignment: .trailing)
+            }
             Text("\(line.stableford)")
                 .font(.ddBody)
                 .monospacedDigit()

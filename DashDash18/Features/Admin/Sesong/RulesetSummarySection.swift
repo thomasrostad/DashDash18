@@ -1,19 +1,21 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Sammendraget øverst i «Sesong og regler»: merket «Golfgutu-oppsettet» (eller hvor mye som er endret)
-/// og det viktigste i regelsettet i klart språk. Hele forklaringen kan foldes ut under.
+/// Sammendraget øverst i «Turneringen»: merket med oppsettet («Stableford-serie», eller hvor mye som
+/// er endret) og det viktigste i regelsettet i klart språk. Hele forklaringen kan foldes ut under.
 struct RulesetSummarySection: View {
     let rules: Ruleset
     var title = "Reglene"
+    var kind: CompetitionKind = .season
     @State private var showsAll = false
 
     var body: some View {
         Section {
             VStack(alignment: .leading, spacing: 10) {
-                DDPill(RulesetSummary.badge(for: rules),
-                       tone: RulesetSummary.isGolfgutu(rules) ? .lime : .sun,
-                       systemImage: RulesetSummary.isGolfgutu(rules) ? "checkmark.seal" : "slider.horizontal.3")
+                let isTemplate = RulesetSummary.isTemplate(rules, kind: kind)
+                DDPill(RulesetSummary.badge(for: rules, kind: kind),
+                       tone: isTemplate ? .lime : .sun,
+                       systemImage: isTemplate ? "checkmark.seal" : "slider.horizontal.3")
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(RulesetSummary.lines(for: rules), id: \.self) { line in
                         Label {

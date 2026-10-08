@@ -225,7 +225,7 @@ nonisolated enum CompetitionCalendar {
 nonisolated enum CompetitionText {
     static func kind(_ kind: CompetitionKind) -> String {
         switch kind {
-        case .season: "Sesong"
+        case .season: "Serie"
         case .league: "Liga"
         case .cup: "Cup"
         case .fun: "Morroturnering"
@@ -318,7 +318,7 @@ nonisolated enum CompetitionText {
 
     /// Linja under navnet i lista: type, eier og periode.
     static func subtitle(_ c: CompetitionRow, clubName: String?) -> String {
-        var parts = [kind(c.kind)]
+        var parts = [TournamentSetup.typeText(kind: c.kind, rules: c.rules)]
         if c.isMain { parts.append("hovedturnering") }
         parts.append(c.clubID == nil ? "privat" : (clubName ?? "klubb"))
         if let p = period(c) { parts.append(p) }
