@@ -45,7 +45,7 @@ struct RootView: View {
                                 }
                             }
                     }
-                    // Knapper og lenker i innholdet er skoggrønne; rust er bare aktiv fane.
+                    // Knapper og lenker i innholdet er skoggrønne; gult er bare aktiv fane.
                     .tint(Color.ddForestInk)
                     .environment(\.currentTab, tab)
                     .ddScreenBackground()

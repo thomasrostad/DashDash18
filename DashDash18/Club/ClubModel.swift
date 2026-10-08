@@ -118,7 +118,8 @@ final class ClubModel {
             let p_handicap_index: Double?
         }
         do {
-            let result: JoinResult = try await client
+            // Svaret dekodes for å sjekke at serveren ga et medlemskap tilbake.
+            let _: JoinResult = try await client
                 .rpc("join_club", params: Params(
                     p_join_code: code,
                     p_member_id: memberID,
@@ -127,7 +128,6 @@ final class ClubModel {
                 ))
                 .execute()
                 .value
-            _ = result
         } catch {
             throw Self.clubError(from: error)
         }

@@ -10,7 +10,7 @@ final class AppServices {
     let club: ClubModel
     /// Utboksen for hull (fase 5). Startes når brukeren er innlogget.
     let outbox: OutboxScoreSubmitter
-    /// Push (fase 8). Gjør ingenting før `PushFeature.isEnabled` er på.
+    /// Push (fase 8). Gjør ingenting når `PushFeature` er av.
     let push: PushRegistrar
     /// Lagring av hull: utboksen utenpå `DirectScoreSubmitter`.
     var scoreSubmitter: any ScoreSubmitting { outbox }
