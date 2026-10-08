@@ -15,7 +15,7 @@ nonisolated enum AppTab: String, CaseIterable, Identifiable {
     }
 
     /// Knappen til Arrangørsiden i verktøylinja: bare på Hjem, og bare for arrangører.
-    /// Knappen på «Neste kveld» og raden i Deg står i tillegg.
+    /// Raden i Deg står i tillegg. Knappen på «Neste kveld» går rett til neste steg (fase 21).
     func showsAdminButton(isOrganizer: Bool) -> Bool {
         self == .hjem && isOrganizer
     }

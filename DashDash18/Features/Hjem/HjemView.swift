@@ -7,6 +7,8 @@ enum HjemRoute: Hashable {
     /// Kveld-skjermen: hvem som kommer, tråden, tipsen og purringen.
     case evening
     case admin
+    /// Kvelden for arrangøren (fase 21): neste steg, påmelding, runder og avslutning.
+    case kvelden(UUID)
     case competition(UUID)
 }
 
@@ -41,6 +43,9 @@ private struct HjemClubContent: View {
     let context: ClubContext
     @State private var round: RundeModel
     @State private var kveld: KveldModel
+    /// Arrangørens runder og kvelder, for knappen for neste steg. Hentes bare for arrangører.
+    @State private var admin: RundeAdminModel
+    @State private var adminActions: RoundAdminActions
     @State private var route: HjemRoute?
     /// Runden er bedt om før den var hentet.
     @State private var wantsRound = false
@@ -53,6 +58,9 @@ private struct HjemClubContent: View {
         self.router = router
         _round = State(initialValue: RundeModel(context: context))
         _kveld = State(initialValue: KveldModel(context: context))
+        let admin = RundeAdminModel(context: context)
+        _admin = State(initialValue: admin)
+        _adminActions = State(initialValue: RoundAdminActions(model: admin))
     }
 
     var body: some View {
@@ -63,9 +71,14 @@ private struct HjemClubContent: View {
                 async let a: Void = home.load()
                 async let b: Void = kveld.load()
                 async let c: Void = round.load()
-                _ = await (a, b, c)
+                async let d: Void = loadAdmin()
+                _ = await (a, b, c, d)
             }
             .navigationDestination(item: $route) { destination($0) }
+            // «Sett opp runden» og «Fortsett kladd» åpner oppsettet rett fra Hjem.
+            .roundAdminActions(adminActions)
+            .task { await loadAdmin() }
+            .onChange(of: route) { _, route in if route == nil { Task { await loadAdmin() } } }
             .toolbar {
                 if AppTab.hjem.showsAdminButton(isOrganizer: context.isOrganizer) {
                     ToolbarItem(placement: .topBarLeading) {
@@ -115,6 +128,7 @@ private struct HjemClubContent: View {
                     home.reopen()
                     Task { await home.load() }
                     Task { await kveld.load() }
+                    Task { await loadAdmin() }
                 case .background:
                     home.markSeen()
                     // Legges appen bort i angre-vinduet, sendes svaret nå (`angreSendAlle`).
@@ -146,14 +160,52 @@ private struct HjemClubContent: View {
             select: { home.filter = $0 },
             openRound: { route = .round },
             openEvening: { route = .evening },
-            openAdmin: { route = .admin },
             answer: { kveld.answer($0) },
             undoAnswer: { kveld.undoAnswer() },
             toggle: { reaction, target in Task { await home.toggle(reaction, on: target) } },
             hasReacted: { home.hasReacted($0, on: $1) },
             openTable: openTable,
-            share: { home.share(round: $0) }
+            share: { home.share(round: $0) },
+            organizer: organizerStep
         )
+    }
+
+    // MARK: Arrangøren
+
+    private func loadAdmin() async {
+        guard context.isOrganizer else { return }
+        await admin.load()
+    }
+
+    /// Knappen for neste steg på «Neste kveld», med samme ord som på arrangørsiden. Oppsettet og
+    /// runden åpnes rett herfra; purring og avslutning åpner Kvelden, der de spør før de gjør noe.
+    private var organizerStep: HjemOrganizerStep? {
+        guard context.isOrganizer, let event = kveld.event else { return nil }
+        let openKvelden = { route = .kvelden(event.id) }
+        guard admin.state == .loaded else {
+            return HjemOrganizerStep(title: "Kvelden", isBusy: admin.state == .loading,
+                                     hint: "Åpner kvelden.", perform: openKvelden)
+        }
+        let progress = Tonight.progress(event: event, rounds: admin.allRounds, activeRound: admin.activeRound,
+                                        activeComplete: admin.activeComplete,
+                                        notAnswered: Nudge.targets(kveld.summary).count, today: kveld.today)
+        let title = progress.action.buttonTitle ?? "Kvelden"
+        switch progress.action {
+        case .setUp:
+            return HjemOrganizerStep(title: title, isBusy: adminActions.isBusy, hint: "Åpner oppsettet av runden.") {
+                adminActions.newRound(on: event)
+            }
+        case .continueDraft(let id):
+            return HjemOrganizerStep(title: title, isBusy: adminActions.isBusy, hint: "Åpner kladden.") {
+                if let round = admin.allRounds.first(where: { $0.id == id }) { adminActions.edit(round) }
+            }
+        case .goToRound:
+            return HjemOrganizerStep(title: title, hint: "Åpner runden.") { route = .round }
+        case .seeResult:
+            return HjemOrganizerStep(title: title, hint: "Åpner Tavla.") { selectTab(.tavla) }
+        case .nudge, .closeEvening, .notPlayed, .noEvening:
+            return HjemOrganizerStep(title: title, hint: "Åpner kvelden.", perform: openKvelden)
+        }
     }
 
     private func openTable(_ id: UUID) {
@@ -185,6 +237,8 @@ private struct HjemClubContent: View {
             KveldView(model: kveld)
         case .admin:
             AdminHubView()
+        case .kvelden(let id):
+            KveldenView(eventID: id, terminliste: TerminlisteModel(context: context), admin: admin)
         case .competition(let id):
             HjemCompetitionScreen(context: context, competitionID: id)
         }
