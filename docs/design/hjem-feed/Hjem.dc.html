@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/fink-design-system-ac36aeb1-9fa3-44d3-ba3a-844b1166e903/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/fink-design-system-ac36aeb1-9fa3-44d3-ba3a-844b1166e903/tokens/colors.css">
+<link rel="stylesheet" href="_ds/fink-design-system-ac36aeb1-9fa3-44d3-ba3a-844b1166e903/tokens/typography.css">
+<link rel="stylesheet" href="_ds/fink-design-system-ac36aeb1-9fa3-44d3-ba3a-844b1166e903/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/fink-design-system-ac36aeb1-9fa3-44d3-ba3a-844b1166e903/styles.css">
+<script src="_ds/fink-design-system-ac36aeb1-9fa3-44d3-ba3a-844b1166e903/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300..800&family=Sometype+Mono:wght@400..700&display=swap">
+<style>
+body{margin:0;background:#EDE6CC;font-family:'42dot Sans',system-ui,sans-serif;color:#21292B;-webkit-font-smoothing:antialiased}
+a{color:#1C483A}a:hover{color:#A84A10}
+.hjem-scroll::-webkit-scrollbar{display:none}
+</style>
+</helmet>
+
+<section style="padding:56px 64px 80px;display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:900px">
+    <div style="font-family:'Sometype Mono',monospace;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:#727065">DashDash · fase 15 · Hjem-fanen</div>
+    <div style="font-size:40px;font-weight:300;color:#1C483A;letter-spacing:-0.2px">Hjem: alt som har skjedd i det siste</div>
+    <div style="font-size:17px;line-height:1.5;color:#21292B;text-wrap:pretty">Bygget på aktivitetsloggen (<span style="font-family:'Sometype Mono',monospace;font-size:14px">activity</span>), «Mine runder» og konkurranse-laget fra <span style="font-family:'Sometype Mono',monospace;font-size:14px">docs/visjon-apen-app.md</span>. Fanene er de nye: Hjem · Spill · Konkurranser · Deg. To retninger for samme innhold.</div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start">
+
+    <!-- ============ 1a: Kronologisk feed ============ -->
+    <div id="1a" style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-family:'Sometype Mono',monospace;font-size:13px;font-weight:600;background:#1C483A;color:#FFF9DF;border-radius:999px;padding:5px 12px">1a</div>
+        <div style="font-size:18px;font-weight:500;color:#1C483A">Kronologisk feed</div>
+        <div style="font-size:14px;color:#727065">Én tidslinje på tvers av konkurranser, filtrer øverst</div>
+      </div>
+
+      <div style="width:424px;height:896px;box-sizing:border-box;border-radius:62px;background:#0B0B0B;padding:11px;box-shadow:0 30px 60px rgba(28,72,58,.25)">
+      <div style="position:relative;width:402px;height:874px;border-radius:52px;overflow:hidden;background:#FFF9DF">
+
+        <!-- status + nav -->
+        <div style="position:absolute;top:0;left:0;right:0;z-index:3;background:#1C483A">
+          <div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 46px;color:#FFF9DF;font-family:-apple-system,system-ui,sans-serif;font-size:17px;font-weight:600">
+            <span>9:41</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="#FFF9DF"><rect x="0" y="8" width="3" height="4" rx="1"></rect><rect x="5" y="5.5" width="3" height="6.5" rx="1"></rect><rect x="10" y="3" width="3" height="9" rx="1"></rect><rect x="15" y="0" width="3" height="12" rx="1"></rect></svg>
+              <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".5" y=".5" width="23" height="12" rx="3.5" stroke="#FFF9DF" opacity=".5"></rect><rect x="2" y="2" width="18" height="9" rx="2" fill="#FFF9DF"></rect><rect x="25" y="4.5" width="1.5" height="4" rx=".75" fill="#FFF9DF" opacity=".5"></rect></svg>
+            </div>
+          </div>
+          <div style="height:48px;position:relative;display:flex;align-items:center;justify-content:center">
+            <div style="font-size:20px;font-weight:500;color:#FFF9DF">Hjem</div>
+            <div style="position:absolute;right:16px;top:4px;width:40px;height:40px;border-radius:20px;background:rgba(255,249,223,.12);display:flex;align-items:center;justify-content:center;color:#FFF9DF">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+              <div style="position:absolute;top:2px;right:0;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#A84A10;border:1.5px solid #1C483A;color:#FFF9DF;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">4</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- scroll -->
+        <div class="hjem-scroll" style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding:102px 0 120px">
+
+          <!-- filter -->
+          <div class="hjem-scroll" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:14px 20px 4px">
+            <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+              <div onClick="{{ f.onTap }}" style="flex:none;cursor:pointer;height:36px;padding:0 14px;border-radius:999px;display:flex;align-items:center;font-size:14.5px;font-weight:{{ f.weight }};background:{{ f.bg }};color:{{ f.fg }};box-shadow:inset 0 0 0 1px {{ f.border }}">{{ f.label }}</div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;padding:12px 20px 0">
+
+            <!-- live round -->
+            <sc-if value="{{ showLive }}" hint-placeholder-val="{{ true }}">
+              <div style="padding:6px 2px 0;font-family:'Sometype Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#727065">Pågår nå</div>
+              <div style="background:#000;color:#fff;border-radius:30px;padding:22px;box-shadow:0 12px 36px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <div style="display:flex;align-items:center;gap:8px;background:#FCE5DB;color:#612807;border-radius:999px;padding:6px 12px 6px 10px;font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase">
+                    <span style="width:8px;height:8px;border-radius:4px;background:#BF5412"></span>Runden pågår
+                  </div>
+                  <div style="font-family:'Sometype Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#9A9A9A">Hull 10 av 18</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <div style="font-size:24px;font-weight:500">Losby · runde 4</div>
+                  <div style="font-size:14px;color:#9A9A9A">Teller i Jakkeracet og Morrocupen · bås 2</div>
+                </div>
+                <div style="display:flex;flex-direction:column">
+                  <sc-for list="{{ liveRows }}" as="r" hint-placeholder-count="3">
+                    <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid rgba(255,255,255,.12)">
+                      <div style="width:22px;font-size:13px;color:#9A9A9A">{{ r.place }}</div>
+                      <div style="flex:1;font-size:17px;font-weight:500;color:{{ r.color }}">{{ r.name }}</div>
+                      <div style="font-size:17px;font-weight:500;font-variant-numeric:tabular-nums;color:{{ r.color }}">{{ r.points }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="height:56px;border-radius:999px;background:#F5C842;color:#1E1A05;font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer">Fortsett føringen</div>
+              </div>
+            </sc-if>
+
+            <!-- next evening -->
+            <sc-if value="{{ showNext }}" hint-placeholder-val="{{ true }}">
+              <div style="background:#fff;border-radius:24px;padding:18px;box-shadow:0 6px 22px rgba(28,72,58,.12),inset 0 0 0 1px rgba(28,72,58,.07);display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                  <div style="display:flex;flex-direction:column;gap:4px">
+                    <div style="font-family:'Sometype Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#727065">Golfgutu Invitational · neste kveld</div>
+                    <div style="font-size:20px;font-weight:500;color:#1C483A">Torsdag 15. oktober</div>
+                  </div>
+                  <div style="flex:none;background:#EFE3B0;color:#4B4A35;border-radius:999px;padding:5px 10px;font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase">8 dager</div>
+                </div>
+                <div style="font-size:14px;color:#727065">Kl. 18:00 · Golfstudio Bryn · 6 kommer</div>
+                <div style="display:flex;gap:8px">
+                  <sc-for list="{{ signup }}" as="s" hint-placeholder-count="3">
+                    <div onClick="{{ s.onTap }}" style="flex:1;cursor:pointer;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:14.5px;font-weight:{{ s.weight }};background:{{ s.bg }};color:{{ s.fg }};box-shadow:inset 0 0 0 1px {{ s.border }}">{{ s.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="2">
+              <div style="padding:16px 2px 0;font-family:'Sometype Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#727065">{{ sec.title }}</div>
+              <sc-for list="{{ sec.items }}" as="it" hint-placeholder-count="2">
+
+                <!-- your finished round -->
+                <sc-if value="{{ it.isMyRound }}">
+                  <div style="background:#fff;border-radius:30px;padding:22px;box-shadow:0 10px 34px rgba(28,72,58,.16),inset 0 0 0 1px rgba(28,72,58,.07);display:flex;flex-direction:column;gap:14px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                      <div style="font-family:'Sometype Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#727065">Din runde · {{ it.time }}</div>
+                      <div style="background:{{ it.tagBg }};color:{{ it.tagFg }};border-radius:999px;padding:5px 10px;font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase">{{ it.tag }}</div>
+                    </div>
+                    <div style="font-size:20px;font-weight:500;color:#1C483A">{{ it.course }}</div>
+                    <div style="display:flex;align-items:flex-end;justify-content:space-between">
+                      <div style="display:flex;align-items:baseline;gap:6px">
+                        <div style="font-size:52px;font-weight:300;line-height:1;color:#21292B;font-variant-numeric:tabular-nums">{{ it.points }}</div>
+                        <div style="font-size:14px;color:#727065">poeng</div>
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+                        <div style="font-size:20px;font-weight:500;color:#21292B">{{ it.place }}</div>
+                        <div style="font-size:13px;color:#727065">{{ it.of }}</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px">
+                      <sc-for list="{{ it.chips }}" as="c" hint-placeholder-count="4">
+                        <div style="background:{{ c.bg }};color:{{ c.fg }};border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600">{{ c.label }}</div>
+                      </sc-for>
+                    </div>
+                    <sc-if value="{{ it.note }}">
+                      <div style="background:#F3E9DD;color:#612807;border-radius:16px;padding:12px 14px;font-size:14px;line-height:1.4">{{ it.note }}</div>
+                    </sc-if>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:2px;border-top:1px solid #F0EADB">
+                      <div style="font-size:13px;color:#727065;padding-top:10px">{{ it.leader }}</div>
+                      <div style="display:flex;align-items:center;gap:6px;color:#1C483A;font-size:15px;font-weight:600;padding-top:10px;cursor:pointer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" x2="12" y1="2" y2="15"></line></svg>Del
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- big score / achievement by someone else -->
+                <sc-if value="{{ it.isBig }}">
+                  <div style="background:#fff;border-radius:24px;padding:18px;box-shadow:0 6px 22px rgba(28,72,58,.12),inset 0 0 0 1px rgba(28,72,58,.07);display:flex;flex-direction:column;gap:12px">
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <div style="width:36px;height:36px;border-radius:18px;background:#D9EBD0;color:#21451F;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ it.initials }}</div>
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <div style="font-size:16px;font-weight:500;color:#21292B">{{ it.who }}</div>
+                        <div style="font-size:13px;color:#727065">{{ it.where }}</div>
+                      </div>
+                      <div style="font-size:13px;color:#727065;font-variant-numeric:tabular-nums">{{ it.time }}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:14px;background:#EFE3B0;border-radius:16px;padding:14px">
+                      <div style="font-size:44px;font-weight:300;line-height:1;color:#4B4A35">{{ it.strokes }}</div>
+                      <div style="display:flex;flex-direction:column;gap:2px">
+                        <div style="font-size:17px;font-weight:600;color:#4B4A35">{{ it.headline }}</div>
+                        <div style="font-size:14px;color:#4B4A35">{{ it.detail }}</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                      <div style="display:flex;gap:6px">
+                        <sc-for list="{{ it.reactions }}" as="rx" hint-placeholder-count="2">
+                          <div onClick="{{ rx.onTap }}" style="cursor:pointer;display:flex;align-items:center;gap:4px;height:32px;padding:0 10px;border-radius:999px;background:{{ rx.bg }};color:{{ rx.fg }};box-shadow:inset 0 0 0 1px {{ rx.border }};font-size:13px;font-weight:600"><span>{{ rx.emoji }}</span><span>{{ rx.count }}</span></div>
+                        </sc-for>
+                      </div>
+                      <div style="background:{{ it.tagBg }};color:{{ it.tagFg }};border-radius:999px;padding:5px 10px;font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase">{{ it.tag }}</div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- standings / lead change with mini table -->
+                <sc-if value="{{ it.isTable }}">
+                  <div style="background:#fff;border-radius:24px;padding:18px;box-shadow:0 6px 22px rgba(28,72,58,.12),inset 0 0 0 1px rgba(28,72,58,.07);display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;align-items:flex-start;gap:12px">
+                      <div style="width:36px;height:36px;border-radius:18px;background:#F3E9DD;color:#1C483A;display:flex;align-items:center;justify-content:center;flex:none">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+                      </div>
+                      <div style="flex:1;min-width:0;font-size:16px;line-height:1.4;color:#21292B;padding-top:7px;text-wrap:pretty">{{ it.text }}</div>
+                      <div style="font-size:13px;color:#727065;padding-top:9px">{{ it.time }}</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;padding-left:48px">
+                      <sc-for list="{{ it.rows }}" as="r" hint-placeholder-count="3">
+                        <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:0 -10px;border-radius:14px;background:{{ r.bg }}">
+                          <div style="width:22px;font-size:13px;color:#727065">{{ r.place }}</div>
+                          <div style="flex:1;font-size:16px;font-weight:{{ r.weight }};color:#1C483A">{{ r.name }}</div>
+                          <sc-if value="{{ r.move }}">
+                            <div style="font-size:12px;font-weight:600;color:#21451F;background:#D9EBD0;border-radius:999px;padding:2px 8px">{{ r.move }}</div>
+                          </sc-if>
+                          <div style="width:30px;text-align:right;font-size:16px;font-weight:500;color:#21292B;font-variant-numeric:tabular-nums">{{ r.pts }}</div>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding-left:48px">
+                      <div style="background:{{ it.tagBg }};color:{{ it.tagFg }};border-radius:999px;padding:5px 10px;font-family:'Sometype Mono',monospace;font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase">{{ it.tag }}</div>
+                      <div style="font-size:15px;font-weight:600;color:#1C483A;cursor:pointer">Se tabellen →</div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- compact rows (like Varsler) -->
+                <sc-if value="{{ it.isCompact }}">
+                  <div style="background:#fff;border-radius:24px;padding:6px 18px;box-shadow:0 6px 22px rgba(28,72,58,.12),inset 0 0 0 1px rgba(28,72,58,.07);display:flex;flex-direction:column">
+                    <sc-for list="{{ it.lines }}" as="l" hint-placeholder-count="2">
+                      <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid {{ l.rule }}">
+                        <div style="width:36px;height:36px;border-radius:18px;background:#F3E9DD;color:#1C483A;display:flex;align-items:center;justify-content:center;flex:none">
+                          <sc-if value="{{ l.iDrive }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"></path><path d="m14.5 12.5 2-2"></path><path d="m11.5 9.5 2-2"></path><path d="m8.5 6.5 2-2"></path></svg></sc-if>
+                          <sc-if value="{{ l.iCrown }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path><path d="M5 21h14"></path></svg></sc-if>
+                          <sc-if value="{{ l.iMega }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg></sc-if>
+                          <sc-if value="{{ l.iFlag }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line></svg></sc-if>
+                          <sc-if value="{{ l.iCheck }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg></sc-if>
+                        </div>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding-top:7px">
+                          <div style="font-size:16px;line-height:1.4;color:#21292B;text-wrap:pretty">{{ l.text }}</div>
+                          <div style="font-size:13px;color:#727065">{{ l.ctx }}</div>
+                        </div>
+                        <div style="font-size:13px;color:#727065;padding-top:9px;white-space:nowrap">{{ l.time }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+              </sc-for>
+            </sc-for>
+
+            <sc-if value="{{ isEmpty }}">
+              <div style="border-radius:24px;padding:28px 18px;border:1.5px dashed #E4DBBB;text-align:center;font-size:14px;color:#727065">Ingenting her ennå.</div>
+            </sc-if>
+          </div>
+        </div>
+
+        <!-- tab bar (iOS 26 glass) -->
+        <div style="position:absolute;left:21px;right:21px;bottom:28px;z-index:3;height:62px;border-radius:31px;background:rgba(255,249,223,.78);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);box-shadow:0 8px 30px rgba(28,72,58,.18),inset 0 0 0 1px rgba(255,255,255,.6);display:flex;align-items:center;padding:4px;gap:2px">
+          <div style="flex:1;height:54px;border-radius:27px;background:rgba(28,72,58,.08);color:#7A5C00;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <div style="font-size:10px;font-weight:600">Hjem</div>
+          </div>
+          <div style="flex:1;height:54px;color:#21292B;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line></svg>
+            <div style="font-size:10px;font-weight:500">Spill</div>
+          </div>
+          <div style="flex:1;height:54px;color:#21292B;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+            <div style="font-size:10px;font-weight:500">Konkurranser</div>
+          </div>
+          <div style="flex:1;height:54px;color:#21292B;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="10" r="3"></circle><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path></svg>
+            <div style="font-size:10px;font-weight:500">Deg</div>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:139px;height:5px;border-radius:3px;background:#21292B;z-index:4"></div>
+      </div>
+      </div>
+    </div>
+
+    <!-- ============ 1b: Per konkurranse ============ -->
+    <div id="1b" style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-family:'Sometype Mono',monospace;font-size:13px;font-weight:600;background:#1C483A;color:#FFF9DF;border-radius:999px;padding:5px 12px">1b</div>
+        <div style="font-size:18px;font-weight:500;color:#1C483A">Siden sist, per konkurranse</div>
+        <div style="font-size:14px;color:#727065">Oppsummering først, så ett kort per konkurranse</div>
+      </div>
+
+      <div style="width:424px;height:896px;box-sizing:border-box;border-radius:62px;background:#0B0B0B;padding:11px;box-shadow:0 30px 60px rgba(28,72,58,.25)">
+      <div style="position:relative;width:402px;height:874px;border-radius:52px;overflow:hidden;background:#FFF9DF">
+
+        <div style="position:absolute;top:0;left:0;right:0;z-index:3;background:#1C483A">
+          <div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 46px;color:#FFF9DF;font-family:-apple-system,system-ui,sans-serif;font-size:17px;font-weight:600">
+            <span>9:41</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="#FFF9DF"><rect x="0" y="8" width="3" height="4" rx="1"></rect><rect x="5" y="5.5" width="3" height="6.5" rx="1"></rect><rect x="10" y="3" width="3" height="9" rx="1"></rect><rect x="15" y="0" width="3" height="12" rx="1"></rect></svg>
+              <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".5" y=".5" width="23" height="12" rx="3.5" stroke="#FFF9DF" opacity=".5"></rect><rect x="2" y="2" width="18" height="9" rx="2" fill="#FFF9DF"></rect><rect x="25" y="4.5" width="1.5" height="4" rx=".75" fill="#FFF9DF" opacity=".5"></rect></svg>
+            </div>
+          </div>
+          <div style="height:48px;position:relative;display:flex;align-items:center;justify-content:center">
+            <div style="font-size:20px;font-weight:500;color:#FFF9DF">Hjem</div>
+            <div style="position:absolute;right:16px;top:4px;width:40px;height:40px;border-radius:20px;background:rgba(255,249,223,.12);display:flex;align-items:center;justify-content:center;color:#FFF9DF">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+              <div style="position:absolute;top:2px;right:0;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#A84A10;border:1.5px solid #1C483A;color:#FFF9DF;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">4</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hjem-scroll" style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding:102px 0 120px">
+          <div style="display:flex;flex-direction:column;gap:10px;padding:16px 20px 0">
+
+            <!-- digest -->
+            <div style="background:#1C483A;color:#FFF9DF;border-radius:30px;padding:20px;box-shadow:0 14px 30px rgba(28,72,58,.36);display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="font-family:'Sometype Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#E4C767">Siden sist · søndag</div>
+                <div style="font-size:24px;font-weight:300;line-height:1.25;text-wrap:pretty">Du klatret til 3. plass i Jakkeracet, og Anders slo eagle.</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                <sc-for list="{{ digest }}" as="d" hint-placeholder-count="3">
+                  <div style="background:rgba(255,249,223,.12);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:26px;font-weight:300;line-height:1.1">{{ d.n }}</div>
+                    <div style="font-size:12px;color:rgba(255,249,223,.8)">{{ d.label }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <!-- live compact -->
+            <div style="background:#000;color:#fff;border-radius:24px;padding:16px 18px;box-shadow:0 12px 36px rgba(0,0,0,.22);display:flex;align-items:center;gap:14px">
+              <span style="width:8px;height:8px;border-radius:4px;background:#BF5412;flex:none;box-shadow:0 0 0 5px rgba(191,84,18,.25)"></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:16px;font-weight:500">Losby · hull 10 av 18</div>
+                <div style="font-size:13px;color:#9A9A9A">Du er 3. · 21 p · Bjørn leder med 23</div>
+              </div>
+              <div style="height:40px;padding:0 16px;border-radius:999px;background:#F5C842;color:#1E1A05;font-size:15px;font-weight:600;display:flex;align-items:center">Før</div>
+            </div>
+
+            <sc-for list="{{ comps }}" as="c" hint-placeholder-count="2">
+              <div style="padding:16px 2px 0;display:flex;align-items:baseline;justify-content:space-between">
+                <div style="font-family:'Sometype Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#727065">{{ c.club }}</div>
+                <div style="font-size:15px;font-weight:600;color:#1C483A">Tabell →</div>
+              </div>
+              <div style="background:#fff;border-radius:30px;padding:20px;box-shadow:0 10px 34px rgba(28,72,58,.16),inset 0 0 0 1px rgba(28,72,58,.07);display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;gap:14px">
+                  <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0">
+                    <div style="font-size:20px;font-weight:500;color:#1C483A">{{ c.name }}</div>
+                    <div style="font-size:13px;color:#727065">{{ c.sub }}</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                    <div style="display:flex;align-items:baseline;gap:4px">
+                      <div style="font-size:40px;font-weight:300;line-height:1;color:#21292B">{{ c.place }}</div>
+                      <div style="font-size:13px;color:#727065">{{ c.of }}</div>
+                    </div>
+                    <div style="font-size:12px;font-weight:600;border-radius:999px;padding:2px 8px;background:{{ c.moveBg }};color:{{ c.moveFg }}">{{ c.move }}</div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column">
+                  <sc-for list="{{ c.events }}" as="e" hint-placeholder-count="3">
+                    <div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-top:1px solid #F0EADB">
+                      <div style="flex:none;min-width:58px;text-align:center;border-radius:999px;padding:4px 8px;font-size:11.5px;font-weight:600;background:{{ e.bg }};color:{{ e.fg }}">{{ e.badge }}</div>
+                      <div style="flex:1;min-width:0;font-size:15px;line-height:1.4;color:#21292B;text-wrap:pretty">{{ e.text }}</div>
+                      <div style="font-size:13px;color:#727065;white-space:nowrap">{{ e.time }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+
+            <div style="padding:16px 2px 0;display:flex;align-items:baseline;justify-content:space-between">
+              <div style="font-family:'Sometype Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#727065">Dine siste runder</div>
+              <div style="font-size:15px;font-weight:600;color:#1C483A">Alle →</div>
+            </div>
+            <div class="hjem-scroll" style="display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px 24px">
+              <sc-for list="{{ myRounds }}" as="m" hint-placeholder-count="3">
+                <div style="flex:none;width:150px;background:#000;color:#fff;border-radius:24px;padding:16px;box-shadow:0 12px 24px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:6px">
+                  <div style="font-family:'Sometype Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#9A9A9A">{{ m.date }}</div>
+                  <div style="font-size:30px;font-weight:300;line-height:1;color:{{ m.color }}">{{ m.points }}</div>
+                  <div style="font-size:14px;font-weight:500">{{ m.course }}</div>
+                  <div style="font-size:13px;color:#9A9A9A">{{ m.place }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:21px;right:21px;bottom:28px;z-index:3;height:62px;border-radius:31px;background:rgba(255,249,223,.78);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);box-shadow:0 8px 30px rgba(28,72,58,.18),inset 0 0 0 1px rgba(255,255,255,.6);display:flex;align-items:center;padding:4px;gap:2px">
+          <div style="flex:1;height:54px;border-radius:27px;background:rgba(28,72,58,.08);color:#7A5C00;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <div style="font-size:10px;font-weight:600">Hjem</div>
+          </div>
+          <div style="flex:1;height:54px;color:#21292B;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line></svg>
+            <div style="font-size:10px;font-weight:500">Spill</div>
+          </div>
+          <div style="flex:1;height:54px;color:#21292B;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+            <div style="font-size:10px;font-weight:500">Konkurranser</div>
+          </div>
+          <div style="flex:1;height:54px;color:#21292B;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="10" r="3"></circle><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path></svg>
+            <div style="font-size:10px;font-weight:500">Deg</div>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:139px;height:5px;border-radius:3px;background:#21292B;z-index:4"></div>
+      </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { filter: 'alle', signup: 'yes', rx: {
+    eagle: [{ e: '🔥', n: 2, mine: true }, { e: '👍', n: 1, mine: false }],
+    hio: [{ e: '😂', n: 3, mine: false }, { e: '❤️', n: 1, mine: false }],
+  } };
+
+  tags = {
+    gg: { tag: 'Jakkeracet', tagBg: '#D9EBD0', tagFg: '#21451F' },
+    morro: { tag: 'Morrocupen', tagBg: '#EFE3B0', tagFg: '#4B4A35' },
+    los: { tag: 'Løs runde', tagBg: '#F3E9DD', tagFg: '#612807' },
+  };
+
+  feed() {
+    const t = this.tags;
+    return [
+      { day: 'I dag', src: 'gg', type: 'big', id: 'eagle', who: 'Anders Berg', initials: 'AB', where: 'Losby · runde 4 · hull 5', time: '3 min',
+        strokes: '3', headline: 'Eagle på hull 5', detail: '3 slag på par 5 · Losby', ...t.gg },
+      { day: 'I dag', src: 'morro', type: 'table', time: '12 min', text: 'Bjørn Dahl har tatt ledelsen i Morrocupen etter runde 2.', ...t.morro,
+        rows: [
+          { place: '1.', name: 'Bjørn', pts: '41', move: '↑1' },
+          { place: '2.', name: 'Per', pts: '39' },
+          { place: '3.', name: 'Thomas', pts: '36', me: true },
+        ] },
+      { day: 'I går', src: 'los', type: 'myround', time: 'i går', course: 'Oslo GK · med Per og Even', points: '34', place: '2. plass', of: 'av 3 spillere',
+        chips: [{ label: 'Birdie 2', bg: '#D9EBD0', fg: '#21451F' }, { label: 'Par 9', bg: '#F3E9DD', fg: '#612807' },
+                { label: 'Bogey 5', bg: '#FCE5DB', fg: '#612807' }, { label: 'Dobbel 2', bg: '#F7D4C6', fg: '#612807' }],
+        note: 'Beste runde på Oslo GK i år, 4 poeng over snittet ditt.', leader: 'Vinner: Per · 36 p', ...t.los },
+      { day: 'I går', src: 'gg', type: 'compact', lines: [
+        { iDrive: true, text: 'Bjørn leder longest drive på hull 7 med 245,0 m — forbi Anders (231,0 m)', ctx: 'Jakkeracet · runde 3', time: 'i går 20:14' },
+        { iCrown: true, text: 'Tippekongen torsdag 1. oktober: Kristian med 9 av 12 riktige', ctx: 'Golfgutu Invitational', time: 'i går 22:40' },
+      ] },
+      { day: 'Tidligere', src: 'gg', type: 'table', time: '4. okt.', text: 'Du klatret til 3. plass i Jakkeracet etter runde 3.', ...t.gg,
+        rows: [
+          { place: '1.', name: 'Anders', pts: '58' },
+          { place: '2.', name: 'Bjørn', pts: '55' },
+          { place: '3.', name: 'Thomas', pts: '49', move: '↑2', me: true },
+        ] },
+      { day: 'Tidligere', src: 'morro', type: 'big', id: 'hio', who: 'Even Lie', initials: 'EL', where: 'Bærum GK · Morrocupen runde 1 · hull 12', time: '3. okt.',
+        strokes: '1', headline: 'Hole in one på hull 12!', detail: 'Første i appen i år', ...t.morro },
+      { day: 'Tidligere', src: 'gg', type: 'compact', lines: [
+        { iMega: true, text: 'Thomas: Vi starter 17:00 torsdag, husk sko.', ctx: 'Golfgutu Invitational', time: '2. okt.' },
+        { iCheck: true, text: 'Bjørn meldte seg på torsdag 15. oktober', ctx: 'Golfgutu Invitational', time: '2. okt.' },
+      ] },
+    ];
+  }
+
+  renderVals() {
+    const { filter, signup, rx } = this.state;
+    const filters = [['alle', 'Alt'], ['gg', 'Golfgutu Invitational'], ['morro', 'Morrocupen'], ['los', 'Løse runder']].map(([k, label]) => {
+      const on = filter === k;
+      return { label, onTap: () => this.setState({ filter: k }),
+        bg: on ? '#6BE07A' : '#FFFFFF', fg: on ? '#0F2E17' : '#727065', border: on ? 'transparent' : '#D5D5D5', weight: on ? 600 : 500 };
+    });
+
+    const items = this.feed().filter(i => filter === 'alle' || i.src === filter).map(i => {
+      const o = { ...i, isBig: i.type === 'big', isTable: i.type === 'table', isMyRound: i.type === 'myround', isCompact: i.type === 'compact' };
+      if (i.rows) o.rows = i.rows.map(r => ({ ...r, bg: r.me ? 'rgba(228,199,103,.13)' : 'transparent', weight: r.me ? 600 : 400 }));
+      if (i.lines) o.lines = i.lines.map((l, n) => ({ ...l, rule: n === 0 ? 'transparent' : '#F0EADB' }));
+      if (i.type === 'big') o.reactions = (rx[i.id] || []).map((c, n) => ({
+        emoji: c.e, count: c.n, bg: c.mine ? '#D9EBD0' : '#F3E9DD', fg: c.mine ? '#21451F' : '#21292B',
+        border: c.mine ? 'rgba(33,69,31,.35)' : 'transparent',
+        onTap: () => this.setState(s => {
+          const list = s.rx[i.id].map((x, m) => m === n ? { ...x, mine: !x.mine, n: x.n + (x.mine ? -1 : 1) } : x);
+          return { rx: { ...s.rx, [i.id]: list } };
+        }),
+      }));
+      return o;
+    });
+    const order = ['I dag', 'I går', 'Tidligere'];
+    const sections = order.map(title => ({ title, items: items.filter(i => i.day === title) })).filter(s => s.items.length);
+
+    const signupBtns = [['yes', 'Kommer', '#6BE07A', '#0F2E17'], ['maybe', 'Usikker', '#EFE3B0', '#4B4A35'], ['no', 'Kommer ikke', '#FCE5DB', '#612807']].map(([k, label, bg, fg]) => {
+      const on = signup === k;
+      return { label, onTap: () => this.setState({ signup: k }), bg: on ? bg : '#FFFFFF', fg: on ? fg : '#727065', border: on ? 'transparent' : '#D5D5D5', weight: on ? 600 : 500 };
+    });
+
+    return {
+      filters, sections, signup: signupBtns,
+      isEmpty: sections.length === 0,
+      showLive: filter === 'alle' || filter === 'gg' || filter === 'morro',
+      showNext: filter === 'alle' || filter === 'gg',
+      liveRows: [
+        { place: '1.', name: 'Bjørn', points: '23', color: '#FFFFFF' },
+        { place: '2.', name: 'Anders', points: '22', color: '#FFFFFF' },
+        { place: '3.', name: 'Thomas (deg)', points: '21', color: '#F5C842' },
+      ],
+      digest: [{ n: '3', label: 'nye runder' }, { n: '2', label: 'bragder' }, { n: '↑2', label: 'plasser' }],
+      comps: [
+        { club: 'Golfgutu Invitational', name: 'Jakkeracet 2026', sub: 'Runde 4 av 7 · 12 spillere', place: '3.', of: 'av 12', move: '↑2 siden sist', moveBg: '#D9EBD0', moveFg: '#21451F',
+          events: [
+            { badge: 'Eagle', bg: '#EFE3B0', fg: '#4B4A35', text: 'Anders eagle på hull 5 — 3 slag på par 5', time: '3 min' },
+            { badge: 'LD', bg: '#E4C767', fg: '#4B3A0B', text: 'Bjørn leder longest drive med 245,0 m', time: 'i går' },
+            { badge: 'Tabell', bg: '#F3E9DD', fg: '#612807', text: 'Du klatret fra 5. til 3. plass', time: '4. okt.' },
+          ] },
+        { club: 'Morrocup · 6 venner', name: 'Morrocupen', sub: 'Runde 2 av 5 · teller beste 3', place: '3.', of: 'av 6', move: '↓1 siden sist', moveBg: '#FCE5DB', moveFg: '#612807',
+          events: [
+            { badge: 'Ledelse', bg: '#D9EBD0', fg: '#21451F', text: 'Bjørn har tatt ledelsen · 41 poeng', time: '12 min' },
+            { badge: 'HIO', bg: '#EFE3B0', fg: '#4B4A35', text: 'Even hole in one på hull 12 på Bærum GK', time: '3. okt.' },
+          ] },
+      ],
+      myRounds: [
+        { date: 'I går', points: '34 p', course: 'Oslo GK', place: '2. av 3', color: '#F5C842' },
+        { date: '4. okt.', points: '31 p', course: 'Losby', place: '4. av 12', color: '#FFFFFF' },
+        { date: '1. okt.', points: '29 p', course: 'Bærum GK', place: '3. av 6', color: '#FFFFFF' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
