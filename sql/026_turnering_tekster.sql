@@ -1,7 +1,7 @@
 -- ===========================================================================
--- 026 – «SESONG» BLIR «TURNERING» I FEILMELDINGENE – FORSLAG, IKKE KJØRT
+-- 026 – «SESONG» BLIR «TURNERING» I FEILMELDINGENE – KJØRT PÅ TEST 08.10.2026
 -- ===========================================================================
--- Status: FORSLAG til godkjenning. IKKE KJØRT mot Supabase, verken test eller prod.
+-- Status: godkjent og kjørt på test 08.10.2026 (kontrollen 5 av 5). Ikke prod.
 --
 -- Hvorfor (besluttet 08.10.2026, fase 18): appen kaller sesong og konkurranse
 -- «turnering». Fem feilmeldinger i databasen sier fortsatt «sesong», og tre av dem
