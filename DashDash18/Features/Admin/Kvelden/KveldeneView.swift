@@ -85,11 +85,7 @@ private struct KveldeneContent: View {
             } message: { _ in
                 Text("Påmeldingene og sosialkomiteen for kvelden slettes også.")
             }
-            .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(error ?? "")
-            }
+            .messageAlert("Det gikk ikke", text: $error)
     }
 
     @ViewBuilder

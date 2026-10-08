@@ -83,11 +83,7 @@ struct RundeQuickStartView: View {
         .onChange(of: draft.participants) { _, _ in
             draft.prepareSetup(rules: rules, roster: model.members)
         }
-        .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(error ?? "")
-        }
+        .messageAlert("Det gikk ikke", text: $error)
     }
 
     /// Noe er endret siden skjermen åpnet: kladden eller «Teller også i …».

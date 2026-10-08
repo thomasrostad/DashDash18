@@ -117,18 +117,8 @@ private struct RoundAdminActionsModifier: ViewModifier {
             } message: { item in
                 Text(item.summary.message)
             }
-            .alert("Det gikk ikke", isPresented: Binding(get: { actions.error != nil },
-                                                         set: { if !$0 { actions.error = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(actions.error ?? "")
-            }
-            .alert("Ferdig", isPresented: Binding(get: { actions.message != nil },
-                                                  set: { if !$0 { actions.message = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(actions.message ?? "")
-            }
+            .messageAlert("Det gikk ikke", text: $actions.error)
+            .messageAlert("Ferdig", text: $actions.message)
     }
 }
 

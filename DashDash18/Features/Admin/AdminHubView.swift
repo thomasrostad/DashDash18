@@ -316,8 +316,8 @@ private struct GettingStartedRow: View {
     }
 }
 
-/// Rad på arrangørsiden: tittel og en undertekst i klart språk.
-private struct AdminHubRow: View {
+/// Rad på arrangørsiden og i «Varsler til troppen»: tittel og en undertekst i klart språk.
+struct AdminHubRow: View {
     let title: String
     let subtitle: String
     let systemImage: String

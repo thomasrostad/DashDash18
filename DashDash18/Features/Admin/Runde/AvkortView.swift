@@ -38,11 +38,7 @@ private struct AvkortContent: View {
                 }
             }
             .task { await load() }
-            .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(error ?? "")
-            }
+            .messageAlert("Det gikk ikke", text: $error)
     }
 
     @ViewBuilder
