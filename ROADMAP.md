@@ -383,9 +383,9 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 **08.10.2026 (Thomas):** slope.no har et åpent, gratis API for nordiske baner (`/wp-json/golfhs/v1/meta` og `/export`). Eieren ber bare om kreditering og lenke til slope.no i appen. Dataene sjekkes hver natt mot ~2 500 kilder og kontrolleres ukentlig. 1 306 baner (161 i Norge) med tees: navn, kjønn, course rating, slope og par. Ingen data per hull: par og indeks per hull legges fortsatt inn fra scorekortet.
 
 - [x] Skjema for tees per bane, CR/slope på runden og synk-status (SQL 029, kjørt på test 08.10, kontrollen 12 av 12).
-- [ ] Synk som Edge Function `slope-sync`: meta først, eksport bare ved ny `data_version`, én gang i døgnet. Lokale rettelser overlever.
-- [ ] Appen: søk i slope.no-banene for ekte bane, tee-valg i runde-oppsett og løse runder, CR/slope fra teen i handicap.
-- [ ] Kreditering: «Slope og course rating fra slope.no» med lenke der tee-data vises, og i Om appen.
+- [x] Synk som Edge Function `slope-sync`: meta først, eksport bare ved ny `data_version`, én gang i døgnet. Lokale rettelser overlever. *(08.10: deployet på test, secret og Vault satt, cron `dd18-slope-sync` kl. 03:17 UTC. Første kjøring: 1306 baner, 9343 tees.)*
+- [x] Appen: søk i slope.no-banene for ekte bane, tee-valg i runde-oppsett og løse runder, CR/slope fra teen i handicap. *(08.10: `SlopeNoFeature` slått på. Ikke prøvd på telefon.)*
+- [x] Kreditering: «Slope og course rating fra slope.no» med lenke der tee-data vises, og i Om appen. *(08.10.)*
 
 ### Kodegjennomgang 08.10.2026: åpne funn
 

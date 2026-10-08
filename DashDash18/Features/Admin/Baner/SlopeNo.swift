@@ -6,10 +6,11 @@ import GolfgutuCore
 // biblioteket (`courses.source = 'slope'`, fylt av Edge Function `slope-sync`). Ren logikk her, uten
 // nettverk og SwiftUI.
 
-/// Baner og tees fra slope.no. Av til sql/029 er kjørt og synken har gått: da leser og skriver appen
-/// ingen av de nye kolonnene og tabellene, og alt ser ut som før fase 20.
+/// Baner og tees fra slope.no. På siden 08.10.2026: sql/029 er kjørt på test, og `slope-sync` har hentet
+/// 1306 baner (synk hver natt kl. 03:17 UTC). Slås det av, leser og skriver appen ingen av de nye
+/// kolonnene og tabellene, og alt ser ut som før fase 20.
 nonisolated enum SlopeNoFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 /// Krediteringen eieren av slope.no ber om: tekst og lenke der tee-data vises eller velges.
