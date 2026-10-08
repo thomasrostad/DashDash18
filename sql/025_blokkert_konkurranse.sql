@@ -1,8 +1,7 @@
 -- ===========================================================================
--- 025 – BLOKKERT KAN IKKE BLI MED I KONKURRANSEN MED KODE – FORSLAG, IKKE KJØRT
+-- 025 – BLOKKERT KAN IKKE BLI MED I KONKURRANSEN MED KODE – KJØRT PÅ TEST 08.10.2026
 -- ===========================================================================
--- Status: FORSLAG til godkjenning (ROADMAP B5). IKKE KJØRT mot Supabase,
--- verken test eller prod. Prøvd mot en lokal, midlertidig Postgres
+-- Status: godkjent og kjørt på test 08.10.2026 (kontrollen 7 av 7). Ikke prod. Prøvd mot en lokal, midlertidig Postgres
 -- (sql/lokal/025_prove.sql). Krever 019 (user_blocks, blocked_between) og
 -- 022 (competition_invites, competition_invite_preview,
 -- claim_competition_invite). Kjøres etter 022 (og etter 023 og 024 om de er

@@ -43,7 +43,7 @@ Oppdatert 08.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 
 ## Besvart 08.10.2026
 
-- Blokkerte kan ikke bli med i din private konkurranse med koden. *(SQL 025 skrives som forslag.)*
+- Blokkerte kan ikke bli med i din private konkurranse med koden. *(025 kjørt på test 08.10, kontrollen 7 av 7.)*
 - Låst konkurranse får betalingsknapp på konkurransesiden. *(Bygget bak kjøpsflagget.)*
 - Push fra en blokkert bruker stoppes. *(`push-send` versjon 2 deployet på test 08.10.)*
 
