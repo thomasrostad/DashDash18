@@ -1,35 +1,30 @@
 import GolfgutuCore
 import SwiftUI
 
-/// «Flere valg» på hurtigstarten: konkurranseform, lag og matcher, sidepremier, vekt og handicap.
+/// «Flere valg» på «Ny runde»: formen, lag og matcher når formen bruker dem, sidepremiene som én rad
+/// hver, og vekt og handicap under «Avansert». Det som ikke gjelder, skjules (se `RoundSetupOptions`).
 struct RundeSetupStep: View {
     let model: RundeAdminModel
     @Binding var draft: RoundDraft
     let bayCount: Int
 
     @State private var editingMatch: MatchEditItem?
+    /// «Avansert» åpen. Nil: åpen bare når noe der er endret fra standarden.
+    @State private var showsAdvanced: Bool?
 
     private var rules: Ruleset { model.rules }
     private var coreCourse: Course? { model.course(draft.courseID)?.coreCourse }
 
     var body: some View {
         let form = draft.form
+        let options = RoundSetupOptions(draft: draft, rules: rules)
         let holes = draft.coreRound(course: coreCourse).courseHoles()
         DDForm {
             formSection(form)
-            if form.isTeamForm { teamSection(form) }
-            matchSection(form)
+            if options.showsTeams { teamSection(form) }
+            if options.showsMatches { matchSection(form) }
             sidePrizeSection(holes)
-            Section {
-                Picker("Hvor mye runden teller", selection: $draft.weight) {
-                    ForEach(Self.weights, id: \.value) { option in
-                        Text(option.title).tag(option.value)
-                    }
-                }
-            } footer: {
-                DDFooter("Ganger opp poengene runden gir. 0 betyr at den ikke teller sammenlagt.")
-            }
-            handicapSection(form)
+            advancedSection(form, options: options)
             let issues = model.issues(draft, forStart: true)
             if !issues.isEmpty {
                 DDSection("Før runden kan starte") {
@@ -55,9 +50,9 @@ struct RundeSetupStep: View {
     @ViewBuilder
     private func formSection(_ form: CompetitionForm) -> some View {
         let count = draft.participants.count
-        let suggestions = rules.suggestions(players: count)
+        let setup = rules.setup(formID: form.id, players: count)
         Section {
-            Picker("Konkurranseform", selection: Binding(
+            Picker("Form", selection: Binding(
                 get: { draft.formID },
                 set: { draft.setForm($0, rules: rules, roster: model.members) }
             )) {
@@ -65,25 +60,22 @@ struct RundeSetupStep: View {
                     Text(f.name + supportNote(f)).tag(f.id)
                 }
             }
-            Text(form.help)
-                .font(.dd(.sans, size: 13, relativeTo: .footnote))
-                .foregroundStyle(Color.ddInkSecondary)
-            let setup = rules.setup(formID: form.id, players: count)
-            if let text = setup.text {
-                Label("\(count) med: \(text)" + (setup.isUneven ? " (ulike lag)" : ""), systemImage: "checkmark.circle")
-                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
-            } else if let reason = setup.reason {
+            // Bare når formen ikke går opp med de som er med.
+            if setup.text == nil, let reason = setup.reason {
                 Label(reason, systemImage: "exclamationmark.triangle")
-                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .font(.ddCaption)
                     .foregroundStyle(Color.ddRustText)
             }
-        } header: {
-            DDHeader("Konkurranseform")
         } footer: {
-            if !suggestions.isEmpty {
-                Text("Går opp med \(count): " + suggestions.map { "\($0.name) (\($0.text))" }.joined(separator: ", ") + ".")
-            }
+            DDFooter(formFooter(form, count: count, failed: setup.text == nil && setup.reason != nil))
         }
+    }
+
+    /// Én linje: formens forklaring, eller hva som går opp når formen ikke gjør det.
+    private func formFooter(_ form: CompetitionForm, count: Int, failed: Bool) -> String {
+        let suggestions = rules.suggestions(players: count)
+        guard failed, !suggestions.isEmpty else { return form.help }
+        return "Går opp med \(count): " + suggestions.map { "\($0.name) (\($0.text))" }.joined(separator: ", ") + "."
     }
 
     /// De tillatte formene i regelsettet, og formen kladden har om den ikke er tillatt lenger.
@@ -141,7 +133,7 @@ struct RundeSetupStep: View {
     private func matchSection(_ form: CompetitionForm) -> some View {
         Section {
             if draft.matches.isEmpty {
-                Text("Ingen matcher. Runden gir da ingen duellpoeng.")
+                Text("Ingen matcher")
                     .foregroundStyle(Color.ddInkSecondary)
             }
             ForEach(Array(draft.matches.enumerated()), id: \.offset) { index, match in
@@ -153,21 +145,21 @@ struct RundeSetupStep: View {
                 }
             }
             .onDelete { draft.matches.remove(atOffsets: $0) }
-            Button("Trekk matchene på nytt", systemImage: "dice") {
-                draft.redrawMatches(roster: model.members)
-            }
             Button("Ny match", systemImage: "plus") {
                 editingMatch = MatchEditItem(index: nil, match: form.isTeamForm ? .teams(1, 2) : MatchDraft())
             }
-            Button("Sett matchene sammen i \(draft.groupTerm.definitePlural)", systemImage: "square.grid.2x2") {
-                draft.reshuffleBays(count: bayCount)
+            Menu {
+                Button("Trekk matchene på nytt", systemImage: "dice") {
+                    draft.redrawMatches(roster: model.members)
+                }
+                Button("Sett matchene sammen i \(draft.groupTerm.definitePlural)", systemImage: "square.grid.2x2") {
+                    draft.reshuffleBays(count: bayCount)
+                }
+            } label: {
+                Label("Trekk på nytt", systemImage: "dice")
             }
         } header: {
             DDHeader("Matcher")
-        } footer: {
-            DDFooter(form.isTeamForm
-                 ? "Lag mot lag i rekkefølge: 1 mot 2, 3 mot 4. Trykk en match for å endre den."
-                 : "Trukket sveitsisk på navn. Ved oddetall blir de tre siste en trekant. Trykk en match for å endre den.")
         }
     }
 
@@ -197,28 +189,27 @@ struct RundeSetupStep: View {
         let ldSuggestion = SidePrizes.suggestedLongestDriveHole(round)
         let kpSuggestion = SidePrizes.suggestedClosestToPinHole(round)
         Section {
-            Toggle("Longest drive", isOn: $draft.ldEnabled)
-            if draft.ldEnabled {
-                holePicker("Hull", selection: $draft.ldHoleIndex, suggestion: ldSuggestion, holes: holes)
-            }
-            Toggle("Nærmest pinnen", isOn: $draft.kpEnabled)
-            if draft.kpEnabled {
-                holePicker("Hull", selection: $draft.kpHoleIndex, suggestion: kpSuggestion, holes: holes)
-            }
+            sidePrizeRow("Longest drive", enabled: $draft.ldEnabled, holeIndex: $draft.ldHoleIndex,
+                         suggestion: ldSuggestion, holes: holes)
+            sidePrizeRow("Nærmest pinnen", enabled: $draft.kpEnabled, holeIndex: $draft.kpHoleIndex,
+                         suggestion: kpSuggestion, holes: holes)
         } header: {
             DDHeader("Sidepremier")
-        } footer: {
-            DDFooter("Appen foreslår hull \(holeNumber(ldSuggestion)) for longest drive og hull \(holeNumber(kpSuggestion)) for nærmest pinnen.")
         }
     }
 
-    private func holePicker(_ title: String, selection: Binding<Int?>, suggestion: Int, holes: [PlayedHole]) -> some View {
+    /// Av/på og hull i én rad: «Av» eller «Hull 7 · par 3».
+    private func sidePrizeRow(_ title: String, enabled: Binding<Bool>, holeIndex: Binding<Int?>, suggestion: Int,
+                              holes: [PlayedHole]) -> some View {
         Picker(title, selection: Binding(
-            get: { selection.wrappedValue ?? suggestion },
-            set: { selection.wrappedValue = $0 == suggestion ? nil : $0 }
+            get: { RoundSetupOptions.sidePrizeChoice(enabled: enabled.wrappedValue, holeIndex: holeIndex.wrappedValue,
+                                                     suggestion: suggestion) },
+            set: { RoundSetupOptions.applySidePrize($0, enabled: &enabled.wrappedValue,
+                                                    holeIndex: &holeIndex.wrappedValue, suggestion: suggestion) }
         )) {
+            Text("Av").tag(Int?.none)
             ForEach(Array(holes.enumerated()), id: \.offset) { i, hole in
-                Text("Hull \(holeNumber(i)) · par \(hole.par)" + (i == suggestion ? " (forslag)" : "")).tag(i)
+                Text("Hull \(holeNumber(i)) · par \(hole.par)" + (i == suggestion ? " (forslag)" : "")).tag(Optional(i))
             }
         }
     }
@@ -228,48 +219,37 @@ struct RundeSetupStep: View {
         index + (draft.firstHole == 10 ? 10 : 1)
     }
 
-    // MARK: Handicap
+    // MARK: Avansert: vekt og handicap
 
     @ViewBuilder
-    private func handicapSection(_ form: CompetitionForm) -> some View {
+    private func advancedSection(_ form: CompetitionForm, options: RoundSetupOptions) -> some View {
+        let changed = options.advancedIsChanged(weight: draft.weight, allowance: draft.allowance)
         Section {
-            // Trackman deler bare ut slag i simulatoren.
-            if draft.venue == .simulator {
-                Toggle("Trackman fordeler slagene", isOn: $draft.externalHandicap)
-            }
-            if !draft.externalHandicap {
-                Stepper("Handicapandel: \(Int((draft.allowance * 100).rounded())) %",
-                        value: $draft.allowance, in: 0...1, step: 0.05)
-                if draft.allowance != rules.allowance(for: form) {
-                    Button("Tilbake til regelsettets \(Int((rules.allowance(for: form) * 100).rounded())) %") {
-                        draft.allowance = rules.allowance(for: form)
+            DisclosureGroup("Avansert", isExpanded: Binding(
+                get: { showsAdvanced ?? changed },
+                set: { showsAdvanced = $0 }
+            )) {
+                Picker("Hvor mye runden teller", selection: $draft.weight) {
+                    ForEach(RoundSetupOptions.weights, id: \.value) { option in
+                        Text(option.title).tag(option.value)
+                    }
+                }
+                // Trackman deler bare ut slag i simulatoren.
+                if options.showsTrackmanToggle {
+                    Toggle("Trackman fordeler slagene", isOn: $draft.externalHandicap)
+                }
+                if options.showsAllowance {
+                    Stepper("Handicapandel: \(Int((draft.allowance * 100).rounded())) %",
+                            value: $draft.allowance, in: 0...1, step: 0.05)
+                    if draft.allowance != rules.allowance(for: form) {
+                        Button("Tilbake til regelsettets \(Int((rules.allowance(for: form) * 100).rounded())) %") {
+                            draft.allowance = rules.allowance(for: form)
+                        }
                     }
                 }
             }
-        } header: {
-            DDHeader("Handicap")
-        } footer: {
-            DDFooter(draft.externalHandicap
-                 ? "Simulatoren deler ut slagene, og dere fører netto fra skjermen. Appen gir ingen slag."
-                 : "Dere fører brutto. Appen trekker fra slagene etter stroke index. Spillehandicapet regnes og lagres når runden starter.")
         }
     }
-
-    // MARK: Vekt
-
-    struct WeightOption {
-        let value: Double
-        let title: String
-    }
-
-    /// Valgene fra PWA-ens `vektValg`.
-    static let weights = [
-        WeightOption(value: 1, title: "Vanlig runde"),
-        WeightOption(value: 1.5, title: "Halvannen"),
-        WeightOption(value: 2, title: "Dobbelt · avsluttende runde"),
-        WeightOption(value: 3, title: "Tredobbelt"),
-        WeightOption(value: 0, title: "Teller ikke sammenlagt"),
-    ]
 }
 
 // MARK: - Én match
@@ -351,3 +331,28 @@ struct MatchEditor: View {
         }
     }
 }
+
+#if DEBUG
+/// Skjermprøven `flerevalg`: «Flere valg» for kvelden i dag, slik hurtigstarten åpner den.
+struct FlereValgSample: View {
+    let model: RundeAdminModel
+    @State private var draft: RoundDraft
+
+    init() {
+        let model = RundeAdminModel.sample()
+        var draft = model.newDraft()!
+        draft.prepareSetup(rules: model.rules, roster: model.members)
+        self.model = model
+        _draft = State(initialValue: draft)
+    }
+
+    var body: some View {
+        NavigationStack {
+            RundeSetupStep(model: model, draft: $draft, bayCount: max(1, draft.bays.bayCount))
+                .navigationTitle("Flere valg")
+                .ddNavigationChrome()
+                .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+#endif
