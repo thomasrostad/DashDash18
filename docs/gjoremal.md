@@ -41,11 +41,11 @@ Oppdatert 08.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 - [ ] **15.** Eksporter fra PWA-en og kjør prøveimport (stegene står i `docs/import-plan.md`).
 - [ ] **16.** Si ja til prod-oppsett, så setter Claude det opp på samme måte som test.
 
-## Venter på svar fra deg
+## Besvart 08.10.2026
 
-- Skal noen du har blokkert, kunne bli med i din private konkurranse med koden? *(Forslag: nei.)*
-- Skal en låst konkurranse (kjøp som ikke ble koblet) få en betalingsknapp på konkurransesiden? *(Forslag: ja.)*
-- Skal push fra en blokkert bruker stoppes? *(Forslag: ja. Claude retter `push-send`.)*
+- Blokkerte kan ikke bli med i din private konkurranse med koden. *(SQL 025 skrives som forslag.)*
+- Låst konkurranse får betalingsknapp på konkurransesiden. *(Bygget bak kjøpsflagget.)*
+- Push fra en blokkert bruker stoppes. *(`push-send` versjon 2 deployet på test 08.10.)*
 
 ## E-postene fra Xcode Cloud
 
