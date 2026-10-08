@@ -295,6 +295,7 @@ struct NyTurneringDetailsView: View {
                                 .font(.system(size: 5))
                                 .foregroundStyle(Color.ddForestInk)
                         }
+                        .labelStyle(.titleAndIcon)
                     }
                 }
                 .font(.dd(.sans, size: 15, relativeTo: .callout))
