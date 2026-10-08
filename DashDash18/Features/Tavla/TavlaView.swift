@@ -95,7 +95,8 @@ struct TavlaList: View {
                     .padding(.bottom, DDSpacing.m)
                 }
 
-                DDSectionLabel("Jakkeracet · \(standings.seasonName)") {
+                // «Jakkeracet» er matchspill-seriens navn (PWA-en). En stableford-serie heter bare det den heter.
+                DDSectionLabel(standings.countsStableford ? standings.seasonName : "Jakkeracet · \(standings.seasonName)") {
                     Text("\(standings.eveningsPlayed) av \(standings.eveningsTotal) \(standings.eveningsTotal == 1 ? "kveld" : "kvelder") spilt")
                         .ddEyebrow()
                 }

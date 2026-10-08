@@ -360,8 +360,9 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 
 - [x] Regelmotoren: tabell fra stableford, de fire oppsettene, gjenkjenning av oppsett. Paritet uendret. *(08.10: 191 kjernetester grønne, Golfgutu-JSON byte-lik.)*
 - [x] Ny runde: én bekreftelsesskjerm, færre valg og tekster. Matcher verken vises eller trekkes når tabellen teller stableford. *(08.10: 23 → 16 synlige valg, 12 → 1 hjelpetekst.)*
-- [ ] Turnering i appen: «Ny turnering» med oppsettene, én liste over turneringer, arrangørsiden lander på hovedturneringen, Tavla for stableford-serie.
+- [x] Turnering i appen: «Ny turnering» med oppsettene, én liste over turneringer, arrangørsiden lander på hovedturneringen, Tavla for stableford-serie. *(08.10. Ikke prøvd mot database.)*
 - [ ] Prøve på telefon: sett opp en stableford-serie og en kveld fra null.
+- [ ] Rester: ordet «sesong» står fortsatt i tekster på Tavla, Kveld og andre steder; `RulesetTemplate.matching` tar ikke hensyn til ligaregler (privat stableford-serie); arket «Ny turnering» fra Tavla-lista lager modellen på nytt ved hver tegning.
 
 ### Kodegjennomgang 08.10.2026: åpne funn
 
