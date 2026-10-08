@@ -267,7 +267,7 @@ struct RulesetTests {
         var r = Ruleset.golfgutu
         r.evenings = 5
         r.table.counting = .init(unit: .evening, best: 6)
-        #expect(r.validate().first?.message == "Tabellen: beste 6 kvelder er flere enn de 5 kveldene i sesongen.")
+        #expect(r.validate().first?.message == "Tabellen: beste 6 kvelder er flere enn de 5 kveldene i turneringen.")
         r = .golfgutu
         r.formats.allowedFormIDs = []
         #expect(r.validate().first?.message == "Minst én konkurranseform må være tillatt.")

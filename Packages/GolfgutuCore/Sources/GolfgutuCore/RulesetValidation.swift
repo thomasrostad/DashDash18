@@ -22,13 +22,13 @@ extension Ruleset {
         }
 
         // Sesong og telling.
-        if evenings < 1 { add("evenings", "Sesongen må ha minst én kveld.") }
+        if evenings < 1 { add("evenings", "Turneringen må ha minst én kveld.") }
         func checkCounting(_ c: Counting, _ field: String, _ what: String) {
             guard let best = c.best else { return }
             if best < 1 {
                 add("\(field).best", "\(what): «beste N» må være minst 1. La feltet stå tomt for at alt skal telle.")
             } else if c.unit == .evening, evenings >= 1, best > evenings {
-                add("\(field).best", "\(what): beste \(best) kvelder er flere enn de \(evenings) kveldene i sesongen.")
+                add("\(field).best", "\(what): beste \(best) kvelder er flere enn de \(evenings) kveldene i turneringen.")
             }
         }
         checkCounting(table.counting, "table.counting", "Tabellen")
