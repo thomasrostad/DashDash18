@@ -61,6 +61,11 @@ nonisolated struct TipsBoard: Sendable {
     /// Kandidatene: de som kommer først, så resten av troppen. Kommer ingen, er alle i `first`.
     let firstCandidates: [Candidate]
     let otherCandidates: [Candidate]
+
+    /// Står spilleren blant kandidatene? En spiller som er arkivert etter at kupongen ble fylt ut, gjør ikke det.
+    func isCandidate(_ id: UUID) -> Bool {
+        firstCandidates.contains { $0.memberID == id } || otherCandidates.contains { $0.memberID == id }
+    }
     /// Hvem som har levert, sortert på navn.
     let submitted: [UUID]
     /// Påmeldt (kommer), men ikke levert.

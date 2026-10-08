@@ -181,6 +181,10 @@ private struct TipsFormSections: View {
         case .player:
             Picker(board.title(q), selection: playerBinding(q)) {
                 Text("Velg spiller").tag(UUID?.none)
+                // Valget står selv om spilleren ikke lenger er i lista, ellers blir feltet tomt.
+                if let chosen = playerBinding(q).wrappedValue, !board.isCandidate(chosen) {
+                    Section("Valgt") { Text(board.shortName(chosen)).tag(UUID?.some(chosen)) }
+                }
                 Section(board.otherCandidates.isEmpty ? "Troppen" : "Kommer") {
                     ForEach(board.firstCandidates) { c in Text(c.name).tag(UUID?.some(c.memberID)) }
                 }

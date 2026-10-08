@@ -28,6 +28,9 @@ nonisolated struct BayPlan: Equatable, Sendable {
     }
 
     /// Høyeste båsnummer (antall båser slik PWA-en teller dem). 0 uten båser.
+    /// Flest båser databasen tar imot (`round_players.bay_no between 1 and 12`, sql/001).
+    static let maxBays = 12
+
     var bayCount: Int {
         seats.map(\.bay).max() ?? 0
     }

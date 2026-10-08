@@ -171,6 +171,8 @@ struct AnnouncementSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var text = ""
     @State private var confirming = false
+    /// Feilen vises i arket, så den ikke havner bak det (eller ingen steder, fra Kvelden).
+    @State private var sendError: String?
 
     private var cleaned: String { ActivityText.cleanAnnouncement(text) }
 
@@ -182,6 +184,12 @@ struct AnnouncementSheet: View {
                         .lineLimit(3...8)
                 } footer: {
                     DDFooter("Går til alle i klubben. \(cleaned.count) av \(ActivityText.announcementMaxLength) tegn.")
+                }
+                if let error = sendError {
+                    Section {
+                        Label(error, systemImage: "exclamationmark.triangle")
+                            .ddErrorStyle()
+                    }
                 }
             }
             .navigationTitle("Melding til alle")
@@ -198,7 +206,13 @@ struct AnnouncementSheet: View {
             .confirmationDialog("Sende denne til alle?", isPresented: $confirming, titleVisibility: .visible) {
                 Button("Send til alle") {
                     Task {
-                        if await model.sendAnnouncement(text) { dismiss() }
+                        sendError = nil
+                        if await model.sendAnnouncement(text) {
+                            dismiss()
+                        } else {
+                            sendError = model.errorMessage ?? "Klarte ikke å sende meldingen."
+                            model.errorMessage = nil
+                        }
                     }
                 }
             } message: {

@@ -94,6 +94,14 @@ private enum T {
 }
 
 struct TipsBoardTests {
+    @Test func valgtSpillerUtenforLista() {
+        let input = TipsInput(event: T.event, members: T.four, rounds: T.evening(), coupons: T.coupons)
+        let b = TipsBoard(input, me: T.id(T.bjorn), isOrganizer: false)
+        #expect(b.isCandidate(T.id(T.anders)))
+        // En arkivert spiller står ikke i troppen, men valget skal fortsatt vises.
+        #expect(!b.isCandidate(UUID()))
+    }
+
     @Test func laastKveldAllesKupongerUtenMerker() {
         var input = TipsInput(event: T.event, members: T.four, rounds: T.evening(), coupons: T.coupons)
         input.serverOpen = false

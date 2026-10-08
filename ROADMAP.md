@@ -348,6 +348,17 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 
 **Anslag:** 4–6 økter.
 
+### Kodegjennomgang 08.10.2026: åpne funn
+
+Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rettet med test). Dette står igjen:
+
+- [ ] **Kjøp (før `PurchaseFeature` slås på):** `PurchaseService.handle` fester turneringsmålet til alle transaksjoner (fornyelser, «Gjenopprett»), ikke bare den fra `purchase()`. Et kjøp kan da kobles til feil turnering.
+- [ ] **Kjøp:** feiler koblingen av en ledig kreditt i «Ny konkurranse», sier ikke skjermen fra (feilen står i `purchases.state`).
+- [ ] **Google (før `GoogleLoginFeature` slås på):** `DegLoginMethodsLogic.signOutMessage` tar ikke hensyn til Google-innlogging.
+- [ ] **Veddemål i Varsler:** `bet_created`, `bet_challenge` og `bet_resolved` vises som «Ny hendelse i klubben». Trenger egne tekster (UI-tekst, avgjøres).
+- [ ] **Flagg som står permanent på** (fjernes når skjemaet er i prod): Foundation, Push, LiveActivity, Widget, Venue, CourseKind, Stats, Bets, Games, Competitions, LooseRounds, AccountDeletion, Moderation, BillSplit.
+- [ ] **Små ting:** kolonnelister skrevet for hånd i flere spørringer (samle), `CompetitionDetailModel.load` henter alle konkurranser for å vise én, `EveningDates` dupliseres i widget-targetet (legg fila i targetet i Xcode), `OutboxScoreSubmitter` kan nullstille en ny retry-oppgave i et sjeldent stopp/start-løp.
+
 ---
 
 ### Fase 12–17 – Åpen app med flere bruksområder

@@ -21,7 +21,7 @@ struct RundeBaysStep: View {
         DDList {
             Section {
                 // 12 er databasens grense for båsnummer (`round_players.bay_no`).
-                Stepper("\(term.pluralTitle): \(bayCount)", value: $bayCount, in: 1...max(1, min(12, draft.participants.count)))
+                Stepper("\(term.pluralTitle): \(bayCount)", value: $bayCount, in: 1...max(1, min(BayPlan.maxBays, draft.participants.count)))
                 Button("Bland på nytt", systemImage: "shuffle") { reshuffle() }
             } header: {
                 DDHeader(headline)
@@ -51,7 +51,7 @@ struct RundeBaysStep: View {
             }
 
             if !unseated.isEmpty {
-                DDSection("Uten bås") {
+                DDSection("Uten \(term.singular)") {
                     ForEach(unseated, id: \.self) { id in playerRow(id) }
                 }
             }
@@ -126,7 +126,7 @@ struct RundeBaysStep: View {
     private func actions(for member: ClubMemberRow) -> some View {
         let seat = draft.bays.seat(for: member.id)
         let highest = max(draft.bays.bayCount, bayCount)
-        ForEach(1...(highest + 1), id: \.self) { bay in
+        ForEach(1...min(highest + 1, BayPlan.maxBays), id: \.self) { bay in
             if bay != seat?.bay {
                 Button(bay > highest ? "Flytt til ny \(term.numberedLower(bay))" : "Flytt til \(term.numberedLower(bay))") {
                     withAnimation { draft.bays.move(member.id, to: bay) }
