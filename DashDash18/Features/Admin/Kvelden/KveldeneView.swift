@@ -115,10 +115,10 @@ private struct KveldeneContent: View {
         return DDList {
             Section {
                 if let season = terminliste.activeSeason {
-                    LabeledContent("Sesong", value: season.name)
+                    LabeledContent("Turnering", value: season.name)
                 } else {
                     Label {
-                        Text("Ingen aktiv sesong. Lag en under «Sesong og regler». Kvelder kan likevel legges inn, uten sesong.")
+                        Text("Ingen aktiv turnering. Lag en under «Turneringen». Kvelder kan likevel legges inn, uten turnering.")
                     } icon: {
                         Image(systemName: "info.circle")
                     }
@@ -163,7 +163,7 @@ private struct KveldeneContent: View {
                         .labelStyle(DDIconLabelStyle())
                 }
             } footer: {
-                DDFooter("Alle rundene klubben har spilt, også fra tidligere sesonger.")
+                DDFooter("Alle rundene klubben har spilt, også fra tidligere turneringer.")
             }
         }
         .disabled(isBusy)

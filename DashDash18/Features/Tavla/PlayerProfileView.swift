@@ -25,7 +25,7 @@ struct PlayerProfileView: View {
                 ProfileHeader(profile: p, standings: standings)
                     .padding(.bottom, DDSpacing.s)
 
-                DDSectionLabel("Sesongen")
+                DDSectionLabel("Turneringen")
                 DDTileGrid([
                     DDStatTile("Stableford", value: "\(p.stablefordTotal)", highlight: true),
                     DDStatTile("Runder", value: "\(p.roundsPlayed)"),
@@ -42,7 +42,7 @@ struct PlayerProfileView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         DDInfoStripe(tone: .earth) {
                             HStack(alignment: .firstTextBaseline) {
-                                Text("Mot deg i sesongen")
+                                Text("Mot deg i turneringen")
                                 Spacer(minLength: 8)
                                 Text(text)
                                     .font(.ddBodyEmphasis)

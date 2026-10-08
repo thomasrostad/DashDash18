@@ -52,7 +52,7 @@ extension WidgetSnapshot {
     nonisolated static let preview = WidgetSnapshot(
         nextEvening: NextEvening(eventDate: "2026-10-08", dateText: "Torsdag 8. oktober", timeText: "17:00",
                                  startsAt: Date.now.addingTimeInterval(86_400), venue: "Losby"),
-        seasonName: "Sesong 2026",
+        seasonName: "Høst 2026",
         top: [
             Leader(place: 1, name: "Anders", points: 14.5, pointsText: "14,5", isMe: false),
             Leader(place: 2, name: "Bjørn", points: 12, pointsText: "12", isMe: true),

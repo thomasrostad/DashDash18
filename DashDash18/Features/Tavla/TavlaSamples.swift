@@ -61,7 +61,7 @@ enum TavlaSamples {
 
     /// Sesongen med Golfgutu-oppsettet, eller en stableford-serie (`tavlastableford`, 6 kvelder spilt).
     static func standings(finished: Bool = false, stableford: Bool = false) -> TavlaStandings {
-        let season = SeasonRow(id: id(9002), clubID: club, name: stableford ? "Høst 2026" : "Sesongen 2026",
+        let season = SeasonRow(id: id(9002), clubID: club, name: stableford ? "Høst 2026" : "Vår 2026",
                                status: finished ? .finished : .active,
                                rules: stableford ? RulesetTemplate.stablefordSeries.rules : .golfgutu)
         let rounds = stableford

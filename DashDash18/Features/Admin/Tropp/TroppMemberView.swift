@@ -111,7 +111,7 @@ struct TroppMemberView: View {
             if let season = model.seasonName {
                 Text("Gruppene kommer fra regelsettet i \(season).")
             } else {
-                Text("Ingen aktiv sesong. Gruppene er fra Golfgutu-oppsettet.")
+                Text("Ingen aktiv turnering. Gruppene er fra Golfgutu-oppsettet.")
             }
         }
     }

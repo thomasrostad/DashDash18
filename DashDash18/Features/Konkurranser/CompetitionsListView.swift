@@ -36,7 +36,7 @@ struct CompetitionsListView: View {
                     }
                 }
             }
-            .newTournamentSheet(isPresented: $showsNew, seasons: seasons, competitions: model, offersPrivate: true)
+            .newTournamentSheet(isPresented: $showsNew, seasons: makeSeasons(), competitions: model, offersPrivate: true)
             .alert("Det gikk ikke", isPresented: Binding(get: { model.error != nil && !showsNew },
                                                          set: { if !$0 { model.error = nil } })) {
                 Button("OK", role: .cancel) {}
@@ -46,8 +46,9 @@ struct CompetitionsListView: View {
             .refreshable { await model.load() }
     }
 
-    /// Klubbens sesonger, når du er arrangør: da kan «Ny turnering» lage klubbens serie.
-    private var seasons: SesongAdminModel? {
+    /// Klubbens sesonger, når du er arrangør: da kan «Ny turnering» lage klubbens serie. Lages først
+    /// når arket åpnes (se `newTournamentSheet`).
+    private func makeSeasons() -> SesongAdminModel? {
         guard let context, model.canCreateInClub, context.clubID == model.clubID else { return nil }
         return SesongAdminModel(context: context)
     }

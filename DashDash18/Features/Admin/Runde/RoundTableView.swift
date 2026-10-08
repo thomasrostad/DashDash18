@@ -74,7 +74,7 @@ private struct RoundTableContent: View {
             .confirmationDialog("Låse runden?", isPresented: $confirmsLock, titleVisibility: .visible) {
                 Button("Lås \(model.title)") { lock() }
             } message: {
-                Text("Runden er ferdig og teller i sesongen. En låst runde kan ikke bli kladd igjen eller slettes.")
+                Text("Runden er ferdig og teller i turneringen. En låst runde kan ikke bli kladd igjen eller slettes.")
             }
             .confirmationDialog(
                 pendingDelete.map { "Slett \($0.noun) · \(model.title)" } ?? "",
@@ -153,7 +153,7 @@ private struct RoundTableContent: View {
         guard let admin else { return }
         run {
             try await admin.lock(round)
-            onLeft?("\(model.title) er låst og teller i sesongen.")
+            onLeft?("\(model.title) er låst og teller i turneringen.")
             dismiss()
         }
     }

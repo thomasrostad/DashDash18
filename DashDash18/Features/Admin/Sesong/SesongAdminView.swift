@@ -208,12 +208,13 @@ private struct TournamentListContent: View {
 }
 
 extension View {
-    /// «Ny turnering» i et ark. Lister lastes på nytt når arket lukkes.
-    func newTournamentSheet(isPresented: Binding<Bool>, seasons: SesongAdminModel?,
+    /// «Ny turnering» i et ark. Lister lastes på nytt når arket lukkes. `seasons` regnes først ut når
+    /// arket vises (ikke hver gang lista tegnes), og `NyTurneringView` beholder modellen i `@State`.
+    func newTournamentSheet(isPresented: Binding<Bool>, seasons: @autoclosure @escaping () -> SesongAdminModel?,
                             competitions: CompetitionsModel, offersPrivate: Bool = false) -> some View {
         sheet(isPresented: isPresented) {
             NavigationStack {
-                NyTurneringView(model: NewTournamentModel(list: competitions, seasons: seasons,
+                NyTurneringView(model: NewTournamentModel(list: competitions, seasons: seasons(),
                                                           offersPrivate: offersPrivate)) {
                     isPresented.wrappedValue = false
                 }

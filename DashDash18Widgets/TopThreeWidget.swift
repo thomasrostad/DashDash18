@@ -10,7 +10,7 @@ struct TopThreeWidget: Widget {
             TopThreeView(entry: entry)
         }
         .configurationDisplayName("Tavla topp 3")
-        .description("De tre øverste i sesongens tabell.")
+        .description("De tre øverste i turneringens tabell.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
 }

@@ -38,17 +38,17 @@ struct SeasonSummaryView: View {
                     placeCard(s.rest)
                 }
 
-                DDSectionLabel("Sesongen i tall")
+                DDSectionLabel("Turneringen i tall")
                     .padding(.top, DDSpacing.l)
                 VStack(alignment: .leading, spacing: 12) {
                     DDStatRow(label: "Kvelder spilt", value: "\(s.eveningsPlayed) / \(s.eveningsTotal)")
-                    if let h = s.bestRound { highlight("Sesongens runde", h) }
+                    if let h = s.bestRound { highlight("Turneringens runde", h) }
                     if let h = s.mostBirdies { highlight("Flest birdies", h) }
                     if let h = s.longestDrive { highlight("Lengste drive", h) }
                 }
                 .ddCard(.stat)
 
-                Text("Takk for sesongen.")
+                Text("Takk for turneringen.")
                     .font(.ddCallout)
                     .foregroundStyle(Color.ddInkSecondary)
                     .frame(maxWidth: .infinity)

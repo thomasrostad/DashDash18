@@ -235,7 +235,7 @@ nonisolated enum CompetitionText {
 
     static func kindHelp(_ kind: CompetitionKind) -> String {
         switch kind {
-        case .season: "Sesongen med terminliste og tabell, som jakkeracet."
+        case .season: "Klubbens serie med terminliste og tabell, som jakkeracet."
         case .league: "Poeng for hver runde etter plassering eller stableford. Beste runder teller."
         case .cup: "Utslag i matchspill. Trekning, tre og en vinner."
         case .fun: "Kort periode og egne deltakere. Tabell som en liga."
