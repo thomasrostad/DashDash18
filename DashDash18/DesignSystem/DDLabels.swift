@@ -150,16 +150,6 @@ extension ScoreName {
     }
 }
 
-/// Score-merke: Eagle, Birdie, Par, Bogey, Dobbel, Blowup.
-struct DDScoreBadge: View {
-    let name: ScoreName
-    var compact = false
-
-    var body: some View {
-        DDChip(name.label, tone: name.tone, compact: compact)
-    }
-}
-
 /// Poengtall i en farget rundel, som på scorekortet (`1` i blush, `4` i sol …). Tom = «–».
 struct DDPointsBadge: View {
     let points: Int?
@@ -231,49 +221,6 @@ struct DDAvatar: View {
     nonisolated static func initials(_ name: String) -> String {
         let parts = name.split(separator: " ").prefix(2)
         return parts.compactMap { $0.first.map(String.init) }.joined().uppercased()
-    }
-}
-
-/// Pulserende rust-prikk for «live» (`.gg-live-dot`). Stille hvis Reduser bevegelse er på.
-struct DDLiveDot: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var pulsing = false
-
-    var body: some View {
-        Circle()
-            .fill(Color.ddRust)
-            .frame(width: 8, height: 8)
-            .background {
-                if !reduceMotion {
-                    Circle()
-                        .fill(Color.ddRust)
-                        .scaleEffect(pulsing ? 2.4 : 1)
-                        .opacity(pulsing ? 0 : 0.9)
-                        .animation(.easeOut(duration: 1.8).repeatForever(autoreverses: false), value: pulsing)
-                }
-            }
-            .onAppear { pulsing = true }
-            .accessibilityHidden(true)
-    }
-}
-
-/// «RUNDEN PÅGÅR»-pille med prikk (`.gg-live`).
-struct DDLivePill: View {
-    let text: String
-
-    var body: some View {
-        HStack(spacing: 8) {
-            DDLiveDot()
-            Text(text)
-                .font(.ddPill)
-                .tracking(1.1)
-                .textCase(.uppercase)
-        }
-        .foregroundStyle(Color.ddRustDark)
-        .padding(.leading, 10)
-        .padding(.trailing, 12)
-        .padding(.vertical, 6)
-        .background(Capsule().fill(Color.ddBlushBackground))
     }
 }
 

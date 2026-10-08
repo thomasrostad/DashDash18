@@ -104,11 +104,6 @@ extension View {
             .background(Color.ddBackground.ignoresSafeArea())
     }
 
-    /// Radene i en seksjon får kortfargen (hvit i lys, #132B23 i mørk).
-    func ddRowBackground() -> some View {
-        listRowBackground(Color.ddCard)
-    }
-
     /// Grønn navigasjonslinje med krem tittel, som headeren i PWA-en. Tittelen står inline:
     /// stor tittel ble ikke tegnet på grønn linje i iOS 26 (prøvd i simulatoren 06.10).
     func ddNavigationChrome() -> some View {

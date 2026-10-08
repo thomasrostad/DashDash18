@@ -35,23 +35,10 @@ struct DesignCatalogView: View {
         VStack(alignment: .leading, spacing: 12) {
             DDSectionLabel("Golfee-blanding")
             DDSegmentedControl([(0, "Hullet"), (1, "Scorekort"), (2, "Bayen")], selection: $segment)
-            HStack {
-                Menu {
-                    ForEach(1...18, id: \.self) { n in Button("Hull \(n)") { hole = n } }
-                } label: {
-                    DDDropdownPill("Hull \(hole)")
-                }
-                Spacer()
-                GlassEffectContainer(spacing: 8) {
-                    HStack(spacing: 8) {
-                        Button {} label: { Image(systemName: "chevron.left") }
-                            .buttonStyle(DDGlassIconButtonStyle())
-                            .accessibilityLabel("Forrige hull")
-                        Button {} label: { Image(systemName: "chevron.right") }
-                            .buttonStyle(DDGlassIconButtonStyle(prominent: true))
-                            .accessibilityLabel("Neste hull")
-                    }
-                }
+            Menu {
+                ForEach(1...18, id: \.self) { n in Button("Hull \(n)") { hole = n } }
+            } label: {
+                DDDropdownPill("Hull \(hole)")
             }
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
@@ -59,11 +46,9 @@ struct DesignCatalogView: View {
                     Spacer()
                     DDPill("Live", tone: .gold)
                 }
-                DDStatHeader(title: "Stableford", unit: "poeng")
                 DDStatRow(label: "Thomas", value: "19", secondary: "7", highlight: true)
                 DDStatRow(label: "Kåre", value: "17", secondary: "7")
                 DDStatRow(label: "Ola", value: "15", secondary: "6")
-                DDStatHeader(title: "Match", unit: "hull")
                 DDStatRow(label: "Thomas og Kåre mot Ola og Per", value: "2 opp", highlight: true)
             }
             .ddCard(.stat)
@@ -108,7 +93,7 @@ struct DesignCatalogView: View {
                 Text("Sekundærtekst under en rad").font(.ddCallout).foregroundStyle(Color.ddInkSecondary)
                 Text("Hull 7 av 18").ddEyebrow()
                 HStack(alignment: .firstTextBaseline, spacing: 16) {
-                    Text("7").font(.ddHoleNumber).foregroundStyle(Color.ddForestInk)
+                    Text("7").font(.ddStrokes).foregroundStyle(Color.ddForestInk)
                     Text("168").font(.ddNumberLarge)
                     Text("3 brutto − 0 = 3 netto").font(.ddMonoSmall).foregroundStyle(Color.ddInkSecondary)
                 }
@@ -125,7 +110,7 @@ struct DesignCatalogView: View {
             Text("Vanlig kort med radius 16 og myk skygge.").ddCard()
             VStack(alignment: .leading, spacing: 6) {
                 Text("Din score").ddEyebrow(color: Color.ddOnDark.opacity(0.55))
-                Text("19").font(.ddHeroNumber)
+                Text("19").font(.ddDisplay)
                 Text("poeng etter 7 hull").font(.ddCallout).foregroundStyle(Color.ddOnDark.opacity(0.72))
                 DDDivider(onDark: true).padding(.vertical, 6)
                 Button("Før poeng →") {}.buttonStyle(.dd(.secondary, compact: true, onDark: true))
@@ -174,7 +159,7 @@ struct DesignCatalogView: View {
         VStack(alignment: .leading, spacing: 10) {
             DDSectionLabel("Merker og piller")
             HStack(spacing: 6) {
-                ForEach(ScoreName.allCases, id: \.self) { DDScoreBadge(name: $0, compact: true) }
+                ForEach(ScoreName.allCases, id: \.self) { DDChip($0.label, tone: $0.tone, compact: true) }
             }
             HStack(spacing: 6) {
                 DDPointsBadge(points: 1, name: .bogey)
@@ -190,7 +175,6 @@ struct DesignCatalogView: View {
                 DDSidePrizeTag(kind: .closestToPin)
             }
             HStack(spacing: 10) {
-                DDLivePill(text: "Runden pågår")
                 DDAvatar(name: "Thomas Rostad")
                 DDAvatar(name: "Kåre", size: 44)
                 DDChip("Par? trykk tallet", tone: .earth, compact: true)
@@ -210,7 +194,7 @@ struct DesignCatalogView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(name).font(.ddName).foregroundStyle(Color.ddForestInk)
                             Text("0 slag fått").font(.ddMonoSmall).foregroundStyle(Color.ddInkSecondary)
-                            if confirmed { DDScoreBadge(name: .par, compact: true) }
+                            if confirmed { DDChip(ScoreName.par.label, tone: ScoreName.par.tone, compact: true) }
                         }
                         Spacer()
                         HStack(spacing: 6) {

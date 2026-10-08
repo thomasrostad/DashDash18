@@ -113,10 +113,6 @@ extension Font {
     static let ddName = dd(.sans, size: 21, weight: .regular, relativeTo: .title3)
     /// Navn i lister (medium 17).
     static let ddNameSmall = dd(.sans, size: 17, weight: .medium, relativeTo: .headline)
-    /// Hullnummer og store plasstall (lett 64).
-    static let ddHoleNumber = dd(.sans, size: 64, weight: .light, relativeTo: .largeTitle)
-    /// Feiring (lett 54).
-    static let ddCelebration = dd(.sans, size: 54, weight: .light, relativeTo: .largeTitle)
 
     /// Brødtekst (regular 16, «Body 16px» i golfee).
     static let ddBody = dd(.sans, size: 16, relativeTo: .body)
@@ -145,8 +141,6 @@ extension Font {
     static let ddNumberLarge = dd(.sans, size: 20, weight: .medium, relativeTo: .title3)
     /// Slag på hullkortet (medium 32).
     static let ddStrokes = dd(.sans, size: 32, weight: .medium, relativeTo: .title)
-    /// Stort tall i hero- og statistikk-kort (lett 52).
-    static let ddHeroNumber = dd(.sans, size: 52, weight: .light, relativeTo: .largeTitle)
 }
 
 extension UIFont {

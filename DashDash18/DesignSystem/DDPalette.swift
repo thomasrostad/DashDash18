@@ -60,7 +60,6 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
     case earthDeep           // --earth-deep
     case forest              // --forest (header, flater)
     case forestDeep          // --forest-deep (feiring)
-    case tabBar              // tabbar (#0F241D i mørk)
     case driveBox            // .gg-drivebox
     case youRow              // .gg-hullrad.deg
     // Tekst og strek
@@ -102,7 +101,6 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
     case buttonGold, buttonGoldText, buttonGoldPressed
     case buttonDisabled, buttonDisabledText
     case buttonOK, buttonOKText
-    case focus
 
     /// Lys og mørk variant.
     var values: (light: DDRGBA, dark: DDRGBA) {
@@ -114,7 +112,6 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
         case .earthDeep: (DDRGBA(0xEADBCA), DDRGBA(0xF3E9DD, alpha: 0.16))
         case .forest: (DDRGBA(0x1C483A), DDRGBA(0x123026))
         case .forestDeep: (DDRGBA(0x123026), DDRGBA(0x0B1F18))
-        case .tabBar: (DDRGBA(0xFFF9DF), DDRGBA(0x0F241D))
         case .driveBox: (DDRGBA(0xFBF5DF), DDRGBA(0xE4C767, alpha: 0.08))
         case .youRow: (DDRGBA(0xE4C767, alpha: 0.13), DDRGBA(0xE4C767, alpha: 0.13))
         case .forestInk: (DDRGBA(0x1C483A), DDRGBA(0xCFE3D6))
@@ -166,7 +163,6 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
         case .buttonDisabledText: (DDRGBA(0x8A8470), DDRGBA(0x7E8F86))
         case .buttonOK: (DDRGBA(0xD9EBD0), DDRGBA(0x2C4A3A))
         case .buttonOKText: (DDRGBA(0x21451F), DDRGBA(0xCFE6C3))
-        case .focus: (DDRGBA(0x0014EB), DDRGBA(0x9DB0FF))
         }
     }
 }
