@@ -455,6 +455,16 @@ nonisolated struct RoundSetupParams: Encodable, Equatable, Sendable {
 // MARK: - Visning og sletting
 
 nonisolated enum RoundListing {
+    /// Linja under runden i lista: «18 hull · Stableford · 12 med · 3 båser · 18:00».
+    static func subtitle(_ round: RoundRow, players: Int, bays: Int) -> String {
+        var parts = ["\(round.holeCount) hull" + (round.firstHole == 10 ? " fra hull 10" : "")]
+        parts.append(CompetitionForm.form(id: round.format).name)
+        if players > 0 { parts.append("\(players) med") }
+        if bays > 0 { parts.append(GroupTerm.for(stored: round.venue).count(bays)) }
+        if let tee = EveningDates.timeText(round.teeTime) { parts.append(tee) }
+        return parts.joined(separator: " · ")
+    }
+
     /// «Runde 2 – Pebble Beach». Nummeret er rundens nummer på kvelden.
     static func title(roundNo: Int, courseName: String?) -> String {
         "Runde \(roundNo)" + (courseName.map { " – \($0)" } ?? "")

@@ -149,16 +149,18 @@ struct KveldExtrasButtons: View {
     }
 }
 
-/// Arrangøren: «Purr de N som ikke har svart …», med bekreftelse.
+/// Arrangøren: «Purr de N som ikke har svart …», med bekreftelse. I Kveld og på Kvelden.
 struct NudgeSection: View {
-    let model: KveldModel
+    /// De som ikke har svart.
+    let targets: [SignupSummary.Entry]
+    /// Sender purringen. Gir teksten som skal vises etterpå.
+    let onSend: () async throws(DataError) -> String
     @State private var confirming = false
     @State private var isSending = false
     @State private var message: String?
     @State private var error: String?
 
     var body: some View {
-        let targets = model.nudgeTargets
         VStack(alignment: .leading, spacing: DDSpacing.s) {
             Button(Nudge.buttonTitle(count: targets.count), systemImage: "alarm") { confirming = true }
                 .buttonStyle(.dd(.secondary, fullWidth: true))
@@ -187,7 +189,7 @@ struct NudgeSection: View {
         Task {
             defer { isSending = false }
             do throws(DataError) {
-                message = try await model.nudge()
+                message = try await onSend()
             } catch {
                 self.error = "Klarte ikke å purre. \(error.message)"
             }

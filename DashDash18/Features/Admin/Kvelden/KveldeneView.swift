@@ -1,21 +1,36 @@
 import SwiftUI
 
-/// Terminlista for arrangøren: kveldene i sesongen, med sted, tid og sosialkomité.
-struct TerminlisteAdminView: View {
+/// Kveldene: terminlista for arrangøren. Kommende kvelder øverst, tidligere bak en bryter, med
+/// påmeldte og hvor langt rundene har kommet. Trykk en kveld for å åpne Kvelden, der tid og sted,
+/// påmelding, runder og «Avslutt kvelden» ligger. «Alle runder» nederst er arkivet.
+struct KveldeneView: View {
     @Environment(\.clubContext) private var context
 
     var body: some View {
         if let context {
-            TerminlisteContent(model: TerminlisteModel(context: context))
+            KveldeneContent(terminliste: TerminlisteModel(context: context), admin: RundeAdminModel(context: context))
         } else {
             ContentUnavailableView("Ingen klubb", systemImage: "calendar")
         }
     }
 }
 
-private struct TerminlisteContent: View {
-    @State var model: TerminlisteModel
-    @State private var editing: IdentifiedDraft?
+#if DEBUG
+/// Kveldene med oppdiktede data (`-DDDesignScreen kveldene`).
+struct KveldeneSample: View {
+    var body: some View {
+        let admin = RundeAdminModel.sample(.liveEvening)
+        KveldeneContent(terminliste: .sample(from: admin), admin: admin, loads: false)
+    }
+}
+#endif
+
+private struct KveldeneContent: View {
+    @State private var terminliste: TerminlisteModel
+    @State private var admin: RundeAdminModel
+    /// Av i skjermprøven, som ikke har nett.
+    private let loads: Bool
+    @State private var creating: EventEditItem?
     @State private var showPast = false
     @State private var pendingDelete: EventRow?
     @State private var drawPlan: IdentifiedPlan?
@@ -23,26 +38,39 @@ private struct TerminlisteContent: View {
     @State private var error: String?
     @State private var isBusy = false
 
+    init(terminliste: TerminlisteModel, admin: RundeAdminModel, loads: Bool = true) {
+        _terminliste = State(initialValue: terminliste)
+        _admin = State(initialValue: admin)
+        self.loads = loads
+    }
+
     var body: some View {
         content
-            .navigationTitle("Terminliste")
+            .navigationTitle("Kveldene")
             .ddNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Ny kveld", systemImage: "plus") { editing = IdentifiedDraft(draft: model.draft(for: nil)) }
-                        .disabled(model.state != .loaded)
+                    Button("Ny kveld", systemImage: "plus") {
+                        creating = EventEditItem(draft: terminliste.draft(for: nil))
+                    }
+                    .disabled(terminliste.state != .loaded)
                 }
             }
-            .task { await model.load() }
-            .refreshable { await model.load() }
-            .sheet(item: $editing) { item in
+            // Også tilbake fra Kvelden: svar, runder og komité kan være endret.
+            .task { if loads { await terminliste.load() } }
+            .task { if loads { await admin.load() } }
+            .refreshable {
+                await terminliste.load()
+                await admin.load()
+            }
+            .sheet(item: $creating) { item in
                 NavigationStack {
-                    EventEditor(model: model, draft: item.draft) { editing = nil }
+                    EventEditor(model: terminliste, draft: item.draft) { creating = nil }
                 }
             }
             .sheet(item: $drawPlan) { item in
                 NavigationStack {
-                    CommitteeDrawSheet(model: model, plan: item.plan, perEvening: perEvening) { drawPlan = nil }
+                    CommitteeDrawSheet(model: terminliste, plan: item.plan, perEvening: perEvening) { drawPlan = nil }
                 }
             }
             .confirmationDialog(
@@ -66,16 +94,16 @@ private struct TerminlisteContent: View {
 
     @ViewBuilder
     private var content: some View {
-        switch model.state {
+        switch terminliste.state {
         case .loading:
-            ProgressView("Henter terminlista …")
+            ProgressView("Henter kveldene …")
         case .failed(let message):
             ContentUnavailableView {
-                Label("Fikk ikke hentet terminlista", systemImage: "wifi.exclamationmark")
+                Label("Fikk ikke hentet kveldene", systemImage: "wifi.exclamationmark")
             } description: {
                 Text(message)
             } actions: {
-                Button("Prøv igjen") { Task { await model.load() } }
+                Button("Prøv igjen") { Task { await terminliste.load() } }
                     .buttonStyle(.dd(.primary))
             }
         case .loaded:
@@ -85,12 +113,12 @@ private struct TerminlisteContent: View {
 
     private var list: some View {
         let today = EveningDates.today()
-        let (upcoming, past) = Terminliste.split(model.events, today: today)
+        let (upcoming, past) = Terminliste.split(terminliste.events, today: today)
         let year = EveningDates.year(of: today)
-        let missingCommittee = upcoming.contains { (model.committees[$0.id] ?? []).count < perEvening }
+        let missingCommittee = upcoming.contains { (terminliste.committees[$0.id] ?? []).count < perEvening }
         return DDList {
             Section {
-                if let season = model.activeSeason {
+                if let season = terminliste.activeSeason {
                     LabeledContent("Sesong", value: season.name)
                 } else {
                     Label {
@@ -108,7 +136,7 @@ private struct TerminlisteContent: View {
                         .foregroundStyle(Color.ddInkSecondary)
                 }
                 ForEach(upcoming) { event in
-                    row(event, referenceYear: year)
+                    row(event, referenceYear: year, isUpcoming: true)
                 }
             }
 
@@ -116,7 +144,7 @@ private struct TerminlisteContent: View {
                 Section {
                     Stepper("Per kveld: \(perEvening)", value: $perEvening, in: 1...6)
                     Button("Trekk sosialkomité", systemImage: "dice") { draw() }
-                        .disabled(model.members.count < perEvening)
+                        .disabled(terminliste.members.count < perEvening)
                 } footer: {
                     DDFooter("Fyller kommende kvelder som mangler komité. De med færrest turer trekkes først. Kvelder som har komité, røres ikke.")
                 }
@@ -127,33 +155,45 @@ private struct TerminlisteContent: View {
                     Toggle("Vis tidligere (\(past.count))", isOn: $showPast.animation())
                     if showPast {
                         ForEach(past) { event in
-                            row(event, referenceYear: year)
+                            row(event, referenceYear: year, isUpcoming: false)
                         }
                     }
                 }
+            }
+
+            Section {
+                NavigationLink { RundeAdminView() } label: {
+                    Label("Alle runder", systemImage: "flag.2.crossed")
+                        .labelStyle(DDIconLabelStyle())
+                }
+            } footer: {
+                DDFooter("Alle rundene klubben har spilt, også fra tidligere sesonger.")
             }
         }
         .disabled(isBusy)
     }
 
-    private func row(_ event: EventRow, referenceYear: Int?) -> some View {
-        Button {
-            editing = IdentifiedDraft(draft: model.draft(for: event))
+    private func row(_ event: EventRow, referenceYear: Int?, isUpcoming: Bool) -> some View {
+        let rounds = admin.state == .loaded ? admin.rounds(on: event.id) : nil
+        return NavigationLink {
+            KveldenView(eventID: event.id, terminliste: terminliste, admin: admin, loads: loads)
         } label: {
-            EventRowLabel(
+            EveningRowLabel(
                 event: event,
-                committee: model.committeeNames(for: event.id),
+                committee: terminliste.committeeNames(for: event.id),
+                signups: isUpcoming ? Tonight.signupText(terminliste.signups[event.id] ?? [],
+                                                         rosterCount: terminliste.members.count) : nil,
+                rounds: rounds,
                 referenceYear: referenceYear
             )
         }
-        .tint(Color.ddInk)
         .swipeActions {
             Button("Slett", systemImage: "trash", role: .destructive) { pendingDelete = event }
         }
     }
 
     private func draw() {
-        let plan = model.proposeCommittees(perEvening: perEvening)
+        let plan = terminliste.proposeCommittees(perEvening: perEvening)
         if plan.isEmpty {
             error = "Fant ingen kvelder å fylle. Er det nok medlemmer i troppen?"
         } else {
@@ -166,7 +206,7 @@ private struct TerminlisteContent: View {
         Task {
             defer { isBusy = false }
             do throws(DataError) {
-                try await model.delete(event)
+                try await terminliste.delete(event)
             } catch {
                 self.error = error.message
             }
@@ -174,140 +214,53 @@ private struct TerminlisteContent: View {
     }
 }
 
-private struct EventRowLabel: View {
+/// En kveld i lista: dato og rundestatus, tid og sted, påmeldte og sosialkomité.
+private struct EveningRowLabel: View {
     let event: EventRow
     let committee: [String]
+    /// «9 av 14 kommer · 1 usikker». Bare for kommende kvelder.
+    let signups: String?
+    /// nil til rundene er hentet.
+    let rounds: [RoundRow]?
     let referenceYear: Int?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(EveningDates.longText(event.eventDate, referenceYear: referenceYear, capitalized: true))
                 .font(.dd(.sans, size: 17, weight: .semibold, relativeTo: .headline))
+                .foregroundStyle(Color.ddInk)
             let details = [EveningDates.timeText(event.startTime), event.venue].compactMap { $0 }
             if !details.isEmpty {
                 Text(details.joined(separator: " · "))
                     .font(.dd(.sans, size: 14, relativeTo: .subheadline))
                     .foregroundStyle(Color.ddInkSecondary)
             }
+            if let signups {
+                Text(signups)
+                    .font(.dd(.sans, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.ddInkSecondary)
+            }
             Text(committee.isEmpty ? "Ingen sosialkomité" : "Sosialkomité: \(NorwegianList.join(committee))")
                 .font(.dd(.sans, size: 13, relativeTo: .footnote))
                 .foregroundStyle(committee.isEmpty ? Color.ddRustText : Color.ddInkSecondary)
+            if let rounds {
+                DDPill(EveningRounds.text(rounds), tone: EveningRoundsTone.tone(EveningRounds.phase(rounds)))
+                    .fixedSize()
+                    .padding(.top, 4)
+            }
         }
         .padding(.vertical, 2)
     }
 }
 
-/// Ny eller endre kveld.
-private struct EventEditor: View {
-    let model: TerminlisteModel
-    @State var draft: EventDraft
-    let done: () -> Void
-    @State private var error: String?
-    @State private var isBusy = false
-    @State private var confirmDelete = false
-
-    var body: some View {
-        DDForm {
-            // Øverst, ved «Lagre»: lenger ned havner den under troppen og ses ikke.
-            if let error {
-                Section {
-                    Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Color.ddError)
-                }
-            }
-
-            Section {
-                DatePicker("Dato", selection: $draft.date, displayedComponents: .date)
-                Toggle("Klokkeslett", isOn: $draft.hasTime)
-                if draft.hasTime {
-                    DatePicker("Starter", selection: $draft.time, displayedComponents: .hourAndMinute)
-                }
-                TextField("Sted", text: $draft.venue)
-                    .textInputAutocapitalization(.words)
-                TextField("Notat (valgfritt)", text: $draft.note, axis: .vertical)
-                    .lineLimit(2...5)
-            } footer: {
-                DDFooter("Én kveld per dato.")
-            }
-
-            Section {
-                ForEach(model.members) { member in
-                    Button {
-                        toggle(member.id)
-                    } label: {
-                        HStack {
-                            Text(member.displayName)
-                            Spacer()
-                            if draft.committee.contains(member.id) {
-                                Image(systemName: "checkmark").foregroundStyle(.tint)
-                            }
-                        }
-                    }
-                    .tint(Color.ddInk)
-                    .accessibilityAddTraits(draft.committee.contains(member.id) ? .isSelected : [])
-                }
-            } header: {
-                DDHeader("Sosialkomité (\(draft.committee.count))")
-            }
-
-            if draft.id != nil {
-                Section {
-                    Button("Slett kvelden", role: .destructive) { confirmDelete = true }
-                }
-            }
-        }
-        .environment(\.timeZone, EveningDates.osloTimeZone)
-        .navigationTitle(draft.id == nil ? "Ny kveld" : "Endre kveld")
-        .ddNavigationChrome()
-        .navigationBarTitleDisplayMode(.inline)
-        .disabled(isBusy)
-        .interactiveDismissDisabled(isBusy)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Avbryt", action: done)
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                if isBusy {
-                    ProgressView()
-                } else {
-                    Button("Lagre", action: save)
-                }
-            }
-        }
-        .confirmationDialog("Slette kvelden?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Slett", role: .destructive, action: delete)
-        } message: {
-            Text("Påmeldingene og sosialkomiteen for kvelden slettes også.")
-        }
-    }
-
-    private func toggle(_ id: UUID) {
-        if draft.committee.contains(id) {
-            draft.committee.remove(id)
-        } else {
-            draft.committee.insert(id)
-        }
-    }
-
-    private func save() {
-        run { () async throws(DataError) in try await model.save(draft) }
-    }
-
-    private func delete() {
-        guard let id = draft.id, let event = model.events.first(where: { $0.id == id }) else { return }
-        run { () async throws(DataError) in try await model.delete(event) }
-    }
-
-    private func run(_ action: @escaping () async throws(DataError) -> Void) {
-        isBusy = true
-        error = nil
-        Task {
-            defer { isBusy = false }
-            do throws(DataError) {
-                try await action()
-                done()
-            } catch {
-                self.error = error.message
-            }
+/// Fargen på rundestatusen: grønn når en runde går, gul for kladd.
+enum EveningRoundsTone {
+    static func tone(_ phase: EveningRounds.Phase) -> DDTone {
+        switch phase {
+        case .active: .lime
+        case .draft: .sun
+        case .done: .earthDeep
+        case .none: .earth
         }
     }
 }
@@ -378,19 +331,8 @@ private struct CommitteeDrawSheet: View {
     }
 }
 
-/// Identifiserbar innpakning, så et utkast kan styre et ark.
-private struct IdentifiedDraft: Identifiable {
-    let id = UUID()
-    let draft: EventDraft
-}
-
 private struct IdentifiedPlan: Identifiable {
     let id = UUID()
     let plan: [CommitteeDraw.Assignment]
 }
 
-#Preview {
-    NavigationStack {
-        TerminlisteAdminView()
-    }
-}

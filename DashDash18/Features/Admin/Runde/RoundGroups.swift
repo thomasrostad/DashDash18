@@ -1,6 +1,6 @@
 import Foundation
 
-/// Rundene på én kveld, slik de står i «Runder». Kvelden er `nil` for runder uten kveld.
+/// Rundene på én kveld, slik de står i «Alle runder». Kvelden er `nil` for runder uten kveld.
 nonisolated struct RoundGroup: Identifiable, Equatable, Sendable {
     let event: EventRow?
     /// I rundenummerets rekkefølge.

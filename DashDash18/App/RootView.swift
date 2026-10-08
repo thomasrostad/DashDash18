@@ -37,6 +37,7 @@ struct RootView: View {
                     }
                     // Knapper og lenker i innholdet er skoggrønne; rust er bare aktiv fane.
                     .tint(Color.ddForestInk)
+                    .environment(\.currentTab, tab)
                     .ddScreenBackground()
                 }
             }
@@ -72,6 +73,9 @@ struct RootView: View {
 extension EnvironmentValues {
     /// Bytter fane fra et view inne i en fane (arrangørsidens «Gå til runden»).
     @Entry var selectTab: (AppTab) -> Void = { _ in }
+
+    /// Fanen et view ligger i. Arrangørsiden åpnet fra Kveld går tilbake i stedet for å bytte fane.
+    @Entry var currentTab: AppTab? = nil
 }
 
 /// Merke i verktøylinjen så det aldri er tvil om at appen ikke kjører mot prod.

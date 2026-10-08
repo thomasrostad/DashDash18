@@ -19,7 +19,7 @@ final class RundeAdminModel {
     private(set) var state: LoadState = .loading
     /// Kveldene i sesongen, eldste først.
     private(set) var events: [EventRow] = []
-    /// Alle kveldene i klubben, også fra tidligere sesonger. For grupperingen i «Runder».
+    /// Alle kveldene i klubben, også fra tidligere sesonger. For grupperingen i «Alle runder».
     private(set) var allEvents: [EventRow] = []
     private(set) var selectedEventID: UUID?
     private(set) var seasons: [SeasonRow] = []
@@ -59,14 +59,19 @@ final class RundeAdminModel {
 
     var selectedEvent: EventRow? { events.first { $0.id == selectedEventID } }
 
-    /// Rundene gruppert per kveld, nyeste først, med kvelden som står for tur selv uten runder.
+    /// Rundene gruppert per kveld, nyeste først («Alle runder»). Bare kvelder med runder.
     var groups: [RoundGroup] {
-        RoundGroups.make(rounds: allRounds, events: allEvents, including: selectedEventID)
+        RoundGroups.make(rounds: allRounds, events: allEvents)
     }
 
-    /// Kan en ny runde settes opp på kvelden fra lista?
+    /// Rundene på en kveld, i rundenummerets rekkefølge.
+    func rounds(on eventID: UUID) -> [RoundRow] {
+        allRounds.filter { $0.eventID == eventID }.sorted { $0.roundNo < $1.roundNo }
+    }
+
+    /// Kan en ny runde settes opp på kvelden? Kvelder som ikke er passert.
     func allowsNewRound(_ event: EventRow) -> Bool {
-        RoundGroups.allowsNewRound(event, today: EveningDates.today(), defaultID: selectedEventID)
+        RoundGroups.allowsNewRound(event, today: EveningDates.today(), defaultID: nil)
     }
 
     /// Regelsettet for den valgte kvelden.
@@ -200,8 +205,7 @@ final class RundeAdminModel {
     }
 
     private func roundsForSelectedEvent() -> [RoundRow] {
-        guard let eventID = selectedEventID else { return [] }
-        return allRounds.filter { $0.eventID == eventID }.sorted { $0.roundNo < $1.roundNo }
+        selectedEventID.map(rounds(on:)) ?? []
     }
 
     /// Påmeldingene på den valgte kvelden, og kveldens runder fra `allRounds`.

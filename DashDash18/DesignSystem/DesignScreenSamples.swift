@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
 /// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `profil`, `sesong`,
-/// `varsler`, `trad`, `hurtigstart`, `arrangor`, `arrangorstart`, `runder`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
+/// `varsler`, `trad`, `hurtigstart`, `arrangor`, `arrangorstart`, `runder`, `kveldene`, `kvelden`, `baner`, `nybane`, `regler`, `reglerendre`, `nysesong`,
 /// `statoversikt`, `stathistorikk`, `statrekorder`, `stattom`, `statforing`,
 /// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
 /// og spill på runden: `spill`, `spillnytt`, `spillresultat`,
@@ -16,6 +16,8 @@ struct DesignScreenSamples: View {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
         // Arrangørsiden: «Kom i gang» (fase 11).
         case arrangorstart
+        // Kveldene og Kvelden (fase 11).
+        case kveldene, kvelden
         // Arrangør: banene og sesong og regler (fase 11).
         case baner, nybane, regler, reglerendre, nysesong
         // Statistikk (fase 16).
@@ -44,6 +46,12 @@ struct DesignScreenSamples: View {
                 .tint(Color.ddForestInk)
         case .runder:
             NavigationStack { RundeAdminSample() }
+                .tint(Color.ddForestInk)
+        case .kveldene:
+            NavigationStack { KveldeneSample() }
+                .tint(Color.ddForestInk)
+        case .kvelden:
+            NavigationStack { KveldenSample() }
                 .tint(Color.ddForestInk)
         case .tavla, .tavlaferdig:
             NavigationStack {

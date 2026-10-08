@@ -14,7 +14,8 @@ struct EventDraft: Equatable {
     var committee: Set<UUID>
 }
 
-/// Terminlista for arrangøren: kveldene, sosialkomiteene og troppen å velge fra.
+/// Kveldene for arrangøren: terminlista med sosialkomiteene, påmeldingen per kveld og troppen
+/// å velge fra. Brukes av «Kveldene» og «Kvelden».
 @Observable
 final class TerminlisteModel {
     enum LoadState: Equatable {
@@ -36,6 +37,8 @@ final class TerminlisteModel {
     private(set) var committees: [UUID: [UUID]] = [:]
     /// Aktive medlemmer, sortert på navn.
     private(set) var members: [ClubMemberRow] = []
+    /// Kveld → svarene. Feiler hentingen, står kveldene uten påmelding.
+    private(set) var signups: [UUID: [SignupRow]] = [:]
 
     private let context: ClubContext
 
@@ -79,10 +82,36 @@ final class TerminlisteModel {
             committees = Dictionary(grouping: committee, by: \.eventID).mapValues { $0.map(\.memberID) }
             members = KveldQueries.sortedByName(roster)
             state = .loaded
+            await loadSignups()
         } catch {
             if case .loaded = state { return }  // behold det vi har ved en feilet oppfrisking
             state = .failed(DataError.from(error).message)
         }
+    }
+
+    /// Svarene på sesongens kvelder. Bare et tillegg i lista, så en feil gir ingen feilet skjerm.
+    private func loadSignups() async {
+        guard !events.isEmpty else { signups = [:]; return }
+        let rows: [SignupRow]? = try? await client.from("signups")
+            .select("event_id, member_id, club_id, status, comment")
+            .in("event_id", values: events.map(\.id.uuidString))
+            .execute().value
+        if let rows { signups = Dictionary(grouping: rows, by: \.eventID) }
+    }
+
+    /// Hele troppen fordelt på svarene for kvelden.
+    func signupSummary(for eventID: UUID) -> SignupSummary {
+        SignupSummary(members: members, signups: signups[eventID] ?? [])
+    }
+
+    /// Purrer på dem som ikke har svart på kvelden (samme purring som i Kveld). Gir teksten
+    /// som skal vises etterpå.
+    func nudge(_ event: EventRow) async throws(DataError) -> String {
+        guard context.isOrganizer else { throw .notAllowed }
+        let missing = Nudge.targets(signupSummary(for: event.id)).map(\.memberID)
+        try await ActivityLog(client: client, clubID: clubID)
+            .nudge(eventID: event.id, eventDate: event.eventDate, missing: missing)
+        return Nudge.doneText(count: missing.count)
     }
 
     func memberName(_ id: UUID) -> String {
@@ -216,6 +245,32 @@ final class TerminlisteModel {
         }
     }
 }
+
+#if DEBUG
+extension TerminlisteModel {
+    /// Kveldene fra skjermprøvens rundemodell, med sosialkomité og påmelding (`kvelden`, `kveldene`).
+    static func sample(from admin: RundeAdminModel) -> TerminlisteModel {
+        let model = TerminlisteModel(context: admin.clubContext)
+        model.activeSeason = admin.seasons.first { $0.status == .active }.map { SeasonSummary(id: $0.id, name: $0.name) }
+        model.events = admin.events
+        model.members = admin.members
+        for (index, event) in admin.events.enumerated() {
+            model.committees[event.id] = admin.members.dropFirst(index * 2).prefix(index == admin.events.count - 1 ? 0 : 2)
+                .map(\.id)
+        }
+        if let selected = admin.selectedEventID {
+            model.signups[selected] = admin.signups
+        }
+        if let next = admin.events.first(where: { $0.eventDate > EveningDates.today() }) {
+            model.signups[next.id] = admin.members.prefix(5).map {
+                SignupRow(eventID: next.id, memberID: $0.id, clubID: $0.clubID, status: .yes, comment: nil)
+            }
+        }
+        model.state = .loaded
+        return model
+    }
+}
+#endif
 
 /// Raden som skrives til `events`. Tomme felt sendes som null, så de også tømmes ved endring.
 nonisolated struct EventWrite: Encodable, Sendable {

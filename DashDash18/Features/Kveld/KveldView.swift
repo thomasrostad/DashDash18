@@ -71,7 +71,9 @@ private struct KveldContent: View {
                         SignupSection(model: model)
                             .padding(.top, DDSpacing.l)
                         if Nudge.isOffered(isOrganizer: model.isOrganizer, summary: model.summary) {
-                            NudgeSection(model: model)
+                            NudgeSection(targets: model.nudgeTargets) { () async throws(DataError) -> String in
+                                try await model.nudge()
+                            }
                         }
                         SignupOverviewSection(summary: model.summary, myID: model.memberID)
                     } else {

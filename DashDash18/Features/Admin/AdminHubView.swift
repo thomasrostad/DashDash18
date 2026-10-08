@@ -1,8 +1,10 @@
 import SwiftUI
 
-/// Arrangørsiden: «Kom i gang» når noe mangler (sesong, baner, tropp, neste kveld), så neste kveld
-/// med én hovedknapp, og det som gjøres sjeldnere under (sesongen, klubben, push). Overskriften sier
-/// «I kveld» bare når kvelden er i dag. Vises bare for arrangører.
+/// Arrangørsiden. Øverst neste steg: «Kom i gang» når noe mangler (sesong, baner, tropp, neste kveld),
+/// så neste kveld med én hovedknapp og raden «Kveldene». Overskriften sier «I kveld» bare når kvelden
+/// er i dag, og trykk på kortet åpner Kvelden. Under ligger det som gjøres sjeldnere: oppsettet
+/// (sesong og regler, troppen, banene) og varsler og rapporter. Vises bare for arrangører, fra Deg og
+/// fra verktøylinja i Kveld.
 struct AdminHubView: View {
     @Environment(\.clubContext) private var context
 
@@ -30,24 +32,20 @@ struct AdminHubSample: View {
 }
 #endif
 
-/// Runden som settes opp (pushet hurtigstart).
-private struct SetupItem: Hashable {
-    let id = UUID()
-    let draft: RoundDraft
-
-    static func == (lhs: SetupItem, rhs: SetupItem) -> Bool { lhs.id == rhs.id }
-    func hash(into hasher: inout Hasher) { hasher.combine(id) }
-}
-
 private struct AdminHubContent: View {
-    @State var model: RundeAdminModel
+    @State private var model: RundeAdminModel
+    @State private var actions: RoundAdminActions
     @Environment(\.selectTab) private var selectTab
+    @Environment(\.currentTab) private var currentTab
+    @Environment(\.dismiss) private var dismiss
 
-    @State private var setup: SetupItem?
-    @State private var showsTerminliste = false
-    @State private var message: String?
-    @State private var error: String?
-    @State private var isBusy = false
+    @State private var showsKveldene = false
+    @State private var showsKvelden = false
+
+    init(model: RundeAdminModel) {
+        _model = State(initialValue: model)
+        _actions = State(initialValue: RoundAdminActions(model: model))
+    }
 
     var body: some View {
         DDList {
@@ -55,17 +53,11 @@ private struct AdminHubContent: View {
                 gettingStartedSection
             }
             tonightSection
-            DDSection("Sesongen") {
-                NavigationLink { TerminlisteAdminView() } label: {
-                    AdminHubRow("Terminliste", "Kveldene i sesongen: dato, tid, sted og sosialkomité.",
-                                systemImage: "calendar")
-                }
+            DDSection("Oppsett") {
                 NavigationLink { SesongAdminView() } label: {
                     AdminHubRow("Sesong og regler", "Antall kvelder, hva som teller, poeng, handicap og former.",
                                 systemImage: "list.number")
                 }
-            }
-            DDSection("Klubben") {
                 NavigationLink { TroppAdminView() } label: {
                     AdminHubRow("Troppen", "Spillerne, handicap, roller og nye som venter på godkjenning.",
                                 systemImage: "person.3")
@@ -95,23 +87,13 @@ private struct AdminHubContent: View {
         .ddNavigationChrome()
         .task { await model.load() }
         .refreshable { await model.load() }
-        .navigationDestination(isPresented: $showsTerminliste) { TerminlisteAdminView() }
-        .navigationDestination(item: $setup) { item in
-            RundeQuickStartView(model: model, draft: item.draft) { result in
-                setup = nil
-                message = result
+        .navigationDestination(isPresented: $showsKveldene) { KveldeneView() }
+        .navigationDestination(isPresented: $showsKvelden) {
+            if let event = model.selectedEvent {
+                KveldenView(eventID: event.id, terminliste: TerminlisteModel(context: model.clubContext), admin: model)
             }
         }
-        .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(error ?? "")
-        }
-        .alert("Ferdig", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(message ?? "")
-        }
+        .roundAdminActions(actions)
     }
 
     // MARK: Kom i gang
@@ -147,7 +129,7 @@ private struct AdminHubContent: View {
         case .season: SesongAdminView()
         case .courses: BanerAdminView()
         case .roster: TroppAdminView()
-        case .evening: TerminlisteAdminView()
+        case .evening: KveldeneView()
         }
     }
 
@@ -182,14 +164,23 @@ private struct AdminHubContent: View {
                 .padding(.vertical, DDSpacing.s)
             case .loaded:
                 VStack(alignment: .leading, spacing: DDSpacing.l) {
-                    TonightCard(model: model, action: action)
+                    if model.selectedEvent != nil {
+                        // Kortet åpner Kvelden; knappen under er en egen knapp i samme rad.
+                        Button { showsKvelden = true } label: {
+                            TonightCard(model: model, action: action)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Åpner kvelden")
+                    } else {
+                        TonightCard(model: model, action: action)
+                    }
                     primaryButton
                 }
                 .padding(.vertical, DDSpacing.s)
             }
-            NavigationLink { RundeAdminView() } label: {
-                AdminHubRow("Runder", "Alle kveldenes runder. Trykk en runde for å starte, avkorte, låse eller rette hull.",
-                            systemImage: "flag.2.crossed")
+            NavigationLink { KveldeneView() } label: {
+                AdminHubRow("Kveldene", "Terminlista: påmelding, runder og sosialkomité for hver kveld.",
+                            systemImage: "calendar")
             }
         } header: {
             DDHeader(Tonight.sectionTitle(daysUntil: daysUntil))
@@ -203,7 +194,7 @@ private struct AdminHubContent: View {
         case .closeEvening(let id):
             AvsluttKveldenButton(rounds: roundsToClose(activeID: id), title: model.title, prominent: true) { text in
                 await model.load()
-                message = text
+                actions.message = text
             }
         default:
             Button {
@@ -211,11 +202,11 @@ private struct AdminHubContent: View {
             } label: {
                 HStack(spacing: 8) {
                     Text(action.buttonTitle)
-                    if isBusy { ProgressView() }
+                    if actions.isBusy { ProgressView() }
                 }
             }
             .buttonStyle(.dd(.primary, fullWidth: true))
-            .disabled(isBusy)
+            .disabled(actions.isBusy)
         }
     }
 
@@ -228,21 +219,14 @@ private struct AdminHubContent: View {
     private func perform(_ action: TonightAction) {
         switch action {
         case .noEvening:
-            showsTerminliste = true
+            showsKveldene = true
         case .setUp:
-            if let draft = model.newDraft() { setup = SetupItem(draft: draft) }
+            actions.newRound(on: model.selectedEvent)
         case .continueDraft(let id):
-            isBusy = true
-            Task {
-                defer { isBusy = false }
-                do {
-                    if let draft = try await model.draft(id: id) { setup = SetupItem(draft: draft) }
-                } catch {
-                    self.error = DataError.from(error).message
-                }
-            }
+            actions.continueDraft(id: id)
         case .goToRound:
-            selectTab(.kveld)
+            // Runden vises i Kveld. Er arrangørsiden åpnet derfra, er det bare å gå tilbake.
+            if currentTab == .kveld { dismiss() } else { selectTab(.kveld) }
         case .closeEvening:
             break
         }
@@ -266,6 +250,9 @@ private struct TonightCard: View {
                         DDPill(EveningDates.countdownText(days: days), tone: .sun)
                             .fixedSize()
                     }
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
                 if let line = timeAndPlace(event) {
                     Label(line, systemImage: "clock")
@@ -274,13 +261,14 @@ private struct TonightCard: View {
                 DDPill(statusText, tone: statusTone)
             }
             .labelStyle(DDIconLabelStyle())
+            .contentShape(.rect)
             .accessibilityElement(children: .combine)
         } else {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Ingen kveld i terminlista")
                     .font(.ddTitle)
                     .foregroundStyle(Color.ddForestInk)
-                Text("Legg inn kveldene i sesongen først. Da kan du sette opp runden herfra.")
+                Text("Legg inn neste kveld under «Kveldene». Da kan du sette opp runden herfra.")
                     .font(.ddCallout)
                     .foregroundStyle(Color.ddInkSecondary)
             }
