@@ -494,11 +494,6 @@ nonisolated enum RoundListing {
         (existing.map(\.roundNo).max() ?? 0) + 1
     }
 
-    /// Kvelden som står for tur i lista (`nextScheduleEntry`), ellers den siste.
-    static func defaultEvent(_ events: [EventRow], today: String, finished: Set<UUID>) -> EventRow? {
-        NextEvening.next(in: events, today: today, finished: finished) ?? events.max { $0.eventDate < $1.eventDate }
-    }
-
     /// Regelsettet for kvelden: kveldens sesong, så den aktive, ellers Golfgutu-oppsettet.
     static func rules(for event: EventRow?, seasons: [SeasonRow]) -> Ruleset {
         if let id = event?.seasonID, let season = seasons.first(where: { $0.id == id }) { return season.rules }

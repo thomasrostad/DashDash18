@@ -22,6 +22,8 @@ struct NesteKveldTests {
         #expect(Tonight.sectionTitle(daysUntil: 1) == "Neste kveld")
         #expect(Tonight.sectionTitle(daysUntil: 5) == "Neste kveld")
         #expect(Tonight.sectionTitle(daysUntil: nil) == "Neste kveld")
+        // Alle kveldene er passert.
+        #expect(Tonight.sectionTitle(daysUntil: -3) == "Siste kveld")
     }
 }
 
@@ -29,16 +31,18 @@ struct KomIGangTests {
     private let allDone = GettingStarted.Input(hasActiveSeason: true, readyCourses: 2, activeMembers: 12,
                                                upcomingEvenings: 3)
 
-    @Test func rekkefolgenErSesongBanerTroppKveld() {
-        #expect(GettingStarted.steps(allDone).map(\.item) == [.season, .courses, .roster, .evening])
-        #expect(GettingStarted.Item.allCases.map(\.title) == ["Turneringen", "Banene", "Troppen", "Kveldene"])
+    /// Fase 21: i sesongens rekkefølge, nummerert.
+    @Test func rekkefolgenErTurneringTroppBanerKveld() {
+        #expect(GettingStarted.steps(allDone).map(\.item) == [.season, .roster, .courses, .evening])
+        #expect(GettingStarted.Item.allCases.map(\.title) == ["Turneringen", "Troppen", "Banene", "Kveldene"])
+        #expect(GettingStarted.steps(allDone).map(\.number) == [1, 2, 3, 4])
     }
 
     @Test func skjultNaarAltErIOrden() {
         let steps = GettingStarted.steps(allDone)
         #expect(steps.filter(\.isDone).count == 4)
         #expect(!GettingStarted.isVisible(steps))
-        #expect(steps.map(\.detail) == ["En turnering er i gang.", "2 baner er klare.", "12 i troppen.",
+        #expect(steps.map(\.detail) == ["En turnering er i gang.", "12 i troppen.", "2 baner er klare.",
                                         "3 kommende kvelder."])
     }
 
@@ -50,7 +54,7 @@ struct KomIGangTests {
 
         input = allDone
         input.readyCourses = 0
-        #expect(GettingStarted.steps(input)[1] == .init(item: .courses, isDone: false,
+        #expect(GettingStarted.steps(input)[2] == .init(item: .courses, isDone: false,
                                                        detail: "Legg inn par på alle hull for minst én bane."))
 
         input = allDone
@@ -61,16 +65,16 @@ struct KomIGangTests {
     @Test func troppenTrengerLikeMangeSomEnRunde() {
         var input = allDone
         input.activeMembers = RoundSetupCheck.minimumPlayers - 1
-        #expect(GettingStarted.steps(input)[2].isDone == false)
-        #expect(GettingStarted.steps(input)[2].detail == "Minst 2 må være med i troppen før dere kan spille.")
+        #expect(GettingStarted.steps(input)[1].isDone == false)
+        #expect(GettingStarted.steps(input)[1].detail == "Minst 2 må være med i troppen før dere kan spille.")
         input.activeMembers = RoundSetupCheck.minimumPlayers
-        #expect(GettingStarted.steps(input)[2].isDone)
+        #expect(GettingStarted.steps(input)[1].isDone)
     }
 
     @Test func entallOgFremdrift() {
         let input = GettingStarted.Input(hasActiveSeason: false, readyCourses: 1, activeMembers: 0, upcomingEvenings: 1)
         let steps = GettingStarted.steps(input)
-        #expect(steps[1].detail == "1 bane er klar.")
+        #expect(steps[2].detail == "1 bane er klar.")
         #expect(steps[3].detail == "1 kommende kveld.")
         #expect(GettingStarted.progressText(steps) == "2 av 4 klar")
     }
