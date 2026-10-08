@@ -57,12 +57,7 @@ nonisolated extension StatsInput {
     /// Kveldens dato for klubbrunder, ellers dagen runden startet (norsk tid).
     func date(of r: StatsRoundRow) -> String? {
         if let event = r.eventID, let d = eventDates[event] { return d }
-        guard let started = r.startedAt else { return nil }
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Europe/Oslo") ?? .current
-        let c = calendar.dateComponents([.year, .month, .day], from: started)
-        guard let y = c.year, let m = c.month, let d = c.day else { return nil }
-        return String(format: "%04d-%02d-%02d", y, m, d)
+        return r.startedAt.map { StatsFormat.day($0) }
     }
 
     /// Spillehandicapet i runden: 0 når simulatoren deler ut slagene, ellers det som ble frosset

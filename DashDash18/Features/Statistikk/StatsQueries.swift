@@ -32,7 +32,7 @@ enum StatsQueries {
             }
             if scope.includesLoose {
                 let mine: [RoundParticipantRow] = try await client.from("round_participants")
-                    .select("id, round_id, profile_id, display_name, handicap_index")
+                    .select(CompetitionQueries.roundParticipantColumns)
                     .eq("profile_id", value: userID)
                     .execute().value
                 if !mine.isEmpty {
