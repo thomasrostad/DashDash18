@@ -1,27 +1,28 @@
-/// Fanene i appen. Penger er utenfor v1 (ROADMAP B10), så Deg tar den plassen.
+/// Fanene i appen: Hjem · Spill · Tavla · Deg (fase 19, besluttet 08.10.2026). Hjem erstatter Kveld:
+/// «Pågår nå» og «Neste kveld» står øverst, og Kveld-skjermen er ett trykk unna.
 /// «Spill» (løse runder, fase 13) vises bare når `LooseRoundsFeature` er på.
 nonisolated enum AppTab: String, CaseIterable, Identifiable {
-    case kveld
+    case hjem
     case spill
     case tavla
     case deg
 
     var id: Self { self }
 
-    /// Fanene som vises, i rekkefølge. Uten løse runder er det de samme som før fase 13.
+    /// Fanene som vises, i rekkefølge.
     static func tabs(looseRounds: Bool = LooseRoundsFeature.isEnabled) -> [AppTab] {
         allCases.filter { $0 != .spill || looseRounds }
     }
 
-    /// Knappen til Arrangørsiden i verktøylinja: bare i Kveld, og bare for arrangører.
-    /// Raden i Deg står i tillegg.
+    /// Knappen til Arrangørsiden i verktøylinja: bare på Hjem, og bare for arrangører.
+    /// Knappen på «Neste kveld» og raden i Deg står i tillegg.
     func showsAdminButton(isOrganizer: Bool) -> Bool {
-        self == .kveld && isOrganizer
+        self == .hjem && isOrganizer
     }
 
     var title: String {
         switch self {
-        case .kveld: "Kveld"
+        case .hjem: "Hjem"
         case .spill: "Spill"
         case .tavla: "Tavla"
         case .deg: "Deg"
@@ -30,7 +31,7 @@ nonisolated enum AppTab: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
-        case .kveld: "flag"
+        case .hjem: "house"
         case .spill: "figure.golf"
         case .tavla: "trophy"
         case .deg: "person.crop.circle"

@@ -38,8 +38,6 @@ final class VarslerModel {
 
     let me: UUID
     let isOrganizer: Bool
-    /// Bjella i verktøylinjen, om RootView har gitt en.
-    var badge: UnreadBadge?
 
     private let context: ClubContext?
     private let log: ActivityLog?
@@ -53,13 +51,12 @@ final class VarslerModel {
     private var channel: RealtimeChannelV2?
     private var listenTasks: [Task<Void, Never>] = []
 
-    init(context: ClubContext, badge: UnreadBadge? = nil) {
+    init(context: ClubContext) {
         self.context = context
         me = context.memberID
         isOrganizer = context.isOrganizer
         log = ActivityLog(client: context.client, clubID: context.clubID)
         seen = ActivitySeenStore(clubID: context.clubID)
-        self.badge = badge
     }
 
     /// Forhåndsvisning: faste rader, ingen nettverk.
@@ -135,7 +132,6 @@ final class VarslerModel {
             }
             // Skjermen er åpen: det som vises, er sett.
             seen.markSeen(newRows)
-            badge?.markSeen(newRows)
             await startRealtime()
         } catch {
             if state == .loaded { return }  // behold det som vises

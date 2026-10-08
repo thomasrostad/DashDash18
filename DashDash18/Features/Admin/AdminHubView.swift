@@ -35,9 +35,8 @@ struct AdminHubSample: View {
 private struct AdminHubContent: View {
     @State private var model: RundeAdminModel
     @State private var actions: RoundAdminActions
-    @Environment(\.selectTab) private var selectTab
-    @Environment(\.currentTab) private var currentTab
-    @Environment(\.dismiss) private var dismiss
+    /// «Gå til runden»: Hjem-fanen åpner runden (fase 19), også når arrangørsiden står over Hjem.
+    @Environment(\.showRound) private var showRound
 
     @State private var showsKveldene = false
     @State private var showsKvelden = false
@@ -248,8 +247,7 @@ private struct AdminHubContent: View {
         case .continueDraft(let id):
             actions.continueDraft(id: id)
         case .goToRound:
-            // Runden vises i Kveld. Er arrangørsiden åpnet derfra, er det bare å gå tilbake.
-            if currentTab == .kveld { dismiss() } else { selectTab(.kveld) }
+            showRound()
         case .closeEvening:
             break
         }

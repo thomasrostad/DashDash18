@@ -10,7 +10,8 @@ import SwiftUI
 /// og spill på runden: `spill`, `spillnytt`, `spillresultat`,
 /// og åpent for alle (fase 17): `apenvalg`, `apenlogin`, `apendeg`, `apenslett`, `apenrapport`,
 /// `apenrapporter`, `apenblokkerte`, `apenbetaling`, `apenregning`,
-/// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkteller`, `konkkveld`, `konklast`, `konklastdeltaker`).
+/// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkteller`, `konkkveld`, `konklast`, `konklastdeltaker`,
+/// og Hjem (fase 19): `hjem`, `hjemmidt`, `hjembunn`, `hjemlos`, `hjemtom`, `hjemarrangor`, `hjembjelle`).
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
@@ -36,6 +37,8 @@ struct DesignScreenSamples: View {
         case konktavla, konkliste, konkliga, konkcup, konkteller, konkkveld
         // Låst konkurranse: betalingsknappen for eieren, teksten for deltakerne (fase 17).
         case konklast, konklastdeltaker
+        // Hjem-fanen med feeden (fase 19).
+        case hjem, hjemmidt, hjembunn, hjemlos, hjemtom, hjemarrangor, hjembjelle
     }
     @State var screen: Screen = .hullkort
 
@@ -122,6 +125,13 @@ struct DesignScreenSamples: View {
             SpillNyttSampleScreen()
         case .konktavla, .konkliste, .konkliga, .konkcup, .konkteller, .konkkveld, .konklast, .konklastdeltaker:
             KonkurranseSampleScreen(screen: screen)
+        case .hjem: HjemSampleScreen(variant: .full)
+        case .hjemmidt: HjemSampleScreen(variant: .middle)
+        case .hjembunn: HjemSampleScreen(variant: .bottom)
+        case .hjemlos: HjemSampleScreen(variant: .loose)
+        case .hjemtom: HjemSampleScreen(variant: .empty)
+        case .hjemarrangor: HjemSampleScreen(variant: .organizer)
+        case .hjembjelle: HjemSampleScreen(variant: .bell)
         case .liste:
             NavigationStack { DDListSample() }
                 .tint(Color.ddForestInk)

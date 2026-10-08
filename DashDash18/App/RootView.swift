@@ -4,11 +4,13 @@ struct RootView: View {
     let config: AppConfig
     let user: AuthUser
     let membership: Membership
-    @State private var selectedTab: AppTab = .kveld
+    @State private var selectedTab: AppTab = .hjem
     @Environment(\.clubContext) private var context
-    /// Uleste til bjella, én per klubb (byttes når klubben byttes).
-    @State private var badge: UnreadBadge?
-    @State private var badgeClubID: UUID?
+    @Environment(ClubModel.self) private var club: ClubModel?
+    /// Hjem-feeden (fase 19). Bor her, så bjella teller i alle fanene. Ny når medlemskapene byttes.
+    @State private var home: HomeFeedModel?
+    @State private var homeKey: String?
+    @State private var router = HjemRouter()
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -19,27 +21,19 @@ struct RootView: View {
                             .navigationTitle(tab.title)
                             .ddNavigationChrome()
                             .toolbar {
-                                // Høyst tre: arrangørsiden (Kveld), miljømerket (ikke prod) og bjella.
-                                if tab.showsAdminButton(isOrganizer: membership.isOrganizer) {
-                                    ToolbarItem(placement: .topBarLeading) {
-                                        NavigationLink { AdminHubView() } label: {
-                                            Image(systemName: "slider.horizontal.3")
-                                        }
-                                        .accessibilityLabel("Arrangørsiden")
-                                        .tint(Color.ddOnDark)
-                                    }
-                                }
+                                // Høyst tre: arrangørsiden (Hjem, se HjemView), miljømerket (ikke prod)
+                                // og bjella.
                                 if config.environment != .prod {
                                     ToolbarItem(placement: .topBarTrailing) {
                                         EnvironmentBadge(environment: config.environment)
                                             .tint(Color.ddOnDark)
                                     }
                                 }
-                                if let badge {
+                                if let home {
                                     ToolbarItem(placement: .topBarTrailing) {
                                         // Lys på den grønne linja. Uten egen tint arver bjella
                                         // skoggrønn, som i lys modus gir en svak mint-kapsel.
-                                        VarslerBell(badge: badge)
+                                        HjemBell(model: home)
                                             .tint(Color.ddOnDark)
                                     }
                                 }
@@ -55,21 +49,33 @@ struct RootView: View {
         // Aktiv fane i gult (golfee), mørk oker i lys modus så etiketten holder 4,5:1.
         .tint(Color.ddYellowText)
         .environment(\.selectTab) { selectedTab = $0 }
-        .task(id: context?.clubID) { makeBadge() }
+        .environment(\.showRound) {
+            selectedTab = .hjem
+            router.showRound()
+        }
+        .task(id: memberships.map(\.id)) { makeHome() }
     }
 
-    /// Én `UnreadBadge` per klubbkontekst: samme klubb beholder den, en ny klubb får en ny.
-    private func makeBadge() {
-        guard let context else { badge = nil; badgeClubID = nil; return }
-        guard badgeClubID != context.clubID else { return }
-        badge = UnreadBadge(context: context)
-        badgeClubID = context.clubID
+    private var memberships: [Membership] {
+        club?.memberships.filter { $0.status == .active } ?? [membership]
+    }
+
+    /// Én `HomeFeedModel` per innlogging og sett med medlemskap.
+    private func makeHome() {
+        guard let context else { home = nil; homeKey = nil; return }
+        let key = user.id.uuidString + memberships.map(\.id.uuidString).sorted().joined()
+        guard key != homeKey else { return }
+        let old = home
+        Task { await old?.stopRealtime() }
+        home = HomeFeedModel(client: context.client, userID: user.id,
+                             memberships: memberships.isEmpty ? [membership] : memberships)
+        homeKey = key
     }
 
     @ViewBuilder
     private func content(for tab: AppTab) -> some View {
         switch tab {
-        case .kveld: KveldView()
+        case .hjem: HjemView(home: home, router: router)
         case .spill:
             if let context {
                 SpillView(model: SpillModel(client: context.client, userID: user.id))
@@ -81,11 +87,14 @@ struct RootView: View {
 }
 
 extension EnvironmentValues {
-    /// Bytter fane fra et view inne i en fane (arrangørsidens «Gå til runden»).
+    /// Bytter fane fra et view inne i en fane.
     @Entry var selectTab: (AppTab) -> Void = { _ in }
 
-    /// Fanen et view ligger i. Arrangørsiden åpnet fra Kveld går tilbake i stedet for å bytte fane.
+    /// Fanen et view ligger i.
     @Entry var currentTab: AppTab? = nil
+
+    /// Åpner runden som går, på Hjem (arrangørsidens «Gå til runden»).
+    @Entry var showRound: () -> Void = {}
 }
 
 /// Merke i verktøylinjen så det aldri er tvil om at appen ikke kjører mot prod.
