@@ -26,6 +26,8 @@ final class HomeFeedModel {
     var errorMessage: String?
 
     var filter: HomeFeedFilter = .all { didSet { if filter != oldValue { rebuild() } } }
+    /// Realtime bare mens Hjem står framme (settes av Hjem). Bjella i de andre fanene henter uten.
+    var wantsRealtime = false
     var live: HomeLiveInput? { didSet { if live != oldValue { rebuild() } } }
     var evening: HomeEveningInput? { didSet { if evening != oldValue { rebuild() } } }
 
@@ -135,7 +137,7 @@ final class HomeFeedModel {
             }
             state = .loaded
             rebuild()
-            await startRealtime()
+            if wantsRealtime { await startRealtime() }
         } catch is CancellationError {
         } catch {
             if state == .loaded { return }  // behold det som vises
@@ -167,6 +169,44 @@ final class HomeFeedModel {
         let newest = (raw.activity.map(\.createdAt) + raw.mentions.map(\.createdAt)).max()
         if let newest { bellSeen?.markSeen(upTo: newest) }
         bellCount = 0
+    }
+
+    // MARK: Varsler (bjella)
+
+    /// Bjellas «sist sett» da Varsler ble åpnet: prikkene viser det som var nytt da.
+    private(set) var bellSeenAtOpen: Date?
+
+    /// Varsler er åpnet fra bjella: husk hva som var nytt, og merk alt som sett.
+    func openBell() {
+        bellSeenAtOpen = bellSeen?.lastSeen(fallbackClubs: clubs.map(\.id)) ?? bellPreviewSeen
+        markBellSeen()
+    }
+
+    /// Linjene i Varsler: det som angår deg, med reaksjoner og navn.
+    func bellSections(now: Date? = nil) -> [HomeBellSection] {
+        HomeBellList.sections(bellRows, reactions: raw.reactions, names: raw.names, viewer: viewer,
+                              lastSeen: bellSeenAtOpen, now: now ?? clock())
+    }
+
+    /// Har du reagert med denne på linja?
+    func hasReacted(_ reaction: ActivityReaction, on target: HomeReactions) -> Bool {
+        guard let me = viewer.memberships[target.clubID] else { return false }
+        return ActivityReactions.has(reaction, on: target.activityID, by: me, in: raw.reactions)
+    }
+
+    // MARK: Oppslag for kortene
+
+    /// Turneringen et tabellkort peker på.
+    func competition(_ id: UUID) -> CompetitionRow? {
+        raw.competitions.first { $0.id == id }
+    }
+
+    /// Resultatet av runden til deling («Del» på «Din runde»), når runden er hentet.
+    func share(round id: UUID) -> ResultShare? {
+        guard let s = raw.rounds.first(where: { $0.round.id == id }), let me = viewer.playerID(in: s) else {
+            return nil
+        }
+        return RoundGame(s).share(viewer: Viewer(memberID: me, isOrganizer: false))
     }
 
     // MARK: Reaksjoner
