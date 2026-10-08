@@ -35,7 +35,7 @@ struct ResultShareCard: View {
             .padding(.vertical, DDSpacing.s)
             .background(Color.ddCard)
 
-            Text("DashDash18")
+            Text("Atten")
                 .ddEyebrow()
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, DDSpacing.m)

@@ -1,8 +1,8 @@
-# Personvernerklæring for DashDash
+# Personvernerklæring for Atten
 
 *Sist endret: 7. oktober 2026. Utkast, publiseres før lansering. Adressen settes i `LegalLinks.privacy` i appen.*
 
-DashDash er en app for å føre golfrunder, spille med venner og kjøre turneringer. Her står hvilke opplysninger appen bruker, hvorfor, og hva du kan gjøre med dem.
+Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer. Her står hvilke opplysninger appen bruker, hvorfor, og hva du kan gjøre med dem.
 
 **Behandlingsansvarlig:** [Navn / firma, organisasjonsnummer, adresse]. Kontakt: personvern@dashdash18.com.
 

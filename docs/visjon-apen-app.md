@@ -1,4 +1,4 @@
-# DashDash for alle – visjon og plan
+# Atten for alle – visjon og plan
 
 Besluttet 07.10.2026 (Thomas): appen skal ha flere bruksområder enn turnering og være **åpen for alle**. Bruksområdene er løse runder med venner, spill på runden, flere konkurranser samtidig og egen statistikk.
 
@@ -48,7 +48,7 @@ Fanene blir **Hjem** (dine runder og det som skjer), **Spill** (ny runde, pågå
 
 1. **Rekkefølge:** fundamentet (fase 12) kommer før byttet for gjengen (fase 9), så dataene flyttes én gang.
 2. **Banedata:** brukerne legger inn baner nå, i et felles bibliotek. Skjemaet gjøres klart for en ekstern kilde senere (GolfAPI.io eller lignende), med ekstern id, kilde og når banen sist ble hentet. Lokale rettelser skal overleve en ny henting.
-3. **Navn:** appen heter **DashDash**. «Golfgutu Invitational» blir en klubb i appen.
+3. **Navn:** appen heter **Atten** (besluttet 08.10.2026, erstatter DashDash). «Golfgutu Invitational» blir en klubb i appen.
 4. **Forretningsmodell:** gratis å bruke. **Betaling for å kjøre turnering.** Det må skje som kjøp i appen (StoreKit), ikke Vipps, fordi Apple krever det for alt som låser opp funksjoner. Skjemaet får plass til et abonnement eller kjøp per klubb eller turnering.
 5. **Penger:** veddemål og spill er fortsatt **bare poeng** (B10). **Vipps-knapp** brukes for å dele **felles utgifter** (simulatorleie, greenfee, mat, premiepotten) med en ferdig utfylt Vipps-forespørsel. Oppgjør av veddemål i kroner tas ikke inn, fordi det kan regnes som pengespill.
 

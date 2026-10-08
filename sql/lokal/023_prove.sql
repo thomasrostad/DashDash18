@@ -47,8 +47,8 @@ grant execute on all functions in schema pg_temp to public;
 \set uJ '23000000-0000-0000-0000-00000000000c'
 \set uK '23000000-0000-0000-0000-00000000000d'
 \set KK '23a00000-0000-0000-0000-000000000001'
-\set P  'no.dashdash.turnering.sesong'
-\set PA 'no.dashdash.turnering.ar'
+\set P  'no.atten.turnering.sesong'
+\set PA 'no.atten.turnering.ar'
 
 select pg_temp.som('');
 insert into auth.users values (:'uH'), (:'uI'), (:'uJ'), (:'uK');

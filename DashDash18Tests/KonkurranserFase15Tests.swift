@@ -581,6 +581,7 @@ nonisolated private struct FakePurchaseBackend: PurchaseBackend {
         #expect(InviteCode.parse("abcde-fgh23", host: InviteTarget.competitionHost) == code)
         let text = target.shareText(code)
         #expect(text.contains("Vennecupen") && text.contains("dashdash://konkurranse/ABCDEFGH23") && text.contains("ABCDE-FGH23"))
+        #expect(text.contains("i Atten.") && !text.contains("DashDash"))
         #expect(InviteTarget.round(courseName: "Losby").shareText(code) == code.shareText(courseName: "Losby"))
         #expect(InviteTarget.round(courseName: nil).url(code) == code.url)
     }

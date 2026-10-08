@@ -1,12 +1,12 @@
-# Vilkår for bruk av DashDash
+# Vilkår for bruk av Atten
 
 *Sist endret: 7. oktober 2026 (versjon `2026-10`, samme som `LegalLinks.termsVersion`). Utkast, publiseres før lansering. Adressen settes i `LegalLinks.terms` i appen.*
 
-Ved å bruke DashDash godtar du disse vilkårene. De gjelder sammen med Apples standard lisensavtale for apper (Apple Standard EULA).
+Ved å bruke Atten godtar du disse vilkårene. De gjelder sammen med Apples standard lisensavtale for apper (Apple Standard EULA).
 
 ## 1. Tjenesten
 
-DashDash lar deg føre golfrunder, spille med venner, være med i klubber og kjøre turneringer. Appen er gratis å bruke. Det koster å kjøre en turnering (se punkt 5).
+Atten lar deg føre golfrunder, spille med venner, være med i klubber og kjøre turneringer. Appen er gratis å bruke. Det koster å kjøre en turnering (se punkt 5).
 
 ## 2. Kontoen din
 
@@ -28,7 +28,7 @@ Alle kan **rapportere** innhold og **blokkere** andre brukere. Arrangøren i klu
 
 ## 4. Poeng, ikke penger
 
-Veddemål, tips og spill på runden gjøres opp i **poeng**. DashDash formidler ikke penger mellom brukere og skal ikke brukes til pengespill. «Del regningen» er bare en hjelp til å dele felles utgifter (som simulatorleie og greenfee); betalingen skjer i Vipps, utenfor appen og utenfor vårt ansvar.
+Veddemål, tips og spill på runden gjøres opp i **poeng**. Atten formidler ikke penger mellom brukere og skal ikke brukes til pengespill. «Del regningen» er bare en hjelp til å dele felles utgifter (som simulatorleie og greenfee); betalingen skjer i Vipps, utenfor appen og utenfor vårt ansvar.
 
 ## 5. Kjøp
 

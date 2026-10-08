@@ -2,7 +2,7 @@
 
 Status 07.10.2026: forslag (fase 12). Første steg ligger i `sql/017_fundament.sql` og er **ikke kjørt** mot Supabase. Appens datalag er laget bak `FoundationFeature.isEnabled = false`, så appen oppfører seg som før.
 
-Bakgrunn: `docs/visjon-apen-app.md` (besluttet 07.10.2026). Appen heter DashDash og skal være åpen for alle. Runden er kjernen, og klubb er valgfritt. «Golfgutu Invitational» blir én klubb, med jakkeracet som hovedkonkurranse.
+Bakgrunn: `docs/visjon-apen-app.md` (besluttet 07.10.2026). Appen heter Atten (besluttet 08.10.2026, først DashDash) og skal være åpen for alle. Runden er kjernen, og klubb er valgfritt. «Golfgutu Invitational» blir én klubb, med jakkeracet som hovedkonkurranse.
 
 ## 1. Måltilstanden
 

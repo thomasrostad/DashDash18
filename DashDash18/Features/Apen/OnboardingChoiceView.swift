@@ -88,7 +88,7 @@ private struct OnboardingChoiceRow: View {
 struct LegalNotice: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DDSpacing.s) {
-            Text("Ved å bruke DashDash godtar du vilkårene. Det er null toleranse for støtende innhold og trakassering; det kan rapporteres, og brukere kan blokkeres.")
+            Text("Ved å bruke Atten godtar du vilkårene. Det er null toleranse for støtende innhold og trakassering; det kan rapporteres, og brukere kan blokkeres.")
                 .font(.ddCaption)
                 .foregroundStyle(Color.ddInkSecondary)
                 .fixedSize(horizontal: false, vertical: true)

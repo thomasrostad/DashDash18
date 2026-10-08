@@ -136,7 +136,7 @@ private struct PushPermissionRow: View {
                 .fontWeight(.medium)
         case .denied:
             VStack(alignment: .leading, spacing: 6) {
-                Text("Varsler er slått av for DashDash18 i Innstillinger.")
+                Text("Varsler er slått av for Atten i Innstillinger.")
                 Button("Åpne Innstillinger") {
                     if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
                 }

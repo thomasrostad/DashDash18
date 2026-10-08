@@ -32,7 +32,7 @@ struct DegView: View {
                     }
                     ShareLink(
                         "Del invitasjonen",
-                        item: "Bli med i \(membership.club.name) i DashDash18. Invitasjonskode: \(code)"
+                        item: "Bli med i \(membership.club.name) i Atten. Invitasjonskode: \(code)"
                     )
                     .fontWeight(.medium)
                 }

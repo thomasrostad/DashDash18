@@ -1,6 +1,6 @@
 # Gjøremål for Thomas
 
-Oppdatert 07.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det bør gjøres. Kryss av etter hvert.
+Oppdatert 08.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det bør gjøres. Kryss av etter hvert.
 
 ## A. Nå (sikkerhet og bygg)
 
@@ -15,8 +15,8 @@ Oppdatert 07.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 
 ## B. Snart (for TestFlight og testing)
 
-- [ ] **4. Xcode, kamerateksten:** `Privacy – Camera Usage Description` = «DashDash bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.»
-- [ ] **5. Xcode, appnavnet:** `Bundle Display Name` = **DashDash** (target DashDash18 → General → Display Name).
+- [ ] **4. Xcode, kamerateksten (valgfritt):** teksten står allerede i `InfoPlist.xcstrings`. Sett også grunnteksten `Privacy – Camera Usage Description` = «Atten bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.»
+- [ ] **5. Xcode, appnavnet (valgfritt):** appen heter **Atten**, og navnet står i `InfoPlist.xcstrings`. Sett også `Bundle Display Name` = **Atten** (target DashDash18 → General → Display Name) og widget-utvidelsens Display Name (`DashDash18Widgets`) = **Atten**.
 - [ ] **6. Supabase → Settings → Infrastructure:** sjekk at Auth er **2.185.0 eller nyere** (kjent hull i Apple-innloggingen i eldre versjoner).
 - [ ] **7. Supabase → Authentication:** slå på **Leaked password protection** og sett minstelengde på passord. Sett lave **rate limits**.
 - [ ] **8. Supabase → Data API:** sjekk at bare `public` er eksponert.
@@ -24,8 +24,9 @@ Oppdatert 07.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 ## C. Før appen åpnes for alle (fase 17)
 
 - [ ] **9. App Store Connect:**
+  - Appnavnet er **Atten** (App Information → Name; er det tatt, f.eks. «Atten – golf med gjengen»).
   - Signer **Paid Apps Agreement** (Business).
-  - Opprett kjøpene `no.dashdash.turnering.sesong` (Consumable) og eventuelt `no.dashdash.turnering.ar` (årsabonnement).
+  - Opprett kjøpene `no.atten.turnering.sesong` (Consumable) og eventuelt `no.atten.turnering.ar` (årsabonnement).
   - Lag en **In-App Purchase-nøkkel** (.p8 med Key ID og Issuer ID). Claude legger den inn som secret og deployer `verify-purchase`.
   - Fyll ut **App Privacy** etter `docs/app-store.md`.
   - Legg inn personvern- og support-URL, aldersgrense, en demokonto til review og en sandbox-tester.

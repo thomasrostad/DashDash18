@@ -33,12 +33,12 @@ Merk: «Sports»-statistikk som handicap regnes som Other User Content. Krasjrap
 
 ## 3. App Store Connect
 
-1. **App-informasjon:** navn «DashDash», undertittel, kategori **Sports**, aldersgrense (svar «Unrestricted Web Access: Nei», «User-Generated Content: Ja» → 12+ eller etter Apples svar).
+1. **App-informasjon:** navn «Atten» (eller «Atten – golf med gjengen» om «Atten» er tatt), undertittel, kategori **Sports**, aldersgrense (svar «Unrestricted Web Access: Nei», «User-Generated Content: Ja» → 12+ eller etter Apples svar).
 2. **Personvern-URL** (påkrevd) og **support-URL**: adressene fra punkt 6.
 3. **Lisensavtale:** Apples standard (EULA) holder; vilkårene våre lenkes i appen.
 4. **Kjøp i appen** (Features → In-App Purchases):
-   - `no.dashdash.turnering.sesong`: **Consumable**, «Kjør turneringen», pris f.eks. 99 kr (Tier etter ønske), norsk tekst, skjermbilde av betalingsveggen (`-DDDesignScreen apenbetaling`).
-   - Valgfritt: abonnementsgruppe «Arrangør» med `no.dashdash.turnering.ar`, **Auto-Renewable**, 1 år, f.eks. 399 kr.
+   - `no.atten.turnering.sesong`: **Consumable**, «Kjør turneringen», pris f.eks. 99 kr (Tier etter ønske), norsk tekst, skjermbilde av betalingsveggen (`-DDDesignScreen apenbetaling`).
+   - Valgfritt: abonnementsgruppe «Arrangør» med `no.atten.turnering.ar`, **Auto-Renewable**, 1 år, f.eks. 399 kr.
    - Legg kjøpene til i versjonen som sendes inn («In-App Purchases and Subscriptions» på versjonssiden).
 5. **Nøkkel for App Store Server API:** Users and Access → Integrations → **In-App Purchase** → generer nøkkel. Noter Issuer ID og Key ID, last ned `.p8` (kan bare lastes ned én gang). Brukes av `verify-purchase`.
 6. **App Store Server Notifications** (senere): når en egen funksjon for varsler finnes, settes adressen her.
@@ -48,7 +48,7 @@ Merk: «Sports»-statistikk som handicap regnes som Other User Content. Krasjrap
 
 ## 4. Google Cloud og Supabase (Google-innlogging)
 
-1. Google Cloud Console → nytt prosjekt (eller eksisterende) → **APIs & Services → OAuth consent screen**: External, appnavn «DashDash», support-e-post, logo, domene, lenke til personvern og vilkår. Scopes: `openid`, `email`, `profile`. Publiser (In production).
+1. Google Cloud Console → nytt prosjekt (eller eksisterende) → **APIs & Services → OAuth consent screen**: External, appnavn «Atten», support-e-post, logo, domene, lenke til personvern og vilkår. Scopes: `openid`, `email`, `profile`. Publiser (In production).
 2. **Credentials → Create OAuth client ID → Web application** (Supabase bruker web-flyten):
    - Authorized JavaScript origins: `https://<prosjekt-ref>.supabase.co`
    - Authorized redirect URI: `https://<prosjekt-ref>.supabase.co/auth/v1/callback`
@@ -87,8 +87,8 @@ Ingenting i prosjektfila er endret. Dette må gjøres i Xcode:
 
 1. **Kjøp i appen (capability):** target DashDash18 → Signing & Capabilities → **+ Capability → In-App Purchase**.
 2. **StoreKit-test lokalt:** dra `StoreKit/DashDash.storekit` inn i prosjektnavigatoren (ikke huk av for noe target, så den ikke havner i appen), og velg den i **Product → Scheme → Edit Scheme → Run → Options → StoreKit Configuration**. Da viser betalingsveggen pris og kan «kjøpe» i simulatoren uten App Store Connect. Fjern valget før TestFlight.
-3. **Kamera-tekst:** `NSCameraUsageDescription` sier «DashDash18 …». Endre til «DashDash bruker kameraet til å ta bilder til tråden og portrettet ditt.» (Build Settings → Info.plist Values) når appnavnet byttes.
-4. **Visningsnavn:** når appen skal hete DashDash i App Store, sett `CFBundleDisplayName` (target → General → Display Name) og vurder innloggingsskjermens «DashDash18 / GolfGutu Invitational».
+3. **Kamera-tekst:** «Atten bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.» står i `DashDash18/Resources/InfoPlist.xcstrings` (en og nb) og gjelder. Grunnteksten i Build Settings (Info.plist Values) sier fortsatt «DashDash18 …»; sett den gjerne til samme tekst, den brukes bare om lokaliseringen mangler.
+4. **Appnavn:** appen heter **Atten**. `CFBundleDisplayName` og `CFBundleName` står i `InfoPlist.xcstrings`. Valgfritt i Xcode: Display Name (target → General) = Atten, og widget-utvidelsens Display Name (står som `DashDash18Widgets`) = Atten. Target, bundle-id `com.dashdash18.app` og App Group beholdes.
 5. Push: `aps-environment` står som `development` i entitlements; Xcode setter production ved arkivering for App Store. Ingenting å gjøre.
 
 ## 8. Koblingen til fase 15 (konkurranser)
@@ -102,7 +102,7 @@ Fase 15 har en stubb `CompetitionPurchase.isUnlocked(...)`. Den røres ikke her.
 
 ## 9. Valg og begrunnelser
 
-- **Forbrukbar per turnering** (`no.dashdash.turnering.sesong`): en ikke-forbrukbar kan bare kjøpes én gang per Apple-ID, og passer derfor ikke «betal per turnering». Et forbrukbart kjøp gjenopprettes ikke av App Store, så serverens `entitlements` er fasiten, og et kjøp som ikke ble koblet (appen lukket midt i), står som en ledig kreditt (`assign_purchase`). Abonnementet (`.ar`) er valgfritt for klubber som kjører mange turneringer.
+- **Forbrukbar per turnering** (`no.atten.turnering.sesong`): en ikke-forbrukbar kan bare kjøpes én gang per Apple-ID, og passer derfor ikke «betal per turnering». Et forbrukbart kjøp gjenopprettes ikke av App Store, så serverens `entitlements` er fasiten, og et kjøp som ikke ble koblet (appen lukket midt i), står som en ledig kreditt (`assign_purchase`). Abonnementet (`.ar`) er valgfritt for klubber som kjører mange turneringer.
 - **Verifisering:** serveren henter transaksjonen selv fra App Store Server API med vår nøkkel (ikke kvitteringen fra appen), sjekker app, produkt og `appAccountToken` (= profil-id), og bare `record_purchase` (service_role) skriver.
 - **Vipps:** Vipps har ingen offentlig dyp lenke for private betalingsforespørsler med beløp. Dype lenker med beløp lages av Vipps sitt betalings-API for bedrifter med avtale, og varer i fem minutter. «Del regningen» åpner derfor Vipps (`vipps://`, ellers App Store) og viser beløp og mottaker til å kopiere, og kan dele oppgjøret som tekst.
 - **Sletting:** navnet blir «Slettet spiller», scorene står (andres tabeller endres ikke). Er du eneste arrangør, tar det eldste aktive medlemmet med innlogging over.
