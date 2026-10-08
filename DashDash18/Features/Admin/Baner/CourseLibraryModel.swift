@@ -75,9 +75,6 @@ final class CourseLibraryModel {
         return (context.client, context.clubID)
     }
 
-    static let courseColumns = "id, club_id, name, external_name, course_rating, slope_rating, in_use, confirmed_by, confirmed_at"
-    static let holeColumns = "course_id, hole_number, par, stroke_index, length_m"
-
     /// Banene fra Golfgutu-settet som klubben ikke har ennå.
     var missingFromSet: [GolfgutuCourseSet.CourseEntry] {
         courseSet?.missing(existingNames: items.map(\.course.name)) ?? []
@@ -95,7 +92,7 @@ final class CourseLibraryModel {
         do {
             let courses: [CourseRow] = try await client
                 .from("courses")
-                .select(Self.courseColumns)
+                .select(CourseRow.columns)
                 .eq("club_id", value: clubID)
                 .execute()
                 .value
@@ -103,7 +100,7 @@ final class CourseLibraryModel {
             if !courses.isEmpty {
                 holes = try await client
                     .from("course_holes")
-                    .select(Self.holeColumns)
+                    .select(CourseHoleRecord.columns)
                     .in("course_id", values: courses.map(\.id.uuidString))
                     .execute()
                     .value
@@ -209,14 +206,14 @@ final class CourseLibraryModel {
         let (client, clubID) = try connection()
         let course: CourseRow = try await client
             .from("courses")
-            .select(Self.courseColumns)
+            .select(CourseRow.columns)
             .eq("id", value: id)
             .single()
             .execute()
             .value
         let holes: [CourseHoleRecord] = try await client
             .from("course_holes")
-            .select(Self.holeColumns)
+            .select(CourseHoleRecord.columns)
             .eq("course_id", value: id)
             .execute()
             .value
@@ -281,7 +278,7 @@ final class CourseLibraryModel {
 
     // MARK: Det felles biblioteket (sql/017–018)
 
-    static let sharedColumns = courseColumns + ", created_by_profile, kind"
+    static let sharedColumns = CourseRow.columns + ", created_by_profile, kind"
 
     /// Banene uten klubb, med hullene og typen.
     private func loadShared(_ shared: SharedLibrary) async {
@@ -295,7 +292,7 @@ final class CourseLibraryModel {
             var holes: [CourseHoleRecord] = []
             if !rows.isEmpty {
                 holes = try await shared.client.from("course_holes")
-                    .select(Self.holeColumns)
+                    .select(CourseHoleRecord.columns)
                     .in("course_id", values: rows.map(\.course.id.uuidString))
                     .execute().value
             }
@@ -353,7 +350,7 @@ final class CourseLibraryModel {
                 .select(Self.sharedColumns).eq("id", value: savedID).execute().value
             guard let row = rows.first else { throw DataError.notAllowed }
             let holes: [CourseHoleRecord] = try await shared.client.from("course_holes")
-                .select(Self.holeColumns)
+                .select(CourseHoleRecord.columns)
                 .eq("course_id", value: savedID).execute().value
             let item = CourseListItem(course: row.course, holes: holes, storedKind: row.kind)
             guard item.holes.count == values.holes.count else { throw DataError.notAllowed }

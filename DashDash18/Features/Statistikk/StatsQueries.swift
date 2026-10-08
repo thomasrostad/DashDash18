@@ -32,7 +32,7 @@ enum StatsQueries {
             }
             if scope.includesLoose {
                 let mine: [RoundParticipantRow] = try await client.from("round_participants")
-                    .select(CompetitionQueries.roundParticipantColumns)
+                    .select(RoundParticipantRow.columns)
                     .eq("profile_id", value: userID)
                     .execute().value
                 if !mine.isEmpty {
@@ -71,16 +71,16 @@ enum StatsQueries {
             .select(StatsCourseRow.columns)
             .in("id", values: courseIDs).execute().value
         async let courseHoleRows: [CourseHoleRecord] = courseIDs.isEmpty ? [] : client.from("course_holes")
-            .select("course_id, hole_number, par, stroke_index, length_m")
+            .select(CourseHoleRecord.columns)
             .in("course_id", values: courseIDs).execute().value
 
         for chunk in chunked(Array(roundIDs)) {
             let ids = chunk.map(\.uuidString)
             async let holes: [RoundHoleRow] = client.from("round_holes")
-                .select("round_id, hole_index, par, stroke_index, length_m")
+                .select(RoundHoleRow.columns)
                 .in("round_id", values: ids).execute().value
             async let scores: [HoleScoreRow] = client.from("hole_scores")
-                .select(RundeQueries.scoreColumns)
+                .select(HoleScoreRow.columns)
                 .in("round_id", values: ids).in("member_id", values: memberIDs).execute().value
             async let details: [HoleStatRow] = client.from("hole_stats")
                 .select(HoleStatRow.columns)
@@ -98,7 +98,7 @@ enum StatsQueries {
         let seasonIDs = Array(Set(events.compactMap(\.seasonID))).map(\.uuidString)
         if !seasonIDs.isEmpty {
             let seasons: [SeasonRow] = try await client.from("seasons")
-                .select(TavlaQueries.seasonColumns)
+                .select(SeasonRow.columns)
                 .in("id", values: seasonIDs).execute().value
             let rules = Dictionary(seasons.map { ($0.id, $0.rules) }, uniquingKeysWith: { a, _ in a })
             for e in events {

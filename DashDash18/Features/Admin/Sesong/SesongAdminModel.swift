@@ -49,7 +49,7 @@ final class SesongAdminModel {
         guard let context else { return }
         do {
             seasons = try await table
-                .select("id, club_id, name, status, rules")
+                .select(SeasonRow.columns)
                 .eq("club_id", value: context.clubID)
                 .order("created_at", ascending: false)
                 .execute()

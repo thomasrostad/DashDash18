@@ -333,6 +333,37 @@ struct OutboxTests {
         outbox.stop()
     }
 
+    /// Utlogging og innlogging mens en gammel retry-løkke sender: når den gamle avslutter, skal den
+    /// ikke nullstille den nye løkkas referanse. Ellers startes en løkke til, og to går samtidig.
+    @Test func stoppOgStartGirIkkeToRetryLokker() async throws {
+        let outbox = makeOutbox()
+        outbox.start()
+        sender.mode = .offline
+        #expect(try await outbox.submit(hole(0, [(anna, 4)])) == .queued)
+        await waitUntil { clock.sleeps.count == 1 }
+
+        // Den første løkka vekkes og sender. Midt i sendingen stoppes og startes utboksen.
+        sender.onSubmit = { [sender] _ in
+            guard sender.calls.count == 2 else { return }
+            outbox.stop()
+            outbox.start()
+        }
+        clock.advance()
+        await waitUntil { clock.sleeps.count >= 2 }
+        for _ in 0..<50 { await Task.yield() }
+        #expect(clock.sleeps.count == 2)
+
+        // Hver runde i backoff gir nøyaktig én ny venting: bare én løkke går.
+        for expected in 3...4 {
+            clock.advance()
+            await waitUntil { clock.sleeps.count >= expected }
+            for _ in 0..<50 { await Task.yield() }
+            #expect(clock.sleeps.count == expected)
+        }
+        sender.onSubmit = nil
+        outbox.stop()
+    }
+
     @Test func sendesNarNettetKommerTilbake() async throws {
         let outbox = makeOutbox()
         outbox.start()

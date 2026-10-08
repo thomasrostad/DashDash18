@@ -78,10 +78,6 @@ nonisolated enum DegProfile {
     /// Kolonnene spilleren kan skrive på egen rad uten å være arrangør.
     static let ownWritableColumns: Set<String> = ["display_name", "handicap_index", "avatar_path"]
 
-    /// Kolonnene som hentes og kommer tilbake fra oppdateringen.
-    static let columns =
-        "id, club_id, user_id, display_name, handicap_index, seed_group, is_organizer, is_treasurer, status, avatar_path"
-
     /// Sjekker raden(e) som kom tilbake. PostgREST sier ikke fra når RLS stopper en
     /// update; da kommer det bare null rader tilbake (SPEC 3.2).
     static func verify(

@@ -5,6 +5,7 @@ import GolfgutuCore
 // med kolonnenavnene fra databasen i CodingKeys. Dato og klokkeslett holdes som tekst
 // slik Postgres leverer dem (`2026-10-08`, `17:00:00`), og tolkes der de vises.
 // Felles for alle funksjoner, så agenter og skjermer ikke lager hver sin variant.
+// `columns` er kolonnelista spørringene henter: CodingKeys, uten valgfrie felt som bare hentes noen steder.
 // (`CourseHoleRecord` heter ikke `…Row` fordi GolfgutuCore har en `CourseHoleRow` med PWA-ens kolonner.)
 
 nonisolated struct ClubMemberRow: Codable, Equatable, Identifiable, Sendable {
@@ -32,6 +33,9 @@ nonisolated struct ClubMemberRow: Codable, Equatable, Identifiable, Sendable {
         case avatarPath = "avatar_path"
     }
 
+    static let columns =
+        "id, club_id, user_id, display_name, handicap_index, seed_group, is_organizer, is_treasurer, status, avatar_path"
+
     /// Ledig navn i troppen som ingen har tatt ennå.
     var isOpen: Bool { userID == nil }
 }
@@ -58,6 +62,8 @@ nonisolated struct SeasonRow: Codable, Equatable, Identifiable, Sendable {
         case status
         case rules
     }
+
+    static let columns = "id, club_id, name, status, rules"
 }
 
 nonisolated struct EventRow: Codable, Equatable, Identifiable, Sendable {
@@ -80,6 +86,8 @@ nonisolated struct EventRow: Codable, Equatable, Identifiable, Sendable {
         case venue
         case note
     }
+
+    static let columns = "id, club_id, season_id, event_date, start_time, venue, note"
 }
 
 nonisolated struct EventCommitteeRow: Codable, Equatable, Sendable {
@@ -92,6 +100,8 @@ nonisolated struct EventCommitteeRow: Codable, Equatable, Sendable {
         case memberID = "member_id"
         case clubID = "club_id"
     }
+
+    static let columns = "event_id, member_id, club_id"
 }
 
 nonisolated enum SignupStatus: String, Codable, CaseIterable, Sendable {
@@ -122,6 +132,8 @@ nonisolated struct SignupRow: Codable, Equatable, Sendable {
         case status
         case comment
     }
+
+    static let columns = "event_id, member_id, club_id, status, comment"
 }
 
 nonisolated struct CourseRow: Codable, Equatable, Identifiable, Sendable {
@@ -150,6 +162,9 @@ nonisolated struct CourseRow: Codable, Equatable, Identifiable, Sendable {
         case confirmedAt = "confirmed_at"
         case createdByProfile = "created_by_profile"
     }
+
+    /// Uten `created_by_profile`, som bare hentes fra det felles biblioteket.
+    static let columns = "id, club_id, name, external_name, course_rating, slope_rating, in_use, confirmed_by, confirmed_at"
 }
 
 nonisolated struct CourseHoleRecord: Codable, Equatable, Sendable {
@@ -166,6 +181,8 @@ nonisolated struct CourseHoleRecord: Codable, Equatable, Sendable {
         case strokeIndex = "stroke_index"
         case lengthM = "length_m"
     }
+
+    static let columns = "course_id, hole_number, par, stroke_index, length_m"
 }
 
 // MARK: - Runder (fase 4–5)
@@ -236,6 +253,13 @@ nonisolated struct RoundRow: Codable, Equatable, Identifiable, Sendable {
         case lockedAt = "locked_at"
         case venue
     }
+
+    /// `venue` er med bare når sql/015 er kjørt (`VenueFeature`); før det finnes ikke kolonnen.
+    static let columns = """
+        id, club_id, event_id, course_id, round_no, name, status, hole_count, first_hole, tee_time, format, \
+        handicap_allowance, external_handicap, weight, ld_enabled, ld_hole_index, kp_enabled, kp_hole_index, \
+        cut_rule, cut_after, par_confirmed_by, par_confirmed_at, started_at, locked_at
+        """ + (VenueFeature.isEnabled ? ", venue" : "")
 }
 
 /// Overstyring av ett hull for én runde. `holeIndex` er rundens 0-baserte hull.
@@ -253,6 +277,8 @@ nonisolated struct RoundHoleRow: Codable, Equatable, Sendable {
         case strokeIndex = "stroke_index"
         case lengthM = "length_m"
     }
+
+    static let columns = "round_id, hole_index, par, stroke_index, length_m"
 }
 
 /// Deltaker i runden med frosset handicap, bås, markør og lag.
@@ -279,6 +305,9 @@ nonisolated struct RoundPlayerRow: Codable, Equatable, Sendable {
         case isMarker = "is_marker"
         case teamNo = "team_no"
     }
+
+    static let columns =
+        "round_id, member_id, club_id, handicap_index, seed_group, playing_handicap, bay_no, is_marker, team_no"
 }
 
 nonisolated struct RoundMatchRow: Codable, Equatable, Sendable {
@@ -302,6 +331,8 @@ nonisolated struct RoundMatchRow: Codable, Equatable, Sendable {
         case teamB = "team_b"
         case result
     }
+
+    static let columns = "round_id, match_no, player_a, player_b, player_c, team_a, team_b, result"
 }
 
 /// Brutto slag. Ingen rad = hullet er ikke ført. Poeng regnes i appen.
@@ -323,6 +354,8 @@ nonisolated struct HoleScoreRow: Codable, Equatable, Sendable {
         case updatedBy = "updated_by"
         case updatedAt = "updated_at"
     }
+
+    static let columns = "round_id, member_id, hole_index, strokes, recorded_at, updated_by, updated_at"
 }
 
 nonisolated enum SideClaimKind: String, Codable, Sendable {
@@ -350,6 +383,8 @@ nonisolated struct SideClaimRow: Codable, Equatable, Identifiable, Sendable {
         case holeIndex = "hole_index"
         case createdAt = "created_at"
     }
+
+    static let columns = "id, round_id, member_id, kind, meters, hole_index, created_at"
 
     /// `created_at` som regelmotorens `ts`: ISO 8601 i UTC med millisekunder, så strengene sorteres i tidsrekkefølge.
     var timestamp: String? {

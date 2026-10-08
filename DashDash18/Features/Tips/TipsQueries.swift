@@ -16,11 +16,11 @@ enum TipsQueries {
         guard let event = events.first else { throw DataError.invalid("Fant ikke kvelden.") }
 
         async let memberRows: [ClubMemberRow] = client.from("club_members")
-            .select(KveldQueries.memberColumns)
+            .select(ClubMemberRow.columns)
             .eq("club_id", value: event.clubID)
             .execute().value
         async let signupRows: [SignupRow] = client.from("signups")
-            .select("event_id, member_id, club_id, status, comment")
+            .select(SignupRow.columns)
             .eq("event_id", value: eventID)
             .execute().value
         async let couponRows: [TipsRow] = client.from("tips")
@@ -62,7 +62,7 @@ enum TipsQueries {
     /// Kveldens runder (kladder bare for arrangøren, via RLS), i opprettelsesrekkefølge.
     private static func snapshots(client: SupabaseClient, event: TipsEventRow) async throws -> [RoundSnapshot] {
         let rounds: [RoundRow] = try await client.from("rounds")
-            .select(RundeQueries.roundColumns)
+            .select(RoundRow.columns)
             .eq("event_id", value: event.id)
             .order("round_no")
             .execute().value
@@ -71,18 +71,18 @@ enum TipsQueries {
         let courseIDs = Array(Set(rounds.compactMap(\.courseID))).map(\.uuidString)
 
         async let holeRows: [RoundHoleRow] = client.from("round_holes")
-            .select("round_id, hole_index, par, stroke_index, length_m")
+            .select(RoundHoleRow.columns)
             .in("round_id", values: ids).execute().value
         async let playerRows: [RoundPlayerRow] = client.from("round_players")
-            .select(RundeQueries.playerColumns)
+            .select(RoundPlayerRow.columns)
             .in("round_id", values: ids).execute().value
         // Scorene per runde, så svaret aldri når PostgREST-grensen på 1000 rader.
         async let scoreRows = scores(client: client, roundIDs: rounds.map(\.id))
         async let courseRows: [CourseRow] = courseIDs.isEmpty ? [] : client.from("courses")
-            .select("id, club_id, name, external_name, course_rating, slope_rating, in_use, confirmed_by, confirmed_at")
+            .select(CourseRow.columns)
             .in("id", values: courseIDs).execute().value
         async let courseHoleRows: [CourseHoleRecord] = courseIDs.isEmpty ? [] : client.from("course_holes")
-            .select("course_id, hole_number, par, stroke_index, length_m")
+            .select(CourseHoleRecord.columns)
             .in("course_id", values: courseIDs).execute().value
 
         let holes = try await holeRows
@@ -107,7 +107,7 @@ enum TipsQueries {
             for id in roundIDs {
                 group.addTask {
                     let rows: [HoleScoreRow] = try await client.from("hole_scores")
-                        .select(RundeQueries.scoreColumns)
+                        .select(HoleScoreRow.columns)
                         .eq("round_id", value: id)
                         .execute().value
                     return (id, rows)

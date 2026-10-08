@@ -92,13 +92,13 @@ final class KveldModel {
         today = EveningDates.today()
         do {
             async let eventRows: [EventRow] = client.from("events")
-                .select("id, club_id, season_id, event_date, start_time, venue, note")
+                .select(EventRow.columns)
                 .eq("club_id", value: clubID)
                 .gte("event_date", value: today)
                 .order("event_date")
                 .execute().value
             async let memberRows: [ClubMemberRow] = client.from("club_members")
-                .select(KveldQueries.memberColumns)
+                .select(ClubMemberRow.columns)
                 .eq("club_id", value: clubID)
                 .eq("status", value: MemberStatus.active.rawValue)
                 .execute().value
@@ -130,11 +130,11 @@ final class KveldModel {
             }
 
             async let committeeRows: [EventCommitteeRow] = client.from("event_committee")
-                .select("event_id, member_id, club_id")
+                .select(EventCommitteeRow.columns)
                 .eq("event_id", value: next.id)
                 .execute().value
             async let signupRows: [SignupRow] = client.from("signups")
-                .select("event_id, member_id, club_id, status, comment")
+                .select(SignupRow.columns)
                 .eq("event_id", value: next.id)
                 .execute().value
 
@@ -227,7 +227,7 @@ final class KveldModel {
         do {
             let saved: [SignupRow] = try await client.from("signups")
                 .upsert(row, onConflict: "event_id,member_id")
-                .select("event_id, member_id, club_id, status, comment")
+                .select(SignupRow.columns)
                 .execute().value
             guard let mine = saved.first else { throw DataError.notAllowed }
             if mine.eventID == self.event?.id { savedSignup = mine }

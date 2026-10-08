@@ -39,7 +39,7 @@ nonisolated struct SupabaseTradBackend: TradBackend {
 
     func members(clubID: UUID) async throws -> [ClubMemberRow] {
         try await client.from("club_members")
-            .select(KveldQueries.memberColumns)
+            .select(ClubMemberRow.columns)
             .eq("club_id", value: clubID)
             .execute().value
     }

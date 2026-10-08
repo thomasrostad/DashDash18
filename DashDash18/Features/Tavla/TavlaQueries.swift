@@ -5,12 +5,10 @@ import Supabase
 /// Spørringene for Tavla. Bare lesing. Radene gjøres om til `RoundSnapshot`, så rundene bygges
 /// med samme mapping som Kveld (`RoundGame.makeRound`).
 enum TavlaQueries {
-    static let seasonColumns = "id, club_id, name, status, rules"
-
     /// Den aktive sesongen, ellers den sist opprettede ferdige. Nil når ingen finnes.
     static func load(client: SupabaseClient, clubID: UUID) async throws -> TavlaInput? {
         let seasons: [SeasonRow] = try await client.from("seasons")
-            .select(seasonColumns)
+            .select(SeasonRow.columns)
             .eq("club_id", value: clubID)
             .in("status", values: [SeasonStatus.active.rawValue, SeasonStatus.finished.rawValue])
             .order("created_at", ascending: false)
@@ -21,11 +19,11 @@ enum TavlaQueries {
 
     static func load(client: SupabaseClient, season: SeasonRow) async throws -> TavlaInput {
         async let eventRows: [EventRow] = client.from("events")
-            .select("id, club_id, season_id, event_date, start_time, venue, note")
+            .select(EventRow.columns)
             .eq("season_id", value: season.id)
             .execute().value
         async let memberRows: [ClubMemberRow] = client.from("club_members")
-            .select(KveldQueries.memberColumns)
+            .select(ClubMemberRow.columns)
             .eq("club_id", value: season.clubID)
             .execute().value
         let events = try await eventRows
@@ -34,7 +32,7 @@ enum TavlaQueries {
 
         // Kladder ser bare arrangøren, og de teller ikke.
         let rounds: [RoundRow] = try await client.from("rounds")
-            .select(RundeQueries.roundColumns)
+            .select(RoundRow.columns)
             .in("event_id", values: events.map(\.id.uuidString))
             .in("status", values: [RoundStatus.active.rawValue, RoundStatus.locked.rawValue])
             .execute().value
@@ -44,22 +42,22 @@ enum TavlaQueries {
         let courseIDs = Array(Set(rounds.compactMap(\.courseID))).map(\.uuidString)
 
         async let holeRows: [RoundHoleRow] = client.from("round_holes")
-            .select("round_id, hole_index, par, stroke_index, length_m")
+            .select(RoundHoleRow.columns)
             .in("round_id", values: ids).execute().value
         async let playerRows: [RoundPlayerRow] = client.from("round_players")
-            .select(RundeQueries.playerColumns)
+            .select(RoundPlayerRow.columns)
             .in("round_id", values: ids).execute().value
         async let matchRows: [RoundMatchRow] = client.from("round_matches")
-            .select("round_id, match_no, player_a, player_b, player_c, team_a, team_b, result")
+            .select(RoundMatchRow.columns)
             .in("round_id", values: ids).execute().value
         async let claimRows: [SideClaimRow] = client.from("side_claims")
-            .select(RundeQueries.claimColumns)
+            .select(SideClaimRow.columns)
             .in("round_id", values: ids).execute().value
         async let courseRows: [CourseRow] = courseIDs.isEmpty ? [] : client.from("courses")
-            .select("id, club_id, name, external_name, course_rating, slope_rating, in_use, confirmed_by, confirmed_at")
+            .select(CourseRow.columns)
             .in("id", values: courseIDs).execute().value
         async let courseHoleRows: [CourseHoleRecord] = courseIDs.isEmpty ? [] : client.from("course_holes")
-            .select("course_id, hole_number, par, stroke_index, length_m")
+            .select(CourseHoleRecord.columns)
             .in("course_id", values: courseIDs).execute().value
         // Scorene per runde: en hel sesong kan gå over PostgREST-grensen på 1000 rader i ett svar.
         let scoreRows = try await scores(client: client, roundIDs: rounds.map(\.id))
@@ -95,7 +93,7 @@ enum TavlaQueries {
             for id in roundIDs {
                 group.addTask {
                     let rows: [HoleScoreRow] = try await client.from("hole_scores")
-                        .select(RundeQueries.scoreColumns)
+                        .select(HoleScoreRow.columns)
                         .eq("round_id", value: id)
                         .execute().value
                     return (id, rows)

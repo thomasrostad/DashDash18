@@ -27,7 +27,7 @@ final class DegProfileModel {
         do {
             let rows: [ClubMemberRow] = try await context.client
                 .from("club_members")
-                .select(DegProfile.columns)
+                .select(ClubMemberRow.columns)
                 .eq("id", value: context.memberID)
                 .eq("club_id", value: context.clubID)
                 .execute()
@@ -60,7 +60,7 @@ final class DegProfileModel {
                 .update(change.patch)
                 .eq("id", value: context.memberID)
                 .eq("club_id", value: context.clubID)
-                .select(DegProfile.columns)
+                .select(ClubMemberRow.columns)
                 .execute()
                 .value
             switch DegProfile.verify(returned: returned, memberID: context.memberID, change: change) {
@@ -165,7 +165,7 @@ extension DegProfileModel {
                 .update(AvatarPatch(avatarPath: path))
                 .eq("id", value: context.memberID)
                 .eq("club_id", value: context.clubID)
-                .select(DegProfile.columns)
+                .select(ClubMemberRow.columns)
                 .execute()
                 .value
             switch DegPortrait.verify(returned: returned, memberID: context.memberID, path: path) {

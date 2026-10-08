@@ -40,8 +40,6 @@ final class TerminlisteModel {
     /// Kveld → svarene. Feiler hentingen, står kveldene uten påmelding.
     private(set) var signups: [UUID: [SignupRow]] = [:]
 
-    static let eventColumns = "id, club_id, season_id, event_date, start_time, venue, note"
-
     private let context: ClubContext
 
     init(context: ClubContext) {
@@ -60,16 +58,16 @@ final class TerminlisteModel {
                 .limit(1)
                 .execute().value
             async let eventRows: [EventRow] = client.from("events")
-                .select(Self.eventColumns)
+                .select(EventRow.columns)
                 .eq("club_id", value: clubID)
                 .order("event_date")
                 .execute().value
             async let committeeRows: [EventCommitteeRow] = client.from("event_committee")
-                .select("event_id, member_id, club_id")
+                .select(EventCommitteeRow.columns)
                 .eq("club_id", value: clubID)
                 .execute().value
             async let memberRows: [ClubMemberRow] = client.from("club_members")
-                .select(KveldQueries.memberColumns)
+                .select(ClubMemberRow.columns)
                 .eq("club_id", value: clubID)
                 .eq("status", value: MemberStatus.active.rawValue)
                 .execute().value
@@ -95,7 +93,7 @@ final class TerminlisteModel {
     private func loadSignups() async {
         guard !events.isEmpty else { signups = [:]; return }
         let rows: [SignupRow]? = try? await client.from("signups")
-            .select("event_id, member_id, club_id, status, comment")
+            .select(SignupRow.columns)
             .in("event_id", values: events.map(\.id.uuidString))
             .execute().value
         if let rows { signups = Dictionary(grouping: rows, by: \.eventID) }
@@ -166,12 +164,12 @@ final class TerminlisteModel {
                 saved = try await client.from("events")
                     .update(write)
                     .eq("id", value: id)
-                    .select(Self.eventColumns)
+                    .select(EventRow.columns)
                     .execute().value
             } else {
                 saved = try await client.from("events")
                     .insert(write)
-                    .select(Self.eventColumns)
+                    .select(EventRow.columns)
                     .execute().value
             }
         } catch {
@@ -190,7 +188,7 @@ final class TerminlisteModel {
             deleted = try await client.from("events")
                 .delete()
                 .eq("id", value: event.id)
-                .select(Self.eventColumns)
+                .select(EventRow.columns)
                 .execute().value
         } catch {
             throw .invalid(Terminliste.deleteErrorMessage(
@@ -219,7 +217,7 @@ final class TerminlisteModel {
         do {
             let inserted: [EventCommitteeRow] = try await client.from("event_committee")
                 .insert(rows)
-                .select("event_id, member_id, club_id")
+                .select(EventCommitteeRow.columns)
                 .execute().value
             guard inserted.count == rows.count else { throw DataError.notAllowed }
         } catch {
