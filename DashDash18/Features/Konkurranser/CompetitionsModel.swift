@@ -128,9 +128,17 @@ final class CompetitionsModel {
                                         purchases: purchases)
     }
 
-    /// Lager konkurransen, og kobler en ledig kreditt til den når typen krever kjøp. Gir id-en,
-    /// eller nil (feilen står i `error`).
-    func create(_ draft: CompetitionDraft, purchases: PurchaseService? = nil) async -> UUID? {
+    /// En konkurranse som er laget.
+    struct Created: Equatable {
+        let id: UUID
+        /// `false` når en ledig kreditt skulle kobles, men koblingen feilet: konkurransen er laget,
+        /// men låst til arrangøren trykker «Bruk kjøpet ditt».
+        var creditLinked = true
+    }
+
+    /// Lager konkurransen, og kobler en ledig kreditt til den når typen krever kjøp. Gir id-en og om
+    /// kreditten ble koblet, eller nil (feilen står i `error`).
+    func create(_ draft: CompetitionDraft, purchases: PurchaseService? = nil) async -> Created? {
         guard let client, !needsPurchase(draft, purchases: purchases) else { return nil }
         if let issue = draft.issues().first {
             error = issue
@@ -140,18 +148,25 @@ final class CompetitionsModel {
         defer { busy = nil }
         do {
             let id = try await CompetitionQueries.create(client: client, draft.params(main: main?.rules))
-            if let purchases, CompetitionPurchase.needsCredit(kind: draft.kind, clubID: draft.clubID,
-                                                             userID: access.profileID,
-                                                             entitlements: purchases.entitlements) {
-                // Kreditten brukes i stedet for et nytt kjøp (`assign_purchase`).
-                await purchases.purchase(.tournament, competitionID: id)
-            }
+            let linked = await linkCredit(to: id, draft: draft, purchases: purchases)
             await load()
-            return id
+            return Created(id: id, creditLinked: linked)
         } catch {
             self.error = DataError.from(error).message
             return nil
         }
+    }
+
+    /// Kobler en ledig kreditt til den nye konkurransen (`assign_purchase`) når typen krever kjøp og et
+    /// abonnement ikke alt dekker den. `false` bare når koblingen trengtes og feilet.
+    func linkCredit(to id: UUID, draft: CompetitionDraft, purchases: PurchaseService?,
+                    enabled: Bool = PurchaseFeature.isEnabled) async -> Bool {
+        guard let purchases, CompetitionPurchase.needsCredit(kind: draft.kind, clubID: draft.clubID,
+                                                              userID: access.profileID,
+                                                              entitlements: purchases.entitlements,
+                                                              enabled: enabled) else { return true }
+        // Kreditten brukes i stedet for et nytt kjøp.
+        return await purchases.useCredit(for: id)
     }
 
     private func run(_ id: UUID, _ action: (SupabaseClient) async throws -> Void) async {

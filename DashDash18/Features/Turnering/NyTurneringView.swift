@@ -16,6 +16,9 @@ final class NewTournamentModel {
     private(set) var members: [ClubMemberRow] = []
     private(set) var friends: [ProfileRow] = []
     var error: String?
+    /// Turneringen er laget, men noe gjenstår (kjøpet ble ikke koblet). Arket står til brukeren har
+    /// lest det.
+    private(set) var notice: String?
     private let now: Date
 
     init(list: CompetitionsModel, seasons: SesongAdminModel?, offersPrivate: Bool, now: Date = .now) {
@@ -86,8 +89,10 @@ final class NewTournamentModel {
         return list.needsPurchase(draft.competitionDraft, purchases: purchases)
     }
 
-    /// Lager turneringen: en sesong (klubbens serie) eller en konkurranse. `true` når den er laget.
+    /// Lager turneringen: en sesong (klubbens serie) eller en konkurranse. `true` når den er laget;
+    /// da står eventuelt en melding i `notice`.
     func create(_ draft: TournamentDraft, purchases: PurchaseService?) async -> Bool {
+        notice = nil
         error = draft.issues().first
         guard error == nil else { return false }
         switch draft.target {
@@ -106,11 +111,21 @@ final class NewTournamentModel {
             }
         case .competition:
             list.error = nil
-            if await list.create(draft.competitionDraft, purchases: purchases) != nil { return true }
+            if let created = await list.create(draft.competitionDraft, purchases: purchases) {
+                notice = Self.notice(for: created)
+                return true
+            }
             error = list.error
             list.error = nil
             return false
         }
+    }
+}
+
+extension NewTournamentModel {
+    /// Meldingen etter «Lag», eller nil når alt gikk som det skulle.
+    nonisolated static func notice(for created: CompetitionsModel.Created) -> String? {
+        created.creditLinked ? nil : CompetitionPurchase.creditNotLinkedNotice
     }
 }
 
@@ -235,15 +250,20 @@ struct NyTurneringDetailsView: View {
         .navigationTitle(draft.template.title)
         .navigationBarTitleDisplayMode(.inline)
         .ddNavigationChrome()
-        .disabled(isSaving)
+        .disabled(isSaving || model.notice != nil)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Lag") { save() }
-                    .disabled(!draft.issues().isEmpty || isSaving)
+                if model.notice != nil {
+                    // Turneringen er laget: ikke «Lag» en gang til.
+                    Button("Ferdig", action: onDone)
+                } else {
+                    Button("Lag") { save() }
+                        .disabled(!draft.issues().isEmpty || isSaving)
+                }
             }
         }
         .safeAreaInset(edge: .bottom) {
-            if let issue = draft.issues().first ?? model.error {
+            if let issue = model.notice ?? draft.issues().first ?? model.error {
                 Label(issue, systemImage: "exclamationmark.triangle")
                     .font(.ddCallout)
                     .foregroundStyle(Color.ddRustText)
@@ -340,7 +360,7 @@ struct NyTurneringDetailsView: View {
         isSaving = true
         Task {
             defer { isSaving = false }
-            if await model.create(draft, purchases: purchases) { onDone() }
+            if await model.create(draft, purchases: purchases), model.notice == nil { onDone() }
         }
     }
 }

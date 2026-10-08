@@ -57,6 +57,11 @@ nonisolated enum CompetitionPurchase {
             : "Gratis å lage og kjøre."
     }
 
+    /// Meldingen i «Ny turnering» når turneringen ble laget, men den ledige kreditten ikke ble koblet
+    /// til den (turneringen er da låst).
+    static let creditNotLinkedNotice =
+        "Turneringen er laget, men kjøpet ble ikke koblet. Åpne turneringen og trykk «Bruk kjøpet ditt»."
+
     /// Et abonnement dekker en ny turnering med denne eieren (samme regel som `CompetitionUnlock`).
     private static func coveredBySubscription(clubID: UUID?, userID: UUID?, entitlements: [EntitlementRow],
                                               now: Date) -> Bool {
