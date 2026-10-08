@@ -18,6 +18,8 @@ final class KveldModel {
     private(set) var savedSignup: SignupRow?
     /// Svaret som venter i angre-vinduet.
     private(set) var pendingAnswer: PendingAnswer?
+    /// Kvelden det ventende svaret gjelder.
+    private var pendingEvent: EventRow?
     /// Feilen fra sist et svar ble sendt etter vinduet.
     var answerError: String?
     private var members: [ClubMemberRow] = []
@@ -45,15 +47,20 @@ final class KveldModel {
     var isOrganizer: Bool { context.isOrganizer }
     var clubContext: ClubContext { context }
 
+    /// Det ventende svaret, bare når det gjelder kvelden som vises.
+    private var visiblePending: PendingAnswer? {
+        pendingAnswer.flatMap { $0.eventID == event?.id ? $0 : nil }
+    }
+
     /// Mitt svar slik det vises: det som venter i angre-vinduet, ellers det lagrede.
     var mySignup: SignupRow? {
-        SignupUndo.displayed(saved: savedSignup, pending: pendingAnswer, memberID: memberID, clubID: clubID)
+        SignupUndo.displayed(saved: savedSignup, pending: visiblePending, memberID: memberID, clubID: clubID)
     }
 
     /// Hvem som kommer, med mitt ventende svar lagt inn.
     var summary: SignupSummary {
         SignupSummary(members: members,
-                      signups: SignupUndo.signups(signups, pending: pendingAnswer, memberID: memberID, clubID: clubID))
+                      signups: SignupUndo.signups(signups, pending: visiblePending, memberID: memberID, clubID: clubID))
     }
 
     /// Det «Legg i kalender» fyller inn for neste kveld.
@@ -169,6 +176,7 @@ final class KveldModel {
     func answer(_ status: SignupStatus) {
         guard let event, mySignup?.status != status else { return }
         answerError = nil
+        pendingEvent = event
         pendingAnswer = SignupUndo.begin(pendingAnswer, saved: savedSignup, eventID: event.id,
                                          status: status, comment: mySignup?.comment)
         undoTimer.schedule(after: SignupUndo.window) { await self.flush() }
@@ -183,9 +191,10 @@ final class KveldModel {
     /// Sender svaret som venter nå (vinduet er over, eller appen legges bort).
     func flush() async {
         undoTimer.cancel()
-        guard let pending = pendingAnswer else { return }
+        // Kvelden svaret ble gitt for, også om neste kveld har byttet i vinduet (midnatt, ferdig kveld).
+        guard let pending = pendingAnswer, let event = pendingEvent, event.id == pending.eventID else { return }
         do throws(DataError) {
-            try await write(status: pending.status, comment: pending.comment, saved: pending.saved)
+            try await write(event: event, status: pending.status, comment: pending.comment, saved: pending.saved)
             if pendingAnswer?.revision == pending.revision {
                 pendingAnswer = nil
             } else {
@@ -199,20 +208,19 @@ final class KveldModel {
 
     /// Lagrer kommentaren med svaret som står. Venter et svar, går det med nå.
     func saveComment(_ text: String) async throws(DataError) {
-        guard let status = mySignup?.status else {
+        guard let event, let status = mySignup?.status else {
             throw .invalid("Svar først, så kan du skrive en kommentar.")
         }
         let saved = pendingAnswer.map(\.saved) ?? savedSignup
         undoTimer.cancel()
         pendingAnswer = nil
-        try await write(status: status, comment: text, saved: saved)
+        try await write(event: event, status: status, comment: text, saved: saved)
     }
 
-    /// `saved` er raden hendelsen regnes fra: det som lå i databasen før svaret.
-    private func write(status: SignupStatus, comment raw: String?, saved: SignupRow?) async throws(DataError) {
-        guard let event else { return }
+    /// `saved` er raden på `event` som lå i databasen før svaret. Hendelsen til de andre regnes fra den.
+    private func write(event: EventRow, status: SignupStatus, comment raw: String?, saved: SignupRow?) async throws(DataError) {
         let comment = SignupInput.cleanComment(raw ?? "")
-        guard SignupInput.needsWrite(current: savedSignup, status: status, comment: comment) else { return }
+        guard SignupInput.needsWrite(current: saved, status: status, comment: comment) else { return }
 
         let before = saved?.status
         let row = SignupUpsert(eventID: event.id, memberID: memberID, clubID: clubID, status: status, comment: comment)
@@ -222,7 +230,7 @@ final class KveldModel {
                 .select("event_id, member_id, club_id, status, comment")
                 .execute().value
             guard let mine = saved.first else { throw DataError.notAllowed }
-            savedSignup = mine
+            if mine.eventID == self.event?.id { savedSignup = mine }
         } catch {
             throw DataError.from(error)
         }
