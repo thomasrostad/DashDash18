@@ -1,7 +1,7 @@
 -- ===========================================================================
--- 029 – BANER FRA SLOPE.NO: TEES, TEE PÅ RUNDEN OG SYNK-STATUS – FORSLAG, IKKE KJØRT
+-- 029 – BANER FRA SLOPE.NO: TEES, TEE PÅ RUNDEN OG SYNK-STATUS – KJØRT PÅ TEST 08.10.2026
 -- ===========================================================================
--- Status: forslag, ikke kjørt. Prøvd mot en lokal, midlertidig Postgres (kjørt
+-- Status: kjørt på test 08.10.2026. Prøvd mot en lokal, midlertidig Postgres (kjørt
 -- to ganger på rad etter 001–026, kontrollen nederst gir ok på alle rader).
 -- 027 og 028 er reservert for fase 19. 029 rører ingen av tabellene fase 19
 -- jobber med (activity, push), og kan kjøres før eller etter dem.
