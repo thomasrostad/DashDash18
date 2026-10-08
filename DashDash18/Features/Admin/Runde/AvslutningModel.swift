@@ -110,6 +110,8 @@ enum EveningCloser {
     /// Hver runde som ble låst, logges som «Runde låst».
     static func lock(context: ClubContext, roundIDs: [UUID]) async -> Set<UUID> {
         var locked: Set<UUID> = []
+        var lockedInOrder: [UUID] = []
+        var eventID: UUID?
         let log = ActivityLog(client: context.client, clubID: context.clubID)
         for id in roundIDs {
             let rows: [RoundRow]? = try? await context.client.from("rounds")
@@ -119,10 +121,17 @@ enum EveningCloser {
                 .execute().value
             guard let row = rows?.first, row.status == .locked else { continue }
             locked.insert(id)
+            lockedInOrder.append(id)
+            eventID = eventID ?? row.eventID
             let name = await courseName(context: context, courseID: row.courseID)
             if let event = RoundActivity.locked(row, courseName: name) {
                 await log.logQuietly(event, eventID: row.eventID, roundID: row.id)
             }
+        }
+        // Plassbyttet for hele kvelden på én gang (fase 19), i bakgrunnen.
+        if !lockedInOrder.isEmpty {
+            let (client, clubID, ids, event) = (context.client, context.clubID, lockedInOrder, eventID)
+            Task { await TableChangeLogger.logAfterLocking(client: client, clubID: clubID, roundIDs: ids, eventID: event) }
         }
         return locked
     }
