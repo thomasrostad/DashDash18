@@ -10,7 +10,7 @@ import SwiftUI
 /// og spill på runden: `spill`, `spillnytt`, `spillresultat`,
 /// og åpent for alle (fase 17): `apenvalg`, `apenlogin`, `apendeg`, `apenslett`, `apenrapport`,
 /// `apenrapporter`, `apenblokkerte`, `apenbetaling`, `apenregning`,
-/// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkny`, `konkteller`, `konkkveld`).
+/// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkny`, `konkteller`, `konkkveld`, `konklast`, `konklastdeltaker`).
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
@@ -30,6 +30,8 @@ struct DesignScreenSamples: View {
         case apenvalg, apenlogin, apendeg, apenslett, apenrapport, apenrapporter, apenblokkerte, apenbetaling, apenregning
         // Flere konkurranser (fase 15).
         case konktavla, konkliste, konkliga, konkcup, konkny, konkteller, konkkveld
+        // Låst konkurranse: betalingsknappen for eieren, teksten for deltakerne (fase 17).
+        case konklast, konklastdeltaker
     }
     @State var screen: Screen = .hullkort
 
@@ -102,7 +104,7 @@ struct DesignScreenSamples: View {
             ApenSampleScreen(screen: screen)
         case .spillnytt:
             SpillNyttSampleScreen()
-        case .konktavla, .konkliste, .konkliga, .konkcup, .konkny, .konkteller, .konkkveld:
+        case .konktavla, .konkliste, .konkliga, .konkcup, .konkny, .konkteller, .konkkveld, .konklast, .konklastdeltaker:
             KonkurranseSampleScreen(screen: screen)
         case .liste:
             NavigationStack { DDListSample() }

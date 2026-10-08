@@ -182,6 +182,17 @@ final class PurchaseService {
         }
     }
 
+    /// Kobler en ledig kreditt du selv har kjøpt til en turnering som alt finnes (konkurransesiden,
+    /// «Bruk kjøpet ditt»). Gir `true` når serveren godtok koblingen; ellers står feilen i `state`.
+    func useCredit(for competitionID: UUID) async -> Bool {
+        guard let credit = CompetitionLock.credit(in: entitlements, profileID: profileID) else {
+            state = .failed(.serverRejected("fant ikke noe ledig kjøp"))
+            return false
+        }
+        await use(credit: credit, for: competitionID)
+        return lastUnlocked == competitionID
+    }
+
     /// «Gjenopprett kjøp»: synker med App Store (abonnement), registrerer det som ikke er
     /// registrert, og henter kjøpene fra serveren (der også forbrukbare kjøp står).
     func restore() async {
