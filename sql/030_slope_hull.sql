@@ -31,7 +31,11 @@
 --      Den byttes med triggeren rounds_guard_course: klubbens egen bane, eller
 --      en hentet bane i det felles biblioteket (club_id tom, source satt).
 --      rounds_course_id_fk (017) holder fortsatt banen ekte (on delete restrict).
---   4. Hullene fryses på runden når den starter (rounds_holes_snapshot): på en
+--   4. rounds.tee_par: teens par (summen av teens hull) fryses på runden som
+--      CR og slope i 029 (rounds_tee_snapshot utvidet), så banehandicapet
+--      regnes med teens par når teen har egne hull. Tom ellers: banens par
+--      gjelder som før.
+--   5. Hullene fryses på runden når den starter (rounds_holes_snapshot): på en
 --      hentet bane kopieres teens hull (eller banens, når teen ikke har egne)
 --      til round_holes, rundens overstyring per hull (001), som all kode alt
 --      leser (føring, tavla, statistikk, tips, spill). Samme grunn som CR og
@@ -39,7 +43,7 @@
 --      runder. Hull arrangøren har overstyrt selv, står (on conflict do
 --      nothing). Klubbenes og brukernes egne baner røres ikke: der gjelder
 --      banens hull som før (Golfgutu-pariteten).
---   5. Lagret data_version for slope nullstilles, så neste synk henter hele
+--   6. Lagret data_version for slope nullstilles, så neste synk henter hele
 --      eksporten (og synken v2 henter uansett én gang når course_tee_holes er
 --      tom). Banene, teene og rundene røres ikke av dette.
 --
@@ -309,7 +313,78 @@ alter table public.rounds drop constraint if exists rounds_course_fk;
 
 
 -- ===========================================================================
--- 4. HULLENE FRYSES PÅ RUNDEN VED START (bare hentede baner)
+-- 4. TEENS PAR PÅ RUNDEN (rounds_tee_snapshot fra 029, utvidet)
+-- ===========================================================================
+-- Banehandicapet (WHS) regnes av CR, slope og par. 029 fryser CR og slope fra
+-- teen; par regnes av banens hull. En tee med egne hull (Valdres Grønn: par 66
+-- på en bane der standard-teen har par 73) må regne med teens par. tee_par er
+-- summen av teens hull i course_tee_holes, satt bare når teen har egne hull
+-- (ellers tom, og banens par gjelder som før). Følger teen i kladd, fryses ved
+-- start, og står når teen slettes, som CR og slope.
+alter table public.rounds
+  add column if not exists tee_par smallint check (tee_par between 27 and 80);
+comment on column public.rounds.tee_par is
+  'Par for teen runden spilles fra, når teen har egne hull (course_tee_holes, 030). Settes av '
+  'rounds_tee_snapshot og fryses ved start. Tom = banens par (summen av course_holes) gjelder.';
+
+-- Samme kropp som i 029, pluss tee_par.
+create or replace function public.rounds_tee_snapshot()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_tee public.course_tees;
+begin
+  if tg_op = 'UPDATE' and new.tee_id is null and old.tee_id is not null
+     and not exists (select 1 from public.course_tees t where t.id = old.tee_id) then
+    -- Teen er slettet: runden beholder det den ble spilt med.
+    new.tee_name := old.tee_name;
+    new.course_rating := old.course_rating;
+    new.slope_rating := old.slope_rating;
+    new.tee_par := old.tee_par;
+    return new;
+  end if;
+
+  if tg_op = 'UPDATE' and old.status <> 'draft' then
+    if new.tee_id is distinct from old.tee_id then
+      raise exception 'Teen kan bare velges før runden starter' using errcode = '22023';
+    end if;
+    new.tee_name := old.tee_name;
+    new.course_rating := old.course_rating;
+    new.slope_rating := old.slope_rating;
+    new.tee_par := old.tee_par;
+  elsif new.tee_id is null then
+    new.tee_name := null;
+    new.course_rating := null;
+    new.slope_rating := null;
+    new.tee_par := null;
+  else
+    select t.* into v_tee from public.course_tees t where t.id = new.tee_id;
+    if not found then
+      raise exception 'Fant ikke teen' using errcode = '22023';
+    end if;
+    new.tee_name := v_tee.name;
+    new.course_rating := v_tee.course_rating;
+    new.slope_rating := v_tee.slope_rating;
+    new.tee_par := (select sum(h.par)::smallint from public.course_tee_holes h where h.tee_id = new.tee_id);
+  end if;
+
+  if new.tee_id is not null
+     and (tg_op = 'INSERT' or new.tee_id is distinct from old.tee_id or new.course_id is distinct from old.course_id)
+     and not exists (select 1 from public.course_tees t
+                     where t.id = new.tee_id and t.course_id is not distinct from new.course_id) then
+    raise exception 'Teen hører til en annen bane' using errcode = '22023';
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.rounds_tee_snapshot() from public, anon, authenticated;
+
+
+-- ===========================================================================
+-- 5. HULLENE FRYSES PÅ RUNDEN VED START (bare hentede baner)
 -- ===========================================================================
 -- Når en runde går fra kladd til i gang (eller settes inn som i gang) på en
 -- bane med kilde, kopieres hullene til round_holes:
@@ -374,7 +449,7 @@ create trigger rounds_holes_snapshot
 
 
 -- ===========================================================================
--- 5. NESTE SYNK HENTER ALT PÅ NYTT
+-- 6. NESTE SYNK HENTER ALT PÅ NYTT
 -- ===========================================================================
 -- Versjonen glemmes, så synken henter eksporten neste natt (eller ved en
 -- kjøring for hånd) og skriver hullene. Banene og teene røres ikke her.
@@ -393,7 +468,7 @@ commit;
 --          has_function_privilege('service_role', p.oid, 'execute') as server_kan
 --   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
 --   where n.nspname = 'public'
---     and p.proname in ('course_feed_apply', 'rounds_guard_course', 'rounds_holes_snapshot')
+--     and p.proname in ('course_feed_apply', 'rounds_guard_course', 'rounds_holes_snapshot', 'rounds_tee_snapshot')
 -- )
 -- select 1 as nr, 'course_tee_holes finnes med RLS på og én policy (lesing)' as sjekk,
 --        (select relrowsecurity from pg_class where oid = 'public.course_tee_holes'::regclass)
@@ -427,8 +502,8 @@ commit;
 -- select 7, 'Triggerfunksjonene kan ikke kalles av appen',
 --        (select bool_and(not auth_kan and not anon_kan) from f where proname in ('rounds_guard_course', 'rounds_holes_snapshot'))
 -- union all
--- select 8, 'Alle tre funksjonene har tom search_path',
---        (select count(*) = 3 and bool_and('search_path=""' = any(proconfig)) from f)
+-- select 8, 'Alle fire funksjonene har tom search_path',
+--        (select count(*) = 4 and bool_and('search_path=""' = any(proconfig)) from f)
 -- union all
 -- select 9, 'Neste synk henter hullene: versjonen er glemt, eller hullene er alt skrevet',
 --        coalesce((select data_version is null from public.course_feeds where source = 'slope'), true)
@@ -437,6 +512,11 @@ commit;
 -- select 10, 'Ingen hull på brukernes eller klubbenes egne tees (bare kildens)',
 --        not exists (select 1 from public.course_tee_holes h join public.course_tees t on t.id = h.tee_id
 --                     where t.source is null)
+-- union all
+-- select 11, 'rounds.tee_par finnes og rounds_tee_snapshot setter den',
+--        exists (select 1 from information_schema.columns
+--                 where table_schema = 'public' and table_name = 'rounds' and column_name = 'tee_par')
+--        and (select prosrc like '%tee_par%' and not auth_kan and not anon_kan from f where proname = 'rounds_tee_snapshot')
 -- order by nr;
 
 
@@ -463,7 +543,8 @@ commit;
 -- ===========================================================================
 -- 1. Slå av SlopeNoFeature.usesHoles i appen, og deploy slope-sync v1 igjen
 --    (v1 sender ingen hull, men fungerer også mot 030).
--- 2. Kjør avsnitt 6 («course_feed_apply») fra 029_slope_baner.sql på nytt.
+-- 2. Kjør avsnittene 3 («rounds_tee_snapshot», bare create or replace-
+--    funksjonen) og 6 («course_feed_apply») fra 029_slope_baner.sql på nytt.
 -- 3. Klubbrunder på hentede baner må slettes eller flyttes til en egen bane
 --    før fremmednøkkelen kan legges tilbake (ellers feiler steg 4):
 --      select r.id from public.rounds r join public.courses c on c.id = r.course_id
@@ -482,4 +563,5 @@ commit;
 -- delete from public.course_holes h using public.courses c
 --  where c.id = h.course_id and c.source is not null;
 -- drop table if exists public.course_tee_holes;
+-- alter table public.rounds drop column if exists tee_par;
 -- commit;

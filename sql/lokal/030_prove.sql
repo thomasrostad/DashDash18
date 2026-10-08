@@ -148,6 +148,7 @@ insert into public.rounds (club_id, event_id, round_no, course_id, tee_id, venue
 values (:'K', :'kveld', 1, :'valdres', :'gronn_tee', 'course') returning id as kr1 \gset
 select pg_temp.lik((select tee_name || ' ' || slope_rating from public.rounds where id = :'kr1'), 'Grønn 66 110',
                    'Klubbrunde på hentet bane med tee (CR og slope fra teen)');
+select pg_temp.lik((select tee_par from public.rounds where id = :'kr1'), 66::smallint, 'Runden har teens par (66), ikke banens (73)');
 select pg_temp.lik((select count(*)::int from public.round_holes where round_id = :'kr1'), 0, 'Kladden har ingen frosne hull');
 reset role;
 select pg_temp.som(:'uU'); set role authenticated;
@@ -214,6 +215,7 @@ select (public.start_loose_round(jsonb_build_object('course_id', :'valdres', 'te
         'players', '[{"guest_name":"Gjest"}]'::jsonb, 'start', true)) ->> 'round_id') as lr1 \gset
 select pg_temp.lik((select sum(par)::int from public.round_holes where round_id = :'lr1'), 73,
                    'Løs runde, tee uten hull: banens hull (Svart, par 73) fryses');
+select pg_temp.lik((select tee_par from public.rounds where id = :'lr1'), null::smallint, 'Tee uten egne hull: ingen tee_par (banens par gjelder)');
 -- Løs runde på hentet bane, siste ni med Grønn-teen.
 select (public.start_loose_round(jsonb_build_object('course_id', :'valdres', 'tee_id', :'gronn_tee', 'venue', 'course',
         'hole_count', 9, 'first_hole', 10, 'players', '[{"guest_name":"Gjest"}]'::jsonb, 'start', true)) ->> 'round_id') as lr2 \gset
@@ -249,4 +251,6 @@ reset role;
 select pg_temp.lik((select count(*)::int from public.course_tee_holes), 0, 'Tom liste sletter teenes hull');
 select pg_temp.lik((select count(*)::int from public.course_holes where course_id = :'valdres'), 0, 'Tom liste sletter banens hull');
 select pg_temp.lik((select count(*)::int from public.round_holes where round_id = :'kr1'), 18, 'Rundene har hullene sine');
+select pg_temp.lik((select tee_par from public.rounds where id = :'kr1'), 66::smallint, 'Startet runde beholder teens par');
+select pg_temp.lik((select tee_par from public.rounds where id = :'lr3'), 66::smallint, 'Løs runde startet fra kladd har teens par');
 select pg_temp.lik((select count(*)::int from public.course_holes where course_id = :'una_course'), 18, 'Unas egen bane er urørt');
