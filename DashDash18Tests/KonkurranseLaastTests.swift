@@ -156,10 +156,10 @@ struct KonkurranseLaastTests {
             L.entitlement(status: .refunded),                          // refundert
             L.entitlement(kind: "subscription"),                       // abonnement, ikke kreditt
         ]
-        #expect(CompetitionLock.credit(in: entitlements, profileID: L.me) == nil)
+        #expect(CompetitionUnlock.unusedCredit(in: entitlements, owner: L.me) == nil)
         #expect(CompetitionLock.notice(for: L.competition(), access: L.access(organizer: true), serverUnlocked: false,
                                        entitlements: entitlements, enabled: true) == .purchase)
-        #expect(CompetitionLock.credit(in: [L.entitlement()], profileID: nil) == nil)
+        #expect(CompetitionUnlock.unusedCredit(in: [L.entitlement()], owner: nil) == nil)
     }
 
     @Test func kjopKobletTilDenneGjorDenUlastUtenNett() {

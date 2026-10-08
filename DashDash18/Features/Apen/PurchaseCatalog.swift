@@ -110,8 +110,7 @@ nonisolated enum CompetitionUnlock {
         }
     }
 
-    /// En ledig kreditt å bruke på turneringen, hvis du har en.
-    /// Et ledig kjøp som `owner` selv har gjort. Arrangørene ser hverandres kjøp i klubben, men
+    /// Et ledig kjøp som `owner` selv har gjort. Arrangørene ser hverandres kjøp i klubben (RLS), men
     /// `assign_purchase` godtar bare egne, så andres kjøp regnes ikke som ledige.
     static func unusedCredit(in entitlements: [EntitlementRow], owner: UUID?) -> EntitlementRow? {
         guard let owner else { return nil }

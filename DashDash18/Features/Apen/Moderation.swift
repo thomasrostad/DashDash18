@@ -53,7 +53,8 @@ nonisolated enum ReportReason: String, CaseIterable, Codable, Identifiable, Send
         }
     }
 
-    /// Grunnene som passer for typen innhold (bildegrunnen bare for bilder).
+    /// Grunnene som passer for typen innhold: bildegrunnen for bilder, navn og profiler, og
+    /// «utgir seg for» bare for navn og profiler.
     static func options(for kind: ReportKind) -> [ReportReason] {
         allCases.filter { reason in
             switch reason {

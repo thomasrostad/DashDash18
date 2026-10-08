@@ -2,8 +2,8 @@ import Foundation
 
 /// Flere konkurranser samtidig (fase 15): liga, cup og morroturnering ved siden av jakkeracet,
 /// «Teller også i …» i hurtigstarten og ny løs runde, konkurransevelger på Tavla og morrokvelder
-/// på Kveld. Av til `sql/022_konkurranser.sql` er godkjent og kjørt på test (åpen påmelding,
-/// cupkampene og RPC-ene). Forutsetter `FoundationFeature` (017). Med flagget av er appen som før.
+/// på Kveld. Krever `sql/022_konkurranser.sql` (kjørt på test) og `FoundationFeature` (017). Med
+/// flagget av er appen som før fase 15.
 nonisolated enum CompetitionsFeature {
     static let isEnabled = true
 

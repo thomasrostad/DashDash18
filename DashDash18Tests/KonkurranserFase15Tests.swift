@@ -161,7 +161,8 @@ import Testing
         var rows = Self.drawn
         rows[1] = Self.match(1, 1, 4, 5, winner: 5, result: "2&1")
         let cup = CupStandings(participants: Self.participants, matches: rows, names: Self.names, me: [Self.p(1)])
-        #expect(cup.rounds[0][1].result == "2&1" && cup.rounds[0][1].winnerSide?.name == "Ola")
+        let decided = cup.rounds[0][1]
+        #expect(decided.result == "2&1" && decided.winner == decided.b?.participantID && decided.b?.name == "Ola")
         #expect(cup.rounds[1][0].b?.name == "Ola" && cup.rounds[1][0].state == .ready)
         #expect(cup.myNext?.id == "2:0" && cup.myNext?.b?.name == "Ola")
         #expect(cup.champion == nil)
@@ -470,11 +471,14 @@ import Testing
 /// Kjøpene fra serveren uten nett, for `PurchaseService`.
 nonisolated private struct FakePurchaseBackend: PurchaseBackend {
     let rows: [EntitlementRow]
+    var assignFails = false
     func verify(transactionID: UInt64, competitionID: UUID?, clubID: UUID?) async throws -> EntitlementRow {
         throw PurchaseError.offline
     }
     func entitlements() async throws -> [EntitlementRow] { rows }
-    func assign(entitlementID: UUID, competitionID: UUID) async throws {}
+    func assign(entitlementID: UUID, competitionID: UUID) async throws {
+        if assignFails { throw PurchaseError.serverRejected("nei") }
+    }
     func isUnlocked(competitionID: UUID) async throws -> Bool { false }
 }
 
@@ -552,6 +556,25 @@ nonisolated private struct FakePurchaseBackend: PurchaseBackend {
         #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, purchases: service, enabled: true))
         #expect(!CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, purchases: nil, enabled: true))
         #expect(CompetitionPurchase.isUnlocked(kind: .fun, clubID: nil, userID: F.me, purchases: nil, enabled: true))
+    }
+
+    /// «Bruk kjøpet ditt» svarer etter hva serveren sa om koblingen.
+    @Test func brukKjopetSvarerEtterServeren() async {
+        let competition = UUID()
+        let ok = PurchaseService(backend: FakePurchaseBackend(rows: [entitlement()]), profileID: F.me)
+        await ok.refreshEntitlements()
+        #expect(await ok.useCredit(for: competition))
+        #expect(ok.lastUnlocked == competition)
+
+        let fails = PurchaseService(backend: FakePurchaseBackend(rows: [entitlement()], assignFails: true), profileID: F.me)
+        await fails.refreshEntitlements()
+        #expect(!(await fails.useCredit(for: competition)))
+        guard case .failed = fails.state else {
+            Issue.record("Feilen skal stå i state")
+            return
+        }
+        let none = PurchaseService(backend: FakePurchaseBackend(rows: []), profileID: F.me)
+        #expect(!(await none.useCredit(for: competition)))
     }
 
     /// «Ny konkurranse» viser betalingsveggen bare når typen er låst.

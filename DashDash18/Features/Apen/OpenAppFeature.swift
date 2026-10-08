@@ -2,7 +2,7 @@ import Foundation
 
 // Fase 17, åpent for alle (docs/visjon-apen-app.md): onboarding uten klubb, sletting av konto,
 // rapporter og blokker, Google-innlogging, kjøp for å kjøre turnering og «Del regningen».
-// Alt ligger bak flagg som er av. Med flaggene av oppfører appen seg nøyaktig som før.
+// Hver del har sitt eget flagg. Med et flagg av oppfører den delen av appen seg som før.
 
 /// Onboarding uten klubb: «Spill med venner» eller «Bli med i/lag en klubb» etter innlogging,
 /// og en app med bare Spill og Deg for den som ikke er i en klubb. Krever løse runder (017, 018).

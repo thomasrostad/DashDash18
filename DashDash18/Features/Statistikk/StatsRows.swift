@@ -1,10 +1,10 @@
 import Foundation
 import GolfgutuCore
 
-// Statistikk (fase 16, `sql/021_statistikk.sql`). Alt nytt er av til 021 er godkjent og kjørt.
+// Statistikk (fase 16, `sql/021_statistikk.sql`).
 
-/// Statistikk under Deg og fra spillerprofilen, og den valgfrie føringen per hull. Av til 021 er
-/// godkjent og kjørt på test.
+/// Statistikk under Deg og fra spillerprofilen, og den valgfrie føringen per hull. Krever 021
+/// (kjørt på test).
 nonisolated enum StatsFeature {
     static let isEnabled = true
 }

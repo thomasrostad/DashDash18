@@ -119,9 +119,6 @@ nonisolated struct CupStandings: Sendable {
         let state: Cup.Match.State
 
         var id: String { "\(round):\(slot)" }
-
-        func side(_ id: UUID?) -> Side? { a?.participantID == id ? a : (b?.participantID == id ? b : nil) }
-        var winnerSide: Side? { side(winner) }
     }
 
     let rounds: [[Game]]

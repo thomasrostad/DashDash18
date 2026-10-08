@@ -5,9 +5,9 @@ import GolfgutuCore
 // og gjester, felles bibliotek) og 018 (invitasjonskode, start i ett kall, avslutt). Ren logikk her,
 // uten nettverk og SwiftUI.
 
-/// Løse runder (fase 13). Av til 017 og 018 er godkjent og kjørt på test. Da vises «Spill»-fanen,
-/// lenker og koder tas imot, og banebiblioteket får det felles biblioteket. Med flagget av oppfører
-/// appen seg nøyaktig som før.
+/// Løse runder (fase 13), på siden 017 og 018 er kjørt på test: «Spill»-fanen vises, lenker og
+/// koder tas imot, og banebiblioteket får det felles biblioteket. Med flagget av oppfører appen seg
+/// som før fase 13.
 nonisolated enum LooseRoundsFeature {
     /// `sql/018_lose_runder.sql` er kjørt på test.
     static let schemaReady = true
