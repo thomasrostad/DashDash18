@@ -1,8 +1,8 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Steg 2: hvem som er med, og båsene (flightene på ekte bane). Trykk et navn for å flytte ham, gjøre ham
-/// til markør eller ta ham ut. Brukes også bak «Endre» på hurtigstarten.
+/// «Spillere og båser» bak «Endre» på hurtigstarten: hvem som er med, og båsene (flightene på ekte bane).
+/// Trykk et navn for å flytte ham, gjøre ham til markør eller ta ham ut.
 struct RundeBaysStep: View {
     let model: RundeAdminModel
     @Binding var draft: RoundDraft

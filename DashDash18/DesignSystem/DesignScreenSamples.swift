@@ -34,7 +34,7 @@ struct DesignScreenSamples: View {
         case .hurtigstart:
             let model = RundeAdminModel.sample()
             NavigationStack {
-                RundeQuickStartView(model: model, draft: model.newDraft()!, onDone: { _ in }, onStepByStep: { _ in })
+                RundeQuickStartView(model: model, draft: model.newDraft()!, onDone: { _ in })
             }
             .tint(Color.ddForestInk)
         case .arrangor:

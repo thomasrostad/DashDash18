@@ -26,10 +26,13 @@ struct RundeAdminSample: View {
 }
 #endif
 
-/// Utkastet som vises i hurtigstarten (eller veiviseren).
-private struct WizardItem: Identifiable {
+/// Utkastet som vises i hurtigstarten (pushet).
+private struct SetupItem: Hashable {
     let id = UUID()
     let draft: RoundDraft
+
+    static func == (lhs: SetupItem, rhs: SetupItem) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
 /// Kladden som skal slettes, med det som følger med.
@@ -41,7 +44,7 @@ private struct PendingDelete: Identifiable {
 
 private struct RundeAdminContent: View {
     @State var model: RundeAdminModel
-    @State private var wizard: WizardItem?
+    @State private var setup: SetupItem?
     @State private var pendingDelete: PendingDelete?
     @State private var message: String?
     @State private var error: String?
@@ -59,9 +62,9 @@ private struct RundeAdminContent: View {
             }
             .task { await model.load() }
             .refreshable { await model.load() }
-            .sheet(item: $wizard) { item in
-                RoundSetupFlow(model: model, draft: item.draft) { result in
-                    wizard = nil
+            .navigationDestination(item: $setup) { item in
+                RundeQuickStartView(model: model, draft: item.draft) { result in
+                    setup = nil
                     message = result
                 }
             }
@@ -215,7 +218,7 @@ private struct RundeAdminContent: View {
             if event.id != model.selectedEventID {
                 try await model.select(eventID: event.id)
             }
-            if let draft = model.newDraft() { wizard = WizardItem(draft: draft) }
+            if let draft = model.newDraft() { setup = SetupItem(draft: draft) }
         }
     }
 
@@ -225,7 +228,7 @@ private struct RundeAdminContent: View {
                 try await model.select(eventID: eventID)
             }
             let draft = try await model.draft(for: round)
-            wizard = WizardItem(draft: draft)
+            setup = SetupItem(draft: draft)
         }
     }
 

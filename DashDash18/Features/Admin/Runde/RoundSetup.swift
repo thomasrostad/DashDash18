@@ -3,7 +3,7 @@ import GolfgutuCore
 
 // MARK: - Deltakere
 
-/// Hvem som er med i runden når veiviseren åpnes (`startRundeDeltakere`, `aapneRedigerKladd`).
+/// Hvem som er med i runden når oppsettet åpnes (`startRundeDeltakere`, `aapneRedigerKladd`).
 nonisolated enum RoundParticipants {
     enum Source: Equatable, Sendable {
         /// De som har svart «Kommer».

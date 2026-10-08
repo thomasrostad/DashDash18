@@ -1,7 +1,7 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Steg 3: konkurranseform, lag og matcher, sidepremier, vekt og handicap.
+/// «Flere valg» på hurtigstarten: konkurranseform, lag og matcher, sidepremier, vekt og handicap.
 struct RundeSetupStep: View {
     let model: RundeAdminModel
     @Binding var draft: RoundDraft

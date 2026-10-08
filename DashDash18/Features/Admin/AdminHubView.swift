@@ -25,10 +25,13 @@ struct AdminHubSample: View {
 }
 #endif
 
-/// Runden som settes opp i arket.
-private struct SetupItem: Identifiable {
+/// Runden som settes opp (pushet hurtigstart).
+private struct SetupItem: Hashable {
     let id = UUID()
     let draft: RoundDraft
+
+    static func == (lhs: SetupItem, rhs: SetupItem) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
 private struct AdminHubContent: View {
@@ -81,8 +84,8 @@ private struct AdminHubContent: View {
         .task { await model.load() }
         .refreshable { await model.load() }
         .navigationDestination(isPresented: $showsTerminliste) { TerminlisteAdminView() }
-        .sheet(item: $setup) { item in
-            RoundSetupFlow(model: model, draft: item.draft) { result in
+        .navigationDestination(item: $setup) { item in
+            RundeQuickStartView(model: model, draft: item.draft) { result in
                 setup = nil
                 message = result
             }
