@@ -57,8 +57,8 @@ private enum S {
 }
 
 struct SlopeNoTeeChoiceTests {
-    @Test func flaggetErAvTilSqlErKjort() {
-        #expect(SlopeNoFeature.isEnabled == false)
+    @Test func flaggetErPåNårSqlErKjørtOgSynkenHarGått() {
+        #expect(SlopeNoFeature.isEnabled == true)
         #expect(SlopeNoCredit.text == "Slope og course rating fra slope.no")
         #expect(SlopeNoCredit.url.absoluteString == "https://slope.no")
     }
@@ -260,14 +260,15 @@ struct SlopeNoRoundTests {
         func json(_ write: RoundWrite) throws -> String {
             try #require(String(data: JSONEncoder().encode(write), encoding: .utf8))
         }
-        #expect(try !json(RoundWrite(draft: draft, clubID: S.club, course: nil)).contains("tee_id"))
+        #expect(try !json(RoundWrite(draft: draft, clubID: S.club, course: nil, includeTee: false)).contains("tee_id"))
         #expect(try json(RoundWrite(draft: draft, clubID: S.club, course: nil, includeTee: true))
             .contains("\"tee_id\":\"\(S.id(102).uuidString)\""))
         draft.teeID = nil
         #expect(try json(RoundWrite(draft: draft, clubID: S.club, course: nil, includeTee: true)).contains("\"tee_id\":null"))
     }
 
-    @Test func losRundeSenderIkkeTeenMedFlaggetAv() throws {
+    /// Med flagget på (08.10.2026) sendes teen. Den må høre til banen; en ukjent tee sendes ikke.
+    @Test func losRundeSenderTeenSomHorerTilBanen() throws {
         var draft = LooseRoundDraft.new()
         let course = CourseListItem(course: CourseRow(id: S.course, clubID: nil, name: "A6", externalName: nil,
                                                       courseRating: nil, slopeRating: nil, inUse: true,
@@ -276,9 +277,12 @@ struct SlopeNoRoundTests {
         draft.setCourse(course.id, courseHoles: 18)
         draft.teeID = S.id(101)
         let start = try #require(LooseRoundStart.make(draft, course: course, names: ["Meg"]))
-        #expect(start.teeID == nil)
+        #expect(start.teeID == (SlopeNoFeature.isEnabled ? course.tee(S.id(101))?.id : nil))
         let json = try #require(String(data: JSONEncoder().encode(start), encoding: .utf8))
-        #expect(!json.contains("tee_id"))
+        #expect(json.contains("tee_id") == (start.teeID != nil))
+        draft.teeID = UUID()
+        let unknown = try #require(LooseRoundStart.make(draft, course: course, names: ["Meg"]))
+        #expect(unknown.teeID == nil)
     }
 
     @Test func rundenRegnerMedTallaneFraStart() {
@@ -320,7 +324,7 @@ struct SlopeNoRoundTests {
         #expect(row.teeName == "Gul-Blå - Hvit")
         #expect(row.courseRating == 73)
         #expect(row.slopeRating == 132)
-        #expect(!RoundRow.columns.contains("tee_id"), "flagget er av: kolonnene hentes ikke")
+        #expect(RoundRow.columns.contains("tee_id") == SlopeNoFeature.isEnabled, "kolonnene hentes bare med flagget")
         #expect(RoundRow.teeColumns == "tee_id, tee_name, course_rating, slope_rating")
     }
 }
