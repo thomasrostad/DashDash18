@@ -29,7 +29,7 @@ final class RoundReviewModel {
     func load() async {
         do {
             let rows: [RoundRow] = try await context.client.from("rounds")
-                .select(RundeQueries.roundColumns)
+                .select(RoundRow.columns)
                 .eq("id", value: roundID)
                 .limit(1)
                 .execute().value
@@ -55,7 +55,7 @@ final class RoundReviewModel {
             let rows: [RoundRow] = try await context.client.from("rounds")
                 .update(patch)
                 .eq("id", value: game.roundID)
-                .select(RundeQueries.roundColumns)
+                .select(RoundRow.columns)
                 .execute().value
             guard let row = rows.first, patch.matches(row) else { throw DataError.notAllowed }
         } catch {
@@ -115,7 +115,7 @@ enum EveningCloser {
             let rows: [RoundRow]? = try? await context.client.from("rounds")
                 .update(RoundStatusPatch(status: .locked))
                 .eq("id", value: id)
-                .select(RundeQueries.roundColumns)
+                .select(RoundRow.columns)
                 .execute().value
             guard let row = rows?.first, row.status == .locked else { continue }
             locked.insert(id)

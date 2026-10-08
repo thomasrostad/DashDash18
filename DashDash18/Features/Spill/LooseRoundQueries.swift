@@ -5,8 +5,9 @@ import Supabase
 /// Nettverket for løse runder (sql/017 og 018). Brukes bare når `LooseRoundsFeature` er på.
 /// Flere rader skrives alltid i én RPC; det som kommer tilbake, sjekkes.
 enum LooseRoundQueries {
-    static let rosterColumns = "round_id, player_id, club_id, display_name, profile_id, is_guest"
-    static let profileColumns = "id, display_name, handicap_index, avatar_path"
+    /// Brukes fortsatt i Konkurranser/. Ny kode bruker `RoundRosterRow.columns` og `ProfileRow.columns`.
+    static let rosterColumns = RoundRosterRow.columns
+    static let profileColumns = ProfileRow.columns
 
     // MARK: Profil og venner
 
@@ -19,7 +20,7 @@ enum LooseRoundQueries {
     /// uten deg selv, i norsk navnerekkefølge. Det finnes ikke noe søk etter fremmede.
     static func friends(client: SupabaseClient, userID: UUID) async throws -> [ProfileRow] {
         let rows: [ProfileRow] = try await client.from("profiles")
-            .select(profileColumns)
+            .select(ProfileRow.columns)
             .neq("id", value: userID)
             .execute().value
         return rows
@@ -43,7 +44,7 @@ enum LooseRoundQueries {
     /// Runden med alt under, eller nil når du ikke kan se den (lenger).
     static func snapshot(client: SupabaseClient, roundID: UUID) async throws -> RoundSnapshot? {
         let rows: [RoundRow] = try await client.from("rounds")
-            .select(RundeQueries.roundColumns)
+            .select(RoundRow.columns)
             .eq("id", value: roundID)
             .is("club_id", value: nil)
             .limit(1)
@@ -108,7 +109,7 @@ enum LooseRoundQueries {
     /// alt i noen få spørringer for hele lista, ikke én runde om gangen.
     static func myRounds(client: SupabaseClient, limit: Int = 40) async throws -> [RoundSnapshot] {
         let rows: [LooseRoundRecord] = try await client.from("rounds")
-            .select(RundeQueries.roundColumns + ", owner_id")
+            .select(RoundRow.columns + ", owner_id")
             .is("club_id", value: nil)
             .neq("status", value: RoundStatus.draft.rawValue)
             .order("started_at", ascending: false)
@@ -119,20 +120,20 @@ enum LooseRoundQueries {
         let courseIDs = Array(Set(rows.compactMap(\.round.courseID))).map(\.uuidString)
 
         async let players: [RoundPlayerRow] = client.from("round_players")
-            .select(RundeQueries.playerColumns).in("round_id", values: ids).execute().value
+            .select(RoundPlayerRow.columns).in("round_id", values: ids).execute().value
         async let scores: [HoleScoreRow] = client.from("hole_scores")
-            .select(RundeQueries.scoreColumns).in("round_id", values: ids).execute().value
+            .select(HoleScoreRow.columns).in("round_id", values: ids).execute().value
         async let matches: [RoundMatchRow] = client.from("round_matches")
-            .select("round_id, match_no, player_a, player_b, player_c, team_a, team_b, result")
+            .select(RoundMatchRow.columns)
             .in("round_id", values: ids).execute().value
         async let holes: [RoundHoleRow] = client.from("round_holes")
-            .select("round_id, hole_index, par, stroke_index, length_m").in("round_id", values: ids).execute().value
+            .select(RoundHoleRow.columns).in("round_id", values: ids).execute().value
         async let roster: [RoundRosterRow] = client.from("round_roster")
-            .select(rosterColumns).in("round_id", values: ids).execute().value
+            .select(RoundRosterRow.columns).in("round_id", values: ids).execute().value
         async let courses: [CourseRow] = client.from("courses")
-            .select(CourseLibraryModel.courseColumns).in("id", values: courseIDs).execute().value
+            .select(CourseRow.columns).in("id", values: courseIDs).execute().value
         async let courseHoles: [CourseHoleRecord] = client.from("course_holes")
-            .select("course_id, hole_number, par, stroke_index, length_m").in("course_id", values: courseIDs)
+            .select(CourseHoleRecord.columns).in("course_id", values: courseIDs)
             .execute().value
 
         return assemble(rows, players: try await players, scores: try await scores, matches: try await matches,

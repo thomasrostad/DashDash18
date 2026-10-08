@@ -52,8 +52,6 @@ final class RundeAdminModel {
     private var clubID: UUID { context.clubID }
     var clubContext: ClubContext { context }
 
-    private static let matchColumns = "round_id, match_no, player_a, player_b, player_c, team_a, team_b, result"
-
     var selectedEvent: EventRow? { events.first { $0.id == selectedEventID } }
 
     /// Rundene gruppert per kveld, nyeste først («Alle runder»). Bare kvelder med runder.
@@ -92,25 +90,25 @@ final class RundeAdminModel {
     func load() async {
         do {
             async let seasonRows: [SeasonRow] = client.from("seasons")
-                .select("id, club_id, name, status, rules")
+                .select(SeasonRow.columns)
                 .eq("club_id", value: clubID)
                 .execute().value
             async let eventRows: [EventRow] = client.from("events")
-                .select(TerminlisteModel.eventColumns)
+                .select(EventRow.columns)
                 .eq("club_id", value: clubID)
                 .order("event_date")
                 .execute().value
             async let memberRows: [ClubMemberRow] = client.from("club_members")
-                .select(KveldQueries.memberColumns)
+                .select(ClubMemberRow.columns)
                 .eq("club_id", value: clubID)
                 .eq("status", value: MemberStatus.active.rawValue)
                 .execute().value
             async let courseRows: [CourseRow] = client.from("courses")
-                .select(CourseLibraryModel.courseColumns)
+                .select(CourseRow.columns)
                 .eq("club_id", value: clubID)
                 .execute().value
             async let activeRows: [RoundRow] = client.from("rounds")
-                .select(RundeQueries.roundColumns)
+                .select(RoundRow.columns)
                 .eq("club_id", value: clubID)
                 .eq("status", value: RoundStatus.active.rawValue)
                 .limit(1)
@@ -125,7 +123,7 @@ final class RundeAdminModel {
             var holes: [CourseHoleRecord] = []
             if !courseList.isEmpty {
                 holes = try await client.from("course_holes")
-                    .select(CourseLibraryModel.holeColumns)
+                    .select(CourseHoleRecord.columns)
                     .in("course_id", values: courseList.map(\.id.uuidString))
                     .execute().value
             }
@@ -183,14 +181,14 @@ final class RundeAdminModel {
     /// forrige runde.
     private func loadRounds() async throws {
         let loaded: [RoundRow] = try await client.from("rounds")
-            .select(RundeQueries.roundColumns)
+            .select(RoundRow.columns)
             .eq("club_id", value: clubID)
             .order("round_no")
             .execute().value
         var players: [RoundPlayerRow] = []
         if !loaded.isEmpty {
             players = try await client.from("round_players")
-                .select(RundeQueries.playerColumns)
+                .select(RoundPlayerRow.columns)
                 .in("round_id", values: loaded.map(\.id.uuidString))
                 .execute().value
         }
@@ -213,7 +211,7 @@ final class RundeAdminModel {
             return
         }
         let loadedSignups: [SignupRow] = try await client.from("signups")
-            .select("event_id, member_id, club_id, status, comment")
+            .select(SignupRow.columns)
             .eq("event_id", value: eventID)
             .execute().value
         // Er en annen kveld valgt mens vi hentet, hører svaret ikke til den.
@@ -274,11 +272,11 @@ final class RundeAdminModel {
     func draft(for round: RoundRow) async throws(DataError) -> RoundDraft {
         do {
             async let playerRows: [RoundPlayerRow] = client.from("round_players")
-                .select(RundeQueries.playerColumns)
+                .select(RoundPlayerRow.columns)
                 .eq("round_id", value: round.id)
                 .execute().value
             async let matchRows: [RoundMatchRow] = client.from("round_matches")
-                .select(Self.matchColumns)
+                .select(RoundMatchRow.columns)
                 .eq("round_id", value: round.id)
                 .order("match_no")
                 .execute().value
@@ -367,7 +365,7 @@ final class RundeAdminModel {
             let updated: [RoundRow] = try await client.from("rounds")
                 .update(RoundStatusPatch(status: .locked))
                 .eq("id", value: round.id)
-                .select(RundeQueries.roundColumns)
+                .select(RoundRow.columns)
                 .execute().value
             guard let row = updated.first, row.status == .locked else { throw DataError.notAllowed }
             locked = row
@@ -424,7 +422,7 @@ final class RundeAdminModel {
             // oppdaterer samme rad i stedet for å lage en til. Status røres ikke her.
             let saved: [RoundRow] = try await client.from("rounds")
                 .upsert(write, onConflict: "id")
-                .select(RundeQueries.roundColumns)
+                .select(RoundRow.columns)
                 .execute().value
             guard let row = saved.first else { throw DataError.notAllowed }  // RLS sa nei uten feilkode
             return row.id
@@ -452,7 +450,7 @@ final class RundeAdminModel {
     private func refreshActiveRound() async throws(DataError) {
         do {
             let rows: [RoundRow] = try await client.from("rounds")
-                .select(RundeQueries.roundColumns)
+                .select(RoundRow.columns)
                 .eq("club_id", value: clubID)
                 .eq("status", value: RoundStatus.active.rawValue)
                 .limit(1)

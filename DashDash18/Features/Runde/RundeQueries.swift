@@ -5,20 +5,13 @@ import Supabase
 /// Spørringene for runden som går: lesing, par-bekreftelsen og innmeldingene til longest drive
 /// og nærmest pinnen. Score skrives aldri herfra (se `ScoreSubmitting`).
 enum RundeQueries {
-    /// `venue` er med bare når sql/015 er kjørt (`VenueFeature`); før det finnes ikke kolonnen.
-    static let roundColumns = """
-        id, club_id, event_id, course_id, round_no, name, status, hole_count, first_hole, tee_time, format, \
-        handicap_allowance, external_handicap, weight, ld_enabled, ld_hole_index, kp_enabled, kp_hole_index, \
-        cut_rule, cut_after, par_confirmed_by, par_confirmed_at, started_at, locked_at
-        """ + (VenueFeature.isEnabled ? ", venue" : "")
-    static let playerColumns =
-        "round_id, member_id, club_id, handicap_index, seed_group, playing_handicap, bay_no, is_marker, team_no"
-    static let scoreColumns = "round_id, member_id, hole_index, strokes, recorded_at, updated_by, updated_at"
+    /// Brukes fortsatt i Konkurranser/. Ny kode bruker `RoundRow.columns`.
+    static let roundColumns = RoundRow.columns
 
     /// Runden som går i klubben (høyst én, se `rounds_one_active_per_club`), med alt under.
     static func activeRound(client: SupabaseClient, clubID: UUID) async throws -> RoundSnapshot? {
         let rounds: [RoundRow] = try await client.from("rounds")
-            .select(roundColumns)
+            .select(RoundRow.columns)
             .eq("club_id", value: clubID)
             .eq("status", value: RoundStatus.active.rawValue)
             .limit(1)
@@ -35,10 +28,10 @@ enum RundeQueries {
         }
         async let base = baseSnapshot(client: client, round: round)
         async let members: [ClubMemberRow] = client.from("club_members")
-            .select(KveldQueries.memberColumns)
+            .select(ClubMemberRow.columns)
             .eq("club_id", value: clubID).execute().value
         async let events: [EventRow] = client.from("events")
-            .select("id, club_id, season_id, event_date, start_time, venue, note")
+            .select(EventRow.columns)
             .eq("id", value: eventID).execute().value
 
         var snapshot = try await base
@@ -58,7 +51,7 @@ enum RundeQueries {
         }
         async let base = baseSnapshot(client: client, round: round)
         async let roster: [RoundRosterRow] = client.from("round_roster")
-            .select(LooseRoundQueries.rosterColumns)
+            .select(RoundRosterRow.columns)
             .eq("round_id", value: round.id).execute().value
         async let owners: [Owner] = client.from("rounds")
             .select("owner_id")
@@ -77,19 +70,19 @@ enum RundeQueries {
     private static func baseSnapshot(client: SupabaseClient, round: RoundRow) async throws -> RoundSnapshot {
         let id = round.id
         async let holes: [RoundHoleRow] = client.from("round_holes")
-            .select("round_id, hole_index, par, stroke_index, length_m")
+            .select(RoundHoleRow.columns)
             .eq("round_id", value: id).execute().value
         async let players: [RoundPlayerRow] = client.from("round_players")
-            .select(playerColumns)
+            .select(RoundPlayerRow.columns)
             .eq("round_id", value: id).execute().value
         async let matches: [RoundMatchRow] = client.from("round_matches")
-            .select("round_id, match_no, player_a, player_b, player_c, team_a, team_b, result")
+            .select(RoundMatchRow.columns)
             .eq("round_id", value: id).execute().value
         async let scores: [HoleScoreRow] = client.from("hole_scores")
-            .select(scoreColumns)
+            .select(HoleScoreRow.columns)
             .eq("round_id", value: id).execute().value
         async let claims: [SideClaimRow] = client.from("side_claims")
-            .select(claimColumns)
+            .select(SideClaimRow.columns)
             .eq("round_id", value: id).execute().value
 
         var snapshot = RoundSnapshot(round: round)
@@ -101,10 +94,10 @@ enum RundeQueries {
 
         if let courseID = round.courseID {
             async let courses: [CourseRow] = client.from("courses")
-                .select("id, club_id, name, external_name, course_rating, slope_rating, in_use, confirmed_by, confirmed_at")
+                .select(CourseRow.columns)
                 .eq("id", value: courseID).execute().value
             async let courseHoles: [CourseHoleRecord] = client.from("course_holes")
-                .select("course_id, hole_number, par, stroke_index, length_m")
+                .select(CourseHoleRecord.columns)
                 .eq("course_id", value: courseID).execute().value
             snapshot.course = try await courses.first
             snapshot.courseHoles = try await courseHoles
@@ -114,13 +107,12 @@ enum RundeQueries {
 
     /// Regelsettet til kveldens sesong, ellers den aktive sesongen, ellers Golfgutu-oppsettet.
     static func rules(client: SupabaseClient, clubID: UUID, seasonID: UUID?) async throws -> Ruleset {
-        let columns = "id, club_id, name, status, rules"
         if let seasonID {
-            let rows: [SeasonRow] = try await client.from("seasons").select(columns)
+            let rows: [SeasonRow] = try await client.from("seasons").select(SeasonRow.columns)
                 .eq("id", value: seasonID).execute().value
             if let season = rows.first { return season.rules }
         }
-        let active: [SeasonRow] = try await client.from("seasons").select(columns)
+        let active: [SeasonRow] = try await client.from("seasons").select(SeasonRow.columns)
             .eq("club_id", value: clubID)
             .eq("status", value: SeasonStatus.active.rawValue)
             .limit(1)
@@ -141,8 +133,6 @@ enum RundeQueries {
     }
 
     // MARK: Longest drive og nærmest pinnen
-
-    static let claimColumns = "id, round_id, member_id, kind, meters, hole_index, created_at"
 
     /// «Meld inn» / «Oppdater»: én rad per runde, spiller og type (`side_claims_one_per_kind`).
     /// Finnes raden, oppdateres den; ellers settes den inn. Har noen andre satt inn i mellomtiden
@@ -169,7 +159,7 @@ enum RundeQueries {
         if let id = draft.existing {
             let rows: [SideClaimRow] = try await client.from("side_claims")
                 .update(update).eq("id", value: id)
-                .select(claimColumns).execute().value
+                .select(SideClaimRow.columns).execute().value
             if !rows.isEmpty { return try updated(rows) }
             // Raden er borte (slettet et annet sted): sett inn på nytt under.
         }
@@ -177,7 +167,7 @@ enum RundeQueries {
             let rows: [SideClaimRow] = try await client.from("side_claims")
                 .insert(Insert(round_id: draft.roundID, member_id: draft.memberID, kind: draft.kind.rawValue,
                                meters: draft.meters, hole_index: draft.holeIndex))
-                .select(claimColumns).execute().value
+                .select(SideClaimRow.columns).execute().value
             return try updated(rows)
         } catch let error where DataError.from(error) == .duplicate {
             let rows: [SideClaimRow] = try await client.from("side_claims")
@@ -185,7 +175,7 @@ enum RundeQueries {
                 .eq("round_id", value: draft.roundID)
                 .eq("member_id", value: draft.memberID)
                 .eq("kind", value: draft.kind.rawValue)
-                .select(claimColumns).execute().value
+                .select(SideClaimRow.columns).execute().value
             return try updated(rows)
         }
     }
@@ -194,7 +184,7 @@ enum RundeQueries {
     static func deleteSideClaim(client: SupabaseClient, id: UUID) async throws {
         let rows: [SideClaimRow] = try await client.from("side_claims")
             .delete().eq("id", value: id)
-            .select(claimColumns).execute().value
+            .select(SideClaimRow.columns).execute().value
         guard !rows.isEmpty else { throw DataError.notAllowed }
     }
 }

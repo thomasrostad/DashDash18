@@ -12,7 +12,7 @@ enum BetsQueries {
     /// Sesongen (aktiv, ellers sist ferdige) med runder og tropp, og veddemålene i den.
     static func load(client: SupabaseClient, clubID: UUID) async throws -> BetsInput? {
         let seasons: [SeasonRow] = try await client.from("seasons")
-            .select(TavlaQueries.seasonColumns)
+            .select(SeasonRow.columns)
             .eq("club_id", value: clubID)
             .in("status", values: [SeasonStatus.active.rawValue, SeasonStatus.finished.rawValue])
             .order("created_at", ascending: false)

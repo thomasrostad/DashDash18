@@ -26,6 +26,8 @@ nonisolated struct ProfileRow: Codable, Equatable, Identifiable, Sendable {
         case handicapIndex = "handicap_index"
         case avatarPath = "avatar_path"
     }
+
+    static let columns = "id, display_name, handicap_index, avatar_path"
 }
 
 /// Hvor en runde hører hjemme: klubb og kveld, eller ingen av delene (en løs runde med en eier,
@@ -82,6 +84,8 @@ nonisolated struct RoundParticipantRow: Codable, Equatable, Identifiable, Sendab
         case handicapIndex = "handicap_index"
     }
 
+    static let columns = "id, round_id, profile_id, display_name, handicap_index"
+
     var isGuest: Bool { profileID == nil }
 }
 
@@ -104,6 +108,8 @@ nonisolated struct RoundRosterRow: Codable, Equatable, Sendable {
         case profileID = "profile_id"
         case isGuest = "is_guest"
     }
+
+    static let columns = "round_id, player_id, club_id, display_name, profile_id, is_guest"
 }
 
 // MARK: - Konkurranser
@@ -204,6 +210,8 @@ nonisolated struct CompetitionParticipantRow: Codable, Equatable, Identifiable, 
         case profileID = "profile_id"
         case status
     }
+
+    static let columns = "id, competition_id, member_id, profile_id, status"
 }
 
 /// En runde som teller i en konkurranse (`competition_rounds`). En runde kan telle i flere.
@@ -224,4 +232,6 @@ nonisolated struct CompetitionRoundRow: Codable, Equatable, Sendable {
         case roundID = "round_id"
         case source
     }
+
+    static let columns = "competition_id, round_id, source"
 }

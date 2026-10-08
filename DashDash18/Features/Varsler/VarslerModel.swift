@@ -117,7 +117,7 @@ final class VarslerModel {
         do {
             async let fetchedRows = log.recent()
             async let members: [ClubMemberRow] = context.client.from("club_members")
-                .select(KveldQueries.memberColumns)
+                .select(ClubMemberRow.columns)
                 .eq("club_id", value: context.clubID)
                 .execute().value
             let newRows = try await fetchedRows
