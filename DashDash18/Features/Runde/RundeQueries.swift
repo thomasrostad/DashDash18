@@ -2,8 +2,8 @@ import Foundation
 import GolfgutuCore
 import Supabase
 
-/// Spørringene for runden som går. Bare lesing, pluss par-bekreftelsen for arrangøren.
-/// Score skrives aldri herfra (se `ScoreSubmitting`).
+/// Spørringene for runden som går: lesing, par-bekreftelsen og innmeldingene til longest drive
+/// og nærmest pinnen. Score skrives aldri herfra (se `ScoreSubmitting`).
 enum RundeQueries {
     /// `venue` er med bare når sql/015 er kjørt (`VenueFeature`); før det finnes ikke kolonnen.
     static let roundColumns = """
@@ -128,9 +128,9 @@ enum RundeQueries {
         return active.first?.rules ?? .golfgutu
     }
 
-    /// Par stemmer med skjermen: `confirm_round_par` (sql/007_foring.sql). Arrangøren, eller en
-    /// markør i en runde som går. Svarer med tidspunktet; var den bekreftet, står den første.
-    /// 42501 = ikke markør eller arrangør, 55000 = runden er ikke i gang.
+    /// Par stemmer med skjermen: `confirm_round_par` (sql/007_foring.sql, regelen i sql/014). Hvem som
+    /// kan, står i `RoundGame.canConfirmPar`. Svarer med tidspunktet; var den bekreftet, står den første.
+    /// 42501 = ikke lov, 55000 = runden er ikke i gang.
     @discardableResult
     static func confirmPar(client: SupabaseClient, roundID: UUID) async throws -> String {
         struct Params: Encodable { let p_round_id: UUID }

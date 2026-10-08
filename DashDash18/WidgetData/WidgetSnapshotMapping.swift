@@ -1,6 +1,6 @@
 import Foundation
 
-/// Widgetene er av til widget-targetet (DashDash18Widgets) og App Group-en finnes.
+/// Bryter for widget-dataene. Krever widget-targetet (DashDash18Widgets) og App Group-en.
 /// Se docs/widgets-oppsett.md.
 nonisolated enum WidgetFeature {
     static let isEnabled = true
@@ -37,7 +37,7 @@ nonisolated extension WidgetSnapshot {
     }
 }
 
-/// Skriver widget-data når Kveld og Tavla har lastet. Av til `WidgetFeature.isEnabled`.
+/// Skriver widget-data når Kveld og Tavla har lastet (når `WidgetFeature.isEnabled`).
 enum WidgetSnapshotPublisher {
     /// Neste kveld fra Kveld (nil: ingen kveld satt opp).
     static func publish(nextEvening event: EventRow?, today: String) {
