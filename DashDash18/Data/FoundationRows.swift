@@ -4,12 +4,9 @@ import GolfgutuCore
 // Radtyper for fundamentet i fase 12 (`sql/017_fundament.sql`, `docs/datamodell-v2.md`): profiler,
 // runder uten klubb, deltakere (profil eller gjest), konkurranser og hvilke runder som teller.
 // Kolonnenavnene fra databasen står i CodingKeys, som i `Rows.swift`.
-//
-// Ingenting her hentes eller skrives før `FoundationFeature` slås på, og det skjer først når 017
-// er godkjent og kjørt. Til da oppfører appen seg nøyaktig som før.
 
-/// Fundamentet (sql/017). Av til 017 er godkjent og kjørt på test; da hentes profiler, løse runder
-/// og konkurranser. Ingen skjerm bruker det ennå (fase 13 og 15).
+/// Fundamentet (sql/017, kjørt på test). Når det er på, hentes profiler, løse runder og
+/// konkurranser (fase 13 og 15). Av: appen oppfører seg som før 017.
 nonisolated enum FoundationFeature {
     static let isEnabled = true
 }
@@ -31,7 +28,8 @@ nonisolated struct ProfileRow: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
-/// Hvor en runde hører hjemme: klubb og kveld, eller ingen av delene (en løs runde med en eier).
+/// Hvor en runde hører hjemme: klubb og kveld, eller ingen av delene (en løs runde med en eier,
+/// `rounds_home_check`).
 /// Bare kolonnene som avgjør tilhørighet og om runden teller; resten av runden er `RoundRow`.
 nonisolated struct RoundOriginRow: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
@@ -50,17 +48,6 @@ nonisolated struct RoundOriginRow: Codable, Equatable, Identifiable, Sendable {
     }
 
     static let columns = "id, club_id, event_id, owner_id, status"
-
-    enum Home: Equatable, Sendable {
-        case club(clubID: UUID, eventID: UUID)
-        case loose(ownerID: UUID?)
-    }
-
-    /// Databasen sikrer at klubb og kveld enten begge er satt eller begge er tomme (`rounds_home_check`).
-    var home: Home {
-        if let clubID, let eventID { return .club(clubID: clubID, eventID: eventID) }
-        return .loose(ownerID: ownerID)
-    }
 
     init(id: UUID, clubID: UUID?, eventID: UUID?, ownerID: UUID?, status: RoundStatus) {
         self.id = id
