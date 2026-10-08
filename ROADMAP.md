@@ -365,6 +365,19 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Rester: «sesong» er «turnering» i appens tekster og regelmotorens meldinger; privat stableford-serie (liga) kjennes igjen som oppsettet; arket «Ny turnering» lager modellen først når det åpnes. *(08.10.)*
 - [x] Fem feilmeldinger i SQL sier «turnering» (026, kjørt på test 08.10, kontrollen 5 av 5).
 
+### Fase 19 – Hjem-fanen med aktivitetsfeed
+
+**Besluttet 08.10.2026 (Thomas):** bygg Hjem-feeden etter forslagene i `docs/hjem-feed.md`.
+- **Fanene:** Hjem erstatter Kveld: **Hjem · Spill · Tavla · Deg**. «Pågår nå» og «Neste kveld» (med svarknappene og arrangørens hovedknapp) står øverst på Hjem.
+- **Varsler-bjella** blir bare det som angår deg direkte (nevnt, utfordret, purret på, melding til alle, din runde). Resten står i feeden.
+- **Retning:** 1a (kronologisk feed i I dag · I går · Tidligere, filterpiller per turnering) med 1b-oppsummeringen øverst bare når noe har skjedd siden sist.
+- **Innhold:** bragder (brutto eagle og bedre), tabellendringer (plassbytte), egne runder, sidepremier, tippekonge, melding til alle, påmeldinger. Ikke alle andres runder. Reaksjoner på alt. Push som i dag («Hva blir push»).
+- **Data:** alle klubbene du er med i, dine turneringer og løse runder. SQL (til godkjenning) bare der det trengs.
+
+- [ ] Data og logikk: samlet feed på tvers av klubber, turneringer og løse runder; plassbytte som hendelse; «sist sett» på tvers; ren feedmodell med tester. SQL som forslag.
+- [ ] Hjem-fanen i appen: kortene fra designet, filterpiller, oppsummering, Pågår nå og Neste kveld; Kveld-fanen erstattes; bjella viser bare det som angår deg.
+- [ ] Prøve på telefon mot test.
+
 ### Kodegjennomgang 08.10.2026: åpne funn
 
 Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rettet med test). Dette står igjen:
