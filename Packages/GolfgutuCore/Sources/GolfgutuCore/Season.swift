@@ -61,10 +61,15 @@ public struct Season: Sendable {
         public var dropped: [SidePrizeResult]
     }
 
-    /// Det som teller i tabellen: matcher og sidepremier.
+    /// Det som teller i tabellen: matcher og sidepremier, eller (når tabellen teller stableford)
+    /// runder og sidepremier.
     public struct TableSelection: Hashable, Sendable {
+        /// Tom når tabellen teller stableford.
         public var matches: MatchSelection
         public var sidePrizes: SidePrizeSelection
+        /// Rundenes stablefordpoeng (vektet) når tabellen teller stableford, best først. Tom når
+        /// tabellen teller matcher (stablefordsummen står da i `countingRounds`).
+        public var rounds: RoundSelection = RoundSelection(counting: [], dropped: [])
     }
 
     /// `matchSum`.
@@ -100,18 +105,22 @@ public struct Season: Sendable {
     /// En rad i jakketavla.
     public struct JacketRow: Hashable, Sendable {
         public var player: Player
-        /// Duell + sidepremier, avrundet etter regelsettet (Golfgutu: nærmeste halve).
+        /// Duell (eller stablefordpoeng) + sidepremier, avrundet etter regelsettet (Golfgutu: nærmeste halve).
         public var total: Double
+        /// Tellende matchpoeng. 0 når tabellen teller stableford.
         public var duel: Double
         /// Tellende sidepremier.
         public var side: Double
         /// Tellende matcher.
         public var matches: Int
         public var holes: Int
-        /// Spilte matcher, også strøkne.
+        /// Spilte matcher, også strøkne. Når tabellen teller stableford: spilte runder, også strøkne.
         public var played: Int
         /// Stablefordsummen (skilletegn).
         public var stableford: Int
+        /// Tellende stablefordpoeng i tabellen (vektet, før avrunding) når tabellen teller stableford.
+        /// 0 når tabellen teller matcher.
+        public var roundPoints: Double = 0
     }
 
     /// En rad i stablefordtavla (`seasonBoardNytt`).
@@ -138,7 +147,10 @@ public struct Season: Sendable {
     ///   (rundene med samme dato) eller per runde, og de N beste teller. Likt avgjøres av
     ///   hulldifferansen, så den tidligste.
     /// `best` `nil` (eller under 1): alt teller.
+    /// Med `table.pointsSource` `stableford` teller rundenes stablefordpoeng i stedet for matchene
+    /// (se `stablefordTableSelection`).
     public func tableSelection(for playerID: String) -> TableSelection {
+        if ruleset.table.pointsSource == .stableford { return stablefordTableSelection(for: playerID) }
         let chronological = matchResultsInOrder(for: playerID)
         let all = chronological.enumerated().sorted { x, y in
             if x.element.points != y.element.points { return x.element.points > y.element.points }
@@ -165,6 +177,39 @@ public struct Season: Sendable {
                                     dropped: zip(all, inMatches).filter { !$0.1 }.map(\.0)),
             sidePrizes: SidePrizeSelection(counting: zip(side, inSide).filter(\.1).map(\.0),
                                            dropped: zip(side, inSide).filter { !$0.1 }.map(\.0)))
+    }
+
+    /// Tabellen når den teller stableford: spillerens stablefordpoeng per runde ganget med vekten
+    /// (som i stablefordsummen) pluss sidepremiene, og de N beste rundene eller kveldene teller etter
+    /// `table.counting` (`match` regnes som `round`). Runder med vekt 0 hopper over, som for matcher.
+    /// Likt avgjøres av den tidligste runden. Matcher og trekanter gir ingen tabellpoeng.
+    private func stablefordTableSelection(for playerID: String) -> TableSelection {
+        let side = sidePrizeResults(for: playerID)
+        let chronological = rounds.indices.compactMap { i -> RoundScore? in
+            guard Self.weight(rounds[i]) != 0, let p = weightedRoundPoints(i, playerID: playerID) else { return nil }
+            return RoundScore(roundIndex: i, roundID: rounds[i].id, points: p)
+        }
+        let all = chronological.enumerated().sorted { x, y in
+            x.element.points != y.element.points ? x.element.points > y.element.points : x.offset < y.offset
+        }.map(\.element)
+        let none = MatchSelection(counting: [], dropped: [])
+        let counting = ruleset.table.counting
+        guard let n = counting.best, n > 0 else {
+            return TableSelection(matches: none, sidePrizes: SidePrizeSelection(counting: side, dropped: []),
+                                  rounds: RoundSelection(counting: all, dropped: []))
+        }
+        let unit: Ruleset.Counting.Unit = counting.unit == .evening ? .evening : .round
+        let items = chronological.map { (key: groupKey($0.roundIndex, unit), round: $0.roundIndex, points: $0.points, holes: 0) }
+            + side.map { (key: groupKey($0.roundIndex, unit), round: $0.roundIndex, points: $0.points, holes: 0) }
+        let keep = Self.bestGroups(items, best: n)
+        let inRounds = all.map { keep.contains(groupKey($0.roundIndex, unit)) }
+        let inSide = side.map { keep.contains(groupKey($0.roundIndex, unit)) }
+        return TableSelection(
+            matches: none,
+            sidePrizes: SidePrizeSelection(counting: zip(side, inSide).filter(\.1).map(\.0),
+                                           dropped: zip(side, inSide).filter { !$0.1 }.map(\.0)),
+            rounds: RoundSelection(counting: zip(all, inRounds).filter(\.1).map(\.0),
+                                   dropped: zip(all, inRounds).filter { !$0.1 }.map(\.0)))
     }
 
     /// Matchene i rundenes rekkefølge, før sortering og utvalg.
@@ -296,7 +341,8 @@ public struct Season: Sendable {
 
     // MARK: Tabellene
 
-    /// `jakketavle`: duellpoeng pluss sidepremier, alle i troppen, med det som teller etter regelsettet.
+    /// `jakketavle`: duellpoeng (eller stablefordpoeng, etter `table.pointsSource`) pluss sidepremier,
+    /// alle i troppen, med det som teller etter regelsettet.
     /// Sortert på total, så regelsettets skilletegn (Golfgutu: hulldifferanse, stablefordsum), så navn (norsk).
     public func jacketBoard() -> [JacketRow] {
         let rows = players.map { p -> JacketRow in
@@ -304,6 +350,13 @@ public struct Season: Sendable {
             let d = selection.matches
             let s = Self.matchSum(d.counting, rules: ruleset)
             let side = selection.sidePrizes.counting.reduce(0) { $0 + $1.points }
+            if ruleset.table.pointsSource == .stableford {
+                let r = selection.rounds
+                let points = r.counting.reduce(0) { $0 + $1.points }
+                return JacketRow(player: p, total: ruleset.roundTablePoints(points + side), duel: 0, side: side,
+                                 matches: 0, holes: 0, played: r.counting.count + r.dropped.count,
+                                 stableford: stablefordTotal(for: p.id), roundPoints: points)
+            }
             return JacketRow(player: p, total: ruleset.roundTablePoints(s.points + side), duel: s.points, side: side,
                              matches: s.matches, holes: s.holes, played: d.counting.count + d.dropped.count,
                              stableford: stablefordTotal(for: p.id))

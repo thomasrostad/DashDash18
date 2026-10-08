@@ -110,13 +110,25 @@ public struct Ruleset: Hashable, Sendable {
         case stableford
     }
 
+    /// Hva tabellpoengene kommer fra.
+    public enum TablePointsSource: String, Codable, Hashable, Sendable, CaseIterable {
+        /// Matcher og trekanter (`matchPoints`, `trianglePoints`), pluss sidepremiene. Golfgutu.
+        case matches
+        /// Stablefordpoengene i runden (vektet), pluss sidepremiene. Matcher og trekanter gir ingen
+        /// tabellpoeng.
+        case stableford
+    }
+
     /// Tabellen (jakketavla).
     public struct TableRules: Hashable, Sendable {
+        /// Hva tabellpoengene kommer fra. Golfgutu: `matches`.
+        public var pointsSource: TablePointsSource
         public var matchPoints: MatchPoints
         /// Poeng i en trekant etter plass (beste først). Delt plass deler summen av plassene.
         public var trianglePoints: [Double]
         /// Det som teller i tabellen: `match`, `round` eller `evening`. Sidepremiene strykes aldri med `match`;
-        /// med `round` og `evening` er de en del av rundens eller kveldens poeng.
+        /// med `round` og `evening` er de en del av rundens eller kveldens poeng. Med `pointsSource`
+        /// `stableford` gir `match` ingen mening (valideringen sier fra) og regnes som `round`.
         public var counting: Counting
         /// Det som teller i stablefordsummen (skilletegn og profil): `round` eller `evening` (`match` regnes
         /// som `round`). Vekten legges på før utvelgelsen.
@@ -127,7 +139,9 @@ public struct Ruleset: Hashable, Sendable {
         public var roundingStep: Double?
 
         public init(matchPoints: MatchPoints, trianglePoints: [Double], counting: Counting,
-                    stablefordCounting: Counting, tiebreaks: [Tiebreak], roundingStep: Double?) {
+                    stablefordCounting: Counting, tiebreaks: [Tiebreak], roundingStep: Double?,
+                    pointsSource: TablePointsSource = .matches) {
+            self.pointsSource = pointsSource
             self.matchPoints = matchPoints
             self.trianglePoints = trianglePoints
             self.counting = counting
@@ -409,12 +423,13 @@ extension Ruleset: Codable {
 
 extension Ruleset.TableRules: Codable {
     private enum CodingKeys: String, CodingKey {
-        case matchPoints, trianglePoints, counting, stablefordCounting, tiebreaks, roundingStep
+        case pointsSource, matchPoints, trianglePoints, counting, stablefordCounting, tiebreaks, roundingStep
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let g = Ruleset.golfgutu.table
+        pointsSource = try c.decodeIfPresent(Ruleset.TablePointsSource.self, forKey: .pointsSource) ?? g.pointsSource
         matchPoints = try c.decodeIfPresent(Ruleset.MatchPoints.self, forKey: .matchPoints) ?? g.matchPoints
         trianglePoints = try c.decodeIfPresent([Double].self, forKey: .trianglePoints) ?? g.trianglePoints
         counting = try c.decodeIfPresent(Ruleset.Counting.self, forKey: .counting) ?? g.counting
@@ -432,6 +447,8 @@ extension Ruleset.TableRules: Codable {
         try c.encode(stablefordCounting, forKey: .stablefordCounting)
         try c.encode(tiebreaks, forKey: .tiebreaks)
         try c.encode(roundingStep, forKey: .roundingStep)
+        // Bare når tabellen ikke teller matcher, så Golfgutu-JSON-en og eldre regelsett er som før.
+        if pointsSource != .matches { try c.encode(pointsSource, forKey: .pointsSource) }
     }
 }
 

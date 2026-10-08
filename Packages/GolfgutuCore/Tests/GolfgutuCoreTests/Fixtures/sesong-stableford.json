@@ -1,0 +1,133 @@
+{
+  "_kilde": "Regnet for hånd (fase 18; tabell fra stableford finnes ikke i PWA-en). Tabellen teller stablefordpoengene (table.pointsSource = stableford): rundens poeng ganget med vekten, pluss sidepremiene når de er på. Runder med vekt 0 hopper over. table.counting velger de N beste kveldene (rundene med samme dato er én kveld) eller rundene; sidepremien hører til runden og kvelden sin; likt avgjøres av den tidligste. Matcher gir ingen tabellpoeng. Totalen avrundes etter table.roundingStep. «regelsett» er et regelsett i JSON (versjon 2) der feltene som mangler, har Golfgutu-verdien (avrunding til nærmeste halve, LD og KP 1 poeng delt ved likt, stablefordsummen beste 5 runder). «poeng» er stablefordpoengene per spiller i runden (testen lager scorer som gir dem: 18 hull par 4, handicap 0). I tavla er «runder» de tellende stablefordpoengene, «side» de tellende sidepremiene, «spilte» spilte runder (også strøkne, ikke vekt 0) og «stableford» stablefordsummen etter table.stablefordCounting (skilletegn; der er runden med vekt 0 med som 0 poeng, som i PWA-en). «tellende»/«strøket» er rundene best først (likt: tidligste).",
+  "_regning": {
+    "vektet": "Anne: r1 30, r2 40, r3 10, r4 20·2 = 40, r6 35 (r5 vekt 0 hopper over). Bjørn: r1 36, r2 30, r3 20, r4 18·2 = 36, r6 36. Cato: r1 33, r2 33, r4 33·2 = 66. Dag har ikke spilt.",
+    "kvelder": "K1 = r1 (01.05), K2 = r2 + r3 (08.05), K3 = r4 (15.05), K4 = r5 (22.05, vekt 0), K5 = r6 (29.05). Anne: K1 30, K2 50, K3 40, K5 35. Bjørn: K1 36, K2 50, K3 36, K5 36. Cato: K1 33, K2 33, K3 66.",
+    "sidepremier": "LD r1: Anne 250 m slår Bjørn 240 m → Anne 1. KP r2: Bjørn og Cato 3,0 m → 0,5 hver. LD r4 (vekt 2): Cato 260 m slår Anne 255 m → Cato 1·2 = 2. KP r6: Anne → 1. LD r5 (vekt 0): Bjørn, teller ikke.",
+    "matcher": "Anne mot Bjørn i r1 gir ingen tabellpoeng når tabellen teller stableford."
+  },
+  "spillere": [
+    {"id": "a", "name": "Anne", "handicap": 0},
+    {"id": "b", "name": "Bjørn", "handicap": 0},
+    {"id": "c", "name": "Cato", "handicap": 0},
+    {"id": "d", "name": "Dag", "handicap": 0}
+  ],
+  "runder": [
+    {"id": "r1", "dato": "2026-05-01", "vekt": 1, "poeng": {"a": 30, "b": 36, "c": 33},
+     "matcher": [{"matchNo": 1, "playerA": "a", "playerB": "b"}]},
+    {"id": "r2", "dato": "2026-05-08", "vekt": 1, "poeng": {"a": 40, "b": 30, "c": 33}},
+    {"id": "r3", "dato": "2026-05-08", "vekt": 1, "poeng": {"a": 10, "b": 20}},
+    {"id": "r4", "dato": "2026-05-15", "vekt": 2, "poeng": {"a": 20, "b": 18, "c": 33}},
+    {"id": "r5", "dato": "2026-05-22", "vekt": 0, "poeng": {"a": 50, "b": 50, "c": 50}},
+    {"id": "r6", "dato": "2026-05-29", "vekt": 1, "poeng": {"a": 35, "b": 36}}
+  ],
+  "claims": [
+    {"kind": "drive", "playerId": "a", "roundId": "r1", "meters": 250},
+    {"kind": "drive", "playerId": "b", "roundId": "r1", "meters": 240},
+    {"kind": "kp", "playerId": "b", "roundId": "r2", "meters": 3.0},
+    {"kind": "kp", "playerId": "c", "roundId": "r2", "meters": 3.0},
+    {"kind": "drive", "playerId": "c", "roundId": "r4", "meters": 260},
+    {"kind": "drive", "playerId": "a", "roundId": "r4", "meters": 255},
+    {"kind": "kp", "playerId": "a", "roundId": "r6", "meters": 2.0},
+    {"kind": "drive", "playerId": "b", "roundId": "r5", "meters": 300}
+  ],
+  "saker": [
+    {
+      "navn": "beste 3 kvelder, uten sidepremier",
+      "forklaring": "Anne: K2 50 + K3 40 + K5 35 = 125, K1 strøket. Bjørn: K2 50, så tre kvelder med 36; de to tidligste (K1, K3) teller = 122, K5 strøket. Cato: alle tre kveldene = 132. Stablefordsummen (beste 3 kvelder, K4 = 0) er den samme. Spilte runder: Anne og Bjørn 5, Cato 3.",
+      "regelsett": {"version": 2,
+        "table": {"pointsSource": "stableford", "counting": {"unit": "evening", "best": 3},
+                  "stablefordCounting": {"unit": "evening", "best": 3}, "tiebreaks": ["stableford"]},
+        "sidePrizes": {"longestDrive": {"enabled": false, "points": 1}, "closestToPin": {"enabled": false, "points": 1}}},
+      "tavle": [
+        {"id": "c", "total": 132, "runder": 132, "side": 0, "spilte": 3, "stableford": 132},
+        {"id": "a", "total": 125, "runder": 125, "side": 0, "spilte": 5, "stableford": 125},
+        {"id": "b", "total": 122, "runder": 122, "side": 0, "spilte": 5, "stableford": 122},
+        {"id": "d", "total": 0, "runder": 0, "side": 0, "spilte": 0, "stableford": 0}
+      ],
+      "per": {
+        "a": {"tellende": ["r2", "r4", "r6", "r3"], "strøket": ["r1"], "tellendeSide": [], "strøketSide": []},
+        "b": {"tellende": ["r1", "r4", "r2", "r3"], "strøket": ["r6"], "tellendeSide": [], "strøketSide": []},
+        "c": {"tellende": ["r4", "r1", "r2"], "strøket": [], "tellendeSide": [], "strøketSide": []},
+        "d": {"tellende": [], "strøket": [], "tellendeSide": [], "strøketSide": []}
+      }
+    },
+    {
+      "navn": "alle runder teller, sidepremier på",
+      "forklaring": "Anne: 30 + 40 + 10 + 40 + 35 = 155, sidepremier 1 (LD r1) + 1 (KP r6) = 2, total 157. Bjørn: 36 + 30 + 20 + 36 + 36 = 158, KP r2 delt 0,5, total 158,5. Cato: 33 + 33 + 66 = 132, KP r2 0,5 + LD r4 2 = 2,5, total 134,5. LD i r5 (vekt 0) teller ikke.",
+      "regelsett": {"version": 2,
+        "table": {"pointsSource": "stableford", "counting": {"unit": "round", "best": null},
+                  "stablefordCounting": {"unit": "round", "best": null}, "tiebreaks": ["stableford"]}},
+      "tavle": [
+        {"id": "b", "total": 158.5, "runder": 158, "side": 0.5, "spilte": 5, "stableford": 158},
+        {"id": "a", "total": 157, "runder": 155, "side": 2, "spilte": 5, "stableford": 155},
+        {"id": "c", "total": 134.5, "runder": 132, "side": 2.5, "spilte": 3, "stableford": 132},
+        {"id": "d", "total": 0, "runder": 0, "side": 0, "spilte": 0, "stableford": 0}
+      ],
+      "per": {
+        "a": {"tellende": ["r2", "r4", "r6", "r1", "r3"], "strøket": [], "tellendeSide": ["r1:drive", "r6:kp"], "strøketSide": []},
+        "b": {"tellende": ["r1", "r4", "r6", "r2", "r3"], "strøket": [], "tellendeSide": ["r2:kp"], "strøketSide": []},
+        "c": {"tellende": ["r4", "r1", "r2"], "strøket": [], "tellendeSide": ["r2:kp", "r4:drive"], "strøketSide": []},
+        "d": {"tellende": [], "strøket": [], "tellendeSide": [], "strøketSide": []}
+      }
+    },
+    {
+      "navn": "beste 2 kvelder med sidepremier: premien hører til kvelden",
+      "forklaring": "Kveldene med sidepremier: Anne K1 30 + 1 = 31, K2 50, K3 40, K5 35 + 1 = 36 → K2 + K3 = 90; LD r1 og KP r6 strøket med kveldene sine. Bjørn: K1 36, K2 50 + 0,5 = 50,5, K3 36, K5 36 → K2 + K1 (tidligste av 36-ene) = 86,5. Cato: K1 33, K2 33 + 0,5 = 33,5, K3 66 + 2 = 68 → K3 + K2 = 101,5; r1 strøket. Stablefordsummen teller beste 5 runder (Golfgutu, mangler i regelsettet): Anne 40+40+35+30+10 = 155, Bjørn 36+36+36+30+20 = 158, Cato 66+33+33 = 132.",
+      "regelsett": {"version": 2,
+        "table": {"pointsSource": "stableford", "counting": {"unit": "evening", "best": 2}, "tiebreaks": ["stableford"]}},
+      "tavle": [
+        {"id": "c", "total": 101.5, "runder": 99, "side": 2.5, "spilte": 3, "stableford": 132},
+        {"id": "a", "total": 90, "runder": 90, "side": 0, "spilte": 5, "stableford": 155},
+        {"id": "b", "total": 86.5, "runder": 86, "side": 0.5, "spilte": 5, "stableford": 158},
+        {"id": "d", "total": 0, "runder": 0, "side": 0, "spilte": 0, "stableford": 0}
+      ],
+      "per": {
+        "a": {"tellende": ["r2", "r4", "r3"], "strøket": ["r6", "r1"], "tellendeSide": [], "strøketSide": ["r1:drive", "r6:kp"]},
+        "b": {"tellende": ["r1", "r2", "r3"], "strøket": ["r4", "r6"], "tellendeSide": ["r2:kp"], "strøketSide": []},
+        "c": {"tellende": ["r4", "r2"], "strøket": ["r1"], "tellendeSide": ["r2:kp", "r4:drive"], "strøketSide": []},
+        "d": {"tellende": [], "strøket": [], "tellendeSide": [], "strøketSide": []}
+      }
+    },
+    {
+      "navn": "uavgjort skilles på stablefordsummen",
+      "forklaring": "Beste kveld teller, uten sidepremier: Anne K2 50, Bjørn K2 50, Cato K3 66. Anne og Bjørn står likt; stablefordsummen (alle runder) skiller: Bjørn 158 foran Anne 155.",
+      "regelsett": {"version": 2,
+        "table": {"pointsSource": "stableford", "counting": {"unit": "evening", "best": 1},
+                  "stablefordCounting": {"unit": "round", "best": null}, "tiebreaks": ["stableford"]},
+        "sidePrizes": {"longestDrive": {"enabled": false, "points": 1}, "closestToPin": {"enabled": false, "points": 1}}},
+      "tavle": [
+        {"id": "c", "total": 66, "runder": 66, "side": 0, "spilte": 3, "stableford": 132},
+        {"id": "b", "total": 50, "runder": 50, "side": 0, "spilte": 5, "stableford": 158},
+        {"id": "a", "total": 50, "runder": 50, "side": 0, "spilte": 5, "stableford": 155},
+        {"id": "d", "total": 0, "runder": 0, "side": 0, "spilte": 0, "stableford": 0}
+      ],
+      "per": {
+        "a": {"tellende": ["r2", "r3"], "strøket": ["r4", "r6", "r1"], "tellendeSide": [], "strøketSide": []},
+        "b": {"tellende": ["r2", "r3"], "strøket": ["r1", "r4", "r6"], "tellendeSide": [], "strøketSide": []},
+        "c": {"tellende": ["r4"], "strøket": ["r1", "r2"], "tellendeSide": [], "strøketSide": []},
+        "d": {"tellende": [], "strøket": [], "tellendeSide": [], "strøketSide": []}
+      }
+    },
+    {
+      "navn": "uavgjort uten skilletegn: navnet avgjør",
+      "forklaring": "Som forrige, men uten skilletegn: Anne og Bjørn har 50 hver, og Anne står først etter norsk navnesortering.",
+      "regelsett": {"version": 2,
+        "table": {"pointsSource": "stableford", "counting": {"unit": "evening", "best": 1},
+                  "stablefordCounting": {"unit": "round", "best": null}, "tiebreaks": []},
+        "sidePrizes": {"longestDrive": {"enabled": false, "points": 1}, "closestToPin": {"enabled": false, "points": 1}}},
+      "tavle": [
+        {"id": "c", "total": 66, "runder": 66, "side": 0, "spilte": 3, "stableford": 132},
+        {"id": "a", "total": 50, "runder": 50, "side": 0, "spilte": 5, "stableford": 155},
+        {"id": "b", "total": 50, "runder": 50, "side": 0, "spilte": 5, "stableford": 158},
+        {"id": "d", "total": 0, "runder": 0, "side": 0, "spilte": 0, "stableford": 0}
+      ],
+      "per": {
+        "a": {"tellende": ["r2", "r3"], "strøket": ["r4", "r6", "r1"], "tellendeSide": [], "strøketSide": []},
+        "b": {"tellende": ["r2", "r3"], "strøket": ["r1", "r4", "r6"], "tellendeSide": [], "strøketSide": []},
+        "c": {"tellende": ["r4"], "strøket": ["r1", "r2"], "tellendeSide": [], "strøketSide": []},
+        "d": {"tellende": [], "strøket": [], "tellendeSide": [], "strøketSide": []}
+      }
+    }
+  ]
+}

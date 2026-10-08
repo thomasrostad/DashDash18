@@ -15,6 +15,7 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `evenings` | tall | Antall kvelder i sesongen. |
 | `scoring.netParPoints` | tall | Stablefordpoeng for netto par (og for uspilt hull ved `nettopar`). |
 | `scoring.minimumPoints` | tall | Laveste poeng på et hull. |
+| `table.pointsSource` | `matches` / `stableford` | Hva tabellpoengene kommer fra. `stableford`: rundens stablefordpoeng (vektet) pluss sidepremiene; matcher og trekant gir ingenting. Skrives bare når det ikke er `matches`. |
 | `table.matchPoints` | `{win, draw, loss}` | Poeng for utfallet av en duell. |
 | `table.trianglePoints` | 3 tall | Poeng etter plass i trekanten, beste først. Delt plass deler. |
 | `table.counting` | `{unit, best}` | Hva som teller i tabellen. `unit`: `match`, `round`, `evening`. `best`: N eller `null` (alle). |
@@ -139,6 +140,22 @@ Fixture: `Tests/GolfgutuCoreTests/Fixtures/regelsett-eksempel.json` (testet i `a
 }
 ```
 
+### Oppsettene (fase 18)
+
+`RulesetTemplate` er oppsettene i «Ny turnering», med navn (`title`), én setning (`summary`) og
+regelsettet (`rules`). `RulesetTemplate.matching(_:among:)` finner oppsettet et regelsett er helt likt,
+`closest(to:among:)` det nærmeste, og `differences(in:)` / `Ruleset.changedFields(from:)` feltstiene som
+er endret. Regelsettet lagrer ikke hvilket oppsett det kom fra.
+
+| Oppsett | Regelsett |
+|---|---|
+| `stablefordSeries` | Golfgutu med `table.pointsSource: stableford`, beste 5 av 7 kvelder (både tabell og stablefordsum), skille på stablefordsum, ingen sidepremier, ingen seeding. |
+| `matchSeries` | `Ruleset.golfgutu`, uendret. |
+| `cup`, `fun` | Golfgutu med `competition` = malene (`CompetitionRules.standard`), som «Ny konkurranse» lagrer i dag. |
+
+Fixture for tabellen fra stableford: `Tests/GolfgutuCoreTests/Fixtures/sesong-stableford.json` (regnet for
+hånd). `regelsett-golfgutu-hel.json` er Golfgutu-oppsettet skrevet med sorterte nøkler, byte for byte.
+
 ### Versjon 1 (lest, ikke skrevet)
 
 Flat form: `allowanceOverride`, `seedingGroups`, `externalHandicap`, `defaultFormID`, `maxPerBay`,
@@ -222,6 +239,7 @@ maks per bås under 1; ingen tillatte former, ukjent form, og standardform som i
 | Verdi | Brukes i | Ruleset | Golfgutu |
 |---|---|---|---|
 | Antall kvelder | – | `evenings` | 7 |
+| Hva tabellpoengene kommer fra | `Season.tableSelection`, `jacketBoard` | `table.pointsSource` (`matches`, `stableford`; med `stableford` regnes `counting.unit` `match` som `round`, og valideringen sier fra) | `matches` |
 | Hva som teller i tabellen (`TELLENDE_MATCHER`) | `Season.tableSelection`, `matchResults` | `table.counting` (`unit`: `match`, `round`, `evening`; `best`: N eller `null` = alle) | `match`, alle |
 | Hva som teller i stablefordsummen (`TELLENDE_RUNDER`) | `Season.countingRounds` | `table.stablefordCounting` (`unit`: `round`, `evening`) | `round`, beste 5 |
 | Avrunding av tabellpoeng | `Season.matchSum`, `jacketBoard`, `formatPoints` | `table.roundingStep` (`null` = ingen) | 0,5 |
