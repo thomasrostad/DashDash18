@@ -29,6 +29,9 @@ private struct KveldContent: View {
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
                     Task { await model.load() }
+                } else if phase == .background {
+                    // Legges appen bort i angre-vinduet, sendes svaret nå (`angreSendAlle`).
+                    Task { await model.flush() }
                 }
             }
     }

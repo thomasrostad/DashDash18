@@ -129,7 +129,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 **Mål:** Spillerne melder seg på i appen, og arrangøren setter opp kvelden (kladd, båser, markører, form, lag, matcher) og starter den.
 
-- [ ] Påmelding: Kommer / Usikker / Kommer ikke + kommentar, angre, purring av de som ikke har svart. *(06.10: svar og kommentar ferdig. Angre og purring gjenstår.)*
+- [x] Påmelding: Kommer / Usikker / Kommer ikke + kommentar, angre, purring av de som ikke har svart. *(06.10: svar og kommentar. Purring bygget senere. 08.10: angre som i PWA-en: svaret vises med en gang, sendes etter 8 s eller når appen legges bort, og først da får de andre hendelsen. Ikke prøvd på telefon.)*
 - [x] Kveld-skjerm, rolig: neste kveld, påmeldte, sosialkomité. *(06.10.)*
 - [x] Start runde-veiviser i tre steg: bane og tid, hvem og båser, oppsett. Lagre som kladd, rediger kladd, start (blokkert hvis en runde går). *(06.10. Ikke prøvd mot database.)*
 - [x] Båser og markør (`foreslaatteBaaser`), matcher for hånd, lag, forslag om form (`oppsettForAntall`, `formerSomPasser`), `trekkMatcher`. *(06.10: trekning på navn til tabellen finnes, fase 6.)*

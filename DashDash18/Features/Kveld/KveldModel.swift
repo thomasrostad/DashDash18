@@ -14,8 +14,15 @@ final class KveldModel {
     private(set) var state: LoadState = .loading
     private(set) var event: EventRow?
     private(set) var committee: [String] = []
-    private(set) var summary = SignupSummary(members: [], signups: [])
-    private(set) var mySignup: SignupRow?
+    /// Mitt svar slik det ligger i databasen.
+    private(set) var savedSignup: SignupRow?
+    /// Svaret som venter i angre-vinduet.
+    private(set) var pendingAnswer: PendingAnswer?
+    /// Feilen fra sist et svar ble sendt etter vinduet.
+    var answerError: String?
+    private var members: [ClubMemberRow] = []
+    private var signups: [SignupRow] = []
+    private var flushTask: Task<Void, Never>?
     private(set) var today = EveningDates.today()
     /// Kveldens nummer i sesongen (plassen i terminlista), når det kan hentes.
     private(set) var eveningNumber: Int?
@@ -37,6 +44,17 @@ final class KveldModel {
     var memberID: UUID { context.memberID }
     var isOrganizer: Bool { context.isOrganizer }
     var clubContext: ClubContext { context }
+
+    /// Mitt svar slik det vises: det som venter i angre-vinduet, ellers det lagrede.
+    var mySignup: SignupRow? {
+        SignupUndo.displayed(saved: savedSignup, pending: pendingAnswer, memberID: memberID, clubID: clubID)
+    }
+
+    /// Hvem som kommer, med mitt ventende svar lagt inn.
+    var summary: SignupSummary {
+        SignupSummary(members: members,
+                      signups: SignupUndo.signups(signups, pending: pendingAnswer, memberID: memberID, clubID: clubID))
+    }
 
     /// Det «Legg i kalender» fyller inn for neste kveld.
     var calendarEntry: CalendarEntry? {
@@ -95,9 +113,10 @@ final class KveldModel {
             guard let next = NextEvening.next(in: events, today: today, finished: finished) else {
                 event = nil
                 committee = []
-                mySignup = nil
+                savedSignup = nil
                 eveningNumber = nil
-                summary = SignupSummary(members: members, signups: [])
+                self.members = members
+                self.signups = []
                 state = .loaded
                 WidgetSnapshotPublisher.publish(nextEvening: nil, today: today)
                 return
@@ -124,8 +143,9 @@ final class KveldModel {
             }
             event = next
             committee = members.filter { committeeIDs.contains($0.id) }.map(\.displayName)
-            mySignup = signups.first { $0.memberID == memberID }
-            summary = SignupSummary(members: members, signups: signups)
+            savedSignup = signups.first { $0.memberID == memberID }
+            self.members = members
+            self.signups = signups
             state = .loaded
             WidgetSnapshotPublisher.publish(nextEvening: next, today: today)
         } catch {
@@ -144,25 +164,66 @@ final class KveldModel {
         return rows.flatMap { KveldCalendar.number(of: event.eventDate, in: $0.map(\.eventDate)) }
     }
 
-    /// Svarer Kommer / Usikker / Kommer ikke. Kommentaren som står, beholdes.
-    func answer(_ status: SignupStatus) async throws(DataError) {
-        try await write(status: status, comment: mySignup?.comment)
+    /// Svarer Kommer / Usikker / Kommer ikke. Svaret gjelder på skjermen med en gang og sendes når
+    /// angre-vinduet er over (som PWA-en). Kommentaren som står, beholdes.
+    func answer(_ status: SignupStatus) {
+        guard let event, mySignup?.status != status else { return }
+        answerError = nil
+        pendingAnswer = SignupUndo.begin(pendingAnswer, saved: savedSignup, eventID: event.id,
+                                         status: status, comment: mySignup?.comment)
+        flushTask?.cancel()
+        // Sterk referanse: svaret skal ut selv om skjermen forsvinner i vinduet.
+        flushTask = Task {
+            try? await Task.sleep(for: SignupUndo.window)
+            guard !Task.isCancelled else { return }
+            await self.flush()
+        }
     }
 
-    /// Lagrer kommentaren med svaret som står.
+    /// «Angre»: tilbake til det som lå lagret. Ingenting er sendt.
+    func undoAnswer() {
+        flushTask?.cancel()
+        flushTask = nil
+        pendingAnswer = nil
+    }
+
+    /// Sender svaret som venter nå (vinduet er over, eller appen legges bort).
+    func flush() async {
+        flushTask?.cancel()
+        flushTask = nil
+        guard let pending = pendingAnswer else { return }
+        do throws(DataError) {
+            try await write(status: pending.status, comment: pending.comment, saved: pending.saved)
+            if pendingAnswer?.revision == pending.revision {
+                pendingAnswer = nil
+            } else {
+                pendingAnswer?.saved = savedSignup
+            }
+        } catch {
+            if pendingAnswer?.revision == pending.revision { pendingAnswer = nil }
+            answerError = "Klarte ikke å lagre svaret. \(error.message)"
+        }
+    }
+
+    /// Lagrer kommentaren med svaret som står. Venter et svar, går det med nå.
     func saveComment(_ text: String) async throws(DataError) {
         guard let status = mySignup?.status else {
             throw .invalid("Svar først, så kan du skrive en kommentar.")
         }
-        try await write(status: status, comment: text)
+        let saved = pendingAnswer.map(\.saved) ?? savedSignup
+        flushTask?.cancel()
+        flushTask = nil
+        pendingAnswer = nil
+        try await write(status: status, comment: text, saved: saved)
     }
 
-    private func write(status: SignupStatus, comment raw: String?) async throws(DataError) {
+    /// `saved` er raden hendelsen regnes fra: det som lå i databasen før svaret.
+    private func write(status: SignupStatus, comment raw: String?, saved: SignupRow?) async throws(DataError) {
         guard let event else { return }
         let comment = SignupInput.cleanComment(raw ?? "")
-        guard SignupInput.needsWrite(current: mySignup, status: status, comment: comment) else { return }
+        guard SignupInput.needsWrite(current: savedSignup, status: status, comment: comment) else { return }
 
-        let before = mySignup?.status
+        let before = saved?.status
         let row = SignupUpsert(eventID: event.id, memberID: memberID, clubID: clubID, status: status, comment: comment)
         do {
             let saved: [SignupRow] = try await client.from("signups")
@@ -170,7 +231,7 @@ final class KveldModel {
                 .select("event_id, member_id, club_id, status, comment")
                 .execute().value
             guard let mine = saved.first else { throw DataError.notAllowed }
-            mySignup = mine
+            savedSignup = mine
         } catch {
             throw DataError.from(error)
         }

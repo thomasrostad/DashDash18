@@ -181,3 +181,51 @@ nonisolated enum KveldTipsStatus {
         }
     }
 }
+
+// MARK: - Angre svaret
+
+/// Svaret som venter i angre-vinduet (`handleSvar` / `angre()` i PWA-en). Det gjelder på skjermen
+/// med en gang, men sendes først når vinduet er over, så arrangøren ikke får push for et feiltrykk.
+nonisolated struct PendingAnswer: Equatable, Sendable {
+    let eventID: UUID
+    /// Raden som lå lagret da vinduet åpnet. «Angre» går tilbake hit, og hendelsen til de andre
+    /// regnes fra hit, også når man ombestemmer seg flere ganger i vinduet.
+    var saved: SignupRow?
+    var status: SignupStatus
+    var comment: String?
+    /// Telles opp for hver endring, så et svar som ble sendt ikke sletter et nyere.
+    var revision: Int
+}
+
+nonisolated enum SignupUndo {
+    /// Lengden på angre-vinduet (`ANGRE_MS` = 8000).
+    static let window: Duration = .seconds(8)
+
+    /// Nytt svar i vinduet. Står det et svar og venter, beholdes det lagrede fra før.
+    static func begin(_ pending: PendingAnswer?, saved: SignupRow?, eventID: UUID,
+                      status: SignupStatus, comment: String?) -> PendingAnswer {
+        if var pending, pending.eventID == eventID {
+            pending.status = status
+            pending.comment = comment
+            pending.revision += 1
+            return pending
+        }
+        return PendingAnswer(eventID: eventID, saved: saved, status: status, comment: comment, revision: 0)
+    }
+
+    /// Mitt svar slik det vises: det som venter, ellers det lagrede.
+    static func displayed(saved: SignupRow?, pending: PendingAnswer?, memberID: UUID, clubID: UUID) -> SignupRow? {
+        guard let pending else { return saved }
+        return SignupRow(eventID: pending.eventID, memberID: memberID, clubID: clubID,
+                         status: pending.status, comment: pending.comment)
+    }
+
+    /// Kveldens svar med mitt ventende svar lagt inn, til oversikten over hvem som kommer.
+    static func signups(_ signups: [SignupRow], pending: PendingAnswer?, memberID: UUID, clubID: UUID) -> [SignupRow] {
+        guard let mine = displayed(saved: nil, pending: pending, memberID: memberID, clubID: clubID) else { return signups }
+        return signups.filter { $0.memberID != memberID } + [mine]
+    }
+
+    /// «Svaret ditt: Kommer».
+    static func text(_ status: SignupStatus) -> String { "Svaret ditt: \(status.title)" }
+}

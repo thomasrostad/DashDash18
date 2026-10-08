@@ -142,3 +142,45 @@ struct SignupInputTests {
         #expect(json?["club_id"] as? String == club.uuidString)
     }
 }
+
+/// Angre-vinduet for svaret (`handleSvar` + `angre()` i app-nytt.js).
+struct SignupUndoTests {
+    let me = id(1)
+    let saved = signup(1, .no, "Jobb")
+
+    @Test func nyttSvarHuskerDetLagrede() {
+        let first = SignupUndo.begin(nil, saved: saved, eventID: id(101), status: .yes, comment: "Jobb")
+        #expect(first.saved == saved)
+        #expect(first.status == .yes)
+
+        // Ombestemmer seg i vinduet: bare det siste gjelder, men Angre går til det som lå lagret.
+        let second = SignupUndo.begin(first, saved: signup(1, .yes), eventID: id(101), status: .maybe, comment: "Jobb")
+        #expect(second.saved == saved)
+        #expect(second.status == .maybe)
+        #expect(second.revision == first.revision + 1)
+
+        // En annen kveld starter et nytt vindu.
+        let other = SignupUndo.begin(first, saved: nil, eventID: id(102), status: .yes, comment: nil)
+        #expect(other.saved == nil)
+        #expect(other.revision == 0)
+    }
+
+    @Test func detVentendeSvaretVisesOgTellesMed() {
+        let pending = SignupUndo.begin(nil, saved: saved, eventID: id(101), status: .yes, comment: "Jobb")
+        let shown = SignupUndo.displayed(saved: saved, pending: pending, memberID: me, clubID: club)
+        #expect(shown?.status == .yes)
+        #expect(shown?.comment == "Jobb")
+        #expect(SignupUndo.displayed(saved: saved, pending: nil, memberID: me, clubID: club) == saved)
+
+        let all = SignupUndo.signups([saved, signup(2, .yes)], pending: pending, memberID: me, clubID: club)
+        let summary = SignupSummary(members: [member(1, "Anders"), member(2, "Bjørn")], signups: all)
+        #expect(summary.yes.map(\.name) == ["Anders", "Bjørn"])
+        #expect(summary.no.isEmpty)
+        #expect(SignupUndo.signups([saved], pending: nil, memberID: me, clubID: club) == [saved])
+    }
+
+    @Test func tekstOgVindu() {
+        #expect(SignupUndo.text(.yes) == "Svaret ditt: \(SignupStatus.yes.title)")
+        #expect(SignupUndo.window == .seconds(8))
+    }
+}

@@ -76,15 +76,29 @@ struct SignupSection: View {
                 }
                 .disabled(isBusy)
 
+                if let pending = model.pendingAnswer {
+                    HStack {
+                        Text(SignupUndo.text(pending.status))
+                            .font(.ddCallout)
+                            .foregroundStyle(Color.ddInkSecondary)
+                        Spacer()
+                        Button("Angre") { model.undoAnswer() }
+                            .buttonStyle(.ddText)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .transition(.opacity)
+                }
+
                 if current != nil {
                     DDDivider()
                     commentRow
                 }
-                if let error {
+                if let error = error ?? model.answerError {
                     Label(error, systemImage: "exclamationmark.triangle")
                         .ddErrorStyle()
                 }
             }
+            .animation(.default, value: model.pendingAnswer?.status)
             .ddCard()
         }
     }
@@ -152,7 +166,8 @@ struct SignupSection: View {
     }
 
     private func answer(_ status: SignupStatus) {
-        run { () async throws(DataError) in try await model.answer(status) }
+        error = nil
+        model.answer(status)
     }
 
     private func saveComment() {
