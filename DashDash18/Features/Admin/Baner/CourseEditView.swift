@@ -12,6 +12,8 @@ struct CourseEditView: View {
     @State private var isBusy = false
     @State private var error: DataError?
     @State private var askDelete = false
+    /// En bane med hull fra slope.no er valgt i «Hent fra slope.no» (fase 20b): den spilles direkte.
+    @State private var playable: (course: SlopeCourseRow, tees: [CourseTeeRow])?
 
     @State private var showsIndex: Bool
 
@@ -87,6 +89,19 @@ struct CourseEditView: View {
         } message: {
             Text("Banen og hullene forsvinner fra biblioteket.")
         }
+        .alert(playable.map { "«\($0.course.name)» kan spilles direkte" } ?? "",
+               isPresented: Binding(get: { playable != nil }, set: { if !$0 { playable = nil } })) {
+            Button("OK") {
+                playable = nil
+                dismiss()
+            }
+            Button("Lag en egen kopi") {
+                if let playable { draft.prefill(from: playable.course, tees: playable.tees) }
+                playable = nil
+            }
+        } message: {
+            Text(SlopeCourseSearch.playableNotice)
+        }
     }
 
     // MARK: Delene
@@ -95,17 +110,23 @@ struct CourseEditView: View {
     private func slopeSection(_ catalog: SlopeCatalogModel) -> some View {
         Section {
             NavigationLink {
-                SlopeCourseSearchView(model: catalog) { course, tees in
-                    draft.prefill(from: course, tees: tees)
-                }
+                SlopeCourseSearchView(model: catalog, onPick: { course, tees in
+                    if catalog.usesHoles, course.hasHoles {
+                        playable = (course, tees)
+                    } else {
+                        draft.prefill(from: course, tees: tees)
+                    }
+                })
             } label: {
                 Label(draft.tees == nil ? "Hent fra slope.no" : "Hent en annen bane fra slope.no",
                       systemImage: "magnifyingglass")
             }
         } footer: {
             VStack(alignment: .leading, spacing: 6) {
-                DDFooter("Søk blant de nordiske banene. Navn, tees, course rating og slope fylles inn. Par og indeks per hull står på scorekortet.")
-                SlopeNoCreditLink()
+                DDFooter(catalog.usesHoles
+                         ? "Søk blant de nordiske banene. Har banen hull hos slope.no, spilles den direkte. Ellers fylles navn, tees, course rating og slope inn, og par og indeks leser du av scorekortet."
+                         : "Søk blant de nordiske banene. Navn, tees, course rating og slope fylles inn. Par og indeks per hull står på scorekortet.")
+                SlopeNoCreditLink(usesHoles: catalog.usesHoles)
             }
         }
     }

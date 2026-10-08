@@ -28,6 +28,7 @@ nonisolated enum RoundConfirm {
     /// simulatoren når det er et annet.
     static func courseDetail(_ course: CourseListItem) -> String {
         var text = course.summary
+        if course.isFromSource { text += " · fra slope.no" }
         if course.kind == .simulator, let external = course.differentExternalName {
             text += ". Heter «\(external)» i simulatoren."
         }
