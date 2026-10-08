@@ -17,9 +17,6 @@ final class TroppModel {
 
     let context: ClubContext
 
-    private static let columns =
-        "id, club_id, user_id, display_name, handicap_index, seed_group, is_organizer, is_treasurer, status, avatar_path"
-
     init(context: ClubContext) {
         self.context = context
     }
@@ -42,7 +39,7 @@ final class TroppModel {
         do {
             rows = try await context.client
                 .from("club_members")
-                .select(Self.columns)
+                .select(KveldQueries.memberColumns)
                 .eq("club_id", value: context.clubID)
                 .execute()
                 .value
@@ -87,7 +84,7 @@ final class TroppModel {
             let row: ClubMemberRow = try await context.client
                 .from("club_members")
                 .insert(NewMember(clubID: context.clubID, displayName: value.name, handicapIndex: value.handicapIndex))
-                .select(Self.columns)
+                .select(KveldQueries.memberColumns)
                 .single()
                 .execute()
                 .value
@@ -149,7 +146,7 @@ final class TroppModel {
                 .update(patch)
                 .eq("id", value: id)
                 .eq("club_id", value: context.clubID)
-                .select(Self.columns)
+                .select(KveldQueries.memberColumns)
                 .single()
                 .execute()
                 .value
@@ -170,7 +167,7 @@ final class TroppModel {
                 .delete()
                 .eq("id", value: id)
                 .eq("club_id", value: context.clubID)
-                .select(Self.columns)
+                .select(KveldQueries.memberColumns)
                 .execute()
                 .value
             guard deleted.contains(where: { $0.id == id }) else {

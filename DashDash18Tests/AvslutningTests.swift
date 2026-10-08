@@ -342,22 +342,15 @@ struct RundeneTabellTests {
         let august = event(1, "2026-08-20"), september = event(2, "2026-09-10"), next = event(3, "2026-10-15")
         let rounds = [round(1, on: august), round(2, on: september, status: .active), round(1, on: september),
                       round(1, on: nil)]
-        let groups = RoundGroups.make(rounds: rounds, events: [august, september, next], including: next.id)
+        let groups = RoundGroups.make(rounds: rounds, events: [august, september, next])
 
-        // Kvelden som står for tur først, selv uten runder; så nyeste; runder uten kveld sist.
-        #expect(groups.map(\.title) == ["Torsdag 15. oktober", "Torsdag 10. september", "Torsdag 20. august", "Uten kveld"])
-        #expect(groups[0].rounds.isEmpty)
-        #expect(groups[1].rounds.map(\.roundNo) == [1, 2])
-        #expect(groups[1].hasActive)
-        #expect(!groups[2].hasActive)
-        #expect(groups[3].event == nil)
+        // Nyeste kveld først, bare kvelder med runder; runder uten kveld sist.
+        #expect(groups.map(\.title) == ["Torsdag 10. september", "Torsdag 20. august", "Uten kveld"])
+        #expect(groups[0].rounds.map(\.roundNo) == [1, 2])
+        #expect(groups[2].event == nil)
 
-        // Uten `including` står ikke en tom kveld i lista.
-        #expect(RoundGroups.make(rounds: rounds, events: [august, september, next]).map(\.title).first == "Torsdag 10. september")
-
-        // Ny runde fra lista: kvelden som står for tur, og kvelder som ikke er passert.
-        #expect(RoundGroups.allowsNewRound(september, today: "2026-10-08", defaultID: next.id) == false)
-        #expect(RoundGroups.allowsNewRound(september, today: "2026-10-08", defaultID: september.id))
-        #expect(RoundGroups.allowsNewRound(next, today: "2026-10-08", defaultID: nil))
+        // Ny runde: bare kvelder som ikke er passert.
+        #expect(RoundGroups.allowsNewRound(september, today: "2026-10-08") == false)
+        #expect(RoundGroups.allowsNewRound(next, today: "2026-10-08"))
     }
 }

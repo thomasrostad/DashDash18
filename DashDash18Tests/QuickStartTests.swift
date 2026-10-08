@@ -78,7 +78,7 @@ struct GroupTermTests {
     }
 
     @Test func meldingenOmMarkoerBrukerRundensOrd() {
-        #expect(RoundSetupIssue.bayWithoutMarker([1, 3]).message == "Bås 1 og 3 har ingen markør.")
+        #expect(RoundSetupIssue.bayWithoutMarker([1, 3]).message(.bay) == "Bås 1 og 3 har ingen markør.")
         #expect(RoundSetupIssue.bayWithoutMarker([2]).message(.flight) == "Flight 2 har ingen markør.")
     }
 
@@ -140,7 +140,6 @@ struct QuickStartSuggestionTests {
     @Test func tidligereRundeSammeKveldTeller() {
         let rounds = [round(2, event: 502), round(7, event: 503, no: 1, status: .active)]
         #expect(QuickStart.previousRound(rounds: rounds, events: events, upTo: events[2])?.id == id(7))
-        #expect(QuickStart.previousRound(rounds: rounds, events: events, upTo: events[2], excluding: id(7))?.id == id(2))
         #expect(QuickStart.previousRound(rounds: [], events: events, upTo: events[2]) == nil)
     }
 

@@ -71,17 +71,13 @@ final class SesongAdminModel {
         return row
     }
 
-    func rename(_ season: SeasonRow, to name: String) async throws(DataError) {
-        try await update(season.id, SeasonNamePatch(name: name))
-    }
-
     func saveRules(_ rules: Ruleset, for season: SeasonRow) async throws(DataError) {
         try await update(season.id, SeasonRulesPatch(rules: rules))
     }
 
     /// Aktiverer sesongen og avslutter en annen aktiv i samme transaksjon
-    /// (RPC `activate_season`, sql/004, kjørt på test 06.10). `finishing` beholdes for skjermen.
-    func activate(_ season: SeasonRow, finishing other: SeasonRow?) async throws(DataError) {
+    /// (RPC `activate_season`, sql/004, kjørt på test 06.10).
+    func activate(_ season: SeasonRow) async throws(DataError) {
         struct Params: Encodable { let p_season_id: UUID }
         let row: SeasonRow = try await write {
             try await connection().client.rpc("activate_season", params: Params(p_season_id: season.id)).execute().value

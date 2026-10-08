@@ -184,8 +184,6 @@ nonisolated enum RoundSetupIssue: Equatable, Sendable {
     case matches([String])
     case sidePrizeOutsideRound(Int)
 
-    var message: String { message(.bay) }
-
     /// Meldingen med rundens ord for gruppene (bås / flight).
     func message(_ term: GroupTerm) -> String {
         switch self {
