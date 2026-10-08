@@ -5,6 +5,26 @@ import SwiftUI
 struct SesongDetailView: View {
     let model: SesongAdminModel
     let seasonID: UUID
+
+    var body: some View {
+        if let season = model.season(id: seasonID) {
+            SesongContentView(model: model, season: season)
+                .navigationTitle(season.name)
+                .ddNavigationChrome()
+        } else {
+            ContentUnavailableView("Sesongen finnes ikke lenger", systemImage: "list.number")
+        }
+    }
+}
+
+/// Innholdet til én sesong: sammendraget av reglene, «Endre reglene», status og handlingene.
+/// Brukes av `SesongDetailView` og av «Sesong og regler» når den lander på den aktive sesongen,
+/// som viser navnet på sesongen og legger egne seksjoner nederst (`bottom`).
+struct SesongContentView<Bottom: View>: View {
+    let model: SesongAdminModel
+    let season: SeasonRow
+    let showsName: Bool
+    let bottom: Bottom
     @Environment(\.dismiss) private var dismiss
 
     @State private var isBusy = false
@@ -13,18 +33,15 @@ struct SesongDetailView: View {
     @State private var confirmsFinish = false
     @State private var confirmsDelete = false
 
-    var body: some View {
-        if let season = model.season(id: seasonID) {
-            content(season)
-        } else {
-            ContentUnavailableView("Sesongen finnes ikke lenger", systemImage: "list.number")
-        }
+    init(model: SesongAdminModel, season: SeasonRow, showsName: Bool = false, @ViewBuilder bottom: () -> Bottom) {
+        self.model = model
+        self.season = season
+        self.showsName = showsName
+        self.bottom = bottom()
     }
 
-    private func content(_ season: SeasonRow) -> some View {
+    var body: some View {
         dialogs(list(season), season)
-            .navigationTitle(season.name)
-            .ddNavigationChrome()
             .disabled(isBusy)
     }
 
@@ -45,6 +62,9 @@ struct SesongDetailView: View {
                 }
             }
             Section {
+                if showsName {
+                    LabeledContent("Sesong", value: season.name)
+                }
                 LabeledContent("Status", value: SeasonLifecycle.title(season.status))
                 ForEach(SeasonLifecycle.actions(for: season.status), id: \.self) { action in
                     actionButton(action, season)
@@ -56,6 +76,7 @@ struct SesongDetailView: View {
                         .foregroundStyle(Color.ddError)
                 }
             }
+            bottom
         }
     }
 
@@ -117,5 +138,11 @@ struct SesongDetailView: View {
             }
             isBusy = false
         }
+    }
+}
+
+extension SesongContentView where Bottom == EmptyView {
+    init(model: SesongAdminModel, season: SeasonRow) {
+        self.init(model: model, season: season) { EmptyView() }
     }
 }

@@ -321,6 +321,27 @@ struct SesongLivslopTests {
         #expect(grupper.map(\.status) == [.active, .planned, .finished])
         #expect(grupper[1].seasons.map(\.name) == ["b", "d"])
     }
+
+    @Test func landerPaDenAktiveSesongen() {
+        let aktiv = season("2026", .active)
+        let liste = [season("2027", .planned), aktiv, season("2025", .finished)]
+        #expect(SeasonLifecycle.landing(liste) == .season(aktiv.id))
+        #expect(SeasonLifecycle.listPrompt(liste) == nil)
+    }
+
+    @Test func utenAktivSesongLanderDetPaLista() {
+        #expect(SeasonLifecycle.landing([]) == .list)
+        #expect(SeasonLifecycle.landing([season("2027", .planned), season("2025", .finished)]) == .list)
+        #expect(SeasonLifecycle.listPrompt([]) == nil)
+        #expect(SeasonLifecycle.listPrompt([season("2027", .planned)])?.contains("Åpne en planlagt sesong") == true)
+        #expect(SeasonLifecycle.listPrompt([season("2025", .finished)])?.contains("Lag en ny sesong") == true)
+    }
+
+    @Test func flereAktiveGirDenForste() {
+        let nyest = season("2027", .active)
+        let eldre = season("2026", .active)
+        #expect(SeasonLifecycle.landing([season("2028", .planned), nyest, eldre]) == .season(nyest.id))
+    }
 }
 
 /// Tallfeltene i regelsettet: norsk komma, og verdien oppdateres mens du skriver.
