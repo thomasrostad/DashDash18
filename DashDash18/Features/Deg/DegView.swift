@@ -22,20 +22,6 @@ struct DegView: View {
                 LabeledContent("Klubb", value: membership.club.name)
                 LabeledContent("Navn i troppen", value: membership.displayName)
                 LabeledContent("Rolle", value: membership.roleText)
-                if membership.isOrganizer, let code = membership.club.joinCode {
-                    LabeledContent("Invitasjonskode") {
-                        Text(code)
-                            .font(.dd(.mono, size: 15, weight: .medium, relativeTo: .body))
-                            .tracking(1)
-                            .foregroundStyle(Color.ddForestInk)
-                            .textSelection(.enabled)
-                    }
-                    ShareLink(
-                        "Del invitasjonen",
-                        item: "Bli med i \(membership.club.name) i Atten. Invitasjonskode: \(code)"
-                    )
-                    .fontWeight(.medium)
-                }
                 if otherActiveClubs.count > 0 {
                     Menu("Bytt klubb") {
                         ForEach(otherActiveClubs) { other in
@@ -61,14 +47,6 @@ struct DegView: View {
                     NavigationLink { AdminHubView() } label: {
                         Label("Arrangørsiden", systemImage: "slider.horizontal.3")
                             .labelStyle(DDIconLabelStyle())
-                    }
-                    if ModerationFeature.isEnabled, let context {
-                        NavigationLink {
-                            ReportsAdminView(service: ModerationService(client: context.client), clubID: membership.clubID)
-                        } label: {
-                            Label("Rapporter", systemImage: "flag.badge.ellipsis")
-                                .labelStyle(DDIconLabelStyle())
-                        }
                     }
                 }
             }

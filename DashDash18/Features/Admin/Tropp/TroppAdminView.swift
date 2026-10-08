@@ -34,6 +34,7 @@ private struct TroppListView: View {
     var body: some View {
         let sections = model.sections
         DDList {
+            TroppInviteSection(club: model.context.membership.club)
             if !sections.pending.isEmpty {
                 Section {
                     ForEach(sections.pending) { row in
@@ -103,6 +104,31 @@ private struct TroppListView: View {
 
     private func run(_ action: TroppAction, _ row: ClubMemberRow) {
         Task { await model.perform(action, on: row.id) }
+    }
+}
+
+/// Invitasjonskoden øverst i troppen: den nye spillere trenger for å bli med eller ta et ledig navn.
+private struct TroppInviteSection: View {
+    let club: Membership.ClubInfo
+
+    var body: some View {
+        if let code = club.joinCode, let text = TroppInvite.shareText(clubName: club.name, code: code) {
+            Section {
+                LabeledContent("Invitasjonskode") {
+                    Text(code)
+                        .font(.dd(.mono, size: 15, weight: .medium, relativeTo: .body))
+                        .tracking(1)
+                        .foregroundStyle(Color.ddForestInk)
+                        .textSelection(.enabled)
+                }
+                ShareLink("Del invitasjonen", item: text)
+                    .fontWeight(.medium)
+            } header: {
+                DDHeader("Invitasjon")
+            } footer: {
+                DDFooter("Nye spillere blir med i klubben med koden. Du godkjenner dem her.")
+            }
+        }
     }
 }
 
