@@ -1,12 +1,19 @@
 import GolfgutuCore
 import SwiftUI
 
-/// De avanserte tabellvalgene: trekant, stablefordsum, skilletegn og avrunding.
+/// De avanserte tabellvalgene: trekant (bare med matcher), stablefordsum, skilletegn og avrunding.
 /// Duellpoeng og hva som teller står blant de vanligste valgene (`RulesetCommonSections`).
 struct RulesetTableSections: View {
     @Binding var draft: RulesetDraft
 
     var body: some View {
+        if draft.countsMatches {
+            triangleSection
+        }
+        otherSections
+    }
+
+    private var triangleSection: some View {
         Section {
             ForEach(draft.rules.table.trianglePoints.indices, id: \.self) { i in
                 RuleNumberField("\(i + 1). plass", value: $draft.rules.table.trianglePoints[i])
@@ -14,10 +21,13 @@ struct RulesetTableSections: View {
         } header: {
             RuleSectionHeader(title: "Trekant", changeNote: draft.changeNote(.trianglePoints))
         } footer: {
-            RuleSectionFooter(text: "Blir det oddetall, spiller tre i en trekant og får poeng etter plass.",
+            RuleSectionFooter(text: "Tre i en match får poeng etter plass.",
                               issues: issues { $0.hasPrefix("table.trianglePoints") })
         }
+    }
 
+    @ViewBuilder
+    private var otherSections: some View {
         Section {
             Picker("Enhet", selection: $draft.rules.table.stablefordCounting.unit) {
                 ForEach(RulesetDraft.stablefordUnits, id: \.self) { Text(RuleNames.title($0)).tag($0) }
@@ -30,7 +40,7 @@ struct RulesetTableSections: View {
         } header: {
             RuleSectionHeader(title: "Stablefordsummen", changeNote: draft.changeNote(.stablefordCounting))
         } footer: {
-            RuleSectionFooter(text: "Summen brukes som skilletegn og vises på profilen.",
+            RuleSectionFooter(text: "Skiller ved likt poeng og vises på profilen.",
                               issues: issues { $0.hasPrefix("table.stablefordCounting") })
         }
 
@@ -63,7 +73,7 @@ struct RulesetTableSections: View {
         } header: {
             RuleSectionHeader(title: "Ved likt poeng", changeNote: draft.changeNote(.tiebreaks))
         } footer: {
-            RuleSectionFooter(text: "Skilletegnene brukes i rekkefølge. Navn skiller alltid til slutt.",
+            RuleSectionFooter(text: "Brukes i rekkefølge. Navn skiller til slutt.",
                               issues: issues { $0 == "table.tiebreaks" })
         }
 
@@ -75,7 +85,7 @@ struct RulesetTableSections: View {
         } header: {
             RuleSectionHeader(title: "Avrunding", changeNote: draft.changeNote(.rounding))
         } footer: {
-            RuleSectionFooter(text: "0,5 gir halve poeng, 1 gir hele.", issues: issues { $0 == "table.roundingStep" })
+            RuleSectionFooter(text: "0,5 gir halve poeng.", issues: issues { $0 == "table.roundingStep" })
         }
     }
 

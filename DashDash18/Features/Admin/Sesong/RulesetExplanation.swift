@@ -17,12 +17,14 @@ nonisolated enum RulesetExplanation {
         out.append(rules.evenings == 1 ? "Sesongen har 1 kveld." : "Sesongen har \(rules.evenings) kvelder.")
 
         let mp = table.matchPoints
-        if mp.loss == 0 {
+        if table.pointsSource == .stableford {
+            out.append("Stablefordpoengene i hver runde er tabellpoengene.")
+        } else if mp.loss == 0 {
             out.append("Seier gir \(RuleFormat.number(mp.win)) poeng, uavgjort \(RuleFormat.number(mp.draw)).")
         } else {
             out.append("Seier gir \(RuleFormat.number(mp.win)) poeng, uavgjort \(RuleFormat.number(mp.draw)) og tap \(RuleFormat.number(mp.loss)).")
         }
-        if !table.trianglePoints.isEmpty {
+        if table.pointsSource == .matches, !table.trianglePoints.isEmpty {
             let places = table.trianglePoints.map(RuleFormat.number).joined(separator: " / ")
             out.append("Trekanten gir \(places) poeng etter plass.")
         }
@@ -43,7 +45,7 @@ nonisolated enum RulesetExplanation {
             out.append("Laveste poeng på et hull er \(rules.scoring.minimumPoints).")
         }
 
-        out.append(contentsOf: handicapSentences(rules.handicap))
+        out.append(contentsOf: handicapSentences(rules.handicap, matches: table.pointsSource == .matches))
         out.append(contentsOf: formatSentences(rules.formats))
         return out
     }
@@ -83,7 +85,7 @@ nonisolated enum RulesetExplanation {
         return out
     }
 
-    private static func handicapSentences(_ h: Ruleset.HandicapRules) -> [String] {
+    private static func handicapSentences(_ h: Ruleset.HandicapRules, matches: Bool) -> [String] {
         var out: [String] = []
         if let a = h.allowanceOverride {
             out.append("Alle spiller med \(RuleFormat.percent(a)) av handicapet.")
@@ -91,7 +93,7 @@ nonisolated enum RulesetExplanation {
             out.append("Handicapandelen følger formen.")
         }
         let groups = h.seedingGroups.sorted { $0.number < $1.number }
-        if !groups.isEmpty {
+        if matches, !groups.isEmpty {
             let parts = groups.enumerated().map { i, g in
                 i == 0 ? "\(g.name) spiller på \(RuleFormat.number(g.handicap))" : "\(g.name) på \(RuleFormat.number(g.handicap))"
             }
@@ -146,6 +148,13 @@ nonisolated enum RuleNames {
         case .match: "Matcher"
         case .round: "Runder"
         case .evening: "Kvelder"
+        }
+    }
+
+    static func title(_ source: Ruleset.TablePointsSource) -> String {
+        switch source {
+        case .matches: "Matcher"
+        case .stableford: "Stableford"
         }
     }
 

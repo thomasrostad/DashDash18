@@ -146,7 +146,7 @@ private struct SeasonList: View {
                                     .foregroundStyle(Color.ddInkSecondary)
                                 Text(RulesetSummary.badge(for: season.rules))
                                     .font(.dd(.sans, size: 13, relativeTo: .footnote))
-                                    .foregroundStyle(RulesetSummary.isGolfgutu(season.rules) ? Color.ddForestInk : Color.ddInkSecondary)
+                                    .foregroundStyle(RulesetSummary.isTemplate(season.rules) ? Color.ddForestInk : Color.ddInkSecondary)
                             }
                         }
                     }

@@ -34,7 +34,7 @@ struct RulesetFormatSection: View {
         } header: {
             DDHeader(RulesetSection.formats.title)
         } footer: {
-            RuleSectionFooter(text: "Laveste fra scratch: den beste i matchen spiller uten slag, de andre får forskjellen.",
+            RuleSectionFooter(text: "Laveste fra scratch: den beste i matchen spiller uten slag.",
                               issues: draft.issues(in: .formats))
         }
     }

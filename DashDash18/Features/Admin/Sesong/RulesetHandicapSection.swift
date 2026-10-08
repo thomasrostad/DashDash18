@@ -1,31 +1,38 @@
 import GolfgutuCore
 import SwiftUI
 
-/// De avanserte handicapvalgene: ekstern handicap, lagshandicap og seeding.
-/// Andelen står blant de vanligste valgene (`RulesetCommonSections`).
+/// De avanserte handicapvalgene: ekstern handicap, og lagshandicap og seeding når tabellen teller
+/// matcher. Andelen står blant de vanligste valgene (`RulesetCommonSections`).
 struct RulesetHandicapSection: View {
     @Binding var draft: RulesetDraft
 
     var body: some View {
         Section {
             Toggle(isOn: $draft.rules.handicap.externalHandicap) {
-                RuleFieldLabel(title: "Ekstern handicap", help: "Simulatoren deler ut slagene, ikke appen.",
-                               changeNote: draft.changeNote(.externalHandicap))
+                RuleFieldLabel(title: "Ekstern handicap", changeNote: draft.changeNote(.externalHandicap))
             }
-            NavigationLink {
-                TeamHandicapView(draft: $draft)
-            } label: {
-                RuleFieldLabel(title: "Lagshandicap", changeNote: draft.changeNote(.teamHandicap))
+            if draft.countsMatches {
+                NavigationLink {
+                    TeamHandicapView(draft: $draft)
+                } label: {
+                    RuleFieldLabel(title: "Lagshandicap", changeNote: draft.changeNote(.teamHandicap))
+                }
             }
         } header: {
             DDHeader(RulesetSection.handicap.title)
         } footer: {
-            RuleSectionFooter(text: nil,
+            RuleSectionFooter(text: "Ekstern: simulatoren deler ut slagene, ikke appen.",
                               issues: draft.issues(in: .handicap).filter {
                                   $0.field.hasPrefix("handicap.teamHandicap") || $0.field.hasPrefix("handicap.external")
                               })
         }
 
+        if draft.countsMatches {
+            seedingSection
+        }
+    }
+
+    private var seedingSection: some View {
         Section {
             ForEach(draft.rules.handicap.seedingGroups.indices, id: \.self) { i in
                 HStack {
@@ -42,7 +49,7 @@ struct RulesetHandicapSection: View {
         } header: {
             RuleSectionHeader(title: "Seeding", changeNote: draft.changeNote(.seeding))
         } footer: {
-            RuleSectionFooter(text: "Seedede spillere spiller på gruppens faste handicap. Sveip for å fjerne en gruppe. Ingen grupper: ingen seeding.",
+            RuleSectionFooter(text: "Seedede spiller på gruppens faste handicap. Ingen grupper: ingen seeding.",
                               issues: draft.issues(in: .handicap).filter { $0.field.hasPrefix("handicap.seedingGroups") })
         }
     }

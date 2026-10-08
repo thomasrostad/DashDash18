@@ -37,15 +37,23 @@ nonisolated enum RulesetSection: CaseIterable, Sendable {
 nonisolated struct RulesetDraft: Equatable, Sendable {
     private(set) var original: Ruleset
     var rules: Ruleset
+    /// Oppsettet turneringen sammenlignes med («Endret · standard …», «Tilbakestill til …»): det
+    /// regelsettet lå nærmest da redigeringen startet, så det står stille mens arrangøren endrer.
+    let base: RulesetTemplate
 
     private var rememberedCountingBest: Int
     private var rememberedStablefordBest: Int
     private var rememberedRoundingStep: Double
     private var rememberedAllowance: Double
 
-    init(_ rules: Ruleset) {
+    init(_ rules: Ruleset, kind: CompetitionKind = .season) {
+        self.init(rules, base: RulesetSummary.template(for: rules, kind: kind))
+    }
+
+    init(_ rules: Ruleset, base: RulesetTemplate) {
         original = rules
         self.rules = rules
+        self.base = base
         let g = Ruleset.golfgutu
         // Når «beste N» slås på, starter N på antall kvelder (eller det som sto der før).
         rememberedCountingBest = rules.table.counting.best ?? rules.evenings
@@ -62,17 +70,20 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
     var canSave: Bool { issues.isEmpty }
     var hasChanges: Bool { rules != original }
 
-    /// Er regelsettet Golfgutu-oppsettet uendret?
-    var isGolfgutu: Bool { RulesetSummary.isGolfgutu(rules) }
+    /// Er regelsettet likt oppsettet (`base`)?
+    var isTemplate: Bool { changedFields.isEmpty }
 
-    /// «Endret · standard 1» ved et felt som ikke er som i Golfgutu-oppsettet.
+    /// Valgene som er endret fra oppsettet.
+    var changedFields: [RulesetField] { RulesetField.changed(rules, from: base.rules) }
+
+    /// «Endret · standard 1» ved et felt som ikke er som i oppsettet.
     func changeNote(_ field: RulesetField) -> String? {
-        field.changeNote(rules)
+        field.changeNote(rules, from: base.rules)
     }
 
-    /// Hvor mange av de avanserte valgene som er endret fra Golfgutu-oppsettet.
+    /// Hvor mange av de avanserte valgene som er endret fra oppsettet.
     var changedAdvancedCount: Int {
-        RulesetField.changed(rules).filter { !$0.isCommon }.count
+        changedFields.filter { !$0.isCommon }.count
     }
 
     func issues(in section: RulesetSection) -> [RulesetIssue] {
@@ -84,11 +95,32 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
         original = saved
     }
 
-    /// «Tilbakestill til Golfgutu». Utgangspunktet beholdes, så endringen kan lagres.
-    mutating func resetToGolfgutu() {
+    /// «Tilbakestill til <oppsett>». Utgangspunktet beholdes, så endringen kan lagres.
+    mutating func resetToTemplate() {
         let original = original
-        self = RulesetDraft(.golfgutu)
+        self = RulesetDraft(base.rules, base: base)
         self.original = original
+    }
+
+    // MARK: Hva tabellen teller
+
+    /// Teller tabellen matcher (ellers stableford)? Da gjelder matchpoeng, trekant, seeding og lagshandicap.
+    var countsMatches: Bool { rules.table.pointsSource == .matches }
+
+    /// «Tabellen teller: matcher / stableford». Med stableford gir «matcher» som enhet ingen mening,
+    /// så den byttes til kvelder.
+    var pointsSource: Ruleset.TablePointsSource {
+        get { rules.table.pointsSource }
+        set {
+            rules.table.pointsSource = newValue
+            guard newValue == .stableford else { return }
+            if rules.table.counting.unit == .match { rules.table.counting.unit = .evening }
+        }
+    }
+
+    /// Enhetene tabellen kan telle: matcher bare når tabellen teller matcher.
+    var tableUnits: [Ruleset.Counting.Unit] {
+        countsMatches ? Ruleset.Counting.Unit.allCases : Self.stablefordUnits
     }
 
     // MARK: Tabell: telling
@@ -148,7 +180,9 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
 
     /// Skilletegn som ikke er i bruk, og kan legges til.
     var unusedTiebreaks: [Ruleset.Tiebreak] {
-        Ruleset.Tiebreak.allCases.filter { !rules.table.tiebreaks.contains($0) }
+        Ruleset.Tiebreak.allCases.filter {
+            !rules.table.tiebreaks.contains($0) && (countsMatches || $0 != .holeDifference)
+        }
     }
 
     mutating func addTiebreak(_ t: Ruleset.Tiebreak) {
@@ -212,7 +246,7 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
         rules.handicap.teamHandicapRule(for: form.id).method
     }
 
-    /// Bytter metode. Vektet starter med vektene som sto der, ellers Golfgutu-vektene for formen (eller ingen).
+    /// Bytter metode. Vektet starter med vektene som sto der, ellers standardvektene for formen (eller ingen).
     mutating func setTeamMethod(_ form: CompetitionForm, _ method: Ruleset.TeamHandicapRule.Method) {
         let current = rules.handicap.teamHandicapRule(for: form.id)
         guard current.method != method else { return }

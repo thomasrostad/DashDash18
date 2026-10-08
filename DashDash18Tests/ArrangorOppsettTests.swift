@@ -153,7 +153,7 @@ struct RegelsettSammendragTests {
             "Seeding i 3 grupper (0, 5 og 10)",
             "Longest drive og nærmest pinnen gir 1 poeng hver",
         ])
-        #expect(RulesetSummary.badge(for: .golfgutu) == "Golfgutu-oppsettet")
+        #expect(RulesetSummary.badge(for: .golfgutu) == "Matchspill-serie")
         #expect(RulesetSummary.short(for: .golfgutu) == "7 kvelder, alle matcher teller")
     }
 
@@ -168,8 +168,8 @@ struct RegelsettSammendragTests {
         #expect(lines.contains("85 % handicap i alle former"))
         #expect(lines.contains("Longest drive gir 1 poeng"))
         #expect(!lines.contains { $0.hasPrefix("Seeding") })
-        #expect(RulesetSummary.badge(for: r) == "4 valg endret fra Golfgutu")
-        #expect(!RulesetSummary.isGolfgutu(r))
+        #expect(RulesetSummary.badge(for: r) == "4 valg endret fra Matchspill-serie")
+        #expect(!RulesetSummary.isTemplate(r))
     }
 
     @Test func varianterAvTelling() {
@@ -183,22 +183,22 @@ struct RegelsettSammendragTests {
         #expect(RulesetSummary.short(for: r) == "1 kveld, alle runder teller")
         r.handicap.externalHandicap = true
         #expect(RulesetSummary.lines(for: r).contains("Simulatoren deler ut slagene"))
-        #expect(RulesetSummary.badge(for: r) == "3 valg endret fra Golfgutu")
+        #expect(RulesetSummary.badge(for: r) == "3 valg endret fra Matchspill-serie")
     }
 
     @Test func golfgutuEtterLagringErFortsattGolfgutu() throws {
         let data = try RulesetDraft.encoded(.golfgutu)
         let decoded = try JSONDecoder().decode(Ruleset.self, from: data)
-        #expect(RulesetSummary.isGolfgutu(decoded))
-        #expect(RulesetField.changed(decoded).isEmpty)
+        #expect(RulesetSummary.isTemplate(decoded))
+        #expect(RulesetField.changed(decoded, from: .golfgutu).isEmpty)
     }
 }
 
 struct EndretFraStandardTests {
     @Test func golfgutuHarIngenEndringer() {
-        #expect(RulesetField.changed(.golfgutu).isEmpty)
+        #expect(RulesetField.changed(.golfgutu, from: .golfgutu).isEmpty)
         for field in RulesetField.allCases {
-            #expect(field.changeNote(.golfgutu) == nil)
+            #expect(field.changeNote(.golfgutu, from: .golfgutu) == nil)
         }
     }
 
@@ -206,6 +206,7 @@ struct EndretFraStandardTests {
     @Test func endringTrefferEttValg() {
         let cases: [(RulesetField, (inout Ruleset) -> Void)] = [
         (RulesetField.evenings, { (r: inout Ruleset) in r.evenings = 8 }),
+        (.pointsSource, { r in r.table.pointsSource = .stableford }),
         (.counting, { r in r.table.counting.best = 5 }),
         (.win, { r in r.table.matchPoints.win = 3 }),
         (.draw, { r in r.table.matchPoints.draw = 1 }),
@@ -232,8 +233,8 @@ struct EndretFraStandardTests {
         for (field, change) in cases {
             var r = Ruleset.golfgutu
             change(&r)
-            #expect(RulesetField.changed(r) == [field], "\(field)")
-            #expect(field.changeNote(r) != nil)
+            #expect(RulesetField.changed(r, from: .golfgutu) == [field], "\(field)")
+            #expect(field.changeNote(r, from: .golfgutu) != nil)
         }
         // Alle valgene er prøvd.
         #expect(Set(cases.map(\.0)) == Set(RulesetField.allCases))
@@ -246,30 +247,31 @@ struct EndretFraStandardTests {
         r.handicap.allowanceOverride = 0.85
         r.sidePrizes.longestDrive.enabled = false
         r.table.counting.best = 5
-        #expect(RulesetField.win.changeNote(r) == "Endret · standard 1")
-        #expect(RulesetField.evenings.changeNote(r) == "Endret · standard 7")
-        #expect(RulesetField.allowance.changeNote(r) == "Endret · standard per form")
-        #expect(RulesetField.longestDrive.changeNote(r) == "Endret · standard 1 poeng")
-        #expect(RulesetField.counting.changeNote(r) == "Endret · standard alle matcher")
-        #expect(RulesetField.draw.changeNote(r) == nil)
+        #expect(RulesetField.win.changeNote(r, from: .golfgutu) == "Endret · standard 1")
+        #expect(RulesetField.evenings.changeNote(r, from: .golfgutu) == "Endret · standard 7")
+        #expect(RulesetField.allowance.changeNote(r, from: .golfgutu) == "Endret · standard per form")
+        #expect(RulesetField.longestDrive.changeNote(r, from: .golfgutu) == "Endret · standard 1 poeng")
+        #expect(RulesetField.counting.changeNote(r, from: .golfgutu) == "Endret · standard alle matcher")
+        #expect(RulesetField.draw.changeNote(r, from: .golfgutu) == nil)
     }
 
     @Test func vanligeOgAvanserteValg() {
         let common = RulesetField.allCases.filter(\.isCommon)
-        #expect(common == [.evenings, .counting, .win, .draw, .loss, .allowance, .longestDrive, .closestToPin, .splitTies])
+        #expect(common == [.pointsSource, .evenings, .counting, .win, .draw, .loss, .allowance, .longestDrive, .closestToPin, .splitTies])
     }
 
     @Test func utkastetTellerAvanserteEndringerOgTilbakestilles() {
         var draft = RulesetDraft(.golfgutu)
-        #expect(draft.isGolfgutu)
+        #expect(draft.base == .matchSeries)
+        #expect(draft.isTemplate)
         draft.rules.table.roundingStep = nil
         draft.rules.formats.maxPerBay = 3
         draft.rules.table.matchPoints.win = 2
         #expect(draft.changedAdvancedCount == 2)
         #expect(draft.changeNote(.win) == "Endret · standard 1")
-        #expect(!draft.isGolfgutu)
-        draft.resetToGolfgutu()
-        #expect(draft.isGolfgutu)
+        #expect(!draft.isTemplate)
+        draft.resetToTemplate()
+        #expect(draft.isTemplate)
         #expect(draft.changeNote(.win) == nil)
         #expect(draft.changedAdvancedCount == 0)
     }

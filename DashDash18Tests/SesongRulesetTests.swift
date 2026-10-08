@@ -203,7 +203,7 @@ struct SesongRedigeringTests {
         var start = Ruleset.golfgutu
         start.evenings = 3
         var d = RulesetDraft(start)
-        d.resetToGolfgutu()
+        d.resetToTemplate()
         #expect(d.rules == .golfgutu)
         #expect(d.hasChanges) // Utgangspunktet var et annet regelsett.
         d.markSaved(d.rules)
