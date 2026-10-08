@@ -577,6 +577,35 @@ nonisolated private struct FakePurchaseBackend: PurchaseBackend {
         #expect(!(await none.useCredit(for: competition)))
     }
 
+    /// «Ny turnering»: feiler koblingen av den ledige kreditten, er turneringen laget, men låst, og
+    /// skjermen sier fra (i stedet for at feilen bare står i `purchases.state`).
+    @Test func nyTurneringSierFraNarKredittenIkkeBleKoblet() async {
+        let list = CompetitionsModel(preview: .init(), access: F.access(organizer: true), clubID: F.club, clubName: "Golfgutu")
+        var cup = CompetitionDraft(clubID: F.club, today: "2026-10-07")
+        cup.kind = .cup
+        let id = UUID()
+
+        let fails = PurchaseService(backend: FakePurchaseBackend(rows: [entitlement()], assignFails: true), profileID: F.me)
+        await fails.refreshEntitlements()
+        let linked = await list.linkCredit(to: id, draft: cup, purchases: fails, enabled: true)
+        #expect(!linked)
+        let notice = NewTournamentModel.notice(for: .init(id: id, creditLinked: linked))
+        #expect(notice == "Turneringen er laget, men kjøpet ble ikke koblet. Åpne turneringen og trykk «Bruk kjøpet ditt».")
+
+        let ok = PurchaseService(backend: FakePurchaseBackend(rows: [entitlement()]), profileID: F.me)
+        await ok.refreshEntitlements()
+        #expect(await list.linkCredit(to: id, draft: cup, purchases: ok, enabled: true))
+        #expect(ok.lastUnlocked == id)
+        #expect(NewTournamentModel.notice(for: .init(id: id)) == nil)
+
+        // Ingen kreditt å koble (gratis type, kjøp av, eller ingen tjeneste): ingen melding.
+        var fun = cup
+        fun.kind = .fun
+        #expect(await list.linkCredit(to: id, draft: fun, purchases: fails, enabled: true))
+        #expect(await list.linkCredit(to: id, draft: cup, purchases: fails, enabled: false))
+        #expect(await list.linkCredit(to: id, draft: cup, purchases: nil, enabled: true))
+    }
+
     /// «Ny konkurranse» viser betalingsveggen bare når typen er låst.
     @Test func nyKonkurranseTrengerKjop() {
         let list = CompetitionsModel(preview: .init(), access: F.access(organizer: true), clubID: F.club, clubName: "Golfgutu")

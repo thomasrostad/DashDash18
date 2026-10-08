@@ -85,13 +85,16 @@ struct SikkerhetAppTests {
         AppHomeChoiceStore(defaults: defaults).save(.friends, userID: Self.userA)
         AppHomeChoiceStore(defaults: defaults).save(.club, userID: Self.userB)
         HoleStatsSetting(defaults: defaults).set(true, for: Self.userA)
-        PendingPurchaseStore(defaults: defaults).setTarget(UUID())
+        PendingPurchaseStore(defaults: defaults).prepare(.init(productID: PurchaseProduct.tournament.rawValue,
+                                                               target: .init(competitionID: UUID()),
+                                                               profileID: Self.userA, createdAt: .now))
+        #expect(defaults.object(forKey: "ventendeKjop") != nil)
 
         LocalDataReset.removeAccountData(userID: Self.userA, defaults: defaults)
 
         #expect(AppHomeChoiceStore(defaults: defaults).load(userID: Self.userA) == nil)
         #expect(!HoleStatsSetting(defaults: defaults).isOn(for: Self.userA))
-        #expect(defaults.dictionary(forKey: "ventendeKjop") == nil)
+        #expect(defaults.object(forKey: "ventendeKjop") == nil)
         #expect(AppHomeChoiceStore(defaults: defaults).load(userID: Self.userB) == .club)
     }
 

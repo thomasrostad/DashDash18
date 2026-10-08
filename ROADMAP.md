@@ -369,12 +369,12 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 
 Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rettet med test). Dette står igjen:
 
-- [ ] **Kjøp (før `PurchaseFeature` slås på):** `PurchaseService.handle` fester turneringsmålet til alle transaksjoner (fornyelser, «Gjenopprett»), ikke bare den fra `purchase()`. Et kjøp kan da kobles til feil turnering.
-- [ ] **Kjøp:** feiler koblingen av en ledig kreditt i «Ny konkurranse», sier ikke skjermen fra (feilen står i `purchases.state`).
+- [x] **Kjøp (før `PurchaseFeature` slås på):** turneringsmålet festes bare til transaksjonen fra kjøpsarket, ikke til fornyelser eller «Gjenopprett». Må prøves i sandkassen før kjøp slås på. *(08.10.)*
+- [x] **Kjøp:** «Ny turnering» sier fra når koblingen av en ledig kreditt feiler. *(08.10.)*
 - [x] **Google (før `GoogleLoginFeature` slås på):** utloggingsteksten nevner Google når kontoen har det. *(08.10.)*
 - [x] **Veddemål i Varsler:** egne tekster i appen og i `push-send` (PWA-ens ordlyd, poeng for kroner). *(08.10. push-send versjon 3 deployet på test.)*
 - [ ] **Flagg som står permanent på** (fjernes når skjemaet er i prod): Foundation, Push, LiveActivity, Widget, Venue, CourseKind, Stats, Bets, Games, Competitions, LooseRounds, AccountDeletion, Moderation, BillSplit.
-- [ ] **Små ting:** kolonnelister skrevet for hånd i flere spørringer (samle), `CompetitionDetailModel.load` henter alle konkurranser for å vise én, `EveningDates` dupliseres i widget-targetet (legg fila i targetet i Xcode), `OutboxScoreSubmitter` kan nullstille en ny retry-oppgave i et sjeldent stopp/start-løp.
+- [x] **Små ting:** kolonnelistene samlet, konkurransesiden henter bare sine egne påmeldinger, og utboksen kan ikke få to retry-løkker. Gjenstår: `EveningDates` dupliseres i widget-targetet (legg fila i targetet i Xcode). *(08.10.)*
 
 ---
 

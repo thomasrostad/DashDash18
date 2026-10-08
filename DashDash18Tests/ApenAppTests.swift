@@ -221,12 +221,15 @@ struct ApenKjopTests {
         let defaults = try #require(UserDefaults(suiteName: "ApenKjopTests"))
         defaults.removePersistentDomain(forName: "ApenKjopTests")
         let store = PendingPurchaseStore(defaults: defaults)
-        let cup = UUID()
-        store.setTarget(cup)
-        store.attach(transactionID: 42)
-        #expect(store.target(for: 42) == cup)
-        store.attach(transactionID: 43)
-        #expect(store.target(for: 43) == nil)
+        let cup = PurchaseTarget(competitionID: UUID())
+        let product = PurchaseProduct.tournament.rawValue
+        store.prepare(.init(productID: product, target: cup, profileID: me, createdAt: .now))
+        let first = PurchaseTransactionInfo(id: 42, originalID: 42, productID: product, purchaseDate: .now,
+                                            appAccountToken: me)
+        #expect(store.claimForPurchase(first) == cup)
+        let second = PurchaseTransactionInfo(id: 43, originalID: 43, productID: product, purchaseDate: .now,
+                                             appAccountToken: me)
+        #expect(store.claimForPurchase(second) == nil)
         store.done(transactionID: 42)
         #expect(store.target(for: 42) == nil)
     }

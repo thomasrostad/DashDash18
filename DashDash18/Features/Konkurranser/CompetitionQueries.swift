@@ -45,6 +45,14 @@ enum CompetitionQueries {
 
     // MARK: Én konkurranse
 
+    /// Påmeldingene i én konkurranse (samme RLS som i oversikten: `can_read_competition`).
+    static func participants(client: SupabaseClient, competitionID: UUID) async throws -> [CompetitionParticipantRow] {
+        try await client.from("competition_participants")
+            .select(participantColumns)
+            .eq("competition_id", value: competitionID)
+            .execute().value
+    }
+
     /// Alt tabellen trenger for en liga, cup eller morroturnering: de tellende rundene med alt
     /// under, personene bak spillerne, de påmeldte og cupkampene.
     struct Detail: Sendable {

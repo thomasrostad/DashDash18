@@ -118,39 +118,141 @@ nonisolated enum CompetitionUnlock {
     }
 }
 
+/// Det appen vet om en transaksjon fra App Store når den skal avgjøre hvilken turnering den er for.
+/// Egen type, så regelen kan prøves uten StoreKit.
+nonisolated struct PurchaseTransactionInfo: Equatable, Sendable {
+    let id: UInt64
+    let originalID: UInt64
+    let productID: String
+    let purchaseDate: Date
+    /// Profil-id-en appen satte på kjøpet (`appAccountToken`).
+    let appAccountToken: UUID?
+
+    /// En fornyelse av et abonnement (ikke det første kjøpet).
+    var isRenewal: Bool { id != originalID }
+}
+
+/// Turneringen (og klubben, for et abonnement) et kjøp er ment for.
+nonisolated struct PurchaseTarget: Codable, Equatable, Sendable {
+    var competitionID: UUID?
+    var clubID: UUID?
+}
+
+/// Hvor transaksjonen kom fra.
+nonisolated enum PurchaseTransactionSource: Sendable {
+    /// Svaret fra `product.purchase()`: kjøpet brukeren nettopp gjorde.
+    case purchase
+    /// Alt annet: `Transaction.updates`, uferdige transaksjoner ved start og «Gjenopprett»
+    /// (fornyelser, en godkjent Kjøpsforespørsel, kjøp på en annen enhet).
+    case background
+}
+
 /// Hva som venter på serveren: turneringen et kjøp var ment for, til `verify-purchase` har svart.
 /// Lagret på telefonen, så et kjøp som ble avbrutt av en krasj, finner turneringen sin igjen.
+///
+/// Målet lagres før kjøpsarket vises (`prepare`) og festes til transaksjonen som kommer tilbake fra
+/// `purchase()` (`claimForPurchase`). En transaksjon som kommer utenom (`claimForBackground`), får
+/// det ventende målet bare når den tydelig er det samme kjøpet (`matches`): samme produkt og konto,
+/// første kjøp (ikke en fornyelse), og gjort etter at målet ble satt og innen `maxAge`. Det dekker
+/// en krasj mellom kjøpet og verifiseringen, og en Kjøpsforespørsel som godkjennes senere. Alt annet
+/// verifiseres uten turnering (eller med målet det alt har fått), så et kjøp aldri kobles til feil
+/// turnering.
 nonisolated struct PendingPurchaseStore {
+    /// Kjøpet som er startet, men ikke kommet tilbake ennå.
+    struct Pending: Codable, Equatable, Sendable {
+        var productID: String
+        var target: PurchaseTarget
+        var profileID: UUID
+        var createdAt: Date
+    }
+
+    /// Hvor lenge etter at målet ble satt et kjøp utenom kjøpsarket kan få det. En Kjøpsforespørsel
+    /// utløper etter et døgn hos Apple.
+    static let maxAge: TimeInterval = 2 * 24 * 3600
+    /// Klokka på telefonen og hos Apple kan gå litt ulikt.
+    static let clockSkew: TimeInterval = 5 * 60
+
     var defaults: UserDefaults = .standard
     private let key = "ventendeKjop"
 
-    /// Turneringen neste kjøp er for (satt før kjøpsarket vises).
-    func setTarget(_ competitionID: UUID?) {
-        var map = all()
-        map["neste"] = competitionID?.uuidString
-        defaults.set(map, forKey: key)
+    private struct Stored: Codable {
+        var next: Pending?
+        var attached: [String: PurchaseTarget] = [:]
     }
 
-    /// Fester målet til transaksjonen når den kommer tilbake fra App Store.
-    func attach(transactionID: UInt64) {
-        var map = all()
-        guard let next = map.removeValue(forKey: "neste") else { return }
-        map[String(transactionID)] = next
-        defaults.set(map, forKey: key)
+    /// Målet for kjøpet som startes nå (satt før kjøpsarket vises).
+    func prepare(_ next: Pending) {
+        var stored = load()
+        stored.next = next
+        save(stored)
     }
 
-    func target(for transactionID: UInt64) -> UUID? {
-        all()[String(transactionID)].flatMap(UUID.init(uuidString:))
+    /// Brukeren avbrøt kjøpet.
+    func cancel() {
+        var stored = load()
+        stored.next = nil
+        save(stored)
     }
 
+    /// Kjøpet som venter på å komme tilbake, om noe.
+    var next: Pending? { load().next }
+
+    /// Transaksjonen fra `purchase()`: målet den alt har, ellers det som ble satt før arket.
+    func claimForPurchase(_ transaction: PurchaseTransactionInfo) -> PurchaseTarget? {
+        var stored = load()
+        if let target = stored.attached[String(transaction.id)] { return target }
+        guard let next = stored.next, next.productID == transaction.productID else { return nil }
+        stored.next = nil
+        stored.attached[String(transaction.id)] = next.target
+        save(stored)
+        return next.target
+    }
+
+    /// En transaksjon utenom kjøpsarket: målet den alt har, eller det ventende målet når det er det
+    /// samme kjøpet. `mayClaim` er usann mens `purchase()` venter på svar; da hører det ventende
+    /// målet til det kjøpet.
+    func claimForBackground(_ transaction: PurchaseTransactionInfo, mayClaim: Bool = true) -> PurchaseTarget? {
+        var stored = load()
+        if let target = stored.attached[String(transaction.id)] { return target }
+        guard mayClaim, let next = stored.next, Self.matches(next, transaction) else { return nil }
+        stored.next = nil
+        stored.attached[String(transaction.id)] = next.target
+        save(stored)
+        return next.target
+    }
+
+    /// Er transaksjonen kjøpet som ble startet med `pending`?
+    static func matches(_ pending: Pending, _ transaction: PurchaseTransactionInfo) -> Bool {
+        guard pending.productID == transaction.productID,
+              transaction.appAccountToken == pending.profileID,
+              !transaction.isRenewal else { return false }
+        let age = transaction.purchaseDate.timeIntervalSince(pending.createdAt)
+        return age >= -clockSkew && age <= maxAge
+    }
+
+    func target(for transactionID: UInt64) -> PurchaseTarget? {
+        load().attached[String(transactionID)]
+    }
+
+    /// Serveren har registrert kjøpet.
     func done(transactionID: UInt64) {
-        var map = all()
-        map[String(transactionID)] = nil
-        defaults.set(map, forKey: key)
+        var stored = load()
+        guard stored.attached.removeValue(forKey: String(transactionID)) != nil else { return }
+        save(stored)
     }
 
-    private func all() -> [String: String] {
-        defaults.dictionary(forKey: key) as? [String: String] ?? [:]
+    private func load() -> Stored {
+        guard let data = defaults.data(forKey: key),
+              let stored = try? JSONDecoder().decode(Stored.self, from: data) else { return Stored() }
+        return stored
+    }
+
+    private func save(_ stored: Stored) {
+        if stored.next == nil && stored.attached.isEmpty {
+            defaults.removeObject(forKey: key)
+        } else if let data = try? JSONEncoder().encode(stored) {
+            defaults.set(data, forKey: key)
+        }
     }
 }
 
