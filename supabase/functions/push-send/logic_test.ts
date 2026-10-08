@@ -20,6 +20,9 @@ import {
   playerAllows,
   pushOriginators,
   summarize,
+  tableHeadline,
+  tableSpots,
+  tableSubject,
   threadText,
 } from "./logic.ts";
 
@@ -549,4 +552,67 @@ Deno.test("pushOriginators: forfatter, aktør og spilleren det handler om", () =
   eq(pushOriginators(thread("hei", ANDERS, [])), [ANDERS]);
   eq(pushOriginators(job({ ...EAGLE, actor_member_id: THOMAS })).sort(), [THOMAS, ANDERS].sort());
   eq(pushOriginators(job(activity("lead_changed", "lead", { leaders: [ANDERS, CATO] }, { actor_member_id: null }))).sort(), [ANDERS, CATO].sort());
+});
+
+// --- Plassbytte i tabellen (table_changed, fase 19) ---------------------------
+// Samme tekster som TableChangeText i appen (HjemTabellTests i DashDash18Tests).
+
+const COMP = "00000000-0000-0000-0000-000000000500";
+const tableRow = (table: unknown[], extra: Record<string, unknown> = {}) =>
+  activity("table_changed", "round", { competition: COMP, competition_name: "Jakkeracet", round_no: 3, table, ...extra },
+    { actor_member_id: THOMAS });
+
+Deno.test("plassbytte: den som klatret mest", () => {
+  const a = tableRow([
+    { member: ANDERS, place: 1, from: 1, points: 58 },
+    { member: BJORN, place: 2, from: 3, points: 55 },
+    { member: CATO, place: 3, from: 5, points: 49.5 },
+  ]);
+  eq(text(a), { emoji: "📊", text: "Cato klatret til 3. plass i Jakkeracet etter runde 3" });
+});
+
+Deno.test("plassbytte: ny leder går foran, og likt hopp gir best plass", () => {
+  is(text(tableRow([{ member: BJORN, place: 1, from: 2 }, { member: ANDERS, place: 2, from: 1 },
+    { member: CATO, place: 3, from: 6 }])).text, "Bjørn har tatt ledelsen i Jakkeracet etter runde 3");
+  is(text(tableRow([{ member: ANDERS, place: 1, from: 1 }, { member: BJORN, place: 2, from: 4 },
+    { member: CATO, place: 4, from: 6 }])).text, "Bjørn klatret til 2. plass i Jakkeracet etter runde 3");
+});
+
+Deno.test("plassbytte: første runde, ingen runde og ingen som klatret", () => {
+  is(text(tableRow([{ member: CATO, place: 1 }, { member: ANDERS, place: 2 }], { round_no: 1 })).text,
+    "Cato leder Jakkeracet etter runde 1");
+  is(text(tableRow([{ member: ANDERS, place: 1, from: 1 }], { round_no: undefined })).text,
+    "Tabellen i Jakkeracet er oppdatert");
+  is(tableHeadline([{ member: "x", place: 2, from: 2 }], "Morrocupen", 0, nameLookup([])),
+    "Tabellen i Morrocupen er oppdatert");
+});
+
+Deno.test("plassbytte: ukjent navn og ugyldige data", () => {
+  is(text(tableRow([{ member: "ukjent", place: 1, from: 2 }])).text, "Noen har tatt ledelsen i Jakkeracet etter runde 3");
+  eq(text(tableRow([])).text, "Ny hendelse i klubben");
+  eq(text(tableRow([{ member: ANDERS, place: "1" }])).text, "Ny hendelse i klubben");
+  eq(text(activity("table_changed", "round", { competition_name: "X", table: [{ member: ANDERS, place: 1 }] })).text,
+    "Ny hendelse i klubben");
+  is(tableSpots(null), undefined);
+  eq(tableSpots([{ member: ANDERS, place: 1, from: null }]), [{ member: ANDERS, place: 1, from: undefined, points: undefined }]);
+  is(tableSubject([{ member: ANDERS, place: 2, from: 1 }]), undefined);
+});
+
+Deno.test("plassbytte: går som «Rundene», til alle unntatt den som låste, og erstatter forrige for konkurransen", () => {
+  const a = tableRow([{ member: BJORN, place: 1, from: 2 }, { member: ANDERS, place: 2, from: 1 }]);
+  eq(to(job(a)), [ANDERS, BJORN, CATO]);
+  const n = planPush(job(a), NOW).notifications[0];
+  is(n.category, "round");
+  is(n.collapseId, `table-${COMP}`);
+  is(n.body, "📊 Bjørn har tatt ledelsen i Jakkeracet etter runde 3");
+  eq(to(job(a, { members: members({ [CATO]: { disabled_categories: ["round"] } }) })), [ANDERS, BJORN]);
+  is(planPush(job(a, { club: ["round"] }), NOW).skipped, "round er av for klubben");
+});
+
+Deno.test("plassbytte: den linja handler om står bak (blokkering)", () => {
+  const a = tableRow([{ member: BJORN, place: 1, from: 2 }, { member: ANDERS, place: 2, from: 1 }]);
+  eq(pushOriginators(job(a)).sort(), [BJORN, THOMAS].sort());
+  const blocked = attachBlocks(job(a), [{ id: CATO, user_id: "u-cato" }, { id: BJORN, user_id: "u-bjorn" }],
+    [{ blocker_id: "u-cato", blocked_id: "u-bjorn" }]);
+  eq(planPush(blocked, NOW).notifications.map((n) => n.memberId).sort(), [ANDERS, BJORN]);
 });
