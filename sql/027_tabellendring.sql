@@ -1,7 +1,7 @@
 -- ===========================================================================
--- 027 – PLASSBYTTE I TABELLEN BARE ÉN GANG PER RUNDE OG TURNERING – FORSLAG, IKKE KJØRT
+-- 027 – PLASSBYTTE I TABELLEN BARE ÉN GANG PER RUNDE OG TURNERING – KJØRT PÅ TEST 08.10.2026
 -- ===========================================================================
--- Status: forslag (fase 19, del 1). Ikke kjørt, verken på test eller prod.
+-- Status: godkjent og kjørt på test 08.10.2026 (kontrollen 6 av 6). Ikke prod.
 -- Krever 008 (activity) og 011 (samme mønster for de andre hendelsene).
 --
 -- Hvorfor: Hjem-feeden (fase 19) viser plassbytte i tabellen («Du klatret til

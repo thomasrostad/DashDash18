@@ -186,7 +186,8 @@ struct HjemTabellHendelseTests {
                                       table: [spot(bjorn, 1, from: 2, points: 52), spot(anders, 2, from: 1, points: 50)]))
     }
 
-    @Test func loggingenErAvTilPushOgSqlErPåPlass() {
-        #expect(HomeFeedFeature.logsTableChanges == false)
+    /// På siden 08.10.2026: 027 er kjørt på test og push-send v4 har teksten for `table_changed`.
+    @Test func loggingenErPåNårPushOgSqlErPåPlass() {
+        #expect(HomeFeedFeature.logsTableChanges == true)
     }
 }
