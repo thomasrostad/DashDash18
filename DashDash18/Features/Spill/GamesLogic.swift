@@ -5,7 +5,7 @@ import GolfgutuCore
 // (`Games.evaluate`) og tekstene på kortene og i arket. Ren logikk, uten nettverk og SwiftUI.
 // Regnestykket (stilling, sluttresultat og oppgjør i hele poeng) ligger i GolfgutuCore.
 
-/// Spill på runden er av til 020 er godkjent og kjørt. Da kaller ingenting RPC-er som ikke finnes.
+/// Spill på runden (krever 020, kjørt på test). Med flagget av kaller ingenting RPC-ene i 020.
 nonisolated enum GamesFeature {
     static let isEnabled = true
 }
@@ -420,10 +420,6 @@ nonisolated struct GamesBoard: Equatable, Sendable {
         cards = input.games.map { row in
             GamesBoard.card(row, input: input, game: game, viewer: viewer, me: me, hole: hole)
         }
-    }
-
-    init(cards: [GameCard]) {
-        self.cards = cards
     }
 
     static func card(_ row: RoundGameRow, input: GamesInput, game: RoundGame, viewer: Viewer, me: UUID?,

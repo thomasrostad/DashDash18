@@ -109,12 +109,6 @@ nonisolated enum BillSplit {
         }
     }
 
-    /// Hva hver betaler (det vanlige beløpet, uten ekstraøre).
-    static func perPerson(total: NOK, count: Int) -> NOK? {
-        guard count > 0 else { return nil }
-        return NOK(ore: (total.ore + count - 1) / count)
-    }
-
     /// Navnene i runden med deg først (du foreslås som den som la ut), resten i rundens rekkefølge.
     static func names(players: [UUID], names: [UUID: String], me: UUID?) -> [String] {
         let mine = players.filter { $0 == me }
@@ -160,16 +154,10 @@ nonisolated enum VippsLink {
     /// Vipps i App Store, når appen ikke er installert.
     static let appStore = URL(string: "https://apps.apple.com/no/app/vipps/id984380185")!
 
-    /// Teksten som kopieres og deles: hvem, hva og hvor mye.
-    static func requestText(share: BillShare, recipientName: String, phone: String?, purpose: BillPurpose, note: String = "") -> String {
-        let what = note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? purpose.title : note.trimmingCharacters(in: .whitespacesAndNewlines)
-        let to = phone.map { "\(recipientName) (\(VippsRecipient.formatted($0)))" } ?? recipientName
-        return "\(share.name): Vipps \(share.amount.text) til \(to) for \(what.lowercased())."
-    }
-
     /// Hele oppgjøret som én melding, til tråden eller Meldinger.
     static func summary(shares: [BillShare], total: NOK, recipientName: String, phone: String?, purpose: BillPurpose, note: String = "") -> String {
-        let what = note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? purpose.title : note.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        let what = trimmedNote.isEmpty ? purpose.title : trimmedNote
         let to = phone.map { "\(recipientName), \(VippsRecipient.formatted($0))" } ?? recipientName
         var lines = ["\(what): \(total.text). Vipps til \(to):"]
         lines += shares.map { "• \($0.name): \($0.amount.text)" }

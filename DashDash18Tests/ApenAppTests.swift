@@ -275,8 +275,6 @@ struct ApenRegningTests {
         let all = BillSplit.shares(total: total, people: people, payer: nil)
         #expect(all.map(\.amount.ore) == [33_334, 33_334, 33_333])
         #expect(all.reduce(0) { $0 + $1.amount.ore } == total.ore)
-        #expect(BillSplit.perPerson(total: total, count: 3)?.ore == 33_334)
-        #expect(BillSplit.perPerson(total: total, count: 0) == nil)
     }
 
     @Test func navnRyddesOgDegForst() {
@@ -293,8 +291,6 @@ struct ApenRegningTests {
         #expect(VippsRecipient.normalizedPhone("22 33 44 55") == nil)
         #expect(VippsRecipient.formatted("98765432") == "987 65 432")
         let share = BillShare(name: "Anders", amount: NOK(ore: 31_250))
-        #expect(VippsLink.requestText(share: share, recipientName: "Thomas", phone: "98765432", purpose: .simulator)
-                == "Anders: Vipps 312,50 kr til Thomas (987 65 432) for simulatorleie.")
         let summary = VippsLink.summary(shares: [share], total: NOK(ore: 125_000), recipientName: "Thomas",
                                         phone: nil, purpose: .greenfee)
         #expect(summary == "Greenfee: 1\u{00A0}250 kr. Vipps til Thomas:\n• Anders: 312,50 kr")
