@@ -59,10 +59,14 @@ enum TavlaSamples {
         return s
     }
 
-    static func standings(finished: Bool = false) -> TavlaStandings {
-        let season = SeasonRow(id: id(9002), clubID: club, name: "Sesongen 2026", status: finished ? .finished : .active,
-                               rules: .golfgutu)
-        let rounds = (1...5).map { round($0, date: "2026-0\($0 + 4)-14") }
+    /// Sesongen med Golfgutu-oppsettet, eller en stableford-serie (`tavlastableford`, 6 kvelder spilt).
+    static func standings(finished: Bool = false, stableford: Bool = false) -> TavlaStandings {
+        let season = SeasonRow(id: id(9002), clubID: club, name: stableford ? "Høst 2026" : "Sesongen 2026",
+                               status: finished ? .finished : .active,
+                               rules: stableford ? RulesetTemplate.stablefordSeries.rules : .golfgutu)
+        let rounds = stableford
+            ? (1...6).map { round($0, date: "2026-\(String(format: "%02d", $0 + 3))-14") }
+            : (1...5).map { round($0, date: "2026-0\($0 + 4)-14") }
         return TavlaStandings(TavlaInput(season: season, members: members, rounds: rounds), me: me)
     }
 }

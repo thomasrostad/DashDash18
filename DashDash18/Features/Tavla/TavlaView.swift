@@ -194,11 +194,7 @@ struct TavlaRowView: View {
         }
     }
 
-    private var detail: String {
-        let holes = row.holes > 0 ? "+\(row.holes)" : "\(row.holes)"
-        let evenings = row.evenings == 1 ? "1 kveld" : "\(row.evenings) kvelder"
-        return "\(holes) hull · \(row.stableford) stableford · \(evenings)"
-    }
+    private var detail: String { standings.detail(row) }
 }
 
 private struct NoSeasonView: View {

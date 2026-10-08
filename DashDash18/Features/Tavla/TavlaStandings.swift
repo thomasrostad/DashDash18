@@ -19,7 +19,7 @@ nonisolated struct TavlaStandings: Sendable {
         let name: String
         /// 1, 2, 3 … i tabellens rekkefølge (`jakketavle`).
         let place: Int
-        /// Duell + sidepremier, avrundet etter regelsettet.
+        /// Duell (eller stablefordpoeng) + sidepremier, avrundet etter regelsettet.
         let total: Double
         let duel: Double
         let side: Double
@@ -32,6 +32,10 @@ nonisolated struct TavlaStandings: Sendable {
         /// Kvelder spilleren har poeng i.
         let evenings: Int
         let isMe: Bool
+        /// Tellende stablefordpoeng (vektet) når tabellen teller stableford, ellers 0.
+        var roundPoints: Double = 0
+        /// Spilte runder når tabellen teller stableford (spilte matcher ellers).
+        var played: Int = 0
 
         var id: UUID { memberID }
     }
@@ -87,7 +91,8 @@ nonisolated struct TavlaStandings: Sendable {
             let played = rounds.indices.filter { season.roundPoints($0)[r.player.id] != nil }.map { rounds[$0] }
             return Row(memberID: id, name: r.player.name, place: i + 1, total: r.total, duel: r.duel, side: r.side,
                        matches: r.matches, holes: r.holes, stableford: r.stableford,
-                       evenings: Season.eveningCount(played), isMe: id == me)
+                       evenings: Season.eveningCount(played), isMe: id == me, roundPoints: r.roundPoints,
+                       played: r.played)
         }
     }
 
@@ -113,6 +118,47 @@ nonisolated struct TavlaStandings: Sendable {
     }
 
     var isEmpty: Bool { rows.isEmpty }
+
+    /// Teller tabellen stableford (en stableford-serie)? Da finnes ingen dueller, matcher eller hull.
+    var countsStableford: Bool { rules.table.pointsSource == .stableford }
+
+    /// Linja under navnet: «+3 hull · 112 stableford · 4 kvelder» med matcher, og «6 kvelder · beste 5
+    /// teller» med stableford.
+    func detail(_ row: Row) -> String {
+        let evenings = row.evenings == 1 ? "1 kveld" : "\(row.evenings) kvelder"
+        guard countsStableford else {
+            let holes = row.holes > 0 ? "+\(row.holes)" : "\(row.holes)"
+            return "\(holes) hull · \(row.stableford) stableford · \(evenings)"
+        }
+        let counting = rules.table.counting
+        guard let best = counting.best else { return evenings }
+        let noun = RuleNames.nouns(counting.unit)
+        return best == 1 ? "\(evenings) · beste \(noun.definite) teller" : "\(evenings) · beste \(best) teller"
+    }
+
+    /// Kolonnene i «Runde for runde» på profilen.
+    var roundColumns: String { countsStableford ? "plass · stableford" : "plass · duell · stableford" }
+
+    /// Hva poengene kommer fra: «4,5 fra 5 dueller · 1 fra sidepremier · +3 hull», eller med
+    /// stableford «98 fra 5 runder · 1 fra sidepremier». Nil uten poeng.
+    func basis(_ row: Row) -> String? {
+        var parts: [String] = []
+        if countsStableford {
+            guard row.played > 0 || row.side > 0 else { return nil }
+            if row.played > 0 {
+                parts.append("\(points(row.roundPoints)) fra \(row.played == 1 ? "én runde" : "\(row.played) runder")")
+            }
+            if row.side > 0 { parts.append("\(points(row.side)) fra sidepremier") }
+            return parts.joined(separator: " · ")
+        }
+        guard row.matches > 0 || row.side > 0 else { return nil }
+        if row.matches > 0 {
+            parts.append("\(points(row.duel)) fra \(row.matches == 1 ? "én duell" : "\(row.matches) dueller")")
+        }
+        if row.side > 0 { parts.append("\(points(row.side)) fra sidepremier") }
+        if row.matches > 0 { parts.append("\(row.holes > 0 ? "+" : "")\(row.holes) hull") }
+        return parts.joined(separator: " · ")
+    }
 
     /// Minst én kveld har gitt poeng. Før det er tabellen bare troppen i navnerekkefølge: ingen
     /// plasser, ingenting å dele, og ingen topp 3 i widgeten.
