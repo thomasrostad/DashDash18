@@ -326,6 +326,9 @@ Deno.test("alle typene appen skriver har en norsk tekst (ActivityEvent.knownKind
     committee_drawn: ["social", {}],
     member_joined: ["club", { member: ANDERS }],
     tips_king: ["tips", { members: [ANDERS], correct: 4, possible: 5 }],
+    bet_created: ["bet", { question: "Q" }],
+    bet_challenge: ["bet", { question: "Q", against: ANDERS }],
+    bet_resolved: ["bet", { question: "Q", resolution: "yes" }],
   };
   for (const [kind, [category, data]] of Object.entries(minimal)) {
     const shown = text(activity(kind, category, data));
@@ -371,6 +374,17 @@ Deno.test("sidepremie, retting, påmelding, komité, ny spiller og tippekonge", 
   is(text(activity("member_joined", "club", { member: CATO })).text, "Cato ble med i klubben");
   is(text(activity("tips_king", "tips", { members: [ANDERS], correct: 4, possible: 5, event_date: "2026-10-08" })).text,
     "Tippekongen torsdag 8. oktober: Anders med 4 av 5 riktige");
+});
+
+Deno.test("veddemål: utfordring, nytt, avgjort og annullert (samme tekst som appen)", () => {
+  is(text(activity("bet_challenge", "bet", { question: "Anders slår Thomas netto på hull 7", against: ANDERS, side: "yes", points: 50 }, { actor_member_id: THOMAS })).text,
+    "Thomas utfordret Anders: «Anders slår Thomas netto på hull 7» — 50 poeng på JA");
+  is(text(activity("bet_created", "bet", { question: "Noen får birdie på hull 3", side: "no", points: 20 }, { actor_member_id: THOMAS })).text,
+    "Thomas åpnet «Noen får birdie på hull 3» og satset 20 poeng på NEI");
+  is(text(activity("bet_created", "bet", { question: "Q" }, { actor_member_id: THOMAS })).text, "Thomas åpnet «Q»");
+  is(text(activity("bet_resolved", "bet", { question: "Q", resolution: "no" }, { actor_member_id: null })).text, "Veddemål avgjort: «Q» → NEI");
+  is(text(activity("bet_resolved", "bet", { question: "Q", resolution: "void", auto: true })).text, "Veddemål annullert: «Q»");
+  eq(text(activity("bet_challenge", "bet", { question: "Q" })), { emoji: "🔔", text: "Ny hendelse i klubben" });
 });
 
 Deno.test("ukjent type eller manglende felt gir en nøytral tekst, og ukjent navn er «Noen»", () => {

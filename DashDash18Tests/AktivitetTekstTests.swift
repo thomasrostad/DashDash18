@@ -31,7 +31,35 @@ private let samples: [ActivityEvent] = [
     .committeeDrawn(eventDate: "2026-10-08", members: [anders, bjorn]),
     .memberJoined(member: cato),
     .tipsKing(members: [anders], correct: 4, possible: 5, eventDate: "2026-10-08"),
+    .betCreated(question: "Noen får birdie på hull 3", side: "no", points: 20),
+    .betChallenge(question: "Anders slår Thomas netto på hull 7", against: anders, side: "yes", points: 50),
+    .betResolved(question: "Anders slår Thomas netto på hull 7", resolution: "yes"),
 ]
+
+/// Veddemål (012): PWA-ens ordlyd fra handleUtfordring og markets, med poeng for kroner.
+struct AktivitetVeddemaalTests {
+    @Test func utfordringNyttOgAvgjort() {
+        #expect(text(.betChallenge(question: "Anders slår Thomas netto på hull 7", against: anders, side: "yes", points: 50))
+                == "Thomas utfordret Anders: «Anders slår Thomas netto på hull 7» — 50 poeng på JA")
+        #expect(text(.betCreated(question: "Noen får birdie på hull 3", side: "no", points: 20))
+                == "Thomas åpnet «Noen får birdie på hull 3» og satset 20 poeng på NEI")
+        #expect(text(.betCreated(question: "Noen får birdie på hull 3", side: nil, points: nil))
+                == "Thomas åpnet «Noen får birdie på hull 3»")
+        #expect(text(.betResolved(question: "Q", resolution: "no"), actor: nil) == "Veddemål avgjort: «Q» → NEI")
+        #expect(text(.betResolved(question: "Q", resolution: "void"), actor: nil) == "Veddemål annullert: «Q»")
+    }
+
+    @Test func leserRadeneFraDatabasen() throws {
+        // Feltene slik create_bet og settle_bet skriver dem (sql/012).
+        let json = #"{"bet_id":"00000000-0000-0000-0000-000000000099","question":"Q","against":"00000000-0000-0000-0000-000000000001","side":"yes","points":50}"#
+        let data = try JSONDecoder().decode(ActivityData.self, from: Data(json.utf8))
+        #expect(ActivityEvent(kind: "bet_challenge", data: data) == .betChallenge(question: "Q", against: anders, side: "yes", points: 50))
+        let auto = try JSONDecoder().decode(ActivityData.self, from: Data(#"{"question":"Q","resolution":"void","auto":true}"#.utf8))
+        #expect(ActivityEvent(kind: "bet_resolved", data: auto) == .betResolved(question: "Q", resolution: "void"))
+        #expect(ActivityEvent(kind: "bet_created", data: ActivityData()) == .unknown(kind: "bet_created"))
+        #expect(ActivityEvent.betResolved(question: "Q", resolution: "yes").category == .bet)
+    }
+}
 
 struct AktivitetKatalogTests {
     @Test func katalogenDekkerAlleKjenteTyper() {

@@ -115,6 +115,11 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
     var unsure: Int?
     var correct: Int?
     var possible: Int?
+    /// Veddemål (012): påstanden, den som er utfordret, siden (`yes`/`no`) og utfallet (`yes`/`no`/`void`).
+    var question: String?
+    var against: UUID?
+    var side: String?
+    var resolution: String?
 
     init(member: UUID? = nil, members: [UUID]? = nil, hole: Int? = nil, holeIndex: Int? = nil, name: String? = nil,
          strokes: Int? = nil, par: Int? = nil, afterHole: Int? = nil, leaders: [UUID]? = nil, points: Int? = nil,
@@ -122,7 +127,8 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
          passedMeters: Double? = nil, status: String? = nil, eventDate: String? = nil, roundNo: Int? = nil,
          courseName: String? = nil, holeCount: Int? = nil, bays: Int? = nil, ldHole: Int? = nil, kpHole: Int? = nil,
          text: String? = nil, from: Int? = nil, to: Int? = nil, coming: Int? = nil, unsure: Int? = nil,
-         correct: Int? = nil, possible: Int? = nil) {
+         correct: Int? = nil, possible: Int? = nil, question: String? = nil, against: UUID? = nil,
+         side: String? = nil, resolution: String? = nil) {
         self.member = member
         self.members = members
         self.hole = hole
@@ -153,6 +159,10 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         self.unsure = unsure
         self.correct = correct
         self.possible = possible
+        self.question = question
+        self.against = against
+        self.side = side
+        self.resolution = resolution
     }
 
     enum CodingKeys: String, CodingKey {
@@ -171,6 +181,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         case ldHole = "ld_hole"
         case kpHole = "kp_hole"
         case text, from, to, coming, unsure, correct, possible
+        case question, against, side, resolution
     }
 
     /// Tåler felt med feil type (en annen klient, en eldre versjon): feltet blir nil,
@@ -208,6 +219,10 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         unsure = get(.unsure)
         correct = get(.correct)
         possible = get(.possible)
+        question = get(.question)
+        against = get(.against)
+        side = get(.side)
+        resolution = get(.resolution)
     }
 }
 
@@ -354,13 +369,19 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     case committeeDrawn(eventDate: String?, members: [UUID])
     case memberJoined(member: UUID)
     case tipsKing(members: [UUID], correct: Int, possible: Int, eventDate: String?)
+    /// Nytt veddemål uten motpart (`create_bet`). `side` og `points` er første innsats.
+    case betCreated(question: String, side: String?, points: Int?)
+    /// Utfordring mot én spiller (`create_bet` med motpart).
+    case betChallenge(question: String, against: UUID, side: String?, points: Int?)
+    /// Avgjort av arrangøren eller av appen (`resolve_bet`, `settle_bet`). `void` = annullert.
+    case betResolved(question: String, resolution: String)
     case unknown(kind: String)
 
     /// Alle kjente nøkler, for tester og dokumentasjon.
     static let knownKinds = [
         "round_started", "round_locked", "round_deleted", "big_score", "lead_changed", "side_prize",
         "score_corrected", "signup", "nudge", "reminder", "announcement", "committee_drawn",
-        "member_joined", "tips_king",
+        "member_joined", "tips_king", "bet_created", "bet_challenge", "bet_resolved",
     ]
 
     var kind: String {
@@ -379,6 +400,9 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .committeeDrawn: "committee_drawn"
         case .memberJoined: "member_joined"
         case .tipsKing: "tips_king"
+        case .betCreated: "bet_created"
+        case .betChallenge: "bet_challenge"
+        case .betResolved: "bet_resolved"
         case .unknown(let kind): kind
         }
     }
@@ -397,6 +421,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .committeeDrawn: .social
         case .memberJoined: .club
         case .tipsKing: .tips
+        case .betCreated, .betChallenge, .betResolved: .bet
         case .unknown: .club
         }
     }
@@ -431,6 +456,12 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             ActivityData(member: member)
         case let .tipsKing(members, correct, possible, eventDate):
             ActivityData(members: members, eventDate: eventDate, correct: correct, possible: possible)
+        case let .betCreated(question, side, points):
+            ActivityData(points: points, question: question, side: side)
+        case let .betChallenge(question, against, side, points):
+            ActivityData(points: points, question: question, against: against, side: side)
+        case let .betResolved(question, resolution):
+            ActivityData(question: question, resolution: resolution)
         case .unknown:
             ActivityData()
         }
@@ -485,6 +516,15 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
                 self = .unknown(kind: kind); return
             }
             self = .tipsKing(members: members, correct: correct, possible: possible, eventDate: d.eventDate)
+        case "bet_created":
+            guard let question = d.question else { self = .unknown(kind: kind); return }
+            self = .betCreated(question: question, side: d.side, points: d.points)
+        case "bet_challenge":
+            guard let question = d.question, let against = d.against else { self = .unknown(kind: kind); return }
+            self = .betChallenge(question: question, against: against, side: d.side, points: d.points)
+        case "bet_resolved":
+            guard let question = d.question, let resolution = d.resolution else { self = .unknown(kind: kind); return }
+            self = .betResolved(question: question, resolution: resolution)
         default:
             self = .unknown(kind: kind)
         }
@@ -503,6 +543,12 @@ nonisolated struct ActivityDisplay: Equatable, Sendable {
 }
 
 nonisolated enum ActivityText {
+    /// «50 poeng på JA», eller nil når innsatsen mangler.
+    static func betStake(_ side: String?, _ points: Int?) -> String? {
+        guard let points, let side, side == "yes" || side == "no" else { return nil }
+        return "\(points) poeng på \(side == "yes" ? "JA" : "NEI")"
+    }
+
     /// «Melding til alle»: linjeskift og doble mellomrom blir ett mellomrom, maks 300 tegn
     /// (PWA: `KUNNGJORING_MAKS`, `kunngjoring-test.js`).
     static let announcementMaxLength = 300
@@ -642,6 +688,26 @@ nonisolated enum ActivityText {
             var text = title + (evening(eventDate).map { " \($0)" } ?? "") + ": "
             text += list(members) + " med \(correct) av \(possible) riktige"
             return ActivityDisplay(symbol: "crown.fill", emoji: "👑", text: text)
+
+        // Veddemål: PWA-ens ordlyd (`logActivity` i handleUtfordring og markets), med poeng for kroner.
+        case let .betChallenge(question, against, side, points):
+            let stake = betStake(side, points).map { " — \($0)" } ?? ""
+            return ActivityDisplay(symbol: "bolt.fill", emoji: "⚔️",
+                                   text: "\(who(actor)) utfordret \(who(against)): «\(question)»" + stake)
+
+        case let .betCreated(question, side, points):
+            let stake = betStake(side, points).map { " og satset \($0)" } ?? ""
+            return ActivityDisplay(symbol: "chart.line.uptrend.xyaxis", emoji: "📈",
+                                   text: "\(who(actor)) åpnet «\(question)»" + stake)
+
+        case let .betResolved(question, resolution):
+            switch resolution {
+            case "yes", "no":
+                return ActivityDisplay(symbol: "trophy.fill", emoji: "🏆",
+                                       text: "Veddemål avgjort: «\(question)» → \(resolution == "yes" ? "JA" : "NEI")")
+            default:
+                return ActivityDisplay(symbol: "xmark.circle", emoji: "↩️", text: "Veddemål annullert: «\(question)»")
+            }
 
         case .unknown:
             return ActivityDisplay(symbol: "clock", emoji: "🔔", text: "Ny hendelse i klubben")

@@ -435,6 +435,13 @@ export interface ActivityDisplay {
 
 // Lesing av jsonb-feltene. Feil type blir undefined, som ActivityData i appen.
 const str = (v: unknown) => (typeof v === "string" ? v : undefined);
+
+/** «50 poeng på JA», eller undefined når innsatsen mangler. */
+function betStake(side: unknown, points: unknown): string | undefined {
+  const p = num(points);
+  if (p === undefined || (side !== "yes" && side !== "no")) return undefined;
+  return `${p} poeng på ${side === "yes" ? "JA" : "NEI"}`;
+}
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
 const ids = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : undefined);
 
@@ -570,6 +577,27 @@ export function activityDisplay(activity: ActivityPayload, name: NameLookup): Ac
         emoji: "👑",
         text: `${title}${date ? ` ${date}` : ""}: ${list(members)} med ${correct} av ${possible} riktige`,
       };
+    }
+    // Veddemål (012): samme ordlyd som appen (ActivityText), PWA-ens tekster med poeng for kroner.
+    case "bet_challenge": {
+      const question = str(d.question), against = str(d.against);
+      if (!question || !against) return UNKNOWN;
+      const stake = betStake(d.side, d.points);
+      return { emoji: "⚔️", text: `${actor} utfordret ${who(against)}: «${question}»${stake ? ` — ${stake}` : ""}` };
+    }
+    case "bet_created": {
+      const question = str(d.question);
+      if (!question) return UNKNOWN;
+      const stake = betStake(d.side, d.points);
+      return { emoji: "📈", text: `${actor} åpnet «${question}»${stake ? ` og satset ${stake}` : ""}` };
+    }
+    case "bet_resolved": {
+      const question = str(d.question), resolution = str(d.resolution);
+      if (!question || !resolution) return UNKNOWN;
+      if (resolution === "yes" || resolution === "no") {
+        return { emoji: "🏆", text: `Veddemål avgjort: «${question}» → ${resolution === "yes" ? "JA" : "NEI"}` };
+      }
+      return { emoji: "↩️", text: `Veddemål annullert: «${question}»` };
     }
     default:
       return UNKNOWN;
