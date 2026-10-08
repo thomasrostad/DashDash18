@@ -16,8 +16,8 @@ Workflowen **TestFlight fra main** bygger appen og sender den til TestFlight hve
 
 ## Vanlig bruk
 
-- Endringer i appen: push til `main`. Bygget kommer i TestFlight etter 15–30 minutter.
-- Bare dokumentasjon eller SQL: skriv `[ci skip]` i commit-meldingen, så startes ingen bygg.
+- Endringer i appen: merge PR-en til `main`. Bygget kommer i TestFlight etter 15–30 minutter.
+- Bare dokumentasjon eller SQL: skriv `[ci skip]` i tittelen på PR-en (squash-commiten), så startes ingen bygg.
 - SQL, Edge Functions og secrets i Supabase trenger ikke nytt bygg.
 
 ## Når Xcode på Mac-en oppdateres
