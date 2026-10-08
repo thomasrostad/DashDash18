@@ -124,7 +124,7 @@ struct ResultShareButton: View {
 #Preview {
     ScrollView {
         ResultShareCard(share: ResultShare(
-            eyebrow: "Jakkeracet", title: "Sesong 2026", subtitle: "3 av 7 kvelder spilt",
+            eyebrow: "Jakkeracet", title: "Høst 2026", subtitle: "3 av 7 kvelder spilt",
             lines: [
                 .init(place: 1, name: "Anders", value: "12,5 p", isMe: false),
                 .init(place: 2, name: "Bjørn", value: "10 p", isMe: true),

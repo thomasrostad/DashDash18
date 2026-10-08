@@ -138,9 +138,9 @@ private struct FinishedSeasonCard: View {
                 .frame(width: 30, height: 36)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
-                Text("Sesongen er ferdig")
+                Text("Turneringen er ferdig")
                     .font(.ddTitleSmall)
-                Text("Se mesteren, pallen og sesongens tall.")
+                Text("Se mesteren, pallen og turneringens tall.")
                     .font(.ddCallout)
                     .foregroundStyle(Color.ddOnDark.opacity(0.8))
             }
@@ -201,9 +201,9 @@ struct TavlaRowView: View {
 private struct NoSeasonView: View {
     var body: some View {
         ContentUnavailableView(
-            "Ingen sesong i gang",
+            "Ingen turnering i gang",
             systemImage: "trophy",
-            description: Text("Tabellen fylles når arrangøren har startet sesongen og første kveld er spilt.")
+            description: Text("Tabellen fylles når arrangøren har startet turneringen og første kveld er spilt.")
         )
     }
 }

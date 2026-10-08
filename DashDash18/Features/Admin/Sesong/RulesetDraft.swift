@@ -8,7 +8,7 @@ nonisolated enum RulesetSection: CaseIterable, Sendable {
 
     var title: String {
         switch self {
-        case .season: "Sesongen"
+        case .season: "Turneringen"
         case .scoring: "Stableford"
         case .table: "Tabellen"
         case .sidePrizes: "Sidepremier"

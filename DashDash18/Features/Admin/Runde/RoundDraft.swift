@@ -198,7 +198,7 @@ nonisolated enum RoundSetupIssue: Equatable, Sendable {
         case .bayWithoutMarker(let bays):
             "\(term.numberedList(bays)) har ingen markør."
         case .formNotAllowed(let name):
-            "\(name) er ikke tillatt i sesongens regelsett."
+            "\(name) er ikke tillatt i turneringens regelsett."
         case .formNotSupported(let name):
             "\(name) kan ikke føres i appen ennå. Velg en annen form."
         case .teams(let text):

@@ -200,7 +200,7 @@ struct DDRankValue: View {
 #Preview("Fliser og rangering") {
     ScrollView {
         VStack(alignment: .leading, spacing: 14) {
-            DDJacketHero(eyebrow: "Sesongen 2026 · mester", title: "Bjørn",
+            DDJacketHero(eyebrow: "Høst 2026 · mester", title: "Bjørn",
                          subtitle: "42 poeng · 30 fra 7 dueller")
             DDTileGrid([
                 DDStatTile("Snitt / runde", value: "30"),

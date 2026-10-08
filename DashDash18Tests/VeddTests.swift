@@ -127,7 +127,7 @@ struct VeddTests {
         let any = BetTemplate(kind: .anyBirdie, condition: BetCondition(kind: .birdie, round: "r", hole: 6), side: .yes)
         #expect(BetTexts.template(any, me: "Anders", him: nil, roundName: nil) == "Noen får birdie på hull 7")
         #expect(BetTexts.template(BetTemplate(kind: .seasonPodium, condition: nil, side: .yes), me: "Anders", him: nil,
-                                  roundName: nil) == "Anders kommer på pallen i sesongen")
+                                  roundName: nil) == "Anders kommer på pallen i turneringen")
         #expect(BetTexts.side(.yes, against: "Bjørn Berg") == "Ja, Bjørn gjør det")
         #expect(BetTexts.side(.yes, against: nil) == "Ja, det skjer")
         #expect(BetTexts.side(.no, against: "Bjørn") == "Nei, jeg vinner")

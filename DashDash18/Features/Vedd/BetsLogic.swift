@@ -193,7 +193,7 @@ nonisolated enum BetTexts {
         case .anyBirdie: return "Noen får birdie på hull \(hole)"
         case .myPar: return "\(me) holder par eller bedre på hull \(hole)"
         case .winRound: return "\(me) vinner runden"
-        case .seasonPodium: return "\(me) kommer på pallen i sesongen"
+        case .seasonPodium: return "\(me) kommer på pallen i turneringen"
         }
     }
 

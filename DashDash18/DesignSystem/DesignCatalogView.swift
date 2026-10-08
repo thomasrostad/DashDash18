@@ -239,7 +239,7 @@ extension DesignCatalogView {
     var tavlaAndSocial: some View {
         VStack(alignment: .leading, spacing: 12) {
             DDSectionLabel("Tavla")
-            DDJacketHero(eyebrow: "Sesongen 2026 · mester", title: "Bjørn",
+            DDJacketHero(eyebrow: "Høst 2026 · mester", title: "Bjørn",
                          subtitle: "bærer den grønne jakka · 42 poeng")
             DDTileGrid([
                 DDStatTile("Snitt / runde", value: "30"),

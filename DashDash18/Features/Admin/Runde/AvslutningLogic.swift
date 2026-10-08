@@ -210,7 +210,7 @@ nonisolated enum EveningClose {
                 lines.append(prefix + cut + ".")
             }
         }
-        lines.append(checks.count == 1 ? "Runden låses og teller i sesongen." : "Rundene låses og teller i sesongen.")
+        lines.append(checks.count == 1 ? "Runden låses og teller i turneringen." : "Rundene låses og teller i turneringen.")
         let title = checks.count == 1 ? "Avslutte \(checks[0].title)?" : "Avslutte kvelden?"
         return EveningClosePrompt(title: title, lines: lines, suggestCut: suggest)
     }

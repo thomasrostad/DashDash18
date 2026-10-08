@@ -81,8 +81,8 @@ private struct BetsContent: View {
             if let board = model.board {
                 BetsList(model: model, board: board)
             } else {
-                ContentUnavailableView("Ingen sesong i gang", systemImage: "trophy",
-                                       description: Text("Veddemål hører til en sesong."))
+                ContentUnavailableView("Ingen turnering i gang", systemImage: "trophy",
+                                       description: Text("Veddemål hører til en turnering."))
             }
         }
     }
@@ -454,7 +454,7 @@ struct BetPointsTableView: View {
     }
 
     private var footer: String {
-        let start = board.rules.bets.startingPoints.map { "Alle starter sesongen med \($0) poeng, og ny sesong gir ny bank. " } ?? ""
+        let start = board.rules.bets.startingPoints.map { "Alle starter turneringen med \($0) poeng, og ny turnering gir ny bank. " } ?? ""
         let whole = board.rules.bets.payoutDecimals == 0 ? " Oppgjøret er i hele poeng." : ""
         return start + "Vinnersiden deler taperpotten etter innsats." + whole + " Tabellen teller ikke i jakkeracet."
     }

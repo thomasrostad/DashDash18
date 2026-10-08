@@ -194,7 +194,7 @@ struct AvsluttKveldenTests {
         #expect(prompt.title == "Avslutte Runde 1 – Testbanen?")
         #expect(prompt.suggestCut == F.roundID)
         #expect(prompt.lines.first == "2 spillere har ikke ført alle 18 hullene. Uspilte hull gir 0 poeng slik runden står nå, så den som rakk færrest hull taper på det.")
-        #expect(prompt.lines.last == "Runden låses og teller i sesongen.")
+        #expect(prompt.lines.last == "Runden låses og teller i turneringen.")
     }
 
     @Test func avkortetRundeSpoerIkkeOmAvkorting() throws {
