@@ -66,15 +66,19 @@ private struct AdminHubContent: View {
                     AdminHubRow("Banene", "Par, indeks og lengde for banene dere spiller.", systemImage: "map")
                 }
             }
-            if PushFeature.isEnabled {
-                DDSection("Push") {
-                    NavigationLink { ClubPushSettingsView() } label: {
-                        AdminHubRow("Hva blir push", "Hvilke hendelser som sendes som varsel til alle.",
-                                    systemImage: "bell.badge")
-                    }
-                    NavigationLink { PushStatusView() } label: {
-                        AdminHubRow("Hvem har push", "Hvem som får varsler på telefonen, og hvem som ikke gjør det.",
-                                    systemImage: "iphone.radiowaves.left.and.right")
+            DDSection("Varsler og rapporter") {
+                ForEach(ClubTools.hubRows(moderationEnabled: ModerationFeature.isEnabled), id: \.self) { row in
+                    switch row {
+                    case .notices:
+                        NavigationLink { VarslerTilTroppenView() } label: {
+                            AdminHubRow("Varsler til troppen", ClubTools.noticesSubtitle(pushEnabled: PushFeature.isEnabled),
+                                        systemImage: "megaphone")
+                        }
+                    case .reports:
+                        NavigationLink { ClubReportsView() } label: {
+                            AdminHubRow("Rapporter", "Innhold som noen har meldt fra om.",
+                                        systemImage: "flag.badge.ellipsis")
+                        }
                     }
                 }
             }
