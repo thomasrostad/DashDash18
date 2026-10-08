@@ -49,7 +49,7 @@ Arbeidsmåte:
 - Kryss av oppgaven og oppdater STATUS i `ROADMAP.md` etter hver fullført oppgave, og commit med en melding som peker på fasen (f.eks. «Fase 2: stableford per hull»).
 - Hvis noe viser seg å være større eller annerledes enn planlagt: oppdater planen og si fra, i stedet for å improvisere.
 - Ingen endringer i Supabase uten at brukeren har godkjent SQL-en.
-- **Aldri push eller commit rett til `main`.** Hver oppgave får egen branch fra oppdatert `main` (`fase-18/…`, `fiks/…`, `docs/…`). Push branchen og åpne PR mot `main` med `gh pr create`: hva som er endret, hvordan det er testet (bygg, antall tester), og om det trengs SQL eller oppsett. Brukeren merger (squash). Ikke merge selv uten at brukeren har sagt det. Se «Arbeidsflyt» i `README.md`.
+- **Aldri push eller commit rett til `main`.** Hver oppgave får egen branch fra oppdatert `main` (`fase-18/…`, `fiks/…`, `docs/…`). Push branchen og åpne PR mot `main` med `gh pr create`: hva som er endret, hvordan det er testet (bygg, antall tester), og om det trengs SQL eller oppsett. Claude merger selv (`gh pr merge --squash --delete-branch`) når bygget og testene er grønne, og sier fra med lenke til PR-en (godkjent av brukeren 08.10.2026). Vent på brukeren før merge når PR-en krever noe av ham (Supabase-endring som ikke er godkjent, oppsett i App Store Connect eller Google) eller når testene ikke er grønne. Se «Arbeidsflyt» i `README.md`.
 - Agent-worktrees: lag branchen fra `main`, og lever arbeidet som PR i stedet for å merge inn i `main` lokalt.
 - Gjelder PR-en bare dokumentasjon eller SQL, skal tittelen ha `[ci skip]`, så Xcode Cloud ikke bygger.
 

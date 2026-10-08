@@ -75,7 +75,7 @@ Med Golfgutu-oppsettet skal regelmotoren gi nøyaktig samme svar som PWA-ens `db
 2. Commit i små steg. Meldingen peker på fasen: «Fase 18: stableford-serie i Tavla».
 3. Bygg og kjør testene før PR.
 4. Åpne PR mot `main` (`gh pr create`). Beskriv hva som er endret, hvordan det er testet, og om det trengs SQL eller oppsett.
-5. Thomas ser gjennom og merger (squash). Branchen slettes etter merge.
+5. Claude merger (squash) når bygg og tester er grønne, og sier fra med lenke. Krever PR-en noe av Thomas (SQL som ikke er godkjent, oppsett i App Store Connect eller Google), venter den på ham. Branchen slettes etter merge.
 
 Når `main` endres, sender Xcode Cloud et nytt bygg til TestFlight (15–30 min). Gjelder PR-en bare dokumentasjon eller SQL, skriv `[ci skip]` i tittelen på squash-commiten, så startes ingen bygg.
 
