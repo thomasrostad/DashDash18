@@ -284,8 +284,7 @@ final class CompetitionDetailModel {
                 let me = access.memberships.first { $0.clubID == competition.clubID }?.memberID
                 content = .season(input.map { TavlaStandings($0, me: me) })
             } else {
-                let fresh = try await CompetitionQueries.overview(client: client).participants
-                participants = fresh.filter { $0.competitionID == competition.id }
+                participants = try await CompetitionQueries.participants(client: client, competitionID: competition.id)
                 let detail = try await CompetitionQueries.detail(client: client, competition: competition,
                                                                  participants: participants)
                 self.detail = detail
