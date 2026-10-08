@@ -13,6 +13,12 @@ nonisolated enum AppTab: String, CaseIterable, Identifiable {
         allCases.filter { $0 != .spill || looseRounds }
     }
 
+    /// Knappen til Arrangørsiden i verktøylinja: bare i Kveld, og bare for arrangører.
+    /// Raden i Deg står i tillegg.
+    func showsAdminButton(isOrganizer: Bool) -> Bool {
+        self == .kveld && isOrganizer
+    }
+
     var title: String {
         switch self {
         case .kveld: "Kveld"

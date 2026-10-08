@@ -86,3 +86,13 @@ struct KomIGangTests {
         #expect(old == .init(hasActiveSeason: false, readyCourses: 0, activeMembers: 0, upcomingEvenings: 0))
     }
 }
+
+struct ArrangorInngangTests {
+    @Test func knappenBareIKveldForArrangorer() {
+        #expect(AppTab.kveld.showsAdminButton(isOrganizer: true))
+        #expect(!AppTab.kveld.showsAdminButton(isOrganizer: false))
+        #expect(!AppTab.deg.showsAdminButton(isOrganizer: true))
+        #expect(!AppTab.tavla.showsAdminButton(isOrganizer: true))
+        #expect(!AppTab.spill.showsAdminButton(isOrganizer: true))
+    }
+}

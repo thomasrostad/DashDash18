@@ -19,6 +19,16 @@ struct RootView: View {
                             .navigationTitle(tab.title)
                             .ddNavigationChrome()
                             .toolbar {
+                                // Høyst tre: arrangørsiden (Kveld), miljømerket (ikke prod) og bjella.
+                                if tab.showsAdminButton(isOrganizer: membership.isOrganizer) {
+                                    ToolbarItem(placement: .topBarLeading) {
+                                        NavigationLink { AdminHubView() } label: {
+                                            Image(systemName: "slider.horizontal.3")
+                                        }
+                                        .accessibilityLabel("Arrangørsiden")
+                                        .tint(Color.ddOnDark)
+                                    }
+                                }
                                 if config.environment != .prod {
                                     ToolbarItem(placement: .topBarTrailing) {
                                         EnvironmentBadge(environment: config.environment)
