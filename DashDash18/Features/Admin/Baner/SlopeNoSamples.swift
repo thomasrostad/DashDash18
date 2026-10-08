@@ -72,8 +72,8 @@ enum SlopeNoSamples {
 
 struct SlopeNoSampleScreen: View {
     let screen: DesignScreenSamples.Screen
-    @State private var selectedTee: UUID? = SlopeNoSamples.losbyTees()[2].id
-    private let tees = SlopeNoSamples.losbyTees()
+    private static let tees = SlopeNoSamples.losbyTees()
+    @State private var selectedTee: UUID? = Self.tees[2].id
 
     var body: some View {
         NavigationStack {
@@ -84,7 +84,7 @@ struct SlopeNoSampleScreen: View {
                 CourseEditView(model: CourseLibraryModel(preview: [], slopeCatalog: SlopeNoSamples.catalog), item: nil,
                                initialDraft: SlopeNoSamples.prefilledDraft)
             case .teevalg:
-                TeePickerView(tees: tees, selected: $selectedTee)
+                TeePickerView(tees: Self.tees, selected: $selectedTee)
             case .hurtigstarttee:
                 let model = RundeAdminModel.sample(withTees: true)
                 RundeQuickStartView(model: model, draft: model.newDraft()!, onDone: { _ in })
