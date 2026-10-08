@@ -13,7 +13,7 @@ struct RundeSetupStep: View {
     @State private var showsAdvanced: Bool?
 
     private var rules: Ruleset { model.rules }
-    private var coreCourse: Course? { model.course(draft.courseID)?.coreCourse }
+    private var coreCourse: Course? { model.coreCourse(for: draft) }
 
     var body: some View {
         let form = draft.form

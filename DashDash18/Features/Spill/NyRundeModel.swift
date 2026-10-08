@@ -93,7 +93,21 @@ final class NyRundeModel {
     }
 
     func select(course: CourseListItem) {
+        let changed = course.id != draft.courseID
         draft.setCourse(course.id, courseHoles: course.holeCount)
+        guard changed, !course.tees.isEmpty else { return }
+        // Forslaget: første herre-tee nå, så teen du brukte sist på banen når den er hentet.
+        let suggested = TeeChoice.suggested(course.tees, previous: nil)?.id
+        draft.teeID = suggested
+        guard let client else { return }
+        let userID = userID
+        Task {
+            guard let previous = try? await LooseRoundQueries.previousTeeID(client: client, courseID: course.id,
+                                                                            userID: userID),
+                  draft.courseID == course.id, draft.teeID == suggested,
+                  let tee = course.tee(previous) else { return }
+            draft.teeID = tee.id
+        }
     }
 
     /// Starter runden. Gir rundens id, eller nil (feilen står i `error`).

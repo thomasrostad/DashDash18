@@ -15,13 +15,14 @@ struct CourseEditView: View {
 
     @State private var showsIndex: Bool
 
-    init(model: CourseLibraryModel, item: CourseListItem?) {
+    /// - Parameter initialDraft: et ferdig utfylt skjema for en ny bane (skjermprøvene).
+    init(model: CourseLibraryModel, item: CourseListItem?, initialDraft: CourseDraft? = nil) {
         self.model = model
         self.item = item
-        var empty = CourseDraft()
+        var empty = initialDraft ?? CourseDraft()
         // Det felles biblioteket er mest ekte baner (løse runder med venner).
-        if model.isShared { empty.kind = .course }
-        let draft = item.map { CourseDraft(course: $0.course, holes: $0.holes, kind: $0.kind) } ?? empty
+        if model.isShared, initialDraft == nil { empty.kind = .course }
+        let draft = item.map { CourseDraft(course: $0.course, holes: $0.holes, kind: $0.kind, tees: $0.tees) } ?? empty
         _draft = State(initialValue: draft)
         _original = State(initialValue: draft)
         _showsIndex = State(initialValue: draft.holes.contains { !$0.strokeIndexText.isEmpty || !$0.lengthText.isEmpty })
@@ -36,6 +37,9 @@ struct CourseEditView: View {
     var body: some View {
         let validation = draft.validate()
         DDForm {
+            if item == nil, let catalog = model.slopeCatalog, draft.kind == .course {
+                slopeSection(catalog)
+            }
             courseSection
             readinessSection
             parSection(title: draft.holeCount > 9 ? "Par, hull 1–9" : "Par", range: 0..<min(9, draft.holeCount))
@@ -44,6 +48,7 @@ struct CourseEditView: View {
             }
             indexSection
             ratingSection
+            CourseTeesSection(tees: $draft.tees)
 
             issuesSection(validation)
 
@@ -85,6 +90,25 @@ struct CourseEditView: View {
     }
 
     // MARK: Delene
+
+    /// «Hent fra slope.no»: navn, tees, CR og slope fylles inn. Hullene leses av scorekortet som før.
+    private func slopeSection(_ catalog: SlopeCatalogModel) -> some View {
+        Section {
+            NavigationLink {
+                SlopeCourseSearchView(model: catalog) { course, tees in
+                    draft.prefill(from: course, tees: tees)
+                }
+            } label: {
+                Label(draft.tees == nil ? "Hent fra slope.no" : "Hent en annen bane fra slope.no",
+                      systemImage: "magnifyingglass")
+            }
+        } footer: {
+            VStack(alignment: .leading, spacing: 6) {
+                DDFooter("Søk blant de nordiske banene. Navn, tees, course rating og slope fylles inn. Par og indeks per hull står på scorekortet.")
+                SlopeNoCreditLink()
+            }
+        }
+    }
 
     /// Navn, type, antall hull og navnet i simulatoren.
     private var courseSection: some View {

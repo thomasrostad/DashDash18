@@ -97,6 +97,9 @@ nonisolated struct StatsRoundRow: Codable, Equatable, Identifiable, Sendable {
     var handicapAllowance: Double
     var externalHandicap: Bool
     var startedAt: Date?
+    /// CR og slope fra teen runden ble spilt fra, slik de var ved start (sql/029). Tomme = banens.
+    var courseRating: Double? = nil
+    var slopeRating: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -111,12 +114,15 @@ nonisolated struct StatsRoundRow: Codable, Equatable, Identifiable, Sendable {
         case handicapAllowance = "handicap_allowance"
         case externalHandicap = "external_handicap"
         case startedAt = "started_at"
+        case courseRating = "course_rating"
+        case slopeRating = "slope_rating"
     }
 
+    /// Rundens CR og slope (sql/029) bare når `SlopeNoFeature` er på.
     static let columns = """
         id, club_id, event_id, course_id, name, status, hole_count, first_hole, format, \
         handicap_allowance, external_handicap, started_at
-        """
+        """ + (SlopeNoFeature.isEnabled ? ", course_rating, slope_rating" : "")
 }
 
 /// Spilleren i runden: frosset indeks og spillehandicap. Klubb kan være tom (løs runde).

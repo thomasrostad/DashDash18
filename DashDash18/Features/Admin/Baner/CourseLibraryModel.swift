@@ -19,6 +19,8 @@ final class CourseLibraryModel {
     /// Det felles biblioteket (sql/017–018, løse runder): baner uten klubb, som alle leser og den som
     /// la dem inn, retter. nil for klubbens bibliotek.
     private let shared: SharedLibrary?
+    /// Banene fra slope.no til «Ny bane» (sql/029). nil når `SlopeNoFeature` er av.
+    let slopeCatalog: SlopeCatalogModel?
 
     struct SharedLibrary {
         let client: SupabaseClient
@@ -30,6 +32,7 @@ final class CourseLibraryModel {
         self.context = context
         self.courseSet = courseSet
         shared = nil
+        slopeCatalog = SlopeNoFeature.isEnabled ? SlopeCatalogModel(client: context.client) : nil
     }
 
     /// Det felles biblioteket (løse runder, `LooseRoundsFeature`).
@@ -37,6 +40,7 @@ final class CourseLibraryModel {
         context = nil
         courseSet = nil
         shared = SharedLibrary(client: client, userID: userID)
+        slopeCatalog = SlopeNoFeature.isEnabled ? SlopeCatalogModel(client: client) : nil
     }
 
     /// Det felles biblioteket, ikke klubbens.
@@ -51,19 +55,22 @@ final class CourseLibraryModel {
 
     #if DEBUG
     /// Skjermprøve av det felles biblioteket, uten nett (henting feiler stille).
-    init(previewShared items: [CourseListItem], client: SupabaseClient, userID: UUID) {
+    init(previewShared items: [CourseListItem], client: SupabaseClient, userID: UUID,
+         slopeCatalog: SlopeCatalogModel? = nil) {
         context = nil
         courseSet = nil
         shared = SharedLibrary(client: client, userID: userID)
+        self.slopeCatalog = slopeCatalog
         self.items = CourseListItem.sorted(items)
         hasLoaded = true
     }
 
     /// Skjermprøve med oppdiktede baner, uten nett.
-    init(preview items: [CourseListItem]) {
+    init(preview items: [CourseListItem], slopeCatalog: SlopeCatalogModel? = nil) {
         context = nil
         courseSet = nil
         shared = nil
+        self.slopeCatalog = slopeCatalog
         self.items = CourseListItem.sorted(items)
         hasLoaded = true
     }
@@ -106,7 +113,8 @@ final class CourseLibraryModel {
                     .value
             }
             let kinds = try await Self.loadKinds(client: client, clubID: clubID)
-            items = CourseListItem.make(courses: courses, holes: holes, kinds: kinds)
+            let tees = try await Self.loadTees(client: client, courseIDs: courses.map(\.id))
+            items = CourseListItem.make(courses: courses, holes: holes, kinds: kinds, tees: tees)
             hasLoaded = true
             error = nil
         } catch {
@@ -178,6 +186,7 @@ final class CourseLibraryModel {
             )
             let savedID: UUID = try await client.rpc("save_course", params: params).execute().value
             try await saveKind(values.kind, id: savedID, client: client)
+            try await Self.saveTees(values.tees, id: savedID, client: client)
             let item = try await fetchItem(savedID)
             guard item.holes.count == values.holes.count else { throw DataError.notAllowed }
             replace(item)
@@ -218,7 +227,32 @@ final class CourseLibraryModel {
             .execute()
             .value
         let kinds = try await Self.loadKinds(client: client, clubID: clubID, courseID: id)
-        return CourseListItem(course: course, holes: holes, storedKind: kinds[id])
+        let tees = try await Self.loadTees(client: client, courseIDs: [id])
+        return CourseListItem(course: course, holes: holes, storedKind: kinds[id], tees: tees)
+    }
+
+    // MARK: Tees (sql/029)
+
+    /// Teene til banene, uten dem som er borte fra kilden. Tom så lenge `SlopeNoFeature` er av.
+    static func loadTees(client: SupabaseClient, courseIDs: [UUID]) async throws -> [CourseTeeRow] {
+        guard SlopeNoFeature.isEnabled, !courseIDs.isEmpty else { return [] }
+        return try await client.from("course_tees")
+            .select(CourseTeeRow.columns)
+            .in("course_id", values: courseIDs.map(\.uuidString))
+            .is("missing_at", value: nil)
+            .execute().value
+    }
+
+    /// Banens egne tees i én transaksjon (`save_course_tees`). nil = teene røres ikke.
+    static func saveTees(_ tees: [TeeInput]?, id: UUID, client: SupabaseClient) async throws {
+        guard SlopeNoFeature.isEnabled, let tees else { return }
+        struct Params: Encodable {
+            let p_course_id: UUID
+            let p_tees: [TeeInput]
+        }
+        let count: Int = try await client.rpc("save_course_tees", params: Params(p_course_id: id, p_tees: tees))
+            .execute().value
+        guard count == tees.count else { throw DataError.invalid("Teene ble ikke lagret slik de sto. Last inn på nytt og sjekk.") }
     }
 
     // MARK: Banetype (sql/016)
@@ -285,9 +319,12 @@ final class CourseLibraryModel {
         isLoading = true
         defer { isLoading = false }
         do {
+            // Bare baner brukerne har lagt inn. Hentede baner (slope.no, sql/029) har ingen hull; de
+            // søkes opp for seg under «Ny bane».
             let rows: [SharedCourseRow] = try await shared.client.from("courses")
                 .select(Self.sharedColumns)
                 .is("club_id", value: nil)
+                .is("source", value: nil)
                 .execute().value
             var holes: [CourseHoleRecord] = []
             if !rows.isEmpty {
@@ -296,8 +333,10 @@ final class CourseLibraryModel {
                     .in("course_id", values: rows.map(\.course.id.uuidString))
                     .execute().value
             }
+            let tees = try await Self.loadTees(client: shared.client, courseIDs: rows.map(\.course.id))
             items = CourseListItem.make(courses: rows.map(\.course), holes: holes,
-                                        kinds: Dictionary(rows.map { ($0.course.id, $0.kind) }, uniquingKeysWith: { a, _ in a }))
+                                        kinds: Dictionary(rows.map { ($0.course.id, $0.kind) }, uniquingKeysWith: { a, _ in a }),
+                                        tees: tees)
             hasLoaded = true
             error = nil
         } catch {
@@ -346,13 +385,15 @@ final class CourseLibraryModel {
                 }
             )
             let savedID: UUID = try await shared.client.rpc("save_library_course", params: params).execute().value
+            try await Self.saveTees(values.tees, id: savedID, client: shared.client)
             let rows: [SharedCourseRow] = try await shared.client.from("courses")
                 .select(Self.sharedColumns).eq("id", value: savedID).execute().value
             guard let row = rows.first else { throw DataError.notAllowed }
             let holes: [CourseHoleRecord] = try await shared.client.from("course_holes")
                 .select(CourseHoleRecord.columns)
                 .eq("course_id", value: savedID).execute().value
-            let item = CourseListItem(course: row.course, holes: holes, storedKind: row.kind)
+            let tees = try await Self.loadTees(client: shared.client, courseIDs: [savedID])
+            let item = CourseListItem(course: row.course, holes: holes, storedKind: row.kind, tees: tees)
             guard item.holes.count == values.holes.count else { throw DataError.notAllowed }
             replace(item)
             return item

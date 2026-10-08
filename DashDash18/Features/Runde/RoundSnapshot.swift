@@ -78,7 +78,7 @@ nonisolated struct RoundGame: Sendable {
             holeCount: r.holeCount,
             // Skjemaet lagrer banens første hull (1 eller 10), regelmotoren PWA-ens 0/9.
             holeStart: r.firstHole == 10 ? 9 : 0,
-            course: makeCourse(s.course, holes: s.courseHoles),
+            course: makeCourse(s.course, holes: s.courseHoles, round: r),
             holes: overrides.isEmpty ? nil : overrides,
             hcpAllowance: r.handicapAllowance,
             hcpExtern: r.externalHandicap,
@@ -112,7 +112,8 @@ nonisolated struct RoundGame: Sendable {
 
     /// Banen med hull fra `course_holes`. Hullene tas bare med når de er 9 eller 18
     /// sammenhengende fra 1 (`banehullFraRader`). Par er summen av hullene.
-    static func makeCourse(_ row: CourseRow?, holes: [CourseHoleRecord]) -> Course? {
+    /// Er runden spilt fra en tee (sql/029), gjelder CR og slope slik de var da runden startet.
+    static func makeCourse(_ row: CourseRow?, holes: [CourseHoleRecord], round: RoundRow? = nil) -> Course? {
         guard let row else { return nil }
         let mine = holes.filter { $0.courseID == row.id }.map { h in
             CourseHoleRow(courseId: row.id.uuidString, holeNumber: h.holeNumber, par: h.par,
@@ -121,7 +122,8 @@ nonisolated struct RoundGame: Sendable {
         let played = Course.holesFromRows(mine)[row.id.uuidString] ?? nil
         let par = played.map { $0.reduce(0) { $0 + ($1.par ?? 0) } }
         return Course(id: row.id.uuidString, name: row.name, par: par,
-                      courseRating: row.courseRating, slopeRating: row.slopeRating.map(Double.init),
+                      courseRating: round?.courseRating ?? row.courseRating,
+                      slopeRating: (round?.slopeRating ?? row.slopeRating).map(Double.init),
                       holes: played)
     }
 

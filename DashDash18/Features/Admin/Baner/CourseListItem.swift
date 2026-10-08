@@ -8,11 +8,24 @@ nonisolated struct CourseListItem: Equatable, Identifiable, Sendable {
     var holes: [CourseHoleRecord]
     /// `courses.kind` når den leses (sql/016, `CourseKindFeature`), ellers nil.
     var storedKind: CourseKind?
+    /// Teene som vises (sql/029, `SlopeNoFeature`), i rekkefølge. Tom før 029, og på simulatorbaner.
+    var tees: [CourseTeeRow]
 
-    init(course: CourseRow, holes: [CourseHoleRecord], storedKind: CourseKind? = nil) {
+    init(course: CourseRow, holes: [CourseHoleRecord], storedKind: CourseKind? = nil, tees: [CourseTeeRow] = []) {
         self.course = course
         self.holes = holes.sorted { $0.holeNumber < $1.holeNumber }
         self.storedKind = storedKind
+        self.tees = TeeChoice.visible(tees)
+    }
+
+    func tee(_ id: UUID?) -> CourseTeeRow? {
+        guard let id else { return nil }
+        return tees.first { $0.id == id }
+    }
+
+    /// GolfgutuCore-banen med teens CR og slope. Uten tee: `coreCourse` uendret.
+    func coreCourse(tee id: UUID?) -> Course {
+        TeeChoice.applying(tee(id), to: coreCourse) ?? coreCourse
     }
 
     /// Simulatorbane eller ekte bane.
@@ -61,6 +74,7 @@ nonisolated struct CourseListItem: Equatable, Identifiable, Sendable {
         var parts = ["\(holeCount) hull", "par \(par)"]
         if let rating = course.courseRating { parts.append("CR \(CourseInput.decimalText(rating))") }
         if let slope = course.slopeRating { parts.append("slope \(slope)") }
+        if !tees.isEmpty { parts.append(tees.count == 1 ? "1 tee" : "\(tees.count) tees") }
         parts.append(hasStrokeIndex ? "med indeks" : "uten indeks")
         return parts.joined(separator: " · ")
     }
@@ -82,9 +96,12 @@ nonisolated struct CourseListItem: Equatable, Identifiable, Sendable {
 
     /// Setter sammen baner og hull fra to spørringer (og typene, når de leses).
     static func make(courses: [CourseRow], holes: [CourseHoleRecord],
-                     kinds: [UUID: CourseKind] = [:]) -> [CourseListItem] {
+                     kinds: [UUID: CourseKind] = [:], tees: [CourseTeeRow] = []) -> [CourseListItem] {
         let grouped = Dictionary(grouping: holes, by: \.courseID)
-        return sorted(courses.map { CourseListItem(course: $0, holes: grouped[$0.id] ?? [], storedKind: kinds[$0.id]) })
+        let teesByCourse = Dictionary(grouping: tees, by: \.courseID)
+        return sorted(courses.map {
+            CourseListItem(course: $0, holes: grouped[$0.id] ?? [], storedKind: kinds[$0.id], tees: teesByCourse[$0.id] ?? [])
+        })
     }
 
     /// Banelista delt i simulatorbaner og ekte baner, i den rekkefølgen. Tomme grupper utelates.

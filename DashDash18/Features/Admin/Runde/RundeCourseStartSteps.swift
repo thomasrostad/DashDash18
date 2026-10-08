@@ -45,7 +45,9 @@ struct RundeCourseStep: View {
 
     private func courseRow(_ course: CourseListItem) -> some View {
         Button {
+            let changed = course.id != draft.courseID
             RoundConfirm.selectCourse(course, on: &draft, rules: model.rules)
+            if changed { draft.teeID = model.suggestedTeeID(for: course) }
             dismiss()
         } label: {
             HStack {

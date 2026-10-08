@@ -57,6 +57,9 @@ struct DegView: View {
                 LabeledContent("Database") {
                     Text(config.projectRef).font(.ddMonoSmall)
                 }
+                if SlopeNoFeature.isEnabled {
+                    SlopeNoAboutRow()
+                }
             }
         }
     }

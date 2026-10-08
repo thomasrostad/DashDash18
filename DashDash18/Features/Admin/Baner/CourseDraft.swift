@@ -27,6 +27,9 @@ nonisolated struct CourseDraft: Equatable, Sendable {
     /// Simulator eller ekte bane. Lagres bare når `CourseKindFeature.isEnabled` (sql/016).
     var kind: CourseKind = .simulator
     var holes: [HoleDraft]
+    /// Teene (sql/029, `SlopeNoFeature`), i rekkefølge. nil = banen har ingen tees, og ingenting
+    /// sendes; tom liste = alle teene fjernes ved lagring.
+    var tees: [TeeInput]? = nil
 
     /// Hvor mange hull en bane kan ha (`baneErKlar`).
     static let holeCounts = [9, 18]
@@ -37,8 +40,11 @@ nonisolated struct CourseDraft: Equatable, Sendable {
     }
 
     /// Fra lagrede rader. Hull som mangler i databasen blir tomme.
-    init(course: CourseRow, holes rows: [CourseHoleRecord], kind: CourseKind = .simulator) {
+    init(course: CourseRow, holes rows: [CourseHoleRecord], kind: CourseKind = .simulator,
+         tees teeRows: [CourseTeeRow] = []) {
         name = course.name
+        let shownTees = TeeChoice.visible(teeRows)
+        tees = shownTees.isEmpty ? nil : shownTees.map(TeeInput.init)
         self.kind = kind
         externalName = course.externalName ?? ""
         courseRatingText = course.courseRating.map(CourseInput.decimalText) ?? ""
@@ -220,7 +226,8 @@ nonisolated struct CourseDraft: Equatable, Sendable {
             slopeRating: slope,
             inUse: inUse,
             holes: noParAtAll ? [] : validHoles,
-            kind: kind
+            kind: kind,
+            tees: tees
         )
         return CourseValidation(issues: issues, values: input)
     }
@@ -247,6 +254,8 @@ nonisolated struct CourseInputValues: Equatable, Sendable {
     var inUse: Bool
     var holes: [CourseHoleInput]
     var kind: CourseKind = .simulator
+    /// Teene som lagres med `save_course_tees` (sql/029). nil = teene røres ikke.
+    var tees: [TeeInput]? = nil
 
     /// GolfgutuCore-banen, for `baneErKlar` og lengdesjekken.
     var coreCourse: Course {
