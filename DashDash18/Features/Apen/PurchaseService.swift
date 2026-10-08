@@ -185,12 +185,11 @@ final class PurchaseService {
     /// Kobler en ledig kreditt du selv har kjøpt til en turnering som alt finnes (konkurransesiden,
     /// «Bruk kjøpet ditt»). Gir `true` når serveren godtok koblingen; ellers står feilen i `state`.
     func useCredit(for competitionID: UUID) async -> Bool {
-        guard let credit = CompetitionLock.credit(in: entitlements, profileID: profileID) else {
+        guard let credit = CompetitionUnlock.unusedCredit(in: entitlements, owner: profileID) else {
             state = .failed(.serverRejected("fant ikke noe ledig kjøp"))
             return false
         }
-        await use(credit: credit, for: competitionID)
-        return lastUnlocked == competitionID
+        return await use(credit: credit, for: competitionID)
     }
 
     /// «Gjenopprett kjøp»: synker med App Store (abonnement), registrerer det som ikke er
@@ -214,11 +213,6 @@ final class PurchaseService {
 
     // MARK: Låst opp?
 
-    /// Fra kjøpene som er hentet (virker uten nett).
-    func isUnlocked(_ competition: CompetitionPurchaseInfo, now: Date = .now) -> Bool {
-        CompetitionUnlock.isUnlocked(competition, entitlements: entitlements, now: now)
-    }
-
     /// Serverens svar (fasit).
     func serverIsUnlocked(_ competitionID: UUID) async -> Bool? {
         try? await backend.isUnlocked(competitionID: competitionID)
@@ -226,15 +220,19 @@ final class PurchaseService {
 
     // MARK: Internt
 
-    private func use(credit: EntitlementRow, for competitionID: UUID) async {
+    /// Gir `true` når serveren godtok koblingen; ellers står feilen i `state`.
+    @discardableResult
+    private func use(credit: EntitlementRow, for competitionID: UUID) async -> Bool {
         state = .purchasing
         do {
             try await backend.assign(entitlementID: credit.id, competitionID: competitionID)
             lastUnlocked = competitionID
             await refreshEntitlements()
             state = .idle
+            return true
         } catch {
             state = .failed(.serverRejected(DataError.from(error).message))
+            return false
         }
     }
 

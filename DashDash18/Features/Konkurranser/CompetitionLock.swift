@@ -68,14 +68,7 @@ nonisolated enum CompetitionLock {
         return notice(requiresPurchase: c.requiresPurchase, isFinished: c.status == .finished,
                       isAdmin: access.isAdmin(c), isClub: c.clubID != nil, serverUnlocked: serverUnlocked,
                       localUnlocked: CompetitionUnlock.isUnlocked(info, entitlements: entitlements, now: now),
-                      hasOwnCredit: credit(in: entitlements, profileID: access.profileID) != nil,
+                      hasOwnCredit: CompetitionUnlock.unusedCredit(in: entitlements, owner: access.profileID) != nil,
                       enabled: enabled)
-    }
-
-    /// En ledig kreditt du selv har kjøpt. `assign_purchase` godtar bare egne kjøp, og RLS viser
-    /// også klubbens kjøp til arrangørene, så andres kreditter teller ikke.
-    static func credit(in entitlements: [EntitlementRow], profileID: UUID?) -> EntitlementRow? {
-        guard let profileID else { return nil }
-        return entitlements.first { $0.isUnusedCredit && $0.profileID == profileID }
     }
 }
