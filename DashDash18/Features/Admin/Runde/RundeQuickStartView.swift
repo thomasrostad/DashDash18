@@ -1,36 +1,15 @@
 import GolfgutuCore
 import SwiftUI
 
-/// «Ny runde» og «Rediger kladd» i et ark: hurtigstarten som standard, og veiviseren i tre steg
-/// for den som vil ta det steg for steg.
-struct RoundSetupFlow: View {
-    let model: RundeAdminModel
-    let draft: RoundDraft
-    let onDone: (String?) -> Void
-
-    @State private var stepByStep: RoundDraft?
-
-    var body: some View {
-        NavigationStack {
-            if let stepByStep {
-                RundeWizardView(model: model, draft: stepByStep, onDone: onDone)
-            } else {
-                RundeQuickStartView(model: model, draft: draft, onDone: onDone) { stepByStep = $0 }
-            }
-        }
-        .interactiveDismissDisabled()
-    }
-}
-
-/// Hurtigstarten: én skjerm med sted, bane, start, tid og spillere, ferdig utfylt fra forrige runde
-/// i sesongen (ellers regelsettet) og med gruppene fordelt fra de påmeldte. Alt annet ligger under
-/// «Flere valg». Lagring og start går gjennom samme modell som veiviseren.
+/// «Ny runde» og «Rediger kladd»: én skjerm med sted, bane, start, tid og spillere, ferdig utfylt fra
+/// forrige runde i sesongen (ellers regelsettet) og med gruppene fordelt fra de påmeldte. Alt annet
+/// ligger under «Flere valg». Pushes i arrangørens navigasjon; «Spillere og båser» og «Flere valg» er
+/// vanlige undernivåer. Tilbake spør før ulagrede endringer forkastes.
 struct RundeQuickStartView: View {
     let model: RundeAdminModel
     @State var draft: RoundDraft
-    let onDone: (String?) -> Void
-    /// «Steg for steg»: åpner veiviseren med det som er fylt ut.
-    var onStepByStep: ((RoundDraft) -> Void)?
+    /// Etter «Lagre som kladd» eller «Start runden», med meldingen som vises der man kom fra.
+    let onDone: (String) -> Void
 
     @State private var bayCount = 1
     @State private var isBusy = false
@@ -38,6 +17,10 @@ struct RundeQuickStartView: View {
     @State private var showsPlayers = false
     @State private var showsMore = false
     @State private var scrollTarget: String?
+    /// Kladden slik den så ut da skjermen åpnet (etter forslagene), for å se om noe er endret.
+    @State private var original: RoundDraft?
+    /// «Teller også i …» slik det var da valget var hentet.
+    @State private var originalLinks: Set<UUID>?
     /// «Teller også i …» (fase 15). Nil når `CompetitionsFeature` er av.
     @State var links: CompetitionLinkModel?
 
@@ -69,20 +52,7 @@ struct RundeQuickStartView: View {
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) { bottomPanel }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Avbryt") { onDone(nil) }
-                    .disabled(isBusy)
-            }
-            if let onStepByStep {
-                ToolbarItem(placement: .primaryAction) {
-                    Menu("Mer", systemImage: "ellipsis") {
-                        Button("Steg for steg", systemImage: "list.number") { onStepByStep(draft) }
-                    }
-                    .disabled(isBusy)
-                }
-            }
-        }
+        .discardChangesGuard(hasChanges: hasChanges && !isBusy)
         .navigationDestination(isPresented: $showsPlayers) {
             RundeBaysStep(model: model, draft: $draft, bayCount: $bayCount)
                 .navigationTitle("Spillere og \(term.plural)")
@@ -98,6 +68,9 @@ struct RundeQuickStartView: View {
         .onAppear {
             draft.prepareSetup(rules: rules, roster: model.members)
             bayCount = max(1, draft.bays.bayCount)
+            // onAppear kommer også når man går tilbake fra et undernivå; utgangspunktet settes én gang.
+            if original == nil { original = draft }
+            if originalLinks == nil, let links, links.isLoaded { originalLinks = links.selected }
         }
         .task {
             guard CompetitionsFeature.isActive, links == nil else { return }
@@ -105,6 +78,7 @@ struct RundeQuickStartView: View {
             let links = CompetitionLinkModel(client: context.client, access: context.competitionAccess)
             self.links = links
             await links.load(clubID: context.clubID, roundID: draft.isSaved ? draft.roundID : nil)
+            if originalLinks == nil, links.isLoaded { originalLinks = links.selected }
         }
         .onChange(of: draft.participants) { _, _ in
             draft.prepareSetup(rules: rules, roster: model.members)
@@ -114,6 +88,13 @@ struct RundeQuickStartView: View {
         } message: {
             Text(error ?? "")
         }
+    }
+
+    /// Noe er endret siden skjermen åpnet: kladden eller «Teller også i …».
+    private var hasChanges: Bool {
+        if let original, original != draft { return true }
+        if let originalLinks, let links, originalLinks != links.selected { return true }
+        return false
     }
 
     // MARK: Hvor

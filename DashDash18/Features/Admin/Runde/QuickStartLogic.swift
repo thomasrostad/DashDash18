@@ -7,7 +7,7 @@ import GolfgutuCore
 nonisolated enum QuickStartTarget: Equatable, Sendable {
     /// Banevalget på hurtigstarten.
     case course
-    /// Spillerne og gruppene (dagens bås-steg).
+    /// Spillerne og gruppene («Spillere og båser»).
     case players
     /// «Flere valg»: form, lag, matcher, sidepremier, vekt og handicap.
     case moreOptions

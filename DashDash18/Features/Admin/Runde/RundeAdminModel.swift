@@ -3,7 +3,7 @@ import GolfgutuCore
 import Observation
 import Supabase
 
-/// Kveldens runder for arrangøren: lista, veiviseren og handlingene (lagre, starte, låse, slette).
+/// Kveldens runder for arrangøren: lista, oppsettet og handlingene (lagre, starte, låse, slette).
 ///
 /// Lagring er to kall: raden i `rounds`, så `set_round_setup` (deltakere, båser, lag og matcher
 /// i én transaksjon). Start er raden, så `start_round` (sql/006_runder.sql), som skriver oppsettet

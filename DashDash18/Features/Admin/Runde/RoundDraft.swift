@@ -1,7 +1,7 @@
 import Foundation
 import GolfgutuCore
 
-/// Alt veiviseren holder på for én runde, før det lagres. Rådata som i `rounds` og `round_players`.
+/// Alt oppsettet holder på for én runde, før det lagres. Rådata som i `rounds` og `round_players`.
 nonisolated struct RoundDraft: Equatable, Sendable {
     /// Lages i appen for en ny runde, så et nytt forsøk etter en feil treffer samme rad (upsert på id).
     let roundID: UUID
@@ -184,14 +184,6 @@ nonisolated enum RoundSetupIssue: Equatable, Sendable {
     case matches([String])
     case sidePrizeOutsideRound(Int)
 
-    /// Gjelder banen (sperrer steg 1).
-    var isCourseIssue: Bool {
-        switch self {
-        case .noCourse, .courseNotReady: true
-        default: false
-        }
-    }
-
     var message: String { message(.bay) }
 
     /// Meldingen med rundens ord for gruppene (bås / flight).
@@ -261,7 +253,7 @@ nonisolated enum RoundSetupCheck {
 
 // MARK: - Det som sendes
 
-/// Raden i `rounds`. Feltene veiviseren eier; status settes for seg (se `RoundStatusPatch`).
+/// Raden i `rounds`. Feltene oppsettet eier; status settes for seg (se `RoundStatusPatch`).
 /// Tomme felt sendes som null, så de også tømmes ved endring. Skrives med upsert på id.
 nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
     let id: UUID
