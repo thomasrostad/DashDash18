@@ -398,6 +398,17 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Bygget rundt én valgt turnering (hovedturneringen som standard), så en turneringsvelger kan legges til i fase 23. *(08.10.)*
 - [ ] Prøve på telefon mot ekte data.
 
+### Fase 22–25 – Turneringen som kjerne (klubber og simulatorsentre)
+
+**08.10.2026 (Thomas):** golfklubber og simulatorsentre skal kunne kjøre mange turneringer i uka, noen over lang tid, ofte overlappende. Åpen påmelding for ikke-medlemmer (valg per turnering). Golfgutu forblir en klubb med hovedturnering. Lasttest gratis først (lokalt), Pro senere. Design: `docs/fase-22-turnering-som-kjerne.md`.
+
+- [x] Fase 22, design: målbilde, datamodell før → etter, migreringstrinn 031–035, paritetskontroll, lokal lasttest (1 000 brukere, 22 000 runder, 3 mill. hull). *(09.10.)*
+- [ ] 031 (additivt, trygt for dagens app): forslag, venter på godkjenning.
+- [ ] 032–035: rettigheter og påmelding, speilingen snus, gamle regler fjernes (krever `min_ios_build`), `seasons` som view.
+- [ ] Fase 23: arrangør per turnering (velger, åpen påmelding, venteliste, startliste), `min_ios_build` i appen.
+- [ ] Fase 24: skala (Tavla-data i én RPC, tabellen på serveren, sanntid).
+- [ ] Fase 25: spillersiden (finn og meld deg på turneringer nær deg).
+
 ### Kodegjennomgang 08.10.2026: åpne funn
 
 Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rettet med test). Dette står igjen:
