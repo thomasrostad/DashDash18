@@ -32,6 +32,9 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
     /// Feil på rad uten kontakt. Styrer backoff, nullstilles ved suksess og når nettet kommer.
     private(set) var consecutiveFailures = 0
     private var retryTask: Task<Void, Never>?
+    /// Øker for hver nye retry-løkke. En gammel løkke som avslutter etter `stop()`/`start()`,
+    /// skal ikke nullstille referansen til den nye.
+    private var retryGeneration = 0
     /// Den innloggede. Nye hull merkes med den, og bare dens hull sendes.
     private(set) var currentUserID: UUID?
     private var networkTask: Task<Void, Never>?
@@ -328,6 +331,8 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
     /// Prøver igjen med økende ventetid så lenge noe ligger i køen og utboksen kjører.
     private func scheduleRetry() {
         guard isRunning, retryTask == nil else { return }
+        retryGeneration += 1
+        let generation = retryGeneration
         retryTask = Task { [weak self] in
             while let self, self.isRunning, self.hasPending, !Task.isCancelled {
                 let delay = self.backoff.delay(afterFailures: self.consecutiveFailures)
@@ -338,7 +343,9 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
                 }
                 await self.flush()
             }
-            self?.retryTask = nil
+            if let self, self.retryGeneration == generation {
+                self.retryTask = nil
+            }
         }
     }
 
