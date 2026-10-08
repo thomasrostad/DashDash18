@@ -25,18 +25,18 @@ nonisolated struct SnapshotProvider: TimelineProvider {
         let now = Date.now
         var dates = [now]
         if let start = snapshot.nextEvening?.startsAt, start > now {
-            var day = WidgetText.osloCalendar.startOfDay(for: now)
+            var day = EveningDates.osloCalendar.startOfDay(for: now)
             // Hver midnatt fram til kvelden (høyst en uke), så nedtellingen stemmer uten appen.
             for _ in 0..<7 {
-                guard let next = WidgetText.osloCalendar.date(byAdding: .day, value: 1, to: day), next <= start else { break }
+                guard let next = EveningDates.osloCalendar.date(byAdding: .day, value: 1, to: day), next <= start else { break }
                 dates.append(next)
                 day = next
             }
         }
         // Midnatt etter kvelden: da er den spilt, og widgeten slutter å vise den som «I dag».
         if let start = snapshot.nextEvening?.startsAt,
-           let after = WidgetText.osloCalendar.date(byAdding: .day, value: 1,
-                                                     to: WidgetText.osloCalendar.startOfDay(for: start)),
+           let after = EveningDates.osloCalendar.date(byAdding: .day, value: 1,
+                                                     to: EveningDates.osloCalendar.startOfDay(for: start)),
            after > now, after > (dates.last ?? now) {
             dates.append(after)
         }

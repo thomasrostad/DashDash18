@@ -396,7 +396,7 @@ Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rett
 - [x] **Google (før `GoogleLoginFeature` slås på):** utloggingsteksten nevner Google når kontoen har det. *(08.10.)*
 - [x] **Veddemål i Varsler:** egne tekster i appen og i `push-send` (PWA-ens ordlyd, poeng for kroner). *(08.10. push-send versjon 3 deployet på test.)*
 - [ ] **Flagg som står permanent på** (fjernes når skjemaet er i prod): Foundation, Push, LiveActivity, Widget, Venue, CourseKind, Stats, Bets, Games, Competitions, LooseRounds, AccountDeletion, Moderation, BillSplit.
-- [x] **Små ting:** kolonnelistene samlet, konkurransesiden henter bare sine egne påmeldinger, og utboksen kan ikke få to retry-løkker. Gjenstår: `EveningDates` dupliseres i widget-targetet (legg fila i targetet i Xcode). *(08.10.)*
+- [x] **Små ting:** kolonnelistene samlet, konkurransesiden henter bare sine egne påmeldinger, og utboksen kan ikke få to retry-løkker. `EveningDates` ligger også i widget-targetet (08.10), og kopiene i widgeten er fjernet. *(08.10.)*
 
 ---
 

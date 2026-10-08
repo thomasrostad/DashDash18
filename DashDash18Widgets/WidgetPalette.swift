@@ -50,23 +50,3 @@ nonisolated enum WidgetPalette {
         return Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? darkColor : lightColor })
     }
 }
-
-/// Små tekstbiter som både widgetene og Live Activity bruker.
-nonisolated enum WidgetText {
-    static var osloCalendar: Calendar { WidgetSnapshot.osloCalendar }
-
-    /// Hele dager fra `now` til `date`, i Oslo (som `EveningDates.daysBetween`).
-    static func days(from now: Date, to date: Date) -> Int {
-        let a = osloCalendar.startOfDay(for: now), b = osloCalendar.startOfDay(for: date)
-        return osloCalendar.dateComponents([.day], from: a, to: b).day ?? 0
-    }
-
-    /// «I dag», «I morgen», «Om 5 dager» (som `EveningDates.countdownText`).
-    static func countdown(days: Int) -> String {
-        switch days {
-        case ...0: "I dag"
-        case 1: "I morgen"
-        default: "Om \(days) dager"
-        }
-    }
-}

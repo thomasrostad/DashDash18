@@ -73,6 +73,7 @@
 		2C5FD722307632C900BC864C /* Exceptions for "DashDash18" folder in "DashDash18WidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Features/Kveld/EveningDates.swift,
 				LiveActivity/RoundActivityAttributes.swift,
 				WidgetData/WidgetSnapshot.swift,
 			);

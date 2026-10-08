@@ -27,9 +27,14 @@ struct NextEveningView: View {
         entry.snapshot.eveningIsOver(at: entry.date) ? "Kvelden er spilt" : "Ingen kveld satt opp"
     }
 
+    /// Hele dager i Oslo fra widgetens tidspunkt til kvelden (`EveningDates`, som appen).
+    private func daysUntil(_ start: Date) -> Int {
+        EveningDates.daysBetween(EveningDates.dateString(from: entry.date), EveningDates.dateString(from: start)) ?? 0
+    }
+
     private var countdown: String? {
         guard let start = evening?.startsAt else { return nil }
-        return WidgetText.countdown(days: WidgetText.days(from: entry.date, to: start))
+        return EveningDates.countdownText(days: daysUntil(start))
     }
 
     /// «17:00 · Losby».
@@ -59,7 +64,7 @@ struct NextEveningView: View {
             }
         case .accessoryCircular:
             if let start = evening?.startsAt {
-                let days = max(0, WidgetText.days(from: entry.date, to: start))
+                let days = max(0, daysUntil(start))
                 VStack(spacing: 0) {
                     Text(days == 0 ? "I dag" : "\(days)")
                         .font(.system(size: days == 0 ? 14 : 22, weight: .semibold, design: .rounded))
