@@ -1,5 +1,5 @@
 -- ===========================================================================
--- 030 – HULL FRA SLOPE.NO: PAR, INDEKS OG LENGDE PER TEE – FORSLAG, IKKE KJØRT
+-- 030 – HULL FRA SLOPE.NO: PAR, INDEKS OG LENGDE PER TEE – KJØRT PÅ TEST 08.10.2026
 -- ===========================================================================
 -- Status: forslag 08.10.2026 (fase 20b). Ikke kjørt på test eller prod. Prøvd
 -- mot en lokal, midlertidig Postgres (se lokal/030_prove.sql). Krever 029.

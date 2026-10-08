@@ -12,12 +12,12 @@ import GolfgutuCore
 nonisolated enum SlopeNoFeature {
     static let isEnabled = true
 
-    /// Hull per tee fra slope.no (fase 20b, sql/030_slope_hull.sql, forslag). Av til 030 er kjørt og
-    /// synken (slope-sync v2) har skrevet hullene. Av: appen leser verken `course_tee_holes` eller
+    /// Hull per tee fra slope.no (fase 20b, sql/030_slope_hull.sql). På siden 08.10.2026: 030 er kjørt
+    /// på test, og slope-sync v2 har skrevet hull for 937 baner og 6146 tees. Av: appen leser verken `course_tee_holes` eller
     /// `rounds.tee_par`, hentede baner vises bare under «Hent fra slope.no» (kopi og scorekort), og alt
     /// er som i fase 20. På: hentede baner med hull kan velges direkte i runde-oppsettet og i løse
     /// runder, og runden spilles med teens hull.
-    static let usesHoles = false
+    static let usesHoles = true
 }
 
 /// Krediteringen eieren av slope.no ber om: tekst og lenke der tee-data vises eller velges.

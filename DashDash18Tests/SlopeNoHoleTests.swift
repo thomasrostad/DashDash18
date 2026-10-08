@@ -57,11 +57,12 @@ private enum V {
 }
 
 struct SlopeNoHoleFlagTests {
-    @Test func hulleneStarAvTilSqlOgSynkenHarGatt() {
-        #expect(SlopeNoFeature.usesHoles == false)
-        #expect(!RoundRow.columns.contains("tee_par"), "kolonnen finnes ikke før 030")
-        #expect(!StatsRoundRow.columns.contains("tee_par"))
-        #expect(SlopeNoCredit.text == "Slope og course rating fra slope.no")
+    @Test func hulleneErPåNårSqlOgSynkenHarGått() {
+        #expect(SlopeNoFeature.usesHoles == true)
+        #expect(RoundRow.columns.contains("tee_par") == SlopeNoFeature.usesHoles, "kolonnen hentes bare med flagget")
+        #expect(StatsRoundRow.columns.contains("tee_par") == SlopeNoFeature.usesHoles)
+        #expect(SlopeNoCredit.text == SlopeNoCredit.text(usesHoles: SlopeNoFeature.usesHoles))
+        #expect(SlopeNoCredit.text(usesHoles: false) == "Slope og course rating fra slope.no")
         #expect(SlopeNoCredit.text(usesHoles: true) == "Hull, slope og course rating fra slope.no")
         #expect(RoundRow.teeParColumn == "tee_par")
     }
