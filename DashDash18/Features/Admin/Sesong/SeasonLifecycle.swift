@@ -62,6 +62,29 @@ nonisolated enum SeasonLifecycle {
         }
     }
 
+    /// Hvor «Sesong og regler» lander.
+    enum Landing: Equatable, Sendable {
+        /// Rett på den aktive sesongen.
+        case season(UUID)
+        /// Lista over sesongene, fordi ingen er aktiv.
+        case list
+    }
+
+    /// Den aktive sesongen hvis klubben har én, ellers lista. Databasen tillater høyst én aktiv per klubb;
+    /// skulle det likevel finnes flere, vinner den første (nyest, som fra databasen).
+    static func landing(_ seasons: [SeasonRow]) -> Landing {
+        seasons.first { $0.status == .active }.map { .season($0.id) } ?? .list
+    }
+
+    /// Oppfordringen øverst i lista når ingen sesong er aktiv (nil når en er aktiv, eller når lista er tom
+    /// og tom-tilstanden sier det selv).
+    static func listPrompt(_ seasons: [SeasonRow]) -> String? {
+        guard !seasons.isEmpty, landing(seasons) == .list else { return nil }
+        return seasons.contains { $0.status == .planned }
+            ? "Ingen sesong er i gang. Åpne en planlagt sesong og aktiver den, eller lag en ny."
+            : "Ingen sesong er i gang. Lag en ny sesong og aktiver den når dere er klare."
+    }
+
     static func title(_ status: SeasonStatus) -> String {
         switch status {
         case .planned: "Planlagt"

@@ -4,7 +4,7 @@ import GolfgutuCore
 import SwiftUI
 
 /// «Sesong og regler» med oppdiktede sesonger, uten nett
-/// (`-DDDesignScreen regler`, `reglerendre` og `nysesong`).
+/// (`-DDDesignScreen regler` lander på den aktive sesongen; `reglerendre` og `nysesong`).
 struct SesongSampleScreen: View {
     let screen: DesignScreenSamples.Screen
     @State private var model = SesongAdminModel(preview: Self.seasons)
@@ -32,9 +32,7 @@ struct SesongSampleScreen: View {
             case .nysesong:
                 NySesongView(model: model)
             default:
-                if let season = model.seasons.first {
-                    SesongDetailView(model: model, seasonID: season.id)
-                }
+                SesongLandingView(model: model)
             }
         }
     }
