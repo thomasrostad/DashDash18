@@ -96,12 +96,21 @@ final class PurchaseService {
     private let backend: any PurchaseBackend
     let profileID: UUID
     private let pending: PendingPurchaseStore
+    private let now: @Sendable () -> Date
     @ObservationIgnored private var listener: Task<Void, Never>?
+    /// `purchase()` venter på App Store: da hører det ventende målet til det kjøpet, og ingen
+    /// transaksjon utenom kan ta det.
+    @ObservationIgnored private var isPurchasing = false
+    /// Transaksjoner som verifiseres fra `purchase()` akkurat nå. Kommer den samme også i
+    /// `Transaction.updates`, tar kjøpsflyten den.
+    @ObservationIgnored private var handledByPurchase: Set<UInt64> = []
 
-    init(backend: any PurchaseBackend, profileID: UUID, pending: PendingPurchaseStore = PendingPurchaseStore()) {
+    init(backend: any PurchaseBackend, profileID: UUID, pending: PendingPurchaseStore = PendingPurchaseStore(),
+         now: @escaping @Sendable () -> Date = { .now }) {
         self.backend = backend
         self.profileID = profileID
         self.pending = pending
+        self.now = now
     }
 
     convenience init(client: SupabaseClient, profileID: UUID) {
@@ -116,10 +125,10 @@ final class PurchaseService {
         guard listener == nil else { return }
         listener = Task { [weak self] in
             for await result in Transaction.unfinished {
-                await self?.handle(result)
+                await self?.handle(result, source: .background)
             }
             for await result in Transaction.updates {
-                await self?.handle(result)
+                await self?.handle(result, source: .background)
             }
         }
     }
@@ -162,17 +171,20 @@ final class PurchaseService {
             return
         }
         state = .purchasing
-        pending.setTarget(competitionID)
+        // Målet lagres før arket vises, så et kjøp som avbrytes av en krasj, finner det igjen.
+        beginPurchase(product, target: PurchaseTarget(competitionID: competitionID, clubID: clubID))
+        defer { isPurchasing = false }
         do {
             // appAccountToken = profil-id-en: serveren sjekker at kjøpet hører til kontoen.
             let result = try await storeProduct.purchase(options: [.appAccountToken(profileID)])
             switch result {
             case .success(let verification):
-                await handle(verification, clubID: clubID)
+                await handle(verification, source: .purchase)
             case .pending:
+                // Kjøpsforespørsel: målet står til forespørselen er godkjent (kommer i `updates`).
                 state = .failed(.pending)
             case .userCancelled:
-                pending.setTarget(nil)
+                pending.cancel()
                 state = .idle
             @unknown default:
                 state = .idle
@@ -198,10 +210,10 @@ final class PurchaseService {
         state = .restoring
         try? await AppStore.sync()
         for await result in Transaction.currentEntitlements {
-            await handle(result)
+            await handle(result, source: .background)
         }
         for await result in Transaction.unfinished {
-            await handle(result)
+            await handle(result, source: .background)
         }
         await refreshEntitlements()
         if case .restoring = state { state = .idle }
@@ -236,17 +248,43 @@ final class PurchaseService {
         }
     }
 
-    private func handle(_ result: VerificationResult<Transaction>, clubID: UUID? = nil) async {
+    /// Lagrer målet for kjøpet som startes nå.
+    func beginPurchase(_ product: PurchaseProduct, target: PurchaseTarget) {
+        isPurchasing = true
+        pending.prepare(.init(productID: product.rawValue, target: target, profileID: profileID, createdAt: now()))
+    }
+
+    private func handle(_ result: VerificationResult<Transaction>, source: PurchaseTransactionSource) async {
         guard case .verified(let transaction) = result else {
             state = .failed(.notVerified)
             return
         }
+        let info = PurchaseTransactionInfo(id: transaction.id, originalID: transaction.originalID,
+                                           productID: transaction.productID, purchaseDate: transaction.purchaseDate,
+                                           appAccountToken: transaction.appAccountToken)
+        await register(info, source: source) { await transaction.finish() }
+    }
+
+    /// Registrerer en verifisert transaksjon hos serveren og fullfører den når serveren har svart.
+    /// Bare transaksjonen fra `purchase()` får turneringen kjøpsarket ble åpnet for; andre får målet
+    /// de alt har (eller det ventende, når de tydelig er det samme kjøpet, se `PendingPurchaseStore`).
+    func register(_ transaction: PurchaseTransactionInfo, source: PurchaseTransactionSource,
+                  finish: () async -> Void) async {
         guard PurchaseProduct.ids.contains(transaction.productID) else { return }
-        pending.attach(transactionID: transaction.id)
-        let competitionID = pending.target(for: transaction.id)
+        let target: PurchaseTarget?
+        switch source {
+        case .purchase:
+            target = pending.claimForPurchase(transaction)
+            handledByPurchase.insert(transaction.id)
+        case .background:
+            if handledByPurchase.contains(transaction.id) { return }
+            target = pending.claimForBackground(transaction, mayClaim: !isPurchasing)
+        }
+        defer { if source == .purchase { handledByPurchase.remove(transaction.id) } }
         do {
-            let row = try await backend.verify(transactionID: transaction.id, competitionID: competitionID, clubID: clubID)
-            await transaction.finish()
+            let row = try await backend.verify(transactionID: transaction.id, competitionID: target?.competitionID,
+                                               clubID: target?.clubID)
+            await finish()
             pending.done(transactionID: transaction.id)
             if let unlocked = row.competitionID { lastUnlocked = unlocked }
             await refreshEntitlements()
