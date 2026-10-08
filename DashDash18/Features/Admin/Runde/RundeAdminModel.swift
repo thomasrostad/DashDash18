@@ -41,11 +41,18 @@ final class RundeAdminModel {
     private(set) var activeComplete = false
     /// Rundene på sesongens kvelder, for forslaget fra forrige runde.
     private(set) var seasonRounds: [RoundRow] = []
+    /// Hentede baner (slope.no med hull, fase 20b) som er valgt i et oppsett eller brukt i klubbens
+    /// runder. Står bak klubbens egne i `allCourses`.
+    private(set) var sourceCourses: [CourseListItem] = []
+    /// Banene fra slope.no med hull, til «Fra slope.no» i bane-valget. nil når `usesHoles` er av.
+    let slopeCatalog: SlopeCatalogModel?
 
     private let context: ClubContext
 
-    init(context: ClubContext) {
+    init(context: ClubContext, slopeCatalog: SlopeCatalogModel? = nil) {
         self.context = context
+        self.slopeCatalog = slopeCatalog
+            ?? (SlopeNoFeature.isEnabled && SlopeNoFeature.usesHoles ? SlopeCatalogModel(client: context.client) : nil)
     }
 
     private var client: SupabaseClient { context.client }
@@ -80,6 +87,26 @@ final class RundeAdminModel {
     /// Banen slik runden regner med den: teens CR og slope når en tee er valgt (sql/029).
     func coreCourse(for draft: RoundDraft) -> Course? {
         course(draft.courseID)?.coreCourse(tee: draft.teeID)
+    }
+
+    /// En hentet bane valgt under «Fra slope.no» (fase 20b): legges bak klubbens baner, så oppsettet,
+    /// lista og forslaget finner den.
+    func adopt(_ item: CourseListItem) {
+        sourceCourses = CourseListItem.adding([item], to: sourceCourses)
+        allCourses = CourseListItem.adding([item], to: allCourses)
+        courses = allCourses.filter(\.isReady)
+    }
+
+    /// Hentede baner som klubbens runder peker på, men som ikke er lastet. Feiler hentingen, vises
+    /// rundene uten banenavn som før.
+    private func loadSourceCourses() async {
+        guard SlopeNoFeature.usesHoles else { return }
+        let known = Set(allCourses.map(\.id))
+        let missing = Set(allRounds.compactMap(\.courseID)).subtracting(known)
+        guard !missing.isEmpty,
+              let loaded = try? await CourseLibraryModel.loadSourceItems(client: client, ids: Array(missing)),
+              !loaded.isEmpty else { return }
+        for item in loaded { adopt(item) }
     }
 
     /// Forslaget til tee på banen: den som ble brukt sist i klubben, ellers første herre-tee.
@@ -146,13 +173,15 @@ final class RundeAdminModel {
             members = KveldQueries.sortedByName(roster)
             let kinds = try await CourseLibraryModel.loadKinds(client: client, clubID: clubID)
             let tees = try await CourseLibraryModel.loadTees(client: client, courseIDs: courseList.map(\.id))
-            allCourses = CourseListItem.make(courses: courseList, holes: holes, kinds: kinds, tees: tees)
+            allCourses = CourseListItem.adding(sourceCourses,
+                                               to: CourseListItem.make(courses: courseList, holes: holes, kinds: kinds, tees: tees))
             courses = allCourses.filter(\.isReady)
 
             if selectedEventID == nil || !events.contains(where: { $0.id == selectedEventID }) {
                 selectedEventID = try await defaultEventID()
             }
             try await loadRounds()
+            await loadSourceCourses()
             try await loadEvent()
             await loadActiveProgress()
             state = .loaded
@@ -483,6 +512,7 @@ final class RundeAdminModel {
     private func reload() async {
         try? await refreshActiveRound()
         try? await loadRounds()
+        await loadSourceCourses()
         try? await loadEvent()
         await loadActiveProgress()
     }
@@ -502,11 +532,14 @@ extension RundeAdminModel {
 
     /// Oppdiktet kveld for skjermprøvene. Uten nett: en feilet henting beholder det som står.
     /// - Parameter withTees: første bane er en ekte bane med teene fra slope.no (`hurtigstarttee`).
-    static func sample(_ variant: SampleVariant = .tonight, withTees: Bool = false) -> RundeAdminModel {
+    /// - Parameter slopeCatalog: banene fra slope.no med hull (fase 20b, `slopeklubb`).
+    static func sample(_ variant: SampleVariant = .tonight, withTees: Bool = false,
+                       slopeCatalog: SlopeCatalogModel? = nil) -> RundeAdminModel {
         let club = UUID()
         let client = SupabaseClient(supabaseURL: URL(string: "https://forhandsvisning.supabase.co")!,
                                     supabaseKey: "sb_publishable_forhandsvisning")
-        let model = RundeAdminModel(context: ClubContext(client: client, user: .preview, membership: .preview))
+        let model = RundeAdminModel(context: ClubContext(client: client, user: .preview, membership: .preview),
+                                    slopeCatalog: slopeCatalog)
         let names = ["Anders", "Bjørn", "Cato", "Dag", "Erik", "Frode", "Gunnar", "Halvor", "Ivar", "Jon",
                      "Kåre", "Lars", "Magne", "Nils"]
         model.members = names.map {

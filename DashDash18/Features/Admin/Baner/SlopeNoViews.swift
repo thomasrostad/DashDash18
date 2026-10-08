@@ -3,31 +3,62 @@ import Supabase
 import SwiftUI
 
 /// Banene fra slope.no i det felles biblioteket (sql/029, fylt av synken): hentes én gang og søkes i
-/// lokalt. Teene hentes for banen som velges.
+/// lokalt. Teene hentes for banen som velges. Med hull (sql/030, `usesHoles`) vet lista hvilke baner som
+/// har hull og kan spilles direkte, og en slik bane hentes med hull og tees (`item(for:)`).
 @Observable
 final class SlopeCatalogModel {
     private(set) var courses: [SlopeCourseRow] = []
     private(set) var isLoading = false
     private(set) var hasLoaded = false
     var error: DataError?
+    /// Hullene brukes (`SlopeNoFeature.usesHoles`; skjermprøvene setter den selv).
+    let usesHoles: Bool
 
     private let client: SupabaseClient?
     /// Teene i skjermprøvene, per bane.
     private var previewTees: [UUID: [CourseTeeRow]] = [:]
+    /// Banene med hull i skjermprøvene, per bane.
+    private var previewItems: [UUID: CourseListItem] = [:]
 
-    init(client: SupabaseClient) {
+    init(client: SupabaseClient, usesHoles: Bool = SlopeNoFeature.usesHoles) {
         self.client = client
+        self.usesHoles = usesHoles
     }
 
     #if DEBUG
     /// Skjermprøve uten nett.
-    init(preview courses: [SlopeCourseRow], tees: [UUID: [CourseTeeRow]]) {
+    init(preview courses: [SlopeCourseRow], tees: [UUID: [CourseTeeRow]], items: [CourseListItem] = [],
+         usesHoles: Bool = false) {
         client = nil
         self.courses = SlopeCourseSearch.sorted(courses)
         previewTees = tees
+        previewItems = Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        self.usesHoles = usesHoles
         hasLoaded = true
     }
     #endif
+
+    /// Banene som kan spilles direkte: de med hull (bare når hullene brukes).
+    var playable: [SlopeCourseRow] {
+        usesHoles ? courses.filter(\.hasHoles) : []
+    }
+
+    /// Banen med hull og tees, klar til å velges i en runde (fase 20b).
+    func item(for course: SlopeCourseRow) async throws(DataError) -> CourseListItem {
+        guard let client else {
+            guard let item = previewItems[course.id] else { throw .notAllowed }
+            return item
+        }
+        do {
+            guard let item = try await CourseLibraryModel.loadSourceItems(client: client, ids: [course.id]).first,
+                  item.isReady else {
+                throw DataError.invalid("Fant ikke hullene til «\(course.name)». Prøv igjen senere.")
+            }
+            return item
+        } catch {
+            throw DataError.from(error)
+        }
+    }
 
     /// Alle hentede baner som ikke er borte fra kilden. PostgREST gir høyst 1000 om gangen.
     func load() async {
@@ -38,11 +69,16 @@ final class SlopeCatalogModel {
         do {
             var all: [SlopeCourseRow] = []
             for start in stride(from: 0, to: 20 * page, by: page) {
-                let rows: [SlopeCourseRow] = try await client.from("courses")
-                    .select(SlopeCourseRow.columns)
+                var query = client.from("courses")
+                    .select(usesHoles ? SlopeCourseRow.holeColumns : SlopeCourseRow.columns)
                     .eq("source", value: "slope")
                     .is("club_id", value: nil)
                     .is("missing_at", value: nil)
+                if usesHoles {
+                    // Bare hull 1 som innebygd rad: tom liste = banen har ingen hull.
+                    query = query.eq("course_holes.hole_number", value: 1)
+                }
+                let rows: [SlopeCourseRow] = try await query
                     .order("id")
                     .range(from: start, to: start + page - 1)
                     .execute().value
@@ -74,10 +110,13 @@ final class SlopeCatalogModel {
 }
 
 /// «Slope og course rating fra slope.no» med lenke. Eieren av slope.no ber om dette der tee-data vises.
+/// Med hullene (fase 20b): «Hull, slope og course rating fra slope.no».
 struct SlopeNoCreditLink: View {
+    var usesHoles = SlopeNoFeature.usesHoles
+
     var body: some View {
         Link(destination: SlopeNoCredit.url) {
-            Label(SlopeNoCredit.text, systemImage: "arrow.up.right.square")
+            Label(SlopeNoCredit.text(usesHoles: usesHoles), systemImage: "arrow.up.right.square")
                 .font(.ddCaption)
         }
         .foregroundStyle(Color.ddForestInk)
@@ -106,11 +145,14 @@ struct SlopeNoAboutRow: View {
     }
 }
 
-/// Søk i banene fra slope.no: navn, sted eller land, norske først. Valgt bane gis tilbake med teene.
+/// Søk i banene fra slope.no: navn, sted eller land, norske først. Valgt bane gis tilbake med teene
+/// (`onPick`, til en egen kopi i «Ny bane»). Med `onPlay` (fase 20b) vises bare baner med hull, og valgt
+/// bane gis tilbake ferdig til å spilles direkte.
 struct SlopeCourseSearchView: View {
     let model: SlopeCatalogModel
-    let onPick: (SlopeCourseRow, [CourseTeeRow]) -> Void
+    var onPick: (SlopeCourseRow, [CourseTeeRow]) -> Void = { _, _ in }
     var initialQuery = ""
+    var onPlay: ((CourseListItem) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @State private var search = ""
@@ -119,8 +161,10 @@ struct SlopeCourseSearchView: View {
     /// Lista vises bare med de første treffene, så den er rask med over tusen baner.
     private let shownLimit = 150
 
+    private var isPlaying: Bool { onPlay != nil }
+
     var body: some View {
-        let matching = SlopeCourseSearch.filter(model.courses, query: search)
+        let matching = SlopeCourseSearch.filter(isPlaying ? model.playable : model.courses, query: search)
         DDList {
             if let error = error ?? model.error {
                 Section {
@@ -140,8 +184,8 @@ struct SlopeCourseSearchView: View {
                     if matching.count > shownLimit {
                         DDFooter("Viser de første \(shownLimit). Skriv mer av navnet eller stedet.")
                     }
-                    DDFooter("Navn, tees, course rating og slope fylles inn. Par og indeks per hull står ikke her: de leser du av scorekortet.")
-                    SlopeNoCreditLink()
+                    DDFooter(SlopeCourseSearch.footer(playing: isPlaying, usesHoles: model.usesHoles))
+                    SlopeNoCreditLink(usesHoles: model.usesHoles)
                 }
             }
         }
@@ -157,7 +201,7 @@ struct SlopeCourseSearchView: View {
             if search.isEmpty, !initialQuery.isEmpty { search = initialQuery }
             if !model.hasLoaded { await model.load() }
         }
-        .navigationTitle("Baner fra slope.no")
+        .navigationTitle(isPlaying ? "Fra slope.no" : "Baner fra slope.no")
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .disabled(loadingID != nil)
@@ -178,6 +222,11 @@ struct SlopeCourseSearchView: View {
                             .font(.ddCaption)
                             .foregroundStyle(Color.ddInkSecondary)
                     }
+                    if !isPlaying, model.usesHoles, course.hasHoles {
+                        Label("Har hull: kan spilles direkte", systemImage: "flag")
+                            .font(.ddCaption)
+                            .foregroundStyle(Color.ddForestInk)
+                    }
                 }
                 Spacer(minLength: 8)
                 if loadingID == course.id { ProgressView() }
@@ -192,8 +241,12 @@ struct SlopeCourseSearchView: View {
         error = nil
         Task {
             do {
-                let tees = try await model.tees(for: course)
-                onPick(course, tees)
+                if let onPlay {
+                    onPlay(try await model.item(for: course))
+                } else {
+                    let tees = try await model.tees(for: course)
+                    onPick(course, tees)
+                }
                 dismiss()
             } catch {
                 self.error = DataError.from(error)
@@ -279,8 +332,8 @@ struct TeePickerView: View {
                 }
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
-                    DDFooter("Teens course rating og slope gir banehandicapet. Tallene lagres på runden når den starter, så en ny rating senere endrer ikke gamle runder.")
-                    SlopeNoCreditLink()
+                    DDFooter(TeeChoice.pickerFooter(hasHoles: tees.contains { TeeHoles.hasOwnHoles($0) }))
+                    SlopeNoCreditLink(usesHoles: SlopeNoFeature.usesHoles || tees.contains { !$0.holes.isEmpty })
                 }
             }
         }

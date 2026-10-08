@@ -66,7 +66,7 @@ final class NyRundeModel {
     var issues: [LooseRoundIssue] { LooseRoundSetup.issues(draft, course: course, rules: rules) }
 
     var startOptions: [QuickStartStart] {
-        var options = QuickStart.startOptions(courseHoles: course?.holeCount)
+        var options = QuickStart.startOptions(courseHoles: course?.holeCount(tee: draft.teeID))
         if !options.contains(draft.start) { options.append(draft.start) }
         return options
     }

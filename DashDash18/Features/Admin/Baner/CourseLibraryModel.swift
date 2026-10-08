@@ -233,14 +233,57 @@ final class CourseLibraryModel {
 
     // MARK: Tees (sql/029)
 
-    /// Teene til banene, uten dem som er borte fra kilden. Tom så lenge `SlopeNoFeature` er av.
+    /// Teene til banene, uten dem som er borte fra kilden. Tom så lenge `SlopeNoFeature` er av. Med
+    /// `usesHoles` (sql/030) får teene sine egne hull festet på.
     static func loadTees(client: SupabaseClient, courseIDs: [UUID]) async throws -> [CourseTeeRow] {
         guard SlopeNoFeature.isEnabled, !courseIDs.isEmpty else { return [] }
-        return try await client.from("course_tees")
+        let tees: [CourseTeeRow] = try await client.from("course_tees")
             .select(CourseTeeRow.columns)
             .in("course_id", values: courseIDs.map(\.uuidString))
             .is("missing_at", value: nil)
             .execute().value
+        guard SlopeNoFeature.usesHoles, !tees.isEmpty else { return tees }
+        return TeeHoles.attach(try await loadTeeHoles(client: client, teeIDs: tees.map(\.id)), to: tees)
+    }
+
+    /// Hullene til teene (`course_tee_holes`, sql/030), i biter så adressen ikke blir for lang.
+    static func loadTeeHoles(client: SupabaseClient, teeIDs: [UUID]) async throws -> [TeeHoleRow] {
+        var rows: [TeeHoleRow] = []
+        for start in stride(from: 0, to: teeIDs.count, by: 100) {
+            let ids = teeIDs[start..<min(start + 100, teeIDs.count)].map(\.uuidString)
+            rows += try await client.from("course_tee_holes")
+                .select(TeeHoleRow.columns)
+                .in("tee_id", values: ids)
+                .execute().value
+        }
+        return rows
+    }
+
+    /// Hentede baner (slope.no, sql/029–030) med hull og tees, slik de spilles direkte: ekte baner med
+    /// kilde-merke. Brukes når en hentet bane velges, og for runder som alt peker på en.
+    static func loadSourceItems(client: SupabaseClient, ids: [UUID]) async throws -> [CourseListItem] {
+        guard SlopeNoFeature.usesHoles, !ids.isEmpty else { return [] }
+        let rows: [SharedCourseRow] = try await client.from("courses")
+            .select(sharedColumns)
+            .in("id", values: ids.map(\.uuidString))
+            .not("source", operator: .is, value: "null")
+            .execute().value
+        guard !rows.isEmpty else { return [] }
+        let courseIDs = rows.map(\.course.id)
+        let holes: [CourseHoleRecord] = try await client.from("course_holes")
+            .select(CourseHoleRecord.columns)
+            .in("course_id", values: courseIDs.map(\.uuidString))
+            .execute().value
+        let tees = try await loadTees(client: client, courseIDs: courseIDs)
+        return CourseListItem.make(courses: rows.map(\.course), holes: holes,
+                                   kinds: Dictionary(rows.map { ($0.course.id, CourseKind.course) }, uniquingKeysWith: { a, _ in a }),
+                                   tees: tees, fromSource: Set(courseIDs))
+    }
+
+    /// En hentet bane som er valgt i en runde (fase 20b): legges i lista (bak de andre), så runden og
+    /// velgeren finner den.
+    func adopt(_ item: CourseListItem) {
+        replace(item)
     }
 
     /// Banens egne tees i én transaksjon (`save_course_tees`). nil = teene røres ikke.
@@ -319,8 +362,10 @@ final class CourseLibraryModel {
         isLoading = true
         defer { isLoading = false }
         do {
-            // Bare baner brukerne har lagt inn. Hentede baner (slope.no, sql/029) har ingen hull; de
-            // søkes opp for seg under «Ny bane».
+            // Bare baner brukerne har lagt inn. Hentede baner (slope.no, sql/029) søkes opp for seg:
+            // uten hull under «Ny bane» (kopi og scorekort), med hull (sql/030, `usesHoles`) i velgeren
+            // under «Fra slope.no», og legges hit når de velges (`adopt`). Over tusen baner med hull og
+            // tees lastes ikke på forhånd.
             let rows: [SharedCourseRow] = try await shared.client.from("courses")
                 .select(Self.sharedColumns)
                 .is("club_id", value: nil)
@@ -334,9 +379,11 @@ final class CourseLibraryModel {
                     .execute().value
             }
             let tees = try await Self.loadTees(client: shared.client, courseIDs: rows.map(\.course.id))
-            items = CourseListItem.make(courses: rows.map(\.course), holes: holes,
-                                        kinds: Dictionary(rows.map { ($0.course.id, $0.kind) }, uniquingKeysWith: { a, _ in a }),
-                                        tees: tees)
+            let own = CourseListItem.make(courses: rows.map(\.course), holes: holes,
+                                          kinds: Dictionary(rows.map { ($0.course.id, $0.kind) }, uniquingKeysWith: { a, _ in a }),
+                                          tees: tees)
+            // Hentede baner som er valgt i denne økten, står til de velges bort.
+            items = CourseListItem.sorted(CourseListItem.adding(items.filter(\.isFromSource), to: own))
             hasLoaded = true
             error = nil
         } catch {

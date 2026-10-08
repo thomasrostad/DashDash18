@@ -78,8 +78,10 @@ struct NyRundeView: View {
         } footer: {
             if let course = model.course, !course.tees.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    DDFooter("Teens course rating og slope gir banehandicapet.")
-                    SlopeNoCreditLink()
+                    DDFooter(course.isFromSource
+                             ? "Fra slope.no: teens hull, course rating og slope gjelder i runden."
+                             : "Teens course rating og slope gir banehandicapet.")
+                    SlopeNoCreditLink(usesHoles: course.isFromSource || SlopeNoFeature.usesHoles)
                 }
             } else {
                 DDFooter("Fra det felles biblioteket. Mangler banen, legger du den inn med «Ny bane».")

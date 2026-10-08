@@ -11,17 +11,26 @@ struct CoursePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var search = ""
     @State private var isCreating = false
+    @State private var loadingID: UUID?
+    @State private var slopeError: DataError?
 
     private var matching: [CourseListItem] {
         CourseSearch.filter(model.items, query: search)
+    }
+
+    /// Hentede baner med hull (fase 20b), bare når en bane velges til en runde.
+    private var catalog: SlopeCatalogModel? {
+        guard onSelect != nil, let catalog = model.slopeCatalog, catalog.usesHoles else { return nil }
+        return catalog
     }
 
     var body: some View {
         let matching = matching
         let mine = matching.filter(model.canEdit)
         let others = matching.filter { !model.canEdit($0) }
+        let slope = catalog.map { SlopeCourseSearch.playable($0.playable, query: search, excluding: Set(model.items.map(\.id))) } ?? []
         DDList {
-            if let error = model.error {
+            if let error = model.error ?? slopeError {
                 Section {
                     Label(error.message, systemImage: "exclamationmark.triangle").ddErrorStyle()
                 }
@@ -32,9 +41,12 @@ struct CoursePickerView: View {
             if !others.isEmpty {
                 section("Biblioteket", items: others)
             }
+            if let catalog, !slope.isEmpty || !search.isEmpty {
+                slopeSection(catalog, matching: slope)
+            }
         }
         .overlay {
-            if model.hasLoaded, matching.isEmpty {
+            if model.hasLoaded, matching.isEmpty, slope.isEmpty {
                 ContentUnavailableView {
                     Label(search.isEmpty ? "Ingen baner ennå" : "Fant ingen bane", systemImage: "map")
                 } description: {
@@ -50,6 +62,8 @@ struct CoursePickerView: View {
         .searchable(text: $search, prompt: "Søk etter bane")
         .refreshable { await model.load() }
         .task { if !model.hasLoaded { await model.load() } }
+        .task { if let catalog, !catalog.hasLoaded { await catalog.load() } }
+        .disabled(loadingID != nil)
         .navigationTitle(onSelect == nil ? "Banebiblioteket" : "Velg bane")
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
@@ -60,6 +74,63 @@ struct CoursePickerView: View {
         }
         .navigationDestination(isPresented: $isCreating) {
             CourseEditView(model: model, item: nil)
+        }
+    }
+
+    /// «Fra slope.no»: hentede baner med hull, valgt direkte uten kopi. De første som passer søket.
+    private func slopeSection(_ catalog: SlopeCatalogModel, matching: [SlopeCourseRow]) -> some View {
+        Section {
+            ForEach(matching.prefix(SlopeCourseSearch.pickerLimit)) { course in
+                Button {
+                    pick(course, from: catalog)
+                } label: {
+                    HStack(alignment: .firstTextBaseline) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(course.name)
+                                .font(.ddBodyEmphasis)
+                                .foregroundStyle(Color.ddInk)
+                            Text(SlopeCourseSearch.pickerDetail(course))
+                                .font(.ddCaption)
+                                .foregroundStyle(Color.ddInkSecondary)
+                        }
+                        Spacer(minLength: 8)
+                        if loadingID == course.id {
+                            ProgressView()
+                        } else {
+                            DDPill("slope.no", tone: .lime)
+                                .fixedSize()
+                        }
+                    }
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+            }
+        } header: {
+            DDHeader("Fra slope.no")
+        } footer: {
+            VStack(alignment: .leading, spacing: 6) {
+                DDFooter(matching.count > SlopeCourseSearch.pickerLimit
+                         ? "Viser de første \(SlopeCourseSearch.pickerLimit) av \(matching.count). Skriv navnet eller stedet for å finne flere."
+                         : matching.isEmpty ? "Ingen baner med hull fra slope.no passer søket."
+                         : "Ekte baner med par, indeks og lengde per tee. Du velger tee etterpå.")
+                SlopeNoCreditLink(usesHoles: true)
+            }
+        }
+    }
+
+    private func pick(_ course: SlopeCourseRow, from catalog: SlopeCatalogModel) {
+        loadingID = course.id
+        slopeError = nil
+        Task {
+            do {
+                let item = try await catalog.item(for: course)
+                model.adopt(item)
+                onSelect?(item)
+                dismiss()
+            } catch {
+                slopeError = DataError.from(error)
+            }
+            loadingID = nil
         }
     }
 
@@ -124,6 +195,9 @@ struct CourseLibraryRow: View {
                 Image(systemName: "checkmark")
                     .foregroundStyle(Color.ddForestInk)
                     .accessibilityLabel("Valgt")
+            } else if item.isFromSource {
+                DDPill("slope.no", tone: .lime)
+                    .fixedSize()
             } else if !item.isReady {
                 DDPill("Ikke klar", tone: .outlineRust)
                     .fixedSize()

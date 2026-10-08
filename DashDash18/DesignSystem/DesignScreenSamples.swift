@@ -12,7 +12,8 @@ import SwiftUI
 /// `apenrapporter`, `apenblokkerte`, `apenbetaling`, `apenregning`,
 /// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkteller`, `konkkveld`, `konklast`, `konklastdeltaker`,
 /// og Hjem (fase 19): `hjem`, `hjemmidt`, `hjembunn`, `hjemlos`, `hjemtom`, `hjemarrangor`, `hjembjelle`,
-/// og slope.no (fase 20): `slopesok`, `slopebane`, `teevalg`, `losnytee`, `hurtigstarttee`).
+/// og slope.no (fase 20): `slopesok`, `slopebane`, `teevalg`, `losnytee`, `hurtigstarttee`, med hull (fase 20b)
+/// `slopevelg` og `slopeklubb`).
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
@@ -42,6 +43,8 @@ struct DesignScreenSamples: View {
         case hjem, hjemmidt, hjembunn, hjemlos, hjemtom, hjemarrangor, hjembjelle
         // Baner og tees fra slope.no (fase 20).
         case slopesok, slopebane, teevalg, losnytee, hurtigstarttee
+        // Hentede baner med hull valgt direkte (fase 20b).
+        case slopevelg, slopeklubb
     }
     @State var screen: Screen = .hullkort
 
@@ -120,7 +123,7 @@ struct DesignScreenSamples: View {
                 .tint(Color.ddForestInk)
         case .losspill, .losny, .losbane, .losinviter, .losblimed, .losrunde, .losresultat:
             SpillSampleScreen(screen: screen)
-        case .slopesok, .slopebane, .teevalg, .losnytee, .hurtigstarttee:
+        case .slopesok, .slopebane, .teevalg, .losnytee, .hurtigstarttee, .slopevelg, .slopeklubb:
             SlopeNoSampleScreen(screen: screen)
         case .spill, .spillresultat:
             GamesSampleScreen(finished: screen == .spillresultat)

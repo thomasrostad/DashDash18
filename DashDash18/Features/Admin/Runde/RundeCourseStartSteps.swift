@@ -40,6 +40,33 @@ struct RundeCourseStep: View {
             } header: {
                 DDHeader(showsVenue ? (draft.venue == .course ? "Ekte baner" : "Simulatorbaner") : "Baner")
             }
+            if let catalog = model.slopeCatalog, catalog.usesHoles, !showsVenue || draft.venue == .course {
+                slopeSection(catalog)
+            }
+        }
+    }
+
+    /// «Fra slope.no» (fase 20b): en ekte bane med hull fra slope.no, valgt direkte uten å legges inn.
+    private func slopeSection(_ catalog: SlopeCatalogModel) -> some View {
+        Section {
+            NavigationLink {
+                SlopeCourseSearchView(model: catalog, onPlay: { item in
+                    model.adopt(item)
+                    let changed = item.id != draft.courseID
+                    RoundConfirm.selectCourse(item, on: &draft, rules: model.rules)
+                    // Søket lukker seg selv; banen står valgt i lista over.
+                    if changed { draft.teeID = model.suggestedTeeID(for: item) }
+                })
+            } label: {
+                Label("Søk blant banene fra slope.no", systemImage: "magnifyingglass")
+            }
+        } header: {
+            DDHeader("Fra slope.no")
+        } footer: {
+            VStack(alignment: .leading, spacing: 6) {
+                DDFooter("Nordiske baner med par, indeks og lengde per tee. De trenger ikke legges inn under «Banene».")
+                SlopeNoCreditLink(usesHoles: true)
+            }
         }
     }
 
