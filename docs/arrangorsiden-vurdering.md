@@ -1,6 +1,6 @@
 # Arrangørsiden – vurdering mot beste praksis (08.10.2026)
 
-Status: forslag, ikke besluttet. Grunnlag: gjennomgang av `Features/Admin/` og research på Apple HIG, Nielsen Norman Group, OOUX og arrangørflyten i Spond, TeamSnap, Golf Genius, 18Birdies og Heja.
+Status: gjennomført 08.10.2026 (se fase 11 i ROADMAP). Arrangør-fanen ble en knapp i Kveld-fanen i stedet. Grunnlag: gjennomgang av `Features/Admin/` og research på Apple HIG, Nielsen Norman Group, OOUX og arrangørflyten i Spond, TeamSnap, Golf Genius, 18Birdies og Heja.
 
 ## Konklusjon
 

@@ -11,7 +11,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | | |
 |---|---|
 | **Nåværende fase** | Fase 12–17 bygget. På test er 011–024 kjørt (08.10). Slått på: alt unntatt onboarding uten klubb, Google-innlogging og kjøp, som venter på oppsett i App Store Connect og Google og på publisert personvern (`docs/gjoremal.md`). |
-| **Sist gjort** | 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
+| **Sist gjort** | 08.10: arrangørsiden gjennomgått mot beste praksis og omstrukturert (fase 11, `docs/arrangorsiden-vurdering.md`): Kveldene/Kvelden, én rundeliste, én oppsettsflyt, «Kom i gang», sesong lander på aktiv. Hjem-feed vurdert i `docs/hjem-feed.md`. Før det, 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
 | **Neste oppgave** | Fase 12–17 er bygget. Godkjenne og kjøre 019, 022 og 023, deploye `delete-account` og `verify-purchase`, oppsett i App Store Connect og Google (`docs/app-store.md`), så slå på flaggene ett for ett. Deretter byttet for gjengen (fase 9) og prod. |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
 
@@ -334,12 +334,13 @@ Besluttet 07.10.2026 (deg):
 Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i prioritert rekkefølge:
 
 - [x] Rundelistene slått sammen: «Alle runder» → «Runder» → «Rundene» er én liste «Runder», gruppert per kveld, nyeste først. Rader navigerer (kladd åpner oppsettet, startet/låst åpner rundens skjerm). Avkort, lås, slett og rett hull ligger på rundens skjerm. Slett kladd med sveip. *(08.10.)*
-- [ ] Huben: datoen som overskrift i stedet for «I kveld», og en sjekkliste (sesong, baner, tropp, neste kveld) når noe mangler.
-- [ ] Kvelden som ett objekt: terminliste, runder, purring, melding til alle og avslutt kvelden på én skjerm.
-- [ ] Sesong og regler lander på den aktive sesongen.
-- [ ] Én oppsettsflyt: hurtigstarten beholdes, veiviseren fjernes, flyten pushes i stedet for ark.
-- [ ] Samle varsler; flytt invitasjonskode og rapporter inn på arrangørsiden.
-- [ ] Egen Arrangør-fane for arrangører.
+- [x] Huben: «Neste kveld» (bare «I kveld» når kvelden er i dag), og «Kom i gang»-sjekkliste (sesong, baner, tropp, kveldene) når noe mangler. *(08.10.)*
+- [x] Kvelden som ett objekt: «Kveldene» erstatter Terminliste og Runder. «Kvelden» har tid og sted, påmelding og purring, runder, avslutt kvelden og melding til alle. «Alle runder» er arkiv nederst i Kveldene. *(08.10.)*
+- [x] Sesong og regler lander på den aktive sesongen, med «Alle sesonger» og «Ny sesong» nederst. *(08.10.)*
+- [x] Én oppsettsflyt: hurtigstarten beholdes, veiviseren er fjernet, flyten pushes i stedet for ark, med vakt mot å miste ulagrede endringer. *(08.10.)*
+- [x] «Varsler til troppen» samler melding til alle og push-skjermene. Invitasjonskoden er flyttet til Troppen, Rapporter til arrangørsiden. *(08.10.)*
+- [x] Inngang for arrangører: knapp i Kveld-fanens verktøylinje i stedet for egen fane, fordi Hjem-forslaget (`docs/hjem-feed.md`) kan endre fanene. *(08.10.)*
+- [ ] Prøve hele arrangørflyten på telefon mot test: ny runde, lagre kladd, start, lås og slett fra rundens skjerm, avslutt kvelden, purring og melding til alle fra Kvelden.
 
 **Ferdig når:**
 - Du setter opp en vanlig kveld med tre trykk etter at påmeldingen er klar.
