@@ -58,8 +58,7 @@ nonisolated struct AppHomeChoiceStore {
 }
 
 nonisolated extension AppTab {
-    /// Fanene uten klubb: Spill og Deg. Kveld og Tavla hører til klubben. Konkurranser (fase 15)
-    /// legges inn her når den fanen finnes.
+    /// Fanene uten klubb: Spill og Deg. Kveld og Tavla hører til klubben.
     static func tabsWithoutClub() -> [AppTab] {
         [.spill, .deg]
     }
