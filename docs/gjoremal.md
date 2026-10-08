@@ -10,7 +10,7 @@ Oppdatert 07.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
   - Sjekk at `SUPABASE_PUBLISHABLE_KEY` starter med `sb_publishable_`. Skriv den gjerne inn på nytt: ⌘V, uten mellomrom foran.
 - [ ] **3. Kjør SQL på test, i denne rekkefølgen.** Claude legger fila på utklippstavla og sjekker den etterpå.
   - [x] **024** sikkerhet (kjørt 08.10, kontrollen 8/8)
-  - [ ] **022** konkurranser
+  - [x] **022** konkurranser (kjørt 08.10, kontrollen 15/15)
   - [ ] **023** kjøp
 
 ## B. Snart (for TestFlight og testing)
