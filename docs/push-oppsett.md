@@ -79,6 +79,10 @@ select cron.schedule('dd18-paaminnelse', '0 8 * * *', $$select public.queue_even
 3. Deg → **Varsler** → **Slå på varsler**. Sjekk at telefonen står i `push_devices` (SQL Editor: `select device_id, environment, last_seen_at from public.push_devices;`).
 4. Prøv med to kontoer: en eagle, en melding til alle og en trådmelding med @navn. Se på `push_queue` (kontrollspørring 7) hvis noe ikke kommer fram. `result` og `last_error` sier hvorfor.
 
+## Blokkering
+
+Har du blokkert noen (`user_blocks`, sql/019), får du ikke push om det de gjør: trådmeldingene deres (også når de nevner deg), og linjer der de er aktøren eller spilleren det handler om (store scorer, sidepremier, påmelding, ny spiller, ledelsen, tippekongen, melding til alle og purring fra dem). Bare den som blokkerer slipper, som i tråden. Linja står fortsatt i Varsler. `push-send` leser `club_members` og `user_blocks` med service-rollen for hver jobb som ellers ville blitt sendt. Feiler lesingen, prøves jobben igjen i stedet for å sendes ufiltrert. Ingen ny SQL trengs. Reglene står i `pushOriginators` i `logic.ts`.
+
 ## Prod
 
 Ingenting av dette gjøres på prod før du sier ja. Da gjentas steg 3–6 mot prod. TestFlight-bygg bruker production-APNs også mot test-databasen, og det fungerer fordi miljøet står på hver telefon.

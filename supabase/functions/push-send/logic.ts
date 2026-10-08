@@ -12,6 +12,9 @@
 //   * Den som gjorde det, får ikke push om sin egen hendelse.
 //   * Tråden: all / mentions (standard) / off. Arrangørens meldinger går også
 //     til dem som har mentions (PWA: mottakereForMelding).
+//   * Blokkering (sql/019, user_blocks): har mottakeren blokkert den som står
+//     bak (pushOriginators), får mottakeren ikke push. Bare én retning, som
+//     tråden i 019: den blokkerte får fortsatt push om den som blokkerte.
 //   * Linja står i Varsler i appen uansett. Det er bare pushen som stoppes.
 //
 // Tekstene følger ActivityText.display i appen (DashDash18/Data/Activity.swift),
@@ -71,6 +74,12 @@ export interface MemberPayload {
   disabled_categories: string[] | null;
   thread_mode: string | null;
   devices: DevicePayload[];
+  /**
+   * Klubbmedlemmene (club_members.id) dette medlemmets innlogging har blokkert.
+   * Kommer ikke fra push_job_payload(): index.ts fyller det med attachBlocks()
+   * før planPush. Mangler feltet, er ingen blokkert.
+   */
+  blocked_member_ids?: string[];
 }
 
 export interface ActivityPayload {
@@ -155,15 +164,109 @@ export function reachable(member: MemberPayload): boolean {
   return member.active && member.devices.length > 0;
 }
 
+// ---------------------------------------------------------------------------
+// Blokkering
+// ---------------------------------------------------------------------------
+
+/** club_members.id og innloggingen bak (user_id = profiles.id = auth.uid()). */
+export interface MemberLink {
+  id: string;
+  user_id: string | null;
+}
+
+/** En rad i user_blocks. */
+export interface BlockRow {
+  blocker_id: string;
+  blocked_id: string;
+}
+
+/**
+ * Hvem står bak hendelsen? Har mottakeren blokkert en av dem, får hen ikke push.
+ *   tråden:        forfatteren
+ *   alle linjer:   actor_member_id (den som utløste den: føreren, arrangøren
+ *                  som purret eller skrev til alle, den som rettet)
+ *   big_score, side_prize, signup, member_joined: data.member (spilleren det
+ *                  handler om, som ikke alltid er den som førte)
+ *   lead_changed:  lederne; tips_king: tippekongene
+ * Ikke med: de som bare nevnes uten å ha gjort noe (den som ble passert på
+ * sidepremien, den som fikk scoren rettet, sosialkomiteen som ble trukket,
+ * mottakerlista på purringen).
+ */
+export function pushOriginators(payload: JobPayload): string[] {
+  const out = new Set<string>();
+  if (payload.kind === "thread") {
+    if (payload.message?.member_id) out.add(payload.message.member_id);
+    return [...out];
+  }
+  const a = payload.activity;
+  if (!a) return [];
+  if (a.actor_member_id) out.add(a.actor_member_id);
+  const d = a.data ?? {};
+  switch (a.kind) {
+    case "big_score":
+    case "side_prize":
+    case "signup":
+    case "member_joined": {
+      const member = str(d.member);
+      if (member) out.add(member);
+      break;
+    }
+    case "lead_changed":
+      for (const id of ids(d.leaders) ?? []) out.add(id);
+      break;
+    case "tips_king":
+      for (const id of ids(d.members) ?? []) out.add(id);
+      break;
+  }
+  return [...out];
+}
+
+/**
+ * Fyller blocked_member_ids på hvert medlem: medlemmene i klubben hvis
+ * innlogging medlemmets innlogging har blokkert (user_blocks er mellom
+ * profiler, payloaden er i klubbmedlemmer). Ren funksjon, endrer ikke payload.
+ */
+export function attachBlocks(payload: JobPayload, links: MemberLink[], blocks: BlockRow[]): JobPayload {
+  const membersOfUser = new Map<string, string[]>();
+  const userOfMember = new Map<string, string>();
+  for (const l of links) {
+    if (!l.user_id) continue;
+    userOfMember.set(l.id, l.user_id);
+    membersOfUser.set(l.user_id, [...(membersOfUser.get(l.user_id) ?? []), l.id]);
+  }
+  const blockedUsers = new Map<string, Set<string>>();
+  for (const b of blocks) {
+    if (!blockedUsers.has(b.blocker_id)) blockedUsers.set(b.blocker_id, new Set());
+    blockedUsers.get(b.blocker_id)!.add(b.blocked_id);
+  }
+  return {
+    ...payload,
+    members: payload.members.map((m) => {
+      const user = userOfMember.get(m.id);
+      const blocked = user ? blockedUsers.get(user) : undefined;
+      const memberIds = blocked ? [...blocked].flatMap((u) => membersOfUser.get(u) ?? []) : [];
+      return { ...m, blocked_member_ids: [...new Set([...(m.blocked_member_ids ?? []), ...memberIds])] };
+    }),
+  };
+}
+
+/** Har medlemmet blokkert en av dem som står bak hendelsen? */
+export function hasBlockedAny(member: MemberPayload, originators: readonly string[]): boolean {
+  const blocked = member.blocked_member_ids ?? [];
+  return blocked.length > 0 && originators.some((id) => blocked.includes(id));
+}
+
 /** Mottakerne av en linje i aktivitetsloggen. */
 export function activityRecipients(payload: JobPayload, activity: ActivityPayload): MemberPayload[] {
   const category = activity.category as ActivityCategory;
   const listed = activity.recipients;
+  const originators = pushOriginators(payload);
   return payload.members.filter((m) =>
     reachable(m) &&
     m.id !== activity.actor_member_id &&
     (listed === null || listed.includes(m.id)) &&
-    playerAllows(m, category)
+    playerAllows(m, category) &&
+    !hasBlockedAny(m, originators)
   );
 }
 
@@ -174,6 +277,7 @@ export function threadRecipients(payload: JobPayload, message: MessagePayload): 
   const mentions = message.mentions ?? [];
   return payload.members.filter((m) => {
     if (!reachable(m) || m.id === message.member_id) return false;
+    if (hasBlockedAny(m, [message.member_id])) return false;
     switch (threadMode(m)) {
       case "off": return false;
       case "all": return true;

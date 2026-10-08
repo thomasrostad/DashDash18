@@ -8,6 +8,7 @@ import {
   activityDisplay,
   type ActivityPayload,
   apnsBody,
+  attachBlocks,
   classifyApnsResponse,
   clubAllows,
   eveningLongText,
@@ -17,6 +18,7 @@ import {
   nameLookup,
   planPush,
   playerAllows,
+  pushOriginators,
   summarize,
   threadText,
 } from "./logic.ts";
@@ -429,4 +431,108 @@ Deno.test("oppsummering: prøv igjen bare når ingenting kom fram og feilen kan 
   is(summarize([{ token: "a", status: 403, reason: "InvalidProviderToken" }]).ok, false);
   is(summarize([{ token: "a", status: 410 }]).ok, true);
   is(summarize([]).ok, true);
+});
+
+// --- Blokkering (sql/019 user_blocks, beslutning 08.10.2026) -----------------
+
+// Innloggingene bak medlemmene. Carl er et ledig navn uten innlogging.
+const USER = { [THOMAS]: "u-thomas", [ANDERS]: "u-anders", [BJORN]: "u-bjorn", [CATO]: "u-cato" };
+const LINKS = [
+  ...Object.entries(USER).map(([id, user_id]) => ({ id, user_id })),
+  { id: CARL, user_id: null },
+];
+const block = (blocker: string, blocked: string) => ({ blocker_id: USER[blocker], blocked_id: USER[blocked] });
+const blocked = (p: JobPayload, ...rows: { blocker_id: string; blocked_id: string }[]) => attachBlocks(p, LINKS, rows);
+
+Deno.test("blokkering: tråden går ikke til den som har blokkert forfatteren", () => {
+  const p = thread("hei alle", ANDERS, [], { members: members({ [BJORN]: { thread_mode: "all" }, [CATO]: { thread_mode: "all" } }) });
+  eq(to(p), [BJORN, CATO].sort());
+  eq(to(blocked(p, block(BJORN, ANDERS))), [CATO]);
+});
+
+Deno.test("blokkering: å bli nevnt av den du har blokkert gir ikke push", () => {
+  eq(to(blocked(thread("@Bjørn", ANDERS, [BJORN]), block(BJORN, ANDERS))), []);
+});
+
+Deno.test("blokkering: arrangørens trådmelding stoppes også hvis du har blokkert arrangøren", () => {
+  eq(to(blocked(thread("Husk kvelden", THOMAS, []), block(CATO, THOMAS))), [ANDERS, BJORN].sort());
+});
+
+Deno.test("blokkering: bare én retning, den blokkerte får fortsatt push fra den som blokkerte", () => {
+  const p = thread("hei", BJORN, [], { members: members({ [ANDERS]: { thread_mode: "all" } }) });
+  eq(to(blocked(p, block(BJORN, ANDERS))), [ANDERS]);
+});
+
+Deno.test("blokkering: stor score fra en blokkert stoppes, også når en annen førte den", () => {
+  // Thomas førte (actor), Anders slo eaglen (data.member).
+  const eagle = { ...EAGLE, actor_member_id: THOMAS };
+  // (Anders får sin egen eagle når en annen førte den, som før.)
+  eq(to(blocked(job(eagle), block(BJORN, ANDERS))), [ANDERS, CATO].sort());
+  // Har du blokkert føreren, stoppes den også.
+  eq(to(blocked(job(eagle), block(CATO, THOMAS))), [ANDERS, BJORN].sort());
+});
+
+Deno.test("blokkering: sidepremie, påmelding, ny spiller, ledelsen og tippekongen", () => {
+  const cases: ActivityPayload[] = [
+    activity("side_prize", "side_prize", { kind: "drive", member: ANDERS, hole: 3, meters: 250 }, { actor_member_id: THOMAS }),
+    activity("signup", "signup", { member: ANDERS, status: "yes", event_date: "2026-10-15" }),
+    activity("member_joined", "club", { member: ANDERS }),
+    activity("lead_changed", "lead", { after_hole: 9, leaders: [ANDERS, CATO], points: 20, outcome: "shares" }, { actor_member_id: THOMAS }),
+    activity("tips_king", "tips", { members: [ANDERS], correct: 5, possible: 7 }, { actor_member_id: null }),
+  ];
+  for (const a of cases) {
+    ok(!to(blocked(job(a), block(BJORN, ANDERS))).includes(BJORN), a.kind);
+    ok(to(job(a)).includes(BJORN), a.kind);
+  }
+});
+
+Deno.test("blokkering: den som bare nevnes, stopper ikke pushen", () => {
+  // Bjørn har blokkert Cato. Cato blir passert på sidepremien, får scoren rettet,
+  // trekkes til komiteen eller står på purrelista: Bjørn får likevel push.
+  const cases: ActivityPayload[] = [
+    activity("side_prize", "side_prize", { kind: "kp", member: ANDERS, hole: 3, meters: 2, passed: CATO }),
+    activity("score_corrected", "score", { member: CATO, hole: 3, from: 4, to: 5 }, { actor_member_id: THOMAS }),
+    activity("committee_drawn", "social", { members: [CATO] }, { actor_member_id: THOMAS }),
+    activity("nudge", "nudge", {}, { actor_member_id: THOMAS, recipients: [BJORN, CATO] }),
+  ];
+  for (const a of cases) ok(to(blocked(job(a), block(BJORN, CATO))).includes(BJORN), a.kind);
+});
+
+Deno.test("blokkering: melding til alle og purring fra en arrangør du har blokkert stoppes", () => {
+  const ann = activity("announcement", "announcement", { text: "Hei" }, { actor_member_id: THOMAS });
+  eq(to(blocked(job(ann), block(BJORN, THOMAS))), [ANDERS, CATO].sort());
+  const nudge = activity("nudge", "nudge", {}, { actor_member_id: THOMAS, recipients: [BJORN, CATO] });
+  eq(to(blocked(job(nudge), block(BJORN, THOMAS))), [CATO]);
+});
+
+Deno.test("blokkering: påminnelsen uten avsender går til alle", () => {
+  const reminder = activity("reminder", "reminder", { event_date: "2026-10-15" }, { actor_member_id: null });
+  eq(pushOriginators(job(reminder)), []);
+  eq(to(blocked(job(reminder), block(BJORN, ANDERS))), [THOMAS, ANDERS, BJORN, CATO].sort());
+});
+
+Deno.test("blokkering: alle blokkerte gir «ingen mottakere»", () => {
+  const p = blocked(thread("@Bjørn", ANDERS, [BJORN]), block(BJORN, ANDERS));
+  is(planPush(p, NOW).skipped, "ingen mottakere");
+});
+
+Deno.test("blokkering: blokkeringer utenfor klubben og uten innlogging betyr ingenting", () => {
+  const p = attachBlocks(job(EAGLE), LINKS, [
+    { blocker_id: "u-fremmed", blocked_id: USER[ANDERS] },
+    { blocker_id: USER[BJORN], blocked_id: "u-fremmed" },
+  ]);
+  eq(to(p), [THOMAS, BJORN, CATO].sort());
+  eq(p.members.find((m) => m.id === CARL)?.blocked_member_ids, []);
+});
+
+Deno.test("blokkering: attachBlocks endrer ikke payloaden den får", () => {
+  const p = job(EAGLE);
+  blocked(p, block(BJORN, ANDERS));
+  is(p.members.find((m) => m.id === BJORN)?.blocked_member_ids, undefined);
+});
+
+Deno.test("pushOriginators: forfatter, aktør og spilleren det handler om", () => {
+  eq(pushOriginators(thread("hei", ANDERS, [])), [ANDERS]);
+  eq(pushOriginators(job({ ...EAGLE, actor_member_id: THOMAS })).sort(), [THOMAS, ANDERS].sort());
+  eq(pushOriginators(job(activity("lead_changed", "lead", { leaders: [ANDERS, CATO] }, { actor_member_id: null }))).sort(), [ANDERS, CATO].sort());
 });

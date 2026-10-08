@@ -13,7 +13,15 @@
 // Logikken (hvem, hva, tekstene) ligger i logic.ts, APNs i apns.ts.
 
 import { ApnsClient, sendAll } from "./apns.ts";
-import { type JobPayload, planPush, summarize } from "./logic.ts";
+import {
+  attachBlocks,
+  type BlockRow,
+  type JobPayload,
+  type MemberLink,
+  planPush,
+  pushOriginators,
+  summarize,
+} from "./logic.ts";
 
 const REQUIRED = [
   "SUPABASE_URL",
@@ -60,6 +68,38 @@ class Db {
     if (!response.ok) throw new Error(`${name}: ${response.status} ${text.slice(0, 200)}`);
     return (text ? JSON.parse(text) : null) as T;
   }
+
+  /** GET mot en tabell. service_role går forbi RLS. query er PostgREST-filtre. */
+  async select<T>(table: string, query: string): Promise<T[]> {
+    const response = await fetch(`${this.url}/rest/v1/${table}?${query}`, {
+      headers: { apikey: this.key, authorization: `Bearer ${this.key}` },
+    });
+    const text = await response.text();
+    if (!response.ok) throw new Error(`${table}: ${response.status} ${text.slice(0, 200)}`);
+    return (text ? JSON.parse(text) : []) as T[];
+  }
+}
+
+/**
+ * Blokkeringene som angår jobben (sql/019, user_blocks): hvem i klubben har
+ * blokkert noen av dem som står bak hendelsen. To små oppslag, bare når
+ * noen står bak. Feiler et oppslag, kastes feilen, og jobben prøves igjen:
+ * heller en forsinket push enn en push fra noen mottakeren har blokkert.
+ */
+async function withBlocks(db: Db, payload: JobPayload): Promise<JobPayload> {
+  const originators = pushOriginators(payload);
+  if (originators.length === 0) return payload;
+  const links = await db.select<MemberLink>(
+    "club_members",
+    `select=id,user_id&club_id=eq.${encodeURIComponent(payload.club.id)}&user_id=not.is.null`,
+  );
+  const users = [...new Set(links.filter((l) => originators.includes(l.id) && l.user_id).map((l) => l.user_id!))];
+  if (users.length === 0) return payload;
+  const blocks = await db.select<BlockRow>(
+    "user_blocks",
+    `select=blocker_id,blocked_id&blocked_id=in.(${users.map(encodeURIComponent).join(",")})`,
+  );
+  return blocks.length ? attachBlocks(payload, links, blocks) : payload;
 }
 
 interface QueueRow {
@@ -106,7 +146,11 @@ Deno.serve(async (request) => {
         await db.rpc("finish_push_job", { p_job_id: job.id, p_ok: true, p_result: { skipped: "fant ikke jobben" } });
         continue;
       }
-      const plan = planPush(payload, new Date());
+      // Først uten blokkeringene: hoppes jobben over uansett (gammel, av,
+      // ingen mottakere), trengs ingen oppslag.
+      const now = new Date();
+      let plan = planPush(payload, now);
+      if (!plan.skipped) plan = planPush(await withBlocks(db, payload), now);
       if (plan.skipped) {
         await db.rpc("finish_push_job", { p_job_id: job.id, p_ok: true, p_result: { skipped: plan.skipped } });
         report.push({ job: job.id, skipped: plan.skipped });
