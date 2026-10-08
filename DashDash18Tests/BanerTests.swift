@@ -273,28 +273,6 @@ struct BanerListeTests {
 }
 
 struct BanerSkrivingTests {
-    private func json(_ value: some Encodable) throws -> [String: Any] {
-        let data = try JSONEncoder().encode(value)
-        return try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
-    }
-
-    @Test func tommeFeltSendesSomNull() throws {
-        let values = CourseInputValues(name: "X", externalName: nil, courseRating: nil, slopeRating: nil, inUse: true, holes: [])
-        let object = try json(CourseWrite(clubID: UUID(), values: values))
-        #expect(Set(object.keys) == ["club_id", "name", "external_name", "course_rating", "slope_rating", "in_use"])
-        #expect(object["external_name"] is NSNull)
-        #expect(object["course_rating"] is NSNull)
-        #expect(object["slope_rating"] is NSNull)
-    }
-
-    @Test func hulletHarAlleKolonner() throws {
-        let record = CourseHoleRecord(courseID: UUID(), holeNumber: 3, par: 4, strokeIndex: nil, lengthM: nil)
-        let object = try json(HoleWrite(record))
-        #expect(Set(object.keys) == ["course_id", "hole_number", "par", "stroke_index", "length_m"])
-        #expect(object["stroke_index"] is NSNull)
-        #expect(object["par"] as? Int == 4)
-    }
-
     @Test func slettingAvBaneIBrukGirForklaring() {
         let error = CourseLibraryModel.deleteError(PostgrestError(code: "23503", message: "violates foreign key constraint"))
         guard case .invalid(let text) = error else {

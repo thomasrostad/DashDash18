@@ -239,7 +239,7 @@ struct RoundSetupCheckTests {
                                  BaySeat(memberID: e, bay: 3, isMarker: false), BaySeat(memberID: f, bay: 3, isMarker: false)])
         #expect(RoundSetupCheck.issues(setup, course: course(), rules: .golfgutu, roster: roster, forStart: true)
                 == [.bayWithoutMarker([2, 3])])
-        #expect(RoundSetupIssue.bayWithoutMarker([2, 3]).message == "Bås 2 og 3 har ingen markør.")
+        #expect(RoundSetupIssue.bayWithoutMarker([2, 3]).message(.bay) == "Bås 2 og 3 har ingen markør.")
     }
 
     @Test func formenMaaVaereTillattIRegelsettet() {

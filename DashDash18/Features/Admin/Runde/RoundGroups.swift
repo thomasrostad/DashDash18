@@ -12,26 +12,20 @@ nonisolated struct RoundGroup: Identifiable, Equatable, Sendable {
     var title: String {
         event.map { EveningDates.longText($0.eventDate, capitalized: true) } ?? "Uten kveld"
     }
-
-    var hasActive: Bool { rounds.contains { $0.status == .active } }
 }
 
-/// Én liste for alle rundene, gruppert per kveld. Erstatter «Runder» (én kveld) og «Rundene»
-/// (alle startede), som var to lister med nesten samme navn.
+/// Én liste for alle rundene, gruppert per kveld.
 nonisolated enum RoundGroups {
     static let noEventID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
     /// Nyeste kveld først, innen kvelden stigende rundenummer. Runder uten kveld sist.
-    /// `including` (kvelden som står for tur) er med selv uten runder, så «Ny runde» har et sted.
-    static func make(rounds: [RoundRow], events: [EventRow], including: UUID? = nil) -> [RoundGroup] {
+    /// Bare kvelder med runder er med.
+    static func make(rounds: [RoundRow], events: [EventRow]) -> [RoundGroup] {
         let byID = Dictionary(events.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         var byEvent: [UUID?: [RoundRow]] = [:]
         for round in rounds {
             let key: UUID? = round.eventID.flatMap { byID[$0] }?.id
             byEvent[key, default: []].append(round)
-        }
-        if let including, byID[including] != nil, byEvent[including] == nil {
-            byEvent[including] = []
         }
         var groups = byEvent.compactMap { key, rows -> RoundGroup? in
             guard let key else { return nil }
@@ -47,9 +41,8 @@ nonisolated enum RoundGroups {
         return groups
     }
 
-    /// Kan det settes opp en ny runde på kvelden herfra? Kvelden som står for tur, og kvelder
-    /// som ikke er passert. Gamle kvelder får ikke nye runder fra lista.
-    static func allowsNewRound(_ event: EventRow, today: String, defaultID: UUID?) -> Bool {
-        event.id == defaultID || event.eventDate >= today
+    /// Kan det settes opp en ny runde på kvelden? Bare kvelder som ikke er passert.
+    static func allowsNewRound(_ event: EventRow, today: String) -> Bool {
+        event.eventDate >= today
     }
 }

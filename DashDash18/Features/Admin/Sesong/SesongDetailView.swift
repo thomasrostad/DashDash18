@@ -86,7 +86,7 @@ struct SesongContentView<Bottom: View>: View {
                                 titleVisibility: .visible, presenting: conflict) { other in
                 Button("Avslutt «\(other.name)» og aktiver") {
                     conflict = nil
-                    run { try await model.activate(season, finishing: other) }
+                    run { try await model.activate(season) }
                 }
                 Button("Avbryt", role: .cancel) { conflict = nil }
             } message: { other in
@@ -117,7 +117,7 @@ struct SesongContentView<Bottom: View>: View {
                 if let other = SeasonLifecycle.activeConflict(activating: season, in: model.seasons) {
                     conflict = other
                 } else {
-                    run { try await model.activate(season, finishing: nil) }
+                    run { try await model.activate(season) }
                 }
             }
         case .finish:

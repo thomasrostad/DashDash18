@@ -1,8 +1,8 @@
 import Foundation
 
-/// Er `courses.kind` på plass i databasen? Kolonnen kommer med `sql/016_banetype.sql`
-/// (forslag, ikke kjørt). Så lenge flagget er av, leser og skriver appen ikke kolonnen,
-/// typevalget vises ikke, og typen avledes (se `CourseKind.resolve`).
+/// Er `courses.kind` på plass i databasen? Kolonnen kommer med `sql/016_banetype.sql` (kjørt på test).
+/// Med flagget av leser og skriver appen ikke kolonnen, typevalget vises ikke, og typen avledes
+/// (se `CourseKind.resolve`).
 nonisolated enum CourseKindFeature {
     static let isEnabled = true
 }

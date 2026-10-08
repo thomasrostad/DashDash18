@@ -2,7 +2,7 @@ import Foundation
 import GolfgutuCore
 
 // Avslutning og retting for arrangøren (fase 7): avkort runden, avslutt kvelden, rett en score
-// og Rundene-tabellen. Ren logikk over `RoundGame`, uten nettverk og SwiftUI.
+// og hele runden som tabell. Ren logikk over `RoundGame`, uten nettverk og SwiftUI.
 // Som PWA-ens avkortValg, renderAvkortInnhold, avkortingenKoster, handleAvsluttKvelden,
 // rundeSpillere, renderHeleRunden og renderRundeRetting (app-nytt.js 5138–5440, 6411–6660).
 
@@ -233,7 +233,7 @@ nonisolated enum EveningClose {
     }
 }
 
-// MARK: - Rundene: hele runden som tabell
+// MARK: - Hele runden som tabell
 
 nonisolated struct RoundTable: Equatable, Sendable {
     struct Column: Equatable, Identifiable, Sendable {

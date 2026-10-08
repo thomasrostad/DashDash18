@@ -116,8 +116,3 @@ nonisolated struct SeasonRulesPatch: Encodable, Sendable {
 nonisolated struct SeasonStatusPatch: Encodable, Sendable {
     let status: SeasonStatus
 }
-
-/// Endring av navn.
-nonisolated struct SeasonNamePatch: Encodable, Sendable {
-    let name: String
-}

@@ -86,11 +86,7 @@ private struct RoundTableContent: View {
             } message: { summary in
                 Text(summary.message)
             }
-            .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(error ?? "")
-            }
+            .messageAlert("Det gikk ikke", text: $error)
             .task { await model.load() }
             .refreshable { await model.load() }
             .sheet(item: $correcting) { item in
@@ -110,11 +106,7 @@ private struct RoundTableContent: View {
                     }
                 }
             }
-            .alert("Ferdig", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(message ?? "")
-            }
+            .messageAlert("Ferdig", text: $message)
     }
 
     @ViewBuilder
@@ -385,11 +377,7 @@ struct ScoreCorrectionSheet: View {
         }
         .onChange(of: member) { reset() }
         .onChange(of: hole) { reset() }
-        .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(error ?? "")
-        }
+        .messageAlert("Det gikk ikke", text: $error)
     }
 
     private func reset() {

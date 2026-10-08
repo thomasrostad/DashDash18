@@ -40,6 +40,8 @@ final class TerminlisteModel {
     /// Kveld → svarene. Feiler hentingen, står kveldene uten påmelding.
     private(set) var signups: [UUID: [SignupRow]] = [:]
 
+    static let eventColumns = "id, club_id, season_id, event_date, start_time, venue, note"
+
     private let context: ClubContext
 
     init(context: ClubContext) {
@@ -58,7 +60,7 @@ final class TerminlisteModel {
                 .limit(1)
                 .execute().value
             async let eventRows: [EventRow] = client.from("events")
-                .select("id, club_id, season_id, event_date, start_time, venue, note")
+                .select(Self.eventColumns)
                 .eq("club_id", value: clubID)
                 .order("event_date")
                 .execute().value
@@ -164,12 +166,12 @@ final class TerminlisteModel {
                 saved = try await client.from("events")
                     .update(write)
                     .eq("id", value: id)
-                    .select("id, club_id, season_id, event_date, start_time, venue, note")
+                    .select(Self.eventColumns)
                     .execute().value
             } else {
                 saved = try await client.from("events")
                     .insert(write)
-                    .select("id, club_id, season_id, event_date, start_time, venue, note")
+                    .select(Self.eventColumns)
                     .execute().value
             }
         } catch {
@@ -188,7 +190,7 @@ final class TerminlisteModel {
             deleted = try await client.from("events")
                 .delete()
                 .eq("id", value: event.id)
-                .select("id, club_id, season_id, event_date, start_time, venue, note")
+                .select(Self.eventColumns)
                 .execute().value
         } catch {
             throw .invalid(Terminliste.deleteErrorMessage(

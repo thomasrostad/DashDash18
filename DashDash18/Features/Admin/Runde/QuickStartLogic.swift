@@ -49,11 +49,10 @@ nonisolated enum QuickStart {
 
     /// Forrige runde i sesongen: den siste som er startet (pågår eller låst) på en kveld til og med
     /// denne, i kveldsdato- og rundenummerets rekkefølge. Kladder teller ikke, de kan være forlatt.
-    static func previousRound(rounds: [RoundRow], events: [EventRow], upTo event: EventRow,
-                              excluding roundID: UUID? = nil) -> RoundRow? {
+    static func previousRound(rounds: [RoundRow], events: [EventRow], upTo event: EventRow) -> RoundRow? {
         let dates = Dictionary(events.map { ($0.id, $0.eventDate) }, uniquingKeysWith: { a, _ in a })
         return rounds
-            .filter { $0.status != .draft && $0.id != roundID }
+            .filter { $0.status != .draft }
             .compactMap { round in round.eventID.flatMap { dates[$0] }.map { (round, $0) } }
             .filter { $0.1 <= event.eventDate }
             .max { ($0.1, $0.0.roundNo) < ($1.1, $1.0.roundNo) }?

@@ -19,7 +19,7 @@ nonisolated struct ClubPushToggle: Equatable, Identifiable, Sendable {
 nonisolated enum ClubPushPlan {
     /// Bryterne arrangøren ser, i samme rekkefølge som spillerens innstillinger, pluss tråden.
     /// Bare kategorier fra `push_club_categories()`, så purring og «Melding til alle» er ute.
-    /// Veddemål (`bet`) venter til fase 10, som hos spilleren.
+    /// Veddemål (`bet`) er ikke med, som hos spilleren (`PushCategories.shownToPlayer`).
     static let toggles: [ClubPushToggle] =
         PushCategories.shownToPlayer
             .filter { PushCategories.clubToggleable.contains($0) }
@@ -71,13 +71,6 @@ nonisolated struct PushStatusRow: Decodable, Equatable, Sendable {
     let hasLogin: Bool
     let devices: Int
     let lastSeenAt: Date?
-
-    init(memberID: UUID, hasLogin: Bool, devices: Int, lastSeenAt: Date?) {
-        self.memberID = memberID
-        self.hasLogin = hasLogin
-        self.devices = devices
-        self.lastSeenAt = lastSeenAt
-    }
 
     enum CodingKeys: String, CodingKey {
         case memberID = "member_id"

@@ -76,6 +76,7 @@ final class CourseLibraryModel {
     }
 
     static let courseColumns = "id, club_id, name, external_name, course_rating, slope_rating, in_use, confirmed_by, confirmed_at"
+    static let holeColumns = "course_id, hole_number, par, stroke_index, length_m"
 
     /// Banene fra Golfgutu-settet som klubben ikke har ennå.
     var missingFromSet: [GolfgutuCourseSet.CourseEntry] {
@@ -102,7 +103,7 @@ final class CourseLibraryModel {
             if !courses.isEmpty {
                 holes = try await client
                     .from("course_holes")
-                    .select("course_id, hole_number, par, stroke_index, length_m")
+                    .select(Self.holeColumns)
                     .in("course_id", values: courses.map(\.id.uuidString))
                     .execute()
                     .value
@@ -215,7 +216,7 @@ final class CourseLibraryModel {
             .value
         let holes: [CourseHoleRecord] = try await client
             .from("course_holes")
-            .select("course_id, hole_number, par, stroke_index, length_m")
+            .select(Self.holeColumns)
             .eq("course_id", value: id)
             .execute()
             .value
@@ -294,7 +295,7 @@ final class CourseLibraryModel {
             var holes: [CourseHoleRecord] = []
             if !rows.isEmpty {
                 holes = try await shared.client.from("course_holes")
-                    .select("course_id, hole_number, par, stroke_index, length_m")
+                    .select(Self.holeColumns)
                     .in("course_id", values: rows.map(\.course.id.uuidString))
                     .execute().value
             }
@@ -352,7 +353,7 @@ final class CourseLibraryModel {
                 .select(Self.sharedColumns).eq("id", value: savedID).execute().value
             guard let row = rows.first else { throw DataError.notAllowed }
             let holes: [CourseHoleRecord] = try await shared.client.from("course_holes")
-                .select("course_id, hole_number, par, stroke_index, length_m")
+                .select(Self.holeColumns)
                 .eq("course_id", value: savedID).execute().value
             let item = CourseListItem(course: row.course, holes: holes, storedKind: row.kind)
             guard item.holes.count == values.holes.count else { throw DataError.notAllowed }
@@ -390,64 +391,6 @@ final class CourseLibraryModel {
             return .invalid("Banen er brukt i en runde og kan ikke slettes. Sett den til «ikke i bruk» i stedet, så forsvinner den fra velgeren.")
         }
         return DataError.from(error)
-    }
-}
-
-/// Kolonnene appen skriver til `courses`. Tomme felt sendes som `null`, så de tømmes
-/// ved endring (standard `Encodable` ville utelatt dem).
-nonisolated struct CourseWrite: Encodable, Sendable {
-    let clubID: UUID
-    let name: String
-    let externalName: String?
-    let courseRating: Double?
-    let slopeRating: Int?
-    let inUse: Bool
-
-    init(clubID: UUID, values: CourseInputValues) {
-        self.clubID = clubID
-        name = values.name
-        externalName = values.externalName
-        courseRating = values.courseRating
-        slopeRating = values.slopeRating
-        inUse = values.inUse
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case clubID = "club_id"
-        case name
-        case externalName = "external_name"
-        case courseRating = "course_rating"
-        case slopeRating = "slope_rating"
-        case inUse = "in_use"
-    }
-
-    func encode(to encoder: any Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(clubID, forKey: .clubID)
-        try c.encode(name, forKey: .name)
-        try c.encode(externalName, forKey: .externalName)
-        try c.encode(courseRating, forKey: .courseRating)
-        try c.encode(slopeRating, forKey: .slopeRating)
-        try c.encode(inUse, forKey: .inUse)
-    }
-}
-
-/// Et hull til upsert. Alle nøkler er med (også `null`), så alle radene i forespørselen
-/// har samme kolonner og en tømt indeks eller lengde faktisk tømmes.
-nonisolated struct HoleWrite: Encodable, Sendable {
-    let record: CourseHoleRecord
-
-    init(_ record: CourseHoleRecord) {
-        self.record = record
-    }
-
-    func encode(to encoder: any Encoder) throws {
-        var c = encoder.container(keyedBy: CourseHoleRecord.CodingKeys.self)
-        try c.encode(record.courseID, forKey: .courseID)
-        try c.encode(record.holeNumber, forKey: .holeNumber)
-        try c.encode(record.par, forKey: .par)
-        try c.encode(record.strokeIndex, forKey: .strokeIndex)
-        try c.encode(record.lengthM, forKey: .lengthM)
     }
 }
 

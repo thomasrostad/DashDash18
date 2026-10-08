@@ -1,7 +1,7 @@
 import GolfgutuCore
 import SwiftUI
 
-/// «Avslutt kvelden …» i rundelisten: spør om avkorting når noen mangler hull, og låser
+/// «Avslutt kvelden …» på Kvelden: spør om avkorting når noen mangler hull, og låser
 /// alle pågående runder på kvelden.
 struct AvsluttKveldenSection: View {
     /// Kveldens runder.
@@ -23,7 +23,7 @@ struct AvsluttKveldenSection: View {
     }
 }
 
-/// Knappen «Avslutt kvelden» med hele flyten: spørsmålet, avkorting og låsing. Som rad i lista,
+/// Knappen «Avslutt kvelden» med hele flyten: spørsmålet, avkorting og låsing. Som rad på Kvelden,
 /// eller som stor hovedknapp på arrangørsiden.
 struct AvsluttKveldenButton: View {
     @Environment(\.clubContext) private var context
@@ -65,11 +65,7 @@ struct AvsluttKveldenButton: View {
                     AvkortSheet(round: round, title: title(round)) { text in Task { await onDone(text) } }
                 }
             }
-            .alert("Det gikk ikke", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(error ?? "")
-            }
+            .messageAlert("Det gikk ikke", text: $error)
     }
 
     @ViewBuilder

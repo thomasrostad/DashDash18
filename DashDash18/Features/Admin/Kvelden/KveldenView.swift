@@ -153,8 +153,7 @@ struct KveldenView: View {
             }
             if EveningSignup.offersNudge(eventDate: event.eventDate, today: EveningDates.today(), summary: summary) {
                 NudgeSection(targets: Nudge.targets(summary)) { () async throws(DataError) -> String in
-                    let text = try await terminliste.nudge(event)
-                    return text
+                    try await terminliste.nudge(event)
                 }
             }
         } header: {

@@ -84,7 +84,7 @@ struct RundeRadTests {
     @Test func nyRundeBareForKvelderSomIkkeErPassert() {
         let past = EventRow(id: id(1), clubID: club, seasonID: nil, eventDate: "2026-10-01", startTime: nil, venue: nil, note: nil)
         let next = EventRow(id: id(2), clubID: club, seasonID: nil, eventDate: "2026-10-08", startTime: nil, venue: nil, note: nil)
-        #expect(!RoundGroups.allowsNewRound(past, today: "2026-10-08", defaultID: nil))
-        #expect(RoundGroups.allowsNewRound(next, today: "2026-10-08", defaultID: nil))
+        #expect(!RoundGroups.allowsNewRound(past, today: "2026-10-08"))
+        #expect(RoundGroups.allowsNewRound(next, today: "2026-10-08"))
     }
 }
