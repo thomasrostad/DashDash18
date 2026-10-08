@@ -4,7 +4,7 @@ Oppdatert 07.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 
 ## A. Nå (sikkerhet og bygg)
 
-- [ ] **1. Supabase → Authentication → Email:** slå på **Confirm email** og **Secure email change**. Sett OTP-lengde **8** og utløp **600 s**. *Kritisk: uten dette kan noen lage konto med din e-post.*
+- [x] **1. Supabase → Authentication → Email:** slå på **Confirm email** og **Secure email change**. Sett OTP-lengde **8** og utløp **600 s**. *Kritisk: uten dette kan noen lage konto med din e-post.*
 - [ ] **2. Xcode Cloud-workflowen** (App Store Connect → Xcode Cloud → Workflows → TestFlight fra main → Edit):
   - Environment → **Xcode Version = Xcode 26.6** (ikke «Latest Release»).
   - Sjekk at `SUPABASE_PUBLISHABLE_KEY` starter med `sb_publishable_`. Skriv den gjerne inn på nytt: ⌘V, uten mellomrom foran.
