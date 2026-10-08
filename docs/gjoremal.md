@@ -5,7 +5,7 @@ Oppdatert 07.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 ## A. Nå (sikkerhet og bygg)
 
 - [x] **1. Supabase → Authentication → Email:** slå på **Confirm email** og **Secure email change**. Sett OTP-lengde **8** og utløp **600 s**. *Kritisk: uten dette kan noen lage konto med din e-post.*
-- [ ] **2. Xcode Cloud-workflowen** (App Store Connect → Xcode Cloud → Workflows → TestFlight fra main → Edit):
+- [x] **2. Xcode Cloud-workflowen** *(08.10: Xcode 26.6, nøkkelen OK, intern gruppe «Utviklere» får byggene. Gjenstår: slå av «Default»-workflowen)* (App Store Connect → Xcode Cloud → Workflows → TestFlight fra main → Edit):
   - Environment → **Xcode Version = Xcode 26.6** (ikke «Latest Release»).
   - Sjekk at `SUPABASE_PUBLISHABLE_KEY` starter med `sb_publishable_`. Skriv den gjerne inn på nytt: ⌘V, uten mellomrom foran.
 - [x] **3. Kjør SQL på test, i denne rekkefølgen.** Claude legger fila på utklippstavla og sjekker den etterpå.
@@ -15,8 +15,8 @@ Oppdatert 07.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 
 ## B. Snart (for TestFlight og testing)
 
-- [ ] **4. Xcode, kamerateksten:** `Privacy – Camera Usage Description` = «DashDash bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.»
-- [ ] **5. Xcode, appnavnet:** `Bundle Display Name` = **DashDash** (target DashDash18 → General → Display Name).
+- [x] **4. Xcode, kamerateksten:** *(løst via InfoPlist.xcstrings)* `Privacy – Camera Usage Description` = «DashDash bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.»
+- [x] **5. Appnavnet:** **Atten** *(besluttet 08.10, visningsnavn og ikon er på plass)* (target DashDash18 → General → Display Name).
 - [ ] **6. Supabase → Settings → Infrastructure:** sjekk at Auth er **2.185.0 eller nyere** (kjent hull i Apple-innloggingen i eldre versjoner).
 - [ ] **7. Supabase → Authentication:** slå på **Leaked password protection** og sett minstelengde på passord. Sett lave **rate limits**.
 - [ ] **8. Supabase → Data API:** sjekk at bare `public` er eksponert.
