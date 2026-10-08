@@ -7,8 +7,14 @@
 /** Kildenavnet i courses.source og course_tees.source. */
 export const SOURCE = "slope";
 
-/** Hvor mange baner som sendes til course_feed_apply i én del. */
-export const CHUNK_SIZE = 200;
+/**
+ * Hvor mange baner som sendes til course_feed_apply i én del. Med hull per tee (sql/030) blir en
+ * del større; logic_test.ts sjekker at ingen del av hele eksporten passerer MAX_PART_BYTES.
+ */
+export const CHUNK_SIZE = 100;
+
+/** Øvre grense for én del (JSON) som testen holder delene under. */
+export const MAX_PART_BYTES = 1_000_000;
 
 // Grensene i databasen (sql/001, sql/029). Rader utenfor hoppes over.
 const COURSE_NAME_MAX = 80;
@@ -21,6 +27,11 @@ const SLOPE_MAX = 155;
 const PAR_MIN = 27;
 const PAR_MAX = 80;
 const SORT_MAX = 999;
+const HOLE_PAR_MIN = 3;
+const HOLE_PAR_MAX = 6;
+const STROKE_INDEX_MAX = 18;
+const LENGTH_MIN = 50;
+const LENGTH_MAX = 700;
 
 // --- Kildens form ------------------------------------------------------------
 
@@ -38,6 +49,8 @@ export interface SlopeTee {
   course_rating?: number | string | null;
   par?: number | string | null;
   sort_order?: number | string | null;
+  /** Hullene på teen: [hullnummer, par, indeks, lengde i meter]. Mangler på rundt en tredel av teene. */
+  holes?: unknown;
 }
 
 export interface SlopeCourse {
@@ -57,7 +70,10 @@ export interface SlopeExport {
   courses: SlopeCourse[];
 }
 
-// --- Det databasen får (course_feed_apply, sql/029) --------------------------
+// --- Det databasen får (course_feed_apply, sql/029 og sql/030) ---------------
+
+/** Ett hull, kompakt som i kilden: [hullnummer, par, indeks eller null, lengde i meter eller null]. */
+export type FeedHole = [number, number, number | null, number | null];
 
 export interface FeedTee {
   external_id: string;
@@ -67,6 +83,8 @@ export interface FeedTee {
   slope_rating: number;
   par: number | null;
   sort_order: number;
+  /** Teens hull (9 eller 18), eller tom: teen har ingen gyldige hull hos kilden. */
+  holes: FeedHole[];
 }
 
 export interface FeedCourse {
@@ -77,6 +95,11 @@ export interface FeedCourse {
   /** Fra standard-teen (første herre-tee), eller null. */
   course_rating: number | null;
   slope_rating: number | null;
+  /**
+   * Banens hull (course_holes): hullene til hull-teen (første herre-tee med hull etter
+   * rekkefølgen, ellers første tee med hull). Tom når ingen tee har hull.
+   */
+  holes: FeedHole[];
   tees: FeedTee[];
 }
 
@@ -91,6 +114,8 @@ export interface MappedExport {
   courses: FeedCourse[];
   skippedCourses: Skipped[];
   skippedTees: Skipped[];
+  /** Tees som står, men uten hull fordi hullene hos kilden ikke var gyldige. */
+  skippedHoles: Skipped[];
 }
 
 // --- Versjonen ---------------------------------------------------------------
@@ -162,8 +187,53 @@ function idText(value: unknown): string | null {
   return null;
 }
 
-/** Én tee, eller grunnen til at den hoppes over. */
-export function mapTee(tee: SlopeTee): FeedTee | Skipped {
+/**
+ * Hullene på en tee, vasket. Gyldig: 9 eller 18 hull nummerert 1…n, par 3–6, indeks 1–18 og unik
+ * på teen (eller tom på alle hullene), og summen av parene lik teens par når den er oppgitt. En
+ * lengde utenfor 50–700 m blir tom (databasens grense), resten av hullet står. Gir hullene sortert
+ * på nummer, en tom liste når kilden ikke har hull, eller grunnen til at de ikke kan brukes.
+ */
+export function mapHoles(raw: unknown, teePar: number | null): FeedHole[] | { reason: string } {
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw)) return { reason: "hullene er ikke en liste" };
+  if (raw.length === 0) return [];
+  if (raw.length !== 9 && raw.length !== 18) return { reason: `${raw.length} hull` };
+  const holes: FeedHole[] = [];
+  for (const entry of raw) {
+    if (!Array.isArray(entry) || entry.length < 2) return { reason: "et hull har feil form" };
+    const number = toNumber(entry[0]);
+    const par = toNumber(entry[1]);
+    const index = toNumber(entry[2]);
+    const length = toNumber(entry[3]);
+    if (number === null || !Number.isInteger(number)) return { reason: `hullnummer ${entry[0]}` };
+    if (par === null || !Number.isInteger(par) || par < HOLE_PAR_MIN || par > HOLE_PAR_MAX) {
+      return { reason: `par ${entry[1]} på hull ${number}` };
+    }
+    if (index !== null && (!Number.isInteger(index) || index < 1 || index > STROKE_INDEX_MAX)) {
+      return { reason: `indeks ${entry[2]} på hull ${number}` };
+    }
+    const meters = length !== null && Number.isInteger(length) && length >= LENGTH_MIN && length <= LENGTH_MAX
+      ? length
+      : null;
+    holes.push([number, par, index, meters]);
+  }
+  holes.sort((a, b) => a[0] - b[0]);
+  if (holes.some((h, i) => h[0] !== i + 1)) return { reason: `hullene er ikke nummerert 1–${holes.length}` };
+  const known = holes.map((h) => h[2]).filter((i): i is number => i !== null);
+  if (known.length !== 0 && known.length !== holes.length) return { reason: "indeks mangler på noen hull" };
+  if (new Set(known).size !== known.length) return { reason: "to hull har samme indeks" };
+  const sum = holes.reduce((total, h) => total + h[1], 0);
+  if (teePar !== null && sum !== teePar) {
+    return { reason: `par per hull (${sum}) stemmer ikke med teens par (${teePar})` };
+  }
+  return holes;
+}
+
+/**
+ * Én tee, eller grunnen til at den hoppes over. Ugyldige hull gjør ikke teen ugyldig: den får
+ * ingen hull, og grunnen står i `holesSkipped`.
+ */
+export function mapTee(tee: SlopeTee): (FeedTee & { holesSkipped?: string }) | Skipped {
   const id = idText(tee?.id);
   if (id === null) return { external_id: String(tee?.id ?? ""), reason: "mangler id" };
   const name = cleanText(tee.name, TEE_NAME_MAX);
@@ -178,17 +248,22 @@ export function mapTee(tee: SlopeTee): FeedTee | Skipped {
   if (slope === null || !Number.isInteger(slope) || slope < SLOPE_MIN || slope > SLOPE_MAX) {
     return { external_id: id, reason: `slope ${tee.slope_rating}` };
   }
-  const par = toNumber(tee.par);
+  const rawPar = toNumber(tee.par);
+  const par = rawPar !== null && Number.isInteger(rawPar) && rawPar >= PAR_MIN && rawPar <= PAR_MAX ? rawPar : null;
   const sort = toNumber(tee.sort_order);
-  return {
+  const holes = mapHoles(tee.holes, par);
+  const mapped: FeedTee & { holesSkipped?: string } = {
     external_id: id,
     name,
     gender,
     course_rating: Math.round(rating * 10) / 10,
     slope_rating: slope,
-    par: par !== null && Number.isInteger(par) && par >= PAR_MIN && par <= PAR_MAX ? par : null,
+    par,
     sort_order: sort !== null && Number.isInteger(sort) ? Math.min(Math.max(sort, 0), SORT_MAX) : 0,
+    holes: Array.isArray(holes) ? holes : [],
   };
+  if (!Array.isArray(holes)) mapped.holesSkipped = holes.reason;
+  return mapped;
 }
 
 function isSkipped(value: FeedTee | Skipped): value is Skipped {
@@ -208,20 +283,45 @@ export function defaultTee(tees: FeedTee[]): FeedTee | null {
   return sorted.find((t) => t.gender === "men") ?? sorted[0] ?? null;
 }
 
+/** Hull-teen (banens hull i course_holes): første herre-tee med hull, ellers første tee med hull. */
+export function holeTee(tees: FeedTee[]): FeedTee | null {
+  return defaultTee(tees.filter((t) => t.holes.length > 0));
+}
+
 /** Én bane med teene sine, eller grunnen til at den hoppes over. */
-export function mapCourse(course: SlopeCourse): { course: FeedCourse | null; skippedCourse?: Skipped; skippedTees: Skipped[] } {
+export function mapCourse(
+  course: SlopeCourse,
+): { course: FeedCourse | null; skippedCourse?: Skipped; skippedTees: Skipped[]; skippedHoles: Skipped[] } {
   const id = idText(course?.id);
-  if (id === null) return { course: null, skippedCourse: { external_id: String(course?.id ?? ""), reason: "mangler id" }, skippedTees: [] };
+  if (id === null) {
+    return {
+      course: null,
+      skippedCourse: { external_id: String(course?.id ?? ""), reason: "mangler id" },
+      skippedTees: [],
+      skippedHoles: [],
+    };
+  }
   const name = cleanText(course.name, COURSE_NAME_MAX);
-  if (name === null) return { course: null, skippedCourse: { external_id: id, reason: "mangler navn" }, skippedTees: [] };
+  if (name === null) {
+    return { course: null, skippedCourse: { external_id: id, reason: "mangler navn" }, skippedTees: [], skippedHoles: [] };
+  }
 
   const skippedTees: Skipped[] = [];
+  const skippedHoles: Skipped[] = [];
   const byId = new Map<string, FeedTee>();
   for (const raw of Array.isArray(course.tees) ? course.tees : []) {
-    const tee = mapTee(raw);
-    if (isSkipped(tee)) skippedTees.push(tee);
-    else if (byId.has(tee.external_id)) skippedTees.push({ external_id: tee.external_id, reason: "dobbel id" });
-    else byId.set(tee.external_id, tee);
+    const mapped = mapTee(raw);
+    if (isSkipped(mapped)) {
+      skippedTees.push(mapped);
+      continue;
+    }
+    const { holesSkipped, ...tee } = mapped;
+    if (byId.has(tee.external_id)) {
+      skippedTees.push({ external_id: tee.external_id, reason: "dobbel id" });
+      continue;
+    }
+    if (holesSkipped) skippedHoles.push({ external_id: tee.external_id, reason: holesSkipped });
+    byId.set(tee.external_id, tee);
   }
   const tees = sortTees([...byId.values()]);
   const standard = defaultTee(tees);
@@ -233,9 +333,11 @@ export function mapCourse(course: SlopeCourse): { course: FeedCourse | null; ski
       country: countryCode(course.country),
       course_rating: standard?.course_rating ?? null,
       slope_rating: standard?.slope_rating ?? null,
+      holes: holeTee(tees)?.holes ?? [],
       tees,
     },
     skippedTees,
+    skippedHoles,
   };
 }
 
@@ -248,10 +350,12 @@ export function mapExport(data: SlopeExport): MappedExport {
   const seen = new Set<string>();
   const skippedCourses: Skipped[] = [];
   const skippedTees: Skipped[] = [];
+  const skippedHoles: Skipped[] = [];
   const teeIDs = new Set<string>();
   for (const raw of data.courses) {
     const mapped = mapCourse(raw);
     skippedTees.push(...mapped.skippedTees);
+    skippedHoles.push(...mapped.skippedHoles);
     if (!mapped.course) {
       if (mapped.skippedCourse) skippedCourses.push(mapped.skippedCourse);
       continue;
@@ -270,7 +374,8 @@ export function mapExport(data: SlopeExport): MappedExport {
       teeIDs.add(t.external_id);
       return true;
     });
-    courses.push({ ...mapped.course, tees });
+    // Falt hull-teen bort som dobbel, velges den på nytt blant teene som står.
+    courses.push({ ...mapped.course, holes: holeTee(tees)?.holes ?? [], tees });
   }
   return {
     dataVersion: version,
@@ -278,6 +383,7 @@ export function mapExport(data: SlopeExport): MappedExport {
     courses,
     skippedCourses,
     skippedTees,
+    skippedHoles,
   };
 }
 
@@ -292,6 +398,8 @@ export interface ExistingTee {
   par: number | null;
   sort_order: number;
   missing_at: string | null;
+  /** Hullene i course_tee_holes (sql/030), sortert på nummer. */
+  holes: FeedHole[];
 }
 
 export interface ExistingCourse {
@@ -302,21 +410,59 @@ export interface ExistingCourse {
   course_rating: number | string | null;
   slope_rating: number | null;
   missing_at: string | null;
+  /** Banens hull i course_holes, sortert på nummer. */
+  holes: FeedHole[];
   tees: ExistingTee[];
 }
 
-/** Radene fra PostgREST (courses og course_tees med course_id), satt sammen. */
+/** En hullrad fra databasen (course_holes eller course_tee_holes). */
+export interface HoleRow {
+  hole_number: number;
+  par: number;
+  stroke_index: number | null;
+  length_m: number | null;
+}
+
+function holesFromRows(rows: HoleRow[] | undefined): FeedHole[] {
+  return (rows ?? [])
+    .map((h): FeedHole => [h.hole_number, h.par, h.stroke_index, h.length_m])
+    .sort((a, b) => a[0] - b[0]);
+}
+
+function groupBy<T, K>(rows: T[], key: (row: T) => K): Map<K, T[]> {
+  const map = new Map<K, T[]>();
+  for (const row of rows) {
+    const k = key(row);
+    const list = map.get(k) ?? [];
+    list.push(row);
+    map.set(k, list);
+  }
+  return map;
+}
+
+/**
+ * Radene fra PostgREST satt sammen per bane: courses, course_tees (med id og course_id) og hullene
+ * (course_holes med course_id, course_tee_holes med tee_id). Hullrader til andre baner overses.
+ */
 export function existingFromRows(
   courses: { id: string; external_id: string; name: string; city: string | null; country: string | null; course_rating: number | string | null; slope_rating: number | null; missing_at: string | null }[],
-  tees: (Omit<ExistingTee, never> & { course_id: string })[],
+  tees: (Omit<ExistingTee, "holes"> & { id: string; course_id: string })[],
+  courseHoles: (HoleRow & { course_id: string })[] = [],
+  teeHoles: (HoleRow & { tee_id: string })[] = [],
 ): ExistingCourse[] {
+  const holesByCourse = groupBy(courseHoles, (h) => h.course_id);
+  const holesByTee = groupBy(teeHoles, (h) => h.tee_id);
   const byCourse = new Map<string, ExistingTee[]>();
-  for (const { course_id, ...tee } of tees) {
+  for (const { course_id, id, ...tee } of tees) {
     const list = byCourse.get(course_id) ?? [];
-    list.push(tee);
+    list.push({ ...tee, holes: holesFromRows(holesByTee.get(id)) });
     byCourse.set(course_id, list);
   }
-  return courses.map(({ id, ...course }) => ({ ...course, tees: byCourse.get(id) ?? [] }));
+  return courses.map(({ id, ...course }) => ({
+    ...course,
+    holes: holesFromRows(holesByCourse.get(id)),
+    tees: byCourse.get(id) ?? [],
+  }));
 }
 
 function sameNumber(a: number | string | null | undefined, b: number | string | null | undefined): boolean {
@@ -325,10 +471,16 @@ function sameNumber(a: number | string | null | undefined, b: number | string | 
   return x === y;
 }
 
+/** Like hull: samme antall, og samme nummer, par, indeks og lengde på hvert. */
+export function sameHoles(a: FeedHole[] | undefined, b: FeedHole[]): boolean {
+  const x = a ?? [];
+  return x.length === b.length && x.every((h, i) => h.every((v, j) => sameNumber(v, b[i][j])));
+}
+
 function sameTee(a: ExistingTee, b: FeedTee): boolean {
   return a.missing_at === null && a.name === b.name && a.gender === b.gender &&
     sameNumber(a.course_rating, b.course_rating) && sameNumber(a.slope_rating, b.slope_rating) &&
-    sameNumber(a.par, b.par) && sameNumber(a.sort_order, b.sort_order);
+    sameNumber(a.par, b.par) && sameNumber(a.sort_order, b.sort_order) && sameHoles(a.holes, b.holes);
 }
 
 /** Er banen lik det som ligger i databasen (felt og tees som ikke er borte)? */
@@ -338,6 +490,7 @@ export function sameCourse(existing: ExistingCourse, incoming: FeedCourse): bool
   if (!sameNumber(existing.course_rating, incoming.course_rating) || !sameNumber(existing.slope_rating, incoming.slope_rating)) {
     return false;
   }
+  if (!sameHoles(existing.holes, incoming.holes)) return false;
   const live = existing.tees.filter((t) => t.missing_at === null);
   if (live.length !== incoming.tees.length) return false;
   const byID = new Map(existing.tees.map((t) => [t.external_id, t]));
@@ -394,6 +547,20 @@ export function sanityProblem(existingActive: number, incoming: number): string 
     return `eksporten har ${incoming} baner, men vi har ${existingActive}. Hoppet over for sikkerhets skyld`;
   }
   return null;
+}
+
+/**
+ * Skal eksporten hentes selv om versjonen er lik? Ja når databasen ikke har ett eneste hull per
+ * tee: sql/030 er nettopp kjørt, eller en eldre synk (uten hull) har lagret versjonen etter 030.
+ * Da hentes alt én gang, og diffen sender banene med hull.
+ */
+export function needsHoles(teeHoleRows: number): boolean {
+  return teeHoleRows === 0;
+}
+
+/** Størrelsen på en del slik den sendes (JSON, byte). */
+export function partBytes(part: FeedCourse[]): number {
+  return new TextEncoder().encode(JSON.stringify(part)).length;
 }
 
 /** Delene som sendes til course_feed_apply. Siste del har versjonen (tom liste gir én del). */
