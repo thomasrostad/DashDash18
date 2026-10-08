@@ -358,8 +358,8 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - **Ny runde blir én bekreftelse:** bane, hvem og starttid, resten fra turneringen. Matcher og lag bare når formen krever det.
 - **Mindre tekst:** høyst én hjelpelinje per seksjon.
 
-- [ ] Regelmotoren: tabell fra stableford, de fire oppsettene, gjenkjenning av oppsett. Paritet uendret.
-- [ ] Ny runde: én bekreftelsesskjerm, færre valg og tekster.
+- [x] Regelmotoren: tabell fra stableford, de fire oppsettene, gjenkjenning av oppsett. Paritet uendret. *(08.10: 191 kjernetester grønne, Golfgutu-JSON byte-lik.)*
+- [x] Ny runde: én bekreftelsesskjerm, færre valg og tekster. Matcher verken vises eller trekkes når tabellen teller stableford. *(08.10: 23 → 16 synlige valg, 12 → 1 hjelpetekst.)*
 - [ ] Turnering i appen: «Ny turnering» med oppsettene, én liste over turneringer, arrangørsiden lander på hovedturneringen, Tavla for stableford-serie.
 - [ ] Prøve på telefon: sett opp en stableford-serie og en kveld fra null.
 

@@ -92,11 +92,8 @@ nonisolated struct RoundSetupOptions: Equatable, Sendable {
     /// Lag bare i lagformer.
     var showsTeams: Bool { form.isTeamForm }
 
-    /// Matchene (dueller, trekant, lag mot lag). Koblingspunktet for regelen om hva tabellen teller:
-    /// i dag gir hver runde matcher (duellpoeng i Golfgutu-oppsettet, lag mot lag i lagformer), så
-    /// svaret er alltid ja. Når tabellen kan telle stableford i stedet for matcher (fase 18, `TableRules`),
-    /// skal dette bli nei for et slikt regelsett, f.eks. `rules.table.source != .stableford`.
-    var showsMatches: Bool { true }
+    /// Matcher vises når de gir tabellpoeng. Teller tabellen stableford (fase 18), trekkes de ikke.
+    var showsMatches: Bool { rules.table.pointsSource == .matches }
 
     /// «Trackman fordeler slagene» finnes bare i simulatoren.
     var showsTrackmanToggle: Bool { venue == .simulator }

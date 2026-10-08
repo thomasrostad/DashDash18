@@ -139,6 +139,12 @@ struct NyRundeFlereValgTests {
         #expect(RoundSetupOptions(draft: draft(players: 11), rules: .golfgutu).showsMatches)
         #expect(RoundSetupOptions(draft: draft(form: "match"), rules: .golfgutu).showsMatches)
         #expect(RoundSetupOptions(draft: draft(form: "fourball"), rules: .golfgutu).showsMatches)
+        // Stableford-serien (fase 18): tabellen teller stableford, så matchene verken vises eller trekkes.
+        let series = RulesetTemplate.stablefordSeries.rules
+        #expect(!RoundSetupOptions(draft: draft(), rules: series).showsMatches)
+        var d = draft()
+        d.prepareSetup(rules: series, roster: [])
+        #expect(d.matches.isEmpty)
     }
 
     @Test func trackmanBareISimulatoren() {

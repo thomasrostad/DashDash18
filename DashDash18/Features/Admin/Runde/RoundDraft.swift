@@ -99,6 +99,8 @@ nonisolated struct RoundDraft: Equatable, Sendable {
         if form.isTeamForm && teams.isEmpty {
             teams = TeamPlanner.suggested(participants: participants, form: form, maxPerBay: rules.formats.maxPerBay)
         }
+        // Teller tabellen stableford (fase 18), gir matcher ingen poeng, så de trekkes ikke.
+        guard rules.table.pointsSource == .matches else { matches = []; return }
         if !MatchPlanner.canKeep(matches, participants: participants, teams: teams, isTeamForm: form.isTeamForm) {
             redrawMatches(roster: roster)
         }
