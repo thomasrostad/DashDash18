@@ -52,7 +52,7 @@ final class JoinCompetitionModel {
             let preview = try await CompetitionQueries.invitePreview(client: client, code: code)
             step = preview.entered ? .joined(preview) : .preview(preview)
         } catch {
-            step = .failed(DataError.from(error).message)
+            step = .failed(CompetitionInviteErrors.message(for: error))
         }
     }
 
@@ -73,7 +73,7 @@ final class JoinCompetitionModel {
             step = .joined(preview)
             return result.competitionID
         } catch {
-            joinError = DataError.from(error).message
+            joinError = CompetitionInviteErrors.message(for: error)
             return nil
         }
     }
