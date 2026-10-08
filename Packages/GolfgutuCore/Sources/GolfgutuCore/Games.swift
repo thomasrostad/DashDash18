@@ -50,9 +50,6 @@ public enum GameKind: String, Codable, Hashable, Sendable, CaseIterable {
 
     /// Spillet har to sider (lag).
     public var hasSides: Bool { self == .nassau || self == .bestBall }
-
-    /// Spillet trenger manuelle markeringer per hull.
-    public var needsMarks: Bool { self == .wolf || self == .bingoBangoBongo }
 }
 
 // MARK: - Malene (standardverdier per spilltype)
