@@ -13,7 +13,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | **Nåværende fase** | Fase 12–17 bygget. På test er 011–024 kjørt (08.10). Slått på: alt unntatt onboarding uten klubb, Google-innlogging og kjøp, som venter på oppsett i App Store Connect og Google og på publisert personvern (`docs/gjoremal.md`). |
 | **Sist gjort** | 08.10: arrangørsiden gjennomgått mot beste praksis og omstrukturert (fase 11, `docs/arrangorsiden-vurdering.md`): Kveldene/Kvelden, én rundeliste, én oppsettsflyt, «Kom i gang», sesong lander på aktiv. Hjem-feed vurdert i `docs/hjem-feed.md`. Før det, 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
 | **Neste oppgave** | Fase 12–17 er bygget, og 019–026 er kjørt på test. `delete-account` er deployet. Gjenstår: oppsett i App Store Connect og Google (`docs/gjoremal.md` C), så `verify-purchase` med IAP-nøkkelen og flaggene for kjøp, Google og onboarding. Prøve arrangørflyten på telefon. Deretter byttet for gjengen (fase 9) og prod. |
-| **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. Kontakt GolfAPI.io (B15). Google-innlogging. |
+| **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. B15: slope.no dekker CR/slope for nordiske baner (fase 20); GolfAPI.io trengs bare for par og indeks per hull. Google-innlogging. |
 
 ---
 
@@ -378,6 +378,15 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [ ] Hjem-fanen i appen: kortene fra designet, filterpiller, oppsummering, Pågår nå og Neste kveld; Kveld-fanen erstattes; bjella viser bare det som angår deg.
 - [ ] Prøve på telefon mot test.
 
+### Fase 20 – Baner fra slope.no
+
+**08.10.2026 (Thomas):** slope.no har et åpent, gratis API for nordiske baner (`/wp-json/golfhs/v1/meta` og `/export`). Eieren ber bare om kreditering og lenke til slope.no i appen. Dataene sjekkes hver natt mot ~2 500 kilder og kontrolleres ukentlig. 1 306 baner (161 i Norge) med tees: navn, kjønn, course rating, slope og par. Ingen data per hull: par og indeks per hull legges fortsatt inn fra scorekortet.
+
+- [ ] Skjema for tees per bane, CR/slope på runden og synk-status (SQL 029, til godkjenning).
+- [ ] Synk som Edge Function `slope-sync`: meta først, eksport bare ved ny `data_version`, én gang i døgnet. Lokale rettelser overlever.
+- [ ] Appen: søk i slope.no-banene for ekte bane, tee-valg i runde-oppsett og løse runder, CR/slope fra teen i handicap.
+- [ ] Kreditering: «Slope og course rating fra slope.no» med lenke der tee-data vises, og i Om appen.
+
 ### Kodegjennomgang 08.10.2026: åpne funn
 
 Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rettet med test). Dette står igjen:
@@ -442,6 +451,7 @@ Status: **Tatt** (av deg, eller av meg etter fullmakt), **Utsatt** eller **Åpen
 Spillogikken bygges i `Packages/GolfgutuCore`, en lokal Swift-pakke uten SwiftUI og nettverk, med Swift Testing og JSON-fixtures. Den testes med `swift test` uten Xcode, kan bygges parallelt med appen, og deles senere med widgets, Live Activity og Watch. Pakken legges til i Xcode-prosjektet av brukeren (*Add Local…*).
 
 ### B15 – Banedata: søk etter ekte baner og Trackman-scorekort · Åpen (deg)
+**08.10.2026:** slope.no gir CR/slope per tee for 1 306 nordiske baner, gratis med kreditering (fase 20). Det som gjenstår fra en betalt kilde, er par og indeks per hull.
 Kartlagt 06.10.2026. Ingen åpen, komplett kilde for norske scorekort med CR/slope, og ingen offentlig kilde for Trackman-scorekort.
 - **Anbefalt hovedvei:** GolfAPI.io for søk (par/SI/lengde per tee, CR/slope per kjønn, green-koordinater; caching i egen database er tillatt, videredeling ikke). Pris må hentes inn (contact@golfapi.io), nordisk dekning må testes på 10–20 norske klubber. Reserve: GolfCourseAPI Pro (ca. 10 USD/mnd).
 - **Alltid:** «Bekreft mot scorekortet/skjermen» før banen brukes, med kilde (api/ocr/manuell) lagret på banen. Foto av scorekort lest på telefonen (Vision `RecognizeDocumentsRequest`, iOS 26) som reserve.
