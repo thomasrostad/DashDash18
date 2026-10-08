@@ -61,7 +61,7 @@ nonisolated enum CameraAccess {
     }
 
     static let deniedTitle = "Ingen tilgang til kameraet"
-    static let deniedMessage = "Slå på kameraet for DashDash18 i Innstillinger for å ta bilder i appen."
+    static let deniedMessage = "Slå på kameraet for Atten i Innstillinger for å ta bilder i appen."
 
     /// Spør om nødvendig. Gir true når kameraet kan åpnes.
     static func requestIfNeeded() async -> Bool {

@@ -118,7 +118,7 @@ nonisolated enum LinkIdentityError: Error, Equatable {
 
     var message: String {
         switch self {
-        case .alreadyUsed: "Denne Apple-ID-en er allerede brukt av en annen konto i DashDash18."
+        case .alreadyUsed: "Denne Apple-ID-en er allerede brukt av en annen konto i Atten."
         case .notEnabled: "Kobling av innloggingsmåter er ikke slått på ennå."
         case .appleFailed: "Fikk ikke svar fra Apple. Prøv igjen."
         case .offline: "Ingen kontakt med serveren. Sjekk nettet og prøv igjen."

@@ -101,7 +101,7 @@ struct DesignCatalogView: View {
         VStack(alignment: .leading, spacing: 10) {
             DDSectionLabel("Typografi")
             VStack(alignment: .leading, spacing: 8) {
-                Text("GolfGutu").font(.ddDisplay).foregroundStyle(Color.ddForestInk)
+                Text("Atten").font(.ddDisplay).foregroundStyle(Color.ddForestInk)
                 Text("Ingen runde på gang").font(.ddTitle).foregroundStyle(Color.ddForestInk)
                 Text("Thomas").font(.ddName).foregroundStyle(Color.ddForestInk)
                 Text("Brødtekst i Hanken Grotesk, som skalerer med Dynamic Type.").font(.ddBody)

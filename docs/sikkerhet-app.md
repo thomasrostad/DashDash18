@@ -42,7 +42,7 @@ Ingen.
 
 **M5. Kameraets bruksbeskrivelse var upresis** – *fikset i string-katalogen, bør også endres i Xcode*
 - Scenario: teksten sa «DashDash18 … til kveldens tråd», men kameraet brukes også til portrettet. Apple avviser upresise formål (5.1.1).
-- Fiks: `Resources/InfoPlist.xcstrings` (en og nb): «DashDash bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.» Testen `kamerateksteneNevnerTradOgPortrett` sjekker teksten. Byggeinnstillingen bør få samme tekst (sjekklista).
+- Fiks: `Resources/InfoPlist.xcstrings` (en og nb): «Atten bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.» Testen `kamerateksteneNevnerTradOgPortrett` sjekker teksten. Byggeinnstillingen bør få samme tekst (sjekklista).
 
 ### Lav
 
@@ -87,7 +87,7 @@ Ingen.
 
 ### Xcode (prosjektfila er ikke rørt)
 
-1. Target DashDash18 → Build Settings → `INFOPLIST_KEY_NSCameraUsageDescription`: sett «DashDash bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.» (samme som i string-katalogen).
+1. Target DashDash18 → Build Settings → `INFOPLIST_KEY_NSCameraUsageDescription`: sett «Atten bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.» (samme som i string-katalogen).
 2. Bekreft at `PrivacyInfo.xcprivacy` vises i navigatoren under DashDash18 med target-medlemskap DashDash18 (ikke widgeten). Ved arkivering: Product → Archive → høyreklikk → **Generate Privacy Report** og sjekk at rapporten stemmer med punkt 2 i `docs/app-store.md`.
 3. For universal links (valgfritt, anbefalt før lansering): Signing & Capabilities → **+ Associated Domains** → `applinks:dashdash18.com` (og senere `webcredentials:dashdash18.com`). Håndter `https`-lenker i `onOpenURL` på samme måte som `dashdash://runde/…`.
 4. Xcode Cloud: `SUPABASE_PUBLISHABLE_KEY` må starte med `sb_publishable_`, ellers stopper bygget nå.

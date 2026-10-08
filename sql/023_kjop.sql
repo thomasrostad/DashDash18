@@ -16,12 +16,12 @@
 -- serveren skriver entitlements.
 --
 -- Produktene (docs/app-store.md):
---   no.dashdash.turnering.sesong   FORBRUKBAR. Låser opp én turnering (liga
+--   no.atten.turnering.sesong      FORBRUKBAR. Låser opp én turnering (liga
 --                                  eller cup) så lenge den varer.
 --                                  Ikke-forbrukbar går ikke: et slikt kjøp kan
 --                                  bare gjøres én gang per Apple-ID, og da kunne
 --                                  ingen kjøre turnering nummer to.
---   no.dashdash.turnering.ar       ABONNEMENT (årlig, valgfritt senere). Alle
+--   no.atten.turnering.ar          ABONNEMENT (årlig, valgfritt senere). Alle
 --                                  turneringene eieren eller klubben kjører,
 --                                  så lenge abonnementet løper.
 -- Et forbrukbart kjøp gjenopprettes ikke av App Store. Derfor er serverens

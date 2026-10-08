@@ -7,8 +7,8 @@
 
 /** Produktene appen selger (samme som PurchaseCatalog i Swift og DashDash.storekit). */
 export const PRODUCTS: Record<string, "consumable" | "non_consumable" | "subscription"> = {
-  "no.dashdash.turnering.sesong": "consumable",
-  "no.dashdash.turnering.ar": "subscription",
+  "no.atten.turnering.sesong": "consumable",
+  "no.atten.turnering.ar": "subscription",
 };
 
 /** Innholdet i signedTransactionInfo (JWSTransactionDecodedPayload), feltene vi bruker. */

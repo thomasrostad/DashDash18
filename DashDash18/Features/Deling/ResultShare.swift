@@ -27,7 +27,7 @@ nonisolated struct ResultShare: Equatable, Hashable, Sendable {
     var fileName: String {
         let cleaned = title.map { "/\\:".contains($0) ? "-" : $0 }
         let name = String(cleaned).trimmingCharacters(in: .whitespacesAndNewlines)
-        return (name.isEmpty ? "DashDash18" : name) + ".png"
+        return (name.isEmpty ? "Atten" : name) + ".png"
     }
 
     /// Tekstversjonen, som fallback når mottakeren ikke tar bilder.

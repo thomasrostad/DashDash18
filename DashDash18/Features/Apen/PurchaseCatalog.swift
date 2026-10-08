@@ -4,8 +4,8 @@ import Foundation
 // turnering, som kjøp i appen). Ren logikk her; StoreKit ligger i `PurchaseService`.
 //
 // Produktene (docs/app-store.md, DashDash.storekit, sql/023 og verify-purchase):
-//   no.dashdash.turnering.sesong   forbrukbar: låser opp én turnering så lenge den varer.
-//   no.dashdash.turnering.ar       årsabonnement (valgfritt): alle turneringene eieren eller
+//   no.atten.turnering.sesong      forbrukbar: låser opp én turnering så lenge den varer.
+//   no.atten.turnering.ar          årsabonnement (valgfritt): alle turneringene eieren eller
 //                                  klubben kjører, så lenge det løper.
 // Hvorfor forbrukbar og ikke ikke-forbrukbar: en ikke-forbrukbar kan bare kjøpes én gang per
 // Apple-ID, og da kunne ingen kjøre turnering nummer to. Et forbrukbart kjøp gjenopprettes ikke
@@ -13,8 +13,8 @@ import Foundation
 // som en ledig kreditt.
 
 nonisolated enum PurchaseProduct: String, CaseIterable, Sendable {
-    case tournament = "no.dashdash.turnering.sesong"
-    case yearly = "no.dashdash.turnering.ar"
+    case tournament = "no.atten.turnering.sesong"
+    case yearly = "no.atten.turnering.ar"
 
     enum Kind: String, Sendable {
         case consumable

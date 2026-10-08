@@ -167,7 +167,7 @@ struct ApenKjopTests {
     }
 
     @Test func produkteneErForbrukbarOgAbonnement() {
-        #expect(PurchaseProduct.tournament.rawValue == "no.dashdash.turnering.sesong")
+        #expect(PurchaseProduct.tournament.rawValue == "no.atten.turnering.sesong")
         #expect(PurchaseProduct.tournament.kind == .consumable)
         #expect(PurchaseProduct.yearly.kind == .subscription)
         #expect(PurchaseProduct.ids.count == 2)
@@ -228,7 +228,7 @@ struct ApenKjopTests {
     @Test func kjopsradenLesesFraDatabasen() throws {
         let json = #"""
         [{"id":"0a000000-0000-0000-0000-00000000000a","profile_id":null,"club_id":null,"competition_id":null,
-          "product_id":"no.dashdash.turnering.sesong","product_kind":"consumable","status":"active","expires_at":null}]
+          "product_id":"no.atten.turnering.sesong","product_kind":"consumable","status":"active","expires_at":null}]
         """#
         let rows = try JSONDecoder().decode([EntitlementRow].self, from: Data(json.utf8))
         #expect(rows.first?.isUnusedCredit == true)

@@ -71,7 +71,7 @@ struct GjennomgangTavlaVeddTests {
     @Test func filnavnetTaalerSkraastrek() {
         let share = ResultShare(eyebrow: "Kvelden", title: "Losby 1/2: Øst", subtitle: nil, lines: [])
         #expect(share.fileName == "Losby 1-2- Øst.png")
-        #expect(ResultShare(eyebrow: "Kvelden", title: "  ", subtitle: nil, lines: []).fileName == "DashDash18.png")
+        #expect(ResultShare(eyebrow: "Kvelden", title: "  ", subtitle: nil, lines: []).fileName == "Atten.png")
     }
 
     // MARK: Veddemål: ledige poeng og tak før innsats

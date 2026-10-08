@@ -64,7 +64,7 @@ nonisolated struct InviteCode: Equatable, Hashable, Sendable {
 
     /// Teksten som deles: hva det er, lenken og koden (for den som skriver den inn).
     func shareText(courseName: String?) -> String {
-        let what = courseName.map { "Bli med på runden på \($0) i DashDash." } ?? "Bli med på runden i DashDash."
+        let what = courseName.map { "Bli med på runden på \($0) i Atten." } ?? "Bli med på runden i Atten."
         return "\(what)\n\(url.absoluteString)\nEller skriv inn koden \(display) under Spill → Bli med."
     }
 }
@@ -93,7 +93,7 @@ nonisolated enum InviteTarget: Equatable, Sendable {
         case .round(let courseName):
             return code.shareText(courseName: courseName)
         case .competition(let name):
-            return "Bli med i \(name) i DashDash.\n\(url(code).absoluteString)\n"
+            return "Bli med i \(name) i Atten.\n\(url(code).absoluteString)\n"
                 + "Eller skriv inn koden \(code.display) under Konkurranser → Bli med med kode."
         }
     }

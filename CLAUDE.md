@@ -2,6 +2,8 @@
 
 Native iOS-app (SwiftUI, iOS 26+, Swift 6, Swift Testing) for GolfGutu Invitational. Erstatter GolfGutu-PWA-en. iPhone først, Android senere.
 
+Appen heter **Atten** for brukerne (besluttet 08.10.2026). Repo, prosjekt, target, kodeidentifikatorer, bundle-id `com.dashdash18.app`, App Group, domenet dashdash18.com og URL-skjemaet `dashdash://` beholder DashDash-navnet. «Golfgutu Invitational» er klubben til gjengen, ikke appen.
+
 ## Fasit
 
 - `referanse/golfgutu-pwa/` er fasit for funksjonalitet og regler. `referanse/golfgutu-pwa/README.md` er i praksis spesifikasjonen.

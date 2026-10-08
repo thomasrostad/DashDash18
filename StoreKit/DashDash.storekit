@@ -15,7 +15,7 @@
           "locale" : "nb"
         }
       ],
-      "productID" : "no.dashdash.turnering.sesong",
+      "productID" : "no.atten.turnering.sesong",
       "referenceName" : "Kjør én turnering",
       "type" : "Consumable"
     }
@@ -56,7 +56,7 @@
               "locale" : "nb"
             }
           ],
-          "productID" : "no.dashdash.turnering.ar",
+          "productID" : "no.atten.turnering.ar",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Arrangør årlig",
           "subscriptionGroupID" : "21700001",

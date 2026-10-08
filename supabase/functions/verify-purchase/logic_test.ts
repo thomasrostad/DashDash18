@@ -22,7 +22,7 @@ const tx = (over: Partial<TransactionPayload> = {}): TransactionPayload => ({
   transactionId: "2000000001",
   originalTransactionId: "2000000001",
   bundleId: BUNDLE,
-  productId: "no.dashdash.turnering.sesong",
+  productId: "no.atten.turnering.sesong",
   type: "Consumable",
   purchaseDate: Date.parse("2026-10-08T11:59:00Z"),
   appAccountToken: USER.toUpperCase(),
@@ -104,7 +104,7 @@ Deno.test("refusjon og utløpt abonnement", () => {
   is(recordFromTransaction(tx({ revocationDate: Date.parse("2026-10-08T11:00:00Z") }), options()).status, "refunded");
   const sub = (expires: string) =>
     recordFromTransaction(
-      tx({ productId: "no.dashdash.turnering.ar", type: "Auto-Renewable Subscription", expiresDate: Date.parse(expires) }),
+      tx({ productId: "no.atten.turnering.ar", type: "Auto-Renewable Subscription", expiresDate: Date.parse(expires) }),
       options({ transactionId: "1", clubId: CUP }),
     );
   is(sub("2026-10-01T00:00:00Z").status, "expired");

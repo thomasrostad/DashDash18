@@ -276,7 +276,7 @@ struct LoginView: View {
     }
 }
 
-/// Jakka, navnet og sesongen på grønn grunn, som innloggingen i PWA-en.
+/// Jakka, appnavnet og undertittelen på grønn grunn, som innloggingen i PWA-en.
 private struct LoginHero: View {
     var body: some View {
         VStack(spacing: DDSpacing.m) {
@@ -284,10 +284,10 @@ private struct LoginHero: View {
                 .stroke(Color.ddGold, style: StrokeStyle(lineWidth: 1.6, lineJoin: .round))
                 .frame(width: 44, height: 52)
                 .accessibilityHidden(true)
-            Text("DashDash18")
+            Text("Atten")
                 .font(.ddDisplay)
                 .foregroundStyle(Color.ddOnDark)
-            Text("GolfGutu Invitational")
+            Text("Golf med gjengen")
                 .ddEyebrow(color: Color.ddOnDark.opacity(0.55))
         }
         .frame(maxWidth: .infinity)

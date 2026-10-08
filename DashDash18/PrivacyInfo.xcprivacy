@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-	Privacy Manifest for DashDash (appen). Se docs/sikkerhet-app.md.
+	Privacy Manifest for Atten (appen). Se docs/sikkerhet-app.md.
 	- Ingen sporing og ingen sporingsdomener.
 	- Datatypene samsvarer med App Privacy-svarene i docs/app-store.md (punkt 2).
 	- Required-reason APIs:

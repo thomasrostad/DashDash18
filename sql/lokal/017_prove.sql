@@ -255,7 +255,7 @@ insert into public.competition_rounds (competition_id, round_id) values (:'cup',
 select pg_temp.feil($$insert into public.competition_rounds (competition_id, round_id) values ('$$ || :'cup' || $$', '$$ || :'frida_runde' || $$')$$, '42501');
 select pg_temp.feil($$insert into public.competition_rounds (competition_id, round_id, source) values ('$$ || :'cup' || $$', '$$ || :'r1' || $$', 'season')$$, '42501');
 select pg_temp.feil($$update public.competitions set requires_purchase = true where id = '$$ || :'cup' || $$'$$, '42501');
-select pg_temp.feil($$insert into public.entitlements (product_id) values ('no.dashdash.turnering')$$, '42501');
+select pg_temp.feil($$insert into public.entitlements (product_id) values ('no.atten.turnering')$$, '42501');
 select pg_temp.lik((select count(*) from public.competition_rounds where competition_id = :'cup'), 2::bigint,
                    'Høstcup teller en klubbrunde (r2) og en løs runde');
 reset role;

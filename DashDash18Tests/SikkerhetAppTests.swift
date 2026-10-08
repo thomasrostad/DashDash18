@@ -219,6 +219,14 @@ struct SikkerhetAppTests {
         let text = Bundle.main.localizedString(forKey: "NSCameraUsageDescription", value: nil, table: "InfoPlist")
         #expect(text.contains("tråden"))
         #expect(text.contains("portrett"))
+        #expect(text.hasPrefix("Atten "))
+    }
+
+    /// Appen heter Atten (besluttet 08.10.2026) under ikonet og i systemet.
+    @Test func appnavnetErAtten() {
+        for key in ["CFBundleDisplayName", "CFBundleName"] {
+            #expect(Bundle.main.localizedString(forKey: key, value: nil, table: "InfoPlist") == "Atten")
+        }
     }
 }
 
