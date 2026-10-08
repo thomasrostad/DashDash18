@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// Kvelden: alt som hører til én kveld, samlet. Tid, sted og sosialkomité (Endre), påmeldingen med
-/// purring, kveldens runder med «Ny runde», «Avslutt kvelden» når en runde går, og «Melding til alle».
-/// Åpnes fra «Kveldene» og fra kortet på arrangørsiden.
+/// Kvelden: alt som hører til én kveld, i kveldens rekkefølge (fase 21). Øverst stegrekka og knappen
+/// for neste steg, så «Før kvelden» (tid, sted, sosialkomité, påmelding og purring), «Under kvelden»
+/// (rundene) og «Etter kvelden» (avslutt kvelden, resultatet og melding til alle).
+/// Åpnes fra tidslinja og kortet på arrangørsiden, og fra arrangørknappen på Hjem.
 struct KveldenView: View {
     let eventID: UUID
     @State private var terminliste: TerminlisteModel
@@ -12,6 +13,8 @@ struct KveldenView: View {
     private let loads: Bool
     @State private var editing: EventEditItem?
     @State private var announcement: VarslerModel?
+    @Environment(\.showRound) private var showRound
+    @Environment(\.selectTab) private var selectTab
 
     init(eventID: UUID, terminliste: TerminlisteModel, admin: RundeAdminModel, loads: Bool = true) {
         self.eventID = eventID
@@ -80,17 +83,59 @@ struct KveldenView: View {
         }
     }
 
+    private var today: String { EveningDates.today() }
+
+    /// Siste rad, for skjermprøven rullet ned.
+    static let afterAnchor = "etter"
+
+    private func progress(_ event: EventRow) -> EveningProgress {
+        Tonight.progress(event: event, rounds: admin.allRounds, activeRound: admin.activeRound,
+                         activeComplete: admin.activeComplete,
+                         notAnswered: Nudge.targets(terminliste.signupSummary(for: event.id)).count, today: today)
+    }
+
+    /// Seksjonsoverskriften, med «nå» på delen kvelden er i.
+    private func header(_ part: EveningPart, current: EveningPart?) -> some View {
+        DDHeader(part == current ? "\(part.title) · nå" : part.title)
+    }
+
     private func list(_ event: EventRow) -> some View {
         let rounds = admin.rounds(on: event.id)
+        let progress = progress(event)
+        let current = EveningPart.current(progress.stage)
+        let summary = terminliste.signupSummary(for: event.id)
         return DDList {
+            // Stegrekka og neste steg, som øverst på arrangørsiden.
+            Section {
+                VStack(alignment: .leading, spacing: DDSpacing.l) {
+                    EveningStepsBar(progress: progress)
+                    DDPill(Tonight.statusText(action: progress.action, rounds: rounds,
+                                              activeTitle: admin.activeRound.map(admin.title)),
+                           tone: EveningStatusTone.tone(progress.action))
+                    if admin.state == .loaded {
+                        EveningNextStepButton(
+                            action: progress.action, rounds: roundsToClose(rounds), title: admin.title,
+                            nudgeNames: Nudge.targets(summary).map(\.name), isBusy: actions.isBusy,
+                            nudge: { () async throws(DataError) -> String in try await terminliste.nudge(event) },
+                            perform: { perform($0, event: event) },
+                            onMessage: { text in
+                                if loads { await admin.load(); await terminliste.load() }
+                                actions.message = text
+                            })
+                    }
+                }
+                .padding(.vertical, DDSpacing.s)
+            }
+
+            // Før: tid og sted, sosialkomité, påmelding og purring.
             Section {
                 KveldenDetails(event: event, committee: terminliste.committeeNames(for: event.id))
             } header: {
-                DDHeader("Tid og sted")
+                header(.before, current: current)
             }
+            signupSection(event, hidesNudge: progress.action == .nudge(Nudge.targets(summary).count))
 
-            signupSection(event)
-
+            // Under: rundene.
             Section {
                 if admin.state != .loaded {
                     ProgressView().frame(maxWidth: .infinity)
@@ -101,26 +146,42 @@ struct KveldenView: View {
                 ForEach(rounds) { round in
                     RoundAdminRow(round: round, actions: actions)
                 }
-                if admin.state == .loaded, admin.allowsNewRound(event) {
+                if admin.state == .loaded, admin.allowsNewRound(event), progress.action != .setUp {
                     Button {
                         actions.newRound(on: event)
                     } label: {
-                        Label("Ny runde", systemImage: "plus")
+                        Label(rounds.isEmpty ? "Sett opp runden" : "Sett opp en runde til", systemImage: "plus")
                             .foregroundStyle(Color.ddForestInk)
                     }
                 }
             } header: {
-                DDHeader("Runder")
+                header(.during, current: current)
             } footer: {
                 DDFooter("Kladder ser bare arrangørene. Én runde kan gå om gangen i klubben.")
             }
 
-            AvsluttKveldenSection(rounds: rounds, title: admin.title) { text in
-                await admin.load()
-                actions.message = text
-            }
-
+            // Etter: avslutt kvelden, resultatet og melding til alle.
             Section {
+                if case .closeEvening = progress.action {
+                    EmptyView()
+                } else if rounds.contains(where: { $0.status == .active }) {
+                    AvsluttKveldenButton(rounds: rounds, title: admin.title, prominent: false) { text in
+                        if loads { await admin.load() }
+                        actions.message = text
+                    }
+                } else if !rounds.contains(where: { $0.status == .locked }) {
+                    Text("Når rundene er spilt, avslutter du kvelden her.")
+                        .foregroundStyle(Color.ddInkSecondary)
+                }
+                if rounds.contains(where: { $0.status == .locked }), progress.action != .seeResult {
+                    Button {
+                        selectTab(.tavla)
+                    } label: {
+                        Label("Se resultatet", systemImage: "trophy")
+                            .labelStyle(DDIconLabelStyle())
+                            .foregroundStyle(Color.ddInk)
+                    }
+                }
                 Button {
                     announcement = VarslerModel(context: admin.clubContext)
                 } label: {
@@ -128,15 +189,39 @@ struct KveldenView: View {
                         .labelStyle(DDIconLabelStyle())
                         .foregroundStyle(Color.ddInk)
                 }
+                .id(Self.afterAnchor)
+            } header: {
+                header(.after, current: current)
             } footer: {
-                DDFooter("Går til alle i klubben og står i varslene.")
+                DDFooter("Avslutt kvelden låser rundene som går. Melding til alle går til alle i klubben og står i varslene.")
             }
         }
         .disabled(actions.isBusy)
         .overlay { if actions.isBusy { ProgressView() } }
     }
 
-    private func signupSection(_ event: EventRow) -> some View {
+    /// Kveldens runder, med runden som går selv om den hører til en annen kveld.
+    private func roundsToClose(_ rounds: [RoundRow]) -> [RoundRow] {
+        guard let active = admin.activeRound, !rounds.contains(where: { $0.id == active.id }) else { return rounds }
+        return rounds + [active]
+    }
+
+    private func perform(_ action: TonightAction, event: EventRow) {
+        switch action {
+        case .noEvening, .nudge, .closeEvening, .notPlayed:
+            break  // Knappen selv tar purring og avslutning.
+        case .setUp:
+            actions.newRound(on: event)
+        case .continueDraft(let id):
+            if let round = admin.allRounds.first(where: { $0.id == id }) { actions.edit(round) }
+        case .goToRound:
+            showRound()
+        case .seeResult:
+            selectTab(.tavla)
+        }
+    }
+
+    private func signupSection(_ event: EventRow, hidesNudge: Bool) -> some View {
         let summary = terminliste.signupSummary(for: event.id)
         return Section {
             Text(Tonight.signupText(terminliste.signups[event.id] ?? [], rosterCount: terminliste.members.count))
@@ -151,7 +236,8 @@ struct KveldenView: View {
                         .foregroundStyle(Color.ddInkSecondary)
                 }
             }
-            if EveningSignup.offersNudge(eventDate: event.eventDate, today: EveningDates.today(), summary: summary) {
+            if !hidesNudge,
+               EveningSignup.offersNudge(eventDate: event.eventDate, today: EveningDates.today(), summary: summary) {
                 NudgeSection(targets: Nudge.targets(summary)) { () async throws(DataError) -> String in
                     try await terminliste.nudge(event)
                 }
@@ -193,12 +279,21 @@ private struct KveldenDetails: View {
 }
 
 #if DEBUG
-/// Kvelden i dag med én runde som går og én kladd (`-DDDesignScreen kvelden`).
+/// Kvelden i dag med én runde som går og én kladd (`-DDDesignScreen kvelden`, rullet ned: `kveldenbunn`).
 struct KveldenSample: View {
+    var scrolledDown = false
+
     var body: some View {
         let admin = RundeAdminModel.sample(.liveEvening)
-        KveldenView(eventID: admin.selectedEventID ?? UUID(), terminliste: .sample(from: admin), admin: admin,
-                    loads: false)
+        ScrollViewReader { proxy in
+            KveldenView(eventID: admin.selectedEventID ?? UUID(), terminliste: .sample(from: admin), admin: admin,
+                        loads: false)
+                .task {
+                    guard scrolledDown else { return }
+                    try? await Task.sleep(for: .milliseconds(300))
+                    proxy.scrollTo(KveldenView.afterAnchor, anchor: .bottom)
+                }
+        }
     }
 }
 #endif

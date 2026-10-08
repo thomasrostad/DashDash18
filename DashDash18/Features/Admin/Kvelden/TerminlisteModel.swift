@@ -41,9 +41,12 @@ final class TerminlisteModel {
     private(set) var signups: [UUID: [SignupRow]] = [:]
 
     private let context: ClubContext
+    /// Turneringen kveldene hører til (fase 21). nil: hovedturneringen (den aktive).
+    let tournamentID: UUID?
 
-    init(context: ClubContext) {
+    init(context: ClubContext, tournamentID: UUID? = nil) {
         self.context = context
+        self.tournamentID = tournamentID
     }
 
     private var client: SupabaseClient { context.client }
@@ -51,10 +54,12 @@ final class TerminlisteModel {
 
     func load() async {
         do {
-            async let seasons: [SeasonSummary] = client.from("seasons")
+            let seasonQuery = client.from("seasons")
                 .select("id, name")
                 .eq("club_id", value: clubID)
-                .eq("status", value: SeasonStatus.active.rawValue)
+            // Den valgte turneringen, ellers hovedturneringen.
+            async let seasons: [SeasonSummary] = (tournamentID.map { seasonQuery.eq("id", value: $0) }
+                ?? seasonQuery.eq("status", value: SeasonStatus.active.rawValue))
                 .limit(1)
                 .execute().value
             async let eventRows: [EventRow] = client.from("events")
@@ -250,8 +255,8 @@ final class TerminlisteModel {
 extension TerminlisteModel {
     /// Kveldene fra skjermprøvens rundemodell, med sosialkomité og påmelding (`kvelden`, `kveldene`).
     static func sample(from admin: RundeAdminModel) -> TerminlisteModel {
-        let model = TerminlisteModel(context: admin.clubContext)
-        model.activeSeason = admin.seasons.first { $0.status == .active }.map { SeasonSummary(id: $0.id, name: $0.name) }
+        let model = TerminlisteModel(context: admin.clubContext, tournamentID: admin.tournamentID)
+        model.activeSeason = admin.tournament.map { SeasonSummary(id: $0.id, name: $0.name) }
         model.events = admin.events
         model.members = admin.members
         for (index, event) in admin.events.enumerated() {

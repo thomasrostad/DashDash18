@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
 /// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `tavlaferdig`, `tavlastableford`, `profil`, `sesong`,
-/// `varsler`, `trad`, `liste`, `hurtigstart`, `flerevalg`, `arrangor`, `arrangorstart`, `runder`, `kveldene`, `kvelden`, `baner`, `nybane`, `regler`, `reglerendre`, `nyturnering`, `nyturnering2`, `turneringer`,
+/// `varsler`, `trad`, `liste`, `hurtigstart`, `flerevalg`, `arrangor`, `arrangorstart`, `arrangorpagar`, `arrangorferdig`, `arrangorbunn`, `runder`, `kveldene`, `kvelden`, `kveldenbunn`, `baner`, `nybane`, `regler`, `reglerendre`, `nyturnering`, `nyturnering2`, `turneringer`,
 /// `statoversikt`, `stathistorikk`, `statrekorder`, `stattom`, `statforing`,
 /// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
 /// og spill på runden: `spill`, `spillnytt`, `spillresultat`,
@@ -23,6 +23,8 @@ struct DesignScreenSamples: View {
         case arrangorstart
         // Kveldene og Kvelden (fase 11).
         case kveldene, kvelden
+        // Arrangørsiden som tidslinje (fase 21): runde pågår, kvelden ferdig, bunnen, Kvelden rullet ned.
+        case arrangorpagar, arrangorferdig, arrangorbunn, kveldenbunn
         // Arrangør: banene og sesong og regler (fase 11).
         case baner, nybane, regler, reglerendre
         // Turnering med fire oppsett (fase 18).
@@ -59,17 +61,14 @@ struct DesignScreenSamples: View {
         case .flerevalg:
             FlereValgSample()
                 .tint(Color.ddForestInk)
-        case .arrangor, .arrangorstart:
-            NavigationStack { AdminHubSample(screen == .arrangorstart ? .gettingStarted : .tonight) }
+        case .arrangor, .arrangorstart, .arrangorpagar, .arrangorferdig, .arrangorbunn, .kveldene:
+            NavigationStack { adminHub }
                 .tint(Color.ddForestInk)
         case .runder:
             NavigationStack { RundeAdminSample() }
                 .tint(Color.ddForestInk)
-        case .kveldene:
-            NavigationStack { KveldeneSample() }
-                .tint(Color.ddForestInk)
-        case .kvelden:
-            NavigationStack { KveldenSample() }
+        case .kvelden, .kveldenbunn:
+            NavigationStack { KveldenSample(scrolledDown: screen == .kveldenbunn) }
                 .tint(Color.ddForestInk)
         case .tavla, .tavlaferdig:
             NavigationStack {
@@ -166,6 +165,18 @@ struct DesignScreenSamples: View {
             FeiringOverlay(celebration: Celebration(level: .eagle, eyebrow: "Hull 7 · par 4",
                                                     text: "To under par. Ikke for å bruse med fjæra, men det var pent.",
                                                     points: 4, place: 2, nextHole: 8)) {}
+        }
+    }
+
+    @ViewBuilder
+    private var adminHub: some View {
+        switch screen {
+        case .arrangorstart: AdminHubSample(.gettingStarted)
+        case .arrangorpagar: AdminHubSample(.liveEvening)
+        case .arrangorferdig: AdminHubSample(.finished)
+        case .arrangorbunn: AdminHubSample(.liveEvening, scroll: .bottom)
+        case .kveldene: AdminHubSample(.liveEvening, scroll: .top)
+        default: AdminHubSample(.tonight)
         }
     }
 
