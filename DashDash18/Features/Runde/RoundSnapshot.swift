@@ -112,7 +112,9 @@ nonisolated struct RoundGame: Sendable {
 
     /// Banen med hull fra `course_holes`. Hullene tas bare med når de er 9 eller 18
     /// sammenhengende fra 1 (`banehullFraRader`). Par er summen av hullene.
-    /// Er runden spilt fra en tee (sql/029), gjelder CR og slope slik de var da runden startet.
+    /// Er runden spilt fra en tee (sql/029), gjelder CR og slope slik de var da runden startet. Har teen
+    /// egne hull (sql/030), gjelder også teens par fra start (`tee_par`); hullene selv er frosset i
+    /// `round_holes` og kommer inn som rundens overstyringer.
     static func makeCourse(_ row: CourseRow?, holes: [CourseHoleRecord], round: RoundRow? = nil) -> Course? {
         guard let row else { return nil }
         let mine = holes.filter { $0.courseID == row.id }.map { h in
@@ -121,7 +123,7 @@ nonisolated struct RoundGame: Sendable {
         }
         let played = Course.holesFromRows(mine)[row.id.uuidString] ?? nil
         let par = played.map { $0.reduce(0) { $0 + ($1.par ?? 0) } }
-        return Course(id: row.id.uuidString, name: row.name, par: par,
+        return Course(id: row.id.uuidString, name: row.name, par: TeeHoles.coursePar(holesPar: par, teePar: round?.teePar),
                       courseRating: round?.courseRating ?? row.courseRating,
                       slopeRating: (round?.slopeRating ?? row.slopeRating).map(Double.init),
                       holes: played)

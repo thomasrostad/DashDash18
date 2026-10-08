@@ -81,7 +81,8 @@ nonisolated extension StatsInput {
                      hcpExtern: r.externalHandicap)
     }
 
-    /// Banen med hullene. Er runden spilt fra en tee (sql/029), gjelder rundens CR og slope.
+    /// Banen med hullene. Er runden spilt fra en tee (sql/029), gjelder rundens CR og slope, og teens par
+    /// når teen har egne hull (sql/030, `tee_par`).
     func makeCourse(_ id: UUID?, round: StatsRoundRow? = nil) -> Course? {
         guard let id, let row = courses.first(where: { $0.id == id }) else { return nil }
         let mine = courseHoles.filter { $0.courseID == id }.map { h in
@@ -89,7 +90,7 @@ nonisolated extension StatsInput {
                           distanceMeters: h.lengthM.map(Double.init))
         }
         let played = Course.holesFromRows(mine)[id.uuidString] ?? nil
-        let par = played.map { $0.reduce(0) { $0 + ($1.par ?? 0) } }
+        let par = TeeHoles.coursePar(holesPar: played.map { $0.reduce(0) { $0 + ($1.par ?? 0) } }, teePar: round?.teePar)
         return Course(id: id.uuidString, name: row.name, par: par, courseRating: round?.courseRating ?? row.courseRating,
                       slopeRating: (round?.slopeRating ?? row.slopeRating).map(Double.init), holes: played)
     }

@@ -10,12 +10,17 @@ nonisolated struct CourseListItem: Equatable, Identifiable, Sendable {
     var storedKind: CourseKind?
     /// Teene som vises (sql/029, `SlopeNoFeature`), i rekkefølge. Tom før 029, og på simulatorbaner.
     var tees: [CourseTeeRow]
+    /// Hentet fra slope.no (`courses.source`) og spilt direkte (fase 20b, sql/030): ingen kan rette den
+    /// i appen, og den vises med kilde-merke og kreditering.
+    var isFromSource: Bool
 
-    init(course: CourseRow, holes: [CourseHoleRecord], storedKind: CourseKind? = nil, tees: [CourseTeeRow] = []) {
+    init(course: CourseRow, holes: [CourseHoleRecord], storedKind: CourseKind? = nil, tees: [CourseTeeRow] = [],
+         isFromSource: Bool = false) {
         self.course = course
         self.holes = holes.sorted { $0.holeNumber < $1.holeNumber }
         self.storedKind = storedKind
         self.tees = TeeChoice.visible(tees)
+        self.isFromSource = isFromSource
     }
 
     func tee(_ id: UUID?) -> CourseTeeRow? {
@@ -23,9 +28,23 @@ nonisolated struct CourseListItem: Equatable, Identifiable, Sendable {
         return tees.first { $0.id == id }
     }
 
-    /// GolfgutuCore-banen med teens CR og slope. Uten tee: `coreCourse` uendret.
+    /// Hullene runden spilles med: teens egne når teen har et helt sett (sql/030), ellers banens.
+    func holes(tee id: UUID?) -> [CourseHoleRecord] {
+        TeeHoles.effective(course: holes, tee: tee(id))
+    }
+
+    /// Antall hull med teen (som `holeCount` uten tee).
+    func holeCount(tee id: UUID?) -> Int {
+        holes(tee: id).count
+    }
+
+    /// GolfgutuCore-banen med teens CR og slope, og teens hull (par, indeks, lengde) når teen har egne.
+    /// Uten tee, eller med en tee uten egne hull: hullene er banens, så `coreCourse` er uendret bortsett
+    /// fra CR og slope (Golfgutu-pariteten for simulatorbaner og baner uten tee).
     func coreCourse(tee id: UUID?) -> Course {
-        TeeChoice.applying(tee(id), to: coreCourse) ?? coreCourse
+        let chosen = tee(id)
+        let base = TeeHoles.hasOwnHoles(chosen) ? Self.core(course, holes: chosen?.holes ?? []) : coreCourse
+        return TeeChoice.applying(chosen, to: base) ?? base
     }
 
     /// Simulatorbane eller ekte bane.
@@ -40,7 +59,10 @@ nonisolated struct CourseListItem: Equatable, Identifiable, Sendable {
 
     /// GolfgutuCore-banen. Hullene tas med bare når de er 9 eller 18 sammenhengende fra 1
     /// (`banehullFraRader`), ellers er banen ikke satt opp.
-    var coreCourse: Course {
+    var coreCourse: Course { Self.core(course, holes: holes) }
+
+    /// GolfgutuCore-banen av en banerad og hullrader.
+    static func core(_ course: CourseRow, holes: [CourseHoleRecord]) -> Course {
         let rows = holes.map {
             CourseHoleRow(courseId: course.id.uuidString, holeNumber: $0.holeNumber, par: $0.par,
                           hcpIndex: $0.strokeIndex, distanceMeters: $0.lengthM.map(Double.init))
@@ -96,12 +118,20 @@ nonisolated struct CourseListItem: Equatable, Identifiable, Sendable {
 
     /// Setter sammen baner og hull fra to spørringer (og typene, når de leses).
     static func make(courses: [CourseRow], holes: [CourseHoleRecord],
-                     kinds: [UUID: CourseKind] = [:], tees: [CourseTeeRow] = []) -> [CourseListItem] {
+                     kinds: [UUID: CourseKind] = [:], tees: [CourseTeeRow] = [],
+                     fromSource: Set<UUID> = []) -> [CourseListItem] {
         let grouped = Dictionary(grouping: holes, by: \.courseID)
         let teesByCourse = Dictionary(grouping: tees, by: \.courseID)
         return sorted(courses.map {
-            CourseListItem(course: $0, holes: grouped[$0.id] ?? [], storedKind: kinds[$0.id], tees: teesByCourse[$0.id] ?? [])
+            CourseListItem(course: $0, holes: grouped[$0.id] ?? [], storedKind: kinds[$0.id], tees: teesByCourse[$0.id] ?? [],
+                           isFromSource: fromSource.contains($0.id))
         })
+    }
+
+    /// Lista med hentede baner lagt til (eller byttet ut, samme id) bak de andre.
+    static func adding(_ extra: [CourseListItem], to items: [CourseListItem]) -> [CourseListItem] {
+        let ids = Set(extra.map(\.id))
+        return items.filter { !ids.contains($0.id) } + extra
     }
 
     /// Banelista delt i simulatorbaner og ekte baner, i den rekkefølgen. Tomme grupper utelates.
