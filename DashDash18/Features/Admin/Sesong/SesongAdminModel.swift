@@ -119,6 +119,19 @@ final class SesongAdminModel {
         seasons.removeAll { $0.id == season.id }
     }
 
+    /// Hele turneringen med kvelder, runder og resultater (`delete_tournament`, sql/038). Alle statuser.
+    func deleteTournament(_ season: SeasonRow, confirmName: String) async throws(DataError) -> TournamentDeletion.Result {
+        let context = try connection()
+        let result: TournamentDeletion.Result = try await write {
+            guard let id = try await TournamentDeletion.competitionID(client: context.client, seasonID: season.id) else {
+                throw DataError.invalid("Fant ikke turneringen.")
+            }
+            return try await TournamentDeletion.delete(client: context.client, competitionID: id, confirmName: confirmName)
+        }
+        seasons.removeAll { $0.id == season.id }
+        return result
+    }
+
     // MARK: Hjelpere
 
     private func update(_ id: UUID, _ patch: some Encodable & Sendable) async throws(DataError) {
