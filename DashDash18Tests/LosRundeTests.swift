@@ -104,7 +104,7 @@ struct LosRundeKodeTests {
 
     @Test func delingsteksten() throws {
         let text = try #require(InviteCode("ABCDEFGH23")).shareText(courseName: "Losby")
-        #expect(text.contains("Losby") && text.contains("dashdash://runde/ABCDEFGH23") && text.contains("ABCDE-FGH23"))
+        #expect(text.contains("Losby") && text.contains("https://dashdash18.com/runde/ABCDEFGH23") && text.contains("ABCDE-FGH23"))
         #expect(text.contains("i Atten.") && !text.contains("DashDash"))
     }
 }
