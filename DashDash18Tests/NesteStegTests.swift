@@ -92,11 +92,11 @@ struct KomIGangTests {
 }
 
 struct ArrangorInngangTests {
-    @Test func knappenBareIHjemForArrangorer() {
-        #expect(AppTab.hjem.showsAdminButton(isOrganizer: true))
-        #expect(!AppTab.hjem.showsAdminButton(isOrganizer: false))
-        #expect(!AppTab.deg.showsAdminButton(isOrganizer: true))
-        #expect(!AppTab.tavla.showsAdminButton(isOrganizer: true))
-        #expect(!AppTab.spill.showsAdminButton(isOrganizer: true))
+    /// 09.10.2026: egen fane for arrangører i stedet for ikonet på Hjem og raden i Deg.
+    @Test func egenFaneBareForArrangorer() {
+        #expect(AppTab.tabs(isOrganizer: true).contains(.arrangor))
+        #expect(!AppTab.tabs(isOrganizer: false).contains(.arrangor))
+        #expect(!AppTab.tabs().contains(.arrangor))
+        #expect(AppTab.arrangor.title == "Arrangør")
     }
 }

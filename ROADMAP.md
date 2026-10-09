@@ -396,6 +396,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Kvelden i tre seksjoner: Før, Under og Etter kvelden, med samme stegrekke. *(08.10.)*
 - [x] Hjem-knappen heter det samme som neste steg og går rett dit: to trykk fra Hjem til «Start runden» (før: fire). *(08.10.)*
 - [x] Bygget rundt én valgt turnering (hovedturneringen som standard), så en turneringsvelger kan legges til i fase 23. *(08.10.)*
+- [x] Egen fane «Arrangør» (bare for arrangører) mellom Tavla og Deg, i stedet for ikonet på Hjem og raden i Deg. Oppsettet øverst og alltid åpent, så kvelden som står for tur, kommende og tidligere kvelder. *(09.10, Thomas: siden var for gjemt.)*
 - [ ] Prøve på telefon mot ekte data.
 
 ### Fase 22–25 – Turneringen som kjerne (klubber og simulatorsentre)

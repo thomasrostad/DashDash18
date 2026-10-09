@@ -1,11 +1,10 @@
 import SwiftUI
 
-/// Arrangørsiden som tidslinje (fase 21), i datorekkefølge fra topp til bunn: tidligere kvelder,
-/// så «nå» (kvelden som står for tur med stegrekka og én knapp for neste steg, eller «Kom i gang»
-/// før sesongen er klar), så kommende kvelder. Siden åpnes rullet til «nå». Under ligger det som
-/// gjøres sjelden: oppsettet (sammenfoldet), varsler og rapporter, og rundearkivet.
-/// Viser én turnering: den valgte, ellers hovedturneringen. Vises bare for arrangører, fra
-/// verktøylinja på Hjem og fra Deg.
+/// Arrangørsiden (fase 21), egen fane for arrangører siden 09.10.2026. Fra topp til bunn: oppsettet
+/// (turneringen, troppen og banene, alltid åpent), «nå» (kvelden som står for tur med stegrekka og
+/// én knapp for neste steg, eller «Kom i gang» før sesongen er klar), kommende kvelder, tidligere
+/// kvelder, og til slutt varsler og rapporter og rundearkivet.
+/// Viser én turnering: den valgte, ellers hovedturneringen. Vises bare for arrangører.
 struct AdminHubView: View {
     /// nil: hovedturneringen. Klar for en turneringsvelger.
     var tournamentID: UUID?
@@ -67,11 +66,11 @@ private struct TournamentAdminHub: View {
 
 /// Hvor arrangørsiden står rullet når den åpnes.
 enum AdminHubScroll: Hashable {
-    /// Kvelden som står for tur (eller «Kom i gang»).
+    /// Øverst: oppsettet og kvelden som står for tur (eller «Kom i gang»).
     case now
-    /// Øverst, med de tidligere kveldene (skjermprøven `kveldene`).
+    /// Også øverst (skjermprøven `kveldene`).
     case top
-    /// Oppsett, varsler og arkiv (skjermprøven `arrangorbunn`).
+    /// Varsler, rapporter og arkiv (skjermprøven `arrangorbunn`).
     case bottom
 }
 
@@ -123,7 +122,6 @@ private struct AdminHubContent: View {
     @State private var pendingDelete: EventRow?
     @State private var drawPlan: IdentifiedPlan?
     @State private var perEvening = 2
-    @State private var showsSetup = false
     @State private var didScroll = false
     @State private var error: String?
     @State private var isBusy = false
@@ -162,6 +160,7 @@ private struct AdminHubContent: View {
                 case .failed(let text):
                     failed(text)
                 case .loaded:
+                    setupSection
                     timeline
                     rareSections
                 }
@@ -261,7 +260,6 @@ private struct AdminHubContent: View {
     // MARK: Tidslinja
 
     private var today: String { EveningDates.today() }
-    private static let lastPastAnchor = "sist"
 
     private var gettingStarted: [GettingStarted.Step] {
         GettingStarted.steps(GettingStarted.input(
@@ -289,17 +287,6 @@ private struct AdminHubContent: View {
     private var timeline: some View {
         let parts = parts
         let year = EveningDates.year(of: today)
-        if !parts.past.isEmpty {
-            Section {
-                ForEach(parts.past) { event in
-                    eveningRow(event, referenceYear: year, isPast: true)
-                        .id(event.id == parts.past.last?.id ? AnyHashable(Self.lastPastAnchor) : AnyHashable(event.id))
-                }
-            } header: {
-                DDHeader(timelineTitle("Tidligere kvelder"))
-            }
-        }
-
         if showsGettingStarted {
             gettingStartedSection
         } else if let event = parts.focus {
@@ -320,7 +307,7 @@ private struct AdminHubContent: View {
             }
             .disabled(terminliste.state != .loaded)
         } header: {
-            DDHeader(timelineTitle(parts.past.isEmpty && parts.focus == nil ? "Kveldene" : "Kommende kvelder"))
+            DDHeader(timelineTitle(parts.focus == nil ? "Kveldene" : "Kommende kvelder"))
         } footer: {
             if model.tournament == nil {
                 DDFooter("Ingen turnering er i gang. Kvelder kan likevel legges inn, uten turnering.")
@@ -339,6 +326,17 @@ private struct AdminHubContent: View {
                 DDHeader("Sosialkomité")
             } footer: {
                 DDFooter("Fyller kommende kvelder som mangler komité. De med færrest turer trekkes først.")
+            }
+        }
+
+        if !parts.past.isEmpty {
+            Section {
+                // Nyeste først, rett under kommende kvelder.
+                ForEach(parts.past.reversed()) { event in
+                    eveningRow(event, referenceYear: year, isPast: true)
+                }
+            } header: {
+                DDHeader(timelineTitle("Tidligere kvelder"))
             }
         }
     }
@@ -491,17 +489,6 @@ private struct AdminHubContent: View {
 
     @ViewBuilder
     private var rareSections: some View {
-        // Før sesongen er klar, dekker «Kom i gang» oppsettet.
-        if !showsGettingStarted {
-            Section {
-                DisclosureGroup(isExpanded: $showsSetup) {
-                    setupRows
-                } label: {
-                    AdminHubRow("Oppsett", "Turneringen, troppen og banene.", systemImage: "gearshape")
-                }
-                .id(AdminHubScroll.bottom)
-            }
-        }
         DDSection("Varsler og rapporter") {
             ForEach(ClubTools.hubRows(moderationEnabled: ModerationFeature.isEnabled), id: \.self) { row in
                 switch row {
@@ -518,6 +505,7 @@ private struct AdminHubContent: View {
                 }
             }
         }
+        .id(AdminHubScroll.bottom)
         Section {
             NavigationLink { RundeAdminView() } label: {
                 AdminHubRow("Alle runder", "Nyeste først, også fra tidligere turneringer.",
@@ -525,6 +513,18 @@ private struct AdminHubContent: View {
             }
         } header: {
             DDHeader("Arkiv")
+        }
+    }
+
+    /// Oppsettet øverst og alltid åpent. Før sesongen er klar, dekker «Kom i gang» det.
+    @ViewBuilder
+    private var setupSection: some View {
+        if !showsGettingStarted {
+            Section {
+                setupRows
+            } header: {
+                DDHeader("Oppsett")
+            }
         }
     }
 
@@ -548,16 +548,12 @@ private struct AdminHubContent: View {
     // MARK: Handlinger
 
     private func scrollToStart(_ proxy: ScrollViewProxy) {
-        let parts = parts
+        // Oppsettet og «nå» står øverst, så siden åpnes uten å rulle.
         let target: AnyHashable? = switch scroll {
-        // Den siste tidligere kvelden øverst, så «nå» står rett under med overskriften.
-        case .now: parts.past.count < 2 ? nil : AnyHashable(Self.lastPastAnchor)
-        case .top: nil
-        case .bottom:
-            AnyHashable(AdminHubScroll.bottom)
+        case .now, .top: nil
+        case .bottom: AnyHashable(AdminHubScroll.bottom)
         }
         guard let target else { return }
-        if scroll == .bottom { showsSetup = true }
         // Etter at lista har lagt ut radene.
         Task { @MainActor in
             await Task.yield()

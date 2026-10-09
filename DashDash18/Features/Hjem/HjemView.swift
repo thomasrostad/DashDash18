@@ -6,7 +6,6 @@ enum HjemRoute: Hashable {
     case round
     /// Kveld-skjermen: hvem som kommer, tråden, tipsen og purringen.
     case evening
-    case admin
     /// Kvelden for arrangøren (fase 21): neste steg, påmelding, runder og avslutning.
     case kvelden(UUID)
     case competition(UUID)
@@ -79,17 +78,6 @@ private struct HjemClubContent: View {
             .roundAdminActions(adminActions)
             .task { await loadAdmin() }
             .onChange(of: route) { _, route in if route == nil { Task { await loadAdmin() } } }
-            .toolbar {
-                if AppTab.hjem.showsAdminButton(isOrganizer: context.isOrganizer) {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button { route = .admin } label: {
-                            Image(systemName: "slider.horizontal.3")
-                        }
-                        .accessibilityLabel("Arrangørsiden")
-                        .tint(Color.ddOnDark)
-                    }
-                }
-            }
             .alert("Noe gikk galt", isPresented: Binding(
                 get: { home.errorMessage != nil },
                 set: { if !$0 { home.errorMessage = nil } }
@@ -247,8 +235,6 @@ private struct HjemClubContent: View {
                 .followsRound(round)
         case .evening:
             KveldView(model: kveld)
-        case .admin:
-            AdminHubView()
         case .kvelden(let id):
             KveldenView(eventID: id, terminliste: TerminlisteModel(context: context), admin: admin)
         case .competition(let id):
