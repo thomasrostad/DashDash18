@@ -14,6 +14,11 @@ struct BillSplitView: View {
     @State private var phoneText = ""
     @State private var newName = ""
     @State private var copied: String?
+    /// Feltet med tastaturet. Tall- og telefontastaturet har ingen returtast, så «Ferdig» over
+    /// tastaturet, dra i lista og knappene under lukker det.
+    @FocusState private var focused: Field?
+
+    private enum Field: Hashable { case note, amount, name, phone }
 
     /// `people`: navnene i runden (eller tomt). Den første er deg, som foreslås som mottaker.
     init(people: [String], amount: String = "", payer: String? = nil, phone: String = "") {
@@ -45,7 +50,10 @@ struct BillSplitView: View {
                     }
                     .padding(.vertical, 4)
                     if purpose == .other {
-                        TextField("Hva gjelder det?", text: $note).ddField()
+                        TextField("Hva gjelder det?", text: $note)
+                            .focused($focused, equals: .note)
+                            .submitLabel(.done)
+                            .ddField()
                     }
                 } header: {
                     DDHeader("Hva skal deles")
@@ -54,6 +62,7 @@ struct BillSplitView: View {
                 Section {
                     TextField("Beløp i kroner", text: $amountText)
                         .keyboardType(.decimalPad)
+                        .focused($focused, equals: .amount)
                         .font(.ddNumberLarge)
                         .ddField()
                     if !amountText.isEmpty, total == nil {
@@ -85,6 +94,8 @@ struct BillSplitView: View {
                     }
                     HStack {
                         TextField("Legg til navn", text: $newName)
+                            .focused($focused, equals: .name)
+                            .submitLabel(.done)
                             .onSubmit(addName)
                         Button("Legg til", action: addName)
                             .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -99,6 +110,7 @@ struct BillSplitView: View {
                     TextField("Mobilnummer til \(payer ?? "mottakeren")", text: $phoneText)
                         .keyboardType(.phonePad)
                         .textContentType(.telephoneNumber)
+                        .focused($focused, equals: .phone)
                         .ddField()
                 } header: {
                     DDHeader("Vipps til")
@@ -125,9 +137,8 @@ struct BillSplitView: View {
                             }
                         }
                         Button {
-                            openURL(VippsLink.app) { accepted in
-                                if !accepted { openURL(VippsLink.appStore) }
-                            }
+                            focused = nil
+                            openVipps()
                         } label: {
                             Label("Åpne Vipps", systemImage: "arrow.up.forward.app")
                         }
@@ -144,6 +155,7 @@ struct BillSplitView: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Del regningen")
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
@@ -151,6 +163,10 @@ struct BillSplitView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Lukk") { dismiss() }
                         .tint(Color.ddOnDark)
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Ferdig") { focused = nil }
                 }
             }
         }
@@ -166,7 +182,18 @@ struct BillSplitView: View {
         newName = ""
     }
 
+    /// Vipps-appen, ellers vipps.no (åpner appen når den finnes), ellers App Store.
+    private func openVipps() {
+        openURL(VippsLink.app) { accepted in
+            guard !accepted else { return }
+            openURL(VippsLink.web) { accepted in
+                if !accepted { openURL(VippsLink.appStore) }
+            }
+        }
+    }
+
     private func copy(_ share: BillShare) {
+        focused = nil
         UIPasteboard.general.string = share.amount.plain
         copied = share.name
     }

@@ -151,6 +151,8 @@ nonisolated enum VippsRecipient {
 nonisolated enum VippsLink {
     /// Åpner Vipps-appen (forsiden). Vipps har ingen offentlig lenke med beløp for privatpersoner.
     static let app = URL(string: "vipps://")!
+    /// Vipps på nett, når appen ikke svarer på `vipps://`.
+    static let web = URL(string: "https://vipps.no")!
     /// Vipps i App Store, når appen ikke er installert.
     static let appStore = URL(string: "https://apps.apple.com/no/app/vipps/id984380185")!
 
