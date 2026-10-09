@@ -109,7 +109,7 @@ struct TavlaDataTests {
 
 /// Mengdebaserte RPC-er (fase 24, sql/037).
 struct SetQueriesFeatureTests {
-    @Test func flaggetErAvTil037ErKjørt() {
-        #expect(SetQueriesFeature.isEnabled == false)
+    @Test func flaggetErPå() {
+        #expect(SetQueriesFeature.isEnabled == true)
     }
 }

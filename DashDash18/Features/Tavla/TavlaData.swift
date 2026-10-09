@@ -10,8 +10,9 @@ nonisolated enum TavlaRPCFeature {
 /// Mengdebaserte RPC-er (fase 24, `sql/037_mengde_rpc.sql`): «folk du kjenner», dine løse runder,
 /// turneringslista og Hjem-feeden hentes som mengder i stedet for at RLS sjekker hver rad i tabellen.
 nonisolated enum SetQueriesFeature {
-    /// Av til 037 er kjørt. Med flagget av hentes det rett fra tabellene som før.
-    static let isEnabled = false
+    /// På siden 09.10.2026: 037 er kjørt på test, og svarene er sjekket mot RLS-spørringene for alle
+    /// brukerne der (`sql/lokal/037_sjekk.sql`). Med flagget av hentes det rett fra tabellene som før.
+    static let isEnabled = true
 }
 
 /// Rådata for én sesong, slik `tavla_data` gir dem og slik spørringene henter dem hver for seg.
