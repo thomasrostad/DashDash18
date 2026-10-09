@@ -47,6 +47,8 @@ private struct HjemClubContent: View {
     @State private var admin: RundeAdminModel
     @State private var adminActions: RoundAdminActions
     @State private var route: HjemRoute?
+    /// Sist arrangørens telefon gjorde opp veddemålene fra Hjem (`BetSweep`).
+    @State private var lastBetSweep: Date?
     /// Runden er bedt om før den var hentet.
     @State private var wantsRound = false
     @Environment(\.scenePhase) private var scenePhase
@@ -180,6 +182,12 @@ private struct HjemClubContent: View {
     private func loadAdmin() async {
         guard context.isOrganizer else { return }
         await admin.load()
+        // Veddemålene gjøres opp på arrangørens telefon. Før skjedde det bare når veddemålene ble
+        // åpnet; nå også fra Hjem, høyst hvert femte minutt (09.10.2026).
+        if BetSweep.isDue(last: lastBetSweep, now: .now) {
+            lastBetSweep = .now
+            await BetsModel(context: context).load()
+        }
     }
 
     /// Knappen for neste steg på «Neste kveld», med samme ord som på arrangørsiden. Oppsettet og

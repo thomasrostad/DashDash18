@@ -323,3 +323,13 @@ nonisolated enum BetErrors {
 
     private static let ownAccessMessages = ["Du må være logget inn", "Du er ikke aktivt medlem", "Bare arrangøren"]
 }
+
+/// Når arrangørens telefon skal gjøre opp veddemålene fra Hjem (`BetsModel.load` feier).
+nonisolated enum BetSweep {
+    /// Høyst så ofte, så Hjem ikke henter veddemålene ved hver retur.
+    static let interval: TimeInterval = 5 * 60
+
+    static func isDue(last: Date?, now: Date) -> Bool {
+        BetsFeature.isEnabled && (last.map { now.timeIntervalSince($0) >= interval } ?? true)
+    }
+}

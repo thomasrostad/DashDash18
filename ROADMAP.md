@@ -426,7 +426,8 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Ny turnering synlig: «+»-meny på Arrangør, i liga/cup/morro, «Lag turneringen» i «Kom i gang», «Turneringer» i Spill (#33).
 - [x] «Forrige kupong · dato» på Hjem-kortet og på Kveld-skjermen, så resultatet og tippekongen kan åpnes når neste kveld har tatt over. *(09.10.)*
 - [x] Spillere uten klubb ser og lager private turneringer (liga, cup, morro) fra «Turneringer» i Spill (`CompetitionsModel(client:userID:)`). *(09.10.)*
-- [ ] Veddemål per turnering med egen poengbank (krever SQL, fase 22 trinn 5), og oppgjør uten at arrangøren åpner veddemålene.
+- [x] Veddemålene gjøres opp fra Hjem på arrangørens telefon (høyst hvert femte minutt), ikke bare når veddemålene åpnes. *(09.10.)*
+- [ ] Veddemål per turnering med egen poengbank, private turneringer og oppgjør uten arrangør: forslag og valg i `docs/vedd-per-turnering.md`. Venter på Thomas.
 
 ### Kodegjennomgang 08.10.2026: åpne funn
 

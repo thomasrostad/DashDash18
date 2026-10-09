@@ -38,6 +38,7 @@ Status 09.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detalje
 | [`CLAUDE.md`](CLAUDE.md) | Arbeidsregler for Claude Code. Gjelder også for mennesker |
 | [`docs/gjoremal.md`](docs/gjoremal.md) | Det som må gjøres manuelt (App Store Connect, Supabase-konsoll, Google) |
 | [`sql/README.md`](sql/README.md) | Databasemigreringer og status per fil (test og prod) |
+| [`docs/vedd-per-turnering.md`](docs/vedd-per-turnering.md) | Forslag: veddemål per turnering, poengbank og oppgjør (venter på valg) |
 | [`docs/`](docs/) | Datamodell, sikkerhet, push, widgets, Xcode Cloud, App Store, personvern og vilkår |
 
 Ved konflikt gjelder `CLAUDE.md`, så `ROADMAP.md`, så `SPEC.md`.
