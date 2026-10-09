@@ -2,8 +2,8 @@ import Foundation
 import GolfgutuCore
 import Supabase
 
-/// Spørringene for Tavla. Bare lesing. Radene gjøres om til `RoundSnapshot`, så rundene bygges
-/// med samme mapping som Kveld (`RoundGame.makeRound`).
+/// Spørringene for Tavla. Bare lesing. Radene samles i `TavlaData` og gjøres om til `RoundSnapshot`,
+/// så rundene bygges med samme mapping som Kveld (`RoundGame.makeRound`).
 enum TavlaQueries {
     /// Den aktive sesongen, ellers den sist opprettede ferdige. Nil når ingen finnes.
     static func load(client: SupabaseClient, clubID: UUID) async throws -> TavlaInput? {
@@ -18,6 +18,25 @@ enum TavlaQueries {
     }
 
     static func load(client: SupabaseClient, season: SeasonRow) async throws -> TavlaInput {
+        if TavlaRPCFeature.isEnabled, let data = try await rpc(client: client, seasonID: season.id) {
+            return data.input(season: season)
+        }
+        return try await tables(client: client, season: season).input(season: season)
+    }
+
+    /// Alt i ett kall (`sql/036`). Nil når funksjonen ikke gir svar for deg (ikke medlem i klubben,
+    /// P0002) eller ikke finnes ennå (PGRST202): da hentes det som før, og RLS avgjør.
+    static func rpc(client: SupabaseClient, seasonID: UUID) async throws -> TavlaData? {
+        struct Params: Encodable { let p_season_id: UUID }
+        do {
+            return try await client.rpc("tavla_data", params: Params(p_season_id: seasonID)).execute().value
+        } catch let error as PostgrestError where ["P0002", "PGRST202"].contains(error.code ?? "") {
+            return nil
+        }
+    }
+
+    /// Én spørring per tabell og én per runde for scorene. RLS sjekker hver rad.
+    static func tables(client: SupabaseClient, season: SeasonRow) async throws -> TavlaData {
         async let eventRows: [EventRow] = client.from("events")
             .select(EventRow.columns)
             .eq("season_id", value: season.id)
@@ -26,20 +45,19 @@ enum TavlaQueries {
             .select(ClubMemberRow.columns)
             .eq("club_id", value: season.clubID)
             .execute().value
-        let events = try await eventRows
-        let members = try await memberRows
-        guard !events.isEmpty else { return TavlaInput(season: season, members: members, rounds: []) }
+        var data = TavlaData(events: try await eventRows, members: try await memberRows)
+        guard !data.events.isEmpty else { return data }
 
         // Kladder ser bare arrangøren, og de teller ikke.
-        let rounds: [RoundRow] = try await client.from("rounds")
+        data.rounds = try await client.from("rounds")
             .select(RoundRow.columns)
-            .in("event_id", values: events.map(\.id.uuidString))
+            .in("event_id", values: data.events.map(\.id.uuidString))
             .in("status", values: [RoundStatus.active.rawValue, RoundStatus.locked.rawValue])
             .execute().value
-        guard !rounds.isEmpty else { return TavlaInput(season: season, members: members, rounds: []) }
+        guard !data.rounds.isEmpty else { return data }
 
-        let ids = rounds.map(\.id.uuidString)
-        let courseIDs = Array(Set(rounds.compactMap(\.courseID))).map(\.uuidString)
+        let ids = data.rounds.map(\.id.uuidString)
+        let courseIDs = Array(Set(data.rounds.compactMap(\.courseID))).map(\.uuidString)
 
         async let holeRows: [RoundHoleRow] = client.from("round_holes")
             .select(RoundHoleRow.columns)
@@ -60,32 +78,16 @@ enum TavlaQueries {
             .select(CourseHoleRecord.columns)
             .in("course_id", values: courseIDs).execute().value
         // Scorene per runde: en hel sesong kan gå over PostgREST-grensen på 1000 rader i ett svar.
-        let scoreRows = try await scores(client: client, roundIDs: rounds.map(\.id))
+        let scoreRows = try await scores(client: client, roundIDs: data.rounds.map(\.id))
 
-        let holes = try await holeRows
-        let players = try await playerRows
-        let matches = try await matchRows
-        let claims = try await claimRows
-        let courses = try await courseRows
-        let courseHoles = try await courseHoleRows
-
-        let names = Dictionary(members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { a, _ in a })
-        let dates = Dictionary(events.map { ($0.id, $0.eventDate) }, uniquingKeysWith: { a, _ in a })
-        let snapshots = rounds.map { round in
-            var s = RoundSnapshot(round: round)
-            s.roundHoles = holes.filter { $0.roundID == round.id }
-            s.players = players.filter { $0.roundID == round.id }
-            s.matches = matches.filter { $0.roundID == round.id }
-            s.scores = scoreRows[round.id] ?? []
-            s.sideClaims = claims.filter { $0.roundID == round.id }
-            s.course = courses.first { $0.id == round.courseID }
-            s.courseHoles = courseHoles.filter { $0.courseID == round.courseID }
-            s.eventDate = round.eventID.flatMap { dates[$0] }
-            s.rules = season.rules
-            s.names = names
-            return s
-        }
-        return TavlaInput(season: season, members: members, rounds: snapshots)
+        data.roundHoles = try await holeRows
+        data.players = try await playerRows
+        data.matches = try await matchRows
+        data.claims = try await claimRows
+        data.courses = try await courseRows
+        data.courseHoles = try await courseHoleRows
+        data.scores = data.rounds.flatMap { scoreRows[$0.id] ?? [] }
+        return data
     }
 
     private static func scores(client: SupabaseClient, roundIDs: [UUID]) async throws -> [UUID: [HoleScoreRow]] {
