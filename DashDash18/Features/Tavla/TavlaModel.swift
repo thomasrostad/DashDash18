@@ -46,19 +46,29 @@ final class TavlaModel {
     /// ny visning ikke kolliderer med at den forrige rydder.
     func follow() async {
         let client = context.client
-        let channel = client.channel("tavla-\(context.clubID.uuidString)-\(UUID().uuidString)")
+        // sql/040: én privat kanal for klubben (bare klubbens runder). Før: alle hullscorer i basen,
+        // med RLS-sjekk per abonnent og endring.
+        let channel = BroadcastFeature.isEnabled
+            ? client.channel(BroadcastTopic.club(context.clubID)) { $0.isPrivate = true }
+            : client.channel("tavla-\(context.clubID.uuidString)-\(UUID().uuidString)")
         // `rounds` har klubb-id; de andre tabellene har bare runde-id, og RLS holder dem til klubbene dine.
-        let changes = [
-            channel.postgresChange(AnyAction.self, schema: "public", table: "rounds",
-                                   filter: .eq("club_id", value: context.clubID)),
-            channel.postgresChange(AnyAction.self, schema: "public", table: "hole_scores"),
-            channel.postgresChange(AnyAction.self, schema: "public", table: "round_matches"),
-            channel.postgresChange(AnyAction.self, schema: "public", table: "side_claims"),
-        ]
         let statuses = channel.statusChange
-        var tasks = changes.map { stream in
-            Task { [weak self] in
-                for await _ in stream { self?.scheduleReload() }
+        var tasks: [Task<Void, Never>]
+        if BroadcastFeature.isEnabled {
+            let changes = channel.broadcastStream(event: BroadcastTopic.event)
+            tasks = [Task { [weak self] in for await _ in changes { self?.scheduleReload() } }]
+        } else {
+            let changes = [
+                channel.postgresChange(AnyAction.self, schema: "public", table: "rounds",
+                                       filter: .eq("club_id", value: context.clubID)),
+                channel.postgresChange(AnyAction.self, schema: "public", table: "hole_scores"),
+                channel.postgresChange(AnyAction.self, schema: "public", table: "round_matches"),
+                channel.postgresChange(AnyAction.self, schema: "public", table: "side_claims"),
+            ]
+            tasks = changes.map { stream in
+                Task { [weak self] in
+                    for await _ in stream { self?.scheduleReload() }
+                }
             }
         }
         tasks.append(Task { [weak self] in
