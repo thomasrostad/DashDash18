@@ -64,7 +64,12 @@ final class ClubModel {
     }
 
     func select(_ membership: Membership) {
-        UserDefaults.standard.set(membership.clubID.uuidString, forKey: Self.rememberedKey)
+        select(clubID: membership.clubID)
+    }
+
+    /// Bytt til klubben (en invitasjon fra en lenke). Er den ikke aktiv ennå, blir du stående der du er.
+    func select(clubID: UUID) {
+        UserDefaults.standard.set(clubID.uuidString, forKey: Self.rememberedKey)
         apply(memberships)
     }
 
@@ -109,17 +114,21 @@ final class ClubModel {
         }
     }
 
-    /// Ta et ledig navn (`memberID`) eller be om å bli med som ny (`displayName`).
-    func join(code: String, memberID: UUID?, displayName: String?, handicapIndex: Double?, userID: UUID) async throws(ClubError) {
+    /// Ta et ledig navn (`memberID`) eller be om å bli med som ny (`displayName`). Svarer med
+    /// statusen du fikk: aktiv (ledig navn) eller venter (ny, arrangøren må godkjenne).
+    @discardableResult
+    func join(code: String, memberID: UUID?, displayName: String?, handicapIndex: Double?,
+              userID: UUID) async throws(ClubError) -> MemberStatus {
         struct Params: Encodable {
             let p_join_code: String
             let p_member_id: UUID?
             let p_display_name: String?
             let p_handicap_index: Double?
         }
+        let result: JoinResult
         do {
             // Svaret dekodes for å sjekke at serveren ga et medlemskap tilbake.
-            let _: JoinResult = try await client
+            result = try await client
                 .rpc("join_club", params: Params(
                     p_join_code: code,
                     p_member_id: memberID,
@@ -132,6 +141,7 @@ final class ClubModel {
             throw Self.clubError(from: error)
         }
         await load(userID: userID)
+        return result.status
     }
 
     private func apply(_ rows: [Membership]) {

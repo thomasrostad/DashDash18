@@ -1,14 +1,25 @@
 import SwiftUI
 
-/// Første gang etter innlogging: lag en klubb eller bli med i en.
+/// Første gang etter innlogging: bli med i en klubb (lim inn invitasjonen eller skriv koden) eller lag en.
 struct ClubOnboardingView: View {
     let user: AuthUser
     /// «Spill med venner i stedet» (OpenAppFeature). nil = som før.
     var onPlayWithoutClub: (() -> Void)?
+    @State private var codeText = ""
+    @State private var error: String?
+    /// Koden som er funnet: «Bli med» åpnes med den.
+    @State private var joining: ClubInvite?
 
     var body: some View {
         NavigationStack {
             DDList {
+                ClubCodeEntrySection(text: $codeText, onSubmit: findClub)
+                if let error {
+                    Section {
+                        Label(error, systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(Color.ddError)
+                    }
+                }
                 if let onPlayWithoutClub {
                     Section {
                         Button("Spill med venner uten klubb", systemImage: "figure.golf", action: onPlayWithoutClub)
@@ -19,31 +30,39 @@ struct ClubOnboardingView: View {
                 }
                 Section {
                     NavigationLink {
-                        JoinClubView(user: user)
-                    } label: {
-                        Label("Bli med i en klubb", systemImage: "person.badge.plus")
-                    }
-                } footer: {
-                    DDFooter("Du trenger invitasjonskoden fra arrangøren.")
-                }
-                Section {
-                    NavigationLink {
                         CreateClubView(user: user)
                     } label: {
                         Label("Lag en ny klubb", systemImage: "flag")
                     }
+                } header: {
+                    DDHeader("Starter du en ny gjeng?")
                 } footer: {
-                    DDFooter("Du blir arrangør og får en kode du kan dele med resten av gjengen.")
+                    DDFooter("Du blir arrangør og får en invitasjon du kan sende til resten av gjengen.")
                 }
             }
             .navigationTitle("Velkommen")
             .ddNavigationChrome()
+            .navigationDestination(item: $joining) { invite in
+                JoinClubView(user: user, initialCode: invite.code)
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     SignOutButton()
                 }
             }
         }
+    }
+}
+
+extension ClubOnboardingView {
+    private func findClub() {
+        guard let invite = ClubInvite.parse(codeText) else {
+            error = ClubInvite.notAnInvite
+            return
+        }
+        error = nil
+        codeText = invite.code
+        joining = invite
     }
 }
 
