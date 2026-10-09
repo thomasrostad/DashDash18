@@ -158,3 +158,13 @@ struct SpilledagRegeltekstTests {
         #expect(TournamentSetup.ruleLines(draft).contains { $0.hasPrefix("Matcher hver kveld") })
     }
 }
+
+/// Veddemålene gjøres opp fra Hjem på arrangørens telefon, høyst hvert femte minutt.
+struct BetSweepTests {
+    @Test func høystHvertFemteMinutt() {
+        let now = Date(timeIntervalSince1970: 1_000_000)
+        #expect(BetSweep.isDue(last: nil, now: now))
+        #expect(!BetSweep.isDue(last: now.addingTimeInterval(-60), now: now))
+        #expect(BetSweep.isDue(last: now.addingTimeInterval(-301), now: now))
+    }
+}
