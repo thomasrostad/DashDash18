@@ -36,15 +36,15 @@ struct NesteStegTilstandTests {
     @Test func ingenKveld() {
         let p = progress(nil)
         #expect(p == EveningProgress(stage: nil, action: .noEvening))
-        #expect(p.action.buttonTitle == "Legg inn en kveld")
+        #expect(p.action.buttonTitle() == "Legg inn en kveld")
         #expect(p.steps.allSatisfy { $0.state == .upcoming })
     }
 
     @Test func kommendeKveldUtenSvarGirPurring() {
         let p = progress(nextWeek, notAnswered: 12)
         #expect(p == EveningProgress(stage: .signup, action: .nudge(12)))
-        #expect(p.action.buttonTitle == "Purr de 12")
-        #expect(EveningProgress(stage: .signup, action: .nudge(1)).action.buttonTitle == "Purr den ene")
+        #expect(p.action.buttonTitle() == "Purr de 12")
+        #expect(EveningProgress(stage: .signup, action: .nudge(1)).action.buttonTitle() == "Purr den ene")
         #expect(p.steps.map(\.state) == [.current, .upcoming, .upcoming, .upcoming])
     }
 
@@ -55,7 +55,7 @@ struct NesteStegTilstandTests {
     @Test func alleHarSvartGirOppsett() {
         let p = progress(nextWeek, notAnswered: 0)
         #expect(p == EveningProgress(stage: .setup, action: .setUp))
-        #expect(p.action.buttonTitle == "Sett opp runden")
+        #expect(p.action.buttonTitle() == "Sett opp runden")
         #expect(p.steps.map(\.state) == [.done, .current, .upcoming, .upcoming])
     }
 
@@ -66,7 +66,7 @@ struct NesteStegTilstandTests {
     @Test func kladdGirFortsettKladd() {
         let p = progress(tonight, [round(10, event: 1, status: .draft)], notAnswered: 4)
         #expect(p == EveningProgress(stage: .setup, action: .continueDraft(id(10))))
-        #expect(p.action.buttonTitle == "Fortsett kladd")
+        #expect(p.action.buttonTitle() == "Fortsett kladd")
     }
 
     @Test func flereKladderGirDenSiste() {
@@ -78,7 +78,7 @@ struct NesteStegTilstandTests {
         let live = round(10, event: 1, status: .active)
         let p = progress(tonight, [live, round(11, event: 1, no: 2, status: .draft)], active: live)
         #expect(p == EveningProgress(stage: .playing, action: .goToRound(id(10))))
-        #expect(p.action.buttonTitle == "Gå til runden")
+        #expect(p.action.buttonTitle() == "Gå til runden")
         #expect(p.steps.map(\.state) == [.done, .done, .current, .upcoming])
     }
 
@@ -86,13 +86,13 @@ struct NesteStegTilstandTests {
         let live = round(10, event: 1, status: .active)
         let p = progress(tonight, [live], active: live, complete: true)
         #expect(p == EveningProgress(stage: .playing, action: .closeEvening(id(10))))
-        #expect(p.action.buttonTitle == "Avslutt kvelden")
+        #expect(p.action.buttonTitle() == "Avslutt kvelden")
     }
 
     @Test func ferdigGirResultatet() {
         let p = progress(tonight, [round(10, event: 1, status: .locked)])
         #expect(p == EveningProgress(stage: .done, action: .seeResult))
-        #expect(p.action.buttonTitle == "Se resultatet")
+        #expect(p.action.buttonTitle() == "Se resultatet")
         #expect(p.steps.allSatisfy { $0.state == .done })
     }
 
@@ -110,7 +110,7 @@ struct NesteStegTilstandTests {
     @Test func passertKveldUtenRunder() {
         let p = progress(lastWeek, notAnswered: 5)
         #expect(p == EveningProgress(stage: nil, action: .notPlayed))
-        #expect(p.action.buttonTitle == nil)
+        #expect(p.action.buttonTitle() == nil)
         #expect(Tonight.statusText(action: p.action, rounds: [], activeTitle: nil) == "Ingen runder spilt")
     }
 
@@ -153,7 +153,9 @@ struct NesteStegTilstandTests {
     }
 
     @Test func kveldensDeler() {
-        #expect(EveningPart.allCases.map(\.title) == ["Før kvelden", "Under kvelden", "Etter kvelden"])
+        #expect(EveningPart.allCases.map { $0.title() } == ["Før kvelden", "Under kvelden", "Etter kvelden"])
+        #expect(EveningPart.allCases.map { $0.title(.playingDay) }
+            == ["Før spilledagen", "Under spilledagen", "Etter spilledagen"])
         #expect(EveningPart.current(.signup) == .before)
         #expect(EveningPart.current(.setup) == .during)
         #expect(EveningPart.current(.playing) == .during)

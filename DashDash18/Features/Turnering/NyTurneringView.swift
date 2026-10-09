@@ -102,7 +102,7 @@ final class NewTournamentModel {
                 return false
             }
             do {
-                try await seasons.create(name: draft.trimmedName, rules: draft.rules, activate: activatesNewSeason)
+                try await seasons.create(name: draft.trimmedName, rules: draft.seasonRules, activate: activatesNewSeason)
                 if CompetitionsFeature.isActive { await list.load() }
                 return true
             } catch {
@@ -244,6 +244,9 @@ struct NyTurneringDetailsView: View {
             }
             if draft.showsPeriod {
                 periodSection
+            }
+            if draft.target == .season {
+                DayTermSection(term: $draft.dayTerm)
             }
             rulesSection
         }

@@ -8,6 +8,7 @@ struct RulesetCommonSections: View {
     @Binding var draft: RulesetDraft
 
     var body: some View {
+        DayTermSection(term: Binding(get: { draft.rules.day }, set: { draft.rules.dayTerm = $0 }))
         countingSection
         if draft.countsMatches {
             pointsSection
@@ -26,7 +27,7 @@ struct RulesetCommonSections: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
             }
-            RuleStepper("Kvelder", value: $draft.rules.evenings, changeNote: draft.changeNote(.evenings))
+            RuleStepper(DayTerm.capitalized(draft.rules.day.many), value: $draft.rules.evenings, changeNote: draft.changeNote(.evenings))
             Picker(selection: $draft.rules.table.counting.unit) {
                 ForEach(draft.tableUnits, id: \.self) { Text(RuleNames.title($0)).tag($0) }
             } label: {
@@ -101,6 +102,24 @@ struct RulesetCommonSections: View {
             DDHeader(RulesetSection.sidePrizes.title)
         } footer: {
             RuleSectionFooter(text: "Poengene kommer i tillegg til tabellpoengene.", issues: draft.issues(in: .sidePrizes))
+        }
+    }
+}
+
+/// Hva en dag i turneringen heter (`DayTerm`): «Kveld» eller «Spilledag». Bare ord, ikke en regel.
+struct DayTermSection: View {
+    @Binding var term: DayTerm
+
+    var body: some View {
+        Section {
+            Picker("En dag heter", selection: $term) {
+                ForEach(DayTerm.allCases, id: \.self) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+        } header: {
+            DDHeader("En dag heter")
+        } footer: {
+            DDFooter("Brukes på arrangørsiden og Hjem: «Neste \(term.one)», «Avslutt \(term.the)».")
         }
     }
 }

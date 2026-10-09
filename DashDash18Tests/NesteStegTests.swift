@@ -34,7 +34,7 @@ struct KomIGangTests {
     /// Fase 21: i sesongens rekkefølge, nummerert.
     @Test func rekkefolgenErTurneringTroppBanerKveld() {
         #expect(GettingStarted.steps(allDone).map(\.item) == [.season, .roster, .courses, .evening])
-        #expect(GettingStarted.Item.allCases.map(\.title) == ["Turneringen", "Troppen", "Banene", "Kveldene"])
+        #expect(GettingStarted.Item.allCases.map { $0.title() } == ["Turneringen", "Troppen", "Banene", "Kveldene"])
         #expect(GettingStarted.steps(allDone).map(\.number) == [1, 2, 3, 4])
     }
 
@@ -98,5 +98,43 @@ struct ArrangorInngangTests {
         #expect(!AppTab.tabs(isOrganizer: false).contains(.arrangor))
         #expect(!AppTab.tabs().contains(.arrangor))
         #expect(AppTab.arrangor.title == "Arrangør")
+    }
+}
+
+/// «Spilledag» for nye turneringer (09.10.2026): samme steg og knapper, andre ord.
+struct SpilledagTests {
+    @Test func overskrifterOgKnapper() {
+        #expect(Tonight.sectionTitle(daysUntil: 0, term: .playingDay) == "I dag")
+        #expect(Tonight.sectionTitle(daysUntil: 2, term: .playingDay) == "Neste spilledag")
+        #expect(Tonight.sectionTitle(daysUntil: -1, term: .playingDay) == "Siste spilledag")
+        #expect(TonightAction.noEvening.buttonTitle(.playingDay) == "Legg inn en spilledag")
+        #expect(TonightAction.closeEvening(UUID()).buttonTitle(.playingDay) == "Avslutt spilledagen")
+        #expect(Tonight.statusText(action: .noEvening, rounds: [], activeTitle: nil, term: .playingDay)
+            == "Ingen spilledag i terminlista")
+    }
+
+    @Test func komIGang() {
+        let input = GettingStarted.Input(hasActiveSeason: true, readyCourses: 1, activeMembers: 8,
+                                         upcomingEvenings: 0, term: .playingDay)
+        let step = GettingStarted.steps(input)[3]
+        #expect(step.title == "Spilledagene" && step.detail == "Legg inn neste spilledag.")
+        var two = input
+        two.upcomingEvenings = 2
+        #expect(GettingStarted.steps(two)[3].detail == "2 kommende spilledager.")
+    }
+
+    @Test func nyTurneringSierSpilledag() {
+        var draft = TournamentDraft(template: .stablefordSeries, clubID: UUID(), name: "Vår", today: "2026-10-09")
+        #expect(draft.seasonRules.day == .playingDay)
+        // Oppsettets regler er urørt; ordet er ikke en regel.
+        #expect(draft.rules == RulesetTemplate.stablefordSeries.rules)
+        draft.dayTerm = .evening
+        #expect(draft.seasonRules.day == .evening)
+        #expect(Ruleset.golfgutu.day == .evening)
+    }
+
+    @Test func avslutning() {
+        #expect(EveningClose.summary(locked: ["Runde 1"], drafts: [], failed: [], term: .playingDay)
+            == "Runde 1 er låst. Spilledagen er ferdig, og neste spilledag står øverst.")
     }
 }

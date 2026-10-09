@@ -1,9 +1,17 @@
+import GolfgutuCore
 import SwiftUI
+
+extension EnvironmentValues {
+    /// Hva en dag i turneringen heter (`DayTerm`): «kveld» for Golfgutu, «spilledag» for nye
+    /// turneringer. Settes av arrangørsiden og Hjem fra turneringens regelsett.
+    @Entry var dayTerm: DayTerm = .evening
+}
 
 /// Stegrekka for kvelden: Påmelding → Oppsett → Spilles → Ferdig, med ✓ for det som er gjort og
 /// steget kvelden står på markert. Øverst på arrangørsiden og på Kvelden.
 struct EveningStepsBar: View {
     let progress: EveningProgress
+    @Environment(\.dayTerm) private var dayTerm
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -67,7 +75,7 @@ struct EveningStepsBar: View {
             case .upcoming: step.stage.title
             }
         }
-        return "Kvelden: " + parts.joined(separator: ", ")
+        return DayTerm.capitalized(dayTerm.the) + ": " + parts.joined(separator: ", ")
     }
 }
 
@@ -87,6 +95,7 @@ struct EveningNextStepButton: View {
     /// Etter avslutning eller purring: meldingen som skal vises.
     var onMessage: (String) async -> Void = { _ in }
 
+    @Environment(\.dayTerm) private var dayTerm
     @State private var confirmingNudge = false
     @State private var sending = false
 
@@ -95,7 +104,7 @@ struct EveningNextStepButton: View {
         case .closeEvening:
             AvsluttKveldenButton(rounds: rounds, title: title, prominent: true, onDone: onMessage)
         default:
-            if let buttonTitle = action.buttonTitle {
+            if let buttonTitle = action.buttonTitle(dayTerm) {
                 Button {
                     if case .nudge = action, nudge != nil {
                         confirmingNudge = true

@@ -1,3 +1,4 @@
+import GolfgutuCore
 import SwiftUI
 
 /// Hvor Hjem kan gå videre.
@@ -179,17 +180,20 @@ private struct HjemClubContent: View {
 
     /// Knappen for neste steg på «Neste kveld», med samme ord som på arrangørsiden. Oppsettet og
     /// runden åpnes rett herfra; purring og avslutning åpner Kvelden, der de spør før de gjør noe.
+    /// «Kveld» eller «spilledag» for hovedturneringen (`DayTerm`). Arrangørens henting har regelsettet.
+    private var dayTerm: DayTerm { admin.tournament?.rules.day ?? .evening }
+
     private var organizerStep: HjemOrganizerStep? {
         guard context.isOrganizer, let event = kveld.event else { return nil }
         let openKvelden = { route = .kvelden(event.id) }
         guard admin.state == .loaded else {
-            return HjemOrganizerStep(title: "Kvelden", isBusy: admin.state == .loading,
-                                     hint: "Åpner kvelden.", perform: openKvelden)
+            return HjemOrganizerStep(title: DayTerm.capitalized(dayTerm.the), isBusy: admin.state == .loading,
+                                     hint: "Åpner \(dayTerm.the).", perform: openKvelden)
         }
         let progress = Tonight.progress(event: event, rounds: admin.allRounds, activeRound: admin.activeRound,
                                         activeComplete: admin.activeComplete,
                                         notAnswered: Nudge.targets(kveld.summary).count, today: kveld.today)
-        let title = progress.action.buttonTitle ?? "Kvelden"
+        let title = progress.action.buttonTitle(dayTerm) ?? DayTerm.capitalized(dayTerm.the)
         switch progress.action {
         case .setUp:
             return HjemOrganizerStep(title: title, isBusy: adminActions.isBusy, hint: "Åpner oppsettet av runden.") {
@@ -204,7 +208,7 @@ private struct HjemClubContent: View {
         case .seeResult:
             return HjemOrganizerStep(title: title, hint: "Åpner Tavla.") { selectTab(.tavla) }
         case .nudge, .closeEvening, .notPlayed, .noEvening:
-            return HjemOrganizerStep(title: title, hint: "Åpner kvelden.", perform: openKvelden)
+            return HjemOrganizerStep(title: title, hint: "Åpner \(dayTerm.the).", perform: openKvelden)
         }
     }
 
@@ -237,6 +241,7 @@ private struct HjemClubContent: View {
             KveldView(model: kveld)
         case .kvelden(let id):
             KveldenView(eventID: id, terminliste: TerminlisteModel(context: context), admin: admin)
+                .environment(\.dayTerm, dayTerm)
         case .competition(let id):
             HjemCompetitionScreen(context: context, competitionID: id)
         }

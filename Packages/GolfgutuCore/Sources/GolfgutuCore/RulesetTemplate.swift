@@ -83,7 +83,10 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
     /// samme regelsett; gi `among` etter turneringstypen for å skille dem (f.eks. `[.fun]`).
     public static func matching(_ rules: Ruleset, among candidates: [RulesetTemplate] = allCases,
                                 asLeague: Bool = false) -> RulesetTemplate? {
-        candidates.first { (asLeague ? $0.leagueRules : $0.rules) == rules }
+        // Ordet for dagen er ikke en regel (`DayTerm`).
+        var rules = rules
+        rules.dayTerm = nil
+        return candidates.first { (asLeague ? $0.leagueRules : $0.rules) == rules }
     }
 
     /// Oppsettet som ligger nærmest: færrest felt endret (`differences`). Likt: det første i `among`.
@@ -136,7 +139,8 @@ extension Ruleset {
         guard let a = Self.jsonObject(self), let b = Self.jsonObject(base) else { return self == base ? [] : [""] }
         var out: [String] = []
         Self.diff(a, b, path: "", into: &out)
-        return out.sorted()
+        // Ordet for dagen er ikke en regel (`DayTerm`).
+        return out.filter { $0 != "dayTerm" }.sorted()
     }
 
     private static func jsonObject(_ rules: Ruleset) -> Any? {
