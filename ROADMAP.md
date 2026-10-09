@@ -12,7 +12,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 |---|---|
 | **Nåværende fase** | Fase 12–17 bygget. På test er 011–024 kjørt (08.10). Slått på: alt unntatt onboarding uten klubb, Google-innlogging og kjøp, som venter på oppsett i App Store Connect og Google og på publisert personvern (`docs/gjoremal.md`). |
 | **Sist gjort** | 08.10: arrangørsiden gjennomgått mot beste praksis og omstrukturert (fase 11, `docs/arrangorsiden-vurdering.md`): Kveldene/Kvelden, én rundeliste, én oppsettsflyt, «Kom i gang», sesong lander på aktiv. Hjem-feed vurdert i `docs/hjem-feed.md`. Før det, 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
-| **Neste oppgave** | Fase 12–17 er bygget, og 019–027, 029 og 030 er kjørt på test. `delete-account` er deployet. Gjenstår: oppsett i App Store Connect og Google (`docs/gjoremal.md` C), så `verify-purchase` med IAP-nøkkelen og flaggene for kjøp, Google og onboarding. Prøve arrangørflyten på telefon. Deretter byttet for gjengen (fase 9) og prod. |
+| **Neste oppgave** | Fase 12–17 er bygget, og 019–027 og 029–031 er kjørt på test. `delete-account` er deployet. Gjenstår: oppsett i App Store Connect og Google (`docs/gjoremal.md` C), så `verify-purchase` med IAP-nøkkelen og flaggene for kjøp, Google og onboarding. Prøve arrangørflyten på telefon. Deretter byttet for gjengen (fase 9) og prod. |
 | **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. B15: slope.no dekker CR/slope for nordiske baner (fase 20); GolfAPI.io trengs bare for par og indeks per hull. Google-innlogging. |
 
 ---
@@ -403,7 +403,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 **08.10.2026 (Thomas):** golfklubber og simulatorsentre skal kunne kjøre mange turneringer i uka, noen over lang tid, ofte overlappende. Åpen påmelding for ikke-medlemmer (valg per turnering). Golfgutu forblir en klubb med hovedturnering. Lasttest gratis først (lokalt), Pro senere. Design: `docs/fase-22-turnering-som-kjerne.md`.
 
 - [x] Fase 22, design: målbilde, datamodell før → etter, migreringstrinn 031–035, paritetskontroll, lokal lasttest (1 000 brukere, 22 000 runder, 3 mill. hull). *(09.10.)*
-- [ ] 031 (additivt, trygt for dagens app): forslag, venter på godkjenning.
+- [x] 031 (additivt, trygt for dagens app): kjørt på test 09.10, kontrollen 12 av 12, paritet identisk. Beslutningene 2–9 står nederst i designdokumentet.
 - [ ] 032–035: rettigheter og påmelding, speilingen snus, gamle regler fjernes (krever `min_ios_build`), `seasons` som view.
 - [ ] Fase 23: arrangør per turnering (velger, åpen påmelding, venteliste, startliste), `min_ios_build` i appen.
 - [ ] Fase 24: skala (Tavla-data i én RPC, tabellen på serveren, sanntid).

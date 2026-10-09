@@ -1,5 +1,5 @@
 -- ===========================================================================
--- 031 – TURNERINGEN SOM KJERNE, TRINN 1 (FASE 22) – FORSLAG, IKKE KJØRT
+-- 031 – TURNERINGEN SOM KJERNE, TRINN 1 (FASE 22) – KJØRT PÅ TEST 09.10.2026
 -- ===========================================================================
 -- Status: FORSLAG til godkjenning (ROADMAP B5). IKKE KJØRT mot Supabase,
 -- verken test eller prod. Prøvd lokalt (sql/lokal/031_prove.sql, to kjøringer

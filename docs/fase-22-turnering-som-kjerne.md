@@ -484,3 +484,16 @@ I tillegg:
 7. **Tavla i fase 24:** én RPC med rådata (pariteten står, anbefalt først), eller lagrede poeng per runde, eller en serverutgave av regelmotoren (mest arbeid, én fasit for Android)?
 8. **Lasttestprosjekt:** egen gratis organisasjon for lasttest i Supabase, eller vente med lasttest gjennom PostgREST til Pro?
 9. **Når trinn 4 kan tas:** kreve at alle i gjengen har fase-23-bygget (TestFlight) før `min_ios_build` settes. Er det greit at gamle bygg da må oppdateres?
+
+
+## Besluttet 09.10.2026 (Thomas: «Ja, alt er fint»)
+
+1. 031 kjøres på test. *(Kjørt 09.10: kontrollen 12 av 12, paritetskontrollen identisk før og etter, lagring av runder og kvelder prøvd.)*
+2. Flere runder samtidig på samme spilledag deles i **puljer** (`rounds.wave_no`).
+3. **Åpne turneringer:** alle innloggede ser turneringen og tabellen. Bare deltakerne ser runder og hull.
+4. **Venteliste:** et tilbud om ledig plass gjelder i **24 timer**, så går det videre.
+5. **Funksjonærer** fører bare for gruppene de er satt på. Arrangøren fører for alle.
+6. **Hovedturnering** er valgfritt for arenaer. Golfgutu beholder sin.
+7. **Tavla (fase 24):** først én RPC med rådata (telefonen regner, pariteten står). Lagret tabell senere.
+8. **Lasttest i Supabase:** egen gratis organisasjon, tas i fase 24.
+9. **Trinn 034** tidligst når alle i Golfgutu-gjengen har et bygg fra fase 23 (`min_ios_build`).
