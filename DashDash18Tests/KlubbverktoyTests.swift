@@ -27,7 +27,7 @@ struct ClubToolsTests {
 struct TroppInviteTests {
     @Test func delingstekstMedKlubbOgKode() {
         #expect(TroppInvite.shareText(clubName: "Golfgutu Invitational", code: "A1B2C3D4E5")
-            == "Bli med i Golfgutu Invitational i Atten. Invitasjonskode: A1B2C3D4E5")
+            == "Bli med i Golfgutu Invitational i Atten: dashdash://klubb/A1B2C3D4E5 · Koden er A1B2C3D4E5")
     }
 
     @Test func ingenKodeGirIngenInvitasjon() {
