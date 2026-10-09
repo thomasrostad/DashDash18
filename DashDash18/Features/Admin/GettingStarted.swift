@@ -42,7 +42,8 @@ nonisolated enum GettingStarted {
         let detail: String
         var term: DayTerm = .evening
         var id: Item { item }
-        var title: String { item.title(term) }
+        /// «Lag turneringen» mens den mangler (punktet åpner «Ny turnering»), ellers «Turneringen».
+        var title: String { item == .season && !isDone ? "Lag turneringen" : item.title(term) }
         /// Nummeret i lista: 1 Turneringen, 2 Troppen, 3 Banene, 4 Kveldene.
         var number: Int { (Item.allCases.firstIndex(of: item) ?? 0) + 1 }
     }

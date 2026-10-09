@@ -132,6 +132,7 @@ struct TournamentSetupRows: View {
 /// påmeldte, påmeldingen og staben. Spilledager per turnering kommer i trinn 3 (sql/033).
 struct CompetitionAdminPanel: View {
     let header: TournamentHeader
+    @State private var showsNewTournament = false
 
     var body: some View {
         DDList {
@@ -159,5 +160,12 @@ struct CompetitionAdminPanel: View {
         }
         .navigationTitle("Arrangørsiden")
         .ddNavigationChrome()
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Ny turnering", systemImage: "plus") { showsNewTournament = true }
+            }
+        }
+        .newTournamentSheet(isPresented: $showsNewTournament, seasons: SesongAdminModel(context: header.context),
+                            competitions: CompetitionsModel(context: header.context))
     }
 }

@@ -185,8 +185,14 @@ private struct AdminHubContent: View {
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Ny \(term.one)", systemImage: "plus") { newEvening() }
-                    .disabled(terminliste.state != .loaded)
+                // «+»: ny kveld/spilledag eller ny turnering (09.10.2026: «Lag turnering» var gjemt).
+                Menu {
+                    Button("Ny \(term.one)", systemImage: "calendar.badge.plus") { newEvening() }
+                        .disabled(terminliste.state != .loaded)
+                    Button("Ny turnering", systemImage: "trophy") { showsNewTournament = true }
+                } label: {
+                    Label("Ny", systemImage: "plus")
+                }
             }
         }
         // Også tilbake fra Kvelden: svar, runder og komité kan være endret.
@@ -538,7 +544,7 @@ private struct AdminHubContent: View {
     @ViewBuilder
     private var setupRows: some View {
         NavigationLink { SesongAdminView() } label: {
-            AdminHubRow("Turneringen", "Hovedturneringen, reglene og alle turneringer.", systemImage: "trophy")
+            AdminHubRow("Turneringen", "Hovedturneringen, reglene, alle turneringer og ny turnering.", systemImage: "trophy")
         }
         NavigationLink { TroppAdminView() } label: {
             AdminHubRow("Troppen", "Spillerne, handicap, roller og nye som venter på godkjenning.",

@@ -167,6 +167,7 @@ struct TavlaCompetitions<Main: View>: View {
                     CompetitionsListView(model: model)
                 } label: {
                     Label("Turneringer", systemImage: "trophy")
+                        .labelStyle(.titleAndIcon)
                 }
                 .tint(Color.ddOnDark)
             }
