@@ -6,6 +6,29 @@ Native iOS-app for golfturneringer blant venner. Den erstatter GolfGutu-PWA-en s
 - Backend: egen Supabase via `supabase-swift` (foreløpig bare test, prod kommer)
 - iPhone først, Android senere
 
+## Hva appen gjør nå
+
+Status 09.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detaljer per fase står i [`ROADMAP.md`](ROADMAP.md).
+
+**Fanene.** Hjem · Spill · Tavla · Arrangør · Deg. «Arrangør» vises bare for arrangører i klubben. Uten klubb har appen Spill og Deg.
+
+| Område | Hva |
+|---|---|
+| Innlogging og start | Apple eller engangskode på e-post. Ny bruker kan spille med venner med en gang, eller bli med i/lage en klubb. Google er av til OAuth er satt opp |
+| Invitasjon | Klubblenke `https://dashdash18.com/klubb/KODE` (universell lenke, åpner appen) og QR-kode. Siden på dashdash18.com er Workeren i `web/atten-lenker/` |
+| Hjem | Feed med aktivitet, «Pågår nå», neste kveld/spilledag med svar, tråd og tippekupong, og arrangørens knapp for neste steg |
+| Spill | Løse runder på slope.no-baner, bli med med kode, spill i runden, «Del regningen» (Vipps), og «Turneringer» for å se og lage turneringer |
+| Turneringer | Fire oppsett: Stableford-serie, Matchspill-serie (Golfgutu), Cup og Morro. Påmelding med tak og venteliste, startliste, stab. Lages fra «+» på Arrangør-fanen eller fra Spill. Kan slettes av arrangøren (navnet må skrives) |
+| Ordet for en dag | «Kveld» for Golfgutu, «Spilledag» for nye turneringer (valg i «Ny turnering» og i reglene) |
+| Arrangør | Oppsett øverst (turneringen, troppen, banene), så dagen som står for tur med stegrekka Påmelding → Oppsett → Spilles → Ferdig, kommende og tidligere dager, varsler, rapporter og arkiv |
+| Tavla | Tabellen regnes på telefonen av regelmotoren (paritet med PWA-en), med data fra én RPC (`tavla_data`) |
+| Vedd og tips | Veddemål med poeng i hovedturneringen (ikke i andre turneringer ennå), tippekupong per kveld |
+| Ytelse | Mengdebaserte RPC-er for venner, løse runder, turneringslista og Hjem (sql/036–037) |
+
+**Funksjonsflagg.** Nye deler ligger bak et flagg i koden til SQL-en er kjørt og prøvd. Av nå: `PurchaseFeature` (kjøp, venter på App Store Connect) og `GoogleLoginFeature` (venter på Google Cloud). Resten er på. Søk etter `Feature {` for å finne dem.
+
+**Venter på Thomas.** App Store Connect, Google OAuth, personvern og vilkår publisert, egen SMTP, eksport fra PWA-en og ja til prod. Lista står i [`docs/gjoremal.md`](docs/gjoremal.md).
+
 ## Dokumenter
 
 | Fil | Hva |
@@ -29,8 +52,9 @@ DashDash18UITests/     UI-tester
 Packages/GolfgutuCore/ Regelmotoren: ren Swift, egne tester og JSON-fixtures
 Packages/DashImport/   Import fra PWA-en (fase 9)
 sql/                   Migreringer for appens Supabase (nummerert, én fil = én transaksjon)
-sql/lokal/             Prøveskript for lokal kjøring av migreringene
-supabase/functions/    Edge Functions: push-send, delete-account, verify-purchase
+sql/lokal/             Prøveskript og sjekker (lokalt, eller i en transaksjon som rulles tilbake)
+supabase/functions/    Edge Functions: push-send, delete-account, slope-sync, verify-purchase
+web/atten-lenker/      Cloudflare Worker på dashdash18.com: AASA-fil og invitasjonssider
 StoreKit/              StoreKit-konfig for kjøp i simulatoren
 ci_scripts/            Xcode Cloud (skriver Supabase-konfig fra miljøvariabler)
 docs/                  Bakgrunn og oppsett

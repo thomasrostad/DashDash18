@@ -5,8 +5,10 @@ import SwiftUI
 
 /// Slette en hel turnering (`sql/038_slett_turnering.sql`, Thomas 09.10.2026).
 nonisolated enum TournamentDeletionFeature {
-    /// Av til 038 er kjørt. Med flagget av kan bare en planlagt sesong uten kvelder slettes, som før.
-    static let isEnabled = false
+    /// På siden 09.10.2026: 038 er kjørt på test og prøvd (spiller 42501, feil navn 22023, riktig navn
+    /// sletter kvelder og runder; prøven rullet tilbake). Med flagget av kan bare en planlagt sesong
+    /// uten kvelder slettes, som før.
+    static let isEnabled = true
 }
 
 /// Svaret fra `delete_tournament` og tekstene rundt.

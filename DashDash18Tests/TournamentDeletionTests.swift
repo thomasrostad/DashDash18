@@ -5,8 +5,8 @@ import Testing
 
 /// Slette en turnering (sql/038).
 struct TournamentDeletionTests {
-    @Test func flaggetErAvTil038ErKjørt() {
-        #expect(TournamentDeletionFeature.isEnabled == false)
+    @Test func flaggetErPå() {
+        #expect(TournamentDeletionFeature.isEnabled == true)
     }
 
     @Test func navnetMåSkrivesInn() {
