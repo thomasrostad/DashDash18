@@ -409,7 +409,8 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Fase 22, design: målbilde, datamodell før → etter, migreringstrinn 031–035, paritetskontroll, lokal lasttest (1 000 brukere, 22 000 runder, 3 mill. hull). *(09.10.)*
 - [x] 031 (additivt, trygt for dagens app): kjørt på test 09.10, kontrollen 12 av 12, paritet identisk. Beslutningene 2–9 står nederst i designdokumentet.
 - [x] 032: stab, påmelding med tak og venteliste (tilbud gjelder 48 timer), startliste, mengdebaserte RLS-hjelpere. Kjørt på test 09.10, kontrollen 10 av 10, paritet identisk, cron for utløpte tilbud.
-- [ ] 033–035: speilingen snus, gamle regler fjernes (krever `min_ios_build`), `seasons` som view.
+- [x] 033: speilingen snus (turneringen er kilden), `is_main` bare uten aktiv hovedturnering, runder kobles via `events.competition_id` for alle turneringer. Kjørt på test 09.10: kontrollen 9/9, paritet identisk. Gjenstår i appen: «Ny spilledag» i liga/cup/morro.
+- [ ] 034–035: gamle regler fjernes (krever `min_ios_build`), `activate_season` lar jakkeracet gå når en annen serie aktiveres, `seasons` som view.
 - [x] Fase 23: arrangør per turnering (velger, åpen påmelding, venteliste, startliste, stab), `min_ios_build` i appen. `TournamentCoreFeature` på 09.10. *(Ikke prøvd på telefon.)*
 - [ ] Fase 24: skala (Tavla-data i én RPC, tabellen på serveren, sanntid).
   - [x] Tavla-data i én RPC (`sql/036_tavla_data.sql`, `TavlaRPCFeature`): Tavla, Vedd og jakkeracet henter sesongen i ett kall. Kjørt på test 09.10, svaret likt med RLS-spørringene, 13 ms. Ikke-medlemmer henter som før.
