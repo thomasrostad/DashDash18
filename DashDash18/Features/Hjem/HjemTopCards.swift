@@ -155,6 +155,7 @@ struct HjemLiveCard: View {
 /// Trykk på toppen åpner Kveld-skjermen.
 struct HjemEveningCard: View {
     @Environment(\.dayTerm) private var dayTerm
+    @Environment(\.clubContext) private var context
     let evening: HomeNextEvening
     /// «Svaret ditt: Kommer» mens svaret kan angres.
     var pendingText: String?
@@ -197,6 +198,11 @@ struct HjemEveningCard: View {
             if let error {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .ddErrorStyle()
+            }
+            // Tråden og tippekupongen rett fra kortet (09.10.2026: kupongen var gjemt bak Kveld-skjermen).
+            if let context, context.clubID == evening.clubID {
+                KveldExtrasButtons(model: KveldExtrasModel(context: context, eventID: evening.eventID))
+                    .id(evening.eventID)
             }
             if evening.isOrganizer, let organizer {
                 Button(action: organizer.perform) {
