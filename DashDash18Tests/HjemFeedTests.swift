@@ -553,6 +553,13 @@ struct HjemTilstandTests {
         bare.evening?.event.startTime = nil
         bare.evening?.event.venue = " "
         #expect(HomeFeed.build(bare).evening?.detail == "6 kommer")
+        #expect(e.previousEventID == nil)
+        // Forrige kveld gir «Forrige kupong · Torsdag 8. oktober».
+        var withPrevious = input
+        withPrevious.evening?.previous = EventRow(id: H.id(949), clubID: H.clubA, seasonID: nil, eventDate: "2026-10-08",
+                                                  startTime: nil, venue: nil, note: nil)
+        let p = try #require(HomeFeed.build(withPrevious).evening)
+        #expect(p.previousEventID == H.id(949) && p.previousTitle == "Torsdag 8. oktober")
     }
 }
 

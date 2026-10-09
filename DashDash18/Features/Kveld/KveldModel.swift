@@ -14,6 +14,9 @@ final class KveldModel {
 
     private(set) var state: LoadState = .loading
     private(set) var event: EventRow?
+    /// Kvelden før `event` (i dag eller tidligere): kupongen med resultatet og tippekongen kan åpnes
+    /// derfra også når neste kveld har tatt over (09.10.2026).
+    private(set) var previousEvent: EventRow?
     private(set) var committee: [String] = []
     /// Mitt svar slik det ligger i databasen.
     private(set) var savedSignup: SignupRow?
@@ -101,6 +104,13 @@ final class KveldModel {
                 .gte("event_date", value: today)
                 .order("event_date")
                 .execute().value
+            async let pastRows: [EventRow] = client.from("events")
+                .select(EventRow.columns)
+                .eq("club_id", value: clubID)
+                .lte("event_date", value: today)
+                .order("event_date", ascending: false)
+                .limit(2)
+                .execute().value
             async let memberRows: [ClubMemberRow] = client.from("club_members")
                 .select(ClubMemberRow.columns)
                 .eq("club_id", value: clubID)
@@ -121,7 +131,10 @@ final class KveldModel {
                 finished = NextEvening.finishedEventIDs(rounds: rounds.map { ($0.eventID, $0.status) })
             }
 
-            guard let next = NextEvening.next(in: events, today: today, finished: finished) else {
+            let nextEvening = NextEvening.next(in: events, today: today, finished: finished)
+            // Bare et tillegg: feiler hentingen, vises kvelden uten lenken.
+            previousEvent = (try? await pastRows)?.first { $0.id != nextEvening?.id }
+            guard let next = nextEvening else {
                 event = nil
                 committee = []
                 savedSignup = nil

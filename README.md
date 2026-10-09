@@ -22,7 +22,7 @@ Status 09.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detalje
 | Ordet for en dag | «Kveld» for Golfgutu, «Spilledag» for nye turneringer (valg i «Ny turnering» og i reglene) |
 | Arrangør | Oppsett øverst (turneringen, troppen, banene), så dagen som står for tur med stegrekka Påmelding → Oppsett → Spilles → Ferdig, kommende og tidligere dager, varsler, rapporter og arkiv |
 | Tavla | Tabellen regnes på telefonen av regelmotoren (paritet med PWA-en), med data fra én RPC (`tavla_data`) |
-| Vedd og tips | Veddemål med poeng i hovedturneringen (ikke i andre turneringer ennå), tippekupong per kveld |
+| Vedd og tips | Veddemål med poeng i hovedturneringen (ikke i andre turneringer ennå), tippekupong per kveld med «Tips» og «Forrige kupong» rett på Hjem-kortet |
 | Ytelse | Mengdebaserte RPC-er for venner, løse runder, turneringslista og Hjem (sql/036–037) |
 
 **Funksjonsflagg.** Nye deler ligger bak et flagg i koden til SQL-en er kjørt og prøvd. Av nå: `PurchaseFeature` (kjøp, venter på App Store Connect) og `GoogleLoginFeature` (venter på Google Cloud). Resten er på. Søk etter `Feature {` for å finne dem.

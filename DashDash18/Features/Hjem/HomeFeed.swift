@@ -167,7 +167,10 @@ nonisolated extension HomeFeed {
                                title: EveningDates.longText(e.event.eventDate, referenceYear: referenceYear,
                                                             capitalized: true),
                                countdown: EveningDates.countdownText(days: days),
-                               detail: detail.joined(separator: " · "), answer: e.answer, isOrganizer: e.isOrganizer)
+                               detail: detail.joined(separator: " · "), answer: e.answer, isOrganizer: e.isOrganizer,
+                               previousEventID: e.previous?.id,
+                               previousTitle: e.previous.map { EveningDates.longText($0.eventDate, referenceYear: referenceYear,
+                                                                                      capitalized: true) })
     }
 }
 

@@ -203,6 +203,15 @@ struct HjemEveningCard: View {
             if let context, context.clubID == evening.clubID {
                 KveldExtrasButtons(model: KveldExtrasModel(context: context, eventID: evening.eventID))
                     .id(evening.eventID)
+                if let previous = evening.previousEventID {
+                    NavigationLink {
+                        TipsView(eventID: previous)
+                    } label: {
+                        Label("Forrige kupong" + (evening.previousTitle.map { " · \($0)" } ?? ""), systemImage: "trophy")
+                            .font(.ddCallout)
+                    }
+                    .buttonStyle(.ddText)
+                }
             }
             if evening.isOrganizer, let organizer {
                 Button(action: organizer.perform) {
