@@ -18,9 +18,12 @@ enum CompetitionQueries {
     }
 
     static func overview(client: SupabaseClient) async throws -> Overview {
-        let competitions: [CompetitionRow] = try await client.from("competitions")
-            .select(CompetitionRow.columnsWithSignup)
-            .neq("kind", value: CompetitionKind.game.rawValue)
+        let competitions: [CompetitionRow] = try await (SetQueriesFeature.isEnabled
+            ? client.rpc("my_competitions").neq("kind", value: CompetitionKind.game.rawValue)
+                .select(CompetitionRow.columnsWithSignup)
+            : client.from("competitions")
+                .select(CompetitionRow.columnsWithSignup)
+                .neq("kind", value: CompetitionKind.game.rawValue))
             .order("created_at", ascending: false)
             .execute().value
         guard !competitions.isEmpty else { return Overview() }
