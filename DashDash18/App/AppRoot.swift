@@ -41,15 +41,10 @@ struct AppRoot: View {
         .environment(services.outbox.status)
         .environment(services.push)
         .environment(purchases)
-        .onOpenURL { url in
-            if let invite = ClubInvite(url: url) {
-                PendingClubInviteStore().save(invite)
-                pendingClubInvite = invite
-                return
-            }
-            guard let link = AppLink.parse(url, rounds: LooseRoundsFeature.isEnabled,
-                                           competitions: CompetitionsFeature.isActive) else { return }
-            pendingLink = link
+        .onOpenURL { url in open(url) }
+        // Universelle lenker (`https://dashdash18.com/…`) går samme vei som `dashdash://`.
+        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+            if let url = activity.webpageURL { open(url) }
         }
         .sheet(item: Binding(get: { signedInUser == nil ? nil : pendingLink }, set: { pendingLink = $0 })) { link in
             if let user = signedInUser {
@@ -101,6 +96,19 @@ extension AppRoot {
         purchases = service
         service.start()
         Task { await service.refreshEntitlements() }
+    }
+
+    /// En invitasjonslenke: `dashdash://…`, eller `https://dashdash18.com/…` når universelle lenker er på.
+    private func open(_ url: URL) {
+        if UniversalLink.appURL(url) != nil, !UniversalLinksFeature.isEnabled { return }
+        if let invite = ClubInvite(url: url) {
+            PendingClubInviteStore().save(invite)
+            pendingClubInvite = invite
+            return
+        }
+        guard let link = AppLink.parse(url, rounds: LooseRoundsFeature.isEnabled,
+                                       competitions: CompetitionsFeature.isActive) else { return }
+        pendingLink = link
     }
 
     /// Hva som skal skje med invitasjonen nå. nil: ingen invitasjon venter.
