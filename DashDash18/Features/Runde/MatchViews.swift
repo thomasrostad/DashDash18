@@ -186,7 +186,7 @@ struct BayenNaaListe: View {
                                 Text(row.name + (row.isMe ? " (deg)" : ""))
                                     .font(row.isMe ? .ddBodyEmphasis : .ddBody)
                                     .foregroundStyle(Color.ddStatText)
-                                Text("thru \(row.thru)" + (row.bay.map { " · \(term.numberedLower($0))" } ?? ""))
+                                Text("etter \(row.thru) hull" + (row.bay.map { " · \(term.numberedLower($0))" } ?? ""))
                                     .font(.dd(.sans, size: 12, relativeTo: .caption))
                                     .foregroundStyle(Color.ddStatSecondary)
                             }

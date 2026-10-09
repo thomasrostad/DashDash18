@@ -146,7 +146,8 @@ private struct AdminHubContent: View {
                 if let header {
                     TournamentPickerSection(header: header)
                 }
-                if let invite {
+                // Før sesongen er klar, står invitasjonen i «Kom i gang» (under Troppen) i stedet.
+                if let invite, !(model.state == .loaded && showsGettingStarted) {
                     Section {
                         InvitePlayersRow(clubName: clubName, invite: invite,
                                          subtitle: ClubInvite.organizerSubtitle(
