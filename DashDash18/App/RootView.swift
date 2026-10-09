@@ -14,14 +14,14 @@ struct RootView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            ForEach(AppTab.tabs()) { tab in
+            ForEach(AppTab.tabs(isOrganizer: context?.isOrganizer ?? false)) { tab in
                 Tab(tab.title, systemImage: tab.systemImage, value: tab) {
                     NavigationStack {
                         content(for: tab)
                             .navigationTitle(tab.title)
                             .ddNavigationChrome()
                             .toolbar {
-                                // Høyst tre: arrangørsiden (Hjem, se HjemView), miljømerket (ikke prod)
+                                // Høyst to: miljømerket (ikke prod)
                                 // og bjella.
                                 if config.environment != .prod {
                                     ToolbarItem(placement: .topBarTrailing) {
@@ -81,6 +81,7 @@ struct RootView: View {
                 SpillView(model: SpillModel(client: context.client, userID: user.id))
             }
         case .tavla: TavlaView()
+        case .arrangor: AdminHubView()
         case .deg: DegView(config: config, user: user, membership: membership)
         }
     }

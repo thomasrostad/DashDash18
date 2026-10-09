@@ -42,14 +42,6 @@ struct DegView: View {
             if StatsFeature.isEnabled, let context {
                 StatsDegSection(context: context)
             }
-            if membership.isOrganizer {
-                Section {
-                    NavigationLink { AdminHubView() } label: {
-                        Label("Arrangørsiden", systemImage: "slider.horizontal.3")
-                            .labelStyle(DDIconLabelStyle())
-                    }
-                }
-            }
             DegAccountSection(user: user)
             DegOpenAppSections(client: context?.client, user: user)
             DDSection("Om appen") {

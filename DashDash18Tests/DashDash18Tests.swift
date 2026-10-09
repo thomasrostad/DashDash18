@@ -9,6 +9,10 @@ struct AppTabTests {
     /// Fase 13: «Spill» kommer etter Hjem når løse runder er på, ellers er fanene som før.
     @Test func spillfanenBareMedLoseRunder() {
         #expect(AppTab.tabs(looseRounds: true).map(\.title) == ["Hjem", "Spill", "Tavla", "Deg"])
+        // Arrangørfanen bare for arrangører, mellom Tavla og Deg.
+        #expect(AppTab.tabs(looseRounds: true, isOrganizer: true).map(\.title)
+            == ["Hjem", "Spill", "Tavla", "Arrangør", "Deg"])
+        #expect(!AppTab.tabs(looseRounds: true, isOrganizer: false).contains(.arrangor))
         #expect(AppTab.tabs() == AppTab.tabs(looseRounds: LooseRoundsFeature.isEnabled))
         #expect(!LooseRoundsFeature.isEnabled || FoundationFeature.isEnabled)
     }
