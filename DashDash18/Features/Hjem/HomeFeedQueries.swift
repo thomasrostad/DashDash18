@@ -63,6 +63,12 @@ enum HomeFeedQueries {
         }
     }
 
+    /// `my_activity` (sql/037).
+    nonisolated private struct ActivityParams: Encodable {
+        let p_club_ids: [UUID]
+        let p_since: Date
+    }
+
     /// Bare aktiviteten og troppene er påkrevd. Feiler noe av resten (turneringer, runder, koblinger),
     /// vises feeden uten de kortene i stedet for å feile.
     static func load(client: SupabaseClient, viewer: HomeViewer, clubs: [HomeClub], now: Date,
@@ -73,10 +79,13 @@ enum HomeFeedQueries {
 
         // Klubbene: aktiviteten og troppene.
         if !clubIDs.isEmpty {
-            async let activity: [ActivityRow] = client.from("activity")
-                .select(ActivityLog.columns)
-                .in("club_id", values: clubIDs)
-                .gte("created_at", value: since)
+            async let activity: [ActivityRow] = (SetQueriesFeature.isEnabled
+                ? client.rpc("my_activity", params: ActivityParams(p_club_ids: clubs.map(\.id), p_since: since))
+                    .select(ActivityLog.columns)
+                : client.from("activity")
+                    .select(ActivityLog.columns)
+                    .in("club_id", values: clubIDs)
+                    .gte("created_at", value: since))
                 .order("created_at", ascending: false)
                 .limit(activityLimit)
                 .execute().value

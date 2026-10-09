@@ -19,9 +19,9 @@ enum LooseRoundQueries {
     /// Folk du kan legge til: profilene RLS lar deg se (felles klubb, runde eller konkurranse),
     /// uten deg selv, i norsk navnerekkefølge. Det finnes ikke noe søk etter fremmede.
     static func friends(client: SupabaseClient, userID: UUID) async throws -> [ProfileRow] {
-        let rows: [ProfileRow] = try await client.from("profiles")
-            .select(ProfileRow.columns)
-            .neq("id", value: userID)
+        let rows: [ProfileRow] = try await (SetQueriesFeature.isEnabled
+            ? client.rpc("known_profiles").neq("id", value: userID).select(ProfileRow.columns)
+            : client.from("profiles").select(ProfileRow.columns).neq("id", value: userID))
             .execute().value
         return rows
             .filter { !($0.displayName ?? "").trimmingCharacters(in: .whitespaces).isEmpty }
@@ -127,10 +127,12 @@ enum LooseRoundQueries {
     /// Dine løse runder (eier eller med), nyeste først, med det som trengs for resultatet. Henter
     /// alt i noen få spørringer for hele lista, ikke én runde om gangen.
     static func myRounds(client: SupabaseClient, limit: Int = 40) async throws -> [RoundSnapshot] {
-        let rows: [LooseRoundRecord] = try await client.from("rounds")
-            .select(RoundRow.columns + ", owner_id")
-            .is("club_id", value: nil)
-            .neq("status", value: RoundStatus.draft.rawValue)
+        let rows: [LooseRoundRecord] = try await (SetQueriesFeature.isEnabled
+            ? client.rpc("my_loose_rounds").select(RoundRow.columns + ", owner_id")
+            : client.from("rounds")
+                .select(RoundRow.columns + ", owner_id")
+                .is("club_id", value: nil)
+                .neq("status", value: RoundStatus.draft.rawValue))
             .order("started_at", ascending: false)
             .limit(limit)
             .execute().value
