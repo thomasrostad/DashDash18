@@ -491,7 +491,7 @@ I tillegg:
 1. 031 kjøres på test. *(Kjørt 09.10: kontrollen 12 av 12, paritetskontrollen identisk før og etter, lagring av runder og kvelder prøvd.)*
 2. Flere runder samtidig på samme spilledag deles i **puljer** (`rounds.wave_no`).
 3. **Åpne turneringer:** alle innloggede ser turneringen og tabellen. Bare deltakerne ser runder og hull.
-4. **Venteliste:** et tilbud om ledig plass gjelder i **24 timer**, så går det videre.
+4. **Venteliste:** et tilbud om ledig plass gjelder i **48 timer** (endret fra 24 timer 09.10), så går det videre. Den som ikke svarer, går ut av køen.
 5. **Funksjonærer** fører bare for gruppene de er satt på. Arrangøren fører for alle.
 6. **Hovedturnering** er valgfritt for arenaer. Golfgutu beholder sin.
 7. **Tavla (fase 24):** først én RPC med rådata (telefonen regner, pariteten står). Lagret tabell senere.
