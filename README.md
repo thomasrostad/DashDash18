@@ -17,7 +17,7 @@ Status 09.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detalje
 | Innlogging og start | Apple eller engangskode på e-post. Ny bruker kan spille med venner med en gang, eller bli med i/lage en klubb. Google er av til OAuth er satt opp |
 | Invitasjon | Klubblenke `https://dashdash18.com/klubb/KODE` (universell lenke, åpner appen) og QR-kode. Siden på dashdash18.com er Workeren i `web/atten-lenker/` |
 | Hjem | Feed med aktivitet, «Pågår nå», neste kveld/spilledag med svar, tråd og tippekupong, og arrangørens knapp for neste steg |
-| Spill | Løse runder på slope.no-baner, bli med med kode, spill i runden, «Del regningen» (Vipps), og «Turneringer» for å se og lage turneringer (også uten klubb: private liga, cup og morro) |
+| Spill | Løse runder på slope.no-baner, bli med med kode, spill i runden, «Del regningen» (Vipps), «Turneringer» for å se og lage turneringer (også uten klubb: private liga, cup og morro), og «Finn turneringer» med åpne turneringer å melde seg på |
 | Turneringer | Fire oppsett: Stableford-serie, Matchspill-serie (Golfgutu), Cup og Morro. Påmelding med tak og venteliste, startliste, stab. Lages fra «+» på Arrangør-fanen eller fra Spill. Kan slettes av arrangøren (navnet må skrives) |
 | Ordet for en dag | «Kveld» for Golfgutu, «Spilledag» for nye turneringer (valg i «Ny turnering» og i reglene) |
 | Arrangør | Oppsett øverst (turneringen, troppen, banene), så dagen som står for tur med stegrekka Påmelding → Oppsett → Spilles → Ferdig, kommende og tidligere dager, varsler, rapporter og arkiv |

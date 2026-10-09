@@ -73,6 +73,12 @@ nonisolated enum EveningDates {
         return capitalized ? text.prefix(1).uppercased() + text.dropFirst() : text
     }
 
+    /// «15. oktober», uten ukedag (perioder: «15. oktober–17. desember»).
+    static func dayMonthText(_ string: String) -> String {
+        guard let parts = components(of: string) else { return string }
+        return "\(parts.day). \(months[parts.month - 1])"
+    }
+
     /// Antall kalenderdager fra `today` til `date` (begge `YYYY-MM-DD`). Negativt når
     /// datoen har vært. Regnes på datoene alene, så sommertid ikke gir 23- eller 25-timersdøgn.
     static func daysBetween(_ today: String, _ date: String) -> Int? {

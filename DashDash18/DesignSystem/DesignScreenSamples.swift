@@ -53,6 +53,8 @@ struct DesignScreenSamples: View {
         case turneringvelger, pamelding, pameldingvente, pameldinginnstillinger, startliste, stab, mingruppe, oppdater
         // Invitasjon til klubb: start uten kode, «Bli med» fra lenken, arrangørsiden og Hjem.
         case velkommen, blimedlenke, blimedbekreft, logininvitasjon, inviter, hjeminviter
+        // Fase 25: finn åpne turneringer, og QR-koden til invitasjonen.
+        case finn, inviterqr
     }
     @State var screen: Screen = .hullkort
 
@@ -176,6 +178,14 @@ struct DesignScreenSamples: View {
         case .turneringvelger:
             NavigationStack { AdminHubSample(.tonight, scroll: .top, picker: TournamentCoreSamples.picker()) }
                 .tint(Color.ddForestInk)
+        case .finn:
+            NavigationStack { FindTournamentsView(model: FindTournamentsModel(preview: FindTournamentsSamples.rows)) }
+                .tint(Color.ddForestInk)
+        case .inviterqr:
+            if let invite = ClubInvite(code: "02E5172C87") {
+                NavigationStack { InviteShareSheet(clubName: "Golfgutu Invitational", invite: invite) }
+                    .tint(Color.ddForestInk)
+            }
         case .pamelding:
             SignupSampleScreen(state: .offered)
         case .pameldingvente:

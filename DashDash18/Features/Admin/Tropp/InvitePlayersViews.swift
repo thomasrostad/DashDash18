@@ -143,6 +143,7 @@ struct InviteShareSheet: View {
                 }
                 .buttonStyle(.dd(.secondary, fullWidth: true))
             }
+            .listRowSeparator(.hidden)
         }
         .navigationTitle("Inviter spillere")
         .navigationBarTitleDisplayMode(.inline)
