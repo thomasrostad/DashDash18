@@ -1,3 +1,4 @@
+import GolfgutuCore
 import SwiftUI
 
 // Toppen av Hjem (fase 19, docs/hjem-feed.md 1a + 1b): filterpillene, oppsummeringen,
@@ -153,6 +154,7 @@ struct HjemLiveCard: View {
 /// «Neste kveld»: dato, nedtelling, tid og sted, svarknappene og arrangørens knapp for neste steg.
 /// Trykk på toppen åpner Kveld-skjermen.
 struct HjemEveningCard: View {
+    @Environment(\.dayTerm) private var dayTerm
     let evening: HomeNextEvening
     /// «Svaret ditt: Kommer» mens svaret kan angres.
     var pendingText: String?
@@ -168,7 +170,7 @@ struct HjemEveningCard: View {
         VStack(alignment: .leading, spacing: 12) {
             Button(action: onOpen) { header }
                 .buttonStyle(.plain)
-                .accessibilityHint("Åpner kvelden: hvem som kommer, tråden og tipsen.")
+                .accessibilityHint("Åpner \(dayTerm.the): hvem som kommer, tråden og tipsen.")
             let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8))
                 : AnyLayout(HStackLayout(spacing: 8))
             layout {

@@ -138,3 +138,23 @@ struct SpilledagTests {
             == "Runde 1 er låst. Spilledagen er ferdig, og neste spilledag står øverst.")
     }
 }
+
+/// Regelteksten med «spilledag» (09.10.2026). Golfgutu-teksten er som før.
+struct SpilledagRegeltekstTests {
+    @Test func oppsummeringOgForklaring() {
+        var rules = RulesetTemplate.stablefordSeries.rules
+        #expect(RulesetSummary.eveningsAndCounting(rules) == "Beste 5 av 7 kvelder teller")
+        rules.dayTerm = .playingDay
+        #expect(RulesetSummary.eveningsAndCounting(rules) == "Beste 5 av 7 spilledager teller")
+        #expect(RulesetExplanation.sentences(for: rules).first == "Turneringen har 7 spilledager.")
+        #expect(RuleNames.title(.evening, term: .playingDay) == "Spilledager")
+        #expect(RulesetExplanation.sentences(for: .golfgutu).first == "Turneringen har 7 kvelder.")
+    }
+
+    @Test func nyTurneringsLinjer() {
+        var draft = TournamentDraft(template: .matchSeries, clubID: UUID(), name: "Vår", today: "2026-10-09")
+        #expect(TournamentSetup.ruleLines(draft).contains { $0.hasPrefix("Matcher hver spilledag") })
+        draft.dayTerm = .evening
+        #expect(TournamentSetup.ruleLines(draft).contains { $0.hasPrefix("Matcher hver kveld") })
+    }
+}

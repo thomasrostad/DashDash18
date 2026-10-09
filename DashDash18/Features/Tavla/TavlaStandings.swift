@@ -125,14 +125,14 @@ nonisolated struct TavlaStandings: Sendable {
     /// Linja under navnet: «+3 hull · 112 stableford · 4 kvelder» med matcher, og «6 kvelder · beste 5
     /// teller» med stableford.
     func detail(_ row: Row) -> String {
-        let evenings = row.evenings == 1 ? "1 kveld" : "\(row.evenings) kvelder"
+        let evenings = rules.day.count(row.evenings)
         guard countsStableford else {
             let holes = row.holes > 0 ? "+\(row.holes)" : "\(row.holes)"
             return "\(holes) hull · \(row.stableford) stableford · \(evenings)"
         }
         let counting = rules.table.counting
         guard let best = counting.best else { return evenings }
-        let noun = RuleNames.nouns(counting.unit)
+        let noun = RuleNames.nouns(counting.unit, term: rules.day)
         return best == 1 ? "\(evenings) · beste \(noun.definite) teller" : "\(evenings) · beste \(best) teller"
     }
 
@@ -184,7 +184,8 @@ nonisolated struct TavlaStandings: Sendable {
         if let name = s.round.name?.trimmingCharacters(in: .whitespaces), !name.isEmpty { return name }
         let number = season.roundNumber(for: s.eventDate)
         let sameEvening = snapshots.filter { $0.eventDate == s.eventDate }.count > 1
-        return sameEvening ? "Kveld \(number) · runde \(s.round.roundNo)" : "Kveld \(number)"
+        let day = DayTerm.capitalized(rules.day.one)
+        return sameEvening ? "\(day) \(number) · runde \(s.round.roundNo)" : "\(day) \(number)"
     }
 
     /// Netto birdie eller bedre per hull gjennom sesongen (`profilTall`: netto − par ≤ −1).

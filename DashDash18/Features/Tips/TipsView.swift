@@ -332,13 +332,14 @@ private struct TipsSettingsSection: View {
 
 /// «Dette tippet gjengen»: svarene per spørsmål, flest stemmer først.
 private struct TipsAllSections: View {
+    @Environment(\.dayTerm) private var dayTerm
     let board: TipsBoard
 
     var body: some View {
         if board.result.rows.isEmpty {
             Section {
                 ContentUnavailableView("Ingen kuponger", systemImage: "ticket",
-                                       description: Text("Ingen leverte kupong til denne kvelden."))
+                                       description: Text("Ingen leverte kupong til denne \(dayTerm.the)."))
             }
         } else {
             ForEach(Array(TipsQuestion.allCases.enumerated()), id: \.element) { index, q in
@@ -372,6 +373,7 @@ private struct TipsAllSections: View {
 }
 
 private struct TipsFinishedSections: View {
+    @Environment(\.dayTerm) private var dayTerm
     let board: TipsBoard
     @State private var showAll = false
 
@@ -379,7 +381,7 @@ private struct TipsFinishedSections: View {
         if board.result.rows.isEmpty {
             Section {
                 ContentUnavailableView("Ingen kuponger", systemImage: "ticket",
-                                       description: Text("Ingen leverte kupong til denne kvelden."))
+                                       description: Text("Ingen leverte kupong til denne \(dayTerm.the)."))
             }
         } else {
             Section {

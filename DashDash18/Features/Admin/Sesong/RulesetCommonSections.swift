@@ -29,7 +29,7 @@ struct RulesetCommonSections: View {
             }
             RuleStepper(DayTerm.capitalized(draft.rules.day.many), value: $draft.rules.evenings, changeNote: draft.changeNote(.evenings))
             Picker(selection: $draft.rules.table.counting.unit) {
-                ForEach(draft.tableUnits, id: \.self) { Text(RuleNames.title($0)).tag($0) }
+                ForEach(draft.tableUnits, id: \.self) { Text(RuleNames.title($0, term: draft.rules.day)).tag($0) }
             } label: {
                 RuleFieldLabel(title: "Telles per", changeNote: draft.changeNote(.counting))
             }

@@ -52,6 +52,7 @@ struct VeddTarget: Identifiable, Hashable {
 
 /// Kortet på Kveld før runden.
 struct BetsKveldCard: View {
+    @Environment(\.dayTerm) private var dayTerm
     var body: some View {
         if BetsFeature.isEnabled {
             NavigationLink {
@@ -66,7 +67,7 @@ struct BetsKveldCard: View {
                         Text("Veddemål")
                             .font(.ddBodyEmphasis)
                             .foregroundStyle(Color.ddInk)
-                        Text("Vedd poeng på kvelden og hverandre")
+                        Text("Vedd poeng på \(dayTerm.the) og hverandre")
                             .font(.ddCallout)
                             .foregroundStyle(Color.ddInkSecondary)
                     }

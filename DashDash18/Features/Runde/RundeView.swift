@@ -1,7 +1,9 @@
+import GolfgutuCore
 import SwiftUI
 
 /// Kveld under spill: markørlinja, sol-stripa, hullprikkene, hullkortet og «Bayen nå».
 struct RundeView: View {
+    @Environment(\.dayTerm) private var dayTerm
     @Bindable var model: RundeModel
     @State private var scorecardFor: ScorecardTarget?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -48,7 +50,7 @@ struct RundeView: View {
             }
         }
         .refreshable { await model.load() }
-        .navigationTitle(model.game?.snapshot.course?.name ?? (model.looseContext == nil ? "Kvelden" : "Runden"))
+        .navigationTitle(model.game?.snapshot.course?.name ?? (model.looseContext == nil ? DayTerm.capitalized(dayTerm.the) : "Runden"))
         .ddNavigationChrome()
         .toolbar {
             if let game = model.game, !game.snapshot.players.isEmpty {

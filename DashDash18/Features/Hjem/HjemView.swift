@@ -50,6 +50,7 @@ private struct HjemClubContent: View {
     /// Runden er bedt om før den var hentet.
     @State private var wantsRound = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dayTerm) private var dayTerm
     @Environment(\.selectTab) private var selectTab
 
     init(context: ClubContext, home: HomeFeedModel, router: HjemRouter?) {
@@ -137,9 +138,11 @@ private struct HjemClubContent: View {
 
     private var eveningInput: HomeEveningInput? {
         guard let event = kveld.event else { return nil }
-        return HomeEveningInput(clubID: context.clubID, clubName: context.membership.club.name, event: event,
-                                today: kveld.today, answer: kveld.mySignup?.status,
-                                coming: kveld.summary.yes.count, isOrganizer: kveld.isOrganizer)
+        var input = HomeEveningInput(clubID: context.clubID, clubName: context.membership.club.name, event: event,
+                                     today: kveld.today, answer: kveld.mySignup?.status,
+                                     coming: kveld.summary.yes.count, isOrganizer: kveld.isOrganizer)
+        input.term = dayTerm
+        return input
     }
 
     // MARK: Handlinger
@@ -180,9 +183,6 @@ private struct HjemClubContent: View {
 
     /// Knappen for neste steg på «Neste kveld», med samme ord som på arrangørsiden. Oppsettet og
     /// runden åpnes rett herfra; purring og avslutning åpner Kvelden, der de spør før de gjør noe.
-    /// «Kveld» eller «spilledag» for hovedturneringen (`DayTerm`). Arrangørens henting har regelsettet.
-    private var dayTerm: DayTerm { admin.tournament?.rules.day ?? .evening }
-
     private var organizerStep: HjemOrganizerStep? {
         guard context.isOrganizer, let event = kveld.event else { return nil }
         let openKvelden = { route = .kvelden(event.id) }
@@ -241,7 +241,6 @@ private struct HjemClubContent: View {
             KveldView(model: kveld)
         case .kvelden(let id):
             KveldenView(eventID: id, terminliste: TerminlisteModel(context: context), admin: admin)
-                .environment(\.dayTerm, dayTerm)
         case .competition(let id):
             HjemCompetitionScreen(context: context, competitionID: id)
         }

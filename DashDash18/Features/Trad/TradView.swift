@@ -1,4 +1,5 @@
 import PhotosUI
+import GolfgutuCore
 import SwiftUI
 
 /// Kveldens tråd: praten om én kveld. Nyeste nederst, skrivefeltet fast i bunnen.
@@ -17,6 +18,7 @@ struct TradView: View {
 }
 
 private struct TradContent: View {
+    @Environment(\.dayTerm) private var dayTerm
     @State var model: TradModel
     @Environment(\.scenePhase) private var scenePhase
     @FocusState private var composerFocused: Bool
@@ -36,7 +38,7 @@ private struct TradContent: View {
                              sources: TradImageSource.available(cameraAvailable: TradCameraPicker.isAvailable),
                              onCamera: openCamera)
             }
-            .navigationTitle("Kveldens tråd")
+            .navigationTitle(DayTerm.capitalized(dayTerm.possessive) + " tråd")
             .ddNavigationChrome()
             .task { await model.load() }
             .onAppear {
@@ -358,6 +360,7 @@ private struct TradFullImage: View {
 /// Står fast nederst. Feltet beholder fokus og teksten når nye meldinger kommer, fordi
 /// utkastet ligger i modellen og hentingen aldri rører det.
 private struct TradComposer: View {
+    @Environment(\.dayTerm) private var dayTerm
     @Bindable var model: TradModel
     var focused: FocusState<Bool>.Binding
     @Binding var photoItem: PhotosPickerItem?
@@ -410,7 +413,7 @@ private struct TradComposer: View {
                         .accessibilityLabel(source.accessibilityLabel)
                 }
 
-                TextField("Skriv til kvelden …", text: $model.draft, axis: .vertical)
+                TextField("Skriv til \(dayTerm.the) …", text: $model.draft, axis: .vertical)
                     .lineLimit(1...5)
                     .focused(focused)
                     .font(.ddBody)

@@ -14,7 +14,7 @@ nonisolated enum RulesetExplanation {
         var out: [String] = []
         let table = rules.table
 
-        out.append(rules.evenings == 1 ? "Turneringen har 1 kveld." : "Turneringen har \(rules.evenings) kvelder.")
+        out.append("Turneringen har \(rules.day.count(rules.evenings)).")
 
         let mp = table.matchPoints
         if table.pointsSource == .stableford {
@@ -29,7 +29,7 @@ nonisolated enum RulesetExplanation {
             out.append("Trekanten gir \(places) poeng etter plass.")
         }
 
-        out.append(countingSentence(table.counting))
+        out.append(countingSentence(table.counting, term: rules.day))
         out.append(contentsOf: sidePrizeSentences(rules.sidePrizes))
 
         if let step = table.roundingStep {
@@ -38,7 +38,7 @@ nonisolated enum RulesetExplanation {
         if !table.tiebreaks.isEmpty {
             out.append("Ved likt poeng skiller \(RuleFormat.list(table.tiebreaks.map(RuleNames.inSentence), last: "så")).")
         }
-        out.append(stablefordSentence(table.stablefordCounting))
+        out.append(stablefordSentence(table.stablefordCounting, term: rules.day))
 
         out.append("Netto par gir \(rules.scoring.netParPoints) stablefordpoeng.")
         if rules.scoring.minimumPoints != 0 {
@@ -52,14 +52,14 @@ nonisolated enum RulesetExplanation {
 
     // MARK: Deler
 
-    private static func countingSentence(_ c: Ruleset.Counting) -> String {
-        let noun = RuleNames.nouns(c.unit)
+    private static func countingSentence(_ c: Ruleset.Counting, term: DayTerm) -> String {
+        let noun = RuleNames.nouns(c.unit, term: term)
         guard let best = c.best else { return "Alle \(noun.plural) teller." }
         return best == 1 ? "Den beste \(noun.definite) teller." : "De \(best) beste \(noun.definitePlural) teller."
     }
 
-    private static func stablefordSentence(_ c: Ruleset.Counting) -> String {
-        let noun = RuleNames.nouns(c.unit)
+    private static func stablefordSentence(_ c: Ruleset.Counting, term: DayTerm) -> String {
+        let noun = RuleNames.nouns(c.unit, term: term)
         guard let best = c.best else { return "Stablefordsummen tar med alle \(noun.plural)." }
         return best == 1
             ? "Stablefordsummen er den beste \(noun.definite)."
@@ -135,19 +135,20 @@ nonisolated enum RuleNames {
         let definitePlural: String
     }
 
-    static func nouns(_ unit: Ruleset.Counting.Unit) -> Nouns {
+    /// `term`: «kveld» eller «spilledag» for enheten `evening` (`DayTerm`).
+    static func nouns(_ unit: Ruleset.Counting.Unit, term: DayTerm = .evening) -> Nouns {
         switch unit {
         case .match: Nouns(plural: "matcher", definite: "matchen", definitePlural: "matchene")
         case .round: Nouns(plural: "runder", definite: "runden", definitePlural: "rundene")
-        case .evening: Nouns(plural: "kvelder", definite: "kvelden", definitePlural: "kveldene")
+        case .evening: Nouns(plural: term.many, definite: term.the, definitePlural: term.theMany)
         }
     }
 
-    static func title(_ unit: Ruleset.Counting.Unit) -> String {
+    static func title(_ unit: Ruleset.Counting.Unit, term: DayTerm = .evening) -> String {
         switch unit {
         case .match: "Matcher"
         case .round: "Runder"
-        case .evening: "Kvelder"
+        case .evening: DayTerm.capitalized(term.many)
         }
     }
 

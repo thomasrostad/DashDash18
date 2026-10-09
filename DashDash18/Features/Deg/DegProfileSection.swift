@@ -1,9 +1,11 @@
 import PhotosUI
+import GolfgutuCore
 import SwiftUI
 
 /// Toppen av «Deg» (portrett, navn, handicap) og skjemaet for navn og handicap.
 /// Spilleren endrer bare sin egen rad.
 struct DegProfileSection: View {
+    @Environment(\.dayTerm) private var dayTerm
     let membership: Membership
     @State private var model: DegProfileModel
     @Environment(ClubModel.self) private var club
@@ -24,7 +26,7 @@ struct DegProfileSection: View {
             }
         } footer: {
             if model.row != nil {
-                DDFooter("Portrettet står her og ved meldingene dine i kveldens tråd.")
+                DDFooter("Portrettet står her og ved meldingene dine i \(dayTerm.possessive) tråd.")
             }
         }
         Section {
