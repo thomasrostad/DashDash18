@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Testing
 @testable import DashDash18
 
@@ -71,7 +72,7 @@ struct ClubInvitePasteTests {
     @Test func delingstekstenKanLimesInnIgjen() throws {
         let invite = try #require(ClubInvite(code: "02E5172C87"))
         let text = invite.shareText(clubName: "Golfgutu Invitational")
-        #expect(text == "Bli med i Golfgutu Invitational i Atten: https://dashdash18.com/klubb/02E5172C87 · Koden er 02E5172C87")
+        #expect(text == "Bli med i Golfgutu Invitational i Atten: https://dashdash18.com/klubb/02E5172C87")
         #expect(ClubInvite.parse(text) == invite)
     }
 }
@@ -184,5 +185,13 @@ struct PendingClubInviteStoreTests {
         store.save(ClubInviteFlowTests.invite)
         store.clear()
         #expect(store.load() == nil)
+    }
+}
+
+struct InviteQRTests {
+    @Test func qrKodeForLenken() throws {
+        let invite = try #require(ClubInvite(code: "02E5172C87"))
+        let image = try #require(QRCode.image(for: invite.shareURL(universal: true).absoluteString))
+        #expect(image.size.width >= 200 && image.size.width == image.size.height)
     }
 }

@@ -73,7 +73,7 @@ struct UniversalLinkSharingTests {
         #expect(invite.shareURL(universal: true).absoluteString == "https://dashdash18.com/klubb/02E5172C87")
         #expect(invite.shareURL(universal: false) == invite.url)
         #expect(invite.shareText(clubName: "Golfgutu Invitational", universal: true)
-            == "Bli med i Golfgutu Invitational i Atten: https://dashdash18.com/klubb/02E5172C87 · Koden er 02E5172C87")
+            == "Bli med i Golfgutu Invitational i Atten: https://dashdash18.com/klubb/02E5172C87")
         #expect(invite.shareText(clubName: "Golfgutu Invitational", universal: false)
             == "Bli med i Golfgutu Invitational i Atten: dashdash://klubb/02E5172C87 · Koden er 02E5172C87")
         // Flagget er av: som før.

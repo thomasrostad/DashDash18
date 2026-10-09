@@ -57,9 +57,13 @@ nonisolated struct ClubInvite: Equatable, Hashable, Sendable {
         universal ? UniversalLink.url(path: Self.host, code: code) : url
     }
 
-    /// Teksten som deles: hva det er, lenken og koden (for den som må skrive den av).
+    /// Teksten som deles: hva det er og lenken. Med https-lenken (universelle lenker) står koden i
+    /// lenken og kan leses av der; med `dashdash://` står den også for seg, siden den lenken ikke kan
+    /// trykkes overalt (09.10.2026: kortere tekst).
     func shareText(clubName: String, universal: Bool = UniversalLinksFeature.isEnabled) -> String {
-        "Bli med i \(clubName) i Atten: \(shareURL(universal: universal).absoluteString) · Koden er \(code)"
+        let link = shareURL(universal: universal).absoluteString
+        return universal ? "Bli med i \(clubName) i Atten: \(link)"
+                         : "Bli med i \(clubName) i Atten: \(link) · Koden er \(code)"
     }
 
     /// Hvor man får koden, til den som står uten.

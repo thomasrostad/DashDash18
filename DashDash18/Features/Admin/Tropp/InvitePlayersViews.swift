@@ -6,9 +6,10 @@ struct InvitePlayersRow: View {
     let clubName: String
     let invite: ClubInvite
     var subtitle = "Send lenken til gjengen. De som har appen, kommer rett inn."
+    @State private var showsSheet = false
 
     var body: some View {
-        ShareLink(item: invite.shareText(clubName: clubName)) {
+        Button { showsSheet = true } label: {
             HStack(spacing: DDSpacing.s) {
                 Label {
                     VStack(alignment: .leading, spacing: 2) {
@@ -26,7 +27,7 @@ struct InvitePlayersRow: View {
                 }
                 .labelStyle(DDIconLabelStyle())
                 Spacer(minLength: 8)
-                Image(systemName: "square.and.arrow.up")
+                Image(systemName: "qrcode")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.ddForestInk)
                     .accessibilityHidden(true)
@@ -34,7 +35,11 @@ struct InvitePlayersRow: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .accessibilityHint("Deler lenken og koden \(invite.code)")
+        .accessibilityHint("Viser QR-koden og lenken til \(clubName)")
+        .sheet(isPresented: $showsSheet) {
+            NavigationStack { InviteShareSheet(clubName: clubName, invite: invite) }
+                .presentationDetents([.large])
+        }
     }
 }
 
@@ -66,6 +71,7 @@ struct HjemInvite {
 
 struct HjemInviteCard: View {
     let invite: HjemInvite
+    @State private var showsQR = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -85,7 +91,67 @@ struct HjemInviteCard: View {
                 Label("Del invitasjonen", systemImage: "square.and.arrow.up")
             }
             .buttonStyle(.dd(.primary, fullWidth: true))
+            Button("Vis QR-kode", systemImage: "qrcode") { showsQR = true }
+                .buttonStyle(.dd(.secondary, fullWidth: true))
         }
         .ddCard()
+        .sheet(isPresented: $showsQR) {
+            NavigationStack { InviteShareSheet(clubName: invite.clubName, invite: invite.invite) }
+        }
+    }
+}
+
+/// Invitasjonen til å vise fram: QR-koden (lenken), koden og knappene for å dele og kopiere.
+/// Den andre skanner med kameraet og kommer rett inn i klubben (universell lenke).
+struct InviteShareSheet: View {
+    let clubName: String
+    let invite: ClubInvite
+    @Environment(\.dismiss) private var dismiss
+    @State private var copied = false
+
+    var body: some View {
+        DDList {
+            Section {
+                VStack(spacing: DDSpacing.m) {
+                    if let image = QRCode.image(for: invite.shareURL().absoluteString) {
+                        Image(uiImage: image)
+                            .interpolation(.none)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 260)
+                            .padding(DDSpacing.m)
+                            .background(Color.white, in: .rect(cornerRadius: DDRadius.card))
+                            .accessibilityLabel("QR-kode til invitasjonen")
+                    }
+                    Text("Skann med kameraet for å bli med i \(clubName).")
+                        .font(.ddCallout)
+                        .foregroundStyle(Color.ddInkSecondary)
+                        .multilineTextAlignment(.center)
+                    InviteCodeText(code: invite.code)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DDSpacing.s)
+            }
+            Section {
+                ShareLink(item: invite.shareText(clubName: clubName)) {
+                    Label("Del lenken", systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(.dd(.primary, fullWidth: true))
+                Button(copied ? "Kopiert" : "Kopier lenken", systemImage: copied ? "checkmark" : "doc.on.doc") {
+                    UIPasteboard.general.string = invite.shareURL().absoluteString
+                    copied = true
+                }
+                .buttonStyle(.dd(.secondary, fullWidth: true))
+            }
+        }
+        .navigationTitle("Inviter spillere")
+        .navigationBarTitleDisplayMode(.inline)
+        .ddNavigationChrome()
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Ferdig") { dismiss() }
+                    .tint(Color.ddOnDark)
+            }
+        }
     }
 }
