@@ -51,8 +51,15 @@ struct SpillView: View {
                     } label: {
                         Label("Turneringer", systemImage: "trophy")
                     }
+                    if FindTournamentsFeature.isEnabled {
+                        NavigationLink {
+                            FindTournamentsView(model: FindTournamentsModel(client: client))
+                        } label: {
+                            Label("Finn turneringer", systemImage: "magnifyingglass")
+                        }
+                    }
                 } footer: {
-                    DDFooter("Se turneringene dine, eller lag en egen med venner: serie, cup eller morroturnering.")
+                    DDFooter("Se turneringene dine, lag en egen med venner, eller finn åpne turneringer å melde deg på.")
                 }
             }
 
