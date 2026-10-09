@@ -8,6 +8,7 @@ struct SpillView: View {
     @State private var showsJoin = false
     @State private var openRound: UUID?
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.clubContext) private var clubContext
 
     var body: some View {
         DDList {
@@ -39,6 +40,19 @@ struct SpillView: View {
                           empty: model.state == .loaded ? "Ingen runder går nå." : nil)
             roundsSection("Ferdige", items: model.finished,
                           empty: model.state == .loaded ? "Rundene du avslutter, havner her med resultatet." : nil)
+
+            // Turneringene du kan se, og «Ny turnering» (09.10.2026: før bare bak et ikon på Tavla).
+            if CompetitionsFeature.isActive, let clubContext {
+                Section {
+                    NavigationLink {
+                        CompetitionsListView(model: CompetitionsModel(context: clubContext))
+                    } label: {
+                        Label("Turneringer", systemImage: "trophy")
+                    }
+                } footer: {
+                    DDFooter("Se turneringene dine, eller lag en egen med venner: serie, cup eller morroturnering.")
+                }
+            }
 
             Section {
                 NavigationLink {
