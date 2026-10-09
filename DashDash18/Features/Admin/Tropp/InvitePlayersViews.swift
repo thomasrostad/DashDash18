@@ -151,7 +151,6 @@ struct InviteShareSheet: View {
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Ferdig") { dismiss() }
-                    .tint(Color.ddOnDark)
             }
         }
     }
