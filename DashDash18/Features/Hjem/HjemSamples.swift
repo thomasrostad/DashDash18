@@ -4,7 +4,7 @@ import GolfgutuCore
 import SwiftUI
 
 /// Oppdiktet Hjem for skjermprøver (`-DDDesignScreen hjem`, `hjemmidt`, `hjembunn`, `hjemlos`, `hjemtom`, `hjemarrangor`,
-/// `hjembjelle`): Golfgutu Invitational med jakkeracet, Morrocupen og en løs runde, som i designet.
+/// `hjembjelle`, `hjeminviter`): Golfgutu Invitational med jakkeracet, Morrocupen og en løs runde, som i designet.
 enum HjemSamples {
     static func id(_ n: Int) -> UUID { UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", n))! }
 
@@ -197,6 +197,8 @@ enum HjemSamples {
 struct HjemSampleScreen: View {
     enum Variant {
         case full, middle, bottom, empty, organizer, bell
+        /// Arrangør i en ny klubb med to i troppen: «Inviter spillere» øverst (`hjeminviter`).
+        case invite
         /// Filteret «Løse runder»: «Din runde» øverst.
         case loose
     }
@@ -206,7 +208,8 @@ struct HjemSampleScreen: View {
 
     init(variant: Variant) {
         self.variant = variant
-        let model = HjemSamples.model(live: variant != .organizer, organizer: variant == .organizer,
+        let organizer = variant == .organizer || variant == .invite
+        let model = HjemSamples.model(live: !organizer, organizer: organizer,
                                       empty: variant == .empty)
         if variant == .loose { model.filter = .loose }
         _model = State(initialValue: model)
@@ -226,6 +229,11 @@ struct HjemSampleScreen: View {
                                                       organizer: variant == .organizer
                                                         ? HjemOrganizerStep(title: TonightAction.setUp.buttonTitle ?? "",
                                                                             hint: "", perform: {})
+                                                        : nil,
+                                                      invite: variant == .invite
+                                                        ? HjemInvite(clubName: "Golfgutu Invitational",
+                                                                     invite: ClubInvite(code: "A1B2C3D4E5")!,
+                                                                     activeMembers: 2)
                                                         : nil),
                                  scrollAnchor: variant == .bottom ? .bottom : variant == .middle ? .center : nil)
                         .navigationTitle("Hjem")

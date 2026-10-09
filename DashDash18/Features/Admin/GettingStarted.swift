@@ -83,6 +83,11 @@ nonisolated enum GettingStarted {
         }
     }
 
+    /// «Inviter spillere» står rett under Troppen, så det er der arrangøren finner den.
+    static func showsInvite(after step: Step) -> Bool {
+        step.item == .roster
+    }
+
     /// Lista vises når minst ett punkt mangler.
     static func isVisible(_ steps: [Step]) -> Bool {
         steps.contains { !$0.isDone }

@@ -14,7 +14,8 @@ import SwiftUI
 /// og Hjem (fase 19): `hjem`, `hjemmidt`, `hjembunn`, `hjemlos`, `hjemtom`, `hjemarrangor`, `hjembjelle`,
 /// og slope.no (fase 20): `slopesok`, `slopebane`, `teevalg`, `losnytee`, `hurtigstarttee`, med hull (fase 20b)
 /// `slopevelg` og `slopeklubb`), og turneringen som kjerne (fase 23): `turneringvelger`, `pamelding`,
-/// `pameldingvente`, `pameldinginnstillinger`, `startliste`, `stab`, `mingruppe`, `oppdater`.
+/// `pameldingvente`, `pameldinginnstillinger`, `startliste`, `stab`, `mingruppe`, `oppdater`,
+/// og invitasjon til klubb: `velkommen`, `blimedlenke`, `blimedbekreft`, `logininvitasjon`, `inviter`, `hjeminviter`.
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
@@ -50,6 +51,8 @@ struct DesignScreenSamples: View {
         case slopevelg, slopeklubb
         // Turneringen som kjerne (fase 23): velger, påmelding, stab, startliste og minste bygg.
         case turneringvelger, pamelding, pameldingvente, pameldinginnstillinger, startliste, stab, mingruppe, oppdater
+        // Invitasjon til klubb: start uten kode, «Bli med» fra lenken, arrangørsiden og Hjem.
+        case velkommen, blimedlenke, blimedbekreft, logininvitasjon, inviter, hjeminviter
     }
     @State var screen: Screen = .hullkort
 
@@ -142,6 +145,12 @@ struct DesignScreenSamples: View {
         case .hjemtom: HjemSampleScreen(variant: .empty)
         case .hjemarrangor: HjemSampleScreen(variant: .organizer)
         case .hjembjelle: HjemSampleScreen(variant: .bell)
+        case .hjeminviter: HjemSampleScreen(variant: .invite)
+        case .velkommen, .blimedlenke, .blimedbekreft, .logininvitasjon:
+            ClubInviteSampleScreen(screen: screen)
+        case .inviter:
+            NavigationStack { AdminHubSample(.tonight, scroll: .top) }
+                .tint(Color.ddForestInk)
         case .liste:
             NavigationStack { DDListSample() }
                 .tint(Color.ddForestInk)

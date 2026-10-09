@@ -126,7 +126,7 @@ private struct TroppInviteSection: View {
             } header: {
                 DDHeader("Invitasjon")
             } footer: {
-                DDFooter("Nye spillere blir med i klubben med koden. Du godkjenner dem her.")
+                DDFooter("Invitasjonen har både lenke og kode. Med appen trykker de på lenken; ellers skriver de koden. Du godkjenner nye her.")
             }
         }
     }

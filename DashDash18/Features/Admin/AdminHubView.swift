@@ -147,6 +147,13 @@ private struct AdminHubContent: View {
                 if let header {
                     TournamentPickerSection(header: header)
                 }
+                if let invite {
+                    Section {
+                        InvitePlayersRow(clubName: clubName, invite: invite,
+                                         subtitle: ClubInvite.organizerSubtitle(
+                                            activeMembers: model.state == .loaded ? model.members.count : nil))
+                    }
+                }
                 switch model.state {
                 case .loading:
                     ProgressView("Henter kveldene …")
@@ -169,6 +176,14 @@ private struct AdminHubContent: View {
         .navigationTitle("Arrangørsiden")
         .ddNavigationChrome()
         .toolbar {
+            // Alltid synlig, også når siden åpnes rullet ned til kvelden.
+            if let invite {
+                ToolbarItem(placement: .primaryAction) {
+                    ShareLink(item: invite.shareText(clubName: clubName)) {
+                        Label("Inviter spillere", systemImage: "person.badge.plus")
+                    }
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Ny kveld", systemImage: "plus") { newEvening() }
                     .disabled(terminliste.state != .loaded)
@@ -235,6 +250,13 @@ private struct AdminHubContent: View {
         }
         .padding(.vertical, DDSpacing.s)
     }
+
+    // MARK: Invitasjon
+
+    private var clubName: String { model.clubContext.membership.club.name }
+
+    /// Lenken og koden til klubben (`clubs.join_code`). nil når klubben ikke har noen kode.
+    private var invite: ClubInvite? { TroppInvite.invite(model.clubContext.membership.club.joinCode) }
 
     // MARK: Tidslinja
 
@@ -427,6 +449,10 @@ private struct AdminHubContent: View {
                     NavigationLink { destination(for: step.item) } label: {
                         GettingStartedRow(step: step)
                     }
+                }
+                if GettingStarted.showsInvite(after: step), let invite {
+                    InvitePlayersRow(clubName: clubName, invite: invite,
+                                     subtitle: "Send lenken til gjengen, så kommer de rett inn i troppen.")
                 }
             }
         } header: {

@@ -102,6 +102,17 @@ struct ClubInviteConfirmView: View {
     @State private var error: ClubError?
     @State private var showsJoin = false
 
+    /// - Parameter preloaded: klubben allerede hentet (skjermprøvene, uten nett).
+    init(invite: ClubInvite, user: AuthUser, currentClub: String?, preloaded: ClubPreview? = nil,
+         onJoined: @escaping (ClubPreview, MemberStatus) -> Void, onClose: @escaping () -> Void) {
+        self.invite = invite
+        self.user = user
+        self.currentClub = currentClub
+        self.onJoined = onJoined
+        self.onClose = onClose
+        _preview = State(initialValue: preloaded)
+    }
+
     var body: some View {
         Group {
             if let preview {

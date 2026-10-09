@@ -20,11 +20,15 @@ struct JoinClubView: View {
     /// Navnet som venter på «Ja, det er meg».
     @State private var claiming: ClubPreview.OpenMember?
 
-    init(user: AuthUser, initialCode: String? = nil, onJoined: ((ClubPreview, MemberStatus) -> Void)? = nil) {
+    /// - Parameter preloaded: klubben allerede hentet (skjermprøvene, uten nett).
+    init(user: AuthUser, initialCode: String? = nil, preloaded: ClubPreview? = nil,
+         onJoined: ((ClubPreview, MemberStatus) -> Void)? = nil) {
         self.user = user
         self.onJoined = onJoined
         _codeText = State(initialValue: initialCode ?? "")
-        _didLookUpInitial = State(initialValue: initialCode == nil)
+        _didLookUpInitial = State(initialValue: initialCode == nil || preloaded != nil)
+        _preview = State(initialValue: preloaded)
+        _code = State(initialValue: preloaded == nil ? "" : (initialCode.flatMap(ClubInvite.init(code:))?.code ?? ""))
     }
 
     var body: some View {

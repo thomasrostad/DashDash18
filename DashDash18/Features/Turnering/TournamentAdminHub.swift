@@ -136,6 +136,11 @@ struct CompetitionAdminPanel: View {
     var body: some View {
         DDList {
             TournamentPickerSection(header: header)
+            if let invite = TroppInvite.invite(header.context.membership.club.joinCode) {
+                Section {
+                    InvitePlayersRow(clubName: header.context.membership.club.name, invite: invite)
+                }
+            }
             if let competition = header.competition {
                 Section {
                     NavigationLink {

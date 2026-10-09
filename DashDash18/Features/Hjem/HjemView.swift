@@ -166,8 +166,20 @@ private struct HjemClubContent: View {
             hasReacted: { home.hasReacted($0, on: $1) },
             openTable: openTable,
             share: { home.share(round: $0) },
-            organizer: organizerStep
+            organizer: organizerStep,
+            invite: invite
         )
+    }
+
+    /// «Inviter spillere» mens troppen er liten (`ClubInvite.homeCardRosterLimit`). Troppen telles
+    /// fra arrangørens henting, så kortet vises ikke før den er klar.
+    private var invite: HjemInvite? {
+        let club = context.membership.club
+        let active = admin.state == .loaded ? admin.members.count : nil
+        guard let invite = TroppInvite.invite(club.joinCode),
+              ClubInvite.showsHomeCard(isOrganizer: context.isOrganizer, activeMembers: active, hasCode: true),
+              let active else { return nil }
+        return HjemInvite(clubName: club.name, invite: invite, activeMembers: active)
     }
 
     // MARK: Arrangøren

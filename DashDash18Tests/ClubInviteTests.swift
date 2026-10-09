@@ -90,6 +90,12 @@ struct ClubInviteHomeCardTests {
         #expect(!ClubInvite.showsHomeCard(isOrganizer: true, activeMembers: nil, hasCode: true))
     }
 
+    @Test func komIGangHarInviterUnderTroppen() {
+        let steps = GettingStarted.steps(.init(hasActiveSeason: true, readyCourses: 0, activeMembers: 1,
+                                               upcomingEvenings: 0))
+        #expect(steps.filter(GettingStarted.showsInvite(after:)).map(\.item) == [.roster])
+    }
+
     @Test func undertekst() {
         #expect(ClubInvite.organizerSubtitle(activeMembers: 1) == "Bare deg i troppen så langt. Send lenken til gjengen.")
         #expect(ClubInvite.organizerSubtitle(activeMembers: 3) == "3 i troppen. Send lenken til resten av gjengen.")
