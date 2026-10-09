@@ -425,7 +425,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Vedd i en runde bruker runden du står i; i andre turneringer står det at veddemål bare gjelder hovedturneringen ennå (#35).
 - [x] Ny turnering synlig: «+»-meny på Arrangør, i liga/cup/morro, «Lag turneringen» i «Kom i gang», «Turneringer» i Spill (#33).
 - [x] «Forrige kupong · dato» på Hjem-kortet og på Kveld-skjermen, så resultatet og tippekongen kan åpnes når neste kveld har tatt over. *(09.10.)*
-- [ ] Spillere uten klubb kan ikke lage turnering (`CompetitionsModel` krever klubb).
+- [x] Spillere uten klubb ser og lager private turneringer (liga, cup, morro) fra «Turneringer» i Spill (`CompetitionsModel(client:userID:)`). *(09.10.)*
 - [ ] Veddemål per turnering med egen poengbank (krever SQL, fase 22 trinn 5), og oppgjør uten at arrangøren åpner veddemålene.
 
 ### Kodegjennomgang 08.10.2026: åpne funn

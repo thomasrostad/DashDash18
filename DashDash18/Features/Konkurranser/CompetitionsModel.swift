@@ -31,6 +31,15 @@ final class CompetitionsModel {
         clubName = context.membership.club.name
     }
 
+    /// Uten klubb (appen med bare Spill og Deg): de private turneringene du eier eller er med i, og
+    /// «Ny turnering» (liga, cup, morro). Serveren krever ingen klubb for dem (sql/017, 022, 026).
+    init(client: SupabaseClient, userID: UUID) {
+        self.client = client
+        access = CompetitionAccess(profileID: userID, memberships: [])
+        clubID = nil
+        clubName = nil
+    }
+
     #if DEBUG
     /// Skjermprøve uten nett.
     init(preview overview: CompetitionQueries.Overview, access: CompetitionAccess, clubID: UUID?, clubName: String?) {
@@ -99,7 +108,8 @@ final class CompetitionsModel {
         access.canInvite(c, overview.participants, isDrawn: overview.drawn.contains(c.id))
     }
 
-    var canCreateInClub: Bool { access.canCreate(inClub: clubID) }
+    /// Bare med en klubb: uten klubb gir `canCreate(inClub: nil)` de private.
+    var canCreateInClub: Bool { clubID != nil && access.canCreate(inClub: clubID) }
     var canCreate: Bool { canCreateInClub || access.canCreate(inClub: nil) }
 
     func clubName(of c: CompetitionRow) -> String? {
