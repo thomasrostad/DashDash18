@@ -344,7 +344,7 @@ Deno.test("påmelding, påminnelse og purring uten dato", () => {
   is(text(activity("signup", "signup", { member: ANDERS, status: "yes", event_date: "2026-10-08" })).text,
     "Anders meldte seg på torsdag 8. oktober");
   is(text(activity("signup", "signup", { member: ANDERS, status: "maybe" })).text, "Anders er likevel usikker");
-  is(text(activity("reminder", "reminder", {})).text, "Påminnelse: neste kveld nærmer seg");
+  is(text(activity("reminder", "reminder", {})).text, "Påminnelse: neste runde nærmer seg");
   is(text(activity("nudge", "nudge", {})).text, "Hvem kommer? Svar i appen.");
   is(text(activity("round_deleted", "round", { round_no: 3, course_name: "St Andrews" }, { actor_member_id: THOMAS })).text,
     "Thomas slettet Runde 3 – St Andrews");

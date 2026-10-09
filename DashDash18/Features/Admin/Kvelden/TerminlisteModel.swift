@@ -246,7 +246,7 @@ final class TerminlisteModel {
                 .value
             guard Set(saved) == wanted else { throw DataError.notAllowed }
         } catch {
-            throw DataError.invalid("Kvelden er lagret, men ikke sosialkomiteen. \(DataError.from(error).message)")
+            throw DataError.invalid("Datoen er lagret, men ikke sosialkomiteen. \(DataError.from(error).message)")
         }
     }
 }

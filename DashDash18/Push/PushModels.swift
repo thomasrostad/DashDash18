@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 
 // Push (fase 8, `sql/010_push.sql`): rene typer uten UIKit og nettverk, så de kan testes
 // isolert. Tjenesten som snakker med iOS og Supabase ligger i `PushRegistrar`.
@@ -107,7 +108,7 @@ nonisolated enum PushCategories {
     }
 
     /// Undertekst i innstillingene (PWA: `VARSEL_KATEGORIER.under`).
-    static func subtitle(_ category: ActivityCategory) -> String {
+    static func subtitle(_ category: ActivityCategory, term: DayTerm = .evening) -> String {
         switch category {
         case .score: "Hole in one, eagle og albatross"
         case .lead: "Hvem leder underveis i runden"
@@ -118,10 +119,10 @@ nonisolated enum PushCategories {
         case .signup: "Når noen melder seg på eller av"
         case .social: "Trekning av sosialkomiteen"
         case .club: "Nye spillere i klubben"
-        case .tips: "Tippekongen etter kvelden"
+        case .tips: "Tippekongen etter \(term.the)"
         case .announcement: "Beskjeder fra arrangøren"
         case .nudge: "Når arrangøren mangler svaret ditt"
-        case .reminder: "En uke før hver kveld"
+        case .reminder: "En uke før hver \(term.one)"
         }
     }
 }

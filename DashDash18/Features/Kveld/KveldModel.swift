@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 import Observation
 import Supabase
 
@@ -63,11 +64,14 @@ final class KveldModel {
                       signups: SignupUndo.signups(signups, pending: visiblePending, memberID: memberID, clubID: clubID))
     }
 
+    /// «Kveld» eller «spilledag» (`DayTerm`), satt av skjermen fra miljøet.
+    var dayTerm: DayTerm = .evening
+
     /// Det «Legg i kalender» fyller inn for neste kveld.
     var calendarEntry: CalendarEntry? {
         event.flatMap {
             KveldCalendar.entry(for: $0, tournament: context.membership.club.name,
-                                number: eveningNumber, committee: committee)
+                                number: eveningNumber, committee: committee, term: dayTerm)
         }
     }
 

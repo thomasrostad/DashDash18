@@ -7,7 +7,7 @@ import Testing
 
 struct ClubPushPlanTests {
     @Test func bryterneErKlubbkategorierPlussTraaden() {
-        let keys = ClubPushPlan.toggles.map(\.key)
+        let keys = ClubPushPlan.toggles().map(\.key)
         let bet = BetsFeature.isEnabled ? ["bet"] : []
         #expect(keys == ["score", "lead", "round", "reminder", "side_prize", "tips"] + bet
                 + ["signup", "social", "setup", "club", "thread"])
@@ -19,7 +19,7 @@ struct ClubPushPlanTests {
     }
 
     @Test func norskeNavnFraKategoriene() {
-        let titles = Dictionary(uniqueKeysWithValues: ClubPushPlan.toggles.map { ($0.key, $0.title) })
+        let titles = Dictionary(uniqueKeysWithValues: ClubPushPlan.toggles().map { ($0.key, $0.title) })
         #expect(titles["score"] == "Store scorer")
         #expect(titles["reminder"] == "Påminnelser")
         #expect(titles["thread"] == "Kveldens tråd")

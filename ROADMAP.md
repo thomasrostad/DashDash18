@@ -399,7 +399,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Egen fane «Arrangør» (bare for arrangører) mellom Tavla og Deg, i stedet for ikonet på Hjem og raden i Deg. Oppsettet øverst og alltid åpent, så kvelden som står for tur, kommende og tidligere kvelder. *(09.10, Thomas: siden var for gjemt.)*
 - [x] «Spilledag» for nye turneringer (`DayTerm` i regelsettet, `dayTerm`; uten feltet: «kveld», som Golfgutu). Valget i «Ny turnering» og i reglene. Arrangørsiden, Kvelden, «Kom i gang», stegrekka, avslutningen og Hjem-knappen følger ordet. *(09.10, Thomas.)*
 - [x] «Spilledag» på spillersidene: ordet for klubbens hovedturnering hentes i `RootView` (`DayTermQueries`). Kveld-skjermen, tråden, Hjem-kortet og feeden, runden, Tavla og sesongoppsummeringen, tips, vedd, deling, Deg og regelteksten følger ordet. *(09.10.)*
-- [ ] Står igjen med «kveld»: push-tekstene (Edge Function og varselinnstillingene), aktivitetsteksten «neste kveld nærmer seg», Live Activity, kalendernavnet (`KveldCalendar.title`), feilmeldingene i terminlista, og navnene på fanen/skjermene i koden (`Kveld…`).
+- [x] Resten: varselinnstillingene (spiller og arrangør), Live Activity, kalendernavnet, og nøytrale tekster der ordet ikke er kjent (påminnelsen uten dato «neste runde nærmer seg» i push-send v6 og i appen, feilmeldingene i terminlista). *(09.10; push-send v6 deployet på test.)* Kodenavnene (`Kveld…`) står.
 - [ ] Prøve på telefon mot ekte data.
 
 ### Fase 22–25 – Turneringen som kjerne (klubber og simulatorsentre)

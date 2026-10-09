@@ -13,7 +13,7 @@ nonisolated extension RoundGame {
     /// Det statiske i aktiviteten.
     func liveActivityAttributes(for viewer: Viewer) -> RoundActivityAttributes {
         RoundActivityAttributes(roundID: roundID,
-                                courseName: snapshot.course?.name ?? "Kvelden",
+                                courseName: snapshot.course?.name ?? DayTerm.capitalized(snapshot.rules.day.the),
                                 playerName: name(viewer.memberID))
     }
 

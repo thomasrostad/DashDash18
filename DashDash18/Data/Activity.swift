@@ -709,7 +709,7 @@ nonisolated enum ActivityText {
             return ActivityDisplay(symbol: "alarm", emoji: "⏰", text: text)
 
         case let .reminder(eventDate, coming, unsure):
-            var text = "Påminnelse: " + (evening(eventDate).map { "\($0) om en uke" } ?? "neste kveld nærmer seg")
+            var text = "Påminnelse: " + (evening(eventDate).map { "\($0) om en uke" } ?? "neste runde nærmer seg")
             var counts: [String] = []
             if let coming { counts.append("\(coming) kommer") }
             if let unsure, unsure > 0 { counts.append(unsure == 1 ? "1 usikker" : "\(unsure) usikre") }
