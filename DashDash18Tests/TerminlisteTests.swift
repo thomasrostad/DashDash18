@@ -126,12 +126,12 @@ struct TerminlisteTests {
     @Test func feilmeldinger() {
         // Samme dato to ganger: databasen har unik på (klubb, dato).
         #expect(Terminliste.saveErrorMessage(sqlState: "23505", fallback: .duplicate, date: "2026-10-08")
-            == "Det finnes allerede en kveld torsdag 8. oktober.")
+            == "Torsdag 8. oktober står allerede i terminlista.")
         #expect(Terminliste.saveErrorMessage(sqlState: "42501", fallback: .notAllowed, date: "2026-10-08")
             == DataError.notAllowed.message)
         // Runder på kvelden: on delete restrict.
         #expect(Terminliste.deleteErrorMessage(sqlState: "23503", fallback: .invalid("fk"))
-            == "Kvelden har runder og kan ikke slettes. Slett rundene først.")
+            == "Datoen har runder og kan ikke slettes. Slett rundene først.")
         #expect(Terminliste.deleteErrorMessage(sqlState: nil, fallback: .offline) == DataError.offline.message)
     }
 

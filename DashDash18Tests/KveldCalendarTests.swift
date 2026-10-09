@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 import Testing
 @testable import DashDash18
 
@@ -54,6 +55,7 @@ struct KveldCalendarTests {
         #expect(KveldCalendar.title(tournament: "GolfGutu Invitational", number: nil) == "GolfGutu Invitational – kveld")
         #expect(KveldCalendar.title(tournament: " ", number: 3) == "Kveld 3")
         #expect(KveldCalendar.title(tournament: "", number: nil) == "Kveld")
+        #expect(KveldCalendar.title(tournament: "Vårserien", number: 2, term: .playingDay) == "Vårserien – spilledag 2")
     }
 
     @Test func notaterMedKomiteOgMerknad() throws {

@@ -20,11 +20,13 @@ nonisolated enum ClubPushPlan {
     /// Bryterne arrangøren ser, i samme rekkefølge som spillerens innstillinger, pluss tråden.
     /// Bare kategorier fra `push_club_categories()`, så purring og «Melding til alle» er ute.
     /// Veddemål (`bet`) er ikke med, som hos spilleren (`PushCategories.shownToPlayer`).
-    static let toggles: [ClubPushToggle] =
+    static func toggles(term: DayTerm = .evening) -> [ClubPushToggle] {
         PushCategories.shownToPlayer
             .filter { PushCategories.clubToggleable.contains($0) }
-            .map { ClubPushToggle(key: $0.rawValue, title: $0.title, subtitle: PushCategories.subtitle($0)) }
-        + [ClubPushToggle(key: PushCategories.threadKey, title: "Kveldens tråd", subtitle: "Meldinger i tråden, også når noen nevnes")]
+            .map { ClubPushToggle(key: $0.rawValue, title: $0.title, subtitle: PushCategories.subtitle($0, term: term)) }
+        + [ClubPushToggle(key: PushCategories.threadKey, title: DayTerm.capitalized(term.possessive) + " tråd",
+                          subtitle: "Meldinger i tråden, også når noen nevnes")]
+    }
 
     /// Kategoriene som alltid går som push og ikke kan slås av for klubben (PWA: ALLTID).
     static let locked: [ActivityCategory] = ActivityCategory.allCases.filter {

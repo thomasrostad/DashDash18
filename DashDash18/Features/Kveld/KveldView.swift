@@ -25,6 +25,7 @@ private struct KveldContent: View {
         content
             .task { await model.load() }
             .refreshable { await model.load() }
+            .onChange(of: dayTerm, initial: true) { _, term in model.dayTerm = term }
     }
 
     @ViewBuilder

@@ -1,3 +1,4 @@
+import GolfgutuCore
 import SwiftUI
 
 /// «Hva blir push»: arrangøren slår kategorier av for hele klubben.
@@ -25,13 +26,14 @@ struct ClubPushSettingsView: View {
 }
 
 private struct ClubPushSettingsList: View {
+    @Environment(\.dayTerm) private var dayTerm
     let model: ClubPushSettingsModel
 
     var body: some View {
         DDList {
             if model.hasLoaded {
                 Section {
-                    ForEach(ClubPushPlan.toggles) { toggle in
+                    ForEach(ClubPushPlan.toggles(term: dayTerm)) { toggle in
                         Toggle(isOn: Binding(
                             get: { model.isOn(toggle.key) },
                             set: { on in Task { await model.set(toggle.key, on: on) } }
@@ -59,7 +61,7 @@ private struct ClubPushSettingsList: View {
                         } label: {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(category.title)
-                                Text(PushCategories.subtitle(category))
+                                Text(PushCategories.subtitle(category, term: dayTerm))
                                     .font(.ddCallout)
                                     .foregroundStyle(Color.ddInkSecondary)
                             }

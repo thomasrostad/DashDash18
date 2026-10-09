@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 
 /// Det som legges i kalenderen for én kveld. Ren verdi uten EventKit, så den kan testes.
 nonisolated struct CalendarEntry: Equatable, Sendable {
@@ -26,7 +27,7 @@ nonisolated enum KveldCalendar {
 
     /// `tournament` er turneringens (klubbens) navn, `number` kveldens nummer i sesongen.
     static func entry(for event: EventRow, tournament: String, number: Int?,
-                      committee: [String] = []) -> CalendarEntry? {
+                      committee: [String] = [], term: DayTerm = .evening) -> CalendarEntry? {
         guard let day = EveningDates.date(from: event.eventDate) else { return nil }
         let calendar = EveningDates.osloCalendar
 
@@ -44,7 +45,7 @@ nonisolated enum KveldCalendar {
         }
 
         return CalendarEntry(
-            title: title(tournament: tournament, number: number),
+            title: title(tournament: tournament, number: number, term: term),
             start: start,
             end: end,
             isAllDay: isAllDay,
@@ -56,9 +57,9 @@ nonisolated enum KveldCalendar {
     }
 
     /// «GolfGutu Invitational – kveld 5». Uten nummer: «GolfGutu Invitational – kveld».
-    static func title(tournament: String, number: Int?) -> String {
+    static func title(tournament: String, number: Int?, term: DayTerm = .evening) -> String {
         let name = tournament.trimmingCharacters(in: .whitespacesAndNewlines)
-        let evening = number.map { "kveld \($0)" } ?? "kveld"
+        let evening = number.map { "\(term.one) \($0)" } ?? term.one
         return name.isEmpty ? evening.prefix(1).uppercased() + evening.dropFirst() : "\(name) – \(evening)"
     }
 

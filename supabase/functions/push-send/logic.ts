@@ -616,7 +616,7 @@ export function activityDisplay(activity: ActivityPayload, name: NameLookup): Ac
     }
     case "reminder": {
       const date = evening(d.event_date);
-      let text = "Påminnelse: " + (date ? `${date} om en uke` : "neste kveld nærmer seg");
+      let text = "Påminnelse: " + (date ? `${date} om en uke` : "neste runde nærmer seg");
       const counts: string[] = [];
       const coming = num(d.coming), unsure = num(d.unsure);
       if (coming !== undefined) counts.push(`${coming} kommer`);

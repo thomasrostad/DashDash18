@@ -77,7 +77,7 @@ struct PushSettingsView: View {
         )) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(category.title)
-                Text(blocked ? "Slått av av arrangøren" : PushCategories.subtitle(category))
+                Text(blocked ? "Slått av av arrangøren" : PushCategories.subtitle(category, term: dayTerm))
                     .font(.ddCallout)
                     .foregroundStyle(Color.ddInkSecondary)
             }

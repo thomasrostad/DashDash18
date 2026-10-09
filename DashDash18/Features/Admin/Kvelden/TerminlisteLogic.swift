@@ -112,12 +112,12 @@ nonisolated enum Terminliste {
 
     /// Norsk feilmelding når en kveld ikke kunne lagres. Én kveld per dato (`events_one_per_date`).
     static func saveErrorMessage(sqlState: String?, fallback: DataError, date: String) -> String {
-        sqlState == "23505" ? "Det finnes allerede en kveld \(EveningDates.longText(date))." : fallback.message
+        sqlState == "23505" ? "\(EveningDates.longText(date, capitalized: true)) står allerede i terminlista." : fallback.message
     }
 
     /// Norsk feilmelding når en kveld ikke kunne slettes. Runder peker på kvelden
     /// med `on delete restrict`, så databasen nekter med 23503.
     static func deleteErrorMessage(sqlState: String?, fallback: DataError) -> String {
-        sqlState == "23503" ? "Kvelden har runder og kan ikke slettes. Slett rundene først." : fallback.message
+        sqlState == "23503" ? "Datoen har runder og kan ikke slettes. Slett rundene først." : fallback.message
     }
 }
