@@ -6,6 +6,8 @@ import Supabase
 struct EventDraft: Equatable {
     var id: UUID?
     var seasonID: UUID?
+    /// Liga, cup eller morro: spilledagen hører til turneringen, ikke en sesong (sql/033).
+    var competitionID: UUID? = nil
     var date: Date
     var hasTime: Bool
     var time: Date
@@ -43,10 +45,14 @@ final class TerminlisteModel {
     private let context: ClubContext
     /// Turneringen kveldene hører til (fase 21). nil: hovedturneringen (den aktive).
     let tournamentID: UUID?
+    /// En turnering uten sesong (liga, cup, morro) med egne spilledager (sql/033). Da er lista
+    /// turneringens dager, og nye dager får turneringen i stedet for en sesong.
+    let competition: CompetitionRow?
 
-    init(context: ClubContext, tournamentID: UUID? = nil) {
+    init(context: ClubContext, tournamentID: UUID? = nil, competition: CompetitionRow? = nil) {
         self.context = context
         self.tournamentID = tournamentID
+        self.competition = competition
     }
 
     private var client: SupabaseClient { context.client }
@@ -82,8 +88,9 @@ final class TerminlisteModel {
             let committee = try await committeeRows
             let roster = try await memberRows
 
-            activeSeason = season
-            events = Terminliste.eveningsForSeason(allEvents, activeSeasonID: season?.id)
+            activeSeason = competition == nil ? season : nil
+            events = competition.map { Terminliste.days(allEvents, competitionID: $0.id) }
+                ?? Terminliste.eveningsForSeason(allEvents, activeSeasonID: season?.id)
             committees = Dictionary(grouping: committee, by: \.eventID).mapValues { $0.map(\.memberID) }
             members = KveldQueries.sortedByName(roster)
             state = .loaded
@@ -134,7 +141,7 @@ final class TerminlisteModel {
             // Ny kveld: neste uke, samme sted og tid som sist.
             let last = events.last
             return EventDraft(
-                id: nil, seasonID: activeSeason?.id,
+                id: nil, seasonID: activeSeason?.id, competitionID: competition?.id,
                 date: Calendar.current.date(byAdding: .day, value: 7, to: .now) ?? .now,
                 hasTime: last?.startTime != nil,
                 time: last?.startTime.flatMap { EveningDates.time(from: $0) }
@@ -143,7 +150,7 @@ final class TerminlisteModel {
             )
         }
         return EventDraft(
-            id: event.id, seasonID: event.seasonID,
+            id: event.id, seasonID: event.seasonID, competitionID: event.seasonID == nil ? event.competitionID : nil,
             date: EveningDates.date(from: event.eventDate) ?? .now,
             hasTime: event.startTime != nil,
             time: event.startTime.flatMap { EveningDates.time(from: $0) } ?? EveningDates.time(from: "17:00")!,
@@ -158,7 +165,7 @@ final class TerminlisteModel {
         let note = try EventInput.text(draft.note, max: EventInput.noteMax, field: "Notatet").get()
         let date = EveningDates.dateString(from: draft.date)
         let write = EventWrite(
-            clubID: clubID, seasonID: draft.seasonID, eventDate: date,
+            clubID: clubID, seasonID: draft.seasonID, competitionID: draft.competitionID, eventDate: date,
             startTime: draft.hasTime ? EveningDates.timeString(from: draft.time) : nil,
             venue: venue, note: note
         )
@@ -255,7 +262,8 @@ final class TerminlisteModel {
 extension TerminlisteModel {
     /// Kveldene fra skjermprøvens rundemodell, med sosialkomité og påmelding (`kvelden`, `kveldene`).
     static func sample(from admin: RundeAdminModel) -> TerminlisteModel {
-        let model = TerminlisteModel(context: admin.clubContext, tournamentID: admin.tournamentID)
+        let model = TerminlisteModel(context: admin.clubContext, tournamentID: admin.tournamentID,
+                                     competition: admin.competition)
         model.activeSeason = admin.tournament.map { SeasonSummary(id: $0.id, name: $0.name) }
         model.events = admin.events
         model.members = admin.members
@@ -281,6 +289,8 @@ extension TerminlisteModel {
 nonisolated struct EventWrite: Encodable, Sendable {
     let clubID: UUID
     let seasonID: UUID?
+    /// Bare for spilledager uten sesong. Sesongens kvelder får turneringen fra sesongen (trigger, sql/031).
+    var competitionID: UUID? = nil
     let eventDate: String
     let startTime: String?
     let venue: String?
@@ -289,6 +299,7 @@ nonisolated struct EventWrite: Encodable, Sendable {
     enum CodingKeys: String, CodingKey {
         case clubID = "club_id"
         case seasonID = "season_id"
+        case competitionID = "competition_id"
         case eventDate = "event_date"
         case startTime = "start_time"
         case venue
@@ -299,6 +310,7 @@ nonisolated struct EventWrite: Encodable, Sendable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(clubID, forKey: .clubID)
         try container.encode(seasonID, forKey: .seasonID)
+        try container.encodeIfPresent(competitionID, forKey: .competitionID)
         try container.encode(eventDate, forKey: .eventDate)
         try container.encode(startTime, forKey: .startTime)
         try container.encode(venue, forKey: .venue)

@@ -96,12 +96,18 @@ nonisolated enum Terminliste {
         return seasons.first { $0.status == .active }
     }
 
-    /// Kveldene som hører til sesongen: den aktive sesongens, og dem uten sesong.
-    /// Uten aktiv sesong vises bare kvelder uten sesong.
+    /// Kveldene som hører til sesongen: den aktive sesongens, og klubbens egne kvelder uten sesong.
+    /// Uten aktiv sesong vises bare kvelder uten sesong. Spilledagene til en liga, cup eller morro
+    /// (uten sesong, med `competitionID`) hører til den turneringen, ikke hit (sql/033).
     static func eveningsForSeason(_ events: [EventRow], activeSeasonID: UUID?) -> [EventRow] {
         events
-            .filter { $0.seasonID == nil || $0.seasonID == activeSeasonID }
+            .filter { ($0.seasonID == nil && $0.competitionID == nil) || ($0.seasonID != nil && $0.seasonID == activeSeasonID) }
             .sorted { $0.eventDate < $1.eventDate }
+    }
+
+    /// Spilledagene til en turnering uten sesong (liga, cup, morro), eldste først.
+    static func days(_ events: [EventRow], competitionID: UUID) -> [EventRow] {
+        events.filter { $0.competitionID == competitionID }.sorted { $0.eventDate < $1.eventDate }
     }
 
     /// Kommende (dato ≥ i dag) og tidligere kvelder. Tidligere står nyeste først.

@@ -76,6 +76,9 @@ nonisolated struct EventRow: Codable, Equatable, Identifiable, Sendable {
     var startTime: String?
     var venue: String?
     var note: String?
+    /// Turneringen spilledagen hører til (sql/031, 033). Sesongens kvelder har sesongens turneringsrad;
+    /// liga, cup og morro har egne spilledager uten sesong. nil: klubbens egen kveld (eller eldre svar).
+    var competitionID: UUID? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -85,9 +88,10 @@ nonisolated struct EventRow: Codable, Equatable, Identifiable, Sendable {
         case startTime = "start_time"
         case venue
         case note
+        case competitionID = "competition_id"
     }
 
-    static let columns = "id, club_id, season_id, event_date, start_time, venue, note"
+    static let columns = "id, club_id, season_id, event_date, start_time, venue, note, competition_id"
 }
 
 nonisolated struct EventCommitteeRow: Codable, Equatable, Sendable {
