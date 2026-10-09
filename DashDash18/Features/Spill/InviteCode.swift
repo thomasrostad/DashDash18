@@ -30,9 +30,11 @@ nonisolated struct InviteCode: Equatable, Hashable, Sendable {
         value = code
     }
 
-    /// Koden fra en lenke: `dashdash://runde/KODE` (også `dashdash://runde?kode=KODE`). Med `host`
-    /// for andre lenker med samme kode, f.eks. `dashdash://konkurranse/KODE` (sql/022).
+    /// Koden fra en lenke: `dashdash://runde/KODE` (også `dashdash://runde?kode=KODE`) eller den
+    /// universelle `https://dashdash18.com/runde/KODE`. Med `host` for andre lenker med samme kode,
+    /// f.eks. `dashdash://konkurranse/KODE` (sql/022).
     init?(url: URL, host: String = InviteCode.host) {
+        let url = UniversalLink.appURL(url) ?? url
         guard url.scheme?.lowercased() == Self.scheme, url.host()?.lowercased() == host else { return nil }
         let fromPath = url.pathComponents.first { $0 != "/" }
         let fromQuery = URLComponents(url: url, resolvingAgainstBaseURL: false)?
@@ -44,7 +46,8 @@ nonisolated struct InviteCode: Equatable, Hashable, Sendable {
     /// Det som limes inn: en lenke eller en kode.
     static func parse(_ text: String, host: String = InviteCode.host) -> InviteCode? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.lowercased().hasPrefix(scheme + ":"), let url = URL(string: trimmed) {
+        let lowered = trimmed.lowercased()
+        if lowered.hasPrefix(scheme + ":") || lowered.hasPrefix("https:"), let url = URL(string: trimmed) {
             return InviteCode(url: url, host: host)
         }
         return InviteCode(trimmed)
@@ -56,6 +59,12 @@ nonisolated struct InviteCode: Equatable, Hashable, Sendable {
     /// `dashdash://<host>/KODE`.
     func url(host: String) -> URL { URL(string: "\(Self.scheme)://\(host)/\(value)")! }
 
+    /// Lenken som deles: `https://dashdash18.com/<host>/KODE` med universelle lenker, ellers
+    /// `dashdash://<host>/KODE`.
+    func shareURL(host: String, universal: Bool = UniversalLinksFeature.isEnabled) -> URL {
+        universal ? UniversalLink.url(path: host, code: value) : url(host: host)
+    }
+
     /// «ABCDE-FGHJK»: lettere å lese høyt og skrive av.
     var display: String {
         let middle = value.index(value.startIndex, offsetBy: Self.length / 2)
@@ -63,9 +72,10 @@ nonisolated struct InviteCode: Equatable, Hashable, Sendable {
     }
 
     /// Teksten som deles: hva det er, lenken og koden (for den som skriver den inn).
-    func shareText(courseName: String?) -> String {
+    func shareText(courseName: String?, universal: Bool = UniversalLinksFeature.isEnabled) -> String {
         let what = courseName.map { "Bli med på runden på \($0) i Atten." } ?? "Bli med på runden i Atten."
-        return "\(what)\n\(url.absoluteString)\nEller skriv inn koden \(display) under Spill → Bli med."
+        let link = shareURL(host: Self.host, universal: universal)
+        return "\(what)\n\(link.absoluteString)\nEller skriv inn koden \(display) under Spill → Bli med."
     }
 }
 
@@ -88,12 +98,12 @@ nonisolated enum InviteTarget: Equatable, Sendable {
     func url(_ code: InviteCode) -> URL { code.url(host: host) }
 
     /// Teksten som deles: hva det er, lenken og koden.
-    func shareText(_ code: InviteCode) -> String {
+    func shareText(_ code: InviteCode, universal: Bool = UniversalLinksFeature.isEnabled) -> String {
         switch self {
         case .round(let courseName):
-            return code.shareText(courseName: courseName)
+            return code.shareText(courseName: courseName, universal: universal)
         case .competition(let name):
-            return "Bli med i \(name) i Atten.\n\(url(code).absoluteString)\n"
+            return "Bli med i \(name) i Atten.\n\(code.shareURL(host: host, universal: universal).absoluteString)\n"
                 + "Eller skriv inn koden \(code.display) under Turneringer → Bli med med kode."
         }
     }

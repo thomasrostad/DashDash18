@@ -1,0 +1,7 @@
+# Universelle lenker og invitasjonssider for Atten på https://dashdash18.com.
+# Deploy: se README.md. Krever at Wrangler er logget inn på kontoen som eier dashdash18.com.
+name = "atten-lenker"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+workers_dev = false
+routes = [{ pattern = "dashdash18.com", custom_domain = true }]

@@ -17,8 +17,10 @@ nonisolated struct ClubInvite: Equatable, Hashable, Sendable {
         self.code = code
     }
 
-    /// Koden fra en lenke: `dashdash://klubb/KODE` (også `dashdash://klubb?kode=KODE`).
+    /// Koden fra en lenke: `dashdash://klubb/KODE` (også `dashdash://klubb?kode=KODE`) eller den
+    /// universelle `https://dashdash18.com/klubb/KODE`.
     init?(url: URL) {
+        let url = UniversalLink.appURL(url) ?? url
         guard url.scheme?.lowercased() == InviteCode.scheme, url.host()?.lowercased() == Self.host else { return nil }
         let fromPath = url.pathComponents.first { $0 != "/" }
         let fromQuery = URLComponents(url: url, resolvingAgainstBaseURL: false)?
@@ -36,6 +38,10 @@ nonisolated struct ClubInvite: Equatable, Hashable, Sendable {
            let url = URL(string: String(match.output)) {
             return ClubInvite(url: url)
         }
+        if let match = trimmed.firstMatch(of: /(?i)https:\/\/(?:www\.)?dashdash18\.com\/klubb\/[A-Za-z0-9-]+/),
+           let url = URL(string: String(match.output)) {
+            return ClubInvite(url: url)
+        }
         if let invite = ClubInvite(code: trimmed) { return invite }
         // Bare koden etter et kjent stikkord: et vanlig ord som «Invitational» er også 6–16 bokstaver.
         if let match = trimmed.firstMatch(of: /(?i)(?:invitasjonskode:|koden er)\s*([A-Za-z0-9-]+)/) {
@@ -46,9 +52,14 @@ nonisolated struct ClubInvite: Equatable, Hashable, Sendable {
 
     var url: URL { URL(string: "\(InviteCode.scheme)://\(Self.host)/\(code)")! }
 
+    /// Lenken som deles: `https://dashdash18.com/klubb/KODE` med universelle lenker, ellers `url`.
+    func shareURL(universal: Bool = UniversalLinksFeature.isEnabled) -> URL {
+        universal ? UniversalLink.url(path: Self.host, code: code) : url
+    }
+
     /// Teksten som deles: hva det er, lenken og koden (for den som må skrive den av).
-    func shareText(clubName: String) -> String {
-        "Bli med i \(clubName) i Atten: \(url.absoluteString) · Koden er \(code)"
+    func shareText(clubName: String, universal: Bool = UniversalLinksFeature.isEnabled) -> String {
+        "Bli med i \(clubName) i Atten: \(shareURL(universal: universal).absoluteString) · Koden er \(code)"
     }
 
     /// Hvor man får koden, til den som står uten.

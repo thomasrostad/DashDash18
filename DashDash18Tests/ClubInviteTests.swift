@@ -22,7 +22,7 @@ struct ClubInviteLinkTests {
     @Test func andreLenkerErIkkeKlubb() throws {
         #expect(ClubInvite(url: try #require(URL(string: "dashdash://runde/ABCDEFGHJK"))) == nil)
         #expect(ClubInvite(url: try #require(URL(string: "dashdash://konkurranse/ABCDEFGHJK"))) == nil)
-        #expect(ClubInvite(url: try #require(URL(string: "https://dashdash18.com/klubb/02E5172C87"))) == nil)
+        #expect(ClubInvite(url: try #require(URL(string: "https://example.com/klubb/02E5172C87"))) == nil)
         #expect(ClubInvite(url: try #require(URL(string: "dashdash://klubb/"))) == nil)
     }
 
