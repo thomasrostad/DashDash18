@@ -121,3 +121,16 @@ nonisolated private final class StubPostgREST: URLProtocol, @unchecked Sendable 
                 == CompetitionQueries.participantColumns.replacingOccurrences(of: " ", with: ""))
     }
 }
+
+/// Turneringer uten klubb (09.10.2026): bare private, og «Ny turnering» uten matchspill-serien.
+@MainActor struct TurneringUtenKlubbTests {
+    @Test func privateTurneringerUtenKlubb() {
+        let model = CompetitionsModel(client: KonkurranseSideTests.client(host: "uten-klubb.test"),
+                                      userID: KonkurranseSideTests.me)
+        #expect(model.clubID == nil && model.clubName == nil)
+        #expect(model.canCreate && !model.canCreateInClub)
+        let new = NewTournamentModel(list: model, seasons: nil, offersPrivate: true)
+        #expect(!new.templates.contains(.matchSeries) && new.templates.contains(.cup))
+        #expect(new.draft(for: .cup).clubID == nil)
+    }
+}

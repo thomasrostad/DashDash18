@@ -1,3 +1,4 @@
+import Supabase
 import SwiftUI
 
 /// «Spill»-fanen (fase 13): ny runde på sekunder, bli med med kode, dine løse runder (pågår og
@@ -42,10 +43,11 @@ struct SpillView: View {
                           empty: model.state == .loaded ? "Rundene du avslutter, havner her med resultatet." : nil)
 
             // Turneringene du kan se, og «Ny turnering» (09.10.2026: før bare bak et ikon på Tavla).
-            if CompetitionsFeature.isActive, let clubContext {
+            // Med klubb: klubbens og dine private. Uten klubb: bare dine private.
+            if CompetitionsFeature.isActive, let client = model.client {
                 Section {
                     NavigationLink {
-                        CompetitionsListView(model: CompetitionsModel(context: clubContext))
+                        SpillCompetitions(context: clubContext, client: client, userID: model.userID)
                     } label: {
                         Label("Turneringer", systemImage: "trophy")
                     }
@@ -298,5 +300,20 @@ struct LooseRoundActions: View {
                 self.error = error.message
             }
         }
+    }
+}
+
+/// Turneringslista fra Spill. Modellen lages én gang (i `@State`), så den ikke bygges på nytt når
+/// Spill tegnes om.
+private struct SpillCompetitions: View {
+    @State private var model: CompetitionsModel
+
+    init(context: ClubContext?, client: SupabaseClient, userID: UUID) {
+        _model = State(initialValue: context.map { CompetitionsModel(context: $0) }
+                       ?? CompetitionsModel(client: client, userID: userID))
+    }
+
+    var body: some View {
+        CompetitionsListView(model: model)
     }
 }
