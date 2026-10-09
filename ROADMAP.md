@@ -433,6 +433,11 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Veddemålene gjøres opp fra Hjem på arrangørens telefon (høyst hvert femte minutt), ikke bare når veddemålene åpnes. *(09.10.)*
 - [ ] Veddemål per turnering med egen poengbank, private turneringer og oppgjør uten arrangør: forslag og valg i `docs/vedd-per-turnering.md`. Venter på Thomas.
 
+### Alle runder (09.10.2026, Thomas: «se hva de andre har slått, slik som i PGA»)
+
+- [x] Tavla: «Alle runder» med spillerne nedover og rundene bortover (poeng eller slag), og scorekortet bak hver rute og hver runde på spillerprofilen.
+- [ ] Det samme for liga og morro (ligatabellen viser i dag bare summen).
+
 ### Skjermsjekk 09.10.2026 (alle skjermprøvene, lys og mørk)
 
 - [x] Norsk dato, «for 3 dager siden», datovelgere og grafer også når telefonen står på engelsk (`ddAppStyle` setter `nb_NO`).

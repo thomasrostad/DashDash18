@@ -117,6 +117,14 @@ struct TavlaList: View {
                         }
                     }
                     .ddCard(padding: DDSpacing.l)
+                    // Hva alle har slått, runde for runde, med scorekortet bak hver rute.
+                    NavigationLink {
+                        TavlaRoundsView(standings: standings)
+                    } label: {
+                        Label("Alle runder · poeng og scorekort", systemImage: "tablecells")
+                            .font(.ddBodyEmphasis)
+                    }
+                    .buttonStyle(.dd(.secondary, fullWidth: true))
                 }
 
                 RulesExplanationCard(rules: standings.rules)
