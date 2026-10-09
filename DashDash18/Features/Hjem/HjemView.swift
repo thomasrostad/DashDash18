@@ -142,6 +142,7 @@ private struct HjemClubContent: View {
                                      today: kveld.today, answer: kveld.mySignup?.status,
                                      coming: kveld.summary.yes.count, isOrganizer: kveld.isOrganizer)
         input.term = dayTerm
+        input.previous = kveld.previousEvent
         return input
     }
 

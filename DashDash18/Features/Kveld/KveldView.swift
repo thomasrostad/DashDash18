@@ -70,6 +70,15 @@ private struct KveldContent: View {
                         KveldExtrasCards(model: KveldExtrasModel(context: model.clubContext, eventID: event.id),
                                          refresh: model.loadCount)
                             .id(event.id)
+                        if let previous = model.previousEvent {
+                            NavigationLink {
+                                TipsView(eventID: previous.id)
+                            } label: {
+                                Label("Forrige kupong · \(EveningDates.longText(previous.eventDate, capitalized: true))",
+                                      systemImage: "trophy")
+                            }
+                            .buttonStyle(.ddText)
+                        }
                         SignupSection(model: model)
                             .padding(.top, DDSpacing.l)
                         if Nudge.isOffered(isOrganizer: model.isOrganizer, summary: model.summary) {

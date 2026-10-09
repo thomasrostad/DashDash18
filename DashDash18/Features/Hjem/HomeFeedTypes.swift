@@ -83,6 +83,8 @@ nonisolated struct HomeEveningInput: Equatable, Sendable {
     var isOrganizer: Bool
     /// «Kveld» eller «spilledag» (`DayTerm`).
     var term: DayTerm = .evening
+    /// Forrige kveld (`KveldModel.previousEvent`).
+    var previous: EventRow?
 
     init(clubID: UUID, clubName: String, event: EventRow, today: String, answer: SignupStatus?, coming: Int,
          isOrganizer: Bool) {
@@ -354,6 +356,10 @@ nonisolated struct HomeNextEvening: Equatable, Sendable {
     let answer: SignupStatus?
     /// Arrangøren får hovedknappen (sett opp runden) og lenken til arrangørsiden.
     let isOrganizer: Bool
+    /// Forrige kveld, for «Forrige kupong» (resultatet og tippekongen).
+    var previousEventID: UUID? = nil
+    /// «Torsdag 8. oktober».
+    var previousTitle: String? = nil
 }
 
 /// Hele Hjem-feeden.
