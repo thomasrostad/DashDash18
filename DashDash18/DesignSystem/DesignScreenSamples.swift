@@ -55,6 +55,8 @@ struct DesignScreenSamples: View {
         case velkommen, blimedlenke, blimedbekreft, logininvitasjon, inviter, hjeminviter
         // Fase 25: finn åpne turneringer, og QR-koden til invitasjonen.
         case finn, inviterqr
+        // Alle runder i turneringen (leaderboard).
+        case allerunder
     }
     @State var screen: Screen = .hullkort
 
@@ -177,6 +179,9 @@ struct DesignScreenSamples: View {
             }
         case .turneringvelger:
             NavigationStack { AdminHubSample(.tonight, scroll: .top, picker: TournamentCoreSamples.picker()) }
+                .tint(Color.ddForestInk)
+        case .allerunder:
+            NavigationStack { TavlaRoundsView(standings: TavlaSamples.standings()) }
                 .tint(Color.ddForestInk)
         case .finn:
             NavigationStack { FindTournamentsView(model: FindTournamentsModel(preview: FindTournamentsSamples.rows)) }

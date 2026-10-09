@@ -5,6 +5,7 @@ import SwiftUI
 struct PlayerProfileView: View {
     let standings: TavlaStandings
     let memberID: UUID
+    @State private var scorecard: RoundScorecardTarget?
 
     var body: some View {
         Group {
@@ -17,6 +18,11 @@ struct PlayerProfileView: View {
         }
         .navigationTitle(standings.row(memberID)?.name ?? "Spiller")
         .ddNavigationChrome()
+        .sheet(item: $scorecard) { target in
+            if let game = standings.game(target.roundID) {
+                ScorekortSheet(game: game, memberID: target.memberID)
+            }
+        }
     }
 
     private func content(_ p: PlayerProfile) -> some View {
@@ -69,7 +75,15 @@ struct PlayerProfileView: View {
                 } else {
                     VStack(spacing: 0) {
                         ForEach(p.rounds) { line in
-                            RoundLineView(line: line, standings: standings)
+                            // Trykk gir scorekortet for runden.
+                            Button {
+                                scorecard = RoundScorecardTarget(roundID: line.roundID, memberID: memberID)
+                            } label: {
+                                RoundLineView(line: line, standings: standings)
+                                    .contentShape(.rect)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityHint("Viser scorekortet")
                             if line.id != p.rounds.last?.id { DDDivider() }
                         }
                     }
