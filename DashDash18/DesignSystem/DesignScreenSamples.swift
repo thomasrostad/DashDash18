@@ -165,7 +165,7 @@ struct DesignScreenSamples: View {
                 .ddNavigationChrome()
             }
         case .turneringvelger:
-            NavigationStack { AdminHubSample(.tonight, picker: TournamentCoreSamples.picker()) }
+            NavigationStack { AdminHubSample(.tonight, scroll: .top, picker: TournamentCoreSamples.picker()) }
                 .tint(Color.ddForestInk)
         case .pamelding:
             SignupSampleScreen(state: .offered)
