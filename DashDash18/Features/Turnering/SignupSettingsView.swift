@@ -154,7 +154,7 @@ struct SignupSettingsView: View {
                 DDHeader("Plasser")
             } footer: {
                 DDFooter(model.draft.hasCap && model.draft.waitlistEnabled
-                         ? "Blir en plass ledig, får den første på ventelista tilbud om den og 24 timer på å svare. Så går tilbudet videre."
+                         ? "Blir en plass ledig, får den første på ventelista tilbud om den og 48 timer på å svare. Så går tilbudet videre."
                          : "Uten tak kan alle som finner turneringen, melde seg på.")
             }
 

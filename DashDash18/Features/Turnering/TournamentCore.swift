@@ -6,7 +6,8 @@ import GolfgutuCore
 /// `sql/032_turnering_kjerne_trinn2.sql`. Av til 032 er kjørt; med flagget av er appen som før.
 /// `min_ios_build` (031) er ikke bak flagget (`MinimumBuild`).
 nonisolated enum TournamentCoreFeature {
-    static let isEnabled = false
+    /// På siden 09.10.2026: sql/032 er kjørt på test (kontrollen 10 av 10, paritet identisk).
+    static let isEnabled = true
 
     /// Krever også konkurransene (017/022).
     static var isActive: Bool { isEnabled && CompetitionsFeature.isActive }

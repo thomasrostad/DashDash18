@@ -125,16 +125,16 @@ select pg_temp.som(:'u5'); set role authenticated;
 select pg_temp.lik(public.competition_signup(:'morro') ->> 'waitlist_position', '2', 'B8 Dag er nr. 2 på ventelista');
 reset role;
 
--- B9 Bjørn melder seg av: Ola får tilbud med frist om 24 timer, Dag venter.
+-- B9 Bjørn melder seg av: Ola får tilbud med frist om 48 timer, Dag venter.
 select pg_temp.som(:'u3'); set role authenticated;
 select pg_temp.lik(public.competition_withdraw(:'morro') ->> 'state', 'withdrawn', 'B9 Bjørn meldt av');
 reset role;
 select pg_temp.som(:'u4'); set role authenticated;
 select pg_temp.lik((select state from public.competition_signup_status(array[:'morro'::uuid])), 'offered',
                    'B9 Ola har fått tilbud');
-select pg_temp.lik((select offer_expires_at between now() + interval '23 hours 59 minutes' and now() + interval '24 hours 1 minute'
+select pg_temp.lik((select offer_expires_at between now() + interval '47 hours 59 minutes' and now() + interval '48 hours 1 minute'
                      from public.competition_signup_status(array[:'morro'::uuid])), true,
-                   'B9 tilbudet gjelder i 24 timer');
+                   'B9 tilbudet gjelder i 48 timer');
 reset role;
 
 -- B10 Bjørn vil inn igjen: plassen er lovet bort, så han havner bak i køen.

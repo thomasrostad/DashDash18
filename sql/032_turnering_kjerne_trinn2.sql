@@ -1,9 +1,9 @@
 -- ===========================================================================
--- 032 – TURNERINGEN SOM KJERNE, TRINN 2 (FASE 23) – FORSLAG, IKKE KJØRT
+-- 032 – TURNERINGEN SOM KJERNE, TRINN 2 (FASE 23) – KJØRT PÅ TEST 09.10.2026
 -- ===========================================================================
--- Status: FORSLAG til godkjenning (ROADMAP B5). IKKE KJØRT mot Supabase,
--- verken test eller prod. Prøvd lokalt (sql/lokal/032_for.sql og
--- sql/lokal/032_prove.sql, 032 to ganger på rad). Krever 001–031.
+-- Status: godkjent og kjørt på test 09.10.2026 med tilbudsfrist 48 timer
+-- (kontrollen 10 av 10, paritet identisk, cron dd18-waitlist-offers). Ikke prod.
+-- Prøvd lokalt (sql/lokal/032_for.sql og sql/lokal/032_prove.sql). Krever 001–031.
 --
 -- Hvorfor (docs/fase-22-turnering-som-kjerne.md, kap. 7 og 10, og
 -- «Besluttet 09.10.2026»): staben i en turnering skal få rettighetene sine,
@@ -15,13 +15,13 @@
 --   * åpen påmelding for ikke-medlemmer velges per turnering (signup_audience);
 --   * åpne turneringer: alle innloggede ser turneringen, bare deltakerne ser
 --     runder og hull;
---   * et tilbud om ledig plass gjelder i 24 timer, så går det videre;
+--   * et tilbud om ledig plass gjelder i 48 timer, så går det videre (09.10: 48 i stedet for 24);
 --   * funksjonærer (scorer) fører bare for gruppene de er satt på, arrangøren
 --     (organizer) for alle;
 --   * Golfgutu skal ikke merke noe.
 --
 -- Hva fila gjør:
---   1. app_config: waitlist_offer_hours = 24 (fristen for et tilbud kan
+--   1. app_config: waitlist_offer_hours = 48 (fristen for et tilbud kan
 --      endres uten ny migrering).
 --   2. round_start_groups.scorer_id: funksjonæren som fører for gruppa.
 --   3. Mengdebaserte hjelpere (lasttesten, kap. 9): my_member_ids,
@@ -107,7 +107,7 @@ begin;
 -- 1. APP_CONFIG: fristen for et tilbud fra ventelista
 -- ===========================================================================
 insert into public.app_config (key, value)
-values ('waitlist_offer_hours', '{"hours": 24}'::jsonb)
+values ('waitlist_offer_hours', '{"hours": 48}'::jsonb)
 on conflict (key) do nothing;
 
 -- Timer et tilbud gjelder: app_config, mellom 1 og 168, ellers 24.
