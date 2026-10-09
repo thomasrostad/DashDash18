@@ -164,6 +164,9 @@ nonisolated struct TournamentDraft: Equatable, Sendable {
     /// Oppsettets regelsett, med det arrangøren har tilpasset.
     var rules: Ruleset
     var competition: CompetitionDraft
+    /// Hva en dag heter i en ny serie med dager (`DayTerm`). Nye turneringer sier «spilledag»
+    /// (09.10.2026); Golfgutu-sesongen fra før beholder «kveld». Lagres i regelsettet (`seasonRules`).
+    var dayTerm: DayTerm = .playingDay
 
     init(template: RulesetTemplate, clubID: UUID?, name: String, today: String) {
         self.template = template
@@ -189,6 +192,13 @@ nonisolated struct TournamentDraft: Equatable, Sendable {
     var showsPeriod: Bool { TournamentSetup.showsPeriod(template, clubID: clubID) }
 
     var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    /// Regelsettet sesongen lagres med: oppsettets regler og ordet for dagen.
+    var seasonRules: Ruleset {
+        var r = rules
+        r.dayTerm = dayTerm
+        return r
+    }
 
     /// Konkurransen som lagres (`create_competition_with_entrants`): navnet, typen og regelsettet
     /// fra oppsettet. Perioden bare der den gjelder.

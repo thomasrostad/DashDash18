@@ -397,6 +397,8 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Hjem-knappen heter det samme som neste steg og går rett dit: to trykk fra Hjem til «Start runden» (før: fire). *(08.10.)*
 - [x] Bygget rundt én valgt turnering (hovedturneringen som standard), så en turneringsvelger kan legges til i fase 23. *(08.10.)*
 - [x] Egen fane «Arrangør» (bare for arrangører) mellom Tavla og Deg, i stedet for ikonet på Hjem og raden i Deg. Oppsettet øverst og alltid åpent, så kvelden som står for tur, kommende og tidligere kvelder. *(09.10, Thomas: siden var for gjemt.)*
+- [x] «Spilledag» for nye turneringer (`DayTerm` i regelsettet, `dayTerm`; uten feltet: «kveld», som Golfgutu). Valget i «Ny turnering» og i reglene. Arrangørsiden, Kvelden, «Kom i gang», stegrekka, avslutningen og Hjem-knappen følger ordet. *(09.10, Thomas.)*
+- [ ] «Spilledag» på spillersidene: Kveld-skjermen, Hjem-kortet og feeden, Tavla, tips, deling, push og regelteksten (`RulesetSummary`, `RulesetExplanation`), og feilmeldingene i terminlista.
 - [ ] Prøve på telefon mot ekte data.
 
 ### Fase 22–25 – Turneringen som kjerne (klubber og simulatorsentre)

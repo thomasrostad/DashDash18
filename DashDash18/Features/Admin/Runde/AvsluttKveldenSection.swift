@@ -27,6 +27,7 @@ struct AvsluttKveldenSection: View {
 /// eller som stor hovedknapp på arrangørsiden.
 struct AvsluttKveldenButton: View {
     @Environment(\.clubContext) private var context
+    @Environment(\.dayTerm) private var dayTerm
     let rounds: [RoundRow]
     let title: (RoundRow) -> String
     /// Stor gul hovedknapp i stedet for en rad.
@@ -52,7 +53,7 @@ struct AvsluttKveldenButton: View {
             .confirmationDialog(pending?.prompt.title ?? "", isPresented: Binding(
                 get: { pending != nil }, set: { if !$0 { pending = nil } }
             ), titleVisibility: .visible, presenting: pending) { item in
-                Button("Avslutt kvelden", role: .destructive) { close(item.roundIDs) }
+                Button("Avslutt \(dayTerm.the)", role: .destructive) { close(item.roundIDs) }
                 if let cutID = item.prompt.suggestCut, let round = rounds.first(where: { $0.id == cutID }) {
                     Button("Avkort runden først") { cutting = round }
                 }
@@ -75,7 +76,7 @@ struct AvsluttKveldenButton: View {
                 ask()
             } label: {
                 HStack(spacing: 8) {
-                    Text("Avslutt kvelden")
+                    Text("Avslutt \(dayTerm.the)")
                     if isBusy { ProgressView() }
                 }
             }
@@ -85,7 +86,7 @@ struct AvsluttKveldenButton: View {
                 ask()
             } label: {
                 HStack {
-                    Label("Avslutt kvelden …", systemImage: "flag.checkered")
+                    Label("Avslutt \(dayTerm.the) …", systemImage: "flag.checkered")
                     if isBusy { Spacer(); ProgressView() }
                 }
             }
@@ -102,7 +103,7 @@ struct AvsluttKveldenButton: View {
                 let checks = games.map { game in
                     EveningClose.check(game, title: rounds.first { $0.id == game.roundID }.map(title) ?? "Runden")
                 }
-                if let prompt = EveningClose.prompt(checks) {
+                if let prompt = EveningClose.prompt(checks, term: dayTerm) {
                     pending = Pending(prompt: prompt, roundIDs: games.map(\.roundID))
                 }
             } catch {
@@ -121,7 +122,8 @@ struct AvsluttKveldenButton: View {
             let text = EveningClose.summary(
                 locked: names { locked.contains($0.id) },
                 drafts: names { $0.status == .draft },
-                failed: names { ids.contains($0.id) && !locked.contains($0.id) }
+                failed: names { ids.contains($0.id) && !locked.contains($0.id) },
+                term: dayTerm
             )
             await onDone(text)
         }

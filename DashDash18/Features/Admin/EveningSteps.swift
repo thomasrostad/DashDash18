@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 
 // Fase 21: arrangørsiden som tidslinje. Kvelden går gjennom fire steg, og arrangøren får én
 // hovedknapp for det neste. Samme logikk på arrangørsiden, på Kvelden og på Hjem-kortet.
@@ -44,15 +45,15 @@ nonisolated enum TonightAction: Equatable, Sendable {
     /// Kvelden er passert uten runder. Ingen knapp.
     case notPlayed
 
-    /// Samme ord overalt i appen. nil: ingen knapp.
-    var buttonTitle: String? {
+    /// Samme ord overalt i appen. nil: ingen knapp. `term`: «kveld» eller «spilledag» (`DayTerm`).
+    func buttonTitle(_ term: DayTerm = .evening) -> String? {
         switch self {
-        case .noEvening: "Legg inn en kveld"
+        case .noEvening: "Legg inn en \(term.one)"
         case .nudge(let count): "Purr " + Nudge.who(count)
         case .setUp: "Sett opp runden"
         case .continueDraft: "Fortsett kladd"
         case .goToRound: "Gå til runden"
-        case .closeEvening: "Avslutt kvelden"
+        case .closeEvening: "Avslutt \(term.the)"
         case .seeResult: "Se resultatet"
         case .notPlayed: nil
         }
@@ -88,11 +89,11 @@ nonisolated struct EveningStepMark: Equatable, Identifiable, Sendable {
 nonisolated enum EveningPart: CaseIterable, Equatable, Sendable {
     case before, during, after
 
-    var title: String {
+    func title(_ term: DayTerm = .evening) -> String {
         switch self {
-        case .before: "Før kvelden"
-        case .during: "Under kvelden"
-        case .after: "Etter kvelden"
+        case .before: "Før \(term.the)"
+        case .during: "Under \(term.the)"
+        case .after: "Etter \(term.the)"
         }
     }
 
@@ -109,10 +110,10 @@ nonisolated enum EveningPart: CaseIterable, Equatable, Sendable {
 
 nonisolated enum Tonight {
     /// Overskriften over kortet: «I kveld» når kvelden er i dag, «Siste kveld» når den er passert.
-    static func sectionTitle(daysUntil: Int?) -> String {
-        guard let daysUntil else { return "Neste kveld" }
-        if daysUntil == 0 { return "I kveld" }
-        return daysUntil < 0 ? "Siste kveld" : "Neste kveld"
+    static func sectionTitle(daysUntil: Int?, term: DayTerm = .evening) -> String {
+        guard let daysUntil else { return "Neste \(term.one)" }
+        if daysUntil == 0 { return term.today }
+        return daysUntil < 0 ? "Siste \(term.one)" : "Neste \(term.one)"
     }
 
     /// Kvelden som står for tur på arrangørsiden: kvelden der en runde går, så kvelden i dag (også
@@ -170,9 +171,10 @@ nonisolated enum Tonight {
     }
 
     /// Kort status for kvelden: «Ikke satt opp», «Kladd lagret · ikke startet», «Runde 1 pågår» …
-    static func statusText(action: TonightAction, rounds: [RoundRow], activeTitle: String?) -> String {
+    static func statusText(action: TonightAction, rounds: [RoundRow], activeTitle: String?,
+                           term: DayTerm = .evening) -> String {
         switch action {
-        case .noEvening: return "Ingen kveld i terminlista"
+        case .noEvening: return "Ingen \(term.one) i terminlista"
         case .nudge(let count): return count == 1 ? "1 har ikke svart" : "\(count) har ikke svart"
         case .setUp: return "Ikke satt opp"
         case .continueDraft: return "Kladd lagret · ikke startet"

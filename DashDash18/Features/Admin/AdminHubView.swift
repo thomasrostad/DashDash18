@@ -1,3 +1,4 @@
+import GolfgutuCore
 import SwiftUI
 
 /// Arrangørsiden (fase 21), egen fane for arrangører siden 09.10.2026. Fra topp til bunn: oppsettet
@@ -154,7 +155,7 @@ private struct AdminHubContent: View {
                 }
                 switch model.state {
                 case .loading:
-                    ProgressView("Henter kveldene …")
+                    ProgressView("Henter \(term.theMany) …")
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, DDSpacing.l)
                 case .failed(let text):
@@ -184,7 +185,7 @@ private struct AdminHubContent: View {
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Ny kveld", systemImage: "plus") { newEvening() }
+                Button("Ny \(term.one)", systemImage: "plus") { newEvening() }
                     .disabled(terminliste.state != .loaded)
             }
         }
@@ -219,16 +220,18 @@ private struct AdminHubContent: View {
             }
         }
         .confirmationDialog(
-            "Slette kvelden?",
+            "Slette \(term.the)?",
             isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
             titleVisibility: .visible,
             presenting: pendingDelete
         ) { event in
             Button("Slett \(EveningDates.longText(event.eventDate))", role: .destructive) { delete(event) }
         } message: { _ in
-            Text("Påmeldingene og sosialkomiteen for kvelden slettes også.")
+            Text("Påmeldingene og sosialkomiteen for \(term.the) slettes også.")
         }
         .messageAlert("Det gikk ikke", text: $error)
+        // Kvelden, oppsettet og knappene under bruker samme ord.
+        .environment(\.dayTerm, term)
     }
 
     private func reload() async {
@@ -239,7 +242,7 @@ private struct AdminHubContent: View {
 
     private func failed(_ text: String) -> some View {
         VStack(alignment: .leading, spacing: DDSpacing.m) {
-            Label("Fikk ikke hentet kveldene", systemImage: "wifi.exclamationmark")
+            Label("Fikk ikke hentet \(term.theMany)", systemImage: "wifi.exclamationmark")
                 .font(.ddBodyEmphasis)
             Text(text)
                 .font(.ddCallout)
@@ -261,10 +264,13 @@ private struct AdminHubContent: View {
 
     private var today: String { EveningDates.today() }
 
+    /// «Kveld» eller «spilledag», fra turneringens regelsett (`DayTerm`). Uten turnering: «kveld».
+    private var term: DayTerm { model.tournament?.rules.day ?? .evening }
+
     private var gettingStarted: [GettingStarted.Step] {
         GettingStarted.steps(GettingStarted.input(
             seasons: model.tournament.map { [$0] } ?? [], readyCourses: model.courses.count,
-            activeMembers: model.members.count, events: model.events, today: today))
+            activeMembers: model.members.count, events: model.events, today: today, term: term))
     }
 
     private var showsGettingStarted: Bool { GettingStarted.isVisible(gettingStarted) }
@@ -295,22 +301,22 @@ private struct AdminHubContent: View {
 
         Section {
             if parts.upcoming.isEmpty {
-                Text(parts.focus == nil ? "Ingen kommende kvelder." : "Ingen flere kvelder etter denne.")
+                Text(parts.focus == nil ? "Ingen kommende \(term.many)." : "Ingen flere \(term.many) etter denne.")
                     .foregroundStyle(Color.ddInkSecondary)
             }
             ForEach(parts.upcoming) { event in
                 eveningRow(event, referenceYear: year, isPast: false)
             }
             Button { newEvening() } label: {
-                Label("Ny kveld", systemImage: "plus")
+                Label("Ny \(term.one)", systemImage: "plus")
                     .foregroundStyle(Color.ddForestInk)
             }
             .disabled(terminliste.state != .loaded)
         } header: {
-            DDHeader(timelineTitle(parts.focus == nil ? "Kveldene" : "Kommende kvelder"))
+            DDHeader(timelineTitle(parts.focus == nil ? DayTerm.capitalized(term.theMany) : "Kommende \(term.many)"))
         } footer: {
             if model.tournament == nil {
-                DDFooter("Ingen turnering er i gang. Kvelder kan likevel legges inn, uten turnering.")
+                DDFooter("Ingen turnering er i gang. \(DayTerm.capitalized(term.many)) kan likevel legges inn, uten turnering.")
             }
         }
 
@@ -319,13 +325,13 @@ private struct AdminHubContent: View {
             .contains { (terminliste.committees[$0.id] ?? []).count < perEvening }
         if terminliste.state == .loaded && missingCommittee {
             Section {
-                Stepper("Per kveld: \(perEvening)", value: $perEvening, in: 1...6)
+                Stepper("Per \(term.one): \(perEvening)", value: $perEvening, in: 1...6)
                 Button("Trekk sosialkomité", systemImage: "dice") { draw() }
                     .disabled(terminliste.members.count < perEvening)
             } header: {
                 DDHeader("Sosialkomité")
             } footer: {
-                DDFooter("Fyller kommende kvelder som mangler komité. De med færrest turer trekkes først.")
+                DDFooter("Fyller kommende \(term.many) som mangler komité. De med færrest turer trekkes først.")
             }
         }
 
@@ -336,7 +342,7 @@ private struct AdminHubContent: View {
                     eveningRow(event, referenceYear: year, isPast: true)
                 }
             } header: {
-                DDHeader(timelineTitle("Tidligere kvelder"))
+                DDHeader(timelineTitle("Tidligere \(term.many)"))
             }
         }
     }
@@ -352,7 +358,7 @@ private struct AdminHubContent: View {
         let status: String = switch progress.action {
         case .seeResult, .notPlayed: Tonight.result(own) { model.course($0.courseID)?.course.name }
         default: own.isEmpty
-            ? Tonight.statusText(action: progress.action, rounds: own, activeTitle: nil)
+            ? Tonight.statusText(action: progress.action, rounds: own, activeTitle: nil, term: term)
             : EveningRounds.text(own)
         }
         return Button { openEvent = event.id } label: {
@@ -391,10 +397,11 @@ private struct AdminHubContent: View {
                                                                rosterCount: terminliste.members.count),
                                    progress: progress,
                                    status: Tonight.statusText(action: progress.action, rounds: own,
-                                                              activeTitle: model.activeRound.map(model.title)))
+                                                              activeTitle: model.activeRound.map(model.title),
+                                                              term: term))
                 }
                 .buttonStyle(.plain)
-                .accessibilityHint("Åpner kvelden")
+                .accessibilityHint("Åpner \(term.the)")
                 EveningNextStepButton(
                     action: progress.action, rounds: own, title: model.title,
                     nudgeNames: Nudge.targets(summary).map(\.name), isBusy: actions.isBusy,
@@ -407,7 +414,7 @@ private struct AdminHubContent: View {
             }
             .padding(.vertical, DDSpacing.s)
         } header: {
-            DDHeader(Tonight.sectionTitle(daysUntil: EveningDates.daysBetween(today, event.eventDate)))
+            DDHeader(Tonight.sectionTitle(daysUntil: EveningDates.daysBetween(today, event.eventDate), term: term))
         }
     }
 
@@ -456,7 +463,7 @@ private struct AdminHubContent: View {
         } header: {
             DDHeader("Kom i gang · " + GettingStarted.progressText(steps))
         } footer: {
-            DDFooter("Når alt er klart, står neste kveld her med knappen for neste steg.")
+            DDFooter("Når alt er klart, står neste \(term.one) her med knappen for neste steg.")
         }
     }
 
@@ -568,7 +575,7 @@ private struct AdminHubContent: View {
     private func draw() {
         let plan = terminliste.proposeCommittees(perEvening: perEvening)
         if plan.isEmpty {
-            error = "Fant ingen kvelder å fylle. Er det nok medlemmer i troppen?"
+            error = "Fant ingen \(term.many) å fylle. Er det nok medlemmer i troppen?"
         } else {
             drawPlan = IdentifiedPlan(plan: plan)
         }
@@ -595,7 +602,7 @@ private struct GettingStartedRow: View {
     var body: some View {
         Label {
             VStack(alignment: .leading, spacing: 2) {
-                Text(step.item.title)
+                Text(step.title)
                     .foregroundStyle(Color.ddInk)
                 Text(step.detail)
                     .font(.ddCaption)

@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 
 /// «Kom i gang» på arrangørsiden: det som må være på plass før en runde kan settes opp,
 /// i den rekkefølgen det gjøres: turneringen, troppen, banene, kveldene. Står øverst på arrangørsiden
@@ -14,12 +15,12 @@ nonisolated enum GettingStarted {
         /// En kveld i dag eller senere i terminlista.
         case evening
 
-        var title: String {
+        func title(_ term: DayTerm = .evening) -> String {
             switch self {
             case .season: "Turneringen"
             case .courses: "Banene"
             case .roster: "Troppen"
-            case .evening: "Kveldene"
+            case .evening: DayTerm.capitalized(term.theMany)
             }
         }
     }
@@ -30,6 +31,8 @@ nonisolated enum GettingStarted {
         var readyCourses: Int
         var activeMembers: Int
         var upcomingEvenings: Int
+        /// «Kveld» eller «spilledag» (`DayTerm`).
+        var term: DayTerm = .evening
     }
 
     struct Step: Equatable, Identifiable, Sendable {
@@ -37,7 +40,9 @@ nonisolated enum GettingStarted {
         let isDone: Bool
         /// Hva som står, eller hva som mangler.
         let detail: String
+        var term: DayTerm = .evening
         var id: Item { item }
+        var title: String { item.title(term) }
         /// Nummeret i lista: 1 Turneringen, 2 Troppen, 3 Banene, 4 Kveldene.
         var number: Int { (Item.allCases.firstIndex(of: item) ?? 0) + 1 }
     }
@@ -46,11 +51,12 @@ nonisolated enum GettingStarted {
     static let minimumRoster = RoundSetupCheck.minimumPlayers
 
     static func input(seasons: [SeasonRow], readyCourses: Int, activeMembers: Int, events: [EventRow],
-                      today: String) -> Input {
+                      today: String, term: DayTerm = .evening) -> Input {
         Input(hasActiveSeason: seasons.contains { $0.status == .active },
               readyCourses: readyCourses,
               activeMembers: activeMembers,
-              upcomingEvenings: events.filter { $0.eventDate >= today }.count)
+              upcomingEvenings: events.filter { $0.eventDate >= today }.count,
+              term: term)
     }
 
     /// Uferdige punkter som åpner «Ny turnering» i stedet for en side: turneringen, når ingen er i gang.
@@ -77,8 +83,9 @@ nonisolated enum GettingStarted {
                         : "Minst \(minimumRoster) må være med i troppen før dere kan spille.")
             case .evening:
                 Step(item: item, isDone: input.upcomingEvenings > 0,
-                     detail: input.upcomingEvenings > 0 ? eveningCount(input.upcomingEvenings)
-                                                        : "Legg inn neste kveld.")
+                     detail: input.upcomingEvenings > 0 ? eveningCount(input.upcomingEvenings, input.term)
+                                                        : "Legg inn neste \(input.term.one).",
+                     term: input.term)
             }
         }
     }
@@ -102,7 +109,7 @@ nonisolated enum GettingStarted {
         n == 1 ? "1 bane er klar." : "\(n) baner er klare."
     }
 
-    private static func eveningCount(_ n: Int) -> String {
-        n == 1 ? "1 kommende kveld." : "\(n) kommende kvelder."
+    private static func eveningCount(_ n: Int, _ term: DayTerm) -> String {
+        n == 1 ? "1 kommende \(term.one)." : "\(n) kommende \(term.many)."
     }
 }

@@ -196,7 +196,7 @@ nonisolated enum EveningClose {
     }
 
     /// Nil når det ikke er noen pågående runde å låse.
-    static func prompt(_ checks: [Check]) -> EveningClosePrompt? {
+    static func prompt(_ checks: [Check], term: DayTerm = .evening) -> EveningClosePrompt? {
         guard !checks.isEmpty else { return nil }
         var lines: [String] = []
         var suggest: UUID?
@@ -211,12 +211,13 @@ nonisolated enum EveningClose {
             }
         }
         lines.append(checks.count == 1 ? "Runden låses og teller i turneringen." : "Rundene låses og teller i turneringen.")
-        let title = checks.count == 1 ? "Avslutte \(checks[0].title)?" : "Avslutte kvelden?"
+        let title = checks.count == 1 ? "Avslutte \(checks[0].title)?" : "Avslutte \(term.the)?"
         return EveningClosePrompt(title: title, lines: lines, suggestCut: suggest)
     }
 
     /// Meldingen etterpå: hva som ble låst, og hva som står igjen.
-    static func summary(locked: [String], drafts: [String], failed: [String]) -> String {
+    static func summary(locked: [String], drafts: [String], failed: [String], term: DayTerm = .evening) -> String {
+        let day = DayTerm.capitalized(term.the)
         var parts: [String] = []
         if !locked.isEmpty {
             parts.append(locked.count == 1 ? "\(locked[0]) er låst." : "Låst: \(locked.joined(separator: ", ")).")
@@ -225,9 +226,9 @@ nonisolated enum EveningClose {
             parts.append("Ble ikke låst: \(failed.joined(separator: ", ")). Prøv igjen.")
         }
         if drafts.isEmpty {
-            if failed.isEmpty { parts.append("Kvelden er ferdig, og neste kveld står øverst.") }
+            if failed.isEmpty { parts.append("\(day) er ferdig, og neste \(term.one) står øverst.") }
         } else {
-            parts.append("Kladden \(drafts.joined(separator: ", ")) er ikke spilt. Kvelden er ikke ferdig før den er startet og låst, eller slettet.")
+            parts.append("Kladden \(drafts.joined(separator: ", ")) er ikke spilt. \(day) er ikke ferdig før den er startet og låst, eller slettet.")
         }
         return parts.joined(separator: " ")
     }

@@ -1,3 +1,4 @@
+import GolfgutuCore
 import SwiftUI
 
 /// Kvelden: alt som hører til én kveld, i kveldens rekkefølge (fase 21). Øverst stegrekka og knappen
@@ -14,6 +15,7 @@ struct KveldenView: View {
     @State private var editing: EventEditItem?
     @State private var announcement: VarslerModel?
     @Environment(\.showRound) private var showRound
+    @Environment(\.dayTerm) private var dayTerm
     @Environment(\.selectTab) private var selectTab
 
     init(eventID: UUID, terminliste: TerminlisteModel, admin: RundeAdminModel, loads: Bool = true) {
@@ -30,7 +32,7 @@ struct KveldenView: View {
 
     var body: some View {
         content
-            .navigationTitle(event.map { EveningDates.longText($0.eventDate, capitalized: true) } ?? "Kvelden")
+            .navigationTitle(event.map { EveningDates.longText($0.eventDate, capitalized: true) } ?? DayTerm.capitalized(dayTerm.the))
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
             .toolbar {
@@ -67,10 +69,10 @@ struct KveldenView: View {
         if let event {
             list(event)
         } else if terminliste.state == .loading || admin.state == .loading {
-            ProgressView("Henter kvelden …")
+            ProgressView("Henter \(dayTerm.the) …")
         } else if case .failed(let text) = terminliste.state {
             ContentUnavailableView {
-                Label("Fikk ikke hentet kvelden", systemImage: "wifi.exclamationmark")
+                Label("Fikk ikke hentet \(dayTerm.the)", systemImage: "wifi.exclamationmark")
             } description: {
                 Text(text)
             } actions: {
@@ -78,7 +80,7 @@ struct KveldenView: View {
                     .buttonStyle(.dd(.primary))
             }
         } else {
-            ContentUnavailableView("Kvelden finnes ikke lenger", systemImage: "calendar",
+            ContentUnavailableView("\(DayTerm.capitalized(dayTerm.the)) finnes ikke lenger", systemImage: "calendar",
                                    description: Text("Den kan være slettet."))
         }
     }
@@ -96,7 +98,7 @@ struct KveldenView: View {
 
     /// Seksjonsoverskriften, med «nå» på delen kvelden er i.
     private func header(_ part: EveningPart, current: EveningPart?) -> some View {
-        DDHeader(part == current ? "\(part.title) · nå" : part.title)
+        DDHeader(part == current ? "\(part.title(dayTerm)) · nå" : part.title(dayTerm))
     }
 
     private func list(_ event: EventRow) -> some View {
@@ -110,7 +112,7 @@ struct KveldenView: View {
                 VStack(alignment: .leading, spacing: DDSpacing.l) {
                     EveningStepsBar(progress: progress)
                     DDPill(Tonight.statusText(action: progress.action, rounds: rounds,
-                                              activeTitle: admin.activeRound.map(admin.title)),
+                                              activeTitle: admin.activeRound.map(admin.title), term: dayTerm),
                            tone: EveningStatusTone.tone(progress.action))
                     if admin.state == .loaded {
                         EveningNextStepButton(
@@ -180,7 +182,7 @@ struct KveldenView: View {
                         actions.message = text
                     }
                 } else if !rounds.contains(where: { $0.status == .locked }) {
-                    Text("Når rundene er spilt, avslutter du kvelden her.")
+                    Text("Når rundene er spilt, avslutter du \(dayTerm.the) her.")
                         .foregroundStyle(Color.ddInkSecondary)
                 }
                 if rounds.contains(where: { $0.status == .locked }), progress.action != .seeResult {
@@ -203,7 +205,7 @@ struct KveldenView: View {
             } header: {
                 header(.after, current: current)
             } footer: {
-                DDFooter("Avslutt kvelden låser rundene som går. Melding til alle går til alle i klubben og står i varslene.")
+                DDFooter("Avslutt \(dayTerm.the) låser rundene som går. Melding til alle går til alle i klubben og står i varslene.")
             }
         }
         .disabled(actions.isBusy)

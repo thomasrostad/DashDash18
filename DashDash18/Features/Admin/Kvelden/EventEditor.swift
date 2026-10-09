@@ -1,7 +1,9 @@
+import GolfgutuCore
 import SwiftUI
 
 /// Ny eller endre kveld.
 struct EventEditor: View {
+    @Environment(\.dayTerm) private var dayTerm
     let model: TerminlisteModel
     @State var draft: EventDraft
     let done: () -> Void
@@ -29,7 +31,7 @@ struct EventEditor: View {
                 TextField("Notat (valgfritt)", text: $draft.note, axis: .vertical)
                     .lineLimit(2...5)
             } footer: {
-                DDFooter("Én kveld per dato.")
+                DDFooter("Én \(dayTerm.one) per dato.")
             }
 
             Section {
@@ -54,12 +56,12 @@ struct EventEditor: View {
 
             if draft.id != nil {
                 Section {
-                    Button("Slett kvelden", role: .destructive) { confirmDelete = true }
+                    Button("Slett \(dayTerm.the)", role: .destructive) { confirmDelete = true }
                 }
             }
         }
         .environment(\.timeZone, EveningDates.osloTimeZone)
-        .navigationTitle(draft.id == nil ? "Ny kveld" : "Endre kveld")
+        .navigationTitle(draft.id == nil ? "Ny \(dayTerm.one)" : "Endre \(dayTerm.one)")
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .disabled(isBusy)
@@ -76,10 +78,10 @@ struct EventEditor: View {
                 }
             }
         }
-        .confirmationDialog("Slette kvelden?", isPresented: $confirmDelete, titleVisibility: .visible) {
+        .confirmationDialog("Slette \(dayTerm.the)?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Slett", role: .destructive, action: delete)
         } message: {
-            Text("Påmeldingene og sosialkomiteen for kvelden slettes også.")
+            Text("Påmeldingene og sosialkomiteen for \(dayTerm.the) slettes også.")
         }
     }
 

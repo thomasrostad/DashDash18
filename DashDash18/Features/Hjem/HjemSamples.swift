@@ -227,7 +227,7 @@ struct HjemSampleScreen: View {
                                                       hasReacted: { model.hasReacted($0, on: $1) },
                                                       share: { model.share(round: $0) },
                                                       organizer: variant == .organizer
-                                                        ? HjemOrganizerStep(title: TonightAction.setUp.buttonTitle ?? "",
+                                                        ? HjemOrganizerStep(title: TonightAction.setUp.buttonTitle() ?? "",
                                                                             hint: "", perform: {})
                                                         : nil,
                                                       invite: variant == .invite

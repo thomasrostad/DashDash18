@@ -190,7 +190,7 @@ struct NyTurneringTests {
     @Test func komIGangLenkerTilNyTurnering() {
         let input = GettingStarted.Input(hasActiveSeason: false, readyCourses: 1, activeMembers: 12, upcomingEvenings: 1)
         let step = GettingStarted.steps(input)[0]
-        #expect(step.item.title == "Turneringen")
+        #expect(step.title == "Turneringen")
         #expect(step.detail == "Lag turneringen og velg hvordan dere spiller.")
         #expect(GettingStarted.opensNewTournament(step))
         var done = input
