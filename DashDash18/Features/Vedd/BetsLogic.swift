@@ -178,6 +178,11 @@ nonisolated enum BetMapping {
 
 /// Tekstene i vedd-arket og på kortene, med PWA-ens ordlyd. Kroner er poeng.
 nonisolated enum BetTexts {
+    /// Runden hører ikke til turneringen veddemålene gjelder (hovedturneringen).
+    static func otherTournament(seasonName: String) -> String {
+        "Veddemål gjelder foreløpig bare \(seasonName). Denne runden er i en annen turnering, så det kan ikke veddes på den ennå."
+    }
+
     /// Påstanden for en mal (`utfordringMaler`). `me` og `him` er navnene; `roundName` gir
     /// «i Runde 2», ellers «i neste runde».
     static func template(_ t: BetTemplate, me: String, him: String?, roundName: String?) -> String {

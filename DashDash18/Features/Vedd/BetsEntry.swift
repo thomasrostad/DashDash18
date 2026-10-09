@@ -32,7 +32,7 @@ struct VeddKnapp: View {
             }
             .buttonStyle(.dd(.secondary, fullWidth: true, compact: true))
             .navigationDestination(item: $target) { t in
-                BetsView(against: t.against ?? me)
+                BetsView(against: t.against ?? me, roundID: game.snapshot.round.id)
             }
         }
     }
