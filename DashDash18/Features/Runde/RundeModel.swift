@@ -217,6 +217,24 @@ final class RundeModel {
     private func startRealtime(roundID: UUID) async {
         guard channelRound != roundID else { return }
         await stopRealtime()
+        if BroadcastFeature.isEnabled {
+            // sql/040: én privat kanal per runde, tilgangen sjekkes når vi kobler på.
+            let channel = client.channel(BroadcastTopic.round(roundID)) { $0.isPrivate = true }
+            let changes = channel.broadcastStream(event: BroadcastTopic.event)
+            let statuses = channel.statusChange
+            self.channel = channel
+            channelRound = roundID
+            listenTasks = [
+                Task { [weak self] in
+                    for await status in statuses { self?.isLive = status == .subscribed }
+                },
+                Task { [weak self] in
+                    for await _ in changes { await self?.load() }
+                },
+                Task { try? await channel.subscribeWithError() },
+            ]
+            return
+        }
         let channel = client.channel("runde-\(roundID.uuidString)")
         let changes = channel.postgresChange(AnyAction.self, schema: "public", table: "hole_scores",
                                              filter: .eq("round_id", value: roundID))
