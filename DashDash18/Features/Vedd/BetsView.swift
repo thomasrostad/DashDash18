@@ -7,10 +7,12 @@ struct BetsView: View {
     @Environment(\.clubContext) private var context
     /// Åpne vedd-arket med en gang (fra runden): på en spiller, eller på deg selv med din egen id.
     var against: UUID?
+    /// Runden «Vedd» ble trykket i. Arket bruker den, ikke bare hovedturneringens aktive runde.
+    var roundID: UUID?
 
     var body: some View {
         if let context {
-            BetsContent(model: BetsModel(context: context), openFor: against)
+            BetsContent(model: BetsModel(context: context), openFor: against, roundID: roundID)
         } else {
             ContentUnavailableView("Ikke logget inn", systemImage: "person.crop.circle.badge.questionmark")
         }
@@ -26,7 +28,9 @@ private struct SheetTarget: Identifiable {
 private struct BetsContent: View {
     @State var model: BetsModel
     var openFor: UUID?
+    var roundID: UUID?
     @State private var sheet: SheetTarget?
+    @State private var notice: String?
     @State private var openedInitial = false
     @Environment(\.scenePhase) private var scenePhase
 
@@ -36,9 +40,15 @@ private struct BetsContent: View {
             .ddNavigationChrome()
             .task {
                 await model.load()
-                if !openedInitial, let openFor, model.board != nil {
+                if !openedInitial, let openFor, let board = model.board {
                     openedInitial = true
-                    sheet = SheetTarget(against: openFor == model.clubContext.memberID ? nil : openFor)
+                    // Veddemål hører til hovedturneringen (sesongen) til `bets` får turneringen (trinn 5).
+                    // En runde i en annen turnering får en forklaring i stedet for et ark for feil runde.
+                    if let roundID, board.games[roundID] == nil {
+                        notice = BetTexts.otherTournament(seasonName: board.seasonName)
+                    } else {
+                        sheet = SheetTarget(against: openFor == model.clubContext.memberID ? nil : openFor)
+                    }
                 }
             }
             .refreshable { await model.load() }
@@ -52,9 +62,11 @@ private struct BetsContent: View {
                     }
                 }
             }
+            .messageAlert("Veddemål", text: $notice)
             .sheet(item: $sheet) { target in
                 if let board = model.board {
-                    VeddArk(model: model, draft: BetSheetDraft(board: board, against: target.against, game: board.activeGame))
+                    VeddArk(model: model, draft: BetSheetDraft(board: board, against: target.against,
+                                                               game: roundID.flatMap { board.games[$0] } ?? board.activeGame))
                 }
             }
     }
