@@ -6,8 +6,9 @@ import Foundation
 
 /// Onboarding uten klubb: «Spill med venner» eller «Bli med i/lag en klubb» etter innlogging,
 /// og en app med bare Spill og Deg for den som ikke er i en klubb. Krever løse runder (017, 018).
+/// På siden 09.10.2026 (Thomas): en ny bruker skal kunne spille uten å bli med i en klubb først.
 nonisolated enum OpenAppFeature {
-    static let flag = false
+    static let flag = true
     static let isEnabled = flag && LooseRoundsFeature.isEnabled
 }
 
