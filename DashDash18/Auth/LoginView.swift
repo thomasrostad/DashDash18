@@ -7,6 +7,8 @@ struct LoginView: View {
     var showsGoogle = GoogleLoginFeature.isEnabled
     /// Lenkene til vilkår og personvern.
     var showsLegal = LegalLinks.isVisible
+    /// Åpnet fra en klubbinvitasjon (`dashdash://klubb/KODE`): si at den er tatt vare på.
+    var hasClubInvite = false
     @Environment(AuthModel.self) private var auth
     @Environment(\.colorScheme) private var colorScheme
     @State private var appleNonce = ""
@@ -34,6 +36,12 @@ struct LoginView: View {
                     LoginHero()
                         .padding(.vertical, 48)
                     VStack(alignment: .leading, spacing: DDSpacing.l) {
+                        if hasClubInvite {
+                            DDInfoStripe(tone: .earth) {
+                                Label("Invitasjonen er tatt vare på. Logg inn, så går du rett videre til klubben.",
+                                      systemImage: "envelope.open")
+                            }
+                        }
                         switch step {
                         case .email:
                             appleSection

@@ -348,11 +348,16 @@ nonisolated enum TroppDisplay {
 
 // MARK: - Invitasjon
 
-/// Invitasjonskoden til klubben (`clubs.join_code`), slik arrangøren deler den fra Troppen.
+/// Invitasjonskoden til klubben (`clubs.join_code`), slik arrangøren deler den fra Troppen,
+/// arrangørsiden og Hjem.
 nonisolated enum TroppInvite {
-    /// Teksten som deles. Nil når klubben ikke har noen kode.
+    /// Teksten som deles, med lenken (`dashdash://klubb/KODE`) og koden. Nil når klubben ikke har noen kode.
     static func shareText(clubName: String, code: String?) -> String? {
-        guard let code = code?.trimmingCharacters(in: .whitespaces), !code.isEmpty else { return nil }
-        return "Bli med i \(clubName) i Atten. Invitasjonskode: \(code)"
+        invite(code).map { $0.shareText(clubName: clubName) }
+    }
+
+    /// Invitasjonen til klubben, eller nil når den ikke har noen (gyldig) kode.
+    static func invite(_ code: String?) -> ClubInvite? {
+        code.flatMap { ClubInvite(code: $0) }
     }
 }

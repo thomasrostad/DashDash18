@@ -23,6 +23,8 @@ struct HjemActions {
     var share: (UUID) -> ResultShare? = { _ in nil }
     /// Arrangørens knapp for neste steg på «Neste kveld» (fase 21). nil: ingen knapp.
     var organizer: HjemOrganizerStep?
+    /// «Inviter spillere» for arrangøren mens troppen er liten. nil: ikke noe kort.
+    var invite: HjemInvite?
 }
 
 /// Hjem fra topp til bunn (retning 1a med 1b-oppsummeringen): filterpillene, «Siden sist» når noe
@@ -59,6 +61,10 @@ struct HjemFeedView: View {
 
     @ViewBuilder
     private var top: some View {
+        // Klubben, som «Neste kveld»: ikke under «Løse runder».
+        if let invite = actions.invite, HjemDisplay.showsEvening(filter: feed.filter) {
+            HjemInviteCard(invite: invite)
+        }
         if let summary = feed.summary {
             HjemSummaryCard(summary: summary)
         }

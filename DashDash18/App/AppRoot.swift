@@ -10,6 +10,10 @@ struct AppRoot: View {
     @State private var pendingLink: AppLink?
     /// Kjøp i appen (fase 17). Lages per innlogging når `PurchaseFeature` er på; ellers nil.
     @State private var purchases: PurchaseService?
+    /// Invitasjon til en klubb (`dashdash://klubb/KODE`). Huskes på telefonen gjennom innloggingen,
+    /// og vises når klubbene er hentet (`ClubInviteFlow`).
+    @State private var pendingClubInvite: ClubInvite? = PendingClubInviteStore().load()
+    @State private var presentedClubInvite: PresentedClubInvite?
 
     var body: some View {
         Group {
@@ -19,7 +23,7 @@ struct AppRoot: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ddScreenBackground()
             case .signedOut:
-                LoginView()
+                LoginView(hasClubInvite: pendingClubInvite != nil)
             case .signedIn(let user):
                 // «Oppdater Atten» når bygget er eldre enn app_config.min_ios_build (sql/031).
                 MinimumBuildGate(client: services.client) {
@@ -38,6 +42,11 @@ struct AppRoot: View {
         .environment(services.push)
         .environment(purchases)
         .onOpenURL { url in
+            if let invite = ClubInvite(url: url) {
+                PendingClubInviteStore().save(invite)
+                pendingClubInvite = invite
+                return
+            }
             guard let link = AppLink.parse(url, rounds: LooseRoundsFeature.isEnabled,
                                            competitions: CompetitionsFeature.isActive) else { return }
             pendingLink = link
@@ -52,6 +61,13 @@ struct AppRoot: View {
                 case .competition(let code):
                     JoinCompetitionFromLinkView(client: services.client, code: code)
                 }
+            }
+        }
+        .onChange(of: clubInviteStep, initial: true) { _, step in presentClubInvite(step) }
+        .sheet(item: $presentedClubInvite) { presented in
+            if let user = signedInUser {
+                ClubInviteSheet(presented: presented, user: user) { presentedClubInvite = nil }
+                    .environment(services.club)
             }
         }
         .task { await services.auth.observe() }
@@ -85,6 +101,27 @@ extension AppRoot {
         purchases = service
         service.start()
         Task { await service.refreshEntitlements() }
+    }
+
+    /// Hva som skal skje med invitasjonen nå. nil: ingen invitasjon venter.
+    private var clubInviteStep: ClubInviteFlow.Step? {
+        pendingClubInvite.map {
+            ClubInviteFlow.step(isSignedIn: signedInUser != nil, club: services.club.state,
+                                memberships: services.club.memberships, invite: $0)
+        }
+    }
+
+    /// Når innloggingen og klubbene er klare: vis invitasjonen én gang, og glem den på telefonen.
+    private func presentClubInvite(_ step: ClubInviteFlow.Step?) {
+        guard let step, let invite = pendingClubInvite else { return }
+        switch step {
+        case .waitForSignIn, .waitForClubs:
+            return
+        case .join, .confirmJoin, .alreadyMember:
+            PendingClubInviteStore().clear()
+            pendingClubInvite = nil
+            presentedClubInvite = PresentedClubInvite(invite: invite, step: step)
+        }
     }
 
     private var signedInUser: AuthUser? {

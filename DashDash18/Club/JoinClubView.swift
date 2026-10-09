@@ -1,11 +1,16 @@
 import SwiftUI
 
-/// Bli med i en klubb: kode → velg ditt navn i troppen, eller be om å bli med som ny.
+/// Bli med i en klubb: kode eller lenke → velg ditt navn i troppen, eller be om å bli med som ny.
+/// Med `initialCode` (fra en invitasjonslenke eller onboardingen) hentes klubben med en gang.
 struct JoinClubView: View {
     let user: AuthUser
+    /// Ferdig: aktiv (ledig navn) eller venter (ny). nil: appen bytter skjerm av seg selv.
+    var onJoined: ((ClubPreview, MemberStatus) -> Void)?
     @Environment(ClubModel.self) private var club
 
-    @State private var codeText = ""
+    @State private var codeText: String
+    /// Koden fra lenken eller onboardingen er slått opp (bare én gang).
+    @State private var didLookUpInitial = false
     @State private var preview: ClubPreview?
     @State private var code = ""
     @State private var newName = ""
@@ -14,6 +19,17 @@ struct JoinClubView: View {
     @State private var error: ClubError?
     /// Navnet som venter på «Ja, det er meg».
     @State private var claiming: ClubPreview.OpenMember?
+
+    /// - Parameter preloaded: klubben allerede hentet (skjermprøvene, uten nett).
+    init(user: AuthUser, initialCode: String? = nil, preloaded: ClubPreview? = nil,
+         onJoined: ((ClubPreview, MemberStatus) -> Void)? = nil) {
+        self.user = user
+        self.onJoined = onJoined
+        _codeText = State(initialValue: initialCode ?? "")
+        _didLookUpInitial = State(initialValue: initialCode == nil || preloaded != nil)
+        _preview = State(initialValue: preloaded)
+        _code = State(initialValue: preloaded == nil ? "" : (initialCode.flatMap(ClubInvite.init(code:))?.code ?? ""))
+    }
 
     var body: some View {
         DDForm {
@@ -32,6 +48,11 @@ struct JoinClubView: View {
         .navigationTitle(preview?.name ?? "Bli med")
         .ddNavigationChrome()
         .disabled(isBusy)
+        .task {
+            guard !didLookUpInitial else { return }
+            didLookUpInitial = true
+            lookUp()
+        }
         // Et feiltrykk kobler deg til en annens navn, og bare arrangøren kan løse det opp.
         .confirmationDialog(
             claiming.map { "Er du \($0.displayName)?" } ?? "",
@@ -47,18 +68,7 @@ struct JoinClubView: View {
     }
 
     private var codeSection: some View {
-        Section {
-            TextField("Invitasjonskode", text: $codeText)
-                .textInputAutocapitalization(.characters)
-                .autocorrectionDisabled()
-                .font(.dd(.mono, size: 14, relativeTo: .body))
-                .onSubmit(lookUp)
-            Button(action: lookUp) {
-                busyLabel("Finn klubben")
-            }
-        } footer: {
-            DDFooter("Koden får du av arrangøren, f.eks. «A1B2C3D4E5».")
-        }
+        ClubCodeEntrySection(text: $codeText, isBusy: isBusy, header: "Invitasjonen", onSubmit: lookUp)
     }
 
     @ViewBuilder
@@ -135,13 +145,14 @@ struct JoinClubView: View {
     }
 
     private func lookUp() {
-        guard let normalized = ClubInput.normalizedJoinCode(codeText) else {
-            error = .invalidInput("Koden er 6–16 bokstaver og tall.")
+        guard let invite = ClubInvite.parse(codeText) else {
+            error = .invalidInput(ClubInvite.notAnInvite)
             return
         }
+        codeText = invite.code
         run {
-            preview = try await club.preview(code: normalized)
-            code = normalized
+            preview = try await club.preview(code: invite.code)
+            code = invite.code
         }
     }
 
@@ -151,7 +162,9 @@ struct JoinClubView: View {
         isBusy = true
         Task {
             do {
-                try await club.join(code: code, memberID: memberID, displayName: nil, handicapIndex: nil, userID: user.id)
+                let status = try await club.join(code: code, memberID: memberID, displayName: nil,
+                                                 handicapIndex: nil, userID: user.id)
+                if let preview { onJoined?(preview, status) }
             } catch {
                 let failure = (error as? ClubError) ?? .unknown(error.localizedDescription)
                 self.error = failure
@@ -182,7 +195,9 @@ struct JoinClubView: View {
         }
         run {
             do {
-                try await club.join(code: code, memberID: nil, displayName: name, handicapIndex: handicap, userID: user.id)
+                let status = try await club.join(code: code, memberID: nil, displayName: name,
+                                                 handicapIndex: handicap, userID: user.id)
+                if let preview { onJoined?(preview, status) }
             } catch ClubError.duplicateName {
                 throw ClubInput.nameTakenByOtherLogin(name)
             }
