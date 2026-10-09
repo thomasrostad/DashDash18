@@ -34,7 +34,7 @@ Oppdatert 08.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 - [ ] **11. Google Cloud:** sett opp OAuth consent screen og en Web-klient med redirect `https://tsekialrxuhrugscosgi.supabase.co/auth/v1/callback`. Legg Client ID og Secret inn i **Supabase → Auth → Google**, og legg `dashdash://login-callback` i Redirect URLs.
 - [ ] **12. Personvern og vilkår:** fyll inn hakeparentesene i `docs/personvern.md` og `docs/vilkar.md`, publiser dem og send adressene til Claude. Opprett `personvern@…`.
 - [ ] **13. Egen SMTP** i Supabase (e-postkoder fra eget domene) før mange brukere.
-- [ ] **14. (Valgfritt) Universal links** på dashdash18.com for invitasjoner.
+- [x] **14. Universal links** på dashdash18.com for invitasjoner. *(09.10: Worker `atten-lenker` på dashdash18.com med AASA og invitasjonssider, Associated Domains i Xcode, flagget på.)*
 
 ## D. Byttet for gjengen (fase 9, til slutt)
 

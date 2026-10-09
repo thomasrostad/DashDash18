@@ -8,8 +8,8 @@ import Testing
 struct UniversalLinkParsingTests {
     private func url(_ string: String) throws -> URL { try #require(URL(string: string)) }
 
-    @Test func flaggetErAv() {
-        #expect(UniversalLinksFeature.isEnabled == false)
+    @Test func flaggetErPå() {
+        #expect(UniversalLinksFeature.isEnabled == true)
     }
 
     @Test func oversetterTilAppLenken() throws {
@@ -77,7 +77,7 @@ struct UniversalLinkSharingTests {
         #expect(invite.shareText(clubName: "Golfgutu Invitational", universal: false)
             == "Bli med i Golfgutu Invitational i Atten: dashdash://klubb/02E5172C87 · Koden er 02E5172C87")
         // Flagget er av: som før.
-        #expect(invite.shareText(clubName: "Golfgutu Invitational") == invite.shareText(clubName: "Golfgutu Invitational", universal: false))
+        #expect(invite.shareText(clubName: "Golfgutu Invitational") == invite.shareText(clubName: "Golfgutu Invitational", universal: true))
     }
 
     @Test func runde() throws {
@@ -99,7 +99,7 @@ struct UniversalLinkSharingTests {
             == "Bli med i Vårcupen i Atten.\nhttps://dashdash18.com/konkurranse/ABCDEFGH23\n"
             + "Eller skriv inn koden ABCDE-FGH23 under Turneringer → Bli med med kode.")
         #expect(target.shareText(code, universal: false).contains("dashdash://konkurranse/ABCDEFGH23"))
-        #expect(target.shareText(code) == target.shareText(code, universal: false))
+        #expect(target.shareText(code) == target.shareText(code, universal: true))
     }
 
     /// Den delte lenken leses tilbake til samme kode.

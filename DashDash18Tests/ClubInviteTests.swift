@@ -71,7 +71,7 @@ struct ClubInvitePasteTests {
     @Test func delingstekstenKanLimesInnIgjen() throws {
         let invite = try #require(ClubInvite(code: "02E5172C87"))
         let text = invite.shareText(clubName: "Golfgutu Invitational")
-        #expect(text == "Bli med i Golfgutu Invitational i Atten: dashdash://klubb/02E5172C87 · Koden er 02E5172C87")
+        #expect(text == "Bli med i Golfgutu Invitational i Atten: https://dashdash18.com/klubb/02E5172C87 · Koden er 02E5172C87")
         #expect(ClubInvite.parse(text) == invite)
     }
 }
