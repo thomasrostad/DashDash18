@@ -53,6 +53,13 @@ private struct KveldContent: View {
                             funCompetitions: model.funCompetitions
                         )
                         .ddCard(.large)
+                        if TournamentCoreFeature.isActive {
+                            // Fase 23: gruppa mi i startlista (bås, tid, starthull).
+                            MyStartGroupCard(model: MyStartGroupModel(client: model.clubContext.client,
+                                                                      clubID: model.clubContext.clubID,
+                                                                      memberID: model.memberID, eventID: event.id))
+                                .id(event.id)
+                        }
                         if let entry = model.calendarEntry {
                             AddToCalendarButton(entry: entry)
                         }

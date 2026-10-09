@@ -146,6 +146,16 @@ struct KveldenView: View {
                 ForEach(rounds) { round in
                     RoundAdminRow(round: round, actions: actions)
                 }
+                if TournamentCoreFeature.isActive, admin.state == .loaded, rounds.contains(where: { $0.status != .locked }) {
+                    // Fase 23 (sql/032): tid, starthull, bås og funksjonær per gruppe.
+                    NavigationLink {
+                        StartListView(model: startListModel(event, rounds: rounds))
+                    } label: {
+                        Label("Startliste", systemImage: "list.number")
+                            .labelStyle(DDIconLabelStyle())
+                            .foregroundStyle(Color.ddInk)
+                    }
+                }
                 if admin.state == .loaded, admin.allowsNewRound(event), progress.action != .setUp {
                     Button {
                         actions.newRound(on: event)
@@ -198,6 +208,14 @@ struct KveldenView: View {
         }
         .disabled(actions.isBusy)
         .overlay { if actions.isBusy { ProgressView() } }
+    }
+
+    /// Startlista for rundene som ikke er låst.
+    private func startListModel(_ event: EventRow, rounds: [RoundRow]) -> StartListModel {
+        StartListModel(client: admin.clubContext.client, event: event,
+                       rounds: rounds.filter { $0.status != .locked }.map { ($0, admin.title($0)) },
+                       memberNames: Dictionary(admin.members.map { ($0.id, $0.displayName) },
+                                               uniquingKeysWith: { first, _ in first }))
     }
 
     /// Kveldens runder, med runden som går selv om den hører til en annen kveld.

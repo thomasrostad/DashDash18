@@ -21,12 +21,15 @@ struct AppRoot: View {
             case .signedOut:
                 LoginView()
             case .signedIn(let user):
-                ClubGate(services: services, user: user)
-                    .id(user.id)
-                    .task(id: user.id) { await services.club.load(userID: user.id) }
-                    .task(id: user.id) { services.outbox.start(userID: user.id) }
-                    .task(id: user.id) { await services.push.start(userID: user.id) }
-                    .task(id: user.id) { startPurchases(userID: user.id) }
+                // «Oppdater Atten» når bygget er eldre enn app_config.min_ios_build (sql/031).
+                MinimumBuildGate(client: services.client) {
+                    ClubGate(services: services, user: user)
+                }
+                .id(user.id)
+                .task(id: user.id) { await services.club.load(userID: user.id) }
+                .task(id: user.id) { services.outbox.start(userID: user.id) }
+                .task(id: user.id) { await services.push.start(userID: user.id) }
+                .task(id: user.id) { startPurchases(userID: user.id) }
             }
         }
         .environment(services.auth)
