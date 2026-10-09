@@ -48,16 +48,16 @@ struct ApenOnboardingTests {
     }
 
     /// 08.10.2026: 019 kjørt og `delete-account` deployet på test, så sletting, moderering og
-    /// «Del regningen» er på. Google, kjøp og onboarding uten klubb venter på oppsett.
+    /// «Del regningen» er på. 09.10: onboarding uten klubb på. Google og kjøp venter på oppsett.
     @Test func flaggeneEtterGodkjenning() {
-        #expect(!OpenAppFeature.isEnabled)
+        #expect(OpenAppFeature.isEnabled)
         #expect(AccountDeletionFeature.isEnabled)
         #expect(ModerationFeature.isEnabled)
         #expect(!GoogleLoginFeature.isEnabled)
         #expect(!PurchaseFeature.isEnabled)
         #expect(BillSplitFeature.isEnabled)
-        // Med flaggene av og uten publiserte lenker ser innloggingen og Deg ut som før.
-        #expect(!LegalLinks.isVisible)
+        // Med onboarding på vises personvern og vilkår (teksten «publiseres før lansering» til lenkene finnes).
+        #expect(LegalLinks.isVisible)
         #expect(!LoginMethod.google.isAvailable)
     }
 }
