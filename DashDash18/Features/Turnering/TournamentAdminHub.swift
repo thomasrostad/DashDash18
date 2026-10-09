@@ -153,8 +153,20 @@ struct CompetitionAdminPanel: View {
                     TournamentSetupRows(competition: competition, context: header.context)
                 } header: {
                     DDHeader(competition.name)
-                } footer: {
-                    DDFooter("Egne spilledager for denne turneringen kommer i neste steg. Til da legges runder i turneringen med «Teller også i …» når runden settes opp.")
+                }
+                // Egne spilledager (sql/033): runder satt opp på dem teller i denne turneringen.
+                if competition.clubID != nil {
+                    Section {
+                        NavigationLink {
+                            AdminHubView(competition: competition)
+                        } label: {
+                            AdminHubRow("Spilledager og runder",
+                                        "Legg inn spilledager og sett opp rundene. De teller i \(competition.name).",
+                                        systemImage: "calendar")
+                        }
+                    } footer: {
+                        DDFooter("Runder fra andre dager kan også telle her med «Teller også i …» når runden settes opp.")
+                    }
                 }
             }
         }

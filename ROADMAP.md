@@ -409,7 +409,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Fase 22, design: målbilde, datamodell før → etter, migreringstrinn 031–035, paritetskontroll, lokal lasttest (1 000 brukere, 22 000 runder, 3 mill. hull). *(09.10.)*
 - [x] 031 (additivt, trygt for dagens app): kjørt på test 09.10, kontrollen 12 av 12, paritet identisk. Beslutningene 2–9 står nederst i designdokumentet.
 - [x] 032: stab, påmelding med tak og venteliste (tilbud gjelder 48 timer), startliste, mengdebaserte RLS-hjelpere. Kjørt på test 09.10, kontrollen 10 av 10, paritet identisk, cron for utløpte tilbud.
-- [x] 033: speilingen snus (turneringen er kilden), `is_main` bare uten aktiv hovedturnering, runder kobles via `events.competition_id` for alle turneringer. Kjørt på test 09.10: kontrollen 9/9, paritet identisk. Gjenstår i appen: «Ny spilledag» i liga/cup/morro.
+- [x] 033: speilingen snus (turneringen er kilden), `is_main` bare uten aktiv hovedturnering, runder kobles via `events.competition_id` for alle turneringer. Kjørt på test 09.10: kontrollen 9/9, paritet identisk. Appen (09.10): «Spilledager og runder» på arrangørsiden for liga/cup/morro, med samme tidslinje som sesongen (ny spilledag, oppsett, start, lås); sesongens tidslinje viser ikke ligaens dager.
 - [ ] 034–035: gamle regler fjernes (krever `min_ios_build`), `activate_season` lar jakkeracet gå når en annen serie aktiveres, `seasons` som view.
 - [x] Fase 23: arrangør per turnering (velger, åpen påmelding, venteliste, startliste, stab), `min_ios_build` i appen. `TournamentCoreFeature` på 09.10. *(Ikke prøvd på telefon.)*
 - [ ] Fase 24: skala (Tavla-data i én RPC, tabellen på serveren, sanntid).

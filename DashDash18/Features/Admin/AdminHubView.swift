@@ -9,11 +9,16 @@ import SwiftUI
 struct AdminHubView: View {
     /// nil: hovedturneringen. Klar for en turneringsvelger.
     var tournamentID: UUID?
+    /// En liga, cup eller morro med egne spilledager (sql/033): tidslinja for den turneringen.
+    var competition: CompetitionRow?
     @Environment(\.clubContext) private var context
 
     var body: some View {
         if let context {
-            if TournamentCoreFeature.isActive {
+            if let competition {
+                AdminHubContent(model: RundeAdminModel(context: context, competition: competition),
+                                terminliste: TerminlisteModel(context: context, competition: competition))
+            } else if TournamentCoreFeature.isActive {
                 TournamentAdminHub(context: context, seasonID: tournamentID)
             } else {
                 AdminHubContent(model: RundeAdminModel(context: context, tournamentID: tournamentID),
@@ -272,7 +277,11 @@ private struct AdminHubContent: View {
     private var today: String { EveningDates.today() }
 
     /// «Kveld» eller «spilledag», fra turneringens regelsett (`DayTerm`). Uten turnering: «kveld».
-    private var term: DayTerm { model.tournament?.rules.day ?? .evening }
+    /// Liga, cup og morro sier «spilledag» med mindre regelsettet sier noe annet.
+    private var term: DayTerm {
+        if let competition = model.competition { return competition.rules.dayTerm ?? .playingDay }
+        return model.tournament?.rules.day ?? .evening
+    }
 
     private var gettingStarted: [GettingStarted.Step] {
         GettingStarted.steps(GettingStarted.input(

@@ -51,10 +51,15 @@ final class RundeAdminModel {
     /// Turneringen kveldene hører til (fase 21). nil: hovedturneringen (den aktive). Klar for en
     /// turneringsvelger når en klubb kjører flere samtidig.
     let tournamentID: UUID?
+    /// En turnering uten sesong (liga, cup, morro) med egne spilledager (sql/033): kveldene er
+    /// turneringens dager, og regelsettet er turneringens.
+    let competition: CompetitionRow?
 
-    init(context: ClubContext, tournamentID: UUID? = nil, slopeCatalog: SlopeCatalogModel? = nil) {
+    init(context: ClubContext, tournamentID: UUID? = nil, competition: CompetitionRow? = nil,
+         slopeCatalog: SlopeCatalogModel? = nil) {
         self.context = context
         self.tournamentID = tournamentID
+        self.competition = competition
         self.slopeCatalog = slopeCatalog
             ?? (SlopeNoFeature.isEnabled && SlopeNoFeature.usesHoles ? SlopeCatalogModel(client: context.client) : nil)
     }
@@ -66,7 +71,14 @@ final class RundeAdminModel {
     var selectedEvent: EventRow? { events.first { $0.id == selectedEventID } }
 
     /// Turneringen arrangørsiden viser: den valgte, ellers hovedturneringen.
-    var tournament: SeasonRow? { Terminliste.tournament(seasons, id: tournamentID) }
+    var tournament: SeasonRow? {
+        // Turneringen uten sesong vises som en «sesong» (navn, status, regler), men id-en er turneringens.
+        if let competition, let club = competition.clubID {
+            return SeasonRow(id: competition.id, clubID: club, name: competition.name, status: competition.status,
+                             rules: competition.rules)
+        }
+        return Terminliste.tournament(seasons, id: tournamentID)
+    }
 
     /// Rundene gruppert per kveld, nyeste først («Alle runder»). Bare kvelder med runder.
     var groups: [RoundGroup] {
@@ -84,7 +96,7 @@ final class RundeAdminModel {
     }
 
     /// Regelsettet for den valgte kvelden.
-    var rules: Ruleset { RoundListing.rules(for: selectedEvent, seasons: seasons) }
+    var rules: Ruleset { competition?.rules ?? RoundListing.rules(for: selectedEvent, seasons: seasons) }
 
     func course(_ id: UUID?) -> CourseListItem? {
         guard let id else { return nil }
@@ -175,7 +187,8 @@ final class RundeAdminModel {
 
             self.seasons = seasons
             self.allEvents = allEvents
-            events = Terminliste.eveningsForSeason(allEvents, activeSeasonID: tournament?.id)
+            events = competition.map { Terminliste.days(allEvents, competitionID: $0.id) }
+                ?? Terminliste.eveningsForSeason(allEvents, activeSeasonID: tournament?.id)
             members = KveldQueries.sortedByName(roster)
             let kinds = try await CourseLibraryModel.loadKinds(client: client, clubID: clubID)
             let tees = try await CourseLibraryModel.loadTees(client: client, courseIDs: courseList.map(\.id))
