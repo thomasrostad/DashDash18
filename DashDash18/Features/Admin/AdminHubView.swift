@@ -13,11 +13,55 @@ struct AdminHubView: View {
 
     var body: some View {
         if let context {
-            AdminHubContent(model: RundeAdminModel(context: context, tournamentID: tournamentID),
-                            terminliste: TerminlisteModel(context: context, tournamentID: tournamentID))
+            if TournamentCoreFeature.isActive {
+                TournamentAdminHub(context: context, seasonID: tournamentID)
+            } else {
+                AdminHubContent(model: RundeAdminModel(context: context, tournamentID: tournamentID),
+                                terminliste: TerminlisteModel(context: context, tournamentID: tournamentID))
+            }
         } else {
             ContentUnavailableView("Ingen klubb", systemImage: "slider.horizontal.3")
         }
+    }
+}
+
+/// Fase 23: arrangørsiden med turneringsvelger øverst (`TournamentCoreFeature`). En turnering med
+/// kvelder (sesongen) får tidslinja som før; de andre får påmelding, stab og tabell. Med én
+/// turnering vises ingen velger.
+private struct TournamentAdminHub: View {
+    let context: ClubContext
+    let seasonID: UUID?
+    @State private var picker: TournamentPickerModel
+    /// Turneringen arrangøren har valgt i velgeren. nil: den arrangørsiden ble åpnet med.
+    @State private var chosen: UUID?
+
+    init(context: ClubContext, seasonID: UUID?) {
+        self.context = context
+        self.seasonID = seasonID
+        _picker = State(initialValue: TournamentPickerModel(client: context.client, clubID: context.clubID))
+    }
+
+    private var selected: TournamentOption? {
+        if let chosen, let option = picker.options.first(where: { $0.id == chosen }) { return option }
+        return TournamentPicker.initial(picker.options, seasonID: seasonID)
+    }
+
+    var body: some View {
+        let selected = selected
+        let header = TournamentHeader(options: picker.options, selectedID: selected?.id,
+                                      competition: picker.row(selected?.id), context: context) { chosen = $0.id }
+        Group {
+            if let selected, !selected.hasEvenings {
+                CompetitionAdminPanel(header: header)
+            } else {
+                let season = chosen == nil ? seasonID : selected?.seasonID
+                AdminHubContent(model: RundeAdminModel(context: context, tournamentID: season),
+                                terminliste: TerminlisteModel(context: context, tournamentID: season),
+                                header: header)
+                    .id(chosen)
+            }
+        }
+        .task { await picker.load() }
     }
 }
 
@@ -39,15 +83,25 @@ struct AdminHubSample: View {
     @State private var terminliste: TerminlisteModel
     let scroll: AdminHubScroll
 
-    init(_ variant: RundeAdminModel.SampleVariant = .tonight, scroll: AdminHubScroll = .now) {
+    /// Turneringsvelgeren (fase 23, `turneringvelger`).
+    private let picker: TournamentPickerModel?
+
+    init(_ variant: RundeAdminModel.SampleVariant = .tonight, scroll: AdminHubScroll = .now,
+         picker: TournamentPickerModel? = nil) {
         let model = RundeAdminModel.sample(variant)
         _model = State(initialValue: model)
         _terminliste = State(initialValue: .sample(from: model))
         self.scroll = scroll
+        self.picker = picker
     }
 
     var body: some View {
-        AdminHubContent(model: model, terminliste: terminliste, loads: false, scroll: scroll)
+        AdminHubContent(model: model, terminliste: terminliste, loads: false, scroll: scroll,
+                        header: picker.map { picker in
+                            TournamentHeader(options: picker.options, selectedID: picker.options.first?.id,
+                                             competition: picker.rows.first { $0.id == picker.options.first?.id },
+                                             context: model.clubContext) { _ in }
+                        })
     }
 }
 #endif
@@ -74,17 +128,25 @@ private struct AdminHubContent: View {
     @State private var error: String?
     @State private var isBusy = false
 
-    init(model: RundeAdminModel, terminliste: TerminlisteModel, loads: Bool = true, scroll: AdminHubScroll = .now) {
+    /// Turneringsvelgeren og turneringens påmelding og stab (fase 23). nil: som før.
+    private let header: TournamentHeader?
+
+    init(model: RundeAdminModel, terminliste: TerminlisteModel, loads: Bool = true, scroll: AdminHubScroll = .now,
+         header: TournamentHeader? = nil) {
         _model = State(initialValue: model)
         _terminliste = State(initialValue: terminliste)
         _actions = State(initialValue: RoundAdminActions(model: model))
         self.loads = loads
         self.scroll = scroll
+        self.header = header
     }
 
     var body: some View {
         ScrollViewReader { proxy in
             DDList {
+                if let header {
+                    TournamentPickerSection(header: header)
+                }
                 switch model.state {
                 case .loading:
                     ProgressView("Henter kveldene …")
@@ -451,6 +513,9 @@ private struct AdminHubContent: View {
         }
         NavigationLink { BanerAdminView() } label: {
             AdminHubRow("Banene", "Par, indeks og lengde for banene dere spiller.", systemImage: "map")
+        }
+        if let header, let competition = header.competition {
+            TournamentSetupRows(competition: competition, context: header.context)
         }
     }
 

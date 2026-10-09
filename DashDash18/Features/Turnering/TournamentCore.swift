@@ -67,11 +67,12 @@ nonisolated enum TournamentPicker {
 
     static func showsPicker(_ options: [TournamentOption]) -> Bool { options.count > 1 }
 
-    /// Den valgte: turneringen som speiler sesongen arrangørsiden ble åpnet med, ellers den første
-    /// (hovedturneringen).
+    /// Den valgte når arrangørsiden åpnes: turneringen som speiler sesongen den ble åpnet med, ellers
+    /// den første med kvelder (hovedturneringen). Uten noen med kvelder: ingen, så arrangørsiden
+    /// viser kveldene og «Kom i gang» som før.
     static func initial(_ options: [TournamentOption], seasonID: UUID?) -> TournamentOption? {
         if let seasonID, let match = options.first(where: { $0.seasonID == seasonID }) { return match }
-        return options.first
+        return options.first(where: \.hasEvenings)
     }
 }
 
@@ -623,6 +624,18 @@ nonisolated enum StartList {
         if let hole = saved?.startHole, hole != 1 { parts.append("starter på hull \(hole)") }
         if wave > 1 { parts.append("pulje \(wave)") }
         return parts.joined(separator: " · ")
+    }
+
+    /// «med Anders, Bjørn og Cato», eller nil når du er alene i gruppa.
+    static func matesText(_ names: [String]) -> String? {
+        guard let last = names.last else { return nil }
+        if names.count == 1 { return "med \(last)" }
+        return "med " + names.dropLast().joined(separator: ", ") + " og " + last
+    }
+
+    /// «Anders, Bjørn» for gruppa i startlista.
+    static func namesText(_ names: [String]) -> String {
+        names.isEmpty ? "Ingen spillere" : names.joined(separator: ", ")
     }
 
     /// «18:10:00» → «18:10».

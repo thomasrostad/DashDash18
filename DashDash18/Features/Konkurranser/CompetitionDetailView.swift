@@ -112,7 +112,17 @@ struct CompetitionDetailView: View {
                 CompetitionHeaderCard(competition: model.competition, clubName: list?.clubName(of: model.competition))
                 CompetitionUnlockSection(notice: model.lockNotice(purchases: purchases), isWorking: model.isUnlocking,
                                          error: model.unlockError, onUnlock: unlock)
-                if let list {
+                if TournamentCoreFeature.isActive, let client = list?.client {
+                    // Fase 23 (sql/032): tak, venteliste og tilbud.
+                    if model.competition.entry != .club {
+                        CompetitionSignupSection(model: CompetitionSignupModel(client: client,
+                                                                               competitionID: model.competition.id),
+                                                 competitionName: model.competition.name) {
+                            await model.load()
+                            await list?.load()
+                        }
+                    }
+                } else if let list {
                     CompetitionSignupButton(model: list, competition: model.competition)
                 }
                 body()

@@ -13,7 +13,8 @@ import SwiftUI
 /// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkteller`, `konkkveld`, `konklast`, `konklastdeltaker`,
 /// og Hjem (fase 19): `hjem`, `hjemmidt`, `hjembunn`, `hjemlos`, `hjemtom`, `hjemarrangor`, `hjembjelle`,
 /// og slope.no (fase 20): `slopesok`, `slopebane`, `teevalg`, `losnytee`, `hurtigstarttee`, med hull (fase 20b)
-/// `slopevelg` og `slopeklubb`).
+/// `slopevelg` og `slopeklubb`), og turneringen som kjerne (fase 23): `turneringvelger`, `pamelding`,
+/// `pameldingvente`, `pameldinginnstillinger`, `startliste`, `stab`, `mingruppe`, `oppdater`.
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
@@ -47,6 +48,8 @@ struct DesignScreenSamples: View {
         case slopesok, slopebane, teevalg, losnytee, hurtigstarttee
         // Hentede baner med hull valgt direkte (fase 20b).
         case slopevelg, slopeklubb
+        // Turneringen som kjerne (fase 23): velger, påmelding, stab, startliste og minste bygg.
+        case turneringvelger, pamelding, pameldingvente, pameldinginnstillinger, startliste, stab, mingruppe, oppdater
     }
     @State var screen: Screen = .hullkort
 
@@ -161,6 +164,26 @@ struct DesignScreenSamples: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .ddNavigationChrome()
             }
+        case .turneringvelger:
+            NavigationStack { AdminHubSample(.tonight, picker: TournamentCoreSamples.picker()) }
+                .tint(Color.ddForestInk)
+        case .pamelding:
+            SignupSampleScreen(state: .offered)
+        case .pameldingvente:
+            SignupSampleScreen(state: .waitlisted)
+        case .pameldinginnstillinger:
+            NavigationStack { SignupSettingsView(model: TournamentCoreSamples.settings(), loads: false) }
+                .tint(Color.ddForestInk)
+        case .startliste:
+            NavigationStack { StartListView(model: TournamentCoreSamples.startList(), loads: false) }
+                .tint(Color.ddForestInk)
+        case .stab:
+            NavigationStack { StaffView(model: TournamentCoreSamples.staff(), loads: false) }
+                .tint(Color.ddForestInk)
+        case .mingruppe:
+            MyGroupSampleScreen()
+        case .oppdater:
+            UpdateRequiredView(current: 41, required: 57)
         case .feiring:
             FeiringOverlay(celebration: Celebration(level: .eagle, eyebrow: "Hull 7 · par 4",
                                                     text: "To under par. Ikke for å bruse med fjæra, men det var pent.",

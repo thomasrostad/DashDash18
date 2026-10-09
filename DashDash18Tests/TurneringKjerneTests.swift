@@ -56,6 +56,14 @@ struct TurneringsvelgerTests {
         #expect(TournamentPicker.initial(options, seasonID: id(501))?.name == "Høstserie")
         #expect(TournamentPicker.initial(options, seasonID: id(999))?.name == "Jakkeracet")
     }
+
+    /// En klubb uten serie med kvelder får tidslinja og «Kom i gang» som før, ikke en liga.
+    @Test func noEveningsSelectsNothing() {
+        let options = TournamentPicker.options([competition(10, "Liga", kind: .league), competition(11, "Cup", kind: .cup)],
+                                               clubID: club)
+        #expect(TournamentPicker.showsPicker(options))
+        #expect(TournamentPicker.initial(options, seasonID: nil) == nil)
+    }
 }
 
 struct PameldingTests {
@@ -333,6 +341,14 @@ struct StartlisteTests {
         #expect(StartList.summary(groupNo: 3, saved: shot, wave: 2, venue: "course")
                 == "Flight 3 · 09:00 · starter på hull 10 · pulje 2")
         #expect(StartList.summary(groupNo: 2, saved: nil, venue: nil) == "Bås 2")
+    }
+
+    @Test func matesAndNames() {
+        #expect(StartList.matesText([]) == nil)
+        #expect(StartList.matesText(["Anders"]) == "med Anders")
+        #expect(StartList.matesText(["Anders", "Bjørn", "Cato"]) == "med Anders, Bjørn og Cato")
+        #expect(StartList.namesText([]) == "Ingen spillere")
+        #expect(StartList.namesText(["Anders", "Bjørn"]) == "Anders, Bjørn")
     }
 
     @Test func clockMath() {
