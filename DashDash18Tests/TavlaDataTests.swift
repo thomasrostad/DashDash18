@@ -67,8 +67,8 @@ struct TavlaDataTests {
                   status: .active, rules: .golfgutu)
     }
 
-    @Test func flaggetErAvTil036ErKjørt() {
-        #expect(TavlaRPCFeature.isEnabled == false)
+    @Test func flaggetErPå() {
+        #expect(TavlaRPCFeature.isEnabled == true)
     }
 
     @Test func svaretLesesInn() throws {

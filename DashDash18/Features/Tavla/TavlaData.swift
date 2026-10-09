@@ -2,8 +2,9 @@ import Foundation
 
 /// Tavla-data i én RPC (fase 24, `sql/036_tavla_data.sql`).
 nonisolated enum TavlaRPCFeature {
-    /// Av til 036 er kjørt. Med flagget av henter Tavla som før, med ett kall per tabell og runde.
-    static let isEnabled = false
+    /// På siden 09.10.2026: 036 er kjørt på test, og svaret er sjekket mot RLS-spørringene som medlem
+    /// (alle rader like, 13 ms). Med flagget av henter Tavla som før, med ett kall per tabell og runde.
+    static let isEnabled = true
 }
 
 /// Rådata for én sesong, slik `tavla_data` gir dem og slik spørringene henter dem hver for seg.

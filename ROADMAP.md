@@ -408,6 +408,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [ ] 033–035: speilingen snus, gamle regler fjernes (krever `min_ios_build`), `seasons` som view.
 - [x] Fase 23: arrangør per turnering (velger, åpen påmelding, venteliste, startliste, stab), `min_ios_build` i appen. `TournamentCoreFeature` på 09.10. *(Ikke prøvd på telefon.)*
 - [ ] Fase 24: skala (Tavla-data i én RPC, tabellen på serveren, sanntid).
+  - [x] Tavla-data i én RPC (`sql/036_tavla_data.sql`, `TavlaRPCFeature`): Tavla, Vedd og jakkeracet henter sesongen i ett kall. Kjørt på test 09.10, svaret likt med RLS-spørringene, 13 ms. Ikke-medlemmer henter som før.
 - [ ] Fase 25: spillersiden (finn og meld deg på turneringer nær deg).
 
 ### Kodegjennomgang 08.10.2026: åpne funn
