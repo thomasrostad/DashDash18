@@ -30,7 +30,7 @@ struct RulesetTableSections: View {
     private var otherSections: some View {
         Section {
             Picker("Enhet", selection: $draft.rules.table.stablefordCounting.unit) {
-                ForEach(RulesetDraft.stablefordUnits, id: \.self) { Text(RuleNames.title($0)).tag($0) }
+                ForEach(RulesetDraft.stablefordUnits, id: \.self) { Text(RuleNames.title($0, term: draft.rules.day)).tag($0) }
             }
             .pickerStyle(.segmented)
             Toggle("Alle teller", isOn: $draft.countsAllInStableford)

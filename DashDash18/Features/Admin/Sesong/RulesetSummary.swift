@@ -66,11 +66,11 @@ nonisolated enum RulesetSummary {
     /// «7 kvelder, alle matcher teller», «Beste 5 av 7 kvelder teller», «7 kvelder, beste 5 matcher teller».
     static func eveningsAndCounting(_ rules: Ruleset) -> String {
         let c = rules.table.counting
-        let evenings = rules.evenings == 1 ? "1 kveld" : "\(rules.evenings) kvelder"
-        let noun = RuleNames.nouns(c.unit)
+        let evenings = rules.day.count(rules.evenings)
+        let noun = RuleNames.nouns(c.unit, term: rules.day)
         guard let best = c.best else { return "\(evenings), alle \(noun.plural) teller" }
         if c.unit == .evening {
-            return best == 1 ? "Beste kveld av \(rules.evenings) teller" : "Beste \(best) av \(evenings) teller"
+            return best == 1 ? "Beste \(rules.day.one) av \(rules.evenings) teller" : "Beste \(best) av \(evenings) teller"
         }
         return best == 1 ? "\(evenings), beste \(noun.definite) teller" : "\(evenings), beste \(best) \(noun.plural) teller"
     }
@@ -183,7 +183,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .evenings: return "\(rules.evenings)"
         case .counting:
             let c = rules.table.counting
-            let noun = RuleNames.nouns(c.unit)
+            let noun = RuleNames.nouns(c.unit, term: rules.day)
             return c.best.map { "beste \($0) \(noun.plural)" } ?? "alle \(noun.plural)"
         case .win: return RuleFormat.number(rules.table.matchPoints.win)
         case .draw: return RuleFormat.number(rules.table.matchPoints.draw)
@@ -197,7 +197,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .trianglePoints: return rules.table.trianglePoints.map(RuleFormat.number).joined(separator: " / ")
         case .stablefordCounting:
             let c = rules.table.stablefordCounting
-            let noun = RuleNames.nouns(c.unit)
+            let noun = RuleNames.nouns(c.unit, term: rules.day)
             return c.best.map { "beste \($0) \(noun.plural)" } ?? "alle \(noun.plural)"
         case .tiebreaks:
             return rules.table.tiebreaks.isEmpty ? "ingen" : rules.table.tiebreaks.map(RuleNames.inSentence).joined(separator: ", ")

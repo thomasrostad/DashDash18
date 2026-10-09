@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 
 /// Det som deles fra Tavla eller kvelden: overskrift og linjene i den rekkefølgen og med de
 /// plassene appen allerede viser. Ingenting regnes på nytt her. Ren, uten SwiftUI og nettverk.
@@ -63,9 +64,8 @@ nonisolated extension ResultShare {
 nonisolated extension TavlaStandings {
     /// Sesongtabellen til deling.
     var share: ResultShare {
-        let evenings = eveningsTotal == 1 ? "kveld" : "kvelder"
         return ResultShare(eyebrow: "Jakkeracet", title: seasonName,
-                           subtitle: "\(eveningsPlayed) av \(eveningsTotal) \(evenings) spilt",
+                           subtitle: "\(eveningsPlayed) av \(rules.day.count(eveningsTotal)) spilt",
                            lines: ResultShare.lines(from: rows, points: points))
     }
 }
@@ -89,7 +89,7 @@ nonisolated extension RoundGame {
     func share(viewer: Viewer) -> ResultShare {
         let state = snapshot.round.status == .locked ? "Resultat" : "Stilling nå"
         let date = snapshot.eventDate.map { EveningDates.longText($0, capitalized: true) }
-        let eyebrow = snapshot.isLoose ? "Runden" : "Kvelden"
+        let eyebrow = snapshot.isLoose ? "Runden" : DayTerm.capitalized(snapshot.rules.day.the)
         return ResultShare(eyebrow: eyebrow, title: snapshot.course?.name ?? eyebrow,
                            subtitle: [date, state].compactMap { $0 }.joined(separator: " · "),
                            lines: ResultShare.lines(from: bayenNaa(viewer: viewer)))

@@ -129,10 +129,10 @@ nonisolated enum TournamentSetup {
         let handicap = RulesetSummary.handicap(rules, form: form)
         switch draft.target {
         case .season:
-            var lines = [RulesetSummary.eveningsAndCounting(rules)]
+            var lines = [RulesetSummary.eveningsAndCounting(draft.seasonRules)]
             lines.append(rules.table.pointsSource == .stableford
                          ? "Stablefordpoengene er tabellpoengene"
-                         : "Matcher hver kveld, seier gir \(RuleFormat.number(rules.table.matchPoints.win)) poeng")
+                         : "Matcher hver \(draft.dayTerm.one), seier gir \(RuleFormat.number(rules.table.matchPoints.win)) poeng")
             lines.append(RulesetSummary.sidePrizes(rules.sidePrizes))
             return lines
         case .competition(.cup):

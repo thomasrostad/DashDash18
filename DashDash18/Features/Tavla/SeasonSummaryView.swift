@@ -1,3 +1,4 @@
+import GolfgutuCore
 import SwiftUI
 
 /// Sesongoppsummeringen: mester, pall og sesongens tall.
@@ -41,7 +42,7 @@ struct SeasonSummaryView: View {
                 DDSectionLabel("Turneringen i tall")
                     .padding(.top, DDSpacing.l)
                 VStack(alignment: .leading, spacing: 12) {
-                    DDStatRow(label: "Kvelder spilt", value: "\(s.eveningsPlayed) / \(s.eveningsTotal)")
+                    DDStatRow(label: DayTerm.capitalized(standings.rules.day.many) + " spilt", value: "\(s.eveningsPlayed) / \(s.eveningsTotal)")
                     if let h = s.bestRound { highlight("Turneringens runde", h) }
                     if let h = s.mostBirdies { highlight("Flest birdies", h) }
                     if let h = s.longestDrive { highlight("Lengste drive", h) }

@@ -12,6 +12,8 @@ struct DayTermTests {
         #expect(DayTerm.evening.today == "I kveld" && DayTerm.playingDay.today == "I dag")
         #expect(DayTerm.playingDay.title == "Spilledag")
         #expect(DayTerm.capitalized("kvelden") == "Kvelden")
+        #expect(DayTerm.playingDay.possessive == "spilledagens" && DayTerm.evening.possessive == "kveldens")
+        #expect(DayTerm.evening.count(1) == "1 kveld" && DayTerm.playingDay.count(3) == "3 spilledager")
     }
 
     @Test func golfgutuSierKveld() {

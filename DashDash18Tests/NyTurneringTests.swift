@@ -143,10 +143,10 @@ struct NyTurneringTests {
 
     @Test func reglerKortISteg2() {
         let s = TournamentDraft(template: .stablefordSeries, clubID: Self.club, name: "H", today: "2026-10-08")
-        #expect(TournamentSetup.ruleLines(s) == ["Beste 5 av 7 kvelder teller", "Stablefordpoengene er tabellpoengene",
+        #expect(TournamentSetup.ruleLines(s) == ["Beste 5 av 7 spilledager teller", "Stablefordpoengene er tabellpoengene",
                                                  "Ingen sidepremier"])
         let m = TournamentDraft(template: .matchSeries, clubID: Self.club, name: "H", today: "2026-10-08")
-        #expect(TournamentSetup.ruleLines(m)[1] == "Matcher hver kveld, seier gir 1 poeng")
+        #expect(TournamentSetup.ruleLines(m)[1] == "Matcher hver spilledag, seier gir 1 poeng")
         var l = s
         l.clubID = nil
         #expect(TournamentSetup.ruleLines(l).prefix(2) == ["Stablefordpoengene teller rett fram", "De 5 beste rundene teller"])

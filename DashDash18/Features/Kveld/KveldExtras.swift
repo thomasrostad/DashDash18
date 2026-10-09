@@ -1,4 +1,5 @@
 import Observation
+import GolfgutuCore
 import SwiftUI
 
 /// Det Kveld viser om tråden og tippekupongen for én kveld. Hentes hver for seg: feiler den
@@ -30,6 +31,7 @@ final class KveldExtrasModel {
 
 /// Kortene «Kveldens tråd» og «Tippekupongen» på Kveld (før runden).
 struct KveldExtrasCards: View {
+    @Environment(\.dayTerm) private var dayTerm
     @State var model: KveldExtrasModel
     /// Øker når Kveld hentes på nytt (dra ned, realtime): da hentes kortene også.
     var refresh = 0
@@ -41,9 +43,9 @@ struct KveldExtrasCards: View {
                 TradView(eventID: model.eventID)
             } label: {
                 ExtrasCardLabel(
-                    title: "Kveldens tråd",
+                    title: DayTerm.capitalized(dayTerm.possessive) + " tråd",
                     systemImage: "bubble.left.and.bubble.right",
-                    subtitle: model.thread.map(KveldThreadStatus.subtitle) ?? "Praten om kvelden",
+                    subtitle: model.thread.map(KveldThreadStatus.subtitle) ?? "Praten om \(dayTerm.the)",
                     detail: model.thread.flatMap(KveldThreadStatus.lastLine),
                     unread: model.thread?.unread ?? 0
                 )
@@ -54,7 +56,7 @@ struct KveldExtrasCards: View {
                 ExtrasCardLabel(
                     title: "Tippekupongen",
                     systemImage: "ticket",
-                    subtitle: model.tips.map(KveldTipsStatus.text) ?? "Fem spørsmål om kvelden",
+                    subtitle: model.tips.map(KveldTipsStatus.text) ?? "Fem spørsmål om \(dayTerm.the)",
                     detail: nil,
                     unread: 0
                 )

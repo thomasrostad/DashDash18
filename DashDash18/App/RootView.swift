@@ -1,3 +1,5 @@
+import GolfgutuCore
+import Supabase
 import SwiftUI
 
 struct RootView: View {
@@ -11,6 +13,8 @@ struct RootView: View {
     @State private var home: HomeFeedModel?
     @State private var homeKey: String?
     @State private var router = HjemRouter()
+    /// «Kveld» eller «spilledag» for klubbens hovedturnering (`DayTerm`). Arrangørsiden bruker den valgte.
+    @State private var dayTerm: DayTerm = .evening
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -54,6 +58,11 @@ struct RootView: View {
             router.showRound()
         }
         .task(id: memberships.map(\.id)) { makeHome() }
+        .environment(\.dayTerm, dayTerm)
+        .task(id: context?.clubID) {
+            guard let context else { return }
+            dayTerm = await DayTermQueries.main(client: context.client, clubID: context.clubID)
+        }
     }
 
     private var memberships: [Membership] {
@@ -139,4 +148,18 @@ extension AppConfig {
         ),
         expecting: .test
     )
+}
+
+/// Ordet for en dag i klubbens hovedturnering (`DayTerm`).
+enum DayTermQueries {
+    /// Den aktive sesongen, ellers den sist opprettede. «Kveld» når ingen finnes eller hentingen feiler.
+    static func main(client: SupabaseClient, clubID: UUID) async -> DayTerm {
+        let rows: [SeasonRow]? = try? await client.from("seasons")
+            .select(SeasonRow.columns)
+            .eq("club_id", value: clubID)
+            .order("created_at", ascending: false)
+            .execute().value
+        guard let rows else { return .evening }
+        return (rows.first { $0.status == .active } ?? rows.first)?.rules.day ?? .evening
+    }
 }

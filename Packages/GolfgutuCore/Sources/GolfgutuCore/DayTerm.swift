@@ -24,6 +24,12 @@ public enum DayTerm: String, Codable, Hashable, Sendable, CaseIterable {
     /// «kveldene», «spilledagene».
     public var theMany: String { one + "ene" }
 
+    /// «kveldens», «spilledagens».
+    public var possessive: String { the + "s" }
+
+    /// «1 kveld», «3 kvelder».
+    public func count(_ n: Int) -> String { n == 1 ? "1 \(one)" : "\(n) \(many)" }
+
     /// Overskriften for dagen som er i dag: «I kveld», «I dag».
     public var today: String {
         switch self {

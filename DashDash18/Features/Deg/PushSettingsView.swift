@@ -1,8 +1,10 @@
+import GolfgutuCore
 import SwiftUI
 
 /// Deg → Varsler: slå på push, velg hva du får push om, og hvordan tråden varsler.
 /// Vises bare når `PushFeature.isEnabled` er på (se `DegView`).
 struct PushSettingsView: View {
+    @Environment(\.dayTerm) private var dayTerm
     let context: ClubContext
     @Environment(PushRegistrar.self) private var registrar
     @Environment(\.scenePhase) private var scenePhase
@@ -27,7 +29,7 @@ struct PushSettingsView: View {
                         categoryToggle(category, preferences: preferences)
                     }
                 }
-                DDSection("Kveldens tråd") {
+                DDSection(DayTerm.capitalized(dayTerm.possessive) + " tråd") {
                     Picker("Tråden", selection: threadBinding(preferences)) {
                         ForEach(ThreadPushMode.allCases, id: \.self) { Text($0.title).tag($0) }
                     }

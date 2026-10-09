@@ -97,7 +97,7 @@ struct TavlaList: View {
 
                 // «Jakkeracet» er matchspill-seriens navn (PWA-en). En stableford-serie heter bare det den heter.
                 DDSectionLabel(standings.countsStableford ? standings.seasonName : "Jakkeracet · \(standings.seasonName)") {
-                    Text("\(standings.eveningsPlayed) av \(standings.eveningsTotal) \(standings.eveningsTotal == 1 ? "kveld" : "kvelder") spilt")
+                    Text("\(standings.eveningsPlayed) av \(standings.rules.day.count(standings.eveningsTotal)) spilt")
                         .ddEyebrow()
                 }
                 if standings.isEmpty {
@@ -199,11 +199,12 @@ struct TavlaRowView: View {
 }
 
 private struct NoSeasonView: View {
+    @Environment(\.dayTerm) private var dayTerm
     var body: some View {
         ContentUnavailableView(
             "Ingen turnering i gang",
             systemImage: "trophy",
-            description: Text("Tabellen fylles når arrangøren har startet turneringen og første kveld er spilt.")
+            description: Text("Tabellen fylles når arrangøren har startet turneringen og første \(dayTerm.one) er spilt.")
         )
     }
 }

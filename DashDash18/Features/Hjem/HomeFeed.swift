@@ -163,7 +163,7 @@ nonisolated extension HomeFeed {
         if let time = EveningDates.timeText(e.event.startTime) { detail.append("Kl. \(time)") }
         if let venue = e.event.venue?.trimmingCharacters(in: .whitespaces), !venue.isEmpty { detail.append(venue) }
         detail.append("\(e.coming) kommer")
-        return HomeNextEvening(clubID: e.clubID, eventID: e.event.id, eyebrow: "\(e.clubName) · neste kveld",
+        return HomeNextEvening(clubID: e.clubID, eventID: e.event.id, eyebrow: "\(e.clubName) · neste \(e.term.one)",
                                title: EveningDates.longText(e.event.eventDate, referenceYear: referenceYear,
                                                             capitalized: true),
                                countdown: EveningDates.countdownText(days: days),

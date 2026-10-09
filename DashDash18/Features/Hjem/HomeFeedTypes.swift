@@ -81,6 +81,8 @@ nonisolated struct HomeEveningInput: Equatable, Sendable {
     var answer: SignupStatus?
     var coming: Int
     var isOrganizer: Bool
+    /// «Kveld» eller «spilledag» (`DayTerm`).
+    var term: DayTerm = .evening
 
     init(clubID: UUID, clubName: String, event: EventRow, today: String, answer: SignupStatus?, coming: Int,
          isOrganizer: Bool) {
