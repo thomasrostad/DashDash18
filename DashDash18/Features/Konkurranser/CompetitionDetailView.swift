@@ -30,6 +30,8 @@ struct CompetitionDetailView: View {
     @State private var showsPaywall = false
     /// Økes når betalingsveggen lukkes, så siden spør serveren på nytt.
     @State private var unlockCheck = 0
+    @State private var confirmsDelete = false
+    @Environment(\.dismiss) private var dismiss
     @Environment(PurchaseService.self) private var purchases: PurchaseService?
 
     var body: some View {
@@ -46,6 +48,25 @@ struct CompetitionDetailView: View {
                 if !embedded, let list, list.canInvite(model.competition) {
                     ToolbarItem(placement: .primaryAction) {
                         Button("Inviter", systemImage: "person.badge.plus") { showsInvite = true }
+                    }
+                }
+                // sql/038. En sesong slettes fra Oppsett → Turneringen, der kveldene står.
+                if TournamentDeletionFeature.isEnabled, !embedded, model.isAdmin, model.competition.seasonID == nil {
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button("Slett turneringen …", systemImage: "trash", role: .destructive) { confirmsDelete = true }
+                    }
+                }
+            }
+            .deleteTournamentAlert(isPresented: $confirmsDelete, name: model.competition.name) { typed in
+                guard let client = list?.client else { return }
+                Task {
+                    do {
+                        _ = try await TournamentDeletion.delete(client: client, competitionID: model.competition.id,
+                                                                confirmName: typed)
+                        await list?.load()
+                        dismiss()
+                    } catch {
+                        model.error = DataError.from(error).message
                     }
                 }
             }

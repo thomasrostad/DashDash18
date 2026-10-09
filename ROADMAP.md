@@ -416,6 +416,18 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
   - [x] Mengdebaserte RPC-er (`sql/037_mengde_rpc.sql`, `SetQueriesFeature`): «folk du kjenner», dine løse runder, turneringslista og Hjem-feeden. Kjørt på test 09.10, likt med RLS for alle brukerne. Gjenstår: policyene med `(select auth.uid())` (mål i lasttesten først).
 - [ ] Fase 25: spillersiden (finn og meld deg på turneringer nær deg).
 
+### Tilbakemeldinger 09.10.2026 (Thomas)
+
+- [x] Slette turneringer: `delete_tournament` (sql/038, kjørt på test), «Slett turneringen …» med navnet som bekreftelse (#36).
+- [x] Del regningen: tastaturet lukkes («Ferdig», dra i lista), «Åpne Vipps» med reserve via vipps.no (#31). Må prøves på telefon med Vipps.
+- [x] Invitasjon: kortere tekst og QR-kode (#34).
+- [x] Tippekupongen: «Tråden» og «Tips» rett på Hjem-kortet (#32).
+- [x] Vedd i en runde bruker runden du står i; i andre turneringer står det at veddemål bare gjelder hovedturneringen ennå (#35).
+- [x] Ny turnering synlig: «+»-meny på Arrangør, i liga/cup/morro, «Lag turneringen» i «Kom i gang», «Turneringer» i Spill (#33).
+- [ ] En ferdig tippekupong (resultatet, tippekongen) kan ikke åpnes når neste kveld har tatt over Hjem-kortet.
+- [ ] Spillere uten klubb kan ikke lage turnering (`CompetitionsModel` krever klubb).
+- [ ] Veddemål per turnering med egen poengbank (krever SQL, fase 22 trinn 5), og oppgjør uten at arrangøren åpner veddemålene.
+
 ### Kodegjennomgang 08.10.2026: åpne funn
 
 Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rettet med test). Dette står igjen:

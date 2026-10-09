@@ -26,6 +26,8 @@ struct SesongContentView<Bottom: View>: View {
     let showsName: Bool
     let bottom: Bottom
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dayTerm) private var dayTerm
+    @State private var confirmsDeleteAll = false
 
     @State private var isBusy = false
     @State private var error: DataError?
@@ -67,8 +69,18 @@ struct SesongContentView<Bottom: View>: View {
                 }
                 LabeledContent("Type", value: TournamentSetup.typeText(kind: .season, rules: season.rules))
                 LabeledContent("Status", value: SeasonLifecycle.title(season.status))
-                ForEach(SeasonLifecycle.actions(for: season.status), id: \.self) { action in
+                ForEach(SeasonLifecycle.actions(for: season.status).filter {
+                    !(TournamentDeletionFeature.isEnabled && $0 == .delete)
+                }, id: \.self) { action in
                     actionButton(action, season)
+                }
+            }
+            // sql/038: hele turneringen kan slettes, også når den er spilt.
+            if TournamentDeletionFeature.isEnabled {
+                Section {
+                    Button("Slett turneringen …", role: .destructive) { confirmsDeleteAll = true }
+                } footer: {
+                    Text("Sletter \(dayTerm.theMany), rundene og resultatene. Kan ikke angres.")
                 }
             }
             if let error {
@@ -97,6 +109,12 @@ struct SesongContentView<Bottom: View>: View {
                 Button("Avslutt turneringen") { run { try await model.finish(season) } }
             } message: {
                 Text("Turneringen blir ferdig, og reglene låses.")
+            }
+            .deleteTournamentAlert(isPresented: $confirmsDeleteAll, name: season.name) { typed in
+                run {
+                    _ = try await model.deleteTournament(season, confirmName: typed)
+                    dismiss()
+                }
             }
             .confirmationDialog("Slette turneringen?", isPresented: $confirmsDelete, titleVisibility: .visible) {
                 Button("Slett", role: .destructive) {
