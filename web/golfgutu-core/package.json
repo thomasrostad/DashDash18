@@ -1,0 +1,15 @@
+{
+  "name": "golfgutu-core",
+  "private": true,
+  "type": "module",
+  "description": "Regelmotoren til Atten (GolfgutuCore) i TypeScript, med samme svar som Swift-pakken.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "node --test 'test/*.test.ts'"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
