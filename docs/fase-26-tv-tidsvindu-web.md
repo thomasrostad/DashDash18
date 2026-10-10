@@ -49,7 +49,7 @@ Hver del får tester mot test-Supabase med en egen testbruker, og ingenting går
 
 ## Status
 
-- [ ] TypeScript-regelmotoren (agent i gang 10.10).
+- [x] TypeScript-regelmotoren (`web/golfgutu-core`, 10.10): 149 tester, sesongtabeller og rundetall byte for byte like Swift (gylne filer), og appens Tavla-, liga-, morro- og cup-mapping prøvd mot appens egen Swift-kode. Ikke portert: veddemål, spill og tips.
 - [x] 041 og 042: kjørt på test 10.10 (prøvd lokalt 18 av 18, og på test i en transaksjon som ble rullet tilbake).
 - [ ] TV-siden i Workeren og TV-kode i appen.
 - [x] «Spill når det passer» i appen (#50, slått på 10.10).
