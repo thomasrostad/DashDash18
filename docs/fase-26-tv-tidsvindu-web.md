@@ -36,7 +36,7 @@ Beste N står i regelsettet som før (`competitionRules.league.bestRounds` / `fu
 
 Hele arrangørsiden i nettleseren, med samme innlogging (e-postkode og Apple) og de samme tilgangsreglene (RLS og RPC-ene) som appen. Ingen egne servertilganger: nettleseren snakker med Supabase med publishable key, akkurat som appen.
 
-Forslag til teknikk: TypeScript, Vite og React, `@supabase/supabase-js` og `web/golfgutu-core`, levert som statiske filer fra Cloudflare (samme konto som dashdash18.com). Krever godkjenning av nye avhengigheter for web-delen.
+Forslag til teknikk: TypeScript, Vite og React, `@supabase/supabase-js` og `web/golfgutu-core`, levert som statiske filer fra Cloudflare (samme konto som dashdash18.com). Nye avhengigheter for web-delen godkjent av Thomas 10.10.
 
 Rekkefølge:
 1. Innlogging, klubbvelger og turneringsvelger. Lesing av turneringer, terminliste og tropp.
@@ -50,7 +50,7 @@ Hver del får tester mot test-Supabase med en egen testbruker, og ingenting går
 ## Status
 
 - [ ] TypeScript-regelmotoren (agent i gang 10.10).
-- [ ] 041 og 042: skrevet og prøvd lokalt (`sql/lokal/041_042_prove.sql`, 18 av 18; 033-prøven 81 av 81 med 041 og 042 inne). Venter på godkjenning.
+- [x] 041 og 042: kjørt på test 10.10 (prøvd lokalt 18 av 18, og på test i en transaksjon som ble rullet tilbake).
 - [ ] TV-siden i Workeren og TV-kode i appen.
-- [ ] «Spill når det passer» i appen.
+- [x] «Spill når det passer» i appen (#50, slått på 10.10).
 - [ ] Web-admin, del 1–5.
