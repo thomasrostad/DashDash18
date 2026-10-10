@@ -41,6 +41,8 @@ nonisolated struct TavlaStandings: Sendable {
     }
 
     let seasonName: String
+    /// Sesongens id (TV-koden finner turneringen fra den, sql/041).
+    let seasonID: UUID
     let status: SeasonStatus
     let rules: Ruleset
     let rows: [Row]
@@ -58,6 +60,7 @@ nonisolated struct TavlaStandings: Sendable {
     init(_ input: TavlaInput, me: UUID?) {
         self.me = me
         seasonName = input.season.name
+        seasonID = input.season.id
         status = input.season.status
         rules = input.season.rules
 
