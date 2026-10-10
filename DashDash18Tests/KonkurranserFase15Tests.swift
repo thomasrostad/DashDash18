@@ -775,7 +775,7 @@ nonisolated private struct FakePurchaseBackend: PurchaseBackend {
         #expect(row.rules == .golfgutu && row.rules.competition == nil)
         #expect(row.signupOpen == nil && !row.isSignupOpen)
         #expect(!CompetitionRow.columns.contains("signup_open"))
-        #expect(CompetitionRow.columnsWithSignup.hasSuffix(", signup_open"))
+        #expect(CompetitionRow.columnsWithSignup.contains(", signup_open"))
     }
 
     /// Velgeren på Tavla: hovedturneringen først, ferdige og andre klubbers hovedturneringer skjult.

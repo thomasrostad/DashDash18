@@ -4,8 +4,9 @@ import SwiftUI
 
 /// Turneringer med tidsvindu, «Spill når det passer» (fase 26, `sql/042_tidsvindu.sql`).
 nonisolated enum TimeWindowFeature {
-    /// Av til 042 er kjørt. Med flagget av finnes ikke valget, og `auto_count` hentes ikke.
-    static let isEnabled = false
+    /// På siden 10.10.2026: 042 er kjørt på test og prøvd. Med flagget av finnes ikke valget, og
+    /// `auto_count` hentes ikke.
+    static let isEnabled = true
 }
 
 nonisolated enum TimeWindowText {
