@@ -1,10 +1,12 @@
 // Fra databasens rader til regelmotorens runde (DashDash18/Features/Runde/RoundSnapshot.swift:
 // `RoundSnapshot` og `RoundGame.makeRound` med hjelperne). Samme mapping som Kveld og Tavla i appen.
+// Scorekortet er `RoundGame.scorecard(for:inward:)` og `total(_:)` fra DashDash18/Features/Runde/ForingLogic.swift.
 
-import { holesFromRows } from "../course.ts";
+import { courseHoles, holesFromRows, numberOfHoles } from "../course.ts";
 import { effectiveHandicap } from "../handicap.ts";
 import { makePlayer, matchResultFromStored, type Course, type CourseHoleRow, type HoleScores, type Player, type Round, type RoundHole } from "../models.ts";
 import { GOLFGUTU, type Ruleset } from "../ruleset.ts";
+import { holePoints, pointsFromScores, scoreName, type ScoreName } from "../scoring.ts";
 import type { TruncationRule } from "../truncation.ts";
 import type {
   CourseHoleRecord,
@@ -159,4 +161,76 @@ export function snapshotHandicap(s: RoundSnapshot, member: UUID, round: Round = 
   const stored = s.players.find((p) => p.memberID === member)?.playingHandicap ?? null;
   if (stored !== null) return stored;
   return effectiveHandicap(roster.find((p) => p.id === member) ?? null, round, roster, s.rules);
+}
+
+// MARK: Scorekortet (ForingLogic.swift)
+
+/** Én linje på scorekortet: hullet, par, slag og poeng. Uten ført slag er slag, poeng og navn `null`. */
+export interface ScorecardLine {
+  /** Rundens 0-baserte hull. */
+  index: number;
+  /** Banens hullnummer (10–18 når runden er «siste ni»). */
+  number: number;
+  par: number;
+  strokes: number | null;
+  points: number | null;
+  scoreName: ScoreName | null;
+}
+
+/** Scorekortet til én spiller: Ut (1–9) eller Inn (10–18). */
+export interface Scorecard {
+  name: string;
+  inward: boolean;
+  lines: ScorecardLine[];
+  sumPar: number;
+  sumStrokes: number;
+  sumPoints: number;
+}
+
+/** `RoundGame.holeNumber`: banens hullnummer for rundens hull. */
+export function holeNumber(round: Round, index: number): number {
+  return index + 1 + (round.holeStart === 9 ? 9 : 0);
+}
+
+/** `RoundGame.hasInward`: ni hull har ingen «Inn»-side. */
+export function snapshotHasInward(s: RoundSnapshot): boolean {
+  return numberOfHoles(makeRoundFromSnapshot(s)) > 9;
+}
+
+/** `RoundGame.scorecard(for:inward:)` (`renderScorekort`): Ut eller Inn, par, slag og poeng per hull. */
+export function snapshotScorecard(s: RoundSnapshot, member: UUID, inward: boolean): Scorecard {
+  const round = makeRoundFromSnapshot(s);
+  const holeCount = numberOfHoles(round);
+  const holes = courseHoles(round);
+  const from = holeCount > 9 && inward ? 9 : 0;
+  const hcp = snapshotHandicap(s, member, round);
+  const mine = round.holeScores.get(member) ?? new Map<number, number>();
+  const lines: ScorecardLine[] = [];
+  for (let i = from; i < Math.min(from + 9, holeCount); i++) {
+    const h = holes[i];
+    const gross = mine.get(i);
+    if (gross === undefined) {
+      lines.push({ index: i, number: holeNumber(round, i), par: h.par, strokes: null, points: null, scoreName: null });
+      continue;
+    }
+    lines.push({
+      index: i, number: holeNumber(round, i), par: h.par, strokes: gross,
+      points: holePoints(h.par, gross, hcp, h.strokeIndex, holeCount, s.rules),
+      scoreName: scoreName(h.par, gross, hcp, h.strokeIndex, holeCount),
+    });
+  }
+  return {
+    name: s.names.get(member) ?? "Ukjent",
+    inward: from === 9,
+    lines,
+    sumPar: lines.reduce((t, l) => t + l.par, 0),
+    sumStrokes: lines.reduce((t, l) => t + (l.strokes ?? 0), 0),
+    sumPoints: lines.reduce((t, l) => t + (l.points ?? 0), 0),
+  };
+}
+
+/** `RoundGame.total`: stablefordsummen i runden for spilleren, med rundens handicap («Totalt i runden»). */
+export function snapshotTotal(s: RoundSnapshot, member: UUID): number {
+  const round = makeRoundFromSnapshot(s);
+  return pointsFromScores(round.holeScores.get(member) ?? new Map(), round, snapshotHandicap(s, member, round), s.rules);
 }

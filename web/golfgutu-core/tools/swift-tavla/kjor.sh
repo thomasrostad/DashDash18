@@ -1,6 +1,6 @@
 #!/bin/sh
 # Lager test/fixtures/tavla.forventet.json med appens egen Swift-kode (TavlaStandings, RoundsGrid,
-# CompetitionScope, LeagueStandings), så TS-mappingen kan sjekkes mot appen.
+# CompetitionScope, LeagueStandings, og scorekortet fra RoundGame), så TS-mappingen kan sjekkes mot appen.
 #
 #   sh tools/swift-tavla/kjor.sh          (fra web/golfgutu-core)
 #
@@ -19,5 +19,12 @@ done
 # RoundsGrid og TavlaStandings.roundGrid, uten visningene under.
 sed -e 's/^import SwiftUI$/import Foundation/' -e '/^\/\/\/ Hvilken spiller i hvilken runde scorekortet viser\./,$d' \
   "$APP/Features/Tavla/TavlaRounds.swift" > "$OUT/TavlaRounds.swift"
+# Scorekortet (RoundGame.scorecard og total) fra føringen, uten resten av ForingLogic.swift.
+{
+  echo 'import Foundation'
+  echo 'import GolfgutuCore'
+  sed -n '/^\/\/\/ Hvem som ser på runden\./,/^}/p' "$APP/Features/Runde/ForingLogic.swift"
+  sed -n '/^\/\/ MARK: - Bayen nå/,/^\/\/ MARK: - Feiringen/p' "$APP/Features/Runde/ForingLogic.swift" | sed '$d'
+} > "$OUT/Scorecard.swift"
 swift run -c debug --quiet TavlaFasit ../../test/fixtures/tavla.json > ../../test/fixtures/tavla.forventet.json
 echo "Skrev test/fixtures/tavla.forventet.json"

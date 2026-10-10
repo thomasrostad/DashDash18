@@ -12,7 +12,16 @@ Plan: `docs/fase-26-tv-tidsvindu-web.md`.
 - [x] Del 2b (10.10.2026): «Ny turnering» med de fire oppsettene fra regelmotoren (serie med antall og ordet for dagen, start nå; cup og morro med hvem som er med, påmelding, periode og «Spill når det passer»), og reglene på turneringssiden (antall, hva som teller, beste N, ordet, sidepremier, deltakerpoeng, handicapandel), validert av regelmotoren.
 - [x] Del 3 (10.10.2026): terminliste (ny dato i valgt turnering, endre, slette, sosialkomité) og tropp (godkjenne og avvise, arrangør og kasserer, navn, handicap og seeding direkte i tabellen, arkivere og gjenopprette, legge til et ledig navn, invitasjonslenken).
 - [ ] Del 4: startliste og grupper, oppsett av runder, start, lås, avkort og rett score.
-- [ ] Del 5: tabeller og «Alle runder» med regelmotoren i TypeScript (`web/golfgutu-core`), eksport og utskrift.
+- [x] Del 5 (10.10.2026): fanen «Tabeller» (`src/standings/`). Velg turnering (serie, liga, morro eller cup).
+  Serien hentes med `tavla_data` (sql/036) og sesongraden og regnes med `TavlaStandings`; liga og morro hentes
+  som `CompetitionQueries.detail` i appen (påmeldte, koblede runder med alt under, tropp, `round_roster`,
+  `round_participants` og profiler) og regnes med `CompetitionScope` og `LeagueStandings`. Tabellen viser plass,
+  navn, poeng og linja under som i appen. «Alle runder» har poeng, slag og mot par, beste i runden i gull, sum,
+  dempede runder (beste N) og scorekortet hull for hull bak hver rute (Ut/Inn, par, slag, poeng). Cupen vises
+  som runder med kampene (`CupStandings`). «Last ned CSV» for tabellen og «Alle runder» (semikolon,
+  desimalkomma, UTF-8 med BOM) og «Skriv ut» med eget utskriftsoppsett. Regelmotoren importeres direkte fra
+  `../golfgutu-core/src` (tsconfig `include` og `server.fs.allow` i `vite.config.ts`). `test/standings.test.ts`
+  sjekker tabellene, «Alle runder», scorekortene og cupen mot appens fasit (`tavla.forventet.json`).
 
 ## Kom i gang
 
