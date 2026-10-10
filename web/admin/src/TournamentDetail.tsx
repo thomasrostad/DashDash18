@@ -5,6 +5,7 @@ import {
 } from "./data.ts";
 import { errorText } from "./supabase.ts";
 import { kindText, longDate, statusText } from "./text.ts";
+import { RulesEditor } from "./RulesEditor.tsx";
 
 /** Én turnering: påmeldte, påmelding og venteliste, stab, «Spill når det passer» og sletting. */
 export function TournamentDetail({ competition, roster, onBack, onChanged }: {
@@ -93,6 +94,8 @@ export function TournamentDetail({ competition, roster, onBack, onChanged }: {
           </form>
         )}
       </div>
+
+      {competition.kind !== "cup" && <div className="grid2"><RulesEditor competition={competition} onSaved={onChanged} /></div>}
 
       <div className="grid2">
         <div className="card">

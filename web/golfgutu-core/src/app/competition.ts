@@ -20,7 +20,7 @@ import {
   type CupResult,
   type LeagueRoundResult,
 } from "../competitions.ts";
-import { DecodeError, obj, optBool, optEnum, optInt, optNumber, optObject, optString, reqInt, reqString } from "../decode.ts";
+import { DecodeError, obj, optBool, optEnum, optNumber, optObject, optString, reqInt, reqString } from "../decode.ts";
 import { norwegianLess, sortedBy } from "../jsmath.ts";
 import { makePlayer, type Player } from "../models.ts";
 import { competitionRulesOf, decodeRuleset, type CupRules, type CupTie, type LeagueRules, type Ruleset } from "../ruleset.ts";

@@ -9,7 +9,7 @@ Plan: `docs/fase-26-tv-tidsvindu-web.md`.
 - [x] Del 1 (10.10.2026): innlogging med e-postkode, klubbvalg (klubbene der du er arrangør), turneringer,
   terminliste og tropp (lesing).
 - [x] Del 2 (10.10.2026): turneringssiden med påmeldte, påmelding (åpen, hvem, plasser, venteliste, «Finn turneringer»), venteliste, stab (legg til, fjern), «Spill når det passer» og sletting.
-- [ ] Del 2b: ny turnering og regler (venter på regelsettmalene i `web/golfgutu-core`).
+- [x] Del 2b (10.10.2026): «Ny turnering» med de fire oppsettene fra regelmotoren (serie med antall og ordet for dagen, start nå; cup og morro med hvem som er med, påmelding, periode og «Spill når det passer»), og reglene på turneringssiden (antall, hva som teller, beste N, ordet, sidepremier, deltakerpoeng, handicapandel), validert av regelmotoren.
 - [x] Del 3 (10.10.2026): terminliste (ny dato i valgt turnering, endre, slette, sosialkomité) og tropp (godkjenne og avvise, arrangør og kasserer, navn, handicap og seeding direkte i tabellen, arkivere og gjenopprette, legge til et ledig navn, invitasjonslenken).
 - [ ] Del 4: startliste og grupper, oppsett av runder, start, lås, avkort og rett score.
 - [ ] Del 5: tabeller og «Alle runder» med regelmotoren i TypeScript (`web/golfgutu-core`), eksport og utskrift.

@@ -63,3 +63,7 @@ input.cell { padding: 6px 8px; border-color: transparent; background: transparen
 input.cell:focus { border-color: #D5D5D5; background: var(--card); }
 input.cell.num { min-width: 60px; width: 80px; }
 section > .card { margin-bottom: 16px; }
+
+button.card.choice { text-align: left; border: 0; display: grid; gap: 6px; color: var(--ink); font: inherit; cursor: pointer; }
+button.card.choice:hover { outline: 2px solid var(--gold); }
+fieldset:disabled { opacity: .6; }

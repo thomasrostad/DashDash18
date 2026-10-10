@@ -4,6 +4,7 @@ import { Schedule } from "./Schedule.tsx";
 import { Roster } from "./Roster.tsx";
 import { errorText } from "./supabase.ts";
 import { TournamentDetail } from "./TournamentDetail.tsx";
+import { NewTournament } from "./NewTournament.tsx";
 import { kindText, longDate, statusText } from "./text.ts";
 
 type Tab = "turneringer" | "terminliste" | "tropp";
@@ -18,6 +19,7 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
   const [committees, setCommittees] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [openID, setOpenID] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -49,8 +51,14 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
           onBack={() => setOpenID(null)} onChanged={load} />
       )}
 
-      {tab === "turneringer" && !openID && (
+      {tab === "turneringer" && creating && comps && (
+        <NewTournament clubID={clubID} comps={comps} onCancel={() => setCreating(false)}
+          onDone={() => { setCreating(false); load(); }} />
+      )}
+
+      {tab === "turneringer" && !openID && !creating && (
         <section>
+          <div className="inline"><button className="primary" onClick={() => setCreating(true)}>Ny turnering</button></div>
           {!comps ? <p className="muted">Henter …</p> : comps.length === 0 ? <p className="muted">Ingen turneringer ennå.</p> : (
             <table>
               <thead><tr><th>Navn</th><th>Type</th><th>Status</th><th>Periode</th><th>Påmelding</th></tr></thead>
