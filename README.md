@@ -18,8 +18,9 @@ Status 09.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detalje
 | Invitasjon | Klubblenke `https://dashdash18.com/klubb/KODE` (universell lenke, åpner appen) og QR-kode. Siden på dashdash18.com er Workeren i `web/atten-lenker/` |
 | Hjem | Feed med aktivitet, «Pågår nå», neste kveld/spilledag med svar, tråd og tippekupong, og arrangørens knapp for neste steg |
 | Spill | Løse runder på slope.no-baner, bli med med kode, spill i runden, «Del regningen» (Vipps), «Turneringer» for å se og lage turneringer (også uten klubb: private liga, cup og morro), og «Finn turneringer» med åpne turneringer å melde seg på |
-| Turneringer | Fire oppsett: Stableford-serie, Matchspill-serie (Golfgutu), Cup og Morro. Påmelding med tak og venteliste, startliste, stab. Liga, cup og morro i en klubb kan ha egne spilledager med runder («Spilledager og runder» på arrangørsiden). Lages fra «+» på Arrangør-fanen eller fra Spill. Kan slettes av arrangøren (navnet må skrives) |
+| Turneringer | Fire oppsett: Stableford-serie, Matchspill-serie (Golfgutu), Cup og Morro. Påmelding med tak og venteliste, startliste, stab. Liga og morro kan være «Spill når det passer» (periode, de beste N teller, runder i perioden teller av seg selv). Liga, cup og morro i en klubb kan ha egne spilledager med runder («Spilledager og runder» på arrangørsiden). Lages fra «+» på Arrangør-fanen eller fra Spill. Kan slettes av arrangøren (navnet må skrives) |
 | Ordet for en dag | «Kveld» for Golfgutu, «Spilledag» for nye turneringer (valg i «Ny turnering» og i reglene) |
+| Arrangør på web | https://admin.dashdash18.com: samme innlogging og tilganger som appen. Del 1 viser turneringer, terminliste og tropp; resten kommer i delene i `web/admin/README.md` |
 | Arrangør | Oppsett øverst (turneringen, troppen, banene), så dagen som står for tur med stegrekka Påmelding → Oppsett → Spilles → Ferdig, kommende og tidligere dager, varsler, rapporter og arkiv |
 | Tavla | Tabellen regnes på telefonen av regelmotoren (paritet med PWA-en), med data fra én RPC (`tavla_data`). «Alle runder» (også i liga og morro) viser alle spillernes poeng, slag eller mot par runde for runde (som et PGA-leaderboard), og hver rute og hver runde på spillerprofilen åpner scorekortet. «TV-visning» viser tabellen i fullskjerm for skjermen i lokalet (side for side, siste runde, oppdateres mens det føres, skjermen slukker ikke) |
 | Vedd og tips | Veddemål med poeng i hovedturneringen (ikke i andre turneringer ennå), tippekupong per kveld med «Tips» og «Forrige kupong» rett på Hjem-kortet |
@@ -38,6 +39,7 @@ Status 09.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detalje
 | [`CLAUDE.md`](CLAUDE.md) | Arbeidsregler for Claude Code. Gjelder også for mennesker |
 | [`docs/gjoremal.md`](docs/gjoremal.md) | Det som må gjøres manuelt (App Store Connect, Supabase-konsoll, Google) |
 | [`sql/README.md`](sql/README.md) | Databasemigreringer og status per fil (test og prod) |
+| [`docs/fase-26-tv-tidsvindu-web.md`](docs/fase-26-tv-tidsvindu-web.md) | Plan: TV med kode, turneringer med tidsvindu, regelmotoren i TypeScript og web-admin |
 | [`docs/golfapper.md`](docs/golfapper.md) | Analyse av flyten i andre golfapper (Squabbit, 18Birdies, Golf Genius, GolfBox, Trackman m.fl.) og 12 anbefalinger for Atten |
 | [`docs/vedd-per-turnering.md`](docs/vedd-per-turnering.md) | Forslag: veddemål per turnering, poengbank og oppgjør (venter på valg) |
 | [`docs/`](docs/) | Datamodell, sikkerhet, push, widgets, Xcode Cloud, App Store, personvern og vilkår |
@@ -57,6 +59,8 @@ sql/                   Migreringer for appens Supabase (nummerert, én fil = én
 sql/lokal/             Prøveskript og sjekker (lokalt, eller i en transaksjon som rulles tilbake)
 supabase/functions/    Edge Functions: push-send, delete-account, slope-sync, verify-purchase
 web/atten-lenker/      Cloudflare Worker på dashdash18.com: AASA-fil og invitasjonssider
+web/admin/             Web-admin på admin.dashdash18.com (Vite, React, supabase-js)
+web/golfgutu-core/     Regelmotoren i TypeScript (paritet med GolfgutuCore, for TV-siden og web-admin)
 StoreKit/              StoreKit-konfig for kjøp i simulatoren
 ci_scripts/            Xcode Cloud (skriver Supabase-konfig fra miljøvariabler)
 docs/                  Bakgrunn og oppsett

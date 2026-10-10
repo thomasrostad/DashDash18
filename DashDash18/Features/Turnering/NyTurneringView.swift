@@ -242,6 +242,9 @@ struct NyTurneringDetailsView: View {
                              : "Klubbens: alle i troppen ser den, og arrangørene styrer den.")
                 }
             }
+            if draft.competition.allowsPlayWhenItSuits, case .competition = draft.target {
+                TimeWindowSection(draft: $draft.competition)
+            }
             if draft.showsPeriod {
                 periodSection
             }
