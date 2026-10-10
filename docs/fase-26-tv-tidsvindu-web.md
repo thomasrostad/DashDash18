@@ -53,4 +53,5 @@ Hver del får tester mot test-Supabase med en egen testbruker, og ingenting går
 - [x] 041 og 042: kjørt på test 10.10 (prøvd lokalt 18 av 18, og på test i en transaksjon som ble rullet tilbake).
 - [ ] TV-siden i Workeren og TV-kode i appen.
 - [x] «Spill når det passer» i appen (#50, slått på 10.10).
-- [ ] Web-admin, del 1–5.
+- [x] Web-admin del 1 ute på admin.dashdash18.com (10.10): innlogging, klubbvalg, turneringer, terminliste, tropp.
+- [ ] Web-admin, del 2–5.
