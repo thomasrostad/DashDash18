@@ -5,9 +5,9 @@ import Testing
 
 /// Turneringer med tidsvindu (sql/042).
 struct TimeWindowTests {
-    @Test func flaggetErAvTil042ErKjørt() {
-        #expect(TimeWindowFeature.isEnabled == false)
-        #expect(!CompetitionRow.columnsWithSignup.contains("auto_count"))
+    @Test func flaggetErPå() {
+        #expect(TimeWindowFeature.isEnabled == true)
+        #expect(CompetitionRow.columnsWithSignup.contains("auto_count"))
     }
 
     @Test func teksten() {
