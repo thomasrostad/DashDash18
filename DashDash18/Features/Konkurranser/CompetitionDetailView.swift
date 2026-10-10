@@ -286,6 +286,16 @@ struct LeagueTableSection: View {
                 }
             }
             .ddCard(padding: DDSpacing.l)
+            if standings.roundCount > 0 {
+                // Hva alle har slått, runde for runde, med scorekortet bak hver rute.
+                NavigationLink {
+                    RoundsLeaderboardView(grid: standings.roundGrid, game: standings.game)
+                } label: {
+                    Label("Alle runder · poeng og scorekort", systemImage: "tablecells")
+                        .font(.ddBodyEmphasis)
+                }
+                .buttonStyle(.dd(.secondary, fullWidth: true))
+            }
         }
         Text(standings.rulesSummary)
             .font(.ddCaption)

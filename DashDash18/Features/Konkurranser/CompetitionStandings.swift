@@ -28,6 +28,9 @@ nonisolated struct LeagueStandings: Sendable {
     /// Rundene som teller, i tidsrekkefølge: id → «1. okt · Pebble Beach».
     let roundTitles: [String: String]
     let roundCount: Int
+    /// Rundene og regelmotorens sesong, til «Alle runder» (poeng og slag per runde, scorekortet).
+    let snapshots: [RoundSnapshot]
+    let season: Season
 
     init(_ input: CompetitionInput, me: Set<Entrant>) {
         competition = input.competition
@@ -36,6 +39,8 @@ nonisolated struct LeagueStandings: Sendable {
             : input.competition.rules.competitionRules.league
         self.rules = rules
         let season = CompetitionBoard.season(input)
+        self.season = season
+        snapshots = input.rounds
         let rounds = input.rounds.indices.map { i in
             League.Round(id: input.rounds[i].round.id.uuidString, stableford: season.roundPoints(i))
         }
@@ -99,6 +104,22 @@ nonisolated struct LeagueStandings: Sendable {
 }
 
 /// Cupen: treet fra trekningen og resultatene, med navn og «din neste kamp».
+nonisolated extension LeagueStandings {
+    /// «Alle runder» for ligaen: tabellens rekkefølge, og hvilke runder som teller (beste N).
+    var roundGrid: RoundsGrid {
+        RoundsGrid.make(snapshots: snapshots, season: season, title: { Self.title(snapshots[$0]) },
+                        rows: rows.map { row in
+                            let counted = rules.bestRounds == nil ? nil
+                                : Set(row.results.filter(\.counted).compactMap { UUID(uuidString: $0.roundID) })
+                            return (row.entrant.id, row.name, placeText(row), row.isMe, counted)
+                        })
+    }
+
+    func game(_ roundID: UUID) -> RoundGame? {
+        snapshots.first { $0.round.id == roundID }.map(RoundGame.init)
+    }
+}
+
 nonisolated struct CupStandings: Sendable {
     struct Side: Hashable, Sendable {
         let participantID: UUID
