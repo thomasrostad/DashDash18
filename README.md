@@ -92,6 +92,14 @@ xcodebuild test -project DashDash18.xcodeproj -scheme DashDash18 \
   -derivedDataPath ~/Library/Developer/Xcode/DerivedData/DashDash18-cli
 ```
 
+Regelmotoren i TypeScript (`web/golfgutu-core`, for server og nett), mot de samme fixturene og goldenfilene fra Swift:
+
+```sh
+node --test 'web/golfgutu-core/test/*.test.ts'
+```
+
+Endres regelmotoren med vilje, skrives goldenfilene på nytt med `GOLDEN_WRITE=1 swift test --filter GoldenTests` i `Packages/GolfgutuCore` (se `web/golfgutu-core/README.md`).
+
 Edge Functions har Deno-tester ved siden av koden, for eksempel `deno test supabase/functions/push-send/`.
 
 Med Golfgutu-oppsettet skal regelmotoren gi nøyaktig samme svar som PWA-ens `db-nytt.js`. Testtallene kommer fra PWA-ens tester eller er utledet fra koden, aldri gjettet.

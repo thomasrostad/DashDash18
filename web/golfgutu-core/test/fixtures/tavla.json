@@ -1,0 +1,6327 @@
+{
+ "_kilde": "Laget med tools/tavla-fixture.py etter TavlaSamples.swift, utvidet. Svaret fra RPC-en tavla_data (sql/036) og tre sesongrader (Golfgutu, stableford-serie med «spilledag», eget oppsett).",
+ "me": "00000000-0000-0000-0000-000000000008",
+ "tavlaData": {
+  "events": [
+   {
+    "id": "00000000-0000-0000-0000-000000000201",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "season_id": "00000000-0000-0000-0000-000000009002",
+    "event_date": "2026-05-14",
+    "start_time": "17:00:00",
+    "venue": null,
+    "note": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000202",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "season_id": "00000000-0000-0000-0000-000000009002",
+    "event_date": "2026-05-21",
+    "start_time": "17:00:00",
+    "venue": null,
+    "note": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000204",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "season_id": "00000000-0000-0000-0000-000000009002",
+    "event_date": "2026-05-28",
+    "start_time": "17:00:00",
+    "venue": null,
+    "note": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000205",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "season_id": "00000000-0000-0000-0000-000000009002",
+    "event_date": "2026-06-04",
+    "start_time": "17:00:00",
+    "venue": null,
+    "note": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000206",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "season_id": "00000000-0000-0000-0000-000000009002",
+    "event_date": "2026-06-11",
+    "start_time": "17:00:00",
+    "venue": null,
+    "note": null
+   }
+  ],
+  "members": [
+   {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Bjørn",
+    "handicap_index": 8.4,
+    "seed_group": null,
+    "is_organizer": true,
+    "is_treasurer": false,
+    "status": "active",
+    "avatar_path": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000002",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Lars",
+    "handicap_index": 10,
+    "seed_group": 2,
+    "is_organizer": false,
+    "is_treasurer": false,
+    "status": "active",
+    "avatar_path": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000003",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Kåre",
+    "handicap_index": 12,
+    "seed_group": null,
+    "is_organizer": false,
+    "is_treasurer": false,
+    "status": "active",
+    "avatar_path": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000004",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Knut",
+    "handicap_index": 14.4,
+    "seed_group": null,
+    "is_organizer": false,
+    "is_treasurer": false,
+    "status": "active",
+    "avatar_path": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000005",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Ola",
+    "handicap_index": 16,
+    "seed_group": 1,
+    "is_organizer": false,
+    "is_treasurer": false,
+    "status": "active",
+    "avatar_path": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000006",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Per",
+    "handicap_index": 18,
+    "seed_group": null,
+    "is_organizer": false,
+    "is_treasurer": false,
+    "status": "active",
+    "avatar_path": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000007",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Odd",
+    "handicap_index": 20.4,
+    "seed_group": null,
+    "is_organizer": false,
+    "is_treasurer": false,
+    "status": "active",
+    "avatar_path": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000008",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Thomas",
+    "handicap_index": 22,
+    "seed_group": null,
+    "is_organizer": false,
+    "is_treasurer": false,
+    "status": "active",
+    "avatar_path": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000009",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Åse",
+    "handicap_index": 24.1,
+    "seed_group": null,
+    "is_organizer": false,
+    "is_treasurer": false,
+    "status": "archived",
+    "avatar_path": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000010",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Zorro",
+    "handicap_index": 12,
+    "seed_group": null,
+    "is_organizer": false,
+    "is_treasurer": false,
+    "status": "pending",
+    "avatar_path": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000011",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "user_id": null,
+    "display_name": "Anders",
+    "handicap_index": null,
+    "seed_group": null,
+    "is_organizer": false,
+    "is_treasurer": false,
+    "status": "active",
+    "avatar_path": null
+   }
+  ],
+  "rounds": [
+   {
+    "id": "00000000-0000-0000-0000-000000000101",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "event_id": "00000000-0000-0000-0000-000000000201",
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "round_no": 1,
+    "name": null,
+    "status": "locked",
+    "hole_count": 18,
+    "first_hole": 1,
+    "tee_time": null,
+    "format": "stableford",
+    "handicap_allowance": 1,
+    "external_handicap": false,
+    "weight": 1,
+    "ld_enabled": true,
+    "ld_hole_index": 6,
+    "kp_enabled": true,
+    "kp_hole_index": 2,
+    "cut_rule": null,
+    "cut_after": null,
+    "par_confirmed_by": null,
+    "par_confirmed_at": null,
+    "started_at": null,
+    "locked_at": null,
+    "venue": null,
+    "tee_id": null,
+    "tee_name": null,
+    "course_rating": null,
+    "slope_rating": null,
+    "tee_par": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000102",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "event_id": "00000000-0000-0000-0000-000000000202",
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "round_no": 1,
+    "name": null,
+    "status": "locked",
+    "hole_count": 18,
+    "first_hole": 1,
+    "tee_time": null,
+    "format": "match",
+    "handicap_allowance": 1,
+    "external_handicap": false,
+    "weight": 1,
+    "ld_enabled": true,
+    "ld_hole_index": null,
+    "kp_enabled": false,
+    "kp_hole_index": null,
+    "cut_rule": null,
+    "cut_after": null,
+    "par_confirmed_by": null,
+    "par_confirmed_at": null,
+    "started_at": null,
+    "locked_at": null,
+    "venue": null,
+    "tee_id": null,
+    "tee_name": null,
+    "course_rating": null,
+    "slope_rating": null,
+    "tee_par": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000103",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "event_id": "00000000-0000-0000-0000-000000000202",
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "round_no": 2,
+    "name": "  Siste ni  ",
+    "status": "locked",
+    "hole_count": 9,
+    "first_hole": 10,
+    "tee_time": null,
+    "format": "fourball",
+    "handicap_allowance": 1,
+    "external_handicap": false,
+    "weight": 2,
+    "ld_enabled": true,
+    "ld_hole_index": null,
+    "kp_enabled": true,
+    "kp_hole_index": null,
+    "cut_rule": null,
+    "cut_after": null,
+    "par_confirmed_by": null,
+    "par_confirmed_at": null,
+    "started_at": null,
+    "locked_at": null,
+    "venue": null,
+    "tee_id": null,
+    "tee_name": null,
+    "course_rating": null,
+    "slope_rating": null,
+    "tee_par": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000104",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "event_id": "00000000-0000-0000-0000-000000000204",
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "round_no": 1,
+    "name": null,
+    "status": "locked",
+    "hole_count": 18,
+    "first_hole": 1,
+    "tee_time": null,
+    "format": "stableford",
+    "handicap_allowance": 0.95,
+    "external_handicap": false,
+    "weight": 1,
+    "ld_enabled": true,
+    "ld_hole_index": null,
+    "kp_enabled": true,
+    "kp_hole_index": null,
+    "cut_rule": "common",
+    "cut_after": 14,
+    "par_confirmed_by": null,
+    "par_confirmed_at": null,
+    "started_at": null,
+    "locked_at": null,
+    "venue": null,
+    "tee_id": null,
+    "tee_name": null,
+    "course_rating": null,
+    "slope_rating": null,
+    "tee_par": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000105",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "event_id": "00000000-0000-0000-0000-000000000205",
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "round_no": 1,
+    "name": "Finalekveld",
+    "status": "active",
+    "hole_count": 18,
+    "first_hole": 1,
+    "tee_time": null,
+    "format": "stableford",
+    "handicap_allowance": 1,
+    "external_handicap": false,
+    "weight": 1,
+    "ld_enabled": true,
+    "ld_hole_index": null,
+    "kp_enabled": true,
+    "kp_hole_index": null,
+    "cut_rule": null,
+    "cut_after": null,
+    "par_confirmed_by": null,
+    "par_confirmed_at": null,
+    "started_at": null,
+    "locked_at": null,
+    "venue": null,
+    "tee_id": null,
+    "tee_name": "Gul",
+    "course_rating": 73.4,
+    "slope_rating": 131,
+    "tee_par": 71
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000106",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "event_id": "00000000-0000-0000-0000-000000000206",
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "round_no": 1,
+    "name": null,
+    "status": "draft",
+    "hole_count": 18,
+    "first_hole": 1,
+    "tee_time": null,
+    "format": "stableford",
+    "handicap_allowance": 1,
+    "external_handicap": false,
+    "weight": 1,
+    "ld_enabled": true,
+    "ld_hole_index": null,
+    "kp_enabled": true,
+    "kp_hole_index": null,
+    "cut_rule": null,
+    "cut_after": null,
+    "par_confirmed_by": null,
+    "par_confirmed_at": null,
+    "started_at": null,
+    "locked_at": null,
+    "venue": null,
+    "tee_id": null,
+    "tee_name": null,
+    "course_rating": null,
+    "slope_rating": null,
+    "tee_par": null
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000107",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "event_id": "00000000-0000-0000-0000-000000000206",
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "round_no": 2,
+    "name": null,
+    "status": "locked",
+    "hole_count": 18,
+    "first_hole": 1,
+    "tee_time": null,
+    "format": "scramble-2",
+    "handicap_allowance": 1,
+    "external_handicap": true,
+    "weight": 1,
+    "ld_enabled": false,
+    "ld_hole_index": null,
+    "kp_enabled": true,
+    "kp_hole_index": null,
+    "cut_rule": null,
+    "cut_after": null,
+    "par_confirmed_by": null,
+    "par_confirmed_at": null,
+    "started_at": null,
+    "locked_at": null,
+    "venue": null,
+    "tee_id": null,
+    "tee_name": null,
+    "course_rating": null,
+    "slope_rating": null,
+    "tee_par": null
+   }
+  ],
+  "round_holes": [
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "hole_index": 0,
+    "par": 5,
+    "stroke_index": 7,
+    "length_m": 470
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "hole_index": 6,
+    "par": 4,
+    "stroke_index": 1,
+    "length_m": null
+   }
+  ],
+  "players": [
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 8.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": 1,
+    "is_marker": true,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 10,
+    "seed_group": 2,
+    "playing_handicap": null,
+    "bay_no": 1,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 12,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": 1,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 14.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": 1,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 16,
+    "seed_group": 1,
+    "playing_handicap": null,
+    "bay_no": 2,
+    "is_marker": true,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 18,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": 2,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 20.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": 2,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 22,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": 2,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 8.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 10,
+    "seed_group": 2,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 12,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 14.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 16,
+    "seed_group": 1,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 18,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 20.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 22,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 24.1,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 8.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 1
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 10,
+    "seed_group": 2,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 1
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 12,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 2
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 14.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 2
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 16,
+    "seed_group": 1,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 3
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 18,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 3
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 20.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 4
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 22,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 4
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 8.4,
+    "seed_group": null,
+    "playing_handicap": 0,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 10,
+    "seed_group": 2,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 12,
+    "seed_group": null,
+    "playing_handicap": 6,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 14.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 16,
+    "seed_group": 1,
+    "playing_handicap": 12,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 18,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 8.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 10,
+    "seed_group": 2,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 12,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 14.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000011",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": null,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000106",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 8.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 8.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 1
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 10,
+    "seed_group": 2,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 1
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 12,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 2
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "handicap_index": 14.4,
+    "seed_group": null,
+    "playing_handicap": null,
+    "bay_no": null,
+    "is_marker": false,
+    "team_no": 2
+   }
+  ],
+  "matches": [
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "match_no": 1,
+    "player_a": "00000000-0000-0000-0000-000000000001",
+    "player_b": "00000000-0000-0000-0000-000000000003",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "match_no": 2,
+    "player_a": "00000000-0000-0000-0000-000000000003",
+    "player_b": "00000000-0000-0000-0000-000000000005",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "match_no": 3,
+    "player_a": "00000000-0000-0000-0000-000000000005",
+    "player_b": "00000000-0000-0000-0000-000000000007",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "match_no": 4,
+    "player_a": "00000000-0000-0000-0000-000000000007",
+    "player_b": "00000000-0000-0000-0000-000000000001",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "match_no": 1,
+    "player_a": "00000000-0000-0000-0000-000000000001",
+    "player_b": "00000000-0000-0000-0000-000000000004",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": "A"
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "match_no": 2,
+    "player_a": "00000000-0000-0000-0000-000000000002",
+    "player_b": "00000000-0000-0000-0000-000000000003",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "match_no": 3,
+    "player_a": "00000000-0000-0000-0000-000000000005",
+    "player_b": "00000000-0000-0000-0000-000000000006",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": "halved"
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "match_no": 4,
+    "player_a": "00000000-0000-0000-0000-000000000007",
+    "player_b": "00000000-0000-0000-0000-000000000008",
+    "player_c": "00000000-0000-0000-0000-000000000009",
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "match_no": 1,
+    "player_a": null,
+    "player_b": null,
+    "player_c": null,
+    "team_a": 1,
+    "team_b": 2,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "match_no": 2,
+    "player_a": null,
+    "player_b": null,
+    "player_c": null,
+    "team_a": 3,
+    "team_b": 4,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "match_no": 1,
+    "player_a": "00000000-0000-0000-0000-000000000001",
+    "player_b": "00000000-0000-0000-0000-000000000002",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "match_no": 2,
+    "player_a": "00000000-0000-0000-0000-000000000003",
+    "player_b": "00000000-0000-0000-0000-000000000004",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "match_no": 3,
+    "player_a": "00000000-0000-0000-0000-000000000005",
+    "player_b": "00000000-0000-0000-0000-000000000006",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "match_no": 1,
+    "player_a": "00000000-0000-0000-0000-000000000001",
+    "player_b": "00000000-0000-0000-0000-000000000003",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "match_no": 2,
+    "player_a": "00000000-0000-0000-0000-000000000002",
+    "player_b": "00000000-0000-0000-0000-000000000004",
+    "player_c": null,
+    "team_a": null,
+    "team_b": null,
+    "result": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "match_no": 1,
+    "player_a": null,
+    "player_b": null,
+    "player_c": null,
+    "team_a": 1,
+    "team_b": 2,
+    "result": null
+   }
+  ],
+  "claims": [
+   {
+    "id": "00000000-0000-0000-0000-000000000301",
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "kind": "drive",
+    "meters": 251.5,
+    "hole_index": 6,
+    "created_at": "2026-05-14T18:10:00Z"
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000302",
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "kind": "drive",
+    "meters": 247,
+    "hole_index": 6,
+    "created_at": "2026-05-14T18:05:00Z"
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000303",
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "kind": "kp",
+    "meters": 3.2,
+    "hole_index": 2,
+    "created_at": "2026-05-14T18:20:00Z"
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000304",
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "kind": "kp",
+    "meters": 3.2,
+    "hole_index": 2,
+    "created_at": "2026-05-14T18:15:00Z"
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000305",
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "kind": "drive",
+    "meters": 262,
+    "hole_index": null,
+    "created_at": "2026-05-21T18:00:00Z"
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000306",
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "kind": "kp",
+    "meters": 1.5,
+    "hole_index": null,
+    "created_at": "2026-05-21T18:00:00Z"
+   },
+   {
+    "id": "00000000-0000-0000-0000-000000000307",
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "kind": "drive",
+    "meters": 280,
+    "hole_index": 3,
+    "created_at": "2026-05-28T18:00:00Z"
+   }
+  ],
+  "courses": [
+   {
+    "id": "00000000-0000-0000-0000-000000009001",
+    "club_id": "00000000-0000-0000-0000-000000009000",
+    "name": "Marco Simone",
+    "external_name": null,
+    "course_rating": 72.3,
+    "slope_rating": 125,
+    "in_use": true,
+    "confirmed_by": null,
+    "confirmed_at": null
+   }
+  ],
+  "course_holes": [
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 1,
+    "par": 4,
+    "stroke_index": 7,
+    "length_m": 360
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 2,
+    "par": 4,
+    "stroke_index": 3,
+    "length_m": 380
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 3,
+    "par": 3,
+    "stroke_index": 15,
+    "length_m": 150
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 4,
+    "par": 5,
+    "stroke_index": 1,
+    "length_m": 500
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 5,
+    "par": 4,
+    "stroke_index": 11,
+    "length_m": 340
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 6,
+    "par": 4,
+    "stroke_index": 5,
+    "length_m": 400
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 7,
+    "par": 3,
+    "stroke_index": 17,
+    "length_m": 170
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 8,
+    "par": 4,
+    "stroke_index": 9,
+    "length_m": 390
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 9,
+    "par": 5,
+    "stroke_index": 13,
+    "length_m": 520
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 10,
+    "par": 4,
+    "stroke_index": 8,
+    "length_m": 370
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 11,
+    "par": 3,
+    "stroke_index": 16,
+    "length_m": 160
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 12,
+    "par": 4,
+    "stroke_index": 2,
+    "length_m": 410
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 13,
+    "par": 5,
+    "stroke_index": 12,
+    "length_m": 510
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 14,
+    "par": 4,
+    "stroke_index": 6,
+    "length_m": 350
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 15,
+    "par": 4,
+    "stroke_index": 14,
+    "length_m": 330
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 16,
+    "par": 3,
+    "stroke_index": 18,
+    "length_m": 180
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 17,
+    "par": 4,
+    "stroke_index": 4,
+    "length_m": 420
+   },
+   {
+    "course_id": "00000000-0000-0000-0000-000000009001",
+    "hole_number": 18,
+    "par": 5,
+    "stroke_index": 10,
+    "length_m": 540
+   }
+  ],
+  "scores": [
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 1,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 7,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 9,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 10,
+    "strokes": 2,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 13,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 15,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 0,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 3,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 6,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 8,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 9,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 11,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 12,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 14,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 15,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 17,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 2,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 8,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 10,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 14,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 15,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 16,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 0,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 1,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 4,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 9,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 10,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 12,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 13,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 15,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 16,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 3,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 6,
+    "strokes": 2,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 9,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 11,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 15,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 1,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 2,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 8,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 10,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 11,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 13,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 14,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 15,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 17,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 0,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 10,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 12,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 15,
+    "strokes": 2,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 16,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 0,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 6,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 8,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 9,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 11,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 12,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 15,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000101",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 17,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 3,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 6,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 9,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 11,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 14,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 15,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 17,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 1,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 2,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 5,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 8,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 10,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 13,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 14,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 15,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 16,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 17,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 0,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 1,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 4,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 9,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 12,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 13,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 15,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 16,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 0,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 3,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 8,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 11,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 12,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 14,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 15,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 17,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 1,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 2,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 10,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 11,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 13,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 14,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 15,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 16,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 17,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 0,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 1,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 9,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 10,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 12,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 13,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 15,
+    "strokes": 2,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 16,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 0,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 8,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 9,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 11,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 12,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 14,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 15,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 17,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 8,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 10,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 11,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 13,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 14,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 15,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 16,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 1,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 7,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 9,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 10,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 12,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 13,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 15,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000102",
+    "member_id": "00000000-0000-0000-0000-000000000009",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 1,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 8,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 0,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 1,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 4,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 0,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 1,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 2,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 3,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 8,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 2,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 8,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 1,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 4,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 0,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 1,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 2,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 6,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 8,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 2,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 5,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000007",
+    "hole_index": 8,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 0,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 4,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 7,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000103",
+    "member_id": "00000000-0000-0000-0000-000000000008",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 1,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 9,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 10,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 13,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 15,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 0,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 3,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 8,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 11,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 12,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 14,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 15,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 17,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 1,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 8,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 11,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 13,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 15,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 17,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 0,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 1,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 9,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 10,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 12,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 13,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 6,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 9,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 11,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 15,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000005",
+    "hole_index": 17,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 8,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 10,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 11,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 13,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 14,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 15,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 16,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000104",
+    "member_id": "00000000-0000-0000-0000-000000000006",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 3,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 6,
+    "strokes": 2,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 1,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 2,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000002",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 0,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 6,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 0,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 3,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 5,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000004",
+    "hole_index": 6,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000011",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000011",
+    "hole_index": 1,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000011",
+    "hole_index": 2,
+    "strokes": 2,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000011",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000011",
+    "hole_index": 4,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000011",
+    "hole_index": 5,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000105",
+    "member_id": "00000000-0000-0000-0000-000000000011",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000106",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 0,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 1,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 2,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 4,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 5,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 7,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 8,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 10,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 11,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 14,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 15,
+    "strokes": 2,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 16,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000001",
+    "hole_index": 17,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 0,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 1,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 2,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 3,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 4,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 5,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 6,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 7,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 8,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 9,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 10,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 11,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 12,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 13,
+    "strokes": 4,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 14,
+    "strokes": 6,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 15,
+    "strokes": 3,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 16,
+    "strokes": 5,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   },
+   {
+    "round_id": "00000000-0000-0000-0000-000000000107",
+    "member_id": "00000000-0000-0000-0000-000000000003",
+    "hole_index": 17,
+    "strokes": 7,
+    "recorded_at": null,
+    "updated_by": null,
+    "updated_at": null
+   }
+  ]
+ },
+ "sesonger": [
+  {
+   "id": "00000000-0000-0000-0000-000000009002",
+   "club_id": "00000000-0000-0000-0000-000000009000",
+   "name": "Vår 2026",
+   "status": "active",
+   "rules": {
+    "version": 1
+   }
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000009002",
+   "club_id": "00000000-0000-0000-0000-000000009000",
+   "name": "Høst 2026",
+   "status": "finished",
+   "rules": {
+    "version": 2,
+    "dayTerm": "playingDay",
+    "table": {
+     "pointsSource": "stableford",
+     "counting": {
+      "unit": "evening",
+      "best": 3
+     },
+     "stablefordCounting": {
+      "unit": "evening",
+      "best": 3
+     },
+     "tiebreaks": [
+      "stableford"
+     ]
+    },
+    "sidePrizes": {
+     "longestDrive": {
+      "enabled": true,
+      "points": 1
+     },
+     "closestToPin": {
+      "enabled": false,
+      "points": 1
+     }
+    },
+    "handicap": {
+     "seedingGroups": []
+    }
+   }
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000009002",
+   "club_id": "00000000-0000-0000-0000-000000009000",
+   "name": "Egen 2026",
+   "status": "planned",
+   "rules": {
+    "version": 2,
+    "evenings": 6,
+    "table": {
+     "counting": {
+      "unit": "evening",
+      "best": 1
+     },
+     "roundingStep": null,
+     "tiebreaks": [
+      "stableford",
+      "holeDifference"
+     ],
+     "matchPoints": {
+      "win": 3,
+      "draw": 1,
+      "loss": 0
+     }
+    },
+    "sidePrizes": {
+     "splitTies": false
+    },
+    "formats": {
+     "matchStrokes": "fullHandicap"
+    }
+   }
+  }
+ ]
+}

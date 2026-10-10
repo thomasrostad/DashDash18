@@ -1,0 +1,3939 @@
+{
+  "cup" : {
+    "champion" : null,
+    "myNext" : null,
+    "pairings" : [
+      {
+        "a" : "00000000-0000-0000-0000-000000000500",
+        "b" : null,
+        "slot" : 0
+      },
+      {
+        "a" : "00000000-0000-0000-0000-000000000503",
+        "b" : "00000000-0000-0000-0000-000000000504",
+        "slot" : 1
+      },
+      {
+        "a" : "00000000-0000-0000-0000-000000000501",
+        "b" : null,
+        "slot" : 2
+      },
+      {
+        "a" : "00000000-0000-0000-0000-000000000502",
+        "b" : "00000000-0000-0000-0000-000000000505",
+        "slot" : 3
+      }
+    ],
+    "rounds" : [
+      [
+        {
+          "a" : {
+            "isMe" : false,
+            "name" : "Bjørn",
+            "participantID" : "00000000-0000-0000-0000-000000000500",
+            "seed" : 1
+          },
+          "b" : null,
+          "isBye" : true,
+          "result" : null,
+          "round" : 1,
+          "slot" : 0,
+          "state" : "decided",
+          "walkover" : false,
+          "winner" : "00000000-0000-0000-0000-000000000500"
+        },
+        {
+          "a" : {
+            "isMe" : false,
+            "name" : "Knut",
+            "participantID" : "00000000-0000-0000-0000-000000000503",
+            "seed" : 4
+          },
+          "b" : {
+            "isMe" : false,
+            "name" : "Ola",
+            "participantID" : "00000000-0000-0000-0000-000000000504",
+            "seed" : 5
+          },
+          "isBye" : false,
+          "result" : "3&2",
+          "round" : 1,
+          "slot" : 1,
+          "state" : "decided",
+          "walkover" : false,
+          "winner" : "00000000-0000-0000-0000-000000000504"
+        },
+        {
+          "a" : {
+            "isMe" : false,
+            "name" : "Lars",
+            "participantID" : "00000000-0000-0000-0000-000000000501",
+            "seed" : 2
+          },
+          "b" : null,
+          "isBye" : true,
+          "result" : null,
+          "round" : 1,
+          "slot" : 2,
+          "state" : "decided",
+          "walkover" : false,
+          "winner" : "00000000-0000-0000-0000-000000000501"
+        },
+        {
+          "a" : {
+            "isMe" : false,
+            "name" : "Kåre",
+            "participantID" : "00000000-0000-0000-0000-000000000502",
+            "seed" : 3
+          },
+          "b" : {
+            "isMe" : true,
+            "name" : "Per",
+            "participantID" : "00000000-0000-0000-0000-000000000505",
+            "seed" : 6
+          },
+          "isBye" : false,
+          "result" : null,
+          "round" : 1,
+          "slot" : 3,
+          "state" : "decided",
+          "walkover" : true,
+          "winner" : "00000000-0000-0000-0000-000000000502"
+        }
+      ],
+      [
+        {
+          "a" : {
+            "isMe" : false,
+            "name" : "Bjørn",
+            "participantID" : "00000000-0000-0000-0000-000000000500",
+            "seed" : 1
+          },
+          "b" : {
+            "isMe" : false,
+            "name" : "Ola",
+            "participantID" : "00000000-0000-0000-0000-000000000504",
+            "seed" : 5
+          },
+          "isBye" : false,
+          "result" : null,
+          "round" : 2,
+          "slot" : 0,
+          "state" : "ready",
+          "walkover" : false,
+          "winner" : null
+        },
+        {
+          "a" : {
+            "isMe" : false,
+            "name" : "Lars",
+            "participantID" : "00000000-0000-0000-0000-000000000501",
+            "seed" : 2
+          },
+          "b" : {
+            "isMe" : false,
+            "name" : "Kåre",
+            "participantID" : "00000000-0000-0000-0000-000000000502",
+            "seed" : 3
+          },
+          "isBye" : false,
+          "result" : null,
+          "round" : 2,
+          "slot" : 1,
+          "state" : "ready",
+          "walkover" : false,
+          "winner" : null
+        }
+      ],
+      [
+        {
+          "a" : null,
+          "b" : null,
+          "isBye" : false,
+          "result" : null,
+          "round" : 3,
+          "slot" : 0,
+          "state" : "waiting",
+          "walkover" : false,
+          "winner" : null
+        }
+      ]
+    ],
+    "roundTitles" : [
+      "Kvartfinale",
+      "Semifinale",
+      "Finale"
+    ]
+  },
+  "konkurranser" : [
+    {
+      "entry" : "club",
+      "kind" : "league",
+      "standings" : {
+        "hasResults" : true,
+        "roundCount" : 6,
+        "rounds" : {
+          "bestPoints" : [
+            52,
+            53,
+            27,
+            38,
+            17,
+            38
+          ],
+          "bestStrokes" : [
+            79,
+            82,
+            35,
+            71,
+            29,
+            70
+          ],
+          "columns" : [
+            {
+              "date" : "14.5",
+              "isOngoing" : false,
+              "label" : "1",
+              "roundID" : "00000000-0000-0000-0000-000000000101",
+              "title" : "14. mai · Marco Simone"
+            },
+            {
+              "date" : "21.5",
+              "isOngoing" : false,
+              "label" : "2",
+              "roundID" : "00000000-0000-0000-0000-000000000102",
+              "title" : "21. mai · Marco Simone"
+            },
+            {
+              "date" : "21.5",
+              "isOngoing" : false,
+              "label" : "3",
+              "roundID" : "00000000-0000-0000-0000-000000000103",
+              "title" : "21. mai · Siste ni"
+            },
+            {
+              "date" : "28.5",
+              "isOngoing" : false,
+              "label" : "4",
+              "roundID" : "00000000-0000-0000-0000-000000000104",
+              "title" : "28. mai · Marco Simone"
+            },
+            {
+              "date" : "4.6",
+              "isOngoing" : true,
+              "label" : "5",
+              "roundID" : "00000000-0000-0000-0000-000000000105",
+              "title" : "4. jun · Finalekveld"
+            },
+            {
+              "date" : "11.6",
+              "isOngoing" : false,
+              "label" : "6",
+              "roundID" : "00000000-0000-0000-0000-000000000107",
+              "title" : "11. jun · Marco Simone"
+            }
+          ],
+          "rows" : [
+            {
+              "counted" : [
+                true,
+                true,
+                true,
+                false,
+                false,
+                false
+              ],
+              "isMe" : false,
+              "name" : "Odd",
+              "place" : "1.",
+              "playerID" : "00000000-0000-0000-0000-000000000007",
+              "points" : [
+                52,
+                47,
+                27,
+                null,
+                null,
+                null
+              ],
+              "pointsTotal" : 126,
+              "strokes" : [
+                79,
+                84,
+                44,
+                null,
+                null,
+                null
+              ],
+              "strokesTotal" : 207,
+              "toPar" : [
+                7,
+                12,
+                8,
+                null,
+                null,
+                null
+              ],
+              "toParTotal" : 27
+            },
+            {
+              "counted" : [
+                true,
+                true,
+                true,
+                false,
+                false,
+                false
+              ],
+              "isMe" : true,
+              "name" : "Thomas",
+              "place" : "2.",
+              "playerID" : "00000000-0000-0000-0000-000000000008",
+              "points" : [
+                45,
+                51,
+                27,
+                null,
+                null,
+                null
+              ],
+              "pointsTotal" : 123,
+              "strokes" : [
+                88,
+                82,
+                44,
+                null,
+                null,
+                null
+              ],
+              "strokesTotal" : 214,
+              "toPar" : [
+                16,
+                10,
+                8,
+                null,
+                null,
+                null
+              ],
+              "toParTotal" : 34
+            },
+            {
+              "counted" : [
+                false,
+                false,
+                true,
+                false,
+                true,
+                true
+              ],
+              "isMe" : false,
+              "name" : "Bjørn",
+              "place" : "3.",
+              "playerID" : "00000000-0000-0000-0000-000000000001",
+              "points" : [
+                38,
+                34,
+                24,
+                20,
+                17,
+                38
+              ],
+              "pointsTotal" : 171,
+              "strokes" : [
+                80,
+                84,
+                35,
+                83,
+                29,
+                70
+              ],
+              "strokesTotal" : 381,
+              "toPar" : [
+                8,
+                12,
+                -1,
+                9,
+                2,
+                -2
+              ],
+              "toParTotal" : 28
+            },
+            {
+              "counted" : [
+                true,
+                false,
+                false,
+                false,
+                true,
+                true
+              ],
+              "isMe" : false,
+              "name" : "Kåre",
+              "place" : "4.",
+              "playerID" : "00000000-0000-0000-0000-000000000003",
+              "points" : [
+                42,
+                36,
+                23,
+                26,
+                17,
+                20
+              ],
+              "pointsTotal" : 164,
+              "strokes" : [
+                80,
+                86,
+                44,
+                83,
+                30,
+                88
+              ],
+              "strokesTotal" : 411,
+              "toPar" : [
+                8,
+                14,
+                8,
+                9,
+                3,
+                16
+              ],
+              "toParTotal" : 58
+            },
+            {
+              "counted" : [
+                true,
+                true,
+                false,
+                true,
+                false,
+                false
+              ],
+              "isMe" : false,
+              "name" : "Per",
+              "place" : "5.",
+              "playerID" : "00000000-0000-0000-0000-000000000006",
+              "points" : [
+                40,
+                44,
+                24,
+                38,
+                null,
+                null
+              ],
+              "pointsTotal" : 146,
+              "strokes" : [
+                88,
+                84,
+                44,
+                82,
+                null,
+                null
+              ],
+              "strokesTotal" : 298,
+              "toPar" : [
+                16,
+                12,
+                8,
+                8,
+                null,
+                null
+              ],
+              "toParTotal" : 44
+            },
+            {
+              "counted" : [
+                false,
+                false,
+                true,
+                true,
+                false,
+                true
+              ],
+              "isMe" : false,
+              "name" : "Lars",
+              "place" : "6.",
+              "playerID" : "00000000-0000-0000-0000-000000000002",
+              "points" : [
+                24,
+                27,
+                24,
+                24,
+                12,
+                38
+              ],
+              "pointsTotal" : 149,
+              "strokes" : [
+                89,
+                86,
+                44,
+                84,
+                32,
+                null
+              ],
+              "strokesTotal" : 335,
+              "toPar" : [
+                17,
+                14,
+                8,
+                10,
+                5,
+                null
+              ],
+              "toParTotal" : 54
+            },
+            {
+              "counted" : [
+                false,
+                false,
+                false,
+                true,
+                true,
+                true
+              ],
+              "isMe" : false,
+              "name" : "Knut",
+              "place" : "7.",
+              "playerID" : "00000000-0000-0000-0000-000000000004",
+              "points" : [
+                35,
+                40,
+                23,
+                31,
+                15,
+                20
+              ],
+              "pointsTotal" : 164,
+              "strokes" : [
+                89,
+                84,
+                44,
+                71,
+                34,
+                null
+              ],
+              "strokesTotal" : 322,
+              "toPar" : [
+                17,
+                12,
+                8,
+                9,
+                7,
+                null
+              ],
+              "toParTotal" : 53
+            },
+            {
+              "counted" : [
+                true,
+                false,
+                true,
+                true,
+                false,
+                false
+              ],
+              "isMe" : false,
+              "name" : "Ola",
+              "place" : "8.",
+              "playerID" : "00000000-0000-0000-0000-000000000005",
+              "points" : [
+                29,
+                24,
+                24,
+                32,
+                null,
+                null
+              ],
+              "pointsTotal" : 109,
+              "strokes" : [
+                79,
+                84,
+                35,
+                83,
+                null,
+                null
+              ],
+              "strokesTotal" : 281,
+              "toPar" : [
+                7,
+                12,
+                -1,
+                9,
+                null,
+                null
+              ],
+              "toParTotal" : 27
+            },
+            {
+              "counted" : [
+                false,
+                true,
+                false,
+                false,
+                false,
+                false
+              ],
+              "isMe" : false,
+              "name" : "Åse",
+              "place" : "9.",
+              "playerID" : "00000000-0000-0000-0000-000000000009",
+              "points" : [
+                null,
+                53,
+                null,
+                null,
+                null,
+                null
+              ],
+              "pointsTotal" : 53,
+              "strokes" : [
+                null,
+                82,
+                null,
+                null,
+                null,
+                null
+              ],
+              "strokesTotal" : 82,
+              "toPar" : [
+                null,
+                10,
+                null,
+                null,
+                null,
+                null
+              ],
+              "toParTotal" : 10
+            },
+            {
+              "counted" : [
+                false,
+                false,
+                false,
+                false,
+                true,
+                false
+              ],
+              "isMe" : false,
+              "name" : "Anders",
+              "place" : "10.",
+              "playerID" : "00000000-0000-0000-0000-000000000011",
+              "points" : [
+                null,
+                null,
+                null,
+                null,
+                13,
+                null
+              ],
+              "pointsTotal" : 13,
+              "strokes" : [
+                null,
+                null,
+                null,
+                null,
+                29,
+                null
+              ],
+              "strokesTotal" : 29,
+              "toPar" : [
+                null,
+                null,
+                null,
+                null,
+                2,
+                null
+              ],
+              "toParTotal" : 2
+            }
+          ]
+        },
+        "roundTitles" : {
+          "00000000-0000-0000-0000-000000000101" : "14. mai · Marco Simone",
+          "00000000-0000-0000-0000-000000000102" : "21. mai · Marco Simone",
+          "00000000-0000-0000-0000-000000000103" : "21. mai · Siste ni",
+          "00000000-0000-0000-0000-000000000104" : "28. mai · Marco Simone",
+          "00000000-0000-0000-0000-000000000105" : "4. jun · Finalekveld",
+          "00000000-0000-0000-0000-000000000107" : "11. jun · Marco Simone"
+        },
+        "rows" : [
+          {
+            "bestRound" : 11,
+            "detail" : "3 runder · 2 seire · 126 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000007",
+            "isMe" : false,
+            "name" : "Odd",
+            "place" : 1,
+            "placeText" : "1.",
+            "played" : 3,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 11,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 52
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 7,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 47
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 10,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 27
+              }
+            ],
+            "stableford" : 126,
+            "total" : 28,
+            "totalText" : "28",
+            "wins" : 2
+          },
+          {
+            "bestRound" : 10,
+            "detail" : "3 runder · 1 seier · 123 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000008",
+            "isMe" : true,
+            "name" : "Thomas",
+            "place" : 2,
+            "placeText" : "2.",
+            "played" : 3,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 2,
+                "points" : 9,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 45
+              },
+              {
+                "counted" : true,
+                "place" : 2,
+                "points" : 9,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 51
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 10,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 27
+              }
+            ],
+            "stableford" : 123,
+            "total" : 28,
+            "totalText" : "28",
+            "wins" : 1
+          },
+          {
+            "bestRound" : 10,
+            "detail" : "6 runder · beste 3 teller · 2 seire · 79 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000001",
+            "isMe" : false,
+            "name" : "Bjørn",
+            "place" : 3,
+            "placeText" : "3.",
+            "played" : 6,
+            "results" : [
+              {
+                "counted" : false,
+                "place" : 5,
+                "points" : 5,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 38
+              },
+              {
+                "counted" : false,
+                "place" : 7,
+                "points" : 3,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 34
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 5.5,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 24
+              },
+              {
+                "counted" : false,
+                "place" : 6,
+                "points" : 4,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 20
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 10,
+                "roundID" : "00000000-0000-0000-0000-000000000105",
+                "stableford" : 17
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 10,
+                "roundID" : "00000000-0000-0000-0000-000000000107",
+                "stableford" : 38
+              }
+            ],
+            "stableford" : 79,
+            "total" : 25.5,
+            "totalText" : "25,5",
+            "wins" : 2
+          },
+          {
+            "bestRound" : 10,
+            "detail" : "6 runder · beste 3 teller · 1 seier · 79 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000003",
+            "isMe" : false,
+            "name" : "Kåre",
+            "place" : 4,
+            "placeText" : "4.",
+            "played" : 6,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 7,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 42
+              },
+              {
+                "counted" : false,
+                "place" : 6,
+                "points" : 4,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 36
+              },
+              {
+                "counted" : false,
+                "place" : 7,
+                "points" : 2.5,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 23
+              },
+              {
+                "counted" : false,
+                "place" : 4,
+                "points" : 6,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 26
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 10,
+                "roundID" : "00000000-0000-0000-0000-000000000105",
+                "stableford" : 17
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 6.5,
+                "roundID" : "00000000-0000-0000-0000-000000000107",
+                "stableford" : 20
+              }
+            ],
+            "stableford" : 79,
+            "total" : 23.5,
+            "totalText" : "23,5",
+            "wins" : 1
+          },
+          {
+            "bestRound" : 11,
+            "detail" : "4 runder · beste 3 teller · 1 seier · 122 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000006",
+            "isMe" : false,
+            "name" : "Per",
+            "place" : 5,
+            "placeText" : "5.",
+            "played" : 4,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 4,
+                "points" : 6,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 40
+              },
+              {
+                "counted" : true,
+                "place" : 4,
+                "points" : 6,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 44
+              },
+              {
+                "counted" : false,
+                "place" : 3,
+                "points" : 5.5,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 11,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 38
+              }
+            ],
+            "stableford" : 122,
+            "total" : 23,
+            "totalText" : "23",
+            "wins" : 1
+          },
+          {
+            "bestRound" : 10,
+            "detail" : "6 runder · beste 3 teller · 1 seier · 86 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000002",
+            "isMe" : false,
+            "name" : "Lars",
+            "place" : 6,
+            "placeText" : "6.",
+            "played" : 6,
+            "results" : [
+              {
+                "counted" : false,
+                "place" : 8,
+                "points" : 2,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 24
+              },
+              {
+                "counted" : false,
+                "place" : 8,
+                "points" : 2,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 27
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 5.5,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 5,
+                "points" : 5,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 24
+              },
+              {
+                "counted" : false,
+                "place" : 5,
+                "points" : 5,
+                "roundID" : "00000000-0000-0000-0000-000000000105",
+                "stableford" : 12
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 10,
+                "roundID" : "00000000-0000-0000-0000-000000000107",
+                "stableford" : 38
+              }
+            ],
+            "stableford" : 86,
+            "total" : 20.5,
+            "totalText" : "20,5",
+            "wins" : 1
+          },
+          {
+            "bestRound" : 7,
+            "detail" : "6 runder · beste 3 teller · 66 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000004",
+            "isMe" : false,
+            "name" : "Knut",
+            "place" : 7,
+            "placeText" : "7.",
+            "played" : 6,
+            "results" : [
+              {
+                "counted" : false,
+                "place" : 6,
+                "points" : 4,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 35
+              },
+              {
+                "counted" : false,
+                "place" : 5,
+                "points" : 5,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 40
+              },
+              {
+                "counted" : false,
+                "place" : 7,
+                "points" : 2.5,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 23
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 7,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 31
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 7,
+                "roundID" : "00000000-0000-0000-0000-000000000105",
+                "stableford" : 15
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 6.5,
+                "roundID" : "00000000-0000-0000-0000-000000000107",
+                "stableford" : 20
+              }
+            ],
+            "stableford" : 66,
+            "total" : 20.5,
+            "totalText" : "20,5",
+            "wins" : 0
+          },
+          {
+            "bestRound" : 9,
+            "detail" : "4 runder · beste 3 teller · 85 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000005",
+            "isMe" : false,
+            "name" : "Ola",
+            "place" : 8,
+            "placeText" : "8.",
+            "played" : 4,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 7,
+                "points" : 3,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 29
+              },
+              {
+                "counted" : false,
+                "place" : 9,
+                "points" : 1,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 5.5,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 2,
+                "points" : 9,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 32
+              }
+            ],
+            "stableford" : 85,
+            "total" : 17.5,
+            "totalText" : "17,5",
+            "wins" : 0
+          },
+          {
+            "bestRound" : 11,
+            "detail" : "1 runde · 1 seier · 53 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000009",
+            "isMe" : false,
+            "name" : "Åse",
+            "place" : 9,
+            "placeText" : "9.",
+            "played" : 1,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 11,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 53
+              }
+            ],
+            "stableford" : 53,
+            "total" : 11,
+            "totalText" : "11",
+            "wins" : 1
+          },
+          {
+            "bestRound" : 6,
+            "detail" : "1 runde · 13 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000011",
+            "isMe" : false,
+            "name" : "Anders",
+            "place" : 10,
+            "placeText" : "10.",
+            "played" : 1,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 4,
+                "points" : 6,
+                "roundID" : "00000000-0000-0000-0000-000000000105",
+                "stableford" : 13
+              }
+            ],
+            "stableford" : 13,
+            "total" : 6,
+            "totalText" : "6",
+            "wins" : 0
+          }
+        ],
+        "rulesSummary" : "Plassering 10–8–6 … · + 1 for å spille · beste 3 runder teller"
+      }
+    },
+    {
+      "entry" : "open",
+      "kind" : "fun",
+      "standings" : {
+        "hasResults" : true,
+        "roundCount" : 6,
+        "rounds" : {
+          "bestPoints" : [
+            52,
+            53,
+            27,
+            38,
+            17,
+            38
+          ],
+          "bestStrokes" : [
+            79,
+            82,
+            35,
+            71,
+            29,
+            70
+          ],
+          "columns" : [
+            {
+              "date" : "14.5",
+              "isOngoing" : false,
+              "label" : "1",
+              "roundID" : "00000000-0000-0000-0000-000000000101",
+              "title" : "14. mai · Marco Simone"
+            },
+            {
+              "date" : "21.5",
+              "isOngoing" : false,
+              "label" : "2",
+              "roundID" : "00000000-0000-0000-0000-000000000102",
+              "title" : "21. mai · Marco Simone"
+            },
+            {
+              "date" : "21.5",
+              "isOngoing" : false,
+              "label" : "3",
+              "roundID" : "00000000-0000-0000-0000-000000000103",
+              "title" : "21. mai · Siste ni"
+            },
+            {
+              "date" : "28.5",
+              "isOngoing" : false,
+              "label" : "4",
+              "roundID" : "00000000-0000-0000-0000-000000000104",
+              "title" : "28. mai · Marco Simone"
+            },
+            {
+              "date" : "4.6",
+              "isOngoing" : true,
+              "label" : "5",
+              "roundID" : "00000000-0000-0000-0000-000000000105",
+              "title" : "4. jun · Finalekveld"
+            },
+            {
+              "date" : "11.6",
+              "isOngoing" : false,
+              "label" : "6",
+              "roundID" : "00000000-0000-0000-0000-000000000107",
+              "title" : "11. jun · Marco Simone"
+            }
+          ],
+          "rows" : [
+            {
+              "counted" : null,
+              "isMe" : false,
+              "name" : "Bjørn",
+              "place" : "1.",
+              "playerID" : "00000000-0000-0000-0000-000000000001",
+              "points" : [
+                38,
+                34,
+                24,
+                20,
+                17,
+                38
+              ],
+              "pointsTotal" : 171,
+              "strokes" : [
+                80,
+                84,
+                35,
+                83,
+                29,
+                70
+              ],
+              "strokesTotal" : 381,
+              "toPar" : [
+                8,
+                12,
+                -1,
+                9,
+                2,
+                -2
+              ],
+              "toParTotal" : 28
+            },
+            {
+              "counted" : null,
+              "isMe" : false,
+              "name" : "Kåre",
+              "place" : "2.",
+              "playerID" : "00000000-0000-0000-0000-000000000003",
+              "points" : [
+                42,
+                36,
+                23,
+                26,
+                17,
+                20
+              ],
+              "pointsTotal" : 164,
+              "strokes" : [
+                80,
+                86,
+                44,
+                83,
+                30,
+                88
+              ],
+              "strokesTotal" : 411,
+              "toPar" : [
+                8,
+                14,
+                8,
+                9,
+                3,
+                16
+              ],
+              "toParTotal" : 58
+            },
+            {
+              "counted" : null,
+              "isMe" : false,
+              "name" : "Knut",
+              "place" : "3.",
+              "playerID" : "00000000-0000-0000-0000-000000000004",
+              "points" : [
+                35,
+                40,
+                23,
+                31,
+                15,
+                20
+              ],
+              "pointsTotal" : 164,
+              "strokes" : [
+                89,
+                84,
+                44,
+                71,
+                34,
+                null
+              ],
+              "strokesTotal" : 322,
+              "toPar" : [
+                17,
+                12,
+                8,
+                9,
+                7,
+                null
+              ],
+              "toParTotal" : 53
+            },
+            {
+              "counted" : null,
+              "isMe" : false,
+              "name" : "Lars",
+              "place" : "4.",
+              "playerID" : "00000000-0000-0000-0000-000000000002",
+              "points" : [
+                24,
+                27,
+                24,
+                24,
+                12,
+                38
+              ],
+              "pointsTotal" : 149,
+              "strokes" : [
+                89,
+                86,
+                44,
+                84,
+                32,
+                null
+              ],
+              "strokesTotal" : 335,
+              "toPar" : [
+                17,
+                14,
+                8,
+                10,
+                5,
+                null
+              ],
+              "toParTotal" : 54
+            },
+            {
+              "counted" : null,
+              "isMe" : false,
+              "name" : "Per",
+              "place" : "5.",
+              "playerID" : "00000000-0000-0000-0000-000000000006",
+              "points" : [
+                40,
+                44,
+                24,
+                38,
+                null,
+                null
+              ],
+              "pointsTotal" : 146,
+              "strokes" : [
+                88,
+                84,
+                44,
+                82,
+                null,
+                null
+              ],
+              "strokesTotal" : 298,
+              "toPar" : [
+                16,
+                12,
+                8,
+                8,
+                null,
+                null
+              ],
+              "toParTotal" : 44
+            },
+            {
+              "counted" : null,
+              "isMe" : false,
+              "name" : "Odd",
+              "place" : "6.",
+              "playerID" : "00000000-0000-0000-0000-000000000007",
+              "points" : [
+                52,
+                47,
+                27,
+                null,
+                null,
+                null
+              ],
+              "pointsTotal" : 126,
+              "strokes" : [
+                79,
+                84,
+                44,
+                null,
+                null,
+                null
+              ],
+              "strokesTotal" : 207,
+              "toPar" : [
+                7,
+                12,
+                8,
+                null,
+                null,
+                null
+              ],
+              "toParTotal" : 27
+            },
+            {
+              "counted" : null,
+              "isMe" : true,
+              "name" : "Thomas",
+              "place" : "7.",
+              "playerID" : "00000000-0000-0000-0000-000000000008",
+              "points" : [
+                45,
+                51,
+                27,
+                null,
+                null,
+                null
+              ],
+              "pointsTotal" : 123,
+              "strokes" : [
+                88,
+                82,
+                44,
+                null,
+                null,
+                null
+              ],
+              "strokesTotal" : 214,
+              "toPar" : [
+                16,
+                10,
+                8,
+                null,
+                null,
+                null
+              ],
+              "toParTotal" : 34
+            },
+            {
+              "counted" : null,
+              "isMe" : false,
+              "name" : "Ola",
+              "place" : "8.",
+              "playerID" : "00000000-0000-0000-0000-000000000005",
+              "points" : [
+                29,
+                24,
+                24,
+                32,
+                null,
+                null
+              ],
+              "pointsTotal" : 109,
+              "strokes" : [
+                79,
+                84,
+                35,
+                83,
+                null,
+                null
+              ],
+              "strokesTotal" : 281,
+              "toPar" : [
+                7,
+                12,
+                -1,
+                9,
+                null,
+                null
+              ],
+              "toParTotal" : 27
+            },
+            {
+              "counted" : null,
+              "isMe" : false,
+              "name" : "Åse",
+              "place" : "9.",
+              "playerID" : "00000000-0000-0000-0000-000000000009",
+              "points" : [
+                null,
+                53,
+                null,
+                null,
+                null,
+                null
+              ],
+              "pointsTotal" : 53,
+              "strokes" : [
+                null,
+                82,
+                null,
+                null,
+                null,
+                null
+              ],
+              "strokesTotal" : 82,
+              "toPar" : [
+                null,
+                10,
+                null,
+                null,
+                null,
+                null
+              ],
+              "toParTotal" : 10
+            },
+            {
+              "counted" : null,
+              "isMe" : false,
+              "name" : "Anders",
+              "place" : "10.",
+              "playerID" : "00000000-0000-0000-0000-000000000011",
+              "points" : [
+                null,
+                null,
+                null,
+                null,
+                13,
+                null
+              ],
+              "pointsTotal" : 13,
+              "strokes" : [
+                null,
+                null,
+                null,
+                null,
+                29,
+                null
+              ],
+              "strokesTotal" : 29,
+              "toPar" : [
+                null,
+                null,
+                null,
+                null,
+                2,
+                null
+              ],
+              "toParTotal" : 2
+            }
+          ]
+        },
+        "roundTitles" : {
+          "00000000-0000-0000-0000-000000000101" : "14. mai · Marco Simone",
+          "00000000-0000-0000-0000-000000000102" : "21. mai · Marco Simone",
+          "00000000-0000-0000-0000-000000000103" : "21. mai · Siste ni",
+          "00000000-0000-0000-0000-000000000104" : "28. mai · Marco Simone",
+          "00000000-0000-0000-0000-000000000105" : "4. jun · Finalekveld",
+          "00000000-0000-0000-0000-000000000107" : "11. jun · Marco Simone"
+        },
+        "rows" : [
+          {
+            "bestRound" : 38,
+            "detail" : "6 runder · 2 seire · 171 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000001",
+            "isMe" : false,
+            "name" : "Bjørn",
+            "place" : 1,
+            "placeText" : "1.",
+            "played" : 6,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 5,
+                "points" : 38,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 38
+              },
+              {
+                "counted" : true,
+                "place" : 7,
+                "points" : 34,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 34
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 24,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 6,
+                "points" : 20,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 20
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 17,
+                "roundID" : "00000000-0000-0000-0000-000000000105",
+                "stableford" : 17
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 38,
+                "roundID" : "00000000-0000-0000-0000-000000000107",
+                "stableford" : 38
+              }
+            ],
+            "stableford" : 171,
+            "total" : 171,
+            "totalText" : "171",
+            "wins" : 2
+          },
+          {
+            "bestRound" : 42,
+            "detail" : "6 runder · 1 seier · 164 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000003",
+            "isMe" : false,
+            "name" : "Kåre",
+            "place" : 2,
+            "placeText" : "2.",
+            "played" : 6,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 42,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 42
+              },
+              {
+                "counted" : true,
+                "place" : 6,
+                "points" : 36,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 36
+              },
+              {
+                "counted" : true,
+                "place" : 7,
+                "points" : 23,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 23
+              },
+              {
+                "counted" : true,
+                "place" : 4,
+                "points" : 26,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 26
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 17,
+                "roundID" : "00000000-0000-0000-0000-000000000105",
+                "stableford" : 17
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 20,
+                "roundID" : "00000000-0000-0000-0000-000000000107",
+                "stableford" : 20
+              }
+            ],
+            "stableford" : 164,
+            "total" : 164,
+            "totalText" : "164",
+            "wins" : 1
+          },
+          {
+            "bestRound" : 40,
+            "detail" : "6 runder · 164 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000004",
+            "isMe" : false,
+            "name" : "Knut",
+            "place" : 3,
+            "placeText" : "3.",
+            "played" : 6,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 6,
+                "points" : 35,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 35
+              },
+              {
+                "counted" : true,
+                "place" : 5,
+                "points" : 40,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 40
+              },
+              {
+                "counted" : true,
+                "place" : 7,
+                "points" : 23,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 23
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 31,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 31
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 15,
+                "roundID" : "00000000-0000-0000-0000-000000000105",
+                "stableford" : 15
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 20,
+                "roundID" : "00000000-0000-0000-0000-000000000107",
+                "stableford" : 20
+              }
+            ],
+            "stableford" : 164,
+            "total" : 164,
+            "totalText" : "164",
+            "wins" : 0
+          },
+          {
+            "bestRound" : 38,
+            "detail" : "6 runder · 1 seier · 149 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000002",
+            "isMe" : false,
+            "name" : "Lars",
+            "place" : 4,
+            "placeText" : "4.",
+            "played" : 6,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 8,
+                "points" : 24,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 8,
+                "points" : 27,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 27
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 24,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 5,
+                "points" : 24,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 5,
+                "points" : 12,
+                "roundID" : "00000000-0000-0000-0000-000000000105",
+                "stableford" : 12
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 38,
+                "roundID" : "00000000-0000-0000-0000-000000000107",
+                "stableford" : 38
+              }
+            ],
+            "stableford" : 149,
+            "total" : 149,
+            "totalText" : "149",
+            "wins" : 1
+          },
+          {
+            "bestRound" : 44,
+            "detail" : "4 runder · 1 seier · 146 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000006",
+            "isMe" : false,
+            "name" : "Per",
+            "place" : 5,
+            "placeText" : "5.",
+            "played" : 4,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 4,
+                "points" : 40,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 40
+              },
+              {
+                "counted" : true,
+                "place" : 4,
+                "points" : 44,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 44
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 24,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 38,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 38
+              }
+            ],
+            "stableford" : 146,
+            "total" : 146,
+            "totalText" : "146",
+            "wins" : 1
+          },
+          {
+            "bestRound" : 52,
+            "detail" : "3 runder · 2 seire · 126 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000007",
+            "isMe" : false,
+            "name" : "Odd",
+            "place" : 6,
+            "placeText" : "6.",
+            "played" : 3,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 52,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 52
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 47,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 47
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 27,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 27
+              }
+            ],
+            "stableford" : 126,
+            "total" : 126,
+            "totalText" : "126",
+            "wins" : 2
+          },
+          {
+            "bestRound" : 51,
+            "detail" : "3 runder · 1 seier · 123 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000008",
+            "isMe" : true,
+            "name" : "Thomas",
+            "place" : 7,
+            "placeText" : "7.",
+            "played" : 3,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 2,
+                "points" : 45,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 45
+              },
+              {
+                "counted" : true,
+                "place" : 2,
+                "points" : 51,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 51
+              },
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 27,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 27
+              }
+            ],
+            "stableford" : 123,
+            "total" : 123,
+            "totalText" : "123",
+            "wins" : 1
+          },
+          {
+            "bestRound" : 32,
+            "detail" : "4 runder · 109 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000005",
+            "isMe" : false,
+            "name" : "Ola",
+            "place" : 8,
+            "placeText" : "8.",
+            "played" : 4,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 7,
+                "points" : 29,
+                "roundID" : "00000000-0000-0000-0000-000000000101",
+                "stableford" : 29
+              },
+              {
+                "counted" : true,
+                "place" : 9,
+                "points" : 24,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 3,
+                "points" : 24,
+                "roundID" : "00000000-0000-0000-0000-000000000103",
+                "stableford" : 24
+              },
+              {
+                "counted" : true,
+                "place" : 2,
+                "points" : 32,
+                "roundID" : "00000000-0000-0000-0000-000000000104",
+                "stableford" : 32
+              }
+            ],
+            "stableford" : 109,
+            "total" : 109,
+            "totalText" : "109",
+            "wins" : 0
+          },
+          {
+            "bestRound" : 53,
+            "detail" : "1 runde · 1 seier · 53 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000009",
+            "isMe" : false,
+            "name" : "Åse",
+            "place" : 9,
+            "placeText" : "9.",
+            "played" : 1,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 1,
+                "points" : 53,
+                "roundID" : "00000000-0000-0000-0000-000000000102",
+                "stableford" : 53
+              }
+            ],
+            "stableford" : 53,
+            "total" : 53,
+            "totalText" : "53",
+            "wins" : 1
+          },
+          {
+            "bestRound" : 13,
+            "detail" : "1 runde · 13 stableford",
+            "entrant" : "00000000-0000-0000-0000-000000000011",
+            "isMe" : false,
+            "name" : "Anders",
+            "place" : 10,
+            "placeText" : "10.",
+            "played" : 1,
+            "results" : [
+              {
+                "counted" : true,
+                "place" : 4,
+                "points" : 13,
+                "roundID" : "00000000-0000-0000-0000-000000000105",
+                "stableford" : 13
+              }
+            ],
+            "stableford" : 13,
+            "total" : 13,
+            "totalText" : "13",
+            "wins" : 0
+          }
+        ],
+        "rulesSummary" : "Stablefordpoeng · alle runder teller"
+      }
+    }
+  ],
+  "tavla" : [
+    {
+      "birdies" : {
+        "00000000-0000-0000-0000-000000000001" : 23,
+        "00000000-0000-0000-0000-000000000002" : 11,
+        "00000000-0000-0000-0000-000000000003" : 26,
+        "00000000-0000-0000-0000-000000000004" : 28,
+        "00000000-0000-0000-0000-000000000005" : 13,
+        "00000000-0000-0000-0000-000000000006" : 28,
+        "00000000-0000-0000-0000-000000000007" : 30,
+        "00000000-0000-0000-0000-000000000008" : 24,
+        "00000000-0000-0000-0000-000000000009" : 13,
+        "00000000-0000-0000-0000-000000000011" : 2
+      },
+      "countsStableford" : false,
+      "eveningsPlayed" : 5,
+      "eveningsTotal" : 7,
+      "hasResults" : true,
+      "longestDrive" : {
+        "00000000-0000-0000-0000-000000000001" : null,
+        "00000000-0000-0000-0000-000000000002" : null,
+        "00000000-0000-0000-0000-000000000003" : 251.5,
+        "00000000-0000-0000-0000-000000000004" : null,
+        "00000000-0000-0000-0000-000000000005" : 280,
+        "00000000-0000-0000-0000-000000000006" : 247,
+        "00000000-0000-0000-0000-000000000007" : null,
+        "00000000-0000-0000-0000-000000000008" : null,
+        "00000000-0000-0000-0000-000000000009" : 262,
+        "00000000-0000-0000-0000-000000000011" : null
+      },
+      "roundColumns" : "plass · duell · stableford",
+      "rounds" : {
+        "bestPoints" : [
+          52,
+          53,
+          27,
+          38,
+          17,
+          38
+        ],
+        "bestStrokes" : [
+          79,
+          82,
+          35,
+          71,
+          29,
+          70
+        ],
+        "columns" : [
+          {
+            "date" : "14.5",
+            "isOngoing" : false,
+            "label" : "1",
+            "roundID" : "00000000-0000-0000-0000-000000000101",
+            "title" : "Kveld 1"
+          },
+          {
+            "date" : "21.5",
+            "isOngoing" : false,
+            "label" : "2",
+            "roundID" : "00000000-0000-0000-0000-000000000102",
+            "title" : "Kveld 2 · runde 1"
+          },
+          {
+            "date" : "21.5",
+            "isOngoing" : false,
+            "label" : "3",
+            "roundID" : "00000000-0000-0000-0000-000000000103",
+            "title" : "Siste ni"
+          },
+          {
+            "date" : "28.5",
+            "isOngoing" : false,
+            "label" : "4",
+            "roundID" : "00000000-0000-0000-0000-000000000104",
+            "title" : "Kveld 3"
+          },
+          {
+            "date" : "4.6",
+            "isOngoing" : true,
+            "label" : "5",
+            "roundID" : "00000000-0000-0000-0000-000000000105",
+            "title" : "Finalekveld"
+          },
+          {
+            "date" : "11.6",
+            "isOngoing" : false,
+            "label" : "6",
+            "roundID" : "00000000-0000-0000-0000-000000000107",
+            "title" : "Kveld 5"
+          }
+        ],
+        "rows" : [
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Kåre",
+            "place" : "1.",
+            "playerID" : "00000000-0000-0000-0000-000000000003",
+            "points" : [
+              42,
+              36,
+              23,
+              26,
+              17,
+              20
+            ],
+            "pointsTotal" : 164,
+            "strokes" : [
+              80,
+              86,
+              44,
+              83,
+              30,
+              88
+            ],
+            "strokesTotal" : 411,
+            "toPar" : [
+              8,
+              14,
+              8,
+              9,
+              3,
+              16
+            ],
+            "toParTotal" : 58
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Odd",
+            "place" : "2.",
+            "playerID" : "00000000-0000-0000-0000-000000000007",
+            "points" : [
+              52,
+              47,
+              27,
+              null,
+              null,
+              null
+            ],
+            "pointsTotal" : 126,
+            "strokes" : [
+              79,
+              84,
+              44,
+              null,
+              null,
+              null
+            ],
+            "strokesTotal" : 207,
+            "toPar" : [
+              7,
+              12,
+              8,
+              null,
+              null,
+              null
+            ],
+            "toParTotal" : 27
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Lars",
+            "place" : "3.",
+            "playerID" : "00000000-0000-0000-0000-000000000002",
+            "points" : [
+              24,
+              27,
+              24,
+              24,
+              12,
+              38
+            ],
+            "pointsTotal" : 149,
+            "strokes" : [
+              89,
+              86,
+              44,
+              84,
+              32,
+              null
+            ],
+            "strokesTotal" : 335,
+            "toPar" : [
+              17,
+              14,
+              8,
+              10,
+              5,
+              null
+            ],
+            "toParTotal" : 54
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Bjørn",
+            "place" : "4.",
+            "playerID" : "00000000-0000-0000-0000-000000000001",
+            "points" : [
+              38,
+              34,
+              24,
+              20,
+              17,
+              38
+            ],
+            "pointsTotal" : 171,
+            "strokes" : [
+              80,
+              84,
+              35,
+              83,
+              29,
+              70
+            ],
+            "strokesTotal" : 381,
+            "toPar" : [
+              8,
+              12,
+              -1,
+              9,
+              2,
+              -2
+            ],
+            "toParTotal" : 28
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Knut",
+            "place" : "5.",
+            "playerID" : "00000000-0000-0000-0000-000000000004",
+            "points" : [
+              35,
+              40,
+              23,
+              31,
+              15,
+              20
+            ],
+            "pointsTotal" : 164,
+            "strokes" : [
+              89,
+              84,
+              44,
+              71,
+              34,
+              null
+            ],
+            "strokesTotal" : 322,
+            "toPar" : [
+              17,
+              12,
+              8,
+              9,
+              7,
+              null
+            ],
+            "toParTotal" : 53
+          },
+          {
+            "counted" : null,
+            "isMe" : true,
+            "name" : "Thomas",
+            "place" : "6.",
+            "playerID" : "00000000-0000-0000-0000-000000000008",
+            "points" : [
+              45,
+              51,
+              27,
+              null,
+              null,
+              null
+            ],
+            "pointsTotal" : 123,
+            "strokes" : [
+              88,
+              82,
+              44,
+              null,
+              null,
+              null
+            ],
+            "strokesTotal" : 214,
+            "toPar" : [
+              16,
+              10,
+              8,
+              null,
+              null,
+              null
+            ],
+            "toParTotal" : 34
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Åse",
+            "place" : "7.",
+            "playerID" : "00000000-0000-0000-0000-000000000009",
+            "points" : [
+              null,
+              53,
+              null,
+              null,
+              null,
+              null
+            ],
+            "pointsTotal" : 53,
+            "strokes" : [
+              null,
+              82,
+              null,
+              null,
+              null,
+              null
+            ],
+            "strokesTotal" : 82,
+            "toPar" : [
+              null,
+              10,
+              null,
+              null,
+              null,
+              null
+            ],
+            "toParTotal" : 10
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Per",
+            "place" : "8.",
+            "playerID" : "00000000-0000-0000-0000-000000000006",
+            "points" : [
+              40,
+              44,
+              24,
+              38,
+              null,
+              null
+            ],
+            "pointsTotal" : 146,
+            "strokes" : [
+              88,
+              84,
+              44,
+              82,
+              null,
+              null
+            ],
+            "strokesTotal" : 298,
+            "toPar" : [
+              16,
+              12,
+              8,
+              8,
+              null,
+              null
+            ],
+            "toParTotal" : 44
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Ola",
+            "place" : "9.",
+            "playerID" : "00000000-0000-0000-0000-000000000005",
+            "points" : [
+              29,
+              24,
+              24,
+              32,
+              null,
+              null
+            ],
+            "pointsTotal" : 109,
+            "strokes" : [
+              79,
+              84,
+              35,
+              83,
+              null,
+              null
+            ],
+            "strokesTotal" : 281,
+            "toPar" : [
+              7,
+              12,
+              -1,
+              9,
+              null,
+              null
+            ],
+            "toParTotal" : 27
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Anders",
+            "place" : "10.",
+            "playerID" : "00000000-0000-0000-0000-000000000011",
+            "points" : [
+              null,
+              null,
+              null,
+              null,
+              13,
+              null
+            ],
+            "pointsTotal" : 13,
+            "strokes" : [
+              null,
+              null,
+              null,
+              null,
+              29,
+              null
+            ],
+            "strokesTotal" : 29,
+            "toPar" : [
+              null,
+              null,
+              null,
+              null,
+              2,
+              null
+            ],
+            "toParTotal" : 2
+          }
+        ]
+      },
+      "roundTitles" : [
+        "Kveld 1",
+        "Kveld 2 · runde 1",
+        "Siste ni",
+        "Kveld 3",
+        "Finalekveld",
+        "Kveld 5"
+      ],
+      "rows" : [
+        {
+          "basis" : "4,5 fra 7 dueller · 1 fra sidepremier · -2 hull",
+          "detail" : "-2 hull · 170 stableford · 5 kvelder",
+          "duel" : 4.5,
+          "duelText" : "4,5",
+          "evenings" : 5,
+          "holes" : -2,
+          "isMe" : false,
+          "matches" : 7,
+          "memberID" : "00000000-0000-0000-0000-000000000003",
+          "name" : "Kåre",
+          "place" : 1,
+          "placeText" : "1.",
+          "played" : 7,
+          "roundPoints" : 0,
+          "side" : 1,
+          "sideText" : "1",
+          "stableford" : 170,
+          "total" : 5.5,
+          "totalText" : "5,5"
+        },
+        {
+          "basis" : "4 fra 4 dueller · 0,5 fra sidepremier · +20 hull",
+          "detail" : "+20 hull · 153 stableford · 2 kvelder",
+          "duel" : 4,
+          "duelText" : "4",
+          "evenings" : 2,
+          "holes" : 20,
+          "isMe" : false,
+          "matches" : 4,
+          "memberID" : "00000000-0000-0000-0000-000000000007",
+          "name" : "Odd",
+          "place" : 2,
+          "placeText" : "2.",
+          "played" : 4,
+          "roundPoints" : 0,
+          "side" : 0.5,
+          "sideText" : "0,5",
+          "stableford" : 153,
+          "total" : 4.5,
+          "totalText" : "4,5"
+        },
+        {
+          "basis" : "3 fra 5 dueller · 0,5 fra sidepremier · +8 hull",
+          "detail" : "+8 hull · 161 stableford · 5 kvelder",
+          "duel" : 3,
+          "duelText" : "3",
+          "evenings" : 5,
+          "holes" : 8,
+          "isMe" : false,
+          "matches" : 5,
+          "memberID" : "00000000-0000-0000-0000-000000000002",
+          "name" : "Lars",
+          "place" : 3,
+          "placeText" : "3.",
+          "played" : 5,
+          "roundPoints" : 0,
+          "side" : 0.5,
+          "sideText" : "0,5",
+          "stableford" : 161,
+          "total" : 3.5,
+          "totalText" : "3,5"
+        },
+        {
+          "basis" : "3,5 fra 7 dueller · +1 hull",
+          "detail" : "+1 hull · 178 stableford · 5 kvelder",
+          "duel" : 3.5,
+          "duelText" : "3,5",
+          "evenings" : 5,
+          "holes" : 1,
+          "isMe" : false,
+          "matches" : 7,
+          "memberID" : "00000000-0000-0000-0000-000000000001",
+          "name" : "Bjørn",
+          "place" : 4,
+          "placeText" : "4.",
+          "played" : 7,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 178,
+          "total" : 3.5,
+          "totalText" : "3,5"
+        },
+        {
+          "basis" : "3 fra 5 dueller · -7 hull",
+          "detail" : "-7 hull · 172 stableford · 5 kvelder",
+          "duel" : 3,
+          "duelText" : "3",
+          "evenings" : 5,
+          "holes" : -7,
+          "isMe" : false,
+          "matches" : 5,
+          "memberID" : "00000000-0000-0000-0000-000000000004",
+          "name" : "Knut",
+          "place" : 5,
+          "placeText" : "5.",
+          "played" : 5,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 172,
+          "total" : 3,
+          "totalText" : "3"
+        },
+        {
+          "basis" : "2,5 fra 2 dueller · +3 hull",
+          "detail" : "+3 hull · 150 stableford · 2 kvelder",
+          "duel" : 2.5,
+          "duelText" : "2,5",
+          "evenings" : 2,
+          "holes" : 3,
+          "isMe" : true,
+          "matches" : 2,
+          "memberID" : "00000000-0000-0000-0000-000000000008",
+          "name" : "Thomas",
+          "place" : 6,
+          "placeText" : "6.",
+          "played" : 2,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 150,
+          "total" : 2.5,
+          "totalText" : "2,5"
+        },
+        {
+          "basis" : "1 fra én duell · 1 fra sidepremier · 0 hull",
+          "detail" : "0 hull · 53 stableford · 1 kveld",
+          "duel" : 1,
+          "duelText" : "1",
+          "evenings" : 1,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 1,
+          "memberID" : "00000000-0000-0000-0000-000000000009",
+          "name" : "Åse",
+          "place" : 7,
+          "placeText" : "7.",
+          "played" : 1,
+          "roundPoints" : 0,
+          "side" : 1,
+          "sideText" : "1",
+          "stableford" : 53,
+          "total" : 2,
+          "totalText" : "2"
+        },
+        {
+          "basis" : "1,5 fra 3 dueller · -1 hull",
+          "detail" : "-1 hull · 170 stableford · 3 kvelder",
+          "duel" : 1.5,
+          "duelText" : "1,5",
+          "evenings" : 3,
+          "holes" : -1,
+          "isMe" : false,
+          "matches" : 3,
+          "memberID" : "00000000-0000-0000-0000-000000000006",
+          "name" : "Per",
+          "place" : 8,
+          "placeText" : "8.",
+          "played" : 3,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 170,
+          "total" : 1.5,
+          "totalText" : "1,5"
+        },
+        {
+          "basis" : "0,5 fra 5 dueller · 1 fra sidepremier · -22 hull",
+          "detail" : "-22 hull · 133 stableford · 3 kvelder",
+          "duel" : 0.5,
+          "duelText" : "0,5",
+          "evenings" : 3,
+          "holes" : -22,
+          "isMe" : false,
+          "matches" : 5,
+          "memberID" : "00000000-0000-0000-0000-000000000005",
+          "name" : "Ola",
+          "place" : 9,
+          "placeText" : "9.",
+          "played" : 5,
+          "roundPoints" : 0,
+          "side" : 1,
+          "sideText" : "1",
+          "stableford" : 133,
+          "total" : 1.5,
+          "totalText" : "1,5"
+        },
+        {
+          "basis" : null,
+          "detail" : "0 hull · 13 stableford · 1 kveld",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 1,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000011",
+          "name" : "Anders",
+          "place" : 10,
+          "placeText" : "10.",
+          "played" : 0,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 13,
+          "total" : 0,
+          "totalText" : "0"
+        }
+      ],
+      "seasonName" : "Vår 2026",
+      "status" : "active"
+    },
+    {
+      "birdies" : {
+        "00000000-0000-0000-0000-000000000001" : 23,
+        "00000000-0000-0000-0000-000000000002" : 22,
+        "00000000-0000-0000-0000-000000000003" : 26,
+        "00000000-0000-0000-0000-000000000004" : 28,
+        "00000000-0000-0000-0000-000000000005" : 37,
+        "00000000-0000-0000-0000-000000000006" : 30,
+        "00000000-0000-0000-0000-000000000007" : 30,
+        "00000000-0000-0000-0000-000000000008" : 24,
+        "00000000-0000-0000-0000-000000000009" : 13,
+        "00000000-0000-0000-0000-000000000011" : 2
+      },
+      "countsStableford" : true,
+      "eveningsPlayed" : 5,
+      "eveningsTotal" : 7,
+      "hasResults" : true,
+      "longestDrive" : {
+        "00000000-0000-0000-0000-000000000001" : null,
+        "00000000-0000-0000-0000-000000000002" : null,
+        "00000000-0000-0000-0000-000000000003" : 251.5,
+        "00000000-0000-0000-0000-000000000004" : null,
+        "00000000-0000-0000-0000-000000000005" : 280,
+        "00000000-0000-0000-0000-000000000006" : 247,
+        "00000000-0000-0000-0000-000000000007" : null,
+        "00000000-0000-0000-0000-000000000008" : null,
+        "00000000-0000-0000-0000-000000000009" : 262,
+        "00000000-0000-0000-0000-000000000011" : null
+      },
+      "roundColumns" : "plass · stableford",
+      "rounds" : {
+        "bestPoints" : [
+          52,
+          53,
+          29,
+          38,
+          17,
+          38
+        ],
+        "bestStrokes" : [
+          79,
+          82,
+          35,
+          71,
+          29,
+          70
+        ],
+        "columns" : [
+          {
+            "date" : "14.5",
+            "isOngoing" : false,
+            "label" : "1",
+            "roundID" : "00000000-0000-0000-0000-000000000101",
+            "title" : "Spilledag 1"
+          },
+          {
+            "date" : "21.5",
+            "isOngoing" : false,
+            "label" : "2",
+            "roundID" : "00000000-0000-0000-0000-000000000102",
+            "title" : "Spilledag 2 · runde 1"
+          },
+          {
+            "date" : "21.5",
+            "isOngoing" : false,
+            "label" : "3",
+            "roundID" : "00000000-0000-0000-0000-000000000103",
+            "title" : "Siste ni"
+          },
+          {
+            "date" : "28.5",
+            "isOngoing" : false,
+            "label" : "4",
+            "roundID" : "00000000-0000-0000-0000-000000000104",
+            "title" : "Spilledag 3"
+          },
+          {
+            "date" : "4.6",
+            "isOngoing" : true,
+            "label" : "5",
+            "roundID" : "00000000-0000-0000-0000-000000000105",
+            "title" : "Finalekveld"
+          },
+          {
+            "date" : "11.6",
+            "isOngoing" : false,
+            "label" : "6",
+            "roundID" : "00000000-0000-0000-0000-000000000107",
+            "title" : "Spilledag 5"
+          }
+        ],
+        "rows" : [
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Per",
+            "place" : "1.",
+            "playerID" : "00000000-0000-0000-0000-000000000006",
+            "points" : [
+              40,
+              44,
+              29,
+              38,
+              null,
+              null
+            ],
+            "pointsTotal" : 151,
+            "strokes" : [
+              88,
+              84,
+              44,
+              82,
+              null,
+              null
+            ],
+            "strokesTotal" : 298,
+            "toPar" : [
+              16,
+              12,
+              8,
+              8,
+              null,
+              null
+            ],
+            "toParTotal" : 44
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Ola",
+            "place" : "2.",
+            "playerID" : "00000000-0000-0000-0000-000000000005",
+            "points" : [
+              47,
+              42,
+              29,
+              32,
+              null,
+              null
+            ],
+            "pointsTotal" : 150,
+            "strokes" : [
+              79,
+              84,
+              35,
+              83,
+              null,
+              null
+            ],
+            "strokesTotal" : 281,
+            "toPar" : [
+              7,
+              12,
+              -1,
+              9,
+              null,
+              null
+            ],
+            "toParTotal" : 27
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Bjørn",
+            "place" : "3.",
+            "playerID" : "00000000-0000-0000-0000-000000000001",
+            "points" : [
+              38,
+              34,
+              24,
+              20,
+              17,
+              38
+            ],
+            "pointsTotal" : 171,
+            "strokes" : [
+              80,
+              84,
+              35,
+              83,
+              29,
+              70
+            ],
+            "strokesTotal" : 381,
+            "toPar" : [
+              8,
+              12,
+              -1,
+              9,
+              2,
+              -2
+            ],
+            "toParTotal" : 28
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Odd",
+            "place" : "4.",
+            "playerID" : "00000000-0000-0000-0000-000000000007",
+            "points" : [
+              52,
+              47,
+              27,
+              null,
+              null,
+              null
+            ],
+            "pointsTotal" : 126,
+            "strokes" : [
+              79,
+              84,
+              44,
+              null,
+              null,
+              null
+            ],
+            "strokesTotal" : 207,
+            "toPar" : [
+              7,
+              12,
+              8,
+              null,
+              null,
+              null
+            ],
+            "toParTotal" : 27
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Knut",
+            "place" : "5.",
+            "playerID" : "00000000-0000-0000-0000-000000000004",
+            "points" : [
+              35,
+              40,
+              23,
+              31,
+              15,
+              20
+            ],
+            "pointsTotal" : 164,
+            "strokes" : [
+              89,
+              84,
+              44,
+              71,
+              34,
+              null
+            ],
+            "strokesTotal" : 322,
+            "toPar" : [
+              17,
+              12,
+              8,
+              9,
+              7,
+              null
+            ],
+            "toParTotal" : 53
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Kåre",
+            "place" : "6.",
+            "playerID" : "00000000-0000-0000-0000-000000000003",
+            "points" : [
+              42,
+              36,
+              23,
+              26,
+              17,
+              20
+            ],
+            "pointsTotal" : 164,
+            "strokes" : [
+              80,
+              86,
+              44,
+              83,
+              30,
+              88
+            ],
+            "strokesTotal" : 411,
+            "toPar" : [
+              8,
+              14,
+              8,
+              9,
+              3,
+              16
+            ],
+            "toParTotal" : 58
+          },
+          {
+            "counted" : null,
+            "isMe" : true,
+            "name" : "Thomas",
+            "place" : "7.",
+            "playerID" : "00000000-0000-0000-0000-000000000008",
+            "points" : [
+              45,
+              51,
+              27,
+              null,
+              null,
+              null
+            ],
+            "pointsTotal" : 123,
+            "strokes" : [
+              88,
+              82,
+              44,
+              null,
+              null,
+              null
+            ],
+            "strokesTotal" : 214,
+            "toPar" : [
+              16,
+              10,
+              8,
+              null,
+              null,
+              null
+            ],
+            "toParTotal" : 34
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Lars",
+            "place" : "8.",
+            "playerID" : "00000000-0000-0000-0000-000000000002",
+            "points" : [
+              30,
+              33,
+              24,
+              29,
+              14,
+              38
+            ],
+            "pointsTotal" : 168,
+            "strokes" : [
+              89,
+              86,
+              44,
+              84,
+              32,
+              null
+            ],
+            "strokesTotal" : 335,
+            "toPar" : [
+              17,
+              14,
+              8,
+              10,
+              5,
+              null
+            ],
+            "toParTotal" : 54
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Åse",
+            "place" : "9.",
+            "playerID" : "00000000-0000-0000-0000-000000000009",
+            "points" : [
+              null,
+              53,
+              null,
+              null,
+              null,
+              null
+            ],
+            "pointsTotal" : 53,
+            "strokes" : [
+              null,
+              82,
+              null,
+              null,
+              null,
+              null
+            ],
+            "strokesTotal" : 82,
+            "toPar" : [
+              null,
+              10,
+              null,
+              null,
+              null,
+              null
+            ],
+            "toParTotal" : 10
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Anders",
+            "place" : "10.",
+            "playerID" : "00000000-0000-0000-0000-000000000011",
+            "points" : [
+              null,
+              null,
+              null,
+              null,
+              13,
+              null
+            ],
+            "pointsTotal" : 13,
+            "strokes" : [
+              null,
+              null,
+              null,
+              null,
+              29,
+              null
+            ],
+            "strokesTotal" : 29,
+            "toPar" : [
+              null,
+              null,
+              null,
+              null,
+              2,
+              null
+            ],
+            "toParTotal" : 2
+          }
+        ]
+      },
+      "roundTitles" : [
+        "Spilledag 1",
+        "Spilledag 2 · runde 1",
+        "Siste ni",
+        "Spilledag 3",
+        "Finalekveld",
+        "Spilledag 5"
+      ],
+      "rows" : [
+        {
+          "basis" : "180 fra 4 runder",
+          "detail" : "3 spilledager · beste 3 teller",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 3,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000006",
+          "name" : "Per",
+          "place" : 1,
+          "placeText" : "1.",
+          "played" : 4,
+          "roundPoints" : 180,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 180,
+          "total" : 180,
+          "totalText" : "180"
+        },
+        {
+          "basis" : "179 fra 4 runder · 1 fra sidepremier",
+          "detail" : "3 spilledager · beste 3 teller",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 3,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000005",
+          "name" : "Ola",
+          "place" : 2,
+          "placeText" : "2.",
+          "played" : 4,
+          "roundPoints" : 179,
+          "side" : 1,
+          "sideText" : "1",
+          "stableford" : 179,
+          "total" : 180,
+          "totalText" : "180"
+        },
+        {
+          "basis" : "158 fra 6 runder",
+          "detail" : "5 spilledager · beste 3 teller",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 5,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000001",
+          "name" : "Bjørn",
+          "place" : 3,
+          "placeText" : "3.",
+          "played" : 6,
+          "roundPoints" : 158,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 158,
+          "total" : 158,
+          "totalText" : "158"
+        },
+        {
+          "basis" : "153 fra 3 runder",
+          "detail" : "2 spilledager · beste 3 teller",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 2,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000007",
+          "name" : "Odd",
+          "place" : 4,
+          "placeText" : "4.",
+          "played" : 3,
+          "roundPoints" : 153,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 153,
+          "total" : 153,
+          "totalText" : "153"
+        },
+        {
+          "basis" : "152 fra 6 runder",
+          "detail" : "5 spilledager · beste 3 teller",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 5,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000004",
+          "name" : "Knut",
+          "place" : 5,
+          "placeText" : "5.",
+          "played" : 6,
+          "roundPoints" : 152,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 152,
+          "total" : 152,
+          "totalText" : "152"
+        },
+        {
+          "basis" : "150 fra 6 runder · 1 fra sidepremier",
+          "detail" : "5 spilledager · beste 3 teller",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 5,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000003",
+          "name" : "Kåre",
+          "place" : 6,
+          "placeText" : "6.",
+          "played" : 6,
+          "roundPoints" : 150,
+          "side" : 1,
+          "sideText" : "1",
+          "stableford" : 150,
+          "total" : 151,
+          "totalText" : "151"
+        },
+        {
+          "basis" : "150 fra 3 runder",
+          "detail" : "2 spilledager · beste 3 teller",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 2,
+          "holes" : 0,
+          "isMe" : true,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000008",
+          "name" : "Thomas",
+          "place" : 7,
+          "placeText" : "7.",
+          "played" : 3,
+          "roundPoints" : 150,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 150,
+          "total" : 150,
+          "totalText" : "150"
+        },
+        {
+          "basis" : "149 fra 6 runder",
+          "detail" : "5 spilledager · beste 3 teller",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 5,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000002",
+          "name" : "Lars",
+          "place" : 8,
+          "placeText" : "8.",
+          "played" : 6,
+          "roundPoints" : 149,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 149,
+          "total" : 149,
+          "totalText" : "149"
+        },
+        {
+          "basis" : "53 fra én runde · 1 fra sidepremier",
+          "detail" : "1 spilledag · beste 3 teller",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 1,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000009",
+          "name" : "Åse",
+          "place" : 9,
+          "placeText" : "9.",
+          "played" : 1,
+          "roundPoints" : 53,
+          "side" : 1,
+          "sideText" : "1",
+          "stableford" : 53,
+          "total" : 54,
+          "totalText" : "54"
+        },
+        {
+          "basis" : "13 fra én runde",
+          "detail" : "1 spilledag · beste 3 teller",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 1,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000011",
+          "name" : "Anders",
+          "place" : 10,
+          "placeText" : "10.",
+          "played" : 1,
+          "roundPoints" : 13,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 13,
+          "total" : 13,
+          "totalText" : "13"
+        }
+      ],
+      "seasonName" : "Høst 2026",
+      "status" : "finished"
+    },
+    {
+      "birdies" : {
+        "00000000-0000-0000-0000-000000000001" : 23,
+        "00000000-0000-0000-0000-000000000002" : 11,
+        "00000000-0000-0000-0000-000000000003" : 26,
+        "00000000-0000-0000-0000-000000000004" : 28,
+        "00000000-0000-0000-0000-000000000005" : 13,
+        "00000000-0000-0000-0000-000000000006" : 28,
+        "00000000-0000-0000-0000-000000000007" : 30,
+        "00000000-0000-0000-0000-000000000008" : 24,
+        "00000000-0000-0000-0000-000000000009" : 13,
+        "00000000-0000-0000-0000-000000000011" : 2
+      },
+      "countsStableford" : false,
+      "eveningsPlayed" : 5,
+      "eveningsTotal" : 6,
+      "hasResults" : true,
+      "longestDrive" : {
+        "00000000-0000-0000-0000-000000000001" : null,
+        "00000000-0000-0000-0000-000000000002" : null,
+        "00000000-0000-0000-0000-000000000003" : 251.5,
+        "00000000-0000-0000-0000-000000000004" : null,
+        "00000000-0000-0000-0000-000000000005" : 280,
+        "00000000-0000-0000-0000-000000000006" : 247,
+        "00000000-0000-0000-0000-000000000007" : null,
+        "00000000-0000-0000-0000-000000000008" : null,
+        "00000000-0000-0000-0000-000000000009" : 262,
+        "00000000-0000-0000-0000-000000000011" : null
+      },
+      "roundColumns" : "plass · duell · stableford",
+      "rounds" : {
+        "bestPoints" : [
+          52,
+          53,
+          27,
+          38,
+          17,
+          38
+        ],
+        "bestStrokes" : [
+          79,
+          82,
+          35,
+          71,
+          29,
+          70
+        ],
+        "columns" : [
+          {
+            "date" : "14.5",
+            "isOngoing" : false,
+            "label" : "1",
+            "roundID" : "00000000-0000-0000-0000-000000000101",
+            "title" : "Kveld 1"
+          },
+          {
+            "date" : "21.5",
+            "isOngoing" : false,
+            "label" : "2",
+            "roundID" : "00000000-0000-0000-0000-000000000102",
+            "title" : "Kveld 2 · runde 1"
+          },
+          {
+            "date" : "21.5",
+            "isOngoing" : false,
+            "label" : "3",
+            "roundID" : "00000000-0000-0000-0000-000000000103",
+            "title" : "Siste ni"
+          },
+          {
+            "date" : "28.5",
+            "isOngoing" : false,
+            "label" : "4",
+            "roundID" : "00000000-0000-0000-0000-000000000104",
+            "title" : "Kveld 3"
+          },
+          {
+            "date" : "4.6",
+            "isOngoing" : true,
+            "label" : "5",
+            "roundID" : "00000000-0000-0000-0000-000000000105",
+            "title" : "Finalekveld"
+          },
+          {
+            "date" : "11.6",
+            "isOngoing" : false,
+            "label" : "6",
+            "roundID" : "00000000-0000-0000-0000-000000000107",
+            "title" : "Kveld 5"
+          }
+        ],
+        "rows" : [
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Kåre",
+            "place" : "1.",
+            "playerID" : "00000000-0000-0000-0000-000000000003",
+            "points" : [
+              42,
+              36,
+              23,
+              26,
+              17,
+              20
+            ],
+            "pointsTotal" : 164,
+            "strokes" : [
+              80,
+              86,
+              44,
+              83,
+              30,
+              88
+            ],
+            "strokesTotal" : 411,
+            "toPar" : [
+              8,
+              14,
+              8,
+              9,
+              3,
+              16
+            ],
+            "toParTotal" : 58
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Odd",
+            "place" : "2.",
+            "playerID" : "00000000-0000-0000-0000-000000000007",
+            "points" : [
+              52,
+              47,
+              27,
+              null,
+              null,
+              null
+            ],
+            "pointsTotal" : 126,
+            "strokes" : [
+              79,
+              84,
+              44,
+              null,
+              null,
+              null
+            ],
+            "strokesTotal" : 207,
+            "toPar" : [
+              7,
+              12,
+              8,
+              null,
+              null,
+              null
+            ],
+            "toParTotal" : 27
+          },
+          {
+            "counted" : null,
+            "isMe" : true,
+            "name" : "Thomas",
+            "place" : "3.",
+            "playerID" : "00000000-0000-0000-0000-000000000008",
+            "points" : [
+              45,
+              51,
+              27,
+              null,
+              null,
+              null
+            ],
+            "pointsTotal" : 123,
+            "strokes" : [
+              88,
+              82,
+              44,
+              null,
+              null,
+              null
+            ],
+            "strokesTotal" : 214,
+            "toPar" : [
+              16,
+              10,
+              8,
+              null,
+              null,
+              null
+            ],
+            "toParTotal" : 34
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Bjørn",
+            "place" : "4.",
+            "playerID" : "00000000-0000-0000-0000-000000000001",
+            "points" : [
+              38,
+              34,
+              24,
+              20,
+              17,
+              38
+            ],
+            "pointsTotal" : 171,
+            "strokes" : [
+              80,
+              84,
+              35,
+              83,
+              29,
+              70
+            ],
+            "strokesTotal" : 381,
+            "toPar" : [
+              8,
+              12,
+              -1,
+              9,
+              2,
+              -2
+            ],
+            "toParTotal" : 28
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Knut",
+            "place" : "5.",
+            "playerID" : "00000000-0000-0000-0000-000000000004",
+            "points" : [
+              35,
+              40,
+              23,
+              31,
+              15,
+              20
+            ],
+            "pointsTotal" : 164,
+            "strokes" : [
+              89,
+              84,
+              44,
+              71,
+              34,
+              null
+            ],
+            "strokesTotal" : 322,
+            "toPar" : [
+              17,
+              12,
+              8,
+              9,
+              7,
+              null
+            ],
+            "toParTotal" : 53
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Per",
+            "place" : "6.",
+            "playerID" : "00000000-0000-0000-0000-000000000006",
+            "points" : [
+              40,
+              44,
+              24,
+              38,
+              null,
+              null
+            ],
+            "pointsTotal" : 146,
+            "strokes" : [
+              88,
+              84,
+              44,
+              82,
+              null,
+              null
+            ],
+            "strokesTotal" : 298,
+            "toPar" : [
+              16,
+              12,
+              8,
+              8,
+              null,
+              null
+            ],
+            "toParTotal" : 44
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Lars",
+            "place" : "7.",
+            "playerID" : "00000000-0000-0000-0000-000000000002",
+            "points" : [
+              24,
+              27,
+              24,
+              24,
+              12,
+              38
+            ],
+            "pointsTotal" : 149,
+            "strokes" : [
+              89,
+              86,
+              44,
+              84,
+              32,
+              null
+            ],
+            "strokesTotal" : 335,
+            "toPar" : [
+              17,
+              14,
+              8,
+              10,
+              5,
+              null
+            ],
+            "toParTotal" : 54
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Åse",
+            "place" : "8.",
+            "playerID" : "00000000-0000-0000-0000-000000000009",
+            "points" : [
+              null,
+              53,
+              null,
+              null,
+              null,
+              null
+            ],
+            "pointsTotal" : 53,
+            "strokes" : [
+              null,
+              82,
+              null,
+              null,
+              null,
+              null
+            ],
+            "strokesTotal" : 82,
+            "toPar" : [
+              null,
+              10,
+              null,
+              null,
+              null,
+              null
+            ],
+            "toParTotal" : 10
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Ola",
+            "place" : "9.",
+            "playerID" : "00000000-0000-0000-0000-000000000005",
+            "points" : [
+              29,
+              24,
+              24,
+              32,
+              null,
+              null
+            ],
+            "pointsTotal" : 109,
+            "strokes" : [
+              79,
+              84,
+              35,
+              83,
+              null,
+              null
+            ],
+            "strokesTotal" : 281,
+            "toPar" : [
+              7,
+              12,
+              -1,
+              9,
+              null,
+              null
+            ],
+            "toParTotal" : 27
+          },
+          {
+            "counted" : null,
+            "isMe" : false,
+            "name" : "Anders",
+            "place" : "10.",
+            "playerID" : "00000000-0000-0000-0000-000000000011",
+            "points" : [
+              null,
+              null,
+              null,
+              null,
+              13,
+              null
+            ],
+            "pointsTotal" : 13,
+            "strokes" : [
+              null,
+              null,
+              null,
+              null,
+              29,
+              null
+            ],
+            "strokesTotal" : 29,
+            "toPar" : [
+              null,
+              null,
+              null,
+              null,
+              2,
+              null
+            ],
+            "toParTotal" : 2
+          }
+        ]
+      },
+      "roundTitles" : [
+        "Kveld 1",
+        "Kveld 2 · runde 1",
+        "Siste ni",
+        "Kveld 3",
+        "Finalekveld",
+        "Kveld 5"
+      ],
+      "rows" : [
+        {
+          "basis" : "6 fra 2 dueller · 1 fra sidepremier · +10 hull",
+          "detail" : "+10 hull · 170 stableford · 5 kvelder",
+          "duel" : 6,
+          "duelText" : "6",
+          "evenings" : 5,
+          "holes" : 10,
+          "isMe" : false,
+          "matches" : 2,
+          "memberID" : "00000000-0000-0000-0000-000000000003",
+          "name" : "Kåre",
+          "place" : 1,
+          "placeText" : "1.",
+          "played" : 7,
+          "roundPoints" : 0,
+          "side" : 1,
+          "sideText" : "1",
+          "stableford" : 170,
+          "total" : 7,
+          "totalText" : "7"
+        },
+        {
+          "basis" : "6 fra 2 dueller · 1 fra sidepremier · +18 hull",
+          "detail" : "+18 hull · 153 stableford · 2 kvelder",
+          "duel" : 6,
+          "duelText" : "6",
+          "evenings" : 2,
+          "holes" : 18,
+          "isMe" : false,
+          "matches" : 2,
+          "memberID" : "00000000-0000-0000-0000-000000000007",
+          "name" : "Odd",
+          "place" : 2,
+          "placeText" : "2.",
+          "played" : 4,
+          "roundPoints" : 0,
+          "side" : 1,
+          "sideText" : "1",
+          "stableford" : 153,
+          "total" : 7,
+          "totalText" : "7"
+        },
+        {
+          "basis" : "6,5 fra 2 dueller · +3 hull",
+          "detail" : "+3 hull · 150 stableford · 2 kvelder",
+          "duel" : 6.5,
+          "duelText" : "6,5",
+          "evenings" : 2,
+          "holes" : 3,
+          "isMe" : true,
+          "matches" : 2,
+          "memberID" : "00000000-0000-0000-0000-000000000008",
+          "name" : "Thomas",
+          "place" : 3,
+          "placeText" : "3.",
+          "played" : 2,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 150,
+          "total" : 6.5,
+          "totalText" : "6,5"
+        },
+        {
+          "basis" : "5 fra 2 dueller · 0 hull",
+          "detail" : "0 hull · 178 stableford · 5 kvelder",
+          "duel" : 5,
+          "duelText" : "5",
+          "evenings" : 5,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 2,
+          "memberID" : "00000000-0000-0000-0000-000000000001",
+          "name" : "Bjørn",
+          "place" : 4,
+          "placeText" : "4.",
+          "played" : 7,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 178,
+          "total" : 5,
+          "totalText" : "5"
+        },
+        {
+          "basis" : "3 fra én duell · +2 hull",
+          "detail" : "+2 hull · 172 stableford · 5 kvelder",
+          "duel" : 3,
+          "duelText" : "3",
+          "evenings" : 5,
+          "holes" : 2,
+          "isMe" : false,
+          "matches" : 1,
+          "memberID" : "00000000-0000-0000-0000-000000000004",
+          "name" : "Knut",
+          "place" : 5,
+          "placeText" : "5.",
+          "played" : 5,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 172,
+          "total" : 3,
+          "totalText" : "3"
+        },
+        {
+          "basis" : "3 fra én duell · +3 hull",
+          "detail" : "+3 hull · 170 stableford · 3 kvelder",
+          "duel" : 3,
+          "duelText" : "3",
+          "evenings" : 3,
+          "holes" : 3,
+          "isMe" : false,
+          "matches" : 1,
+          "memberID" : "00000000-0000-0000-0000-000000000006",
+          "name" : "Per",
+          "place" : 6,
+          "placeText" : "6.",
+          "played" : 3,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 170,
+          "total" : 3,
+          "totalText" : "3"
+        },
+        {
+          "basis" : "3 fra én duell · +12 hull",
+          "detail" : "+12 hull · 161 stableford · 5 kvelder",
+          "duel" : 3,
+          "duelText" : "3",
+          "evenings" : 5,
+          "holes" : 12,
+          "isMe" : false,
+          "matches" : 1,
+          "memberID" : "00000000-0000-0000-0000-000000000002",
+          "name" : "Lars",
+          "place" : 7,
+          "placeText" : "7.",
+          "played" : 5,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 161,
+          "total" : 3,
+          "totalText" : "3"
+        },
+        {
+          "basis" : "1 fra én duell · 1 fra sidepremier · 0 hull",
+          "detail" : "0 hull · 53 stableford · 1 kveld",
+          "duel" : 1,
+          "duelText" : "1",
+          "evenings" : 1,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 1,
+          "memberID" : "00000000-0000-0000-0000-000000000009",
+          "name" : "Åse",
+          "place" : 8,
+          "placeText" : "8.",
+          "played" : 1,
+          "roundPoints" : 0,
+          "side" : 1,
+          "sideText" : "1",
+          "stableford" : 53,
+          "total" : 2,
+          "totalText" : "2"
+        },
+        {
+          "basis" : "1 fra 2 dueller · -3 hull",
+          "detail" : "-3 hull · 133 stableford · 3 kvelder",
+          "duel" : 1,
+          "duelText" : "1",
+          "evenings" : 3,
+          "holes" : -3,
+          "isMe" : false,
+          "matches" : 2,
+          "memberID" : "00000000-0000-0000-0000-000000000005",
+          "name" : "Ola",
+          "place" : 9,
+          "placeText" : "9.",
+          "played" : 5,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 133,
+          "total" : 1,
+          "totalText" : "1"
+        },
+        {
+          "basis" : null,
+          "detail" : "0 hull · 13 stableford · 1 kveld",
+          "duel" : 0,
+          "duelText" : "0",
+          "evenings" : 1,
+          "holes" : 0,
+          "isMe" : false,
+          "matches" : 0,
+          "memberID" : "00000000-0000-0000-0000-000000000011",
+          "name" : "Anders",
+          "place" : 10,
+          "placeText" : "10.",
+          "played" : 0,
+          "roundPoints" : 0,
+          "side" : 0,
+          "sideText" : "0",
+          "stableford" : 13,
+          "total" : 0,
+          "totalText" : "0"
+        }
+      ],
+      "seasonName" : "Egen 2026",
+      "status" : "planned"
+    }
+  ]
+}
