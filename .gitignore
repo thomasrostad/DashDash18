@@ -34,3 +34,6 @@ supabase/.temp/
 # Import fra PWA-en (fase 9): øyeblikksbilder og generert SQL inneholder navn
 import-snapshot/
 import-out/
+
+# iCloud lager kopier som «Fil 2.ts» i Documents. De skal aldri i git.
+* [0-9].*
