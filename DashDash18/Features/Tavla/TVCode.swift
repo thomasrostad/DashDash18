@@ -6,8 +6,9 @@ import SwiftUI
 /// TV-visning med kode (fase 26, `sql/041_tv_kode.sql`): en skjerm uten appen åpner
 /// dashdash18.com/tv/KODE og viser tabellen, regnet av regelmotoren på serveren.
 nonisolated enum TVCodeFeature {
-    /// Av til 041 er kjørt og TV-siden er ute på dashdash18.com.
-    static let isEnabled = false
+    /// På siden 10.10.2026: 041 er kjørt på test, og TV-siden er ute (Workeren `atten-lenker`, prøvd med en
+    /// kode mot «Test golf»).
+    static let isEnabled = true
 }
 
 nonisolated enum TVCode {
