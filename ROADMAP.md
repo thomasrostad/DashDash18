@@ -436,7 +436,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 ### Alle runder (09.10.2026, Thomas: «se hva de andre har slått, slik som i PGA»)
 
 - [x] Tavla: «Alle runder» med spillerne nedover og rundene bortover (poeng eller slag), og scorekortet bak hver rute og hver runde på spillerprofilen.
-- [ ] Det samme for liga og morro (ligatabellen viser i dag bare summen).
+- [x] Det samme for liga og morro, med «Mot par», fast sum-kolonne, beste per runde i gult, din rad markert, pågående runde med prikk, og dempede runder som ikke teller (beste N). *(10.10.)*
 
 ### Skjermsjekk 09.10.2026 (alle skjermprøvene, lys og mørk)
 
