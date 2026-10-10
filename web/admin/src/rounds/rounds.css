@@ -1,0 +1,32 @@
+/* Rundene på en spilledag (del 4). Bare egne klasser, så styles.css er urørt. */
+.small { font-size: 13px; }
+.pre { white-space: pre-line; }
+.card.confirm { border: 2px solid var(--gold); margin: 12px 0; }
+.setup > .card { margin-bottom: 16px; }
+.setup .card label { margin-bottom: 8px; }
+.pill.status-active { background: var(--lime); }
+.pill.status-draft { background: var(--rule); }
+.pill.status-locked { background: var(--rule); color: var(--ink2); }
+.bays { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin: 12px 0; }
+.bay { border: 1px solid var(--rule); border-radius: 12px; padding: 8px 12px; }
+.bay h4 { margin: 4px 0 8px; display: flex; justify-content: space-between; }
+.seat, .match, .row-inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0; font-weight: 400; }
+.seat > span:first-child { flex: 1; min-width: 100px; }
+.seat select, .match select { padding: 6px 8px; }
+.check input[type="number"] { width: 80px; height: auto; }
+details.card summary { cursor: pointer; margin-bottom: 8px; }
+.sticky-actions { position: sticky; bottom: 0; background: var(--bg); padding: 12px 0; }
+.stepper { display: flex; gap: 12px; align-items: center; margin: 8px 0; }
+.stepper .big { font-size: 28px; line-height: 1; }
+.stepper .strokes { font-size: 32px; min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
+.scroll { overflow-x: auto; margin: 12px 0; }
+table.scorecard { font-variant-numeric: tabular-nums; width: auto; min-width: 100%; }
+table.scorecard th, table.scorecard td { padding: 4px 6px; text-align: center; }
+table.scorecard .name { text-align: left; position: sticky; left: 0; background: var(--card); white-space: nowrap; }
+table.scorecard tr.par td { color: var(--ink2); }
+table.scorecard .outside { opacity: .4; }
+.cellbtn { background: none; border: 0; color: inherit; font: inherit; width: 28px; height: 28px; border-radius: 6px; }
+.cellbtn:hover { outline: 2px solid var(--gold); }
+td.score-eagle, td.score-birdie, .pill.score-eagle, .pill.score-birdie { background: var(--lime); }
+td.score-bogey, .pill.score-bogey { background: rgba(228, 199, 103, .35); }
+td.score-dobbel, td.score-blowup, .pill.score-dobbel, .pill.score-blowup { background: rgba(168, 74, 16, .2); }
