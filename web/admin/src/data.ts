@@ -197,3 +197,38 @@ export async function addMember(clubID: string, name: string, handicap: number |
   const { error } = await supabase.from("club_members").insert({ club_id: clubID, display_name: name.trim(), handicap_index: handicap });
   if (error) throw error;
 }
+
+// ===== Del 2b: ny turnering og regler =====
+
+/** Ny serie i klubben (sesong): lagres planlagt, og startes med activate_season når arrangøren vil. */
+export async function createSeason(clubID: string, name: string, rules: Record<string, unknown>, start: boolean): Promise<void> {
+  const { data, error } = await supabase.from("seasons")
+    .insert({ club_id: clubID, name: name.trim(), status: "planned", rules }).select("id").single();
+  if (error) throw error;
+  if (start) {
+    const { error: aErr } = await supabase.rpc("activate_season", { p_season_id: (data as { id: string }).id });
+    if (aErr) throw new Error(`Turneringen er laget, men ikke startet. ${aErr.message}`);
+  }
+}
+
+/** Cup eller morroturnering i klubben (create_competition_with_entrants, sql/022). Gir id-en. */
+export async function createCompetition(p: {
+  clubID: string; kind: "cup" | "fun" | "league"; name: string; entry: string; rules: Record<string, unknown>;
+  startsOn: string | null; endsOn: string | null; signupOpen: boolean;
+}): Promise<string> {
+  const { data, error } = await supabase.rpc("create_competition_with_entrants", {
+    p_kind: p.kind, p_name: p.name.trim(), p_club_id: p.clubID, p_entry: p.entry, p_rules: p.rules,
+    p_starts_on: p.startsOn, p_ends_on: p.endsOn, p_signup_open: p.signupOpen, p_member_ids: [], p_profile_ids: [],
+  });
+  if (error) throw error;
+  return data as string;
+}
+
+/** Lagrer regelsettet: sesongens i seasons (speiles til turneringen), de andres i competitions. */
+export async function saveRules(c: Competition, rules: Record<string, unknown>): Promise<void> {
+  const q = c.kind === "season" && c.season_id
+    ? supabase.from("seasons").update({ rules }).eq("id", c.season_id)
+    : supabase.from("competitions").update({ rules }).eq("id", c.id);
+  const { error } = await q;
+  if (error) throw error;
+}
