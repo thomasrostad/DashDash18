@@ -9,8 +9,9 @@ nonisolated enum TVCodeFeature {
     /// På siden 10.10.2026: 041 er kjørt på test, og TV-siden er ute (Workeren `atten-lenker`, prøvd med en
     /// kode mot «Test golf»).
     static let isEnabled = true
-    /// Liga, cup og morro (`sql/043_tv_liga.sql`): av til 043 er kjørt på test og Workeren regner dem.
-    static let competitionsEnabled = false
+    /// Liga, cup og morro (`sql/043_tv_liga.sql`): på siden 10.10.2026, 043 er kjørt på test og Workeren er ute
+    /// (prøvd med en kode mot «Høstmorro»).
+    static let competitionsEnabled = true
 }
 
 nonisolated enum TVCode {
