@@ -91,3 +91,7 @@ nonisolated struct CupPairingParam: Encodable, Equatable, Sendable {
     let a: UUID
     let b: UUID?
 }
+
+nonisolated enum TimeWindowFeature {
+    static let isEnabled = true
+}

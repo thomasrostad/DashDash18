@@ -42,9 +42,10 @@ Pariteten er sjekket på tre måter:
    (laget med `tools/tavla-fixture.py` etter `TavlaSamples.swift`, utvidet med lag, trekant, manuelle
    resultater, siste ni, avkorting, frosset handicap, tee, kladd og simulator) og tre sesongrader.
    `tools/swift-tavla/kjor.sh` kompilerer appens filer for Tavla og konkurransene (`TavlaStandings`,
-   `RoundsGrid`, `RoundSnapshot`, `CompetitionScope`, `LeagueStandings`, `CupStandings`) mot Swift-pakken og
-   skriver fasiten `test/fixtures/tavla.forventet.json`. `test/tavla.test.ts` krever samme rader, tall og
-   tekster.
+   `RoundsGrid`, `RoundSnapshot`, `CompetitionScope`, `LeagueStandings`, `CupStandings`, og scorekortet
+   `RoundGame.scorecard(for:inward:)`/`total` fra `ForingLogic.swift`) mot Swift-pakken og skriver fasiten
+   `test/fixtures/tavla.forventet.json` (med `scorekort` for alle spillere i alle rundene, Ut og Inn).
+   `test/tavla.test.ts` krever samme rader, tall og tekster.
 
 Endres regelmotoren med vilje:
 
@@ -101,7 +102,8 @@ Stegene finnes også hver for seg: `decodeTavlaData`, `decodeSeasonRow`, `tavlaI
 | Competitions (liga, cup, SplitMix64) | `competitions.ts` |
 
 Fra appen (`DashDash18/`): radtypene (`Data/Rows.swift`, `FoundationRows.swift`) i `app/rows.ts`,
-`RoundSnapshot`/`RoundGame.makeRound` i `app/roundgame.ts`, `TavlaData`, `TavlaStandings` og `RoundsGrid` i
+`RoundSnapshot`/`RoundGame.makeRound` og scorekortet (`snapshotScorecard`, `snapshotTotal`, `holeNumber`) i
+`app/roundgame.ts`, `TavlaData`, `TavlaStandings` og `RoundsGrid` i
 `app/tavla.ts`, og `CompetitionScope`, `LeagueStandings` og `CupStandings` i `app/competition.ts`.
 
 Ikke portert ennå: `Bets` (veddemål), `Games`, `GameNassau`, `GameSkins`, `GameWolf` (spill på runden),

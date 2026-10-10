@@ -72,6 +72,27 @@ func league(_ l: LeagueStandings) -> [String: Any] {
     ]
 }
 
+/// Scorekortet til alle spillerne i alle rundene (Ut, og Inn når runden har den), som `ScorekortSheet` viser det.
+func scorecards(_ snapshots: [RoundSnapshot]) -> [[String: Any]] {
+    snapshots.flatMap { s -> [[String: Any]] in
+        let game = RoundGame(s)
+        return s.players.flatMap { p -> [[String: Any]] in
+            (game.hasInward ? [false, true] : [false]).map { inward -> [String: Any] in
+                let card = game.scorecard(for: p.memberID, inward: inward)
+                return [
+                    "roundID": u(s.round.id), "memberID": u(p.memberID), "inward": inward, "hasInward": game.hasInward,
+                    "name": card.name, "cardInward": card.inward, "total": game.total(p.memberID),
+                    "sumPar": card.sumPar, "sumStrokes": card.sumStrokes, "sumPoints": card.sumPoints,
+                    "lines": card.lines.map { l -> [String: Any] in
+                        ["index": l.index, "number": l.number, "par": l.par, "strokes": n(l.strokes),
+                         "points": n(l.points), "scoreName": n(l.scoreName?.rawValue)]
+                    },
+                ]
+            }
+        }
+    }
+}
+
 let path = CommandLine.arguments[1]
 let decoder = JSONDecoder()
 decoder.dateDecodingStrategy = .iso8601
@@ -79,9 +100,12 @@ let fixture = try decoder.decode(Fixture.self, from: Data(contentsOf: URL(fileUR
 let data = fixture.tavlaData
 
 var seasons: [[String: Any]] = []
+var seasonCards: [[String: Any]] = []
 for season in fixture.sesonger {
     let input = data.input(season: season)
-    seasons.append(tavla(TavlaStandings(input, me: fixture.me)))
+    let standings = TavlaStandings(input, me: fixture.me)
+    seasons.append(tavla(standings))
+    if seasonCards.isEmpty { seasonCards = scorecards(standings.snapshots) }
 }
 
 // Liga (klubbens tropp, beste 3 runder) og morro (privat, alle som spilte) over de samme rundene.
@@ -95,12 +119,14 @@ func competition(_ kind: CompetitionKind, club: UUID?, entry: CompetitionEntry, 
                    startsOn: nil, endsOn: nil, isMain: false, requiresPurchase: false, entitlementID: nil)
 }
 var competitions: [[String: Any]] = []
+var leagueCards: [[String: Any]] = []
 for c in [competition(.league, club: club, entry: .club, rules: leagueRules),
           competition(.fun, club: nil, entry: .open, rules: RulesetTemplate.fun.rules)] {
     let links = data.rounds.map { CompetitionRoundRow(competitionID: c.id, roundID: $0.id, source: .manual) }
     let scope = CompetitionScope(competition: c, links: links)
     let input = scope.input(candidates: candidates, directory: directory)
     let me = Set(input.entrants.filter { $0.id == fixture.me })
+    if leagueCards.isEmpty { leagueCards = scorecards(LeagueStandings(input, me: me).snapshots) }
     competitions.append(["kind": c.kind.rawValue, "entry": c.entry.rawValue, "standings": league(LeagueStandings(input, me: me))])
 }
 
@@ -139,7 +165,8 @@ let cupOut: [String: Any] = [
     "myNext": cup.myNext.map(game) ?? NSNull(),
 ]
 
-let out: [String: Any] = ["tavla": seasons, "konkurranser": competitions, "cup": cupOut]
+let out: [String: Any] = ["tavla": seasons, "konkurranser": competitions, "cup": cupOut,
+                          "scorekort": ["tavla": seasonCards, "liga": leagueCards]]
 let json = try JSONSerialization.data(withJSONObject: out, options: [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes])
 FileHandle.standardOutput.write(json)
 FileHandle.standardOutput.write(Data("\n".utf8))

@@ -1,11 +1,12 @@
 // App-mappingen mot appens egen Swift-kode: test/fixtures/tavla.json (svaret fra tavla_data og tre
 // sesongrader) og fasiten test/fixtures/tavla.forventet.json, regnet av TavlaStandings, RoundsGrid,
-// CompetitionScope og LeagueStandings i appen (tools/swift-tavla/kjor.sh).
+// CompetitionScope og LeagueStandings i appen (tools/swift-tavla/kjor.sh), og scorekortet fra RoundGame.
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { CompetitionScope, CupStandings, LeagueStandings, PersonDirectory, type CompetitionRow, type Entrant } from "../src/app/competition.ts";
+import { snapshotHasInward, snapshotScorecard, snapshotTotal, type RoundSnapshot } from "../src/app/roundgame.ts";
 import { decodeSeasonRow, decodeTavlaData } from "../src/app/rows.ts";
 import { shortDate, standingsFromTavlaData, tavlaInput, TavlaStandings, tavlaToJSON, toParText, type RoundsGrid } from "../src/app/tavla.ts";
 import { decodeRuleset } from "../src/ruleset.ts";
@@ -123,6 +124,30 @@ test("cup som appen", () => {
   assert.deepEqual(cup.roundTitles, w.roundTitles);
   assert.deepEqual(cup.champion, w.champion);
   assert.deepEqual(cup.myNext, w.myNext);
+});
+
+/** Scorekortene slik fasiten skriver dem: alle spillere i alle runder, Ut og (når den finnes) Inn. */
+function scorecards(snapshots: readonly RoundSnapshot[]) {
+  return snapshots.flatMap((s) => {
+    const hasInward = snapshotHasInward(s);
+    return s.players.flatMap((p) => (hasInward ? [false, true] : [false]).map((inward) => {
+      const card = snapshotScorecard(s, p.memberID, inward);
+      return {
+        roundID: s.round.id, memberID: p.memberID, inward, hasInward, name: card.name, cardInward: card.inward,
+        total: snapshotTotal(s, p.memberID), sumPar: card.sumPar, sumStrokes: card.sumStrokes, sumPoints: card.sumPoints,
+        lines: card.lines,
+      };
+    }));
+  });
+}
+
+test("scorekortet som appen (RoundGame.scorecard og total)", () => {
+  const t = new TavlaStandings(tavlaInput(data, decodeSeasonRow(fx.sesonger[0])), fx.me);
+  assert.deepEqual(scorecards(t.snapshots), want.scorekort.tavla);
+  const c = competition("league", data.members[0].clubID, "club", decodeRuleset({ version: 2, competition: { league: { bestRounds: 3 } } }));
+  const input = new CompetitionScope(c, data.rounds.map((r) => ({ competitionID: c.id, roundID: r.id })))
+    .input(tavlaInput(data, decodeSeasonRow(fx.sesonger[0])).rounds, new PersonDirectory(data.members));
+  assert.deepEqual(scorecards(new LeagueStandings(input, input.entrants.filter((e) => e.id === fx.me)).snapshots), want.scorekort.liga);
 });
 
 test("små tekster", () => {

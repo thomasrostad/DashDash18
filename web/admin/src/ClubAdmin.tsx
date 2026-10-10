@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { committees as loadCommittees, competitions, events, members, type Competition, type EventRow, type Member, type Membership } from "./data.ts";
 import { Schedule } from "./Schedule.tsx";
 import { Roster } from "./Roster.tsx";
+import { Standings } from "./standings/Standings.tsx";
 import { errorText } from "./supabase.ts";
 import { TournamentDetail } from "./TournamentDetail.tsx";
 import { NewTournament } from "./NewTournament.tsx";
 import { kindText, longDate, statusText } from "./text.ts";
 
-type Tab = "turneringer" | "terminliste" | "tropp";
+type Tab = "turneringer" | "terminliste" | "tropp" | "tabeller";
 
 /** Arrangørsiden for én klubb. Del 1: oversikt over turneringer, terminliste og tropp. */
 export function ClubAdmin({ membership }: { membership: Membership }) {
@@ -36,9 +37,9 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
   return (
     <main className="page">
       <nav className="tabs">
-        {(["turneringer", "terminliste", "tropp"] as Tab[]).map((t) => (
+        {(["turneringer", "terminliste", "tropp", "tabeller"] as Tab[]).map((t) => (
           <button key={t} className={t === tab ? "tab active" : "tab"} onClick={() => setTab(t)}>
-            {{ turneringer: "Turneringer", terminliste: "Terminliste", tropp: "Tropp" }[t]}
+            {{ turneringer: "Turneringer", terminliste: "Terminliste", tropp: "Tropp", tabeller: "Tabeller" }[t]}
           </button>
         ))}
         <span className="spacer" />
@@ -85,6 +86,7 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
       {tab === "tropp" && (!roster ? <p className="muted">Henter …</p> : (
         <Roster clubID={clubID} roster={roster} joinCode={membership.clubs.join_code} onChanged={load} />
       ))}
+      {tab === "tabeller" && (!comps ? <p className="muted">Henter …</p> : <Standings comps={comps} membership={membership} />)}
     </main>
   );
 }
