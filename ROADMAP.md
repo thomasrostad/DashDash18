@@ -438,6 +438,15 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Tavla: «Alle runder» med spillerne nedover og rundene bortover (poeng eller slag), og scorekortet bak hver rute og hver runde på spillerprofilen.
 - [x] Det samme for liga og morro, med «Mot par», fast sum-kolonne, beste per runde i gult, din rad markert, pågående runde med prikk, og dempede runder som ikke teller (beste N). *(10.10.)*
 
+### Fra analysen av andre golfapper (10.10.2026, `docs/golfapper.md`)
+
+- [x] TV-visning av Tavla for simulatorsenteret eller klubbhuset (Golf Genius har det): fullskjerm, store tall, tabellen side for side hvert 10. sekund, siste runde ved siden av (liggende) eller under (stående), klokke, oppdateres med sanntid, skjermen slukker ikke.
+- [x] Føring uten nett med merke for det som ikke er sendt: fantes allerede (utboksen, «ikke sendt ennå» og prikken på hullet).
+- [x] Én fører per gruppe eller bås: fantes allerede (markøren).
+- [ ] Tavla i nettleseren fra invitasjonslenken uten app (Squabbit): krever en offentlig lesevei (RPC eller Worker) og et valg om hva som kan vises uten innlogging.
+- [ ] Turneringer med tidsvindu (18Birdies): hver spiller spiller når det passer i perioden. Krever valg om regler (én runde per spiller per periode? beste av flere?).
+- [ ] Brutto og netto side om side, og tak på slag per hull i simulator (SGT/GSPro).
+
 ### Skjermsjekk 09.10.2026 (alle skjermprøvene, lys og mørk)
 
 - [x] Norsk dato, «for 3 dager siden», datovelgere og grafer også når telefonen står på engelsk (`ddAppStyle` setter `nb_NO`).
