@@ -20,6 +20,8 @@ final class TavlaModel {
     private var isReloading = false
     private var reloadAgain = false
 
+    var clubContext: ClubContext { context }
+
     init(context: ClubContext) {
         self.context = context
     }
