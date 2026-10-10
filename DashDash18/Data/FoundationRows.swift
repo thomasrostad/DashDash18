@@ -162,6 +162,9 @@ nonisolated struct CompetitionRow: Codable, Equatable, Identifiable, Sendable {
     var entitlementID: UUID?
     /// Åpen påmelding (`signup_open`, sql/022). Tom når kolonnen ikke er hentet (før 022).
     var signupOpen: Bool? = nil
+    /// «Spill når det passer» (`auto_count`, sql/042): runder påmeldte spiller i perioden, teller av
+    /// seg selv. Tom når kolonnen ikke er hentet.
+    var autoCount: Bool? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -179,12 +182,16 @@ nonisolated struct CompetitionRow: Codable, Equatable, Identifiable, Sendable {
         case requiresPurchase = "requires_purchase"
         case entitlementID = "entitlement_id"
         case signupOpen = "signup_open"
+        case autoCount = "auto_count"
     }
 
     static let columns = "id, kind, name, club_id, owner_id, season_id, status, entry, rules, starts_on, ends_on, "
         + "is_main, requires_purchase, entitlement_id"
-    /// Med åpen påmelding. Krever 022 (`CompetitionsFeature`).
-    static let columnsWithSignup = columns + ", signup_open"
+    /// Med åpen påmelding. Krever 022 (`CompetitionsFeature`). Med «Spill når det passer» når 042 er kjørt.
+    static let columnsWithSignup = columns + ", signup_open" + (TimeWindowFeature.isEnabled ? ", auto_count" : "")
+
+    /// Spilles når det passer i perioden (sql/042).
+    var playsWhenItSuits: Bool { autoCount ?? false }
 
     /// Påmeldingen er åpen.
     var isSignupOpen: Bool { signupOpen ?? false }
