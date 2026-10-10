@@ -52,3 +52,14 @@ select { font: inherit; padding: 10px 12px; border-radius: 12px; border: 1px sol
 button.danger { background: var(--rust); color: #fff; border: 0; border-radius: 999px; padding: 10px 16px; font-weight: 600; margin-top: 8px; }
 button.danger:disabled { opacity: .4; cursor: default; }
 tr.click { cursor: pointer; } tr.click:hover td { background: var(--rule); }
+
+.grid2.tight { gap: 12px; margin-top: 0; }
+fieldset { border: 1px solid var(--rule); border-radius: 12px; padding: 10px 12px; }
+legend { padding: 0 6px; color: var(--ink2); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.chip { font-weight: 400; }
+td.actions { white-space: nowrap; text-align: right; }
+input.cell { padding: 6px 8px; border-color: transparent; background: transparent; width: 100%; min-width: 120px; }
+input.cell:focus { border-color: #D5D5D5; background: var(--card); }
+input.cell.num { min-width: 60px; width: 80px; }
+section > .card { margin-bottom: 16px; }

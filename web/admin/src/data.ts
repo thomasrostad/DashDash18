@@ -145,3 +145,55 @@ export async function deleteTournament(competitionID: string, confirmName: strin
   if (error) throw error;
   return data as { name: string; rounds: number; events: number };
 }
+
+// ===== Del 3: terminliste og tropp =====
+
+export type EventInput = {
+  event_date: string; start_time: string | null; venue: string | null; note: string | null;
+  /** Sesongens kvelder får season_id; liga, cup og morro får competition_id (sql/033). */
+  season_id: string | null; competition_id: string | null;
+};
+
+export async function committees(clubID: string): Promise<Record<string, string[]>> {
+  const { data, error } = await supabase.from("event_committee").select("event_id, member_id").eq("club_id", clubID);
+  if (error) throw error;
+  const out: Record<string, string[]> = {};
+  for (const r of data as { event_id: string; member_id: string }[]) (out[r.event_id] ??= []).push(r.member_id);
+  return out;
+}
+
+export async function saveEvent(clubID: string, id: string | null, e: EventInput, committee: string[]): Promise<void> {
+  const row: Record<string, unknown> = {
+    club_id: clubID, season_id: e.season_id, event_date: e.event_date, start_time: e.start_time,
+    venue: e.venue?.trim() || null, note: e.note?.trim() || null,
+  };
+  if (!e.season_id && e.competition_id) row.competition_id = e.competition_id;
+  const q = id ? supabase.from("events").update(row).eq("id", id) : supabase.from("events").insert(row);
+  const { data, error } = await q.select("id").single();
+  if (error) {
+    if (error.code === "23505") throw new Error("Datoen står allerede i terminlista.");
+    throw error;
+  }
+  const { error: cErr } = await supabase.rpc("set_event_committee", { p_event_id: (data as { id: string }).id, p_member_ids: committee });
+  if (cErr) throw new Error(`Datoen er lagret, men ikke sosialkomiteen. ${cErr.message}`);
+}
+
+export async function deleteEvent(id: string): Promise<void> {
+  const { error } = await supabase.from("events").delete().eq("id", id);
+  if (error) {
+    if (error.code === "23503") throw new Error("Datoen har runder og kan ikke slettes. Slett rundene først.");
+    throw error;
+  }
+}
+
+export type MemberPatch = Partial<Pick<Member, "display_name" | "handicap_index" | "seed_group" | "is_organizer" | "is_treasurer" | "status">> & { user_id?: null };
+
+export async function updateMember(clubID: string, id: string, patch: MemberPatch): Promise<void> {
+  const { error } = await supabase.from("club_members").update(patch).eq("id", id).eq("club_id", clubID);
+  if (error) throw error;
+}
+
+export async function addMember(clubID: string, name: string, handicap: number | null): Promise<void> {
+  const { error } = await supabase.from("club_members").insert({ club_id: clubID, display_name: name.trim(), handicap_index: handicap });
+  if (error) throw error;
+}
