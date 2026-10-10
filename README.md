@@ -38,6 +38,7 @@ Status 09.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detalje
 | [`CLAUDE.md`](CLAUDE.md) | Arbeidsregler for Claude Code. Gjelder også for mennesker |
 | [`docs/gjoremal.md`](docs/gjoremal.md) | Det som må gjøres manuelt (App Store Connect, Supabase-konsoll, Google) |
 | [`sql/README.md`](sql/README.md) | Databasemigreringer og status per fil (test og prod) |
+| [`docs/fase-26-tv-tidsvindu-web.md`](docs/fase-26-tv-tidsvindu-web.md) | Plan: TV med kode, turneringer med tidsvindu, regelmotoren i TypeScript og web-admin |
 | [`docs/golfapper.md`](docs/golfapper.md) | Analyse av flyten i andre golfapper (Squabbit, 18Birdies, Golf Genius, GolfBox, Trackman m.fl.) og 12 anbefalinger for Atten |
 | [`docs/vedd-per-turnering.md`](docs/vedd-per-turnering.md) | Forslag: veddemål per turnering, poengbank og oppgjør (venter på valg) |
 | [`docs/`](docs/) | Datamodell, sikkerhet, push, widgets, Xcode Cloud, App Store, personvern og vilkår |
