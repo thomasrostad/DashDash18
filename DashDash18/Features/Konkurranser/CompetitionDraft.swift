@@ -31,6 +31,12 @@ nonisolated struct CompetitionDraft: Equatable, Sendable {
     var cup: CupRules = .standard
     var entry: CompetitionEntry = .listed
     var signupOpen = true
+    /// «Spill når det passer» (sql/042): bare liga og morro, med periode. Runder påmeldte spiller i
+    /// perioden, teller av seg selv; de beste N teller (`leagueRules.bestRounds`).
+    var playsWhenItSuits = false
+
+    /// Kan typen spilles når det passer?
+    var allowsPlayWhenItSuits: Bool { TimeWindowFeature.isEnabled && (kind == .league || kind == .fun) }
     /// Påmeldte klubbmedlemmer (klubbkonkurranse).
     var memberIDs: Set<UUID> = []
     /// Påmeldte profiler (folk du kjenner).
@@ -71,6 +77,9 @@ nonisolated struct CompetitionDraft: Equatable, Sendable {
         if trimmedName.isEmpty { out.append("Gi turneringen et navn.") }
         if trimmedName.count > 60 { out.append("Navnet kan ha høyst 60 tegn.") }
         if hasPeriod, endsOn < startsOn { out.append("Perioden slutter før den starter.") }
+        if playsWhenItSuits, allowsPlayWhenItSuits, !hasPeriod {
+            out.append("Velg perioden spillerne kan spille i.")
+        }
         if !entryOptions.contains(entry) { out.append("\(CompetitionText.entry(entry)) passer ikke for denne typen.") }
         if kind == .cup, memberIDs.count + profileIDs.count + (clubID == nil ? 1 : 0) < 2, !signupOpen {
             out.append("En cup trenger minst to påmeldte, eller åpen påmelding.")

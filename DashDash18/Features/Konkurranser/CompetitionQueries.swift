@@ -164,6 +164,12 @@ enum CompetitionQueries {
         try await client.rpc("create_competition_with_entrants", params: params).execute().value
     }
 
+    /// «Spill når det passer» på eller av (sql/042). Eieren eller arrangøren (RLS `competitions_update`).
+    static func setPlaysWhenItSuits(client: SupabaseClient, competitionID: UUID, on: Bool) async throws {
+        struct Patch: Encodable { let auto_count: Bool }
+        try await client.from("competitions").update(Patch(auto_count: on)).eq("id", value: competitionID).execute()
+    }
+
     static func join(client: SupabaseClient, competitionID: UUID) async throws -> CompetitionParticipantRow {
         struct Params: Encodable { let p_competition_id: UUID }
         return try await client.rpc("join_competition", params: Params(p_competition_id: competitionID)).execute().value

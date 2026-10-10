@@ -253,6 +253,13 @@ struct CompetitionHeaderCard: View {
             Text(CompetitionText.kindHelp(competition.kind))
                 .font(.ddCallout)
                 .foregroundStyle(Color.ddInkSecondary)
+            if competition.playsWhenItSuits {
+                let rules = competition.kind == .fun ? competition.rules.competitionRules.fun
+                    : competition.rules.competitionRules.league
+                Label(TimeWindowText.summary(startsOn: competition.startsOn, endsOn: competition.endsOn,
+                                             best: rules.bestRounds), systemImage: "calendar.badge.clock")
+                    .font(.ddCallout)
+            }
             Label(CompetitionText.entry(competition.entry), systemImage: "person.2")
                 .font(.ddCallout)
                 .labelStyle(DDIconLabelStyle())
