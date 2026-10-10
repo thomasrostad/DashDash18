@@ -5,7 +5,6 @@ import { deepCopy, deepEqual, sortedStrings } from "./jsmath.ts";
 import {
   encodeRuleset,
   FUN_TEMPLATE,
-  GOLFGUTU,
   golfgutuRules,
   standardCompetitionRules,
   type LeagueRules,
@@ -147,4 +146,3 @@ function diff(a: unknown, b: unknown, path: string, out: string[]): void {
 
 /** Golfgutu-oppsettet er `matchSeries`. */
 export const GOLFGUTU_TEMPLATE: RulesetTemplate = "matchSeries";
-export { GOLFGUTU };
