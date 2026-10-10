@@ -40,3 +40,15 @@ tr.past td { color: var(--ink2); }
 .pill { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--lime); font-size: 12px; }
 code { background: var(--rule); padding: 2px 6px; border-radius: 6px; }
 @media (max-width: 700px) { th:nth-child(5), td:nth-child(5) { display: none; } }
+
+.ok { color: var(--forest); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 16px; }
+.card h3 { margin: 0 0 8px; } .card h4 { margin: 16px 0 6px; }
+.plain { padding-left: 18px; margin: 8px 0; } .plain li { margin: 4px 0; }
+.check { display: flex; gap: 8px; align-items: center; font-weight: 400; }
+.check input { width: 18px; height: 18px; }
+select { font: inherit; padding: 10px 12px; border-radius: 12px; border: 1px solid #D5D5D5; background: var(--card); color: var(--ink); }
+.inline { display: flex; gap: 8px; flex-wrap: wrap; }
+button.danger { background: var(--rust); color: #fff; border: 0; border-radius: 999px; padding: 10px 16px; font-weight: 600; margin-top: 8px; }
+button.danger:disabled { opacity: .4; cursor: default; }
+tr.click { cursor: pointer; } tr.click:hover td { background: var(--rule); }

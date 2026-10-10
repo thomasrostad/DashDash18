@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { competitions, events, members, type Competition, type EventRow, type Member, type Membership } from "./data.ts";
 import { errorText } from "./supabase.ts";
+import { TournamentDetail } from "./TournamentDetail.tsx";
 import { kindText, longDate, memberStatusText, statusText, timeText, todayISO } from "./text.ts";
 
 type Tab = "turneringer" | "terminliste" | "tropp";
@@ -13,6 +14,7 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
   const [days, setDays] = useState<EventRow[] | null>(null);
   const [roster, setRoster] = useState<Member[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [openID, setOpenID] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -42,14 +44,19 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
       </nav>
       {error && <p className="error">{error}</p>}
 
-      {tab === "turneringer" && (
+      {tab === "turneringer" && openID && comps && roster && comps.find((c) => c.id === openID) && (
+        <TournamentDetail competition={comps.find((c) => c.id === openID)!} roster={roster}
+          onBack={() => setOpenID(null)} onChanged={load} />
+      )}
+
+      {tab === "turneringer" && !openID && (
         <section>
           {!comps ? <p className="muted">Henter …</p> : comps.length === 0 ? <p className="muted">Ingen turneringer ennå.</p> : (
             <table>
               <thead><tr><th>Navn</th><th>Type</th><th>Status</th><th>Periode</th><th>Påmelding</th></tr></thead>
               <tbody>
                 {comps.map((c) => (
-                  <tr key={c.id}>
+                  <tr key={c.id} className="click" onClick={() => setOpenID(c.id)}>
                     <td><strong>{c.name}</strong>{c.is_main && <span className="pill">Hovedturnering</span>}{c.auto_count && <span className="pill">Spill når det passer</span>}</td>
                     <td>{kindText(c.kind)}</td>
                     <td>{statusText(c.status)}</td>
