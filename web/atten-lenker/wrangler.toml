@@ -5,3 +5,8 @@ main = "src/index.ts"
 compatibility_date = "2026-09-01"
 workers_dev = false
 routes = [{ pattern = "dashdash18.com", custom_domain = true }]
+
+# TV-siden (fase 26) henter tv_board_data herfra. Den publiserbare nøkkelen ligger som secret
+# (wrangler secret put SUPABASE_KEY), ikke i repoet. Test-prosjektet til prod er satt opp.
+[vars]
+SUPABASE_URL = "https://tsekialrxuhrugscosgi.supabase.co"

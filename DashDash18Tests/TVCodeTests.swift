@@ -4,8 +4,8 @@ import Testing
 
 /// TV-kode (sql/041).
 struct TVCodeTests {
-    @Test func flaggetErAvTil041ErKjørt() {
-        #expect(TVCodeFeature.isEnabled == false)
+    @Test func flaggetErPå() {
+        #expect(TVCodeFeature.isEnabled == true)
     }
 
     @Test func lenkeOgVisning() {

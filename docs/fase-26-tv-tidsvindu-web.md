@@ -51,7 +51,7 @@ Hver del får tester mot test-Supabase med en egen testbruker, og ingenting går
 
 - [x] TypeScript-regelmotoren (`web/golfgutu-core`, 10.10): 149 tester, sesongtabeller og rundetall byte for byte like Swift (gylne filer), og appens Tavla-, liga-, morro- og cup-mapping prøvd mot appens egen Swift-kode. Ikke portert: veddemål, spill og tips.
 - [x] 041 og 042: kjørt på test 10.10 (prøvd lokalt 18 av 18, og på test i en transaksjon som ble rullet tilbake).
-- [ ] TV-siden i Workeren og TV-kode i appen.
+- [x] TV-siden i Workeren (dashdash18.com/tv og /tv/KODE, regnet med `web/golfgutu-core`, oppdateres hvert 15. sekund) og TV-kode i appen (10.10). Prøvd mot «Test golf» med en kode som er trukket tilbake.
 - [x] «Spill når det passer» i appen (#50, slått på 10.10).
 - [x] Web-admin del 1 ute på admin.dashdash18.com (10.10): innlogging, klubbvalg, turneringer, terminliste, tropp.
 - [ ] Web-admin, del 2–5.

@@ -1,3 +1,4 @@
+import { fetchTVPayload, normalizeTVCode, tvBoardPage, tvCodePage, type TVEnv } from "./tv.ts";
 // Atten på https://dashdash18.com: filen som kobler domenet til appen (universelle lenker),
 // og en enkel side for invitasjonslenker når appen ikke er installert.
 //
@@ -68,7 +69,8 @@ const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "DENY",
 };
 
-function htmlResponse(body: string, status: number, nonce: string, cache: string, isHead: boolean): Response {
+function htmlResponse(body: string, status: number, nonce: string, cache: string, isHead: boolean,
+                      connectSelf = false): Response {
   return new Response(isHead ? null : body, {
     status,
     headers: {
@@ -77,6 +79,7 @@ function htmlResponse(body: string, status: number, nonce: string, cache: string
       "Cache-Control": cache,
       "Content-Security-Policy":
         `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; ` +
+        (connectSelf ? "connect-src 'self'; " : "") +
         "base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     },
   });
@@ -200,7 +203,7 @@ function matchInvite(pathname: string): { kind: InviteKind; raw: string } | null
   return { kind: match[1] as InviteKind, raw };
 }
 
-export async function handle(request: Request): Promise<Response> {
+export async function handle(request: Request, env: TVEnv = {}): Promise<Response> {
   const method = request.method.toUpperCase();
   const isHead = method === "HEAD";
   if (method !== "GET" && !isHead) {
@@ -227,6 +230,29 @@ export async function handle(request: Request): Promise<Response> {
     return htmlResponse(homePage(nonce), 200, nonce, "public, max-age=3600", isHead);
   }
 
+  // TV-visning med kode (fase 26, sql/041).
+  if (pathname === "/tv" || pathname === "/tv/") {
+    return htmlResponse(tvCodePage(nonce), 200, nonce, "public, max-age=3600", isHead);
+  }
+  const tv = /^\/tv\/([^/]+?)(\.json)?$/.exec(pathname);
+  if (tv) {
+    const code = normalizeTVCode(tv[1]);
+    if (tv[2]) {
+      const payload = code ? await fetchTVPayload(code, env).catch(() => undefined) : null;
+      if (payload === undefined) {
+        return new Response(JSON.stringify({ error: "Fikk ikke hentet tabellen" }), {
+          status: 502, headers: { ...SECURITY_HEADERS, "Content-Type": "application/json", "Cache-Control": "no-store" } });
+      }
+      return new Response(isHead ? null : JSON.stringify(payload ?? { error: "Ukjent kode" }), {
+        status: payload ? 200 : 404,
+        headers: { ...SECURITY_HEADERS, "Content-Type": "application/json", "Cache-Control": "no-store" },
+      });
+    }
+    if (!code) return htmlResponse(tvCodePage(nonce), 404, nonce, "no-store", isHead);
+    if (code !== tv[1]) return Response.redirect(new URL(`/tv/${code}`, request.url).toString(), 302);
+    return htmlResponse(tvBoardPage(code, nonce), 200, nonce, "no-store", isHead, true);
+  }
+
   const invite = matchInvite(pathname);
   if (invite) {
     const code = normalizeCode(invite.kind, invite.raw);
@@ -238,7 +264,7 @@ export async function handle(request: Request): Promise<Response> {
 }
 
 export default {
-  fetch(request: Request): Promise<Response> {
-    return handle(request);
+  fetch(request: Request, env: TVEnv): Promise<Response> {
+    return handle(request, env);
   },
 };
