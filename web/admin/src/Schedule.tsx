@@ -2,6 +2,7 @@ import { useState } from "react";
 import { deleteEvent, saveEvent, type Competition, type EventInput, type EventRow, type Member } from "./data.ts";
 import { errorText } from "./supabase.ts";
 import { longDate, timeText, todayISO } from "./text.ts";
+import { DayRounds } from "./rounds/DayRounds.tsx";
 
 /** Terminlista: kvelder og spilledager for alle turneringene i klubben, med ny, endre, slette og komité. */
 export function Schedule({ clubID, days, comps, roster, committees, onChanged }: {
@@ -9,6 +10,7 @@ export function Schedule({ clubID, days, comps, roster, committees, onChanged }:
 }) {
   const [editing, setEditing] = useState<EventRow | "new" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [roundsFor, setRoundsFor] = useState<EventRow | null>(null);
   const today = todayISO();
   const nameOf = (e: EventRow) =>
     comps.find((c) => (e.season_id && c.season_id === e.season_id) || (!e.season_id && e.competition_id && c.id === e.competition_id))?.name ?? "Klubbens egen";
@@ -17,6 +19,10 @@ export function Schedule({ clubID, days, comps, roster, committees, onChanged }:
     if (!confirm(`Slette ${longDate(e.event_date)}? Påmeldingene og sosialkomiteen slettes også.`)) return;
     setError(null);
     try { await deleteEvent(e.id); onChanged(); } catch (err) { setError(errorText(err)); }
+  }
+
+  if (roundsFor) {
+    return <DayRounds clubID={clubID} event={roundsFor} days={days} comps={comps} onBack={() => { setRoundsFor(null); onChanged(); }} />;
   }
 
   return (
@@ -40,6 +46,7 @@ export function Schedule({ clubID, days, comps, roster, committees, onChanged }:
                 <td>{nameOf(e)}</td>
                 <td className="muted">{(committees[e.id] ?? []).map((id) => roster.find((m) => m.id === id)?.display_name ?? "?").join(", ")}</td>
                 <td className="actions">
+                  <button className="link" onClick={() => setRoundsFor(e)}>Runder</button>
                   <button className="link" onClick={() => setEditing(e)}>Endre</button>
                   <button className="link" onClick={() => remove(e)}>Slett</button>
                 </td>
