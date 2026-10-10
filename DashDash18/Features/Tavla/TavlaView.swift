@@ -23,6 +23,7 @@ struct TavlaView: View {
 
 private struct TavlaContent: View {
     @State var model: TavlaModel
+    @State private var showsTV = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -39,7 +40,14 @@ private struct TavlaContent: View {
                             .tint(Color.ddOnDark)
                     }
                 }
+                if model.standings != nil {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("TV-visning", systemImage: "tv") { showsTV = true }
+                            .tint(Color.ddOnDark)
+                    }
+                }
             }
+            .fullScreenCover(isPresented: $showsTV) { TavlaTVView(model: model) }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
                     Task { await model.load() }

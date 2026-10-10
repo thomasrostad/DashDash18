@@ -56,7 +56,7 @@ struct DesignScreenSamples: View {
         // Fase 25: finn åpne turneringer, og QR-koden til invitasjonen.
         case finn, inviterqr
         // Alle runder i turneringen (leaderboard).
-        case allerunder, allerunderliga
+        case allerunder, allerunderliga, tavlatv
     }
     @State var screen: Screen = .hullkort
 
@@ -180,6 +180,8 @@ struct DesignScreenSamples: View {
         case .turneringvelger:
             NavigationStack { AdminHubSample(.tonight, scroll: .top, picker: TournamentCoreSamples.picker()) }
                 .tint(Color.ddForestInk)
+        case .tavlatv:
+            TavlaTVView(preview: TavlaSamples.standings())
         case .allerunderliga:
             if case .league(let standings)? = KonkurranseSamples.league().content {
                 NavigationStack { RoundsLeaderboardView(grid: standings.roundGrid, game: standings.game) }

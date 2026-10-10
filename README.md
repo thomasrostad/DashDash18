@@ -21,7 +21,7 @@ Status 09.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detalje
 | Turneringer | Fire oppsett: Stableford-serie, Matchspill-serie (Golfgutu), Cup og Morro. Påmelding med tak og venteliste, startliste, stab. Liga, cup og morro i en klubb kan ha egne spilledager med runder («Spilledager og runder» på arrangørsiden). Lages fra «+» på Arrangør-fanen eller fra Spill. Kan slettes av arrangøren (navnet må skrives) |
 | Ordet for en dag | «Kveld» for Golfgutu, «Spilledag» for nye turneringer (valg i «Ny turnering» og i reglene) |
 | Arrangør | Oppsett øverst (turneringen, troppen, banene), så dagen som står for tur med stegrekka Påmelding → Oppsett → Spilles → Ferdig, kommende og tidligere dager, varsler, rapporter og arkiv |
-| Tavla | Tabellen regnes på telefonen av regelmotoren (paritet med PWA-en), med data fra én RPC (`tavla_data`). «Alle runder» (også i liga og morro) viser alle spillernes poeng, slag eller mot par runde for runde (som et PGA-leaderboard), og hver rute og hver runde på spillerprofilen åpner scorekortet |
+| Tavla | Tabellen regnes på telefonen av regelmotoren (paritet med PWA-en), med data fra én RPC (`tavla_data`). «Alle runder» (også i liga og morro) viser alle spillernes poeng, slag eller mot par runde for runde (som et PGA-leaderboard), og hver rute og hver runde på spillerprofilen åpner scorekortet. «TV-visning» viser tabellen i fullskjerm for skjermen i lokalet (side for side, siste runde, oppdateres mens det føres, skjermen slukker ikke) |
 | Vedd og tips | Veddemål med poeng i hovedturneringen (ikke i andre turneringer ennå), tippekupong per kveld med «Tips» og «Forrige kupong» rett på Hjem-kortet |
 | Ytelse | Mengdebaserte RPC-er for venner, løse runder, turneringslista og Hjem (sql/036–037) |
 
