@@ -9,6 +9,9 @@ nonisolated enum TVCodeFeature {
     /// På siden 10.10.2026: 041 er kjørt på test, og TV-siden er ute (Workeren `atten-lenker`, prøvd med en
     /// kode mot «Test golf»).
     static let isEnabled = true
+    /// Liga, cup og morro (`sql/043_tv_liga.sql`): på siden 10.10.2026, 043 er kjørt på test og Workeren er ute
+    /// (prøvd med en kode mot «Høstmorro»).
+    static let competitionsEnabled = true
 }
 
 nonisolated enum TVCode {
@@ -31,12 +34,28 @@ final class TVCodeModel {
     var error: String?
     let competitionName: String
     private let client: SupabaseClient
-    private let seasonID: UUID
+    private let seasonID: UUID?
+    private let knownCompetitionID: UUID?
 
     init(client: SupabaseClient, seasonID: UUID, competitionName: String) {
         self.client = client
         self.seasonID = seasonID
+        self.knownCompetitionID = nil
         self.competitionName = competitionName
+    }
+
+    /// Liga, cup og morro: turneringen er kjent.
+    init(client: SupabaseClient, competitionID: UUID, competitionName: String) {
+        self.client = client
+        self.seasonID = nil
+        self.knownCompetitionID = competitionID
+        self.competitionName = competitionName
+    }
+
+    private func competitionID() async throws -> UUID? {
+        if let knownCompetitionID { return knownCompetitionID }
+        guard let seasonID else { return nil }
+        return try await TournamentDeletion.competitionID(client: client, seasonID: seasonID)
     }
 
     private struct Params: Encodable { let p_competition_id: UUID; let p_renew: Bool }
@@ -46,7 +65,7 @@ final class TVCodeModel {
         isWorking = true
         defer { isWorking = false }
         do {
-            guard let id = try await TournamentDeletion.competitionID(client: client, seasonID: seasonID) else {
+            guard let id = try await competitionID() else {
                 error = "Fant ikke turneringen."
                 return
             }
@@ -60,7 +79,7 @@ final class TVCodeModel {
         isWorking = true
         defer { isWorking = false }
         do {
-            guard let id = try await TournamentDeletion.competitionID(client: client, seasonID: seasonID) else { return }
+            guard let id = try await competitionID() else { return }
             try await client.rpc("tv_code_revoke", params: Revoke(p_competition_id: id)).execute()
             code = nil
         } catch {

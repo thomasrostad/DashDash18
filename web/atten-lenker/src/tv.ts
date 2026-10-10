@@ -2,7 +2,11 @@
 // Workeren henter rådataene med tv_board_data(kode) og regner tabellen med regelmotoren i
 // TypeScript (web/golfgutu-core), med samme tall og tekster som Tavla i appen.
 
-import { standingsFromTavlaData } from "../../golfgutu-core/src/index.ts";
+import {
+  CompetitionScope, CupStandings, decodeCompetitionMatch, decodeCompetitionParticipant, decodeCompetitionRound,
+  decodeCompetitionRow, decodeProfile, decodeRoundParticipant, decodeTavlaData, LeagueStandings, makeSnapshot,
+  PersonDirectory, standingsFromTavlaData, type RoundsGrid, type UUID,
+} from "../../golfgutu-core/src/index.ts";
 
 export interface TVEnv {
   SUPABASE_URL?: string;
@@ -26,6 +30,7 @@ export function normalizeTVCode(raw: string): string | null {
 
 /** Svaret fra tv_board_data → det TV-en viser. Rent, uten nett (testes med fixturen fra golfgutu-core). */
 export function buildTVPayload(board: Record<string, unknown>): TVPayload {
+  if ((board.competition as { season_id?: string | null }).season_id == null) return competitionPayload(board);
   const comp = board.competition as {
     name: string; season_id: string; club_id: string; status: string; rules: Record<string, unknown>; club_name?: string | null;
   };
@@ -34,9 +39,20 @@ export function buildTVPayload(board: Record<string, unknown>): TVPayload {
   const playingDay = (comp.rules as { dayTerm?: string })?.dayTerm === "playingDay";
   const total = t.eveningsTotal;
   const unit = playingDay ? (total === 1 ? "spilledag" : "spilledager") : (total === 1 ? "kveld" : "kvelder");
-  const grid = t.rounds;
+  return {
+    name: t.countsStableford ? t.seasonName : `Jakkeracet · ${t.seasonName}`,
+    club: comp.club_name ?? null,
+    played: `${t.eveningsPlayed} av ${total} ${unit} spilt`,
+    rows: t.rows.map((r) => ({ place: r.placeText, name: r.name, total: r.totalText, detail: r.detail })),
+    latest: latestRound(t.rounds),
+  };
+}
+
+/** Siste kolonne i rundeoversikten: de åtte beste i runden. */
+function latestRound(grid: RoundsGrid): TVPayload["latest"] {
   const n = grid.columns.length - 1;
-  const latest = n < 0 ? null : {
+  if (n < 0) return null;
+  return {
     title: grid.columns[n].title,
     ongoing: grid.columns[n].isOngoing,
     lines: grid.rows
@@ -45,12 +61,79 @@ export function buildTVPayload(board: Record<string, unknown>): TVPayload {
       .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name, "no"))
       .slice(0, 8),
   };
+}
+
+const list = (board: Record<string, unknown>, key: string): unknown[] => (Array.isArray(board[key]) ? (board[key] as unknown[]) : []);
+
+/** Liga, morro og cup (sql/043, tv_competition_data): samme mapping som turneringssiden i appen. */
+function competitionPayload(board: Record<string, unknown>): TVPayload {
+  const raw = board.competition as Record<string, unknown> & { club_name?: string | null };
+  const comp = decodeCompetitionRow(raw);
+  const club = raw.club_name ?? null;
+  const participants = list(board, "participants").map((x) => decodeCompetitionParticipant(x));
+  const profiles = list(board, "profiles").map((x) => decodeProfile(x));
+  const roundParticipants = list(board, "round_participants").map((x) => decodeRoundParticipant(x));
+  const data = decodeTavlaData({ ...board, events: [] });
+  const directory = new PersonDirectory(data.members, roundParticipants, profiles);
+
+  if (comp.kind === "cup") {
+    const names = new Map<UUID, string>();
+    for (const p of participants) {
+      const n = p.memberID !== null ? directory.members.get(p.memberID)?.displayName : p.profileID !== null ? directory.profiles.get(p.profileID)?.displayName : null;
+      names.set(p.id, n ?? "Ukjent");
+    }
+    const cup = new CupStandings(list(board, "cup_matches").map((x) => decodeCompetitionMatch(x)), names);
+    const i = cup.rounds.findIndex((r) => r.some((g) => g.winner === null && !g.isBye));
+    const at = i < 0 ? cup.rounds.length - 1 : i;
+    const games = at < 0 ? [] : cup.rounds[at].filter((g) => !g.isBye);
+    return {
+      name: comp.name,
+      club,
+      played: cup.champion !== null ? `Vinner: ${cup.champion.name}` : at < 0 ? "Ikke trukket ennå" : cup.roundTitles[at],
+      rows: games.map((g) => ({
+        place: "",
+        name: `${g.a?.name ?? "?"} – ${g.b?.name ?? "?"}`,
+        total: g.winner === null ? "" : (g.winner === g.a?.participantID ? g.a?.name : g.b?.name) ?? "",
+        detail: g.walkover ? "W.O." : g.result ?? "",
+      })),
+      latest: null,
+    };
+  }
+
+  // Navn fra troppen i runden (klubbrunde) eller deltakerne (løs runde), dato fra kvelden/spilledagen.
+  const names = new Map<UUID, Map<UUID, string>>();
+  for (const x of list(board, "roster")) {
+    const r = x as { round_id: string; player_id: string; display_name: string | null };
+    const m = names.get(r.round_id.toLowerCase()) ?? new Map<UUID, string>();
+    if (r.display_name !== null) m.set(r.player_id.toLowerCase(), r.display_name);
+    names.set(r.round_id.toLowerCase(), m);
+  }
+  const dates = new Map<UUID, string | null>();
+  for (const x of list(board, "rounds")) {
+    const r = x as { id: string; event_date?: string | null };
+    dates.set(r.id.toLowerCase(), r.event_date ?? null);
+  }
+  const snapshots = data.rounds.map((round) => makeSnapshot(round, {
+    roundHoles: data.roundHoles.filter((h) => h.roundID === round.id),
+    players: data.players.filter((p) => p.roundID === round.id),
+    matches: data.matches.filter((m) => m.roundID === round.id),
+    scores: data.scores.filter((s) => s.roundID === round.id),
+    sideClaims: data.claims.filter((c) => c.roundID === round.id),
+    course: data.courses.find((c) => c.id === round.courseID) ?? null,
+    courseHoles: data.courseHoles.filter((h) => h.courseID === round.courseID),
+    eventDate: dates.get(round.id) ?? null,
+    rules: comp.rules,
+    names: names.get(round.id) ?? new Map(),
+  }));
+  const links = list(board, "links").map((x) => decodeCompetitionRound(x));
+  const input = new CompetitionScope(comp, links, participants).input(snapshots, directory);
+  const l = new LeagueStandings(input);
   return {
-    name: t.countsStableford ? t.seasonName : `Jakkeracet · ${t.seasonName}`,
-    club: comp.club_name ?? null,
-    played: `${t.eveningsPlayed} av ${total} ${unit} spilt`,
-    rows: t.rows.map((r) => ({ place: r.placeText, name: r.name, total: r.totalText, detail: r.detail })),
-    latest,
+    name: comp.name,
+    club,
+    played: `${l.roundCount} ${l.roundCount === 1 ? "runde" : "runder"} spilt · ${l.rulesSummary}`,
+    rows: l.rows.map((r) => ({ place: l.placeText(r), name: r.name, total: LeagueStandings.points(r.total), detail: l.detail(r) })),
+    latest: latestRound(l.roundGrid()),
   };
 }
 
@@ -68,7 +151,6 @@ export async function fetchTVPayload(code: string, env: TVEnv): Promise<TVPayloa
     if (body.code === "P0002") return null;
     throw new Error(`tv_board_data svarte ${res.status}`);
   }
-  if (!res.ok) throw new Error(`tv_board_data svarte ${res.status}`);
   return buildTVPayload((await res.json()) as Record<string, unknown>);
 }
 

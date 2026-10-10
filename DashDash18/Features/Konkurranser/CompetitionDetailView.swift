@@ -31,6 +31,7 @@ struct CompetitionDetailView: View {
     /// Økes når betalingsveggen lukkes, så siden spør serveren på nytt.
     @State private var unlockCheck = 0
     @State private var confirmsDelete = false
+    @State private var showsTVCode = false
     @Environment(\.dismiss) private var dismiss
     @Environment(PurchaseService.self) private var purchases: PurchaseService?
 
@@ -48,6 +49,12 @@ struct CompetitionDetailView: View {
                 if !embedded, let list, list.canInvite(model.competition) {
                     ToolbarItem(placement: .primaryAction) {
                         Button("Inviter", systemImage: "person.badge.plus") { showsInvite = true }
+                    }
+                }
+                // sql/043. Sesongen har TV-koden sin på Tavla.
+                if TVCodeFeature.competitionsEnabled, !embedded, model.isAdmin, model.competition.seasonID == nil {
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button("TV-kode for en skjerm", systemImage: "qrcode") { showsTVCode = true }
                     }
                 }
                 // sql/038. En sesong slettes fra Oppsett → Turneringen, der kveldene står.
@@ -74,6 +81,14 @@ struct CompetitionDetailView: View {
                 if let client = list?.client {
                     NavigationStack {
                         InviteView(model: inviteModel(client: client))
+                    }
+                }
+            }
+            .sheet(isPresented: $showsTVCode) {
+                if let client = list?.client {
+                    NavigationStack {
+                        TVCodeSheet(model: TVCodeModel(client: client, competitionID: model.competition.id,
+                                                       competitionName: model.competition.name))
                     }
                 }
             }
