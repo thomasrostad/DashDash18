@@ -158,6 +158,9 @@ final class CompetitionsModel {
         defer { busy = nil }
         do {
             let id = try await CompetitionQueries.create(client: client, draft.params(main: main?.rules))
+            if draft.playsWhenItSuits, draft.allowsPlayWhenItSuits {
+                try await CompetitionQueries.setPlaysWhenItSuits(client: client, competitionID: id, on: true)
+            }
             let linked = await linkCredit(to: id, draft: draft, purchases: purchases)
             await load()
             return Created(id: id, creditLinked: linked)

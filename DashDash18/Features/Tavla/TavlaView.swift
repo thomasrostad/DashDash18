@@ -24,6 +24,7 @@ struct TavlaView: View {
 private struct TavlaContent: View {
     @State var model: TavlaModel
     @State private var showsTV = false
+    @State private var showsTVCode = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -42,12 +43,31 @@ private struct TavlaContent: View {
                 }
                 if model.standings != nil {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("TV-visning", systemImage: "tv") { showsTV = true }
+                        // Arrangøren kan også vise Tavla på en skjerm uten appen (TV-kode, sql/041).
+                        if TVCodeFeature.isEnabled, model.clubContext.isOrganizer {
+                            Menu {
+                                Button("Vis på denne enheten", systemImage: "tv") { showsTV = true }
+                                Button("TV-kode for en annen skjerm", systemImage: "qrcode") { showsTVCode = true }
+                            } label: {
+                                Label("TV-visning", systemImage: "tv")
+                            }
                             .tint(Color.ddOnDark)
+                        } else {
+                            Button("TV-visning", systemImage: "tv") { showsTV = true }
+                                .tint(Color.ddOnDark)
+                        }
                     }
                 }
             }
             .fullScreenCover(isPresented: $showsTV) { TavlaTVView(model: model) }
+            .sheet(isPresented: $showsTVCode) {
+                if let standings = model.standings {
+                    NavigationStack {
+                        TVCodeSheet(model: TVCodeModel(client: model.clubContext.client, seasonID: standings.seasonID,
+                                                       competitionName: standings.seasonName))
+                    }
+                }
+            }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
                     Task { await model.load() }
