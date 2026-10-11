@@ -86,7 +86,7 @@ struct SignupSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                DDConfirmToolbarItem {
                     Button("Lagre") {
                         Task { if await model.save() { dismiss() } }
                     }

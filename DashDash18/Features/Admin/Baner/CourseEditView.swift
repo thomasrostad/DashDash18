@@ -79,7 +79,7 @@ struct CourseEditView: View {
         .disabled(isBusy)
         .discardChangesGuard(hasChanges: draft != original && !isBusy, alwaysShowsCancel: item == nil)
         .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 Button("Lagre") { save(validation) }
                     .disabled(isBusy || (item != nil && draft == original))
             }

@@ -22,7 +22,7 @@ struct ClubInviteSheet: View {
         NavigationStack {
             content
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
+                    DDCancelToolbarItem {
                         Button("Lukk", action: onClose)
                     }
                 }

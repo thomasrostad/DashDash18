@@ -71,7 +71,7 @@ struct VeddArk: View {
             .navigationTitle(draft.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                DDCancelToolbarItem {
                     Button("Avbryt") { dismiss() }
                 }
             }

@@ -113,7 +113,7 @@ struct JoinCompetitionView: View {
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt") { dismiss() }
             }
         }

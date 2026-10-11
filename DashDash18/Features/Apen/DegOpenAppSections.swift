@@ -123,7 +123,7 @@ struct AccountDeletionSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                DDCancelToolbarItem {
                     Button("Avbryt") { dismiss() }
                         .tint(Color.ddOnDark)
                 }

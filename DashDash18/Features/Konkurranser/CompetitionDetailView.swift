@@ -501,10 +501,10 @@ struct CupResultSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .ddNavigationChrome()
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt", action: onDone)
             }
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 Button("Lagre") { save() }
                     .disabled(model.isWorking || (winner == nil && game.winner == nil))
             }

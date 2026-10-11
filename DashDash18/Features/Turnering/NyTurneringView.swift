@@ -159,7 +159,7 @@ struct NyTurneringView: View {
         .navigationBarTitleDisplayMode(.inline)
         .ddNavigationChrome()
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt", action: onDone)
             }
         }
@@ -258,7 +258,7 @@ struct NyTurneringDetailsView: View {
         .ddNavigationChrome()
         .disabled(isSaving || model.notice != nil)
         .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 if model.notice != nil {
                     // Turneringen er laget: ikke «Lag» en gang til.
                     Button("Ferdig", action: onDone)
@@ -438,7 +438,7 @@ private struct CompetitionRulesCustomizeView: View {
         .ddNavigationChrome()
         .onChange(of: draft.entry) { _, _ in draft.normalize() }
         .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 Button("Ferdig") { dismiss() }
             }
         }

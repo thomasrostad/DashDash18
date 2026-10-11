@@ -97,10 +97,10 @@ struct CommitteeDrawSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .disabled(isBusy)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt", action: done)
             }
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 if isBusy {
                     ProgressView()
                 } else {

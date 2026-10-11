@@ -462,7 +462,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 
 - [x] Norsk dato, «for 3 dager siden», datovelgere og grafer også når telefonen står på engelsk (`ddAppStyle` setter `nb_NO`).
 - [x] «thru 18» → «etter 18 hull». «Inviter spillere» står ikke dobbelt når «Kom i gang» vises.
-- [ ] Kontrast: knappene i verktøylinja («Lagre», «Lag», «Ferdig», «Avbryt») er lys tekst på lys mintgrønn pille i lys modus (verktøylinja står i mørk modus, så `ddForestInk` blir mint). Besluttet 11.10 (Thomas): gul med mørk tekst.
+- [x] Kontrast: knappene i verktøylinja («Lagre», «Lag», «Ferdig», «Avbryt») er lys tekst på lys mintgrønn pille i lys modus (verktøylinja står i mørk modus, så `ddForestInk` blir mint). Besluttet 11.10 (Thomas): gul med mørk tekst. Fikset 11.10: `DDConfirmToolbarItem` gir gul pille med mørk tekst (11,0:1), `DDCancelToolbarItem` gir krem tekst rett på den grønne linja uten glasspille (9,8:1 lys, 13,5:1 mørk). Alle `.confirmationAction`/`.cancellationAction` bruker dem.
 - [ ] «Sign in with Apple» og «Paste» følger telefonens språk: sett «Development Region» til norsk (nb) i Xcode (prosjektinnstilling, Thomas).
 - [ ] «Vilkår/Personvern (publiseres før lansering)» må byttes med lenker før App Store (gjøremål 12).
 - [ ] Små ting: cup-treet kuttes i høyre kant (konkcup), ord som brytes inne i piller («ETTER HULL 7 · / 7 SKINS STÅR»), «Kommer ikke» krymper på Hjem-kortet, «Gjenopprett kjøp» brytes, slopeklubb uten tittellinje.
