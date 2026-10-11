@@ -418,6 +418,15 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
   - [x] Lasttest på SQL-nivå av 036–038 (`sql/lokal/lasttest_fase24.sql`, 09.10): Tavla 53 ms i ett kall, folk du kjenner 1,3 ms, turneringslista 2,6 ms. Funn: `my_loose_rounds` 296 ms, rettet i 039 (5,7 ms, kjørt på test 09.10). Lasttest gjennom PostgREST krever Docker (ikke installert).
   - [ ] Sanntid via Broadcast (`sql/040`, `BroadcastFeature` av): runden og Tavla lytter på private kanaler per runde og klubb i stedet for alle hullscorer i basen. Kjørt på test 09.10 (meldingene og tilgangen sjekket). Flagget slås på etter prøving med to telefoner.
 - [ ] Fase 26: TV med kode, turneringer med tidsvindu og web-admin. Plan: `docs/fase-26-tv-tidsvindu-web.md`.
+- [ ] Fase 27–34: konkurranser, påmelding, medlemmer og sosialt lag (oppdrag 11.10.2026). Gap-analyse, datamodell, oppgaver og spørsmål: `docs/plan-konkurranser-og-sosialt.md`. **Venter på godkjenning og svar.**
+  - [ ] Fase 27: tekniske prøver (push fra Edge Function finnes; offline-køen og Broadcast med to telefoner).
+  - [ ] Fase 28: grunnmur (eier og eieroverføring, invitasjoner med kort kode, tak og utløp, RPC i stedet for skrivepolicyer, hjelpere i `private`, RLS-tester).
+  - [ ] Fase 29: formatmotor og runde (lagform og poengtelling som to akser, NGF/WHS-handicapsett, flere spill per runde, øyeblikksbilde, «uoffisielt», oppskrifter, «ta over føringen»).
+  - [ ] Fase 30: sesong og gjenbruk (resultattype, snitt, minste antall, poengtabeller, eclectic, sesongbygger, spillbibliotek, trekning uten gjentakelser).
+  - [ ] Fase 31: påmelding per kveld (standardsvar, frister, tak, venteliste i låsende RPC), påminnelser styrt av svar, kalender (ICS, avlys, ny dato, avstemning).
+  - [ ] Fase 32: sosialt lag med moderering (kommentarer, reaksjoner på alt, feed med sider, galleri, delebilde, myk sletting, tekstfilter).
+  - [ ] Fase 33: varsler og live (fire grupper, demping per kveld, samling per kveld, live-stripe).
+  - [ ] Fase 34: App Store-pakken (vilkår håndhevet, varsel ved rapport, Apple-token ved sletting, demogruppe, eventuelt regnskap).
 - [ ] Fase 25: spillersiden (finn og meld deg på turneringer nær deg).
   - [x] «Finn turneringer» i Spill (også uten klubb): åpne turneringer fra `public_competitions` (032), søk på navn, klubb og sted, og påmelding med samme kort som turneringssiden. *(09.10.)* Gjenstår: «nær deg» (sted/avstand), push når en ny åpen turnering legges ut.
 
