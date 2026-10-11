@@ -72,8 +72,9 @@ export interface BaySeat {
   isMarker: boolean;
 }
 
-/** Flest båser databasen tar imot (`round_players.bay_no between 1 and 12`). */
-export const MAX_BAYS = 12;
+/** Flest båser databasen tar imot (`round_players.bay_no between 1 and 99`, sql/034; 12 før). Feltet
+ *  holdes i tillegg innenfor antall spillere. */
+export const MAX_BAYS = 99;
 
 export function seatFor(seats: readonly BaySeat[], id: UUID): BaySeat | undefined {
   return seats.find((s) => s.memberID === id);
@@ -802,9 +803,17 @@ export function dataErrorText(e: unknown): string {
   }
 }
 
-/** `start_round`: 23505 er én pågående runde per klubb, 55000 er at runden ikke er en kladd lenger. */
+/**
+ * `start_round`: 23505 er en av de unike indeksene for runder som går. Etter sql/034 er det
+ * `rounds_one_active_per_event_wave` (én per spilledag og pulje); før var det også
+ * `rounds_one_active_per_club`. 55000 er at runden ikke er en kladd lenger. Som `RoundErrors.startMessage`.
+ */
 export function startErrorText(e: unknown): string {
-  const code = (e as { code?: string } | null)?.code;
+  const err = e as { code?: string; message?: string } | null;
+  const code = err?.code;
+  if (code === "23505" && err?.message?.includes("rounds_one_active_per_event_wave")) {
+    return "En runde går allerede i denne puljen. Lås den før du starter en ny.";
+  }
   if (code === "23505") return "En runde går allerede. Lås den før du starter en ny.";
   if (code === "55000") return "Bare en kladd kan startes. Last inn på nytt og sjekk.";
   return dataErrorText(e);
@@ -955,3 +964,33 @@ export function formChoices(rules: Ruleset, formID: string): CompetitionForm[] {
 }
 
 export { GOLFGUTU };
+
+// MARK: - Flere runder og serier samtidig (sql/034, ActiveRounds.swift og MainTournament.swift)
+
+/**
+ * Runden som stopper start av `roundID`: en annen runde som går på samme spilledag og i samme pulje.
+ * Runder på andre spilledager er ikke i veien etter sql/034 (før 034 stopper databasen dem selv).
+ */
+export function blockingRound<T extends { id: UUID; eventID: UUID | null; waveNo: number }>(
+  active: readonly T[], roundID: UUID, eventID: UUID, wave: number,
+): T | null {
+  return active.find((r) => r.id !== roundID && r.eventID === eventID && r.waveNo === wave) ?? null;
+}
+
+/**
+ * Hovedturneringens aktive sesong. Uten kjente hovedturneringer brukes den aktive bare når den er den
+ * eneste. Aldri en vilkårlig aktiv serie.
+ */
+export function mainActiveSeason<T extends { id: string; status: string }>(
+  seasons: readonly T[], mainSeasonIDs: readonly string[],
+): T | null {
+  const active = seasons.filter((s) => s.status === "active");
+  const main = active.find((s) => mainSeasonIDs.includes(s.id));
+  if (main) return main;
+  return mainSeasonIDs.length === 0 && active.length === 1 ? active[0] : null;
+}
+
+/** Sesongene bak hovedturneringene i lista (`competitions.is_main`). */
+export function mainSeasonIDs(comps: readonly { is_main: boolean; season_id: string | null }[]): string[] {
+  return comps.filter((c) => c.is_main && c.season_id).map((c) => c.season_id as string);
+}

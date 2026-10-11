@@ -12,10 +12,13 @@ nonisolated struct HomeViewer: Equatable, Sendable {
     let profileID: UUID?
     /// `clubs.id` → `club_members.id`.
     let memberships: [UUID: UUID]
+    /// Klubbene der du er arrangør: rundene som går der, står i «Pågår nå» selv om du ikke spiller.
+    let organizerClubs: Set<UUID>
 
-    init(profileID: UUID?, memberships: [UUID: UUID]) {
+    init(profileID: UUID?, memberships: [UUID: UUID], organizerClubs: Set<UUID> = []) {
         self.profileID = profileID
         self.memberships = memberships
+        self.organizerClubs = organizerClubs
     }
 
     var memberIDs: Set<UUID> { Set(memberships.values) }
@@ -60,7 +63,7 @@ nonisolated struct HomeRoundLabel: Equatable, Sendable {
     }
 }
 
-/// Runden som pågår (fra `RundeModel` eller «Mine runder»).
+/// En runde som pågår (fra `RundeModel` eller rundene feeden har hentet).
 nonisolated struct HomeLiveInput: Equatable, Sendable {
     var snapshot: RoundSnapshot
     var viewer: Viewer
@@ -119,7 +122,9 @@ nonisolated struct HomeFeedInput: Sendable {
     var rounds: [RoundSnapshot] = []
     /// Tabellgrunnlaget for private turneringer (liga og morro): plassbyttet regnes her, det logges ikke.
     var competitionInputs: [CompetitionInput] = []
-    var live: HomeLiveInput?
+    /// Rundene som pågår og som angår deg (du spiller eller arrangerer), i rekkefølgen «Pågår nå»
+    /// viser dem (`HomeFeed.liveInputs`).
+    var live: [HomeLiveInput] = []
     var evening: HomeEveningInput?
     /// Sist du så Hjem (`HomeSeenStore`). Nil = aldri: ingen oppsummering, ingenting merket ulest.
     var lastSeen: Date?
@@ -328,6 +333,8 @@ nonisolated struct HomeLive: Equatable, Sendable {
 
     let roundID: UUID
     let isLoose: Bool
+    /// Klubben runden hører til. Nil for løse runder.
+    var clubID: UUID? = nil
     /// «Hull 10 av 18».
     let progress: String
     /// «Losby · runde 4».
@@ -367,7 +374,8 @@ nonisolated struct HomeFeed: Equatable, Sendable {
     let pills: [HomeFeedPill]
     let filter: HomeFeedFilter
     let summary: HomeSummary?
-    let live: HomeLive?
+    /// «Pågår nå»: ett kort per runde du spiller i eller arrangerer.
+    let live: [HomeLive]
     let evening: HomeNextEvening?
     let sections: [HomeFeedSection]
 

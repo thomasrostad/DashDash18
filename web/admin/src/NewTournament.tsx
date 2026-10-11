@@ -46,6 +46,7 @@ function Details({ clubID, template, comps, onDone, onBack }: {
   const [evenings, setEvenings] = useState(base.evenings);
   const [dayTerm, setDayTerm] = useState<"evening" | "playingDay">("playingDay");
   const [start, setStart] = useState(false);
+  const [asMain, setAsMain] = useState(true);
   const [entry, setEntry] = useState(template === "cup" ? "listed" : "club");
   const [signupOpen, setSignupOpen] = useState(true);
   const [hasPeriod, setHasPeriod] = useState(false);
@@ -55,7 +56,8 @@ function Details({ clubID, template, comps, onDone, onBack }: {
   const [best, setBest] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const activeMain = comps.find((c) => c.kind === "season" && c.status === "active");
+  // Flere serier kan gå samtidig (sql/034), men bare én er hovedturneringen.
+  const activeMain = comps.find((c) => c.kind === "season" && c.status === "active" && c.is_main);
 
   function rules() {
     const r = templateRules(template);
@@ -74,7 +76,7 @@ function Details({ clubID, template, comps, onDone, onBack }: {
     setBusy(true); setError(null);
     try {
       if (isSeries) {
-        await createSeason(clubID, name, encodeRuleset(r), start);
+        await createSeason(clubID, name, encodeRuleset(r), start, !activeMain || asMain);
       } else {
         const period = hasPeriod || whenItSuits;
         const id = await createCompetition({
@@ -102,7 +104,16 @@ function Details({ clubID, template, comps, onDone, onBack }: {
             </select>
           </label>
           <label className="check"><input type="checkbox" checked={start} onChange={(e) => setStart(e.target.checked)} />Start turneringen nå</label>
-          {start && activeMain && <p className="muted">«{activeMain.name}» er i gang. Den blir avsluttet når denne startes (klubben kan ha én serie i gang).</p>}
+          {start && activeMain && (
+            <fieldset>
+              <legend>Skal serien erstatte hovedturneringen?</legend>
+              <label className="check"><input type="radio" name="asMain" checked={asMain} onChange={() => setAsMain(true)} />Erstatt</label>
+              <label className="check"><input type="radio" name="asMain" checked={!asMain} onChange={() => setAsMain(false)} />Kjør ved siden av</label>
+              <p className="muted">{asMain
+                ? `«${activeMain.name}» blir ferdig, og serien blir hovedturnering.`
+                : `Begge går, og «${activeMain.name}» er fortsatt hovedturneringen.`}</p>
+            </fieldset>
+          )}
         </>}
         {!isSeries && <>
           {template === "fun" && (

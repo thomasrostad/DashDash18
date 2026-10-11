@@ -50,19 +50,21 @@ final class TroppModel {
         await loadSeedGroups()
     }
 
-    /// Gruppene fra aktiv sesong. Feiler oppslaget, brukes Golfgutu-gruppene.
+    /// Gruppene fra hovedturneringen (sql/034: flere serier kan gå samtidig). Feiler oppslaget,
+    /// brukes Golfgutu-gruppene.
     private func loadSeedGroups() async {
         do {
-            let seasons: [SeasonRow] = try await context.client
+            async let rows: [SeasonRow] = context.client
                 .from("seasons")
                 .select(SeasonRow.columns)
                 .eq("club_id", value: context.clubID)
                 .eq("status", value: SeasonStatus.active.rawValue)
-                .limit(1)
                 .execute()
                 .value
-            seedGroups = TroppSeeding.groups(activeSeason: seasons.first)
-            seasonName = seasons.first?.name
+            async let mains = MainTournament.seasonIDs(client: context.client, clubID: context.clubID)
+            let season = MainTournament.activeSeason(try await rows, mainSeasonIDs: await mains)
+            seedGroups = TroppSeeding.groups(activeSeason: season)
+            seasonName = season?.name
         } catch {
             seedGroups = TroppSeeding.groups(activeSeason: nil)
             seasonName = nil

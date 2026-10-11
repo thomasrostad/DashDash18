@@ -95,15 +95,19 @@ struct SesongContentView<Bottom: View>: View {
 
     private func dialogs(_ view: some View, _ season: SeasonRow) -> some View {
         view
-            .confirmationDialog("Avslutte turneringen som er i gang?", isPresented: Binding(get: { conflict != nil }, set: { if !$0 { conflict = nil } }),
+            .confirmationDialog("Skal serien erstatte hovedturneringen?", isPresented: Binding(get: { conflict != nil }, set: { if !$0 { conflict = nil } }),
                                 titleVisibility: .visible, presenting: conflict) { other in
-                Button("Avslutt «\(other.name)» og aktiver") {
+                Button("Erstatt") {
                     conflict = nil
-                    run { try await model.activate(season) }
+                    run { try await model.activate(season, asMain: true) }
+                }
+                Button("Kjør ved siden av") {
+                    conflict = nil
+                    run { try await model.activate(season, asMain: false) }
                 }
                 Button("Avbryt", role: .cancel) { conflict = nil }
             } message: { other in
-                Text("Klubben kan ha én serie i gang. «\(other.name)» blir ferdig.")
+                Text(SeasonLifecycle.replaceMessage(main: other))
             }
             .confirmationDialog("Avslutte turneringen?", isPresented: $confirmsFinish, titleVisibility: .visible) {
                 Button("Avslutt turneringen") { run { try await model.finish(season) } }
@@ -133,10 +137,11 @@ struct SesongContentView<Bottom: View>: View {
         switch action {
         case .activate:
             Button(season.status == .finished ? "Aktiver igjen" : "Aktiver turneringen") {
-                if let other = SeasonLifecycle.activeConflict(activating: season, in: model.seasons) {
+                if let other = SeasonLifecycle.activeConflict(activating: season, in: model.seasons,
+                                                              mainSeasonIDs: model.mainSeasonIDs) {
                     conflict = other
                 } else {
-                    run { try await model.activate(season) }
+                    run { try await model.activate(season, asMain: true) }
                 }
             }
         case .finish:

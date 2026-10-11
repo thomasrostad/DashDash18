@@ -234,8 +234,8 @@ struct KveldenView: View {
             actions.newRound(on: event)
         case .continueDraft(let id):
             if let round = admin.allRounds.first(where: { $0.id == id }) { actions.edit(round) }
-        case .goToRound:
-            showRound()
+        case .goToRound(let id):
+            showRound(id)
         case .seeResult:
             selectTab(.tavla)
         }

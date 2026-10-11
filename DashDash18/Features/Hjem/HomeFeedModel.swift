@@ -8,8 +8,8 @@ import Supabase
 /// det som kom mens den var borte (som Varsler).
 ///
 /// «Pågår nå» og «Neste kveld» kommer fra modellene som allerede holder dem levende (`RundeModel`,
-/// `KveldModel`): viewet setter `live` og `evening`. Uten `live` vises en løs runde som pågår, om
-/// du har en.
+/// `KveldModel`): viewet setter `live` og `evening`. I tillegg står de andre rundene som går og angår
+/// deg (du spiller eller arrangerer, også løse runder), siden flere kan gå samtidig (sql/034).
 @Observable
 final class HomeFeedModel {
     enum LoadState: Equatable {
@@ -28,7 +28,10 @@ final class HomeFeedModel {
     var filter: HomeFeedFilter = .all { didSet { if filter != oldValue { rebuild() } } }
     /// Realtime bare mens Hjem står framme (settes av Hjem). Bjella i de andre fanene henter uten.
     var wantsRealtime = false
+    /// Runden Kveld følger (`RundeModel`), med realtime.
     var live: HomeLiveInput? { didSet { if live != oldValue { rebuild() } } }
+    /// Klubben Hjem står i: klubbrundene i «Pågår nå» åpnes der, så bare de står.
+    var liveClubID: UUID? { didSet { if liveClubID != oldValue { rebuild() } } }
     var evening: HomeEveningInput? { didSet { if evening != oldValue { rebuild() } } }
 
     let viewer: HomeViewer
@@ -53,7 +56,8 @@ final class HomeFeedModel {
     init(client: SupabaseClient, userID: UUID, memberships: [Membership]) {
         let active = memberships.filter { $0.status == .active }
         viewer = HomeViewer(profileID: userID,
-                            memberships: Dictionary(active.map { ($0.clubID, $0.id) }, uniquingKeysWith: { a, _ in a }))
+                            memberships: Dictionary(active.map { ($0.clubID, $0.id) }, uniquingKeysWith: { a, _ in a }),
+                            organizerClubs: Set(active.filter(\.isOrganizer).map(\.clubID)))
         clubs = active.map { HomeClub(id: $0.clubID, name: $0.club.name) }
         self.client = client
         seen = HomeSeenStore(userID: userID, clock: .feed)
@@ -84,7 +88,7 @@ final class HomeFeedModel {
     /// Råmaterialet slik feeden ser det nå.
     var input: HomeFeedInput {
         var input = raw.input(viewer: viewer, clubs: clubs, now: clock())
-        input.live = live ?? ongoingLoose
+        input.live = HomeFeed.liveInputs(focused: live, rounds: raw.rounds, viewer: viewer, club: liveClubID)
         input.evening = evening
         input.lastSeen = seenAtOpen
         input.filter = filter
@@ -100,14 +104,6 @@ final class HomeFeedModel {
 
     /// Bjellas «sist sett» i skjermprøven (ingen lagring).
     private var bellPreviewSeen: Date? { seen == nil ? seenAtOpen : nil }
-
-    /// En løs runde som pågår, der du spiller (når viewet ikke har satt `live`).
-    private var ongoingLoose: HomeLiveInput? {
-        guard let profile = viewer.profileID,
-              let s = raw.rounds.first(where: { $0.isLoose && $0.round.status == .active && viewer.playerID(in: $0) != nil })
-        else { return nil }
-        return HomeLiveInput(snapshot: s, viewer: LooseRoundRights.viewer(info: s.loose, userID: profile))
-    }
 
     /// Linjene bjella viser (det som angår deg), nyeste først.
     var bellRows: [ActivityRow] {

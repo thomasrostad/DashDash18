@@ -65,11 +65,14 @@ nonisolated enum TournamentSetup {
         template == .fun && clubID != nil
     }
 
-    /// En ny sesong startes med en gang når klubben ikke har en i gang, så arrangøren kan legge inn
-    /// kvelder og spille uten et ekstra steg. Er en annen i gang, blir den nye planlagt, så den som går,
-    /// ikke avsluttes ved et uhell.
-    static func activatesNewSeason(existing seasons: [SeasonRow]) -> Bool {
-        !seasons.contains { $0.status == .active }
+    /// En ny sesong startes med en gang når klubben ikke har en hovedturnering i gang, så arrangøren kan
+    /// legge inn kvelder og spille uten et ekstra steg. Er en i gang, blir den nye planlagt, så den som
+    /// går, ikke avsluttes ved et uhell; ved aktiveringen velger arrangøren om serien skal erstatte
+    /// hovedturneringen eller gå ved siden av (sql/034). Uten kjente hovedturneringer teller enhver
+    /// aktiv sesong, som før.
+    static func activatesNewSeason(existing seasons: [SeasonRow], mainSeasonIDs: Set<UUID> = []) -> Bool {
+        let active = seasons.filter { $0.status == .active }
+        return mainSeasonIDs.isEmpty ? active.isEmpty : !active.contains { mainSeasonIDs.contains($0.id) }
     }
 
     /// Ligareglene for en privat stableford-serie: stablefordpoengene teller rett fram, uten

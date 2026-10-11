@@ -23,6 +23,8 @@ final class RundeAdminModel {
     private(set) var allEvents: [EventRow] = []
     private(set) var selectedEventID: UUID?
     private(set) var seasons: [SeasonRow] = []
+    /// Sesongene bak klubbens hovedturneringer: uten valgt turnering viser siden hovedturneringen.
+    private(set) var mainSeasonIDs: Set<UUID> = []
     /// Banene som er klare, i bibliotekets rekkefølge.
     private(set) var courses: [CourseListItem] = []
     private(set) var allCourses: [CourseListItem] = []
@@ -35,8 +37,15 @@ final class RundeAdminModel {
     private(set) var rounds: [RoundRow] = []
     /// Deltakerne i alle rundene.
     private(set) var playersByRound: [UUID: [RoundPlayerRow]] = [:]
-    /// Runden som går i klubben nå, på hvilken som helst kveld.
-    private(set) var activeRound: RoundRow?
+    /// Rundene som går i klubben nå, på alle kvelder og i alle turneringer. Før sql/034 høyst én per
+    /// klubb; etter høyst én per spilledag og pulje (`rounds_one_active_per_event_wave`).
+    private(set) var activeRounds: [RoundRow] = []
+    /// Runden som går for turneringen siden viser: den første på turneringens kvelder, ellers den
+    /// første i klubben (som før, da klubben hadde høyst én).
+    var activeRound: RoundRow? {
+        get { ActiveRounds.focus(activeRounds, eventIDs: Set(events.map(\.id))) }
+        set { activeRounds = newValue.map { [$0] } ?? [] }
+    }
     /// Er alle hull ført i runden som går?
     private(set) var activeComplete = false
     /// Rundene på sesongens kvelder, for forslaget fra forrige runde.
@@ -77,7 +86,7 @@ final class RundeAdminModel {
             return SeasonRow(id: competition.id, clubID: club, name: competition.name, status: competition.status,
                              rules: competition.rules)
         }
-        return Terminliste.tournament(seasons, id: tournamentID)
+        return Terminliste.tournament(seasons, id: tournamentID, mainSeasonIDs: mainSeasonIDs)
     }
 
     /// Rundene gruppert per kveld, nyeste først («Alle runder»). Bare kvelder med runder.
@@ -168,14 +177,16 @@ final class RundeAdminModel {
                 .select(RoundRow.columns)
                 .eq("club_id", value: clubID)
                 .eq("status", value: RoundStatus.active.rawValue)
-                .limit(1)
+                .order("started_at", ascending: false)
                 .execute().value
+            async let mains = MainTournament.seasonIDs(client: client, clubID: clubID)
 
             let seasons = try await seasonRows
             let allEvents = try await eventRows
             let roster = try await memberRows
             let courseList = try await courseRows
-            activeRound = try await activeRows.first
+            activeRounds = try await activeRows
+            mainSeasonIDs = await mains
 
             var holes: [CourseHoleRecord] = []
             if !courseList.isEmpty {
@@ -350,10 +361,11 @@ final class RundeAdminModel {
         RoundSetupCheck.issues(draft, course: course(draft.courseID), rules: rules, roster: members, forStart: forStart)
     }
 
-    /// Runden som er i veien for å starte denne, hvis noen.
-    func blockingRound(for draft: RoundDraft) -> RoundRow? {
-        guard let activeRound, activeRound.id != draft.roundID else { return nil }
-        return activeRound
+    /// Runden som er i veien for å starte denne, hvis noen: en runde som går på samme kveld og i
+    /// samme pulje. Runder på andre kvelder er ikke i veien etter sql/034; før 034 stopper databasen
+    /// dem med `rounds_one_active_per_club` (`RoundErrors.startMessage`).
+    func blockingRound(for draft: RoundDraft, waves: [UUID: Int] = [:]) -> RoundRow? {
+        ActiveRounds.blocking(activeRounds, roundID: draft.roundID, eventID: draft.eventID, waves: waves)
     }
 
     // MARK: Skriving
@@ -369,11 +381,16 @@ final class RundeAdminModel {
     }
 
     /// «Start runden»: lagrer oppsettet med spillehandicap og setter status til pågår.
-    /// Databasen tillater én pågående runde per klubb (23505).
+    /// Databasen tillater én pågående runde per kveld og pulje (23505, sql/031 og 034).
     func start(_ draft: RoundDraft) async throws(DataError) {
         if let issue = issues(draft, forStart: true).first { throw .invalid(issue.message(draft.groupTerm)) }
         try await refreshActiveRound()
-        if let blocking = blockingRound(for: draft) {
+        // Puljen per runde (`rounds.wave_no`). Feiler oppslaget, regnes alle i pulje 1, og databasen
+        // har siste ord.
+        let sameEvening = activeRounds.filter { $0.eventID == draft.eventID }.map(\.id)
+        let waves = sameEvening.isEmpty ? [:]
+            : ((try? await TournamentCoreQueries.waves(client: client, roundIDs: sameEvening + [draft.roundID])) ?? [:])
+        if let blocking = blockingRound(for: draft, waves: waves) {
             throw .invalid("\(title(blocking)) går allerede. Lås den før du starter en ny, eller lagre denne som kladd.")
         }
         let id = try await writeRound(draft)
@@ -390,8 +407,10 @@ final class RundeAdminModel {
             }
         } catch {
             await reload()
+            let postgrest = error as? PostgrestError
             throw .invalid("Runden startet ikke. "
-                           + RoundErrors.startMessage(sqlState: (error as? PostgrestError)?.code, fallback: DataError.from(error)))
+                           + RoundErrors.startMessage(sqlState: postgrest?.code, message: postgrest?.message,
+                                                      fallback: DataError.from(error)))
         }
         await reload()
         await logStarted(roundID: id)
@@ -400,7 +419,7 @@ final class RundeAdminModel {
     /// «Ny runde» i aktiviteten, fra runden slik serveren har den etter start_round. Feiler
     /// hentingen eller loggingen, står runden startet likevel.
     private func logStarted(roundID: UUID) async {
-        let active = activeRound?.id == roundID ? activeRound : nil
+        let active = activeRounds.first { $0.id == roundID }
         guard let row = rounds.first(where: { $0.id == roundID }) ?? active,
               let snapshot = try? await RundeQueries.snapshot(client: client, round: row),
               let event = RoundGame(snapshot).startedEventIfActive else { return }
@@ -506,13 +525,12 @@ final class RundeAdminModel {
 
     private func refreshActiveRound() async throws(DataError) {
         do {
-            let rows: [RoundRow] = try await client.from("rounds")
+            activeRounds = try await client.from("rounds")
                 .select(RoundRow.columns)
                 .eq("club_id", value: clubID)
                 .eq("status", value: RoundStatus.active.rawValue)
-                .limit(1)
+                .order("started_at", ascending: false)
                 .execute().value
-            activeRound = rows.first
         } catch {
             throw DataError.from(error)
         }

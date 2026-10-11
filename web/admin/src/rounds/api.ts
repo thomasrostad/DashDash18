@@ -14,7 +14,7 @@ import {
 } from "./courses.ts";
 import { RoundGame, cutPatch, cutPatchMatches, type CutChoice } from "./game.ts";
 import {
-  dataErrorText, deletedMessage, roundTitle, saveErrorText, setupIssues, setupParams, startErrorText, issueMessage,
+  blockingRound, dataErrorText, deletedMessage, mainActiveSeason, mainSeasonIDs, roundTitle, saveErrorText, setupIssues, setupParams, startErrorText, issueMessage,
   groupTerm, roundWrite, sortedByName, type DeleteSummary, type RosterMember, type RoundDraft, type SignupRow,
 } from "./logic.ts";
 import { startListParams, type StartGroupDraft, type StartGroupRow } from "./startlist.ts";
@@ -85,7 +85,8 @@ async function rulesFor(clubID: string, e: EventRow, comps: readonly Competition
     const c = comps.find((x) => x.id === e.competition_id);
     if (c) return decodeRuleset(c.rules);
   }
-  const active = seasons.find((x) => x.status === "active");
+  // Flere serier kan være aktive (sql/034): uten kveldens sesong gjelder hovedturneringen.
+  const active = mainActiveSeason(seasons, mainSeasonIDs(comps));
   return active ? decodeRuleset(active.rules) : GOLFGUTU;
 }
 
@@ -258,12 +259,12 @@ export async function saveDraft(ctx: SetupContext, d: RoundDraft): Promise<void>
   }
 }
 
-/** Runden som går i klubben nå, hvis noen. */
-export async function activeRound(clubID: string): Promise<ListRound | null> {
-  const { data, error } = await supabase.from("rounds").select(ROUND_COLUMNS).eq("club_id", clubID).eq("status", "active").limit(1);
+/** Rundene som går i klubben nå. Etter sql/034 kan flere gå samtidig (én per spilledag og pulje). */
+export async function activeRounds(clubID: string): Promise<ListRound[]> {
+  const { data, error } = await supabase.from("rounds").select(ROUND_COLUMNS).eq("club_id", clubID).eq("status", "active")
+    .order("started_at", { ascending: false });
   if (error) fail(error);
-  const rows = (data ?? []) as unknown as Record<string, unknown>[];
-  return rows.length > 0 ? decodeListRound(rows[0]) : null;
+  return ((data ?? []) as unknown as Record<string, unknown>[]).map(decodeListRound);
 }
 
 /**
@@ -273,8 +274,12 @@ export async function activeRound(clubID: string): Promise<ListRound | null> {
 export async function startRound(ctx: SetupContext, d: RoundDraft, titleOf: (r: ListRound) => string): Promise<void> {
   const issue = setupIssues(d, courseCheck(ctx), ctx.rules, ctx.roster, true)[0];
   if (issue) throw new RoundError(issueMessage(issue, groupTerm(d.venue)));
-  const blocking = await activeRound(ctx.clubID);
-  if (blocking && blocking.id !== d.roundID) {
+  const active = await activeRounds(ctx.clubID);
+  // Puljen til runden som startes (`rounds.wave_no`, satt i startlista). Ny runde: pulje 1.
+  const { data: own } = await supabase.from("rounds").select("wave_no").eq("id", d.roundID).limit(1);
+  const wave = ((own ?? [])[0] as { wave_no?: number } | undefined)?.wave_no ?? 1;
+  const blocking = blockingRound(active, d.roundID, d.eventID, wave);
+  if (blocking) {
     throw new RoundError(`${titleOf(blocking)} går allerede. Lås den før du starter en ny, eller lagre denne som kladd.`);
   }
   await writeRound(ctx, d);

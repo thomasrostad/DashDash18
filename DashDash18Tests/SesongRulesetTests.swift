@@ -326,10 +326,12 @@ struct SesongLivslopTests {
         #expect(SeasonLifecycle.listPrompt([season("2025", .finished)])?.contains("Lag en ny turnering") == true)
     }
 
-    @Test func flereAktiveGirDenForste() {
+    /// Flere aktive (sql/034): hovedturneringen, ikke den nyeste.
+    @Test func flereAktiveGirHovedturneringen() {
         let nyest = season("2027", .active)
         let eldre = season("2026", .active)
-        #expect(SeasonLifecycle.landing([season("2028", .planned), nyest, eldre]) == .season(nyest.id))
+        #expect(SeasonLifecycle.landing([season("2028", .planned), nyest, eldre], mainSeasonIDs: [eldre.id])
+                == .season(eldre.id))
     }
 }
 

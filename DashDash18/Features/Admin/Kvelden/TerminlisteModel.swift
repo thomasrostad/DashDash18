@@ -61,13 +61,14 @@ final class TerminlisteModel {
     func load() async {
         do {
             let seasonQuery = client.from("seasons")
-                .select("id, name")
+                .select(SeasonRow.columns)
                 .eq("club_id", value: clubID)
-            // Den valgte turneringen, ellers hovedturneringen.
-            async let seasons: [SeasonSummary] = (tournamentID.map { seasonQuery.eq("id", value: $0) }
+            // Den valgte turneringen, ellers hovedturneringen (flere serier kan være aktive, sql/034).
+            async let seasons: [SeasonRow] = (tournamentID.map { seasonQuery.eq("id", value: $0) }
                 ?? seasonQuery.eq("status", value: SeasonStatus.active.rawValue))
-                .limit(1)
                 .execute().value
+            async let mains: Set<UUID> = tournamentID == nil
+                ? MainTournament.seasonIDs(client: client, clubID: clubID) : []
             async let eventRows: [EventRow] = client.from("events")
                 .select(EventRow.columns)
                 .eq("club_id", value: clubID)
@@ -83,7 +84,8 @@ final class TerminlisteModel {
                 .eq("status", value: MemberStatus.active.rawValue)
                 .execute().value
 
-            let season = try await seasons.first
+            let season = Terminliste.tournament(try await seasons, id: tournamentID, mainSeasonIDs: await mains)
+                .map { SeasonSummary(id: $0.id, name: $0.name) }
             let allEvents = try await eventRows
             let committee = try await committeeRows
             let roster = try await memberRows

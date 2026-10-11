@@ -89,11 +89,12 @@ nonisolated enum EventInput {
 
 /// Hvilke kvelder terminlista viser, og hvordan.
 nonisolated enum Terminliste {
-    /// Turneringen med id, ellers hovedturneringen (den aktive). Arrangørsiden og kveldene viser én
-    /// turnering om gangen (fase 21), så en velger kan legges til senere.
-    static func tournament(_ seasons: [SeasonRow], id: UUID?) -> SeasonRow? {
+    /// Turneringen med id, ellers hovedturneringen (`MainTournament.activeSeason`). Arrangørsiden og
+    /// kveldene viser én turnering om gangen (fase 21). Etter sql/034 kan flere serier være aktive;
+    /// uten id er det alltid hovedturneringen, ikke en vilkårlig av dem.
+    static func tournament(_ seasons: [SeasonRow], id: UUID?, mainSeasonIDs: Set<UUID> = []) -> SeasonRow? {
         if let id { return seasons.first { $0.id == id } }
-        return seasons.first { $0.status == .active }
+        return MainTournament.activeSeason(seasons, mainSeasonIDs: mainSeasonIDs)
     }
 
     /// Kveldene som hører til sesongen: den aktive sesongens, og klubbens egne kvelder uten sesong.
@@ -116,7 +117,9 @@ nonisolated enum Terminliste {
         return (sorted.filter { $0.eventDate >= today }, sorted.filter { $0.eventDate < today }.reversed())
     }
 
-    /// Norsk feilmelding når en kveld ikke kunne lagres. Én kveld per dato (`events_one_per_date`).
+    /// Norsk feilmelding når en kveld ikke kunne lagres. Én kveld per turnering og dato
+    /// (`events_one_per_date_per_competition`, sql/031). Før sql/034 også én per klubb og dato
+    /// (`events_one_per_date`); meldingen passer for begge.
     static func saveErrorMessage(sqlState: String?, fallback: DataError, date: String) -> String {
         sqlState == "23505" ? "\(EveningDates.longText(date, capitalized: true)) står allerede i terminlista." : fallback.message
     }

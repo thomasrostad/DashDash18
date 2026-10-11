@@ -66,7 +66,7 @@ function EventForm({ clubID, event, comps, roster, committee, lastVenue, onDone,
   const choices = comps.filter((c) => c.status !== "finished" && c.kind !== "game" && (c.kind === "season" ? c.season_id : c.club_id));
   const initialChoice = event
     ? (comps.find((c) => (event.season_id && c.season_id === event.season_id) || (!event.season_id && event.competition_id === c.id))?.id ?? "")
-    : (choices.find((c) => c.is_main)?.id ?? choices[0]?.id ?? "");
+    : (choices.find((c) => c.is_main && c.status === "active")?.id ?? choices.find((c) => c.is_main)?.id ?? choices[0]?.id ?? "");
   const [choice, setChoice] = useState(initialChoice);
   const [date, setDate] = useState(event?.event_date ?? "");
   const [time, setTime] = useState(event?.start_time?.slice(0, 5) ?? "18:00");

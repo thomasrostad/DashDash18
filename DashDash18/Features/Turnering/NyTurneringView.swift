@@ -63,12 +63,14 @@ final class NewTournamentModel {
 
     /// Blir en ny sesong startet med en gang?
     var activatesNewSeason: Bool {
-        TournamentSetup.activatesNewSeason(existing: seasons?.seasons ?? [])
+        TournamentSetup.activatesNewSeason(existing: seasons?.seasons ?? [], mainSeasonIDs: seasons?.mainSeasonIDs ?? [])
     }
 
-    /// Sesongen som er i gang, når en ny blir planlagt.
+    /// Hovedturneringen som er i gang, når en ny blir planlagt.
     var activeSeasonName: String? {
-        seasons?.seasons.first { $0.status == .active }?.name
+        guard let seasons else { return nil }
+        return (MainTournament.activeSeason(seasons.seasons, mainSeasonIDs: seasons.mainSeasonIDs)
+            ?? seasons.seasons.first { $0.status == .active })?.name
     }
 
     func load() async {

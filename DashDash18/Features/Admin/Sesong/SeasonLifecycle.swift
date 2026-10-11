@@ -18,10 +18,17 @@ nonisolated enum SeasonLifecycle {
         }
     }
 
-    /// Den andre aktive sesongen i klubben, som må avsluttes før `season` kan aktiveres
-    /// (databasen tillater høyst én aktiv per klubb).
-    static func activeConflict(activating season: SeasonRow, in seasons: [SeasonRow]) -> SeasonRow? {
-        seasons.first { $0.status == .active && $0.id != season.id && $0.clubID == season.clubID }
+    /// Den aktive hovedturneringen i klubben, som `season` ville erstattet. Da spør appen om serien
+    /// skal erstatte den («Erstatt») eller gå ved siden av («Kjør ved siden av», sql/034).
+    static func activeConflict(activating season: SeasonRow, in seasons: [SeasonRow],
+                               mainSeasonIDs: Set<UUID> = []) -> SeasonRow? {
+        MainTournament.activeMain(otherThan: season, in: seasons, mainSeasonIDs: mainSeasonIDs)
+    }
+
+    /// Teksten i spørsmålet «Skal serien erstatte hovedturneringen?».
+    static func replaceMessage(main: SeasonRow) -> String {
+        "«\(main.name)» er hovedturneringen. Erstatt: den blir ferdig, og serien blir hovedturnering. "
+            + "Kjør ved siden av: begge går, og «\(main.name)» er fortsatt hovedturneringen."
     }
 
     /// Sesongene i visningsrekkefølgen: aktiv, planlagt, ferdig. Innenfor hver status som fra databasen (nyest først).
@@ -40,16 +47,17 @@ nonisolated enum SeasonLifecycle {
         case list
     }
 
-    /// Den aktive sesongen hvis klubben har én, ellers lista. Databasen tillater høyst én aktiv per klubb;
-    /// skulle det likevel finnes flere, vinner den første (nyest, som fra databasen).
-    static func landing(_ seasons: [SeasonRow]) -> Landing {
-        seasons.first { $0.status == .active }.map { .season($0.id) } ?? .list
+    /// Hovedturneringen når den er i gang, ellers lista. Flere serier kan være aktive (sql/034); da
+    /// lander siden på hovedturneringen, og uten en merket hovedturnering på lista.
+    static func landing(_ seasons: [SeasonRow], mainSeasonIDs: Set<UUID> = []) -> Landing {
+        MainTournament.activeSeason(seasons, mainSeasonIDs: mainSeasonIDs).map { .season($0.id) } ?? .list
     }
 
     /// Oppfordringen øverst i lista når ingen sesong er aktiv (nil når en er aktiv, eller når lista er tom
     /// og tom-tilstanden sier det selv).
-    static func listPrompt(_ seasons: [SeasonRow]) -> String? {
-        guard !seasons.isEmpty, landing(seasons) == .list else { return nil }
+    static func listPrompt(_ seasons: [SeasonRow], mainSeasonIDs: Set<UUID> = []) -> String? {
+        guard !seasons.isEmpty, !seasons.contains(where: { $0.status == .active }),
+              landing(seasons, mainSeasonIDs: mainSeasonIDs) == .list else { return nil }
         return seasons.contains { $0.status == .planned }
             ? "Ingen serie er i gang. Åpne en planlagt og aktiver den, eller lag en ny turnering."
             : "Ingen serie er i gang. Lag en ny turnering."

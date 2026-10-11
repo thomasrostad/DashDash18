@@ -45,6 +45,7 @@ import {
   type SeasonRow,
 } from "../../../golfgutu-core/src/index.ts";
 import { todayISO } from "../text.ts";
+import { mainActiveSeason } from "../rounds/logic.ts";
 
 /** En rad i tabellen slik appen viser den (`DDRankRow`): plass, navn, poeng og linja under. */
 export interface TableRow {
@@ -144,6 +145,8 @@ export interface CompetitionRaw {
   roundMembers: unknown[];
   /** Sesongene kveldene hører til, og de aktive sesongene i rundenes klubber (regelsettet per runde). */
   seasons: unknown[];
+  /** Sesongene bak hovedturneringene i rundenes klubber (`competitions.is_main`, sql/034). */
+  mainSeasonIDs?: string[];
   roster: RoundRosterRow[];
   roundParticipants: unknown[];
   profiles: unknown[];
@@ -199,7 +202,8 @@ export function competitionSnapshots(raw: CompetitionRaw): RoundSnapshot[] {
       const s = seasons.find((x) => x.id === seasonID);
       if (s) return s.rules;
     }
-    return seasons.find((x) => x.clubID === clubID && x.status === "active")?.rules ?? GOLFGUTU;
+    // Flere serier kan være aktive (sql/034): uten kveldens sesong gjelder hovedturneringen.
+    return mainActiveSeason(seasons.filter((x) => x.clubID === clubID), raw.mainSeasonIDs ?? [])?.rules ?? GOLFGUTU;
   };
 
   return raw.rounds.map((x, i) => {

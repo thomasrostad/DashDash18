@@ -50,6 +50,9 @@ final class RundeModel {
     var submitter: (any ScoreSubmitting)?
 
     private let source: RundeSource
+    /// Klubbrunden som er bedt om (et kort i «Pågår nå», «Gå til runden»). Flere runder kan gå
+    /// samtidig etter sql/034; uten valg vises en du spiller i, ellers den nyeste.
+    private(set) var preferredRoundID: UUID?
     /// Hull i kø som ble ført for første gang: logges når serveren har dem (store scorer, ledelsen).
     private var queuedFresh: [Int: [RoundGame.FreshScore]] = [:]
     /// Det denne telefonen har logget i runden, så samme hendelse ikke går to ganger.
@@ -167,11 +170,20 @@ final class RundeModel {
         }
     }
 
-    /// Klubbens runde som går, eller den løse runden.
+    /// Viser en bestemt klubbrunde som går (når flere går samtidig). nil: standardvalget.
+    func show(roundID: UUID?) async {
+        guard case .club = source else { return }
+        let changed = preferredRoundID != roundID || (roundID != nil && snapshot?.round.id != roundID)
+        preferredRoundID = roundID
+        if changed { await load() }
+    }
+
+    /// Klubbens runde som går (den valgte, ellers en du spiller i), eller den løse runden.
     private func fetchSnapshot() async throws -> RoundSnapshot? {
         switch source {
         case .club(let context):
-            try await RundeQueries.activeRound(client: client, clubID: context.clubID)
+            try await RundeQueries.activeRound(client: client, clubID: context.clubID, memberID: context.memberID,
+                                               preferred: preferredRoundID ?? snapshot?.round.id)
         case .loose(let loose):
             try await LooseRoundQueries.snapshot(client: client, roundID: loose.roundID)
         }

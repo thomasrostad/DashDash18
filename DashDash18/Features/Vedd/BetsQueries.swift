@@ -9,15 +9,10 @@ enum BetsQueries {
         let bet_id: UUID
     }
 
-    /// Sesongen (aktiv, ellers sist ferdige) med runder og tropp, og veddemålene i den.
+    /// Hovedturneringen (aktiv, ellers sist ferdige) med runder og tropp, og veddemålene i den.
+    /// `create_bet` uten kveld bruker også hovedturneringen (sql/034).
     static func load(client: SupabaseClient, clubID: UUID) async throws -> BetsInput? {
-        let seasons: [SeasonRow] = try await client.from("seasons")
-            .select(SeasonRow.columns)
-            .eq("club_id", value: clubID)
-            .in("status", values: [SeasonStatus.active.rawValue, SeasonStatus.finished.rawValue])
-            .order("created_at", ascending: false)
-            .execute().value
-        guard let season = seasons.first(where: { $0.status == .active }) ?? seasons.first else { return nil }
+        guard let season = try await TavlaQueries.mainSeason(client: client, clubID: clubID) else { return nil }
         async let tavla = TavlaQueries.load(client: client, season: season)
         async let betRows: [BetRow] = client.from("bets")
             .select(BetRow.columns)
