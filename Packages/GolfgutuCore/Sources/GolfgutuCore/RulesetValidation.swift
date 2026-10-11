@@ -49,6 +49,9 @@ extension Ruleset {
         for (name, t) in table.pointsTables.sorted(by: { $0.key < $1.key }) where t.multiplier < 0 || !t.multiplier.isFinite {
             add("table.pointsTables.\(name)", "Poengtabellen «\(name)» kan ikke gange med et negativt tall.")
         }
+        if table.formPoints, table.pointsSource != .stableford {
+            add("table.formPoints", "Formpoeng i tabellen gjelder bare når tabellen teller rundepoeng (stableford), ikke matcher.")
+        }
         if table.stablefordCounting.unit == .match {
             add("table.stablefordCounting.unit", "Stablefordsummen kan ikke telle matcher. Velg runder eller kvelder.")
         }
@@ -111,13 +114,33 @@ extension Ruleset {
         if formats.allowedFormIDs.isEmpty {
             add("formats.allowedFormIDs", "Minst én konkurranseform må være tillatt.")
         }
-        let known = Set(CompetitionForm.all.map(\.id))
+        let known = Set(CompetitionForm.catalog.map(\.id))
         for id in formats.allowedFormIDs where !known.contains(id) {
             add("formats.allowedFormIDs", "Ukjent konkurranseform: «\(id)».")
         }
         if !formats.allowedFormIDs.isEmpty, !formats.allowedFormIDs.contains(formats.defaultFormID) {
             add("formats.defaultFormID", "Standardformen må være blant de tillatte formene.")
         }
+
+        // Formene fra steg 7.
+        for (name, game) in formPlay.pointsGames.sorted(by: { $0.key < $1.key }) {
+            let field = "formPlay.pointsGames.\(name)"
+            if game.players < 2 { add(field, "Et poengspill må ha minst to spillere.") }
+            if game.handicap.allowance < 0 || game.handicap.allowance > 1 {
+                add(field, "Handicapandelen må være mellom 0 og 100 %.")
+            }
+            for (pattern, points) in game.points.sorted(by: { $0.key < $1.key }) {
+                if points.count != game.players {
+                    add(field, "Poengene for «\(pattern)» må ha én verdi per spiller (\(game.players)).")
+                } else if points.contains(where: { $0 < 0 || !$0.isFinite }) {
+                    add(field, "Poengene for «\(pattern)» kan ikke være negative.")
+                }
+            }
+        }
+        notNegative(formPlay.skinPoints, "formPlay.skinPoints", "Tabellpoeng per skin")
+        notNegative(formPlay.teamMatch.win, "formPlay.teamMatch.win", "Lagpoeng for seier")
+        notNegative(formPlay.teamMatch.draw, "formPlay.teamMatch.draw", "Lagpoeng for delt")
+        notNegative(formPlay.teamMatch.loss, "formPlay.teamMatch.loss", "Lagpoeng for tap")
 
         // Tippekupongen. Grensene er databasens (events.tips_stake_points, events.tips_line).
         if Tips.startTime(tips.defaultStartTime, rules: .golfgutu) != tips.defaultStartTime
