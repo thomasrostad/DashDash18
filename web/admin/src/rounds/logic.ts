@@ -3,9 +3,10 @@
 // Ren logikk uten nettverk og React, så den kan testes med node --test.
 
 import {
-  allowanceFor, allowedForms, drawMatches, effectiveHandicap, formById, formSetup, GOLFGUTU, isTeamForm, makePlayer,
+  addMeetings, allowanceFor, allowedForms, avoidingRepeats, drawMatches, effectiveHandicap, pairKey, randomTeams, repeats,
+  swapTeams, formById, formSetup, GOLFGUTU, isTeamForm, makePlayer,
   makeRound, norwegianCompare, roundAwayFromZero, suggestedClosestToPinHole, suggestedLongestDriveHole,
-  type CompetitionForm, type Course, type Round, type Ruleset,
+  type CompetitionForm, type Course, type Round, type RoundMatchRow, type RoundPlayerRow as CoreRoundPlayerRow, type Ruleset,
 } from "../../../golfgutu-core/src/index.ts";
 
 export type UUID = string;
@@ -273,6 +274,84 @@ export function drawIndividual(participants: readonly RosterMember[]): MatchDraf
     ids.length >= 2 ? [playerMatch(ids[0], ids[1], ids.length > 2 ? ids[2] : null)] : []);
 }
 
+// MARK: - Trekningen (steg 6, `formats.drawMethod`; MatchDrawPlan i RoundSetup.swift)
+
+export type DrawMethod = Ruleset["formats"]["drawMethod"];
+
+/** Hvordan matchene trekkes, og hvor mange ganger hvert par har møtt hverandre før (`pairKey` → antall). */
+export interface DrawPlan {
+  method: DrawMethod;
+  previous: Map<string, number>;
+}
+
+/** Som i dag: etter tabellen, uten historikk. */
+export const STANDINGS_PLAN: DrawPlan = { method: "standings", previous: new Map() };
+
+/** Et tilfeldig frø til trekningen og lagene. */
+export function randomSeed(): bigint {
+  const words = crypto.getRandomValues(new Uint32Array(2));
+  return (BigInt(words[0]) << 32n) | BigInt(words[1]);
+}
+
+/** `Draw.meetings` for lagrede matcher: motstanderne møter hverandre; i en trekant møter alle tre hverandre. */
+export function meetingsFromRows(matches: readonly RoundMatchRow[], players: ReadonlyMap<UUID, readonly CoreRoundPlayerRow[]>): Map<string, number> {
+  const out = new Map<string, number>();
+  const add = (a: UUID, b: UUID) => { const k = pairKey(a, b); out.set(k, (out.get(k) ?? 0) + 1); };
+  for (const m of matches) {
+    if (m.teamA !== null && m.teamB !== null) {
+      const roster = players.get(m.roundID) ?? [];
+      const sideA = roster.filter((p) => p.teamNo === m.teamA).map((p) => p.memberID);
+      const sideB = roster.filter((p) => p.teamNo === m.teamB).map((p) => p.memberID);
+      for (const a of sideA) for (const b of sideB) if (a !== b) add(a, b);
+      continue;
+    }
+    const ids = [m.playerA, m.playerB, m.playerC].filter((x): x is UUID => x !== null);
+    if (m.playerC !== null) addMeetings([ids], out);
+    else if (ids.length === 2) add(ids[0], ids[1]);
+  }
+  return out;
+}
+
+/** Planen for regelsettet, med møtene i de spilte rundene. Kladder og runden som settes opp, teller ikke. */
+export function drawPlan(rules: Ruleset, rounds: readonly { id: UUID; status: string }[], matches: readonly RoundMatchRow[],
+  players: ReadonlyMap<UUID, readonly CoreRoundPlayerRow[]>, excluding: UUID | null = null): DrawPlan {
+  const played = new Set(rounds.filter((r) => r.status !== "draft" && r.id !== excluding).map((r) => r.id));
+  return { method: rules.formats.drawMethod ?? "standings", previous: meetingsFromRows(matches.filter((m) => played.has(m.roundID)), players) };
+}
+
+/** Trekningen etter planen: etter tabellen (som i dag), tilfeldig uten gjentakelser, eller ingen (manuelt). */
+export function drawByPlan(participants: readonly RosterMember[], plan: DrawPlan, seed: bigint | number): MatchDraft[] {
+  switch (plan.method) {
+    case "standings":
+      return drawIndividual(participants);
+    case "manual":
+      return [];
+    case "avoidRepeats":
+      return avoidingRepeats(participants.map((m) => makePlayer(m.id, m.name)), plan.previous, seed).flatMap((ids) =>
+        ids.length >= 2 ? [playerMatch(ids[0], ids[1], ids.length > 2 ? ids[2] : null)] : []);
+  }
+}
+
+/** Hvor mange møter i matchene som har vært før. */
+export function drawRepeats(plan: DrawPlan, matches: readonly MatchDraft[]): number {
+  return repeats(matches.filter((m) => !isTeamMatch(m)).map((m) => matchMembers(m)), plan.previous);
+}
+
+/** Linja under matchene (`MatchDrawText.footer`). `null` som i dag (etter tabellen). */
+export function drawFooter(plan: DrawPlan, matches: readonly MatchDraft[]): string | null {
+  switch (plan.method) {
+    case "standings":
+      return null;
+    case "manual":
+      return "Du setter opp matchene selv.";
+    case "avoidRepeats": {
+      const n = drawRepeats(plan, matches);
+      const tail = n === 0 ? "Ingen har møtt hverandre før." : n === 1 ? "1 møte har vært før." : `${n} møter har vært før.`;
+      return `Trekkes tilfeldig uten gjentakelser. ${tail}`;
+    }
+  }
+}
+
 /** Lag mot lag i lagnummerets rekkefølge: 1 mot 2, 3 mot 4. */
 export function teamMatches(teams: Readonly<Record<UUID, number>>): MatchDraft[] {
   const numbers = [...new Set(Object.values(teams))].sort((a, b) => a - b);
@@ -338,6 +417,18 @@ export function suggestedTeams(participants: readonly UUID[], form: CompetitionF
     for (let k = 0; k < size && i < participants.length; k++) teams[participants[i++]] = number + 1;
   });
   return teams;
+}
+
+/** Tilfeldige lag (`Teams.random`): deltakerne stokkes med frøet, så fylles formens lagstørrelser som i `suggestedTeams`. */
+export function randomTeamsFor(participants: readonly UUID[], form: CompetitionForm, maxPerBay: number, seed: bigint | number): Record<UUID, number> {
+  const order = randomTeams(participants, 1, seed);
+  const shuffled = [...participants].sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
+  return suggestedTeams(shuffled, form, maxPerBay);
+}
+
+/** Bytter lagene til to spillere (`Teams.swap`). Uendret når de er på samme lag eller en mangler lag. */
+export function swapTwo(teams: Readonly<Record<UUID, number>>, a: UUID, b: UUID): Record<UUID, number> {
+  return Object.fromEntries(swapTeams(new Map(Object.entries(teams)), a, b));
 }
 
 /** `lesLagOppsett`: går lagene opp? `null` = i orden. */
@@ -482,19 +573,19 @@ export function setVenue(d: RoundDraft, venue: Venue, rules: Ruleset): RoundDraf
   return { ...d, venue, externalHandicap: venue === "simulator" ? rules.handicap.externalHandicap : false };
 }
 
-/** Trekker matchene på nytt: lag mot lag i lagformer, `trekkMatcher` ellers. */
-export function redrawMatches(d: RoundDraft, roster: readonly RosterMember[]): RoundDraft {
+/** Trekker matchene på nytt: lag mot lag i lagformer, ellers etter planen (`formats.drawMethod`). */
+export function redrawMatches(d: RoundDraft, roster: readonly RosterMember[], plan: DrawPlan = STANDINGS_PLAN, seed: bigint | number = randomSeed()): RoundDraft {
   if (isTeamForm(draftForm(d))) {
     const teams: Record<UUID, number> = {};
     for (const [id, t] of Object.entries(d.teams)) if (d.participants.includes(id)) teams[id] = t;
     return { ...d, matches: teamMatches(teams) };
   }
   const included = new Set(d.participants);
-  return { ...d, matches: drawIndividual(roster.filter((m) => included.has(m.id))) };
+  return { ...d, matches: drawByPlan(roster.filter((m) => included.has(m.id)), plan, seed) };
 }
 
 /** Lag og matcher klare for oppsettet (`handleStartRunde`). */
-export function prepareSetup(d: RoundDraft, rules: Ruleset, roster: readonly RosterMember[]): RoundDraft {
+export function prepareSetup(d: RoundDraft, rules: Ruleset, roster: readonly RosterMember[], plan: DrawPlan = STANDINGS_PLAN): RoundDraft {
   let out = d;
   const form = draftForm(d);
   if (isTeamForm(form) && Object.keys(d.teams).length === 0) {
@@ -502,15 +593,15 @@ export function prepareSetup(d: RoundDraft, rules: Ruleset, roster: readonly Ros
   }
   // Teller tabellen stableford, gir matcher ingen poeng, så de trekkes ikke.
   if (rules.table.pointsSource !== "matches") return { ...out, matches: [] };
-  if (!canKeepMatches(out.matches, out.participants, out.teams, isTeamForm(form))) out = redrawMatches(out, roster);
+  if (!canKeepMatches(out.matches, out.participants, out.teams, isTeamForm(form))) out = redrawMatches(out, roster, plan);
   return out;
 }
 
 /** Skifter form: ny andel fra regelsettet, og lag og matcher legges på nytt. */
-export function setForm(d: RoundDraft, id: string, rules: Ruleset, roster: readonly RosterMember[]): RoundDraft {
+export function setForm(d: RoundDraft, id: string, rules: Ruleset, roster: readonly RosterMember[], plan: DrawPlan = STANDINGS_PLAN): RoundDraft {
   const form = formById(id);
   const teams = isTeamForm(form) ? suggestedTeams(d.participants, form, rules.formats.maxPerBay) : {};
-  return redrawMatches({ ...d, formID: id, allowance: allowanceFor(rules, form), teams }, roster);
+  return redrawMatches({ ...d, formID: id, allowance: allowanceFor(rules, form), teams }, roster, plan);
 }
 
 /** Fordeler båsene på nytt, med duellpartnerne samlet. */
@@ -914,8 +1005,8 @@ export function applySuggestion(d: RoundDraft, previous: PreviousCandidate | nul
 }
 
 /** Ny runde fordelt automatisk: lag og matcher, så gruppene med duellpartnerne samlet. */
-export function autoArrange(d: RoundDraft, rules: Ruleset, roster: readonly RosterMember[]): RoundDraft {
-  const prepared = prepareSetup(d, rules, roster);
+export function autoArrange(d: RoundDraft, rules: Ruleset, roster: readonly RosterMember[], plan: DrawPlan = STANDINGS_PLAN): RoundDraft {
+  const prepared = prepareSetup(d, rules, roster, plan);
   return reshuffleBays(prepared, defaultBayCount(prepared.participants.length, rules.formats.maxPerBay));
 }
 

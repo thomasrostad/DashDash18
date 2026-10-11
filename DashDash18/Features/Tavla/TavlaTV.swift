@@ -156,7 +156,7 @@ struct TavlaTVView: View {
                 .opacity(0.6)
                 .frame(width: 44 * scale, alignment: .trailing)
             Text(row.name)
-                .font(.system(size: 26 * scale, weight: row.place <= 3 ? .semibold : .regular))
+                .font(.system(size: 26 * scale, weight: standings.isOnPodium(row) ? .semibold : .regular))
                 .lineLimit(1)
             Spacer()
             if showsDetail {
@@ -167,7 +167,7 @@ struct TavlaTVView: View {
             }
             Text(standings.points(row.total))
                 .font(.system(size: 28 * scale, weight: .semibold).monospacedDigit())
-                .foregroundStyle(row.place == 1 ? Color.ddGold : Color.ddOnDark)
+                .foregroundStyle(row.qualified && row.place == 1 ? Color.ddGold : Color.ddOnDark)
                 .frame(minWidth: 70 * scale, alignment: .trailing)
         }
         .foregroundStyle(Color.ddOnDark)

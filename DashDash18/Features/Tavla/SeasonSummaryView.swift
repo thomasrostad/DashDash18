@@ -63,8 +63,8 @@ struct SeasonSummaryView: View {
     private func placeCard(_ rows: [TavlaStandings.Row]) -> some View {
         VStack(spacing: 0) {
             ForEach(rows) { row in
-                DDRankRow(place: "\(row.place).", name: row.name, isMe: row.isMe) {
-                    DDRankValue("\(standings.points(row.total)) p", emphasized: row.place == 1)
+                DDRankRow(place: standings.placeText(row), name: row.name, isMe: row.isMe) {
+                    DDRankValue("\(standings.points(row.total)) p", emphasized: row.qualified && row.place == 1)
                 }
                 if row.id != rows.last?.id { DDDivider() }
             }
