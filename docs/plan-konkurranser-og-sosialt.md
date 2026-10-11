@@ -44,6 +44,24 @@ Endringer i planen som følger av dette:
 - Fase 30: eclectic tas ut. De fire tabellreglene og playoff om førsteplassen kommer inn. Trekningsvalg (tabell, uten gjentakelser, manuelt) og tilfeldige lag med bytte.
 - Handicapkilde: ingen ny innstilling nå. GolfBox-henting står som ønske til NGF åpner.
 
+### Sosialt, varsler, veddemål og resten (11.10.2026, Thomas)
+
+| Tema | Beslutning |
+|---|---|
+| Reaksjoner | Fem faste (👍 😂 ⛳ 🔥 ❤️) først, alle andre emojier bak «+». På hendelser, innlegg og kommentarer |
+| Kommentarer | Flate kommentarer på hendelser, innlegg og bilder, med @-omtale. Varsel til forfatteren og den som nevnes. «Følg tråden» er et valg |
+| Bilder | Bildeoppfordring når runden låses. Ikke galleri, delebilde med bilde eller fleipepriser nå |
+| Kalender | Abonnement: kveldene du er påmeldt dukker opp og oppdateres selv. Ikke «avlys», «ny dato» eller datoavstemning nå |
+| Varsler | Alle fire: fire grupper som kan slås av, demping av én kveld, ett «kvelden er i gang» per kveld, e-post til dem uten push |
+| Veddemål: når | Av som standard. Slås på i innstillingene for en turnering. For enkeltrunder på banen kan det velges i oppsettet |
+| Veddemål: hvor | Liga, cup og morro, private turneringer uten klubb, og løse runder |
+| Veddemål: poengbank | Følger der veddemålene er slått på: én bank per turnering, og én per runde for enkeltrunder |
+| Veddemål: oppgjør | Serveren, med regelmotoren i TypeScript, når runden låses. Ingen telefon trengs |
+| Gjenbruk | «Samme som sist», «Sesong fra mal», og egne maler som arrangøren lager og gjenbruker |
+| Navn på gruppen | Golfklubbens navn når gruppen er en golfklubb, gjerne funnet via organisasjonsnummer (Enhetsregisteret i Brønnøysund har et åpent API). Vennegjenger lager eget navn. «Klubb» beholdes i koden |
+| Aldersgrense | Det App Store-skjemaet gir, med ærlige svar (veddemål med poeng, brukerinnhold) |
+| Knappene i verktøylinja | Gul med mørk tekst, i begge moduser |
+
 Konsekvenser for planen:
 
 - M4, M5 og spørsmål 2: B10 endres. Del regningen får status «sendt» og «bekreftet» (`bill_splits`, `bill_split_shares`). Veddemål og tippekupong blir med som i dag.
@@ -53,7 +71,7 @@ Konsekvenser for planen:
 - Spørsmål 5: regelsettet får `tieRule = playoff` for førsteplassen. Playoff-hullene føres som en egen kort runde (`rounds.kind = playoff`) koblet til turneringen, slik at slag per hull fortsatt er det eneste som lagres.
 - Spørsmål 6: ingen ny standard. NGF-settet legges til som valg i regelsettet.
 
-Fortsatt åpne: aldersgrense (spørsmål 8), «klubb» som navn (11), gjenbruk av oppsett (over), og valgene i `docs/vedd-per-turnering.md`.
+Alle spørsmålene er besvart. Det eneste som står igjen fra Thomas, er oppsett i App Store Connect, Xcode-innstillingen «Development Region» (nb) og prøving på telefon.
 
 ## Kort fortalt
 

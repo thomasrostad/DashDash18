@@ -441,7 +441,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] «Forrige kupong · dato» på Hjem-kortet og på Kveld-skjermen, så resultatet og tippekongen kan åpnes når neste kveld har tatt over. *(09.10.)*
 - [x] Spillere uten klubb ser og lager private turneringer (liga, cup, morro) fra «Turneringer» i Spill (`CompetitionsModel(client:userID:)`). *(09.10.)*
 - [x] Veddemålene gjøres opp fra Hjem på arrangørens telefon (høyst hvert femte minutt), ikke bare når veddemålene åpnes. *(09.10.)*
-- [ ] Veddemål per turnering med egen poengbank, private turneringer og oppgjør uten arrangør: forslag og valg i `docs/vedd-per-turnering.md`. Venter på Thomas.
+- [ ] Veddemål per turnering med egen poengbank, private turneringer og oppgjør uten arrangør: forslag i `docs/vedd-per-turnering.md`. Besvart 11.10: av som standard, slås på per turnering eller runde, oppgjør på serveren.
 
 ### Alle runder (09.10.2026, Thomas: «se hva de andre har slått, slik som i PGA»)
 
@@ -461,7 +461,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 
 - [x] Norsk dato, «for 3 dager siden», datovelgere og grafer også når telefonen står på engelsk (`ddAppStyle` setter `nb_NO`).
 - [x] «thru 18» → «etter 18 hull». «Inviter spillere» står ikke dobbelt når «Kom i gang» vises.
-- [ ] Kontrast: knappene i verktøylinja («Lagre», «Lag», «Ferdig», «Avbryt») er lys tekst på lys mintgrønn pille i lys modus (verktøylinja står i mørk modus, så `ddForestInk` blir mint). Designvalg for Thomas: f.eks. gul «Lagre» med mørk tekst.
+- [ ] Kontrast: knappene i verktøylinja («Lagre», «Lag», «Ferdig», «Avbryt») er lys tekst på lys mintgrønn pille i lys modus (verktøylinja står i mørk modus, så `ddForestInk` blir mint). Besluttet 11.10 (Thomas): gul med mørk tekst.
 - [ ] «Sign in with Apple» og «Paste» følger telefonens språk: sett «Development Region» til norsk (nb) i Xcode (prosjektinnstilling, Thomas).
 - [ ] «Vilkår/Personvern (publiseres før lansering)» må byttes med lenker før App Store (gjøremål 12).
 - [ ] Små ting: cup-treet kuttes i høyre kant (konkcup), ord som brytes inne i piller («ETTER HULL 7 · / 7 SKINS STÅR»), «Kommer ikke» krymper på Hjem-kortet, «Gjenopprett kjøp» brytes, slopeklubb uten tittellinje.
