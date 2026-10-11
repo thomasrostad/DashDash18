@@ -418,6 +418,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
   - [x] Lasttest på SQL-nivå av 036–038 (`sql/lokal/lasttest_fase24.sql`, 09.10): Tavla 53 ms i ett kall, folk du kjenner 1,3 ms, turneringslista 2,6 ms. Funn: `my_loose_rounds` 296 ms, rettet i 039 (5,7 ms, kjørt på test 09.10). Lasttest gjennom PostgREST krever Docker (ikke installert).
   - [ ] Sanntid via Broadcast (`sql/040`, `BroadcastFeature` av): runden og Tavla lytter på private kanaler per runde og klubb i stedet for alle hullscorer i basen. Kjørt på test 09.10 (meldingene og tilgangen sjekket). Flagget slås på etter prøving med to telefoner.
 - [ ] Fase 26: TV med kode, turneringer med tidsvindu og web-admin. Plan: `docs/fase-26-tv-tidsvindu-web.md`.
+- [ ] **Gjennomføring (startet 11.10.2026): `docs/gjennomforingsplan.md`, tolv steg.** Erstatter fase 27–34 under som arbeidsrekkefølge.
 - [ ] Fase 27–34: konkurranser, påmelding, medlemmer og sosialt lag (oppdrag 11.10.2026). Gap-analyse, datamodell, oppgaver og spørsmål: `docs/plan-konkurranser-og-sosialt.md`. Svar fra Thomas 11.10 under «Beslutninger» i planen: alle målgrupper, alt med, egne roller per klubb, playoff om førsteplassen, automatisk opprykk, Dash18 Prod, App Store som mål.
   - [ ] Fase 27: tekniske prøver (push fra Edge Function finnes; offline-køen og Broadcast med to telefoner).
   - [ ] Fase 28: grunnmur (eier og eieroverføring, invitasjoner med kort kode, tak og utløp, RPC i stedet for skrivepolicyer, hjelpere i `private`, RLS-tester).
