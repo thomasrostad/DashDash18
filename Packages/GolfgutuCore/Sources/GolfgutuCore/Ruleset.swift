@@ -30,6 +30,9 @@ public struct Ruleset: Hashable, Sendable {
     /// Hva en dag i turneringen heter (`DayTerm`). `nil`: «kveld», som Golfgutu-oppsettet og alle
     /// regelsett fra før 09.10.2026. Bare ord, ikke en regel.
     public var dayTerm: DayTerm?
+    /// Regelverdiene for formene fra steg 7: poengspillene (Amerikaner, Københavner), skins som form og
+    /// lag mot lag (FormPlay.swift). Standard: `FormPlayRules.standard`, og da skrives gruppen ikke.
+    public var formPlay: FormPlayRules
 
     /// Ordet som gjelder: `dayTerm`, ellers «kveld».
     public var day: DayTerm { dayTerm ?? .evening }
@@ -37,7 +40,7 @@ public struct Ruleset: Hashable, Sendable {
     public init(evenings: Int, scoring: ScoringRules, table: TableRules, sidePrizes: SidePrizeRules,
                 handicap: HandicapRules, formats: FormatRules, tips: TipsRules = .golfgutu,
                 bets: BetRules = .golfgutu, leadCheckpoints: [Int] = Ruleset.golfgutuLeadCheckpoints,
-                competition: CompetitionRules? = nil, dayTerm: DayTerm? = nil) {
+                competition: CompetitionRules? = nil, dayTerm: DayTerm? = nil, formPlay: FormPlayRules = .standard) {
         self.evenings = evenings
         self.scoring = scoring
         self.table = table
@@ -49,6 +52,7 @@ public struct Ruleset: Hashable, Sendable {
         self.leadCheckpoints = leadCheckpoints
         self.competition = competition
         self.dayTerm = dayTerm
+        self.formPlay = formPlay
     }
 
     // MARK: Gruppene
@@ -190,12 +194,16 @@ public struct Ruleset: Hashable, Sendable {
         public var pointsTables: [String: PointsTable]
         /// Likhet: skillene (Golfgutu) eller playoff om førsteplassen.
         public var tieRule: TieRule
+        /// Med `pointsSource` `stableford`: rundens poeng i tabellen er formens egne (skins vunnet,
+        /// Amerikaner- og Københavnerpoeng; stableford for de andre formene, `FormPlay.tablePoints`).
+        /// Av (Golfgutu): stablefordpoengene for alle former.
+        public var formPoints: Bool
 
         public init(matchPoints: MatchPoints, trianglePoints: [Double], counting: Counting,
                     stablefordCounting: Counting, tiebreaks: [Tiebreak], roundingStep: Double?,
                     pointsSource: TablePointsSource = .matches, minEvenings: Int? = nil,
                     aggregation: Aggregation = .sum, pointsTables: [String: PointsTable] = [:],
-                    tieRule: TieRule = .tiebreaks) {
+                    tieRule: TieRule = .tiebreaks, formPoints: Bool = false) {
             self.pointsSource = pointsSource
             self.matchPoints = matchPoints
             self.trianglePoints = trianglePoints
@@ -207,6 +215,7 @@ public struct Ruleset: Hashable, Sendable {
             self.aggregation = aggregation
             self.pointsTables = pointsTables
             self.tieRule = tieRule
+            self.formPoints = formPoints
         }
     }
 
@@ -394,7 +403,7 @@ public struct Ruleset: Hashable, Sendable {
 
     /// De tillatte formene, i katalogens rekkefølge.
     public var allowedForms: [CompetitionForm] {
-        CompetitionForm.all.filter { formats.allowedFormIDs.contains($0.id) }
+        CompetitionForm.catalog.filter { formats.allowedFormIDs.contains($0.id) }
     }
 
     /// Avrunding av tabellpoeng etter regelsettet (JS `Math.round`).
@@ -413,7 +422,7 @@ public struct Ruleset: Hashable, Sendable {
 extension Ruleset: Codable {
     private enum CodingKeys: String, CodingKey {
         case version, evenings, scoring, table, sidePrizes, handicap, formats, tips, bets, leadCheckpoints, competition
-        case dayTerm
+        case dayTerm, formPlay
     }
 
     /// Versjon 1: flat.
@@ -443,6 +452,7 @@ extension Ruleset: Codable {
             leadCheckpoints = try c.decodeIfPresent([Int].self, forKey: .leadCheckpoints) ?? g.leadCheckpoints
             competition = try c.decodeIfPresent(CompetitionRules.self, forKey: .competition)
             dayTerm = try c.decodeIfPresent(DayTerm.self, forKey: .dayTerm)
+            formPlay = try c.decodeIfPresent(FormPlayRules.self, forKey: .formPlay) ?? g.formPlay
             return
         }
         // Versjon 1. `countingEvenings` gjaldt matcher (`TELLENDE_MATCHER`), `stablefordCountingEvenings` runder.
@@ -485,13 +495,15 @@ extension Ruleset: Codable {
         try c.encodeIfPresent(competition, forKey: .competition)
         // Bare når ordet er valgt, så JSON-en for regelsett fra før er som før.
         try c.encodeIfPresent(dayTerm, forKey: .dayTerm)
+        // Bare når formreglene ikke er standard, så JSON-en for regelsett fra før er som før.
+        if formPlay != .standard { try c.encode(formPlay, forKey: .formPlay) }
     }
 }
 
 extension Ruleset.TableRules: Codable {
     private enum CodingKeys: String, CodingKey {
         case pointsSource, matchPoints, trianglePoints, counting, stablefordCounting, tiebreaks, roundingStep
-        case minEvenings, aggregation, pointsTables, tieRule
+        case minEvenings, aggregation, pointsTables, tieRule, formPoints
     }
 
     public init(from decoder: Decoder) throws {
@@ -509,6 +521,7 @@ extension Ruleset.TableRules: Codable {
         aggregation = try c.decodeIfPresent(Ruleset.Aggregation.self, forKey: .aggregation) ?? g.aggregation
         pointsTables = try c.decodeIfPresent([String: Ruleset.PointsTable].self, forKey: .pointsTables) ?? g.pointsTables
         tieRule = try c.decodeIfPresent(Ruleset.TieRule.self, forKey: .tieRule) ?? g.tieRule
+        formPoints = try c.decodeIfPresent(Bool.self, forKey: .formPoints) ?? g.formPoints
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -526,6 +539,7 @@ extension Ruleset.TableRules: Codable {
         if aggregation != .sum { try c.encode(aggregation, forKey: .aggregation) }
         if !pointsTables.isEmpty { try c.encode(pointsTables, forKey: .pointsTables) }
         if tieRule != .tiebreaks { try c.encode(tieRule, forKey: .tieRule) }
+        if formPoints { try c.encode(formPoints, forKey: .formPoints) }
     }
 }
 
