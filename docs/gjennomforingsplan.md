@@ -44,5 +44,6 @@ Knappefargen (gul med mørk tekst) gjøres med en gang, siden den ikke avhenger 
 | Knappefarge | Pågår |
 | 1 | 034 kjørt på test 11.10 (kontrollene grønne). Appen og web-admin: PR #70 |
 | 2 | `sql/044_roller.sql` skrevet, venter på godkjenning. Lokalt: kontrollen 10 av 10, `lokal/044_prove.sql` 112 av 112 (paritet for alle unntatt kasserer uten arrangør, som får `money`). Appen og web-admin: ikke startet |
+| 4 | `sql/045_pamelding_kveld.sql` skrevet, venter på godkjenning (kjøres etter 044). Lokalt: kontrollen 10 av 10, `lokal/045_prove.sql` 112 av 112, samtidighet med 30 økter ok, 044- og 034-prøvene uendret. Appen og web-admin: ikke startet (må bruke `evening_signup` og telle `waitlisted_at is null`) |
 | 6 (motoren) | Merget (#69): `table.minEvenings`, `aggregation`, `pointsTables`, `tieRule` (playoff), `formats.drawMethod`; på runden `counts`, `pointsTable`, `hideLastHoles`. Playoff med fullt handicap (Thomas 11.10). Se `Packages/GolfgutuCore/REGELSETT.md`. Gjenstår: 047 og appen |
 | Resten | Ikke startet |
