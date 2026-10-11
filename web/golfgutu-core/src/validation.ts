@@ -65,6 +65,20 @@ export function validateRuleset(r: Ruleset): RulesetIssue[] {
   if (r.table.pointsSource === "stableford" && r.table.counting.unit === "match") {
     add("table.counting.unit", "Tabellen teller stableford, så den kan ikke telle matcher. Velg runder eller kvelder.");
   }
+  const min = r.table.minEvenings ?? null;
+  if (min !== null) {
+    if (min < 0) {
+      add("table.minEvenings", "Minste antall kvelder kan ikke være negativt. La feltet stå tomt for at alle skal rangeres.");
+    } else if (r.evenings >= 1 && min > r.evenings) {
+      add("table.minEvenings", `Minst ${min} kvelder er flere enn de ${r.evenings} kveldene i turneringen.`);
+    }
+  }
+  const tables = r.table.pointsTables ?? {};
+  if (Object.keys(tables).some((k) => k.trim() === "")) add("table.pointsTables", "En poengtabell må ha et navn.");
+  for (const name of Object.keys(tables).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))) {
+    const m = tables[name].multiplier;
+    if (m < 0 || !isFiniteNumber(m)) add(`table.pointsTables.${name}`, `Poengtabellen «${name}» kan ikke gange med et negativt tall.`);
+  }
   if (r.table.stablefordCounting.unit === "match") {
     add("table.stablefordCounting.unit", "Stablefordsummen kan ikke telle matcher. Velg runder eller kvelder.");
   }

@@ -26,6 +26,8 @@ export * from "./match.ts";
 export * from "./triangle.ts";
 export * from "./sideprize.ts";
 export * from "./season.ts";
+export * from "./draw.ts";
+export * from "./playoff.ts";
 export * from "./competitions.ts";
 export * from "./app/rows.ts";
 export * from "./app/roundgame.ts";

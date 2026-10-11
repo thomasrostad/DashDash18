@@ -3,6 +3,7 @@
 // som PWA-en. Rundens poeng regnes fra scorene.
 
 import { jsRound, norwegianLess, norwegianString, sortedStrings } from "./jsmath.ts";
+import { avoidingRepeats, meetings } from "./draw.ts";
 import { matchInvolves, matchSides, matchStanding, outcomeForA, pointsForOutcome } from "./match.ts";
 import { copyRound, isTriangle, type Player, type Round, type SideClaim, type SideClaimKind } from "./models.ts";
 import { GOLFGUTU, roundTablePoints, sidePrizeFor, type CountingUnit, type Ruleset } from "./ruleset.ts";
@@ -85,6 +86,21 @@ export interface JacketRow {
   stableford: number;
   /** Tellende stablefordpoeng i tabellen (vektet, før avrunding) når tabellen teller stableford. */
   roundPoints: number;
+  /** Kveldene spilleren har spilt som teller (score eller match i en runde med vekt over 0). */
+  evenings: number;
+  /** Har spilt nok kvelder til å rangeres (`table.minEvenings`). */
+  qualified: boolean;
+}
+
+/** En rad i tabellen med plass (`Season.standings`). */
+export interface Standing {
+  row: JacketRow;
+  /** 1, 1, 3 …: delt plass har samme nummer. `null`: ikke kvalifisert, står under de rangerte. */
+  place: number | null;
+  /** Delt førsteplass med `tieRule` `playoff`, og playoffen er ikke avgjort. */
+  playoffPending: boolean;
+  /** Vant playoffen om førsteplassen. */
+  wonPlayoff: boolean;
 }
 
 /** En rad i stablefordtavla (`seasonBoardNytt`). */
@@ -249,7 +265,7 @@ export class Season {
     const side = this.sidePrizeResults(playerID);
     const chronological: RoundScore[] = [];
     this.rounds.forEach((round, i) => {
-      if (roundWeight(round) === 0) return;
+      if (this.effectiveWeight(round) === 0) return;
       const p = this.weightedRoundPoints(i, playerID);
       if (p === null) return;
       chronological.push({ roundIndex: i, roundID: round.id, points: p });
@@ -280,7 +296,7 @@ export class Season {
     const all: SeasonMatchResult[] = [];
     const rules = this.ruleset;
     this.rounds.forEach((round, i) => {
-      const weight = roundWeight(round);
+      const weight = this.effectiveWeight(round);
       if (weight === 0) return;
       for (const m of round.matches) {
         if (!matchInvolves(m, playerID, round)) continue;
@@ -314,6 +330,17 @@ export class Season {
     return unit === "evening" ? eveningKey(this.rounds[roundIndex]) : `runde ${roundIndex}`;
   }
 
+  /**
+   * Vekten runden teller med: 0 når kvelden ikke teller (`counts`), ellers rundevekten ganget med
+   * poengtabellen den peker på (`table.pointsTables`; ukjent eller ingen: 1).
+   */
+  effectiveWeight(round: Round): number {
+    if (round.counts === false) return 0;
+    const name = round.pointsTable ?? null;
+    const tables = this.ruleset.table.pointsTables ?? {};
+    return roundWeight(round) * (name !== null && Object.hasOwn(tables, name) ? tables[name].multiplier : 1);
+  }
+
   /** `matchPoengFor` / `matchHullFor`: summen av de tellende matchene. */
   matchTotals(playerID: string): MatchSum {
     return matchSum(this.matchResults(playerID).counting, this.ruleset);
@@ -326,7 +353,7 @@ export class Season {
     const out: SidePrizeResult[] = [];
     const prizes = this.ruleset.sidePrizes;
     this.rounds.forEach((round, i) => {
-      const weight = roundWeight(round);
+      const weight = this.effectiveWeight(round);
       if (weight === 0) return;
       for (const kind of ["drive", "kp"] as const) {
         const prize = sidePrizeFor(prizes, kind);
@@ -356,7 +383,7 @@ export class Season {
   weightedRoundPoints(roundIndex: number, playerID: string): number | null {
     const p = this.pointsByRound[roundIndex].get(playerID);
     if (p === undefined) return null;
-    return p * roundWeight(this.rounds[roundIndex]);
+    return p * this.effectiveWeight(this.rounds[roundIndex]);
   }
 
   /** `tellendeRunderFor`: rundene som teller i stablefordsummen, best først, etter `table.stablefordCounting`. */
@@ -392,15 +419,19 @@ export class Season {
    */
   jacketBoard(): JacketRow[] {
     const rules = this.ruleset;
+    const table = rules.table;
+    const minEvenings = table.minEvenings ?? 0;
     const rows = this.players.map((p): JacketRow => {
       const selection = this.tableSelection(p.id);
       const d = selection.matches;
       const s = matchSum(d.counting, rules);
       const side = selection.sidePrizes.counting.reduce((sum, r) => sum + r.points, 0);
-      if (rules.table.pointsSource === "stableford") {
+      const played = this.playedEvenings(p.id);
+      let row: JacketRow;
+      if (table.pointsSource === "stableford") {
         const r = selection.rounds;
         const points = r.counting.reduce((sum, x) => sum + x.points, 0);
-        return {
+        row = {
           player: p,
           total: roundTablePoints(rules, points + side),
           duel: 0,
@@ -410,29 +441,106 @@ export class Season {
           played: r.counting.length + r.dropped.length,
           stableford: this.stablefordTotal(p.id),
           roundPoints: points,
+          evenings: 0,
+          qualified: true,
+        };
+      } else {
+        row = {
+          player: p,
+          total: roundTablePoints(rules, s.points + side),
+          duel: s.points,
+          side,
+          matches: s.matches,
+          holes: s.holes,
+          played: d.counting.length + d.dropped.length,
+          stableford: this.stablefordTotal(p.id),
+          roundPoints: 0,
+          evenings: 0,
+          qualified: true,
         };
       }
-      return {
-        player: p,
-        total: roundTablePoints(rules, s.points + side),
-        duel: s.points,
-        side,
-        matches: s.matches,
-        holes: s.holes,
-        played: d.counting.length + d.dropped.length,
-        stableford: this.stablefordTotal(p.id),
-        roundPoints: 0,
-      };
+      row.evenings = played.size;
+      row.qualified = minEvenings <= 0 || played.size >= minEvenings;
+      if ((table.aggregation ?? "sum") === "average") {
+        // Snitt per spilte kveld som teller: kvelder der alt ble strøket av «beste N», regnes ikke.
+        const counted = [...selection.matches.counting, ...selection.rounds.counting, ...selection.sidePrizes.counting];
+        const dropped = [...selection.matches.dropped, ...selection.rounds.dropped, ...selection.sidePrizes.dropped];
+        const countedKeys = new Set(counted.map((x) => eveningKey(this.rounds[x.roundIndex])));
+        const droppedKeys = new Set(dropped.map((x) => eveningKey(this.rounds[x.roundIndex])).filter((k) => !countedKeys.has(k)));
+        const divisor = [...played].filter((k) => !droppedKeys.has(k)).length;
+        const raw = d.counting.reduce((sum, x) => sum + x.points, 0) + selection.rounds.counting.reduce((sum, x) => sum + x.points, 0) + side;
+        row.total = divisor > 0 ? roundTablePoints(rules, raw / divisor) : 0;
+      }
+      return row;
     });
     const less = (a: JacketRow, b: JacketRow): boolean => {
+      if (a.qualified !== b.qualified) return a.qualified;
       if (a.total !== b.total) return a.total > b.total;
-      for (const t of rules.table.tiebreaks) {
-        if (t === "holeDifference" && a.holes !== b.holes) return a.holes > b.holes;
-        if (t === "stableford" && a.stableford !== b.stableford) return a.stableford > b.stableford;
+      if ((table.tieRule ?? "tiebreaks") === "tiebreaks") {
+        for (const t of table.tiebreaks) {
+          if (t === "holeDifference" && a.holes !== b.holes) return a.holes > b.holes;
+          if (t === "stableford" && a.stableford !== b.stableford) return a.stableford > b.stableford;
+        }
       }
       return norwegianLess(a.player.name, b.player.name);
     };
     return rows.sort((a, b) => (less(a, b) ? -1 : less(b, a) ? 1 : 0));
+  }
+
+  /** Kveldene (nøklene) spilleren har spilt som teller: runder med vekt over 0 med poeng eller en match. */
+  playedEvenings(playerID: string): Set<string> {
+    const out = new Set<string>();
+    this.rounds.forEach((round, i) => {
+      if (this.effectiveWeight(round) === 0) return;
+      if (this.pointsByRound[i].has(playerID) || round.matches.some((m) => matchInvolves(m, playerID, round))) out.add(eveningKey(round));
+    });
+    return out;
+  }
+
+  /**
+   * Tabellen med plass: delt plass ved likhet (på total, og på alle skillene med `tieRule` `tiebreaks`),
+   * ingen plass for dem som ikke er kvalifisert, og playoff om delt førsteplass med `tieRule` `playoff`.
+   */
+  standings(playoffWinner: string | null = null): Standing[] {
+    const table = this.ruleset.table;
+    const playoff = (table.tieRule ?? "tiebreaks") === "playoff";
+    const rows = this.jacketBoard();
+    const same = (a: JacketRow, b: JacketRow): boolean => {
+      if (a.total !== b.total) return false;
+      if (playoff) return true;
+      return table.tiebreaks.every((t) => (t === "holeDifference" ? a.holes === b.holes : a.stableford === b.stableford));
+    };
+    let pending = false;
+    let winner: string | null = null;
+    const ranked: JacketRow[] = [];
+    for (const r of rows) {
+      if (!r.qualified) break;
+      ranked.push(r);
+    }
+    if (playoff && ranked.length >= 2 && same(ranked[0], ranked[1]) && ranked[0].evenings > 0) {
+      let n = 0;
+      while (n < ranked.length && same(ranked[n], ranked[0])) n++;
+      const i = playoffWinner === null ? -1 : ranked.slice(0, n).findIndex((r) => r.player.id === playoffWinner);
+      if (i >= 0) {
+        const [w] = rows.splice(i, 1);
+        rows.unshift(w);
+        winner = playoffWinner;
+      } else {
+        pending = true;
+      }
+    }
+    const out: Standing[] = [];
+    rows.forEach((row, i) => {
+      if (!row.qualified) {
+        out.push({ row, place: null, playoffPending: false, wonPlayoff: false });
+        return;
+      }
+      const prev = i > 0 ? rows[i - 1] : null;
+      const shares = prev !== null && same(row, prev) && prev.player.id !== winner;
+      const place = shares ? out[i - 1].place : i + 1;
+      out.push({ row, place, playoffPending: pending && place === 1, wonPlayoff: row.player.id === winner });
+    });
+    return out;
   }
 
   /** `seasonBoardNytt`: stablefordsummen, alle i troppen. Sortert på sum, så navn (norsk). */
@@ -449,6 +557,21 @@ export class Season {
     });
     const less = (a: StablefordRow, b: StablefordRow) => (a.total !== b.total ? a.total > b.total : norwegianLess(a.player.name, b.player.name));
     return rows.sort((a, b) => (less(a, b) ? -1 : less(b, a) ? 1 : 0));
+  }
+
+  /**
+   * Trekningen etter regelsettets `formats.drawMethod`: etter tabellen, uten gjentakelser (møtene fra
+   * rundene i sesongen, gjentakbar med `seed`), eller `null` for manuell.
+   */
+  draw(participants: readonly Player[], round: number, seed: bigint | number): string[][] | null {
+    switch (this.ruleset.formats.drawMethod ?? "standings") {
+      case "standings":
+        return this.drawMatches(participants, round);
+      case "avoidRepeats":
+        return avoidingRepeats(participants, meetings(this.rounds), seed);
+      case "manual":
+        return null;
+    }
   }
 
   /** `trekkMatcher` med stillingen fra tabellen (`matchPoengFor`). */

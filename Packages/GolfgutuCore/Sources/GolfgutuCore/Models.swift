@@ -111,6 +111,15 @@ public struct Round: Codable, Hashable, Sendable {
     /// ble satt da runden startet). Står spilleren her, er tallet fasit for runden, og troppens
     /// handicap og seeding brukes ikke. Tom (PWA-en, eldre runder): regnes fra troppen.
     public var playingHandicaps: [String: Double]
+    /// Kvelden teller i tabellen og stablefordsummen. `false` er det samme som vekt 0, bare uttrykkelig
+    /// («kveld som ikke teller»). Standard: teller.
+    public var counts: Bool
+    /// Navnet på en poengtabell i regelsettet (`table.pointsTables`, f.eks. «finale»). Poengene ganges med
+    /// tabellens `multiplier` i tillegg til `weight`. `nil` eller ukjent navn: 1.
+    public var pointsTable: String?
+    /// Antall hull på slutten av runden som skjules for dem som ser på, til runden er låst
+    /// («skjul de tre siste hullene»: 3). 0: ingenting skjules. Se `hidingLastHoles(revealedTo:)`.
+    public var hideLastHoles: Int
 
     public init(id: String? = nil, gameType: String? = nil, holeCount: Int? = nil, holeStart: Int? = nil,
                 course: Course? = nil, holes: [Int: RoundHole]? = nil, hcpAllowance: Double? = nil,
@@ -118,7 +127,8 @@ public struct Round: Codable, Hashable, Sendable {
                 avkortRegel: String? = nil, avkortetEtter: Double? = nil, matches: [Match] = [],
                 ldEnabled: Bool = true, kpEnabled: Bool = true, ldHoleIndex: Int? = nil, kpHoleIndex: Int? = nil,
                 weight: Double = 1, date: String? = nil, locked: Bool = false,
-                playingHandicaps: [String: Double] = [:]) {
+                playingHandicaps: [String: Double] = [:], counts: Bool = true, pointsTable: String? = nil,
+                hideLastHoles: Int = 0) {
         self.id = id
         self.gameType = gameType
         self.holeCount = holeCount
@@ -140,12 +150,16 @@ public struct Round: Codable, Hashable, Sendable {
         self.date = date
         self.locked = locked
         self.playingHandicaps = playingHandicaps
+        self.counts = counts
+        self.pointsTable = pointsTable
+        self.hideLastHoles = hideLastHoles
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, gameType, holeCount, holeStart, course, holes, hcpAllowance, hcpExtern,
              teams, holeScores, avkortRegel, avkortetEtter, matches,
              ldEnabled, kpEnabled, ldHoleIndex, kpHoleIndex, weight, date, locked, playingHandicaps
+        case counts, pointsTable, hideLastHoles
     }
 
     public init(from decoder: Decoder) throws {
@@ -171,6 +185,9 @@ public struct Round: Codable, Hashable, Sendable {
         date = try c.decodeIfPresent(String.self, forKey: .date)
         locked = try c.decodeIfPresent(Bool.self, forKey: .locked) ?? false
         playingHandicaps = try c.decodeIfPresent([String: Double].self, forKey: .playingHandicaps) ?? [:]
+        counts = try c.decodeIfPresent(Bool.self, forKey: .counts) ?? true
+        pointsTable = try c.decodeIfPresent(String.self, forKey: .pointsTable)
+        hideLastHoles = try c.decodeIfPresent(Int.self, forKey: .hideLastHoles) ?? 0
     }
 }
 
