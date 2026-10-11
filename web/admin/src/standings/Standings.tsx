@@ -11,10 +11,12 @@ import "./standings.css";
 
 const shown = ["season", "league", "fun", "cup"];
 
-/** Turneringen som vises først: hovedturneringen, ellers den første som er i gang, ellers den første. */
-function initial(comps: Competition[]): string | null {
+/** Turneringen som vises først: den aktive hovedturneringen, ellers en hovedturnering, ellers den første
+ *  som er i gang, ellers den første. Flere serier kan gå samtidig (sql/034). */
+export function initial(comps: readonly Pick<Competition, "id" | "kind" | "is_main" | "status">[]): string | null {
   const list = comps.filter((c) => shown.includes(c.kind));
-  return (list.find((c) => c.is_main) ?? list.find((c) => c.status === "active") ?? list[0])?.id ?? null;
+  return (list.find((c) => c.is_main && c.status === "active") ?? list.find((c) => c.is_main)
+    ?? list.find((c) => c.status === "active") ?? list[0])?.id ?? null;
 }
 
 /** Last ned tekst som fil (CSV med BOM). */

@@ -53,9 +53,9 @@ struct RootView: View {
         // Aktiv fane i gult (golfee), mørk oker i lys modus så etiketten holder 4,5:1.
         .tint(Color.ddYellowText)
         .environment(\.selectTab) { selectedTab = $0 }
-        .environment(\.showRound) {
+        .environment(\.showRound) { roundID in
             selectedTab = .hjem
-            router.showRound()
+            router.showRound(roundID)
         }
         .task(id: memberships.map(\.id)) { makeHome() }
         .environment(\.dayTerm, dayTerm)
@@ -104,7 +104,8 @@ extension EnvironmentValues {
     @Entry var currentTab: AppTab? = nil
 
     /// Åpner runden som går, på Hjem (arrangørsidens «Gå til runden»).
-    @Entry var showRound: () -> Void = {}
+    /// Åpner runden som går på Hjem. Med id: den runden (flere kan gå samtidig, sql/034).
+    @Entry var showRound: (UUID?) -> Void = { _ in }
 }
 
 /// Merke i verktøylinjen så det aldri er tvil om at appen ikke kjører mot prod.
@@ -152,14 +153,16 @@ extension AppConfig {
 
 /// Ordet for en dag i klubbens hovedturnering (`DayTerm`).
 enum DayTermQueries {
-    /// Den aktive sesongen, ellers den sist opprettede. «Kveld» når ingen finnes eller hentingen feiler.
+    /// Hovedturneringen (`MainTournament.tableSeason`), ellers den sist opprettede. «Kveld» når ingen
+    /// finnes eller hentingen feiler.
     static func main(client: SupabaseClient, clubID: UUID) async -> DayTerm {
-        let rows: [SeasonRow]? = try? await client.from("seasons")
+        async let fetched: [SeasonRow]? = try? await client.from("seasons")
             .select(SeasonRow.columns)
             .eq("club_id", value: clubID)
             .order("created_at", ascending: false)
             .execute().value
-        guard let rows else { return .evening }
-        return (rows.first { $0.status == .active } ?? rows.first)?.rules.day ?? .evening
+        async let mains = MainTournament.seasonIDs(client: client, clubID: clubID)
+        guard let rows = await fetched else { return .evening }
+        return (MainTournament.tableSeason(rows, mainSeasonIDs: await mains) ?? rows.first)?.rules.day ?? .evening
     }
 }

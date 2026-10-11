@@ -6,12 +6,15 @@ import Supabase
 ///   * `activity` og `activity_reactions` med `club_id in (klubbene dine)` (`is_club_member`, sql/008),
 ///   * turneringene du ser (`can_read_competition`, 017/022),
 ///   * dine runder: klubbrundene du spilte (låst i vinduet) og løse runder (eier eller med, 017/018),
+///   * klubbrundene som går og angår deg (du spiller eller arrangerer), til «Pågår nå»,
 ///   * rundene i private turneringer (via turneringen, `can_read_round` fra 017).
 /// Ingen ny SQL trengs for å lese.
 enum HomeFeedQueries {
     static let activityLimit = 150
     /// Dine klubbrunder med alt under: én henting per runde, så antallet holdes nede.
     static let clubRoundLimit = 8
+    /// Klubbrunder som går, til «Pågår nå». Flere kan gå samtidig etter sql/034.
+    static let activeRoundLimit = 6
     static let looseRoundLimit = 20
     static let privateCompetitionLimit = 5
     /// Id-er per `in`-filter, så adressen holder seg kort.
@@ -93,7 +96,8 @@ enum HomeFeedQueries {
                 .select(ClubMemberRow.columns)
                 .in("club_id", values: clubIDs)
                 .execute().value
-            raw.activity = try await activity
+            // Hendelser uten klubb (sql/034, fra steg 9) hører ikke til klubbfeeden ennå.
+            raw.activity = try await activity.filter { $0.clubID != nil }
             raw.members = try await members
             raw.reactions = (try? await chunked(raw.activity.map(\.id)) { ids in
                 try await client.from("activity_reactions")
@@ -112,6 +116,7 @@ enum HomeFeedQueries {
         }
         if !clubIDs.isEmpty {
             raw.rounds += (try? await myClubRounds(client: client, viewer: viewer, clubIDs: clubIDs, since: since)) ?? []
+            raw.rounds += (try? await activeClubRounds(client: client, viewer: viewer, clubIDs: clubIDs)) ?? []
         }
 
         // Turneringene, og tabellgrunnlaget for de private.
@@ -177,6 +182,42 @@ enum HomeFeedQueries {
             var out: [RoundSnapshot] = []
             for try await s in group { out.append(s) }
             return out.sorted { ($0.round.lockedAt ?? .distantPast) > ($1.round.lockedAt ?? .distantPast) }
+        }
+    }
+
+    /// Klubbrundene som går nå der du spiller, eller i klubber der du er arrangør, med alt under.
+    /// Nyest startet først.
+    private static func activeClubRounds(client: SupabaseClient, viewer: HomeViewer,
+                                         clubIDs: [String]) async throws -> [RoundSnapshot] {
+        let rounds: [RoundRow] = try await client.from("rounds")
+            .select(RoundRow.columns)
+            .in("club_id", values: clubIDs)
+            .eq("status", value: RoundStatus.active.rawValue)
+            .order("started_at", ascending: false)
+            .limit(40)
+            .execute().value
+        guard !rounds.isEmpty, !viewer.memberIDs.isEmpty else { return [] }
+        struct Played: Decodable {
+            let roundID: UUID
+            enum CodingKeys: String, CodingKey { case roundID = "round_id" }
+        }
+        let played: [Played] = try await client.from("round_players")
+            .select("round_id")
+            .in("round_id", values: rounds.map(\.id.uuidString))
+            .in("member_id", values: viewer.memberIDs.map(\.uuidString))
+            .execute().value
+        let mine = Set(played.map(\.roundID))
+        let chosen = rounds.filter { round in
+            mine.contains(round.id) || round.clubID.map(viewer.organizerClubs.contains) ?? false
+        }.prefix(activeRoundLimit)
+        let order = Dictionary(chosen.enumerated().map { ($1.id, $0) }, uniquingKeysWith: { a, _ in a })
+        return try await withThrowingTaskGroup(of: RoundSnapshot.self) { group in
+            for round in chosen {
+                group.addTask { try await RundeQueries.snapshot(client: client, round: round) }
+            }
+            var out: [RoundSnapshot] = []
+            for try await s in group { out.append(s) }
+            return out.sorted { (order[$0.round.id] ?? 0) < (order[$1.round.id] ?? 0) }
         }
     }
 

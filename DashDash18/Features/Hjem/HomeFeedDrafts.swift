@@ -110,7 +110,7 @@ nonisolated struct HomeFeedDrafts: Sendable {
             if status == .yes {
                 line.signupNames = [context.name(member)]
                 line.signupDate = eventDate
-                key = "s:\(row.clubID.uuidString):\(eventDate ?? "")"
+                key = "s:\(row.clubID?.uuidString ?? ""):\(eventDate ?? "")"
             }
             return HomeFeedDraft(id: id, date: row.createdAt, source: placement.source, filters: placement.filters,
                                  kind: .line(line), isUnread: unread, isOwn: own, signupKey: key)
@@ -130,7 +130,7 @@ nonisolated struct HomeFeedDrafts: Sendable {
     private func lineDraft(_ row: ActivityRow, placement: (source: HomeFeedSource, filters: Set<HomeFeedFilter>))
         -> HomeFeedDraft.LineDraft {
         let display = ActivityText.display(row, name: { input.names[$0] })
-        let club = context.clubsByID[row.clubID]?.name ?? placement.source.title
+        let club = row.clubID.flatMap { self.context.clubsByID[$0] }?.name ?? placement.source.title
         var context = club
         if let round = row.roundID, let label = input.roundLabels[round] {
             let parts = [placement.source.title, label.roundNo.flatMap { $0 > 0 ? "runde \($0)" : nil }].compactMap { $0 }

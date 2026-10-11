@@ -13,7 +13,8 @@ struct HjemOrganizerStep {
 /// skjermprøvene lar dem stå tomme.
 struct HjemActions {
     var select: (HomeFeedFilter) -> Void = { _ in }
-    var openRound: () -> Void = {}
+    /// «Fortsett føringen» på et kort i «Pågår nå».
+    var openRound: (HomeLive) -> Void = { _ in }
     var openEvening: () -> Void = {}
     var answer: (SignupStatus) -> Void = { _ in }
     var undoAnswer: () -> Void = {}
@@ -68,10 +69,14 @@ struct HjemFeedView: View {
         if let summary = feed.summary {
             HjemSummaryCard(summary: summary)
         }
-        if let live = feed.live, HjemDisplay.showsLive(live, filter: feed.filter) {
+        let live = feed.live.filter { HjemDisplay.showsLive($0, filter: feed.filter) }
+        if !live.isEmpty {
             DDSectionLabel("Pågår nå")
                 .padding(.top, 6)
-            HjemLiveCard(live: live, onContinue: actions.openRound)
+            // Flere runder kan gå samtidig (sql/034): ett kort per runde.
+            ForEach(live, id: \.roundID) { round in
+                HjemLiveCard(live: round) { actions.openRound(round) }
+            }
         }
         if let evening = feed.evening, HjemDisplay.showsEvening(filter: feed.filter) {
             HjemEveningCard(evening: evening, pendingText: pendingAnswer, error: answerError,

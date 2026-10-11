@@ -5,16 +5,23 @@ import Supabase
 /// Spørringene for Tavla. Bare lesing. Radene samles i `TavlaData` og gjøres om til `RoundSnapshot`,
 /// så rundene bygges med samme mapping som Kveld (`RoundGame.makeRound`).
 enum TavlaQueries {
-    /// Den aktive sesongen, ellers den sist opprettede ferdige. Nil når ingen finnes.
+    /// Hovedturneringen (`MainTournament.tableSeason`): den aktive, ellers den sist ferdige. Nil når
+    /// ingen finnes.
     static func load(client: SupabaseClient, clubID: UUID) async throws -> TavlaInput? {
-        let seasons: [SeasonRow] = try await client.from("seasons")
+        guard let season = try await mainSeason(client: client, clubID: clubID) else { return nil }
+        return try await load(client: client, season: season)
+    }
+
+    /// Sesongen Tavla og Vedd viser: hovedturneringen, ikke en vilkårlig aktiv serie (sql/034).
+    static func mainSeason(client: SupabaseClient, clubID: UUID) async throws -> SeasonRow? {
+        async let rows: [SeasonRow] = client.from("seasons")
             .select(SeasonRow.columns)
             .eq("club_id", value: clubID)
             .in("status", values: [SeasonStatus.active.rawValue, SeasonStatus.finished.rawValue])
             .order("created_at", ascending: false)
             .execute().value
-        guard let season = seasons.first(where: { $0.status == .active }) ?? seasons.first else { return nil }
-        return try await load(client: client, season: season)
+        async let mains = MainTournament.seasonIDs(client: client, clubID: clubID)
+        return MainTournament.tableSeason(try await rows, mainSeasonIDs: await mains)
     }
 
     static func load(client: SupabaseClient, season: SeasonRow) async throws -> TavlaInput {

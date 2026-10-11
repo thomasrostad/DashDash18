@@ -512,8 +512,8 @@ struct HjemTilstandTests {
                            scores: [(H.me, 0, 5, nil), (H.anders, 0, 3, nil), (H.anders, 1, 5, nil), (H.bjorn, 0, 4, nil),
                                     (H.cato, 0, 4, nil)])
         var input = H.input()
-        input.live = HomeLiveInput(snapshot: s, viewer: Viewer(memberID: H.me, isOrganizer: false))
-        let live = try #require(HomeFeed.build(input).live)
+        input.live = [HomeLiveInput(snapshot: s, viewer: Viewer(memberID: H.me, isOrganizer: false))]
+        let live = try #require(HomeFeed.build(input).live.first)
         #expect(live.title == "Losby · runde 4")
         #expect(live.progress == "Hull 2 av 18")
         #expect(live.detail == "Teller i Jakkeracet · bås 2")
@@ -528,12 +528,57 @@ struct HjemTilstandTests {
     @Test func løsRundeSomPågår() throws {
         var input = H.input()
         let s = H.myLooseRound(status: .active)
-        input.live = HomeLiveInput(snapshot: s, viewer: LooseRoundRights.viewer(info: s.loose, userID: H.profile))
-        let live = try #require(HomeFeed.build(input).live)
+        input.live = [HomeLiveInput(snapshot: s, viewer: LooseRoundRights.viewer(info: s.loose, userID: H.profile))]
+        let live = try #require(HomeFeed.build(input).live.first)
         #expect(live.title == "Oslo GK")
         #expect(live.detail == "bås 1")
         #expect(live.isLoose)
         #expect(live.me == nil)
+    }
+
+    // MARK: Flere runder samtidig (sql/034)
+
+    private func active(_ rid: UUID, club: UUID?, players: [(UUID, String, Int?)]) -> RoundSnapshot {
+        H.snapshot(H.roundRow(rid, club: club, status: .active, roundNo: 1, started: H.ago(minutes: 30)),
+                   players: players, scores: [])
+    }
+
+    @Test func pågårNåViserRundeneDuSpillerIOgArrangerer() {
+        let organizer = HomeViewer(profileID: H.profile, memberships: [H.clubA: H.me, H.clubB: H.meB],
+                                   organizerClubs: [H.clubA])
+        let spiller = active(H.id(31), club: H.clubA, players: [(H.me, "Thomas", 1), (H.anders, "Anders Berg", 1)])
+        let arrangerer = active(H.id(32), club: H.clubA, players: [(H.bjorn, "Bjørn", 1)])
+        let annenKlubb = active(H.id(33), club: H.clubB, players: [(H.meB, "Thomas", 1)])
+        let fremmed = active(H.id(34), club: H.clubB, players: [(H.kari, "Kari", 1)])
+        let ferdig = H.snapshot(H.roundRow(H.id(35), club: H.clubA, status: .locked, locked: H.ago(minutes: 5)),
+                                players: [(H.me, "Thomas", 1)], scores: [])
+        let løs = H.myLooseRound(status: .active)
+
+        // Arrangøren først på en runde hun ikke spiller i; den hun spiller i, kommer først likevel.
+        let fokus = HomeLiveInput(snapshot: arrangerer, viewer: Viewer(memberID: H.me, isOrganizer: true))
+        let lista = HomeFeed.liveInputs(focused: fokus, rounds: [spiller, arrangerer, annenKlubb, fremmed, ferdig, løs],
+                                        viewer: organizer, club: H.clubA)
+        #expect(lista.map(\.snapshot.round.id) == [H.id(31), løs.round.id, H.id(32)])
+        #expect(lista.first?.viewer == Viewer(memberID: H.me, isOrganizer: true))
+
+        // Uten klubbfilter står også runden i den andre klubben (der du spiller), men ikke den fremmede.
+        let alle = HomeFeed.liveInputs(focused: nil, rounds: [spiller, annenKlubb, fremmed], viewer: organizer, club: nil)
+        #expect(alle.map(\.snapshot.round.id) == [H.id(31), H.id(33)])
+
+        // Uten arrangørrolle står bare rundene du spiller i.
+        let medlem = HomeFeed.liveInputs(focused: nil, rounds: [spiller, arrangerer], viewer: H.viewer, club: H.clubA)
+        #expect(medlem.map(\.snapshot.round.id) == [H.id(31)])
+    }
+
+    @Test func pågårNåGirEttKortPerRunde() {
+        var input = H.input()
+        let a = active(H.id(31), club: H.clubA, players: [(H.me, "Thomas", 1)])
+        let b = active(H.id(32), club: H.clubA, players: [(H.anders, "Anders Berg", 1)])
+        input.live = [HomeLiveInput(snapshot: a, viewer: Viewer(memberID: H.me, isOrganizer: true)),
+                      HomeLiveInput(snapshot: b, viewer: Viewer(memberID: H.me, isOrganizer: true))]
+        let live = HomeFeed.build(input).live
+        #expect(live.map(\.roundID) == [H.id(31), H.id(32)])
+        #expect(live.allSatisfy { $0.clubID == H.clubA })
     }
 
     @Test func nesteKveld() throws {

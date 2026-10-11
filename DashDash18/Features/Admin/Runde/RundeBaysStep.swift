@@ -20,7 +20,7 @@ struct RundeBaysStep: View {
 
         DDList {
             Section {
-                // 12 er databasens grense for båsnummer (`round_players.bay_no`).
+                // Databasens grense for båsnummer (`BayPlan.maxBays`), og aldri flere enn spillerne.
                 Stepper("\(term.pluralTitle): \(bayCount)", value: $bayCount, in: 1...max(1, min(BayPlan.maxBays, draft.participants.count)))
                 Button("Bland på nytt", systemImage: "shuffle") { reshuffle() }
             } header: {

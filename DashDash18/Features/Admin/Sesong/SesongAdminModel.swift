@@ -14,6 +14,9 @@ final class SesongAdminModel {
     }
 
     private(set) var seasons: [SeasonRow] = []
+    /// Sesongene bak klubbens hovedturneringer (`competitions.is_main`). Avgjør hvor «Turneringen»
+    /// lander, og om aktivering må spørre om serien skal erstatte hovedturneringen (sql/034).
+    private(set) var mainSeasonIDs: Set<UUID> = []
     private(set) var loadState: LoadState = .loading
     /// nil bare i skjermprøvene (`init(preview:)`): da går ingenting til nettet.
     private let context: ClubContext?
@@ -24,9 +27,10 @@ final class SesongAdminModel {
 
     #if DEBUG
     /// Skjermprøve med oppdiktede sesonger, uten nett.
-    init(preview seasons: [SeasonRow]) {
+    init(preview seasons: [SeasonRow], mainSeasonIDs: Set<UUID> = []) {
         context = nil
         self.seasons = seasons
+        self.mainSeasonIDs = mainSeasonIDs
         loadState = .loaded
     }
     #endif
@@ -48,12 +52,14 @@ final class SesongAdminModel {
     func load() async {
         guard let context else { return }
         do {
+            async let mains = MainTournament.seasonIDs(client: context.client, clubID: context.clubID)
             seasons = try await table
                 .select(SeasonRow.columns)
                 .eq("club_id", value: context.clubID)
                 .order("created_at", ascending: false)
                 .execute()
                 .value
+            mainSeasonIDs = await mains
             loadState = .loaded
         } catch {
             loadState = .failed(DataError.from(error))
@@ -70,7 +76,7 @@ final class SesongAdminModel {
         }
         seasons.insert(row, at: 0)
         guard activate else { return row }
-        try await self.activate(row)
+        try await self.activate(row, asMain: true)
         return season(id: row.id) ?? row
     }
 
@@ -78,19 +84,29 @@ final class SesongAdminModel {
         try await update(season.id, SeasonRulesPatch(rules: rules))
     }
 
-    /// Aktiverer sesongen og avslutter en annen aktiv i samme transaksjon
-    /// (RPC `activate_season`, sql/004, kjørt på test 06.10).
-    func activate(_ season: SeasonRow) async throws(DataError) {
-        struct Params: Encodable { let p_season_id: UUID }
+    /// Aktiverer sesongen (RPC `activate_season`, sql/034). `asMain`: serien tar over som
+    /// hovedturnering, og den forrige aktive hovedturneringen avsluttes i samme transaksjon (som før
+    /// 034). Ellers går serien ved siden av, og hovedturneringen står.
+    ///
+    /// `p_as_main` sendes alltid. Databasen før 034 har bare `activate_season(uuid)` og svarer
+    /// PGRST202; dette bygget forutsetter at 034 er kjørt.
+    func activate(_ season: SeasonRow, asMain: Bool) async throws(DataError) {
         let row: SeasonRow = try await write {
-            try await connection().client.rpc("activate_season", params: Params(p_season_id: season.id)).execute().value
+            try await connection().client
+                .rpc("activate_season", params: ActivateSeasonParams(seasonID: season.id, asMain: asMain))
+                .execute().value
         }
-        for i in seasons.indices where seasons[i].status == .active && seasons[i].id != row.id {
-            seasons[i].status = .finished
+        if asMain {
+            let replaced = SeasonLifecycle.activeConflict(activating: season, in: seasons, mainSeasonIDs: mainSeasonIDs)
+            for i in seasons.indices where seasons[i].id == replaced?.id {
+                seasons[i].status = .finished
+            }
         }
         if let i = seasons.firstIndex(where: { $0.id == row.id }) {
             seasons[i] = row
         }
+        // Hvem som er hovedturnering, settes av serveren (competitions_sync_season). Hent på nytt.
+        if let context { mainSeasonIDs = await MainTournament.seasonIDs(client: context.client, clubID: context.clubID) }
     }
 
     func finish(_ season: SeasonRow) async throws(DataError) {
@@ -151,5 +167,16 @@ final class SesongAdminModel {
         } catch {
             throw DataError.from(error)
         }
+    }
+}
+
+/// `activate_season(p_season_id, p_as_main)` (sql/034).
+nonisolated struct ActivateSeasonParams: Encodable, Equatable, Sendable {
+    let seasonID: UUID
+    let asMain: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case seasonID = "p_season_id"
+        case asMain = "p_as_main"
     }
 }

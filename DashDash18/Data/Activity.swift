@@ -264,7 +264,9 @@ nonisolated struct ActivityTableSpot: Codable, Equatable, Sendable {
 /// En rad i `activity`. Append-only: ingen oppdatering eller sletting fra appen.
 nonisolated struct ActivityRow: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
-    let clubID: UUID
+    /// Klubben. Valgfri etter sql/034: hendelser i en turnering uten klubb (fra steg 9) har bare
+    /// turneringen. Skjermer som krever klubb, hopper over dem.
+    let clubID: UUID?
     var kind: String
     /// Ukjent kategori (en nyere server) leses som nil i stedet for å feile.
     var category: ActivityCategory?
@@ -278,7 +280,7 @@ nonisolated struct ActivityRow: Codable, Equatable, Identifiable, Sendable {
     var recipients: [UUID]?
     var createdAt: Date
 
-    init(id: UUID, clubID: UUID, kind: String, category: ActivityCategory?, data: ActivityData,
+    init(id: UUID, clubID: UUID?, kind: String, category: ActivityCategory?, data: ActivityData,
          actorMemberID: UUID? = nil, eventID: UUID? = nil, roundID: UUID? = nil, recipients: [UUID]? = nil,
          createdAt: Date) {
         self.id = id
@@ -309,7 +311,7 @@ nonisolated struct ActivityRow: Codable, Equatable, Identifiable, Sendable {
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(UUID.self, forKey: .id)
-        clubID = try c.decode(UUID.self, forKey: .clubID)
+        clubID = try c.decodeIfPresent(UUID.self, forKey: .clubID)
         kind = try c.decode(String.self, forKey: .kind)
         category = (try? c.decodeIfPresent(ActivityCategory.self, forKey: .category)) ?? nil
         data = (try? c.decodeIfPresent(ActivityData.self, forKey: .data)) ?? ActivityData()

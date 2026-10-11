@@ -67,7 +67,7 @@ struct SesongLandingView: View {
                 Button("Prøv igjen") { Task { await reload() } }
             }
         default:
-            switch SeasonLifecycle.landing(model.seasons) {
+            switch SeasonLifecycle.landing(model.seasons, mainSeasonIDs: model.mainSeasonIDs) {
             case .season(let id):
                 if let season = model.season(id: id) {
                     activeSeason(season)
@@ -146,7 +146,7 @@ private struct TournamentListContent: View {
         let items = TournamentList.items(seasons: model.seasons, competitions: competitions.overview.competitions,
                                          clubID: competitions.clubID ?? UUID())
         DDList {
-            if let prompt = SeasonLifecycle.listPrompt(model.seasons) {
+            if let prompt = SeasonLifecycle.listPrompt(model.seasons, mainSeasonIDs: model.mainSeasonIDs) {
                 Section {
                     Text(prompt)
                     Button("Ny turnering", systemImage: "plus", action: newTournament)

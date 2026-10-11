@@ -33,7 +33,8 @@ nonisolated enum HomeBell {
     /// Hvorfor linja angår deg, eller nil når den ikke gjør det. `myRounds` er rundene du spiller
     /// eller har spilt (for «din runde»).
     static func reason(_ row: ActivityRow, viewer: HomeViewer, myRounds: Set<UUID> = []) -> HomeBellReason? {
-        guard let me = viewer.memberships[row.clubID] else { return nil }
+        // Hendelser uten klubb (sql/034) har ingen mottaker i en klubb ennå.
+        guard let club = row.clubID, let me = viewer.memberships[club] else { return nil }
         switch row.event {
         case .announcement:
             return .announcement

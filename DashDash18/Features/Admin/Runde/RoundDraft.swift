@@ -567,10 +567,14 @@ nonisolated struct DeleteRoundResult: Decodable, Equatable, Sendable {
 
 /// Norske meldinger for feil ved lagring og start.
 nonisolated enum RoundErrors {
-    /// `start_round`: 23505 er den unike indeksen `rounds_one_active_per_club`,
-    /// 55000 er at runden ikke er en kladd lenger.
-    static func startMessage(sqlState: String?, fallback: DataError) -> String {
+    /// `start_round`: 23505 er en av de unike indeksene for runder som går. Etter sql/034 er det
+    /// `rounds_one_active_per_event_wave` (én per spilledag og pulje); før var det også
+    /// `rounds_one_active_per_club`. 55000 er at runden ikke er en kladd lenger.
+    /// - Parameter message: Postgres-meldingen, som navngir indeksen.
+    static func startMessage(sqlState: String?, message: String? = nil, fallback: DataError) -> String {
         switch sqlState {
+        case "23505" where message?.contains("rounds_one_active_per_event_wave") == true:
+            "En runde går allerede i denne puljen. Lås den før du starter en ny."
         case "23505": "En runde går allerede. Lås den før du starter en ny."
         case "55000": "Bare en kladd kan startes. Last inn på nytt og sjekk."
         default: fallback.message

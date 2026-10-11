@@ -129,6 +129,33 @@ nonisolated extension HomeFeed {
 
     // MARK: Pågår nå
 
+    /// Rundene i «Pågår nå»: runden Kveld følger (`focused`, freshest, med realtime) og de andre som
+    /// går og angår deg, fra rundene feeden har hentet. Etter sql/034 kan flere gå samtidig.
+    ///   * En runde du spiller i (klubb eller løs), eller en klubbrunde der du er arrangør.
+    ///   * Klubbrunder bare i `club` (klubben Hjem står i), siden runden åpnes i den klubben.
+    ///   * Rundene du spiller i står først; ellers står `focused` først, så resten i hentet rekkefølge.
+    static func liveInputs(focused: HomeLiveInput?, rounds: [RoundSnapshot], viewer: HomeViewer,
+                           club: UUID?) -> [HomeLiveInput] {
+        var out: [HomeLiveInput] = []
+        var seen: Set<UUID> = []
+        if let focused, seen.insert(focused.snapshot.round.id).inserted { out.append(focused) }
+        for s in rounds where s.round.status == .active && !seen.contains(s.round.id) {
+            if let roundClub = s.round.clubID {
+                if let club, roundClub != club { continue }
+                let plays = viewer.playerID(in: s) != nil
+                let organizes = viewer.organizerClubs.contains(roundClub)
+                guard plays || organizes, let member = viewer.memberships[roundClub] else { continue }
+                out.append(HomeLiveInput(snapshot: s, viewer: Viewer(memberID: member, isOrganizer: organizes)))
+            } else {
+                guard let profile = viewer.profileID, viewer.playerID(in: s) != nil else { continue }
+                out.append(HomeLiveInput(snapshot: s, viewer: LooseRoundRights.viewer(info: s.loose, userID: profile)))
+            }
+            seen.insert(s.round.id)
+        }
+        let playing = out.filter { viewer.playerID(in: $0.snapshot) != nil }
+        return playing + out.filter { viewer.playerID(in: $0.snapshot) == nil }
+    }
+
     static func live(_ input: HomeLiveInput, context: HomeFeedContext) -> HomeLive {
         let s = input.snapshot
         let game = RoundGame(s)
@@ -148,7 +175,7 @@ nonisolated extension HomeFeed {
             HomeLive.Row(id: r.id, place: r.place.map { "\($0)." } ?? "–", name: r.name, value: r.value, isMe: r.isMe)
         }
         let top = rows.prefix(3).map(row)
-        return HomeLive(roundID: s.round.id, isLoose: s.isLoose, progress: "Hull \(hole) av \(game.holeCount)",
+        return HomeLive(roundID: s.round.id, isLoose: s.isLoose, clubID: s.round.clubID, progress: "Hull \(hole) av \(game.holeCount)",
                         title: title, detail: detail.isEmpty ? nil : detail.joined(separator: " · "),
                         top: top, me: top.contains(where: \.isMe) ? nil : mine.map(row),
                         actionTitle: "Fortsett føringen")
@@ -272,8 +299,8 @@ nonisolated struct HomeFeedContext: Sendable {
     }
 
     func reactions(_ row: ActivityRow?) -> HomeReactions? {
-        guard let row else { return nil }
-        return HomeReactions(activityID: row.id, clubID: row.clubID,
+        guard let row, let club = row.clubID else { return nil }
+        return HomeReactions(activityID: row.id, clubID: club,
                              chips: ActivityReactions.chips(for: row.id, in: input.reactions, me: row.clubMember(of: viewer),
                                                             name: { input.names[$0] }))
     }
@@ -286,7 +313,7 @@ nonisolated struct HomeFeedContext: Sendable {
 
 nonisolated extension ActivityRow {
     /// Medlemmet ditt i klubben linja hører til (for «min reaksjon»).
-    func clubMember(of viewer: HomeViewer) -> UUID? { viewer.memberships[clubID] }
+    func clubMember(of viewer: HomeViewer) -> UUID? { clubID.flatMap { viewer.memberships[$0] } }
 }
 
 // MARK: - Tekst

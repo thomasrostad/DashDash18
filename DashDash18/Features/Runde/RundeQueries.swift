@@ -8,15 +8,31 @@ enum RundeQueries {
     /// Brukes fortsatt i Konkurranser/. Ny kode bruker `RoundRow.columns`.
     static let roundColumns = RoundRow.columns
 
-    /// Runden som går i klubben (høyst én, se `rounds_one_active_per_club`), med alt under.
-    static func activeRound(client: SupabaseClient, clubID: UUID) async throws -> RoundSnapshot? {
+    /// En runde som går i klubben, med alt under. Etter sql/034 kan flere gå samtidig (én per
+    /// spilledag og pulje): da vinner den som er bedt om, ellers en du spiller i, ellers den nyeste
+    /// (`ActiveRounds.pick`). Med én runde (som før 034) er det den.
+    static func activeRound(client: SupabaseClient, clubID: UUID, memberID: UUID?,
+                            preferred: UUID? = nil) async throws -> RoundSnapshot? {
         let rounds: [RoundRow] = try await client.from("rounds")
             .select(RoundRow.columns)
             .eq("club_id", value: clubID)
             .eq("status", value: RoundStatus.active.rawValue)
-            .limit(1)
+            .order("started_at", ascending: false)
             .execute().value
-        guard let round = rounds.first else { return nil }
+        var mine: Set<UUID> = []
+        if rounds.count > 1, let memberID {
+            struct Played: Decodable {
+                let roundID: UUID
+                enum CodingKeys: String, CodingKey { case roundID = "round_id" }
+            }
+            let played: [Played] = try await client.from("round_players")
+                .select("round_id")
+                .in("round_id", values: rounds.map(\.id.uuidString))
+                .eq("member_id", value: memberID)
+                .execute().value
+            mine = Set(played.map(\.roundID))
+        }
+        guard let round = ActiveRounds.pick(rounds, mine: mine, preferred: preferred) else { return nil }
         return try await snapshot(client: client, round: round)
     }
 
@@ -105,19 +121,19 @@ enum RundeQueries {
         return snapshot
     }
 
-    /// Regelsettet til kveldens sesong, ellers den aktive sesongen, ellers Golfgutu-oppsettet.
+    /// Regelsettet til kveldens sesong, ellers hovedturneringens, ellers Golfgutu-oppsettet.
     static func rules(client: SupabaseClient, clubID: UUID, seasonID: UUID?) async throws -> Ruleset {
         if let seasonID {
             let rows: [SeasonRow] = try await client.from("seasons").select(SeasonRow.columns)
                 .eq("id", value: seasonID).execute().value
             if let season = rows.first { return season.rules }
         }
-        let active: [SeasonRow] = try await client.from("seasons").select(SeasonRow.columns)
+        async let active: [SeasonRow] = client.from("seasons").select(SeasonRow.columns)
             .eq("club_id", value: clubID)
             .eq("status", value: SeasonStatus.active.rawValue)
-            .limit(1)
             .execute().value
-        return active.first?.rules ?? .golfgutu
+        async let mains = MainTournament.seasonIDs(client: client, clubID: clubID)
+        return MainTournament.activeSeason(try await active, mainSeasonIDs: await mains)?.rules ?? .golfgutu
     }
 
     /// Par stemmer med skjermen: `confirm_round_par` (sql/007_foring.sql, regelen i sql/014). Hvem som

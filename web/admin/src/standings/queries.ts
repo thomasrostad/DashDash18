@@ -78,10 +78,13 @@ export async function loadCompetition(competitionID: string): Promise<Competitio
 
   // Regelsettet per runde: kveldens sesong, ellers klubbens aktive sesong.
   const seasonIDs = [...new Set((events as { season_id: string | null }[]).map((e) => e.season_id).filter((x): x is string => !!x))];
-  const [byID, active] = await Promise.all([
+  const [byID, active, mains] = await Promise.all([
     seasonIDs.length === 0 ? none : rows(supabase.from("seasons").select(seasonColumns).in("id", seasonIDs)),
     roundClubs.length === 0 ? none : rows(supabase.from("seasons").select(seasonColumns).in("club_id", roundClubs).eq("status", "active")),
+    // Hovedturneringene: flere serier kan være aktive (sql/034), og regelsettet uten kveld er hovedturneringens.
+    roundClubs.length === 0 ? none : rows(supabase.from("competitions").select("season_id").in("club_id", roundClubs).eq("is_main", true)),
   ]);
+  const mainSeasonIDs = (mains as { season_id: string | null }[]).map((m) => m.season_id).filter((x): x is string => !!x);
 
   const profileIDs = [...new Set([
     ...(participants as { profile_id: string | null }[]).map((p) => p.profile_id),
@@ -92,6 +95,6 @@ export async function loadCompetition(competitionID: string): Promise<Competitio
 
   return {
     competition, participants, links, rounds, roundHoles, players, matches, scores, claims, courses, courseHoles, events,
-    clubMembers, roundMembers, seasons: [...byID, ...active], roster: roster as RoundRosterRow[], roundParticipants, profiles, cupMatches,
+    clubMembers, roundMembers, seasons: [...byID, ...active], mainSeasonIDs, roster: roster as RoundRosterRow[], roundParticipants, profiles, cupMatches,
   };
 }

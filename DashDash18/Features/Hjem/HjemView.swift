@@ -10,14 +10,21 @@ enum HjemRoute: Hashable {
     /// Kvelden for arrangøren (fase 21): neste steg, påmelding, runder og avslutning.
     case kvelden(UUID)
     case competition(UUID)
+    /// En løs runde fra «Pågår nå».
+    case looseRound(UUID)
 }
 
 /// Ber Hjem åpne runden som går (arrangørsidens «Gå til runden»). RootView eier den.
 @Observable
 final class HjemRouter {
     private(set) var roundRequest = 0
+    /// Runden som er bedt om, når flere går samtidig (sql/034). nil: standardvalget.
+    private(set) var requestedRoundID: UUID?
 
-    func showRound() { roundRequest += 1 }
+    func showRound(_ roundID: UUID? = nil) {
+        requestedRoundID = roundID
+        roundRequest += 1
+    }
 }
 
 /// Hjem-fanen (fase 19): feeden, med «Pågår nå» og «Neste kveld» øverst. Eier modellene for runden
@@ -93,10 +100,15 @@ private struct HjemClubContent: View {
             // Runden: som RundeGate gjorde for Kveld-fanen.
             .followsRound(round)
             .onChange(of: liveInput, initial: true) { _, live in home.live = live }
+            .onChange(of: context.clubID, initial: true) { _, club in home.liveClubID = club }
             .onChange(of: round.hasRound) { _, has in if has { consumeRoundRequest() } }
             .onChange(of: router?.roundRequest) { _, _ in
                 wantsRound = true
-                consumeRoundRequest()
+                let requested = router?.requestedRoundID
+                Task {
+                    await round.show(roundID: requested)
+                    consumeRoundRequest()
+                }
             }
             // Kvelden: henting, realtime og angre-vinduet.
             .task { await kveld.load() }
@@ -153,7 +165,7 @@ private struct HjemClubContent: View {
     private var actions: HjemActions {
         HjemActions(
             select: { home.filter = $0 },
-            openRound: { route = .round },
+            openRound: openLive,
             openEvening: { route = .evening },
             answer: { kveld.answer($0) },
             undoAnswer: { kveld.undoAnswer() },
@@ -212,8 +224,8 @@ private struct HjemClubContent: View {
             return HjemOrganizerStep(title: title, isBusy: adminActions.isBusy, hint: "Åpner kladden.") {
                 if let round = admin.allRounds.first(where: { $0.id == id }) { adminActions.edit(round) }
             }
-        case .goToRound:
-            return HjemOrganizerStep(title: title, hint: "Åpner runden.") { route = .round }
+        case .goToRound(let id):
+            return HjemOrganizerStep(title: title, hint: "Åpner runden.") { openClubRound(id) }
         case .seeResult:
             return HjemOrganizerStep(title: title, hint: "Åpner Tavla.") { selectTab(.tavla) }
         case .nudge, .closeEvening, .notPlayed, .noEvening:
@@ -226,6 +238,22 @@ private struct HjemClubContent: View {
         case .tavla: selectTab(.tavla)
         case .competition(let id): route = .competition(id)
         }
+    }
+
+    /// «Fortsett føringen» i «Pågår nå»: en løs runde åpnes for seg, en klubbrunde i Kveld-modellen.
+    private func openLive(_ live: HomeLive) {
+        if live.isLoose {
+            route = .looseRound(live.roundID)
+        } else {
+            openClubRound(live.roundID)
+        }
+    }
+
+    /// Åpner en bestemt klubbrunde (flere kan gå samtidig). Skjermen åpnes med en gang; runden byttes
+    /// når den er hentet.
+    private func openClubRound(_ id: UUID) {
+        Task { await round.show(roundID: id) }
+        route = .round
     }
 
     private func reload() {
@@ -252,6 +280,9 @@ private struct HjemClubContent: View {
             KveldenView(eventID: id, terminliste: TerminlisteModel(context: context), admin: admin)
         case .competition(let id):
             HjemCompetitionScreen(context: context, competitionID: id)
+        case .looseRound(let id):
+            LooseRoundScreen(context: LooseRoundContext(client: context.client, userID: context.user.id, roundID: id))
+                .onDisappear { Task { await home.load() } }
         }
     }
 }

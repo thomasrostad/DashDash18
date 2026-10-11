@@ -24,7 +24,9 @@ nonisolated enum HomeBellList {
     static func sections(_ rows: [ActivityRow], reactions: [ActivityReactionRow], names: [UUID: String],
                          viewer: HomeViewer, lastSeen: Date?, now: Date) -> [HomeBellSection] {
         ActivityFeed.sections(rows, now: now).map { section in
-            HomeBellSection(title: section.title, items: section.rows.map { row in
+            HomeBellSection(title: section.title, items: section.rows.compactMap { row -> HomeBellItem? in
+                // Reaksjoner krever klubb: hendelser uten klubb (sql/034) står ikke her.
+                guard let club = row.clubID else { return nil }
                 let me = row.clubMember(of: viewer)
                 let chips = ActivityReactions.chips(for: row.id, in: reactions, me: me, name: { names[$0] })
                 return HomeBellItem(row: row,
@@ -32,7 +34,7 @@ nonisolated enum HomeBellList {
                                     time: ActivityFeed.relativeTime(row.createdAt, now: now),
                                     isUnread: isUnread(row, lastSeen: lastSeen, viewer: viewer),
                                     chips: chips,
-                                    target: HomeReactions(activityID: row.id, clubID: row.clubID, chips: chips))
+                                    target: HomeReactions(activityID: row.id, clubID: club, chips: chips))
             })
         }
     }

@@ -200,13 +200,18 @@ export async function addMember(clubID: string, name: string, handicap: number |
 
 // ===== Del 2b: ny turnering og regler =====
 
-/** Ny serie i klubben (sesong): lagres planlagt, og startes med activate_season når arrangøren vil. */
-export async function createSeason(clubID: string, name: string, rules: Record<string, unknown>, start: boolean): Promise<void> {
+/**
+ * Ny serie i klubben (sesong): lagres planlagt, og startes med activate_season når arrangøren vil.
+ * `asMain` (sql/034): serien tar over som hovedturnering, og den forrige aktive hovedturneringen avsluttes;
+ * ellers går den ved siden av. `p_as_main` sendes alltid, så dette krever at 034 er kjørt.
+ */
+export async function createSeason(clubID: string, name: string, rules: Record<string, unknown>, start: boolean,
+  asMain = true): Promise<void> {
   const { data, error } = await supabase.from("seasons")
     .insert({ club_id: clubID, name: name.trim(), status: "planned", rules }).select("id").single();
   if (error) throw error;
   if (start) {
-    const { error: aErr } = await supabase.rpc("activate_season", { p_season_id: (data as { id: string }).id });
+    const { error: aErr } = await supabase.rpc("activate_season", activateSeasonParams((data as { id: string }).id, asMain));
     if (aErr) throw new Error(`Turneringen er laget, men ikke startet. ${aErr.message}`);
   }
 }
@@ -231,4 +236,9 @@ export async function saveRules(c: Competition, rules: Record<string, unknown>):
     : supabase.from("competitions").update({ rules }).eq("id", c.id);
   const { error } = await q;
   if (error) throw error;
+}
+
+/** `activate_season(p_season_id, p_as_main)` (sql/034). */
+export function activateSeasonParams(seasonID: string, asMain: boolean): { p_season_id: string; p_as_main: boolean } {
+  return { p_season_id: seasonID, p_as_main: asMain };
 }
