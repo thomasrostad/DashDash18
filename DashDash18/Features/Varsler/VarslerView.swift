@@ -195,10 +195,10 @@ struct AnnouncementSheet: View {
             .navigationTitle("Melding til alle")
             .ddNavigationChrome()
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                DDCancelToolbarItem {
                     Button("Avbryt") { dismiss() }
                 }
-                ToolbarItem(placement: .confirmationAction) {
+                DDConfirmToolbarItem {
                     Button("Send") { confirming = true }
                         .disabled(cleaned.isEmpty || model.isSending)
                 }

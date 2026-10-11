@@ -213,6 +213,9 @@ nonisolated enum DDContrastPairs {
         Pair(name: "Fareknapp", foreground: .buttonDangerText, background: .buttonDanger, base: nil),
         Pair(name: "Gullknapp", foreground: .buttonGoldText, background: .buttonGold, base: nil),
         Pair(name: "Ferdig-knapp", foreground: .buttonOKText, background: .buttonOK, base: nil),
+        // Verktøylinja (`DDConfirmToolbarItem`, `DDCancelToolbarItem`).
+        Pair(name: "Bekreft i verktøylinja", foreground: .accentYellowInk, background: .accentYellow, base: nil),
+        Pair(name: "Avbryt i verktøylinja", foreground: .onDark, background: .forest, base: nil),
     ]
 
     /// Kontrast for paret i lys (`dark == false`) eller mørk modus.

@@ -16,7 +16,7 @@ private struct DiscardChangesGuard: ViewModifier {
             .interactiveDismissDisabled(hasChanges)
             .toolbar {
                 if hasChanges || alwaysShowsCancel {
-                    ToolbarItem(placement: .cancellationAction) {
+                    DDCancelToolbarItem {
                         Button("Avbryt") {
                             if hasChanges { confirming = true } else { dismiss() }
                         }
