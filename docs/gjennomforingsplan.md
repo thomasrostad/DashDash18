@@ -44,4 +44,5 @@ Knappefargen (gul med mørk tekst) gjøres med en gang, siden den ikke avhenger 
 | Knappefarge | Pågår |
 | 1 | 034 kjørt på test 11.10 (kontrollene grønne). Appen og web-admin: PR #70 |
 | 6 (motoren) | Merget (#69): `table.minEvenings`, `aggregation`, `pointsTables`, `tieRule` (playoff), `formats.drawMethod`; på runden `counts`, `pointsTable`, `hideLastHoles`. Playoff med fullt handicap (Thomas 11.10). Se `Packages/GolfgutuCore/REGELSETT.md`. Gjenstår: 047 og appen |
+| 7 (motoren) | Branch `fase-27/motor-formater`: lagform og poengtelling som to akser (`FormAxes`), Amerikaner og Københavner etter NGF (side 3 og 4) med poengtabellene i `formPlay.pointsGames`, skins i tabellen (`table.formPoints`, `formPlay.skinPoints`), lag mot lag (`RyderCup`, `formPlay.teamMatch`), flere konkurranser på samme runde (`RoundCompetitions`) og øyeblikksbildet ved start (`FrozenRound`). Swift og TS. Se `Packages/GolfgutuCore/REGELSETT.md`. Gjenstår: 048, oppsett, føring og Tavla |
 | Resten | Ikke startet |

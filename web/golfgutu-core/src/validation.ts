@@ -1,7 +1,7 @@
 // Gyldighetssjekk av regelsettet før det lagres (RulesetValidation.swift, og
 // `CompetitionRules.validate` i Competitions.swift). Grensene for tips og veddemål er databasens.
 
-import { ALL_FORMS } from "./forms.ts";
+import { FORM_CATALOG } from "./forms.ts";
 import type { CompetitionRules, Counting, LeagueRules, Ruleset } from "./ruleset.ts";
 
 /** Et problem i et regelsett, med feltet det gjelder og en norsk melding til arrangøren. */
@@ -79,6 +79,9 @@ export function validateRuleset(r: Ruleset): RulesetIssue[] {
     const m = tables[name].multiplier;
     if (m < 0 || !isFiniteNumber(m)) add(`table.pointsTables.${name}`, `Poengtabellen «${name}» kan ikke gange med et negativt tall.`);
   }
+  if (r.table.formPoints && r.table.pointsSource !== "stableford") {
+    add("table.formPoints", "Formpoeng i tabellen gjelder bare når tabellen teller rundepoeng (stableford), ikke matcher.");
+  }
   if (r.table.stablefordCounting.unit === "match") {
     add("table.stablefordCounting.unit", "Stablefordsummen kan ikke telle matcher. Velg runder eller kvelder.");
   }
@@ -137,13 +140,33 @@ export function validateRuleset(r: Ruleset): RulesetIssue[] {
   // Former.
   if (r.formats.maxPerBay < 1) add("formats.maxPerBay", "Det må være plass til minst én spiller per bås.");
   if (r.formats.allowedFormIDs.length === 0) add("formats.allowedFormIDs", "Minst én konkurranseform må være tillatt.");
-  const known = new Set(ALL_FORMS.map((f) => f.id));
+  const known = new Set(FORM_CATALOG.map((f) => f.id));
   for (const id of r.formats.allowedFormIDs) {
     if (!known.has(id)) add("formats.allowedFormIDs", `Ukjent konkurranseform: «${id}».`);
   }
   if (r.formats.allowedFormIDs.length > 0 && !r.formats.allowedFormIDs.includes(r.formats.defaultFormID)) {
     add("formats.defaultFormID", "Standardformen må være blant de tillatte formene.");
   }
+
+  // Formene fra steg 7.
+  for (const name of Object.keys(r.formPlay.pointsGames).sort()) {
+    const game = r.formPlay.pointsGames[name];
+    const field = `formPlay.pointsGames.${name}`;
+    if (game.players < 2) add(field, "Et poengspill må ha minst to spillere.");
+    if (game.handicap.allowance < 0 || game.handicap.allowance > 1) add(field, "Handicapandelen må være mellom 0 og 100 %.");
+    for (const pattern of Object.keys(game.points).sort()) {
+      const points = game.points[pattern];
+      if (points.length !== game.players) {
+        add(field, `Poengene for «${pattern}» må ha én verdi per spiller (${game.players}).`);
+      } else if (points.some((x) => x < 0 || !isFiniteNumber(x))) {
+        add(field, `Poengene for «${pattern}» kan ikke være negative.`);
+      }
+    }
+  }
+  notNegative(r.formPlay.skinPoints, "formPlay.skinPoints", "Tabellpoeng per skin");
+  notNegative(r.formPlay.teamMatch.win, "formPlay.teamMatch.win", "Lagpoeng for seier");
+  notNegative(r.formPlay.teamMatch.draw, "formPlay.teamMatch.draw", "Lagpoeng for delt");
+  notNegative(r.formPlay.teamMatch.loss, "formPlay.teamMatch.loss", "Lagpoeng for tap");
 
   // Tippekupongen.
   const t = r.tips;

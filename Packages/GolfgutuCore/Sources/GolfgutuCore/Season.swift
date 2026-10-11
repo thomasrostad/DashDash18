@@ -15,6 +15,8 @@ public struct Season: Sendable {
     public let ruleset: Ruleset
     /// `round_points` per runde, regnet én gang.
     private let pointsByRound: [[String: Int]]
+    /// Rundepoengene i tabellen når den teller formens poeng (`table.formPoints`), regnet én gang. Tom ellers.
+    private let formPointsByRound: [[String: Double]]
 
     /// - Parameter playingHandicaps: rundens frosne spillehandicap, runde-id → spiller-id → handicap
     ///   i hele slag. Legges på rundene (`Round.playingHandicaps`, og vinner over det som står der fra før)
@@ -33,6 +35,8 @@ public struct Season: Sendable {
         self.claims = claims
         self.ruleset = ruleset
         pointsByRound = rounds.map { Scoring.roundPoints($0, roster: players, rules: ruleset) }
+        formPointsByRound = ruleset.table.formPoints && ruleset.table.pointsSource == .stableford
+            ? rounds.map { FormPlay.tablePoints($0, roster: players, rules: ruleset) } : []
     }
 
     // MARK: Typer
@@ -202,7 +206,7 @@ public struct Season: Sendable {
     private func stablefordTableSelection(for playerID: String) -> TableSelection {
         let side = sidePrizeResults(for: playerID)
         let chronological = rounds.indices.compactMap { i -> RoundScore? in
-            guard effectiveWeight(rounds[i]) != 0, let p = weightedRoundPoints(i, playerID: playerID) else { return nil }
+            guard effectiveWeight(rounds[i]) != 0, let p = weightedTableRoundPoints(i, playerID: playerID) else { return nil }
             return RoundScore(roundIndex: i, roundID: rounds[i].id, points: p)
         }
         let all = chronological.enumerated().sorted { x, y in
@@ -326,6 +330,14 @@ public struct Season: Sendable {
     public func weightedRoundPoints(_ roundIndex: Int, playerID: String) -> Double? {
         guard let p = pointsByRound[roundIndex][playerID] else { return nil }
         return Double(p) * effectiveWeight(rounds[roundIndex])
+    }
+
+    /// Rundens poeng i tabellen ganget med vekten: formens poeng med `table.formPoints`, ellers
+    /// stablefordpoengene (`weightedRoundPoints`).
+    func weightedTableRoundPoints(_ roundIndex: Int, playerID: String) -> Double? {
+        guard !formPointsByRound.isEmpty else { return weightedRoundPoints(roundIndex, playerID: playerID) }
+        guard let p = formPointsByRound[roundIndex][playerID] else { return nil }
+        return p * effectiveWeight(rounds[roundIndex])
     }
 
     /// `tellendeRunderFor`: rundene som teller i stablefordsummen, best først (vekten legges på før
