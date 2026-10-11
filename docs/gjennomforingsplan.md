@@ -42,6 +42,6 @@ Knappefargen (gul med mørk tekst) gjøres med en gang, siden den ikke avhenger 
 | Steg | Status |
 |---|---|
 | Knappefarge | Pågår |
-| 1 | Pågår: 034 skrives |
+| 1 | 034 skrevet og prøvd lokalt (20 av 20), venter på godkjenning. Appen og web-admin tilpasses parallelt |
 | 6 (motoren) | Pågår parallelt: tabellregler og playoff i GolfgutuCore og TypeScript, uten SQL |
 | Resten | Ikke startet |
