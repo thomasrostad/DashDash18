@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
 /// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `tavlaferdig`, `tavlastableford`, `profil`, `sesong`,
-/// `varsler`, `trad`, `liste`, `hurtigstart`, `flerevalg`, `arrangor`, `arrangorstart`, `arrangorpagar`, `arrangorferdig`, `arrangorbunn`, `runder`, `kveldene`, `kvelden`, `kveldenbunn`, `baner`, `nybane`, `regler`, `reglerendre`, `nyturnering`, `nyturnering2`, `turneringer`,
+/// `varsler`, `trad`, `liste`, `hurtigstart`, `flerevalg`, `tavlaregler`, `arrangor`, `arrangorstart`, `arrangorpagar`, `arrangorferdig`, `arrangorbunn`, `runder`, `kveldene`, `kvelden`, `kveldenbunn`, `baner`, `nybane`, `regler`, `reglerendre`, `nyturnering`, `nyturnering2`, `turneringer`,
 /// `statoversikt`, `stathistorikk`, `statrekorder`, `stattom`, `statforing`,
 /// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
 /// og spill på runden: `spill`, `spillnytt`, `spillresultat`,
@@ -21,6 +21,8 @@ struct DesignScreenSamples: View {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
         // «Flere valg» på Ny runde (fase 18).
         case flerevalg
+        // Tavla med tabellreglene (steg 6): playoff om førsteplassen og minste antall kvelder.
+        case tavlaregler
         // Arrangørsiden: «Kom i gang» (fase 11).
         case arrangorstart
         // Kveldene og Kvelden (fase 11).
@@ -111,6 +113,12 @@ struct DesignScreenSamples: View {
                 .tint(Color.ddForestInk)
         case .nyturnering, .nyturnering2, .turneringer:
             TurneringSampleScreen(screen: screen)
+        case .tavlaregler:
+            NavigationStack {
+                TavlaList(standings: TavlaSamples.standings(rules: Self.tableRulesSample))
+                    .navigationTitle("Tavla")
+                    .ddNavigationChrome()
+            }
         case .tavlastableford:
             NavigationStack {
                 TavlaList(standings: TavlaSamples.standings(stableford: true))
@@ -263,4 +271,15 @@ struct DesignScreenSamples: View {
 #Preview("Hullkort") { DesignScreenSamples(screen: .hullkort) }
 #Preview("Hullkort mørk") { DesignScreenSamples(screen: .hullkort).preferredColorScheme(.dark) }
 #Preview("Feiring") { DesignScreenSamples(screen: .feiring) }
+
+extension DesignScreenSamples {
+    /// Golfgutu med playoff om førsteplassen, hele poeng og minst 4 kvelder for plass.
+    static var tableRulesSample: Ruleset {
+        var r = Ruleset.golfgutu
+        r.table.tieRule = .playoff
+        r.table.roundingStep = 1
+        r.table.minEvenings = 4
+        return r
+    }
+}
 #endif

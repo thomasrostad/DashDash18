@@ -43,5 +43,5 @@ Knappefargen (gul med mørk tekst) gjøres med en gang, siden den ikke avhenger 
 |---|---|
 | Knappefarge | Pågår |
 | 1 | 034 kjørt på test 11.10 (kontrollene grønne). Appen og web-admin: PR #70 |
-| 6 (motoren) | Merget (#69): `table.minEvenings`, `aggregation`, `pointsTables`, `tieRule` (playoff), `formats.drawMethod`; på runden `counts`, `pointsTable`, `hideLastHoles`. Playoff med fullt handicap (Thomas 11.10). Se `Packages/GolfgutuCore/REGELSETT.md`. Gjenstår: 047 og appen |
+| 6 (motoren) | Merget (#69): `table.minEvenings`, `aggregation`, `pointsTables`, `tieRule` (playoff), `formats.drawMethod`; på runden `counts`, `pointsTable`, `hideLastHoles`. Playoff med fullt handicap (Thomas 11.10). Se `Packages/GolfgutuCore/REGELSETT.md`. Appen og web-admin (branch `fase-27/steg6-app`): Tavla, TV og Tabeller med delt plass, uten plass og playoff-merke; de nye reglene i «Tilpass reglene» og «Reglene»; trekning etter `drawMethod` og tilfeldige lag med bytte. Gjenstår: 047 (`counts`, `pointsTable`, `hideLastHoles`, `rounds.kind = playoff`) og playoff-runden |
 | Resten | Ikke startet |

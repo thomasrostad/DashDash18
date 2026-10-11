@@ -43,6 +43,7 @@ func tavla(_ t: TavlaStandings) -> [String: Any] {
             ["memberID": u(r.memberID), "name": r.name, "place": r.place, "total": r.total, "duel": r.duel,
              "side": r.side, "matches": r.matches, "holes": r.holes, "stableford": r.stableford,
              "evenings": r.evenings, "isMe": r.isMe, "roundPoints": r.roundPoints, "played": r.played,
+             "qualified": r.qualified, "playoffPending": r.playoffPending,
              "placeText": t.placeText(r), "totalText": t.points(r.total), "duelText": t.points(r.duel),
              "sideText": t.points(r.side), "detail": t.detail(r), "basis": n(t.basis(r))]
         },

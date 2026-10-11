@@ -105,8 +105,9 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
     case pointsSource, evenings, counting, win, draw, loss, allowance, longestDrive, closestToPin, splitTies
     // Avanserte valg
     case scoring, trianglePoints, stablefordCounting, tiebreaks, rounding
+    case minEvenings, aggregation, pointsTables, tieRule
     case seeding, externalHandicap, teamHandicap
-    case defaultForm, allowedForms, maxPerBay, matchStrokes
+    case defaultForm, allowedForms, maxPerBay, matchStrokes, drawMethod
     /// Tippekupong, veddemål og ledelsesmeldinger: ikke i skjemaet her, men med i sammenligningen.
     case other
 
@@ -134,6 +135,10 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .stablefordCounting: "Stablefordsummen"
         case .tiebreaks: "Ved likt poeng"
         case .rounding: "Avrunding"
+        case .minEvenings: "Minste antall kvelder"
+        case .aggregation: "Tabellen regnes som"
+        case .pointsTables: "Poengtabeller"
+        case .tieRule: "Likt på første plass"
         case .seeding: "Seeding"
         case .externalHandicap: "Ekstern handicap"
         case .teamHandicap: "Lagshandicap"
@@ -141,6 +146,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .allowedForms: "Tillatte former"
         case .maxPerBay: "Maks per bås"
         case .matchStrokes: "Slag i match"
+        case .drawMethod: "Trekning av matcher"
         case .other: "Tips, veddemål og ledelse"
         }
     }
@@ -165,6 +171,10 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .stablefordCounting: a.table.stablefordCounting != b.table.stablefordCounting
         case .tiebreaks: a.table.tiebreaks != b.table.tiebreaks
         case .rounding: a.table.roundingStep != b.table.roundingStep
+        case .minEvenings: (a.table.minEvenings ?? 0) != (b.table.minEvenings ?? 0)
+        case .aggregation: a.table.aggregation != b.table.aggregation
+        case .pointsTables: a.table.pointsTables != b.table.pointsTables
+        case .tieRule: a.table.tieRule != b.table.tieRule
         case .seeding: a.handicap.seedingGroups != b.handicap.seedingGroups
         case .externalHandicap: a.handicap.externalHandicap != b.handicap.externalHandicap
         case .teamHandicap: a.handicap.teamHandicap != b.handicap.teamHandicap
@@ -172,6 +182,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .allowedForms: a.formats.allowedFormIDs != b.formats.allowedFormIDs
         case .maxPerBay: a.formats.maxPerBay != b.formats.maxPerBay
         case .matchStrokes: a.formats.matchStrokes != b.formats.matchStrokes
+        case .drawMethod: a.formats.drawMethod != b.formats.drawMethod
         case .other: a.tips != b.tips || a.bets != b.bets || a.leadCheckpoints != b.leadCheckpoints
         }
     }
@@ -202,6 +213,10 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .tiebreaks:
             return rules.table.tiebreaks.isEmpty ? "ingen" : rules.table.tiebreaks.map(RuleNames.inSentence).joined(separator: ", ")
         case .rounding: return rules.table.roundingStep.map(RuleFormat.number) ?? "av"
+        case .minEvenings: return rules.table.minEvenings.flatMap { $0 > 0 ? "\($0)" : nil } ?? "av"
+        case .aggregation: return RuleNames.title(rules.table.aggregation).lowercased()
+        case .pointsTables: return rules.table.pointsTables.isEmpty ? "ingen" : "\(rules.table.pointsTables.count)"
+        case .tieRule: return RuleNames.title(rules.table.tieRule).lowercased()
         case .seeding:
             let groups = rules.handicap.seedingGroups.sorted { $0.number < $1.number }
             return groups.isEmpty ? "ingen" : groups.map { RuleFormat.number($0.handicap) }.joined(separator: " / ")
@@ -211,6 +226,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .allowedForms: return "\(rules.allowedForms.count) av \(CompetitionForm.all.count)"
         case .maxPerBay: return "\(rules.formats.maxPerBay)"
         case .matchStrokes: return RuleNames.title(rules.formats.matchStrokes).lowercased()
+        case .drawMethod: return RuleNames.title(rules.formats.drawMethod).lowercased()
         case .other: return "oppsettets valg"
         }
     }

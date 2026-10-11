@@ -26,7 +26,8 @@ nonisolated struct TableBoard: Equatable, Sendable {
 
     /// Jakkeracet (og andre konkurranser som regnes som Tavla).
     init(_ tavla: TavlaStandings) {
-        standings = tavla.rows.map { TableStanding(id: $0.memberID, place: $0.place, points: $0.total) }
+        // De uten plass (for få kvelder, `table.minEvenings`) er ikke med i plassbevegelsene.
+        standings = tavla.rows.filter(\.qualified).map { TableStanding(id: $0.memberID, place: $0.place, points: $0.total) }
         hasResults = tavla.eveningsPlayed > 0 || tavla.rows.contains { $0.total != 0 }
     }
 

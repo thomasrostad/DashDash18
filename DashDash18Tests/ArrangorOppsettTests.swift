@@ -228,6 +228,11 @@ struct EndretFraStandardTests {
         (.allowedForms, { r in r.formats.allowedFormIDs = ["stableford"] }),
         (.maxPerBay, { r in r.formats.maxPerBay = 3 }),
         (.matchStrokes, { r in r.formats.matchStrokes = .fullHandicap }),
+        (.minEvenings, { r in r.table.minEvenings = 3 }),
+        (.aggregation, { r in r.table.aggregation = .average }),
+        (.pointsTables, { r in r.table.pointsTables = ["Finale": Ruleset.PointsTable(multiplier: 2)] }),
+        (.tieRule, { r in r.table.tieRule = .playoff }),
+        (.drawMethod, { r in r.formats.drawMethod = .avoidRepeats }),
         (.other, { r in r.leadCheckpoints = [9, 18] }),
         ]
         for (field, change) in cases {

@@ -31,7 +31,7 @@ nonisolated extension WidgetSnapshot {
     }
 
     static func topThree(_ rows: [TavlaStandings.Row], format: (Double) -> String) -> [Leader] {
-        rows.prefix(3).map { row in
+        rows.filter(\.qualified).prefix(3).map { row in
             Leader(place: row.place, name: row.name, points: row.total, pointsText: format(row.total), isMe: row.isMe)
         }
     }
