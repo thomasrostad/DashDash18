@@ -72,7 +72,7 @@ final class TradModel {
 
     convenience init(context: ClubContext, eventID: UUID) {
         self.init(eventID: eventID, clubID: context.clubID, viewer: context.memberID,
-                  isOrganizer: context.isOrganizer, backend: SupabaseTradBackend(client: context.client),
+                  isOrganizer: context.can(.money), backend: SupabaseTradBackend(client: context.client),
                   client: context.client)
     }
 

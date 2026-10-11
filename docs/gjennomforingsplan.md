@@ -43,5 +43,6 @@ Knappefargen (gul med mørk tekst) gjøres med en gang, siden den ikke avhenger 
 |---|---|
 | Knappefarge | Pågår |
 | 1 | 034 kjørt på test 11.10 (kontrollene grønne). Appen og web-admin: PR #70 |
+| 2 | 044 venter på godkjenning (branch `fase-27/044-roller`). Appen og web-admin: branch `fase-27/steg2-app` (Roller, rettigheter på arrangørsiden, organisasjonsnummer og «Hent navn»). Merges først når 044 er kjørt på test; uten 044 skjules rollene, og alt er som før |
 | 6 (motoren) | Merget (#69): `table.minEvenings`, `aggregation`, `pointsTables`, `tieRule` (playoff), `formats.drawMethod`; på runden `counts`, `pointsTable`, `hideLastHoles`. Playoff med fullt handicap (Thomas 11.10). Se `Packages/GolfgutuCore/REGELSETT.md`. Gjenstår: 047 og appen |
 | Resten | Ikke startet |

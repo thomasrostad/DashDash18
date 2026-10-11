@@ -10,7 +10,7 @@ Native iOS-app for golfturneringer blant venner. Den erstatter GolfGutu-PWA-en s
 
 Status 09.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detaljer per fase står i [`ROADMAP.md`](ROADMAP.md).
 
-**Fanene.** Hjem · Spill · Tavla · Arrangør · Deg. «Arrangør» vises bare for arrangører i klubben. Uten klubb har appen Spill og Deg.
+**Fanene.** Hjem · Spill · Tavla · Arrangør · Deg. «Arrangør» vises bare for arrangører i klubben (med sql/044: dem med minst én rettighet). Uten klubb har appen Spill og Deg.
 
 | Område | Hva |
 |---|---|
@@ -22,6 +22,8 @@ Status 09.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detalje
 | Ordet for en dag | «Kveld» for Golfgutu, «Spilledag» for nye turneringer (valg i «Ny turnering» og i reglene) |
 | Arrangør på web | https://admin.dashdash18.com: samme innlogging og tilganger som appen. Del 1 viser turneringer, terminliste og tropp; resten kommer i delene i `web/admin/README.md` |
 | Arrangør | Oppsett øverst (turneringen, troppen, banene), så dagen som står for tur med stegrekka Påmelding → Oppsett → Spilles → Ferdig, kommende og tidligere dager, varsler, rapporter og arkiv. Med sql/034: flere runder kan gå samtidig (én per spilledag og pulje), opptil 99 båser, og en serie som aktiveres mens hovedturneringen går, kan erstatte den eller kjøre ved siden av. Tavla, Vedd og arrangørsiden viser hovedturneringen |
+| Roller (steg 2, krever sql/044) | Klubben har roller med fire rettigheter (turneringer, runder, medlemmer, penger). Eieren styrer «Roller» på Arrangør-fanen og gir bort eierskapet fra spillersiden i Troppen; den som har «Medlemmer og invitasjon» gir roller med rettigheter den selv har. Arrangør-fanen viser bare delene du har rettighet til. Uten 044 er alt som før (bryterne for arrangør og kasserer). Det samme på web (fanene Roller og Tropp) |
+| Klubben | Navn og valgfritt organisasjonsnummer (Arrangør → Klubben, og «Klubb» på web). «Hent navn» henter navnet fra Enhetsregisteret, og du bekrefter før det brukes. Nummeret lagres når 044 er kjørt |
 | Tavla | Tabellen regnes på telefonen av regelmotoren (paritet med PWA-en), med data fra én RPC (`tavla_data`). «Alle runder» (også i liga og morro) viser alle spillernes poeng, slag eller mot par runde for runde (som et PGA-leaderboard), og hver rute og hver runde på spillerprofilen åpner scorekortet. «TV-visning» viser tabellen i fullskjerm for skjermen i lokalet (side for side, siste runde, oppdateres mens det føres, skjermen slukker ikke). Arrangøren kan lage en TV-kode, så en skjerm uten appen viser tabellen på dashdash18.com/tv/KODE (regnet på serveren). Det samme gjelder liga, cup og morro (TV-kode på turneringssiden) |
 | Vedd og tips | Veddemål med poeng i hovedturneringen (ikke i andre turneringer ennå), tippekupong per kveld med «Tips» og «Forrige kupong» rett på Hjem-kortet |
 | Ytelse | Mengdebaserte RPC-er for venner, løse runder, turneringslista og Hjem (sql/036–037) |

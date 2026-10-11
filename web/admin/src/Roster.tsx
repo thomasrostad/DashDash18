@@ -2,10 +2,14 @@ import { useState } from "react";
 import { addMember, updateMember, type Member, type MemberPatch } from "./data.ts";
 import { errorText } from "./supabase.ts";
 import { memberStatusText } from "./text.ts";
+import { canGrant, type Rights } from "./roles.ts";
+import { setMemberRoles, transferOwnership, type RoleData } from "./rolesApi.ts";
 
 /** Troppen: godkjenne, roller, handicap og seeding, arkivere, legge til, og invitasjonslenken. */
-export function Roster({ clubID, roster, joinCode, onChanged }: {
+export function Roster({ clubID, roster, joinCode, onChanged, roleData, viewer, myMemberID }: {
   clubID: string; roster: Member[]; joinCode: string | null; onChanged: () => void;
+  /** Rollene (sql/044). Null: bryterne for arrangør og kasserer, som før. */
+  roleData: RoleData | null; viewer: Rights; myMemberID: string;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -17,6 +21,48 @@ export function Roster({ clubID, roster, joinCode, onChanged }: {
   async function patch(m: Member, p: MemberPatch) {
     setBusy(m.id); setError(null);
     try { await updateMember(clubID, m.id, p); onChanged(); } catch (e) { setError(errorText(e)); } finally { setBusy(null); }
+  }
+
+  async function run(m: Member, f: () => Promise<void>) {
+    setBusy(m.id); setError(null);
+    try { await f(); onChanged(); } catch (e) { setError(errorText(e)); } finally { setBusy(null); }
+  }
+
+  function roleIDs(memberID: string): string[] {
+    return roleData ? roleData.assignments.filter((a) => a.member_id === memberID).map((a) => a.role_id) : [];
+  }
+
+  function toggleRole(m: Member, roleID: string, on: boolean) {
+    const current = new Set(roleIDs(m.id));
+    if (on) current.add(roleID); else current.delete(roleID);
+    run(m, () => setMemberRoles(m.id, [...current]));
+  }
+
+  function rolesCell(m: Member) {
+    if (!roleData) return (
+      <>
+        <label className="check"><input type="checkbox" checked={m.is_organizer} disabled={busy === m.id || m.status !== "active"}
+          onChange={(e) => patch(m, { is_organizer: e.target.checked })} />Arrangør</label>
+        <label className="check"><input type="checkbox" checked={m.is_treasurer} disabled={busy === m.id || m.status !== "active"}
+          onChange={(e) => patch(m, { is_treasurer: e.target.checked })} />Kasserer</label>
+      </>
+    );
+    const mine = new Set(roleIDs(m.id));
+    const isOwner = roleData.roles.some((r) => r.is_owner && mine.has(r.id));
+    return (
+      <>
+        {roleData.roles.map((r) => (
+          <label key={r.id} className="check"><input type="checkbox" checked={mine.has(r.id)}
+            disabled={busy === m.id || m.status !== "active" || !canGrant(viewer, r)}
+            onChange={(e) => toggleRole(m, r.id, e.target.checked)} />{r.name}</label>
+        ))}
+        {viewer.isOwner && !isOwner && m.status === "active" && m.user_id && m.id !== myMemberID && (
+          <button className="link" disabled={busy === m.id}
+            onClick={() => confirm(`Gi eierskapet til ${m.display_name}? Du mister Eier, men beholder de andre rollene dine.`)
+              && run(m, () => transferOwnership(clubID, m.id))}>Overfør eierskap</button>
+        )}
+      </>
+    );
   }
 
   async function add(e: React.FormEvent) {
@@ -67,12 +113,7 @@ export function Roster({ clubID, roster, joinCode, onChanged }: {
                   <option value="">–</option>{[1, 2, 3, 4].map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
               </td>
-              <td>
-                <label className="check"><input type="checkbox" checked={m.is_organizer} disabled={busy === m.id || m.status !== "active"}
-                  onChange={(e) => patch(m, { is_organizer: e.target.checked })} />Arrangør</label>
-                <label className="check"><input type="checkbox" checked={m.is_treasurer} disabled={busy === m.id || m.status !== "active"}
-                  onChange={(e) => patch(m, { is_treasurer: e.target.checked })} />Kasserer</label>
-              </td>
+              <td>{rolesCell(m)}</td>
               <td>{memberStatusText(m.status)}</td>
               <td className="actions">
                 {m.status === "pending" && <>

@@ -16,9 +16,17 @@ final class TroppModel {
     var error: TroppError?
 
     let context: ClubContext
+    /// Rollene (sql/044). Uten roller vises bryterne for arrangør og kasserer.
+    let roles: ClubRolesModel
 
     init(context: ClubContext) {
         self.context = context
+        roles = ClubRolesModel(context: context)
+    }
+
+    /// Rollenavnene under navnet i lista, når klubben har roller.
+    func roleNames(of member: UUID) -> [String]? {
+        roles.isAvailable ? roles.roles(of: member).map(\.name) : nil
     }
 
     var sections: TroppSections { TroppSections(rows) }
@@ -47,7 +55,9 @@ final class TroppModel {
         } catch {
             self.error = Self.troppError(from: error)
         }
+        async let roles: Void = self.roles.load()
         await loadSeedGroups()
+        await roles
     }
 
     /// Gruppene fra hovedturneringen (sql/034: flere serier kan gå samtidig). Feiler oppslaget,

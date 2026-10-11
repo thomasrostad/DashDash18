@@ -8,10 +8,23 @@ struct ClubContext {
     let client: SupabaseClient
     let user: AuthUser
     let membership: Membership
+    /// Rollene i klubben (sql/044). nil når 044 ikke er kjørt eller rollene ikke er hentet ennå:
+    /// da gjelder flaggene `is_organizer` og `is_treasurer`, som før.
+    var roleAccess: ClubRoleAccess? = nil
 
     var clubID: UUID { membership.clubID }
     var memberID: UUID { membership.id }
-    var isOrganizer: Bool { membership.isOrganizer }
+
+    /// Rettighetene den innloggede har i klubben. Bare for å skjule; serveren er vakta.
+    var rights: ClubRights {
+        roleAccess?.rights ?? .legacy(isOrganizer: membership.isOrganizer, isTreasurer: membership.isTreasurer)
+    }
+
+    /// Minst én rettighet (som `is_club_organizer`). Flagget teller også, så ingen dagens arrangør
+    /// mister noe mens rollene hentes.
+    var isOrganizer: Bool { membership.isOrganizer || rights.hasAny }
+
+    func can(_ right: ClubRight) -> Bool { rights.has(right) }
 }
 
 extension EnvironmentValues {

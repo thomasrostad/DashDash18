@@ -121,6 +121,8 @@ private struct AdminHubContent: View {
     /// «Gå til runden»: Hjem-fanen åpner runden (fase 19), også når arrangørsiden står over Hjem.
     @Environment(\.showRound) private var showRound
     @Environment(\.selectTab) private var selectTab
+    /// Det nyeste (rollene kan endres mens siden står åpen). nil i skjermprøvene.
+    @Environment(\.clubContext) private var liveContext
 
     @State private var openEvent: UUID?
     @State private var showsNewTournament = false
@@ -152,7 +154,7 @@ private struct AdminHubContent: View {
                     TournamentPickerSection(header: header)
                 }
                 // Før sesongen er klar, står invitasjonen i «Kom i gang» (under Troppen) i stedet.
-                if let invite, !(model.state == .loaded && showsGettingStarted) {
+                if let invite, shows(.roster), !(model.state == .loaded && showsGettingStarted) {
                     Section {
                         InvitePlayersRow(clubName: clubName, invite: invite,
                                          subtitle: ClubInvite.organizerSubtitle(
@@ -168,7 +170,7 @@ private struct AdminHubContent: View {
                     failed(text)
                 case .loaded:
                     setupSection
-                    timeline
+                    if shows(.timeline) { timeline }
                     rareSections
                 }
             }
@@ -183,13 +185,14 @@ private struct AdminHubContent: View {
         .ddNavigationChrome()
         .toolbar {
             // Alltid synlig, også når siden åpnes rullet ned til kvelden.
-            if let invite {
+            if let invite, shows(.roster) {
                 ToolbarItem(placement: .primaryAction) {
                     ShareLink(item: invite.shareText(clubName: clubName)) {
                         Label("Inviter spillere", systemImage: "person.badge.plus")
                     }
                 }
             }
+            if shows(.tournaments) {
             ToolbarItem(placement: .primaryAction) {
                 // «+»: ny kveld/spilledag eller ny turnering (09.10.2026: «Lag turnering» var gjemt).
                 Menu {
@@ -199,6 +202,7 @@ private struct AdminHubContent: View {
                 } label: {
                     Label("Ny", systemImage: "plus")
                 }
+            }
             }
         }
         // Også tilbake fra Kvelden: svar, runder og komité kan være endret.
@@ -265,6 +269,13 @@ private struct AdminHubContent: View {
         .padding(.vertical, DDSpacing.s)
     }
 
+    // MARK: Rettigheter
+
+    /// Delene av siden du har rettighet til (sql/044). Uten roller: flaggene, som før.
+    private func shows(_ area: AdminArea) -> Bool {
+        area.isVisible(for: (liveContext ?? model.clubContext).rights)
+    }
+
     // MARK: Invitasjon
 
     private var clubName: String { model.clubContext.membership.club.name }
@@ -323,11 +334,13 @@ private struct AdminHubContent: View {
             ForEach(parts.upcoming) { event in
                 eveningRow(event, referenceYear: year, isPast: false)
             }
-            Button { newEvening() } label: {
-                Label("Ny \(term.one)", systemImage: "plus")
-                    .foregroundStyle(Color.ddForestInk)
+            if shows(.tournaments) {
+                Button { newEvening() } label: {
+                    Label("Ny \(term.one)", systemImage: "plus")
+                        .foregroundStyle(Color.ddForestInk)
+                }
+                .disabled(terminliste.state != .loaded)
             }
-            .disabled(terminliste.state != .loaded)
         } header: {
             DDHeader(timelineTitle(parts.focus == nil ? DayTerm.capitalized(term.theMany) : "Kommende \(term.many)"))
         } footer: {
@@ -339,7 +352,7 @@ private struct AdminHubContent: View {
         let missingCommittee = (parts.upcoming + [parts.focus].compactMap { $0 })
             .filter { $0.eventDate >= today }
             .contains { (terminliste.committees[$0.id] ?? []).count < perEvening }
-        if terminliste.state == .loaded && missingCommittee {
+        if terminliste.state == .loaded && missingCommittee && shows(.tournaments) {
             Section {
                 Stepper("Per \(term.one): \(perEvening)", value: $perEvening, in: 1...6)
                 Button("Trekk sosialkomité", systemImage: "dice") { draw() }
@@ -394,7 +407,9 @@ private struct AdminHubContent: View {
         }
         .buttonStyle(.plain)
         .swipeActions {
-            Button("Slett", systemImage: "trash", role: .destructive) { pendingDelete = event }
+            if shows(.tournaments) {
+                Button("Slett", systemImage: "trash", role: .destructive) { pendingDelete = event }
+            }
         }
     }
 
@@ -513,7 +528,8 @@ private struct AdminHubContent: View {
     @ViewBuilder
     private var rareSections: some View {
         DDSection("Varsler og rapporter") {
-            ForEach(ClubTools.hubRows(moderationEnabled: ModerationFeature.isEnabled), id: \.self) { row in
+            ForEach(ClubTools.hubRows(moderationEnabled: ModerationFeature.isEnabled)
+                .filter { $0 != .reports || shows(.reports) }, id: \.self) { row in
                 switch row {
                 case .notices:
                     NavigationLink { VarslerTilTroppenView() } label: {
@@ -529,13 +545,15 @@ private struct AdminHubContent: View {
             }
         }
         .id(AdminHubScroll.bottom)
-        Section {
-            NavigationLink { RundeAdminView() } label: {
-                AdminHubRow("Alle runder", "Nyeste først, også fra tidligere turneringer.",
-                            systemImage: "archivebox")
+        if shows(.rounds) {
+            Section {
+                NavigationLink { RundeAdminView() } label: {
+                    AdminHubRow("Alle runder", "Nyeste først, også fra tidligere turneringer.",
+                                systemImage: "archivebox")
+                }
+            } header: {
+                DDHeader("Arkiv")
             }
-        } header: {
-            DDHeader("Arkiv")
         }
     }
 
@@ -553,17 +571,34 @@ private struct AdminHubContent: View {
 
     @ViewBuilder
     private var setupRows: some View {
-        NavigationLink { SesongAdminView() } label: {
-            AdminHubRow("Turneringen", "Hovedturneringen, reglene, alle turneringer og ny turnering.", systemImage: "trophy")
+        if shows(.tournaments) {
+            NavigationLink { SesongAdminView() } label: {
+                AdminHubRow("Turneringen", "Hovedturneringen, reglene, alle turneringer og ny turnering.", systemImage: "trophy")
+            }
         }
-        NavigationLink { TroppAdminView() } label: {
-            AdminHubRow("Troppen", "Spillerne, handicap, roller og nye som venter på godkjenning.",
-                        systemImage: "person.3")
+        if shows(.roster) {
+            NavigationLink { TroppAdminView() } label: {
+                AdminHubRow("Troppen", "Spillerne, handicap, roller og nye som venter på godkjenning.",
+                            systemImage: "person.3")
+            }
         }
-        NavigationLink { BanerAdminView() } label: {
-            AdminHubRow("Banene", "Par, indeks og lengde for banene dere spiller.", systemImage: "map")
+        if shows(.rounds) {
+            NavigationLink { BanerAdminView() } label: {
+                AdminHubRow("Banene", "Par, indeks og lengde for banene dere spiller.", systemImage: "map")
+            }
         }
-        if let header, let competition = header.competition {
+        if shows(.club) {
+            NavigationLink { KlubbView() } label: {
+                AdminHubRow("Klubben", "Navn og organisasjonsnummer.", systemImage: "building.2")
+            }
+        }
+        // Bare når klubben har roller (sql/044) og du er eier.
+        if shows(.roles), (liveContext ?? model.clubContext).roleAccess != nil {
+            NavigationLink { RollerView() } label: {
+                AdminHubRow("Roller", "Hvem som kan hva i klubben.", systemImage: "person.badge.key")
+            }
+        }
+        if shows(.tournaments), let header, let competition = header.competition {
             TournamentSetupRows(competition: competition, context: header.context)
         }
     }

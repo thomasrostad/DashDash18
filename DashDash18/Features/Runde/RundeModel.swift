@@ -115,7 +115,7 @@ final class RundeModel {
     var viewer: Viewer {
         switch source {
         case .club(let context):
-            Viewer(memberID: context.memberID, isOrganizer: context.isOrganizer)
+            Viewer(memberID: context.memberID, isOrganizer: context.can(.rounds))
         case .loose(let loose):
             LooseRoundRights.viewer(info: snapshot?.loose, userID: loose.userID)
         }

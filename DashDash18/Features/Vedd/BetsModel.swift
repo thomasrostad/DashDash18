@@ -32,7 +32,7 @@ final class BetsModel {
         guard BetsFeature.isEnabled else { state = .disabled; return }
         do {
             let input = try await BetsQueries.load(client: client, clubID: context.clubID)
-            board = input.map { BetsBoard($0, me: context.memberID, isOrganizer: context.isOrganizer) }
+            board = input.map { BetsBoard($0, me: context.memberID, isOrganizer: context.can(.money)) }
             state = .loaded
             await sweep()
         } catch is CancellationError {
@@ -73,7 +73,7 @@ final class BetsModel {
     /// Arrangøren avgjør (JA, NEI) eller annullerer. Kan ikke angres. Ikke når hun selv har
     /// satset på veddemålet (`resolve_bet` avviser det også).
     func resolve(_ item: BetsBoard.Item, verdict: BetVerdict) async throws(DataError) {
-        guard BetsFeature.isEnabled, context.isOrganizer, !isSaving else { return }
+        guard BetsFeature.isEnabled, context.can(.money), !isSaving else { return }
         if item.resolverHasStake { throw .invalid(BetTexts.resolverHasStake) }
         guard item.canResolve else { return }
         isSaving = true
@@ -117,7 +117,7 @@ final class BetsModel {
             }
         }
         if changed, let input = try? await BetsQueries.load(client: client, clubID: context.clubID) {
-            board = BetsBoard(input, me: context.memberID, isOrganizer: context.isOrganizer)
+            board = BetsBoard(input, me: context.memberID, isOrganizer: context.can(.money))
         }
     }
 }

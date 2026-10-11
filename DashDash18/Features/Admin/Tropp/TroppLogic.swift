@@ -331,7 +331,8 @@ nonisolated enum TroppError: Error, Equatable {
 
 nonisolated enum TroppDisplay {
     /// Linja under navnet i lista: handicap, gruppe, roller og innlogging.
-    static func details(for row: ClubMemberRow, groups: [SeedingGroup]) -> String {
+    /// Med `roleNames` (sql/044) vises rollene i stedet for flaggene arrangør og kasserer.
+    static func details(for row: ClubMemberRow, groups: [SeedingGroup], roleNames: [String]? = nil) -> String {
         var parts: [String] = []
         if let index = row.handicapIndex {
             parts.append("Hcp \(TroppInput.handicapText(index))")
@@ -339,8 +340,12 @@ nonisolated enum TroppDisplay {
         if let group = row.seedGroup {
             parts.append(groups.first { $0.number == group }?.name ?? "Gruppe \(group)")
         }
-        if row.isOrganizer { parts.append("Arrangør") }
-        if row.isTreasurer { parts.append("Kasserer") }
+        if let roleNames {
+            parts.append(contentsOf: roleNames)
+        } else {
+            if row.isOrganizer { parts.append("Arrangør") }
+            if row.isTreasurer { parts.append("Kasserer") }
+        }
         if row.userID == nil { parts.append("Har ikke logget inn") }
         return parts.joined(separator: " · ")
     }

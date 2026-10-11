@@ -11,6 +11,7 @@ struct TroppMemberView: View {
     @State private var handicapText = ""
     @State private var confirming: TroppAction?
     @State private var isSaving = false
+    @State private var confirmsTransfer = false
 
     var body: some View {
         Group {
@@ -48,7 +49,11 @@ struct TroppMemberView: View {
             }
 
             if row.status == .active {
-                rolesSection(row)
+                if model.roles.isAvailable {
+                    clubRolesSection(row)
+                } else {
+                    rolesSection(row)
+                }
             }
 
             loginSection(row)
@@ -62,6 +67,45 @@ struct TroppMemberView: View {
         ) { action in
             Button(confirmButton(action), role: .destructive) { run(action) }
             Button("Avbryt", role: .cancel) {}
+        }
+        .confirmationDialog("Gi eierskapet til \(row.displayName)?", isPresented: $confirmsTransfer,
+                            titleVisibility: .visible) {
+            Button("Overfør eierskap", role: .destructive) {
+                Task { _ = await model.roles.transferOwnership(to: memberID) }
+            }
+            Button("Avbryt", role: .cancel) {}
+        } message: {
+            Text("Du mister Eier, men beholder de andre rollene dine.")
+        }
+        .messageAlert("Det gikk ikke", text: Bindable(model.roles).error)
+    }
+
+    /// Rollene (sql/044): én bryter per rolle. Bare roller du kan gi, kan endres.
+    private func clubRolesSection(_ row: ClubMemberRow) -> some View {
+        let roles = model.roles
+        let viewer = roles.viewer
+        let current = roles.roleIDs(of: memberID)
+        let canTransfer = ClubRoleInput.canTransferOwnership(viewer: viewer, to: row, me: model.context.memberID,
+                                                             memberIsOwner: roles.isOwner(memberID))
+        return Section {
+            ForEach(roles.roles) { role in
+                Toggle(role.name, isOn: Binding(
+                    get: { current.contains(role.id) },
+                    set: { on in
+                        let next = ClubRoleInput.toggled(current, role: role.id, on: on)
+                        Task { _ = await roles.setRoles(next, for: memberID) }
+                    }
+                ))
+                .disabled(!viewer.canGrant(role) || roles.isSaving)
+            }
+            if canTransfer {
+                Button("Overfør eierskap") { confirmsTransfer = true }
+                    .disabled(roles.isSaving)
+            }
+        } header: {
+            DDHeader("Roller")
+        } footer: {
+            DDFooter("Du kan bare gi roller med rettigheter du selv har. Bare en eier gir Eier.")
         }
     }
 

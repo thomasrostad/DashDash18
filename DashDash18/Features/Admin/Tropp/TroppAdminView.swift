@@ -4,6 +4,7 @@ import SwiftUI
 /// Troppen: arrangørens oversikt over spillerne i klubben.
 struct TroppAdminView: View {
     @Environment(\.clubContext) private var context
+    @Environment(ClubModel.self) private var club: ClubModel?
     @State private var model: TroppModel?
 
     var body: some View {
@@ -19,6 +20,8 @@ struct TroppAdminView: View {
         .task(id: context?.clubID) {
             guard let context else { return }
             let model = TroppModel(context: context)
+            let club = club
+            model.roles.onChange = { await club?.loadRoleAccess() }
             self.model = model
             await model.load()
         }
@@ -97,7 +100,8 @@ private struct TroppListView: View {
         NavigationLink {
             TroppMemberView(model: model, memberID: row.id)
         } label: {
-            TroppRowLabel(row: row, isMe: row.id == model.context.memberID, groups: model.seedGroups)
+            TroppRowLabel(row: row, isMe: row.id == model.context.memberID, groups: model.seedGroups,
+                          roleNames: model.roleNames(of: row.id))
         }
         .disabled(model.isBusy(row.id))
     }
@@ -136,6 +140,7 @@ private struct TroppRowLabel: View {
     let row: ClubMemberRow
     let isMe: Bool
     let groups: [SeedingGroup]
+    var roleNames: [String]?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -143,7 +148,7 @@ private struct TroppRowLabel: View {
                 Text(row.displayName)
                 if isMe { Text("(deg)").foregroundStyle(Color.ddInkSecondary) }
             }
-            let details = TroppDisplay.details(for: row, groups: groups)
+            let details = TroppDisplay.details(for: row, groups: groups, roleNames: roleNames)
             if !details.isEmpty {
                 Text(details)
                     .font(.dd(.sans, size: 12, relativeTo: .caption))

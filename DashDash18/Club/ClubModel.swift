@@ -9,6 +9,8 @@ final class ClubModel {
     private(set) var memberships: [Membership] = []
     /// En henting pågår (så retur fra bakgrunnen ikke starter en til).
     private(set) var isRefreshing = false
+    /// Rollene per klubb (sql/044). Tom når 044 ikke er kjørt: da gjelder flaggene.
+    private(set) var roleAccess: [UUID: ClubRoleAccess] = [:]
     private let client: SupabaseClient
     private let cache: MembershipCache
     private static let rememberedKey = "valgtKlubb"
@@ -45,6 +47,7 @@ final class ClubModel {
                 .value
             cache.save(rows, userID: userID)
             apply(rows)
+            await loadRoleAccess()
             return nil
         } catch {
             let failure = Self.clubError(from: error)
@@ -63,6 +66,35 @@ final class ClubModel {
         await load(userID: userID)
     }
 
+    /// Rollene og hvilke du har, i klubbene du er aktiv i. Feiler det (044 ikke kjørt, uten nett),
+    /// blir det som var: uten roller gjelder flaggene.
+    func loadRoleAccess() async {
+        let active = memberships.filter { $0.status == .active }
+        guard !active.isEmpty else {
+            roleAccess = [:]
+            return
+        }
+        do {
+            async let roles: [ClubRoleRow] = client
+                .from("club_roles")
+                .select(ClubRoleRow.columns)
+                .in("club_id", values: active.map(\.clubID.uuidString))
+                .execute()
+                .value
+            async let mine: [ClubMemberRoleRow] = client
+                .from("club_member_roles")
+                .select(ClubMemberRoleRow.columns)
+                .in("member_id", values: active.map(\.id.uuidString))
+                .execute()
+                .value
+            let next = ClubRoleAccess.byClub(roles: try await roles, mine: try await mine,
+                                             memberIDs: Set(active.map(\.id)))
+            if next != roleAccess { roleAccess = next }
+        } catch {
+            // Beholder det som var.
+        }
+    }
+
     func select(_ membership: Membership) {
         select(clubID: membership.clubID)
     }
@@ -77,6 +109,7 @@ final class ClubModel {
     func reset() {
         state = .loading
         memberships = []
+        roleAccess = [:]
         cache.clear()
     }
 

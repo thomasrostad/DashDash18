@@ -32,7 +32,7 @@ final class TipsModel {
     func load() async {
         do {
             let input = try await TipsQueries.load(client: client, eventID: eventID)
-            let board = TipsBoard(input, me: memberID, isOrganizer: context.isOrganizer)
+            let board = TipsBoard(input, me: memberID, isOrganizer: context.can(.money))
             // Utkastet beholdes mens du velger; det nullstilles når det leverte endrer seg.
             if self.board?.myCoupon != board.myCoupon || self.board == nil {
                 draft = TipsDraft(me: memberID, saved: board.myCoupon)

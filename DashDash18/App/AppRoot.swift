@@ -171,7 +171,8 @@ struct ClubGate: View {
                                   onPlayWithoutClub: OpenAppFeature.isEnabled ? { choose(.friends) } : nil)
         case .club(let membership):
             RootView(config: services.config, user: user, membership: membership)
-                .environment(\.clubContext, ClubContext(client: services.client, user: user, membership: membership))
+                .environment(\.clubContext, ClubContext(client: services.client, user: user, membership: membership,
+                                                      roleAccess: club.roleAccess[membership.clubID]))
                 .environment(\.scoreSubmitter, services.scoreSubmitter)
         case .failed(let error):
             ContentUnavailableView {
