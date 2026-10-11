@@ -36,6 +36,19 @@ extension Ruleset {
         if table.pointsSource == .stableford, table.counting.unit == .match {
             add("table.counting.unit", "Tabellen teller stableford, så den kan ikke telle matcher. Velg runder eller kvelder.")
         }
+        if let min = table.minEvenings {
+            if min < 0 {
+                add("table.minEvenings", "Minste antall kvelder kan ikke være negativt. La feltet stå tomt for at alle skal rangeres.")
+            } else if evenings >= 1, min > evenings {
+                add("table.minEvenings", "Minst \(min) kvelder er flere enn de \(evenings) kveldene i turneringen.")
+            }
+        }
+        if table.pointsTables.keys.contains(where: { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+            add("table.pointsTables", "En poengtabell må ha et navn.")
+        }
+        for (name, t) in table.pointsTables.sorted(by: { $0.key < $1.key }) where t.multiplier < 0 || !t.multiplier.isFinite {
+            add("table.pointsTables.\(name)", "Poengtabellen «\(name)» kan ikke gange med et negativt tall.")
+        }
         if table.stablefordCounting.unit == .match {
             add("table.stablefordCounting.unit", "Stablefordsummen kan ikke telle matcher. Velg runder eller kvelder.")
         }

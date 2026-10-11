@@ -44,7 +44,7 @@ struct PaywallView: View {
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                DDCancelToolbarItem {
                     Button("Lukk") { dismiss() }
                         .tint(Color.ddOnDark)
                 }

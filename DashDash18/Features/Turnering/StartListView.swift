@@ -158,7 +158,7 @@ struct StartListView: View {
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                DDConfirmToolbarItem {
                     Button("Lagre") {
                         Task { if await model.save() { dismiss() } }
                     }
@@ -350,10 +350,10 @@ private struct StartGroupSheet: View {
         .navigationTitle("Gruppe \(group.groupNo)")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt") { dismiss() }
             }
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 Button("Ferdig") {
                     var g = group
                     g.startsAt = hasTime ? StartGroupSheetTime.text(time) : nil
@@ -386,10 +386,10 @@ private struct TeeTimesSheet: View {
         .navigationTitle("Tee-tider")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt") { dismiss() }
             }
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 Button("Fyll inn") { onApply(StartGroupSheetTime.text(first), interval) }
             }
         }

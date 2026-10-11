@@ -22,6 +22,10 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `table.stablefordCounting` | `{unit, best}` | Hva som teller i stablefordsummen. `unit`: `round`, `evening`. |
 | `table.tiebreaks` | liste | `holeDifference`, `stableford` i ønsket rekkefølge. Navn skiller alltid til slutt. |
 | `table.roundingStep` | tall eller `null` | Avrunding av tabellpoeng (0,5 = halve). `null`: ingen. |
+| `table.minEvenings` | tall eller utelatt | Minste antall spilte kvelder (som teller) for å få plass i tabellen. Utelatt (`null`) eller 0: alle rangeres. Skrives bare når satt. |
+| `table.aggregation` | `sum` / `average` | Summen, eller snittet per spilte kveld som teller. Skrives bare når det er `average`. |
+| `table.pointsTables` | navn → `{multiplier}` | Navngitte poengtabeller (f.eks. `"finale": {"multiplier": 2}`). Kvelden peker på én med `pointsTable`. Skrives bare når den ikke er tom. |
+| `table.tieRule` | `tiebreaks` / `playoff` | Likhet: skillene, eller playoff om førsteplassen (andre likheter er delt plass). Skrives bare når det er `playoff`. |
 | `sidePrizes.longestDrive`, `sidePrizes.closestToPin` | `{enabled, points}` | Av/på og poeng per premie. |
 | `sidePrizes.splitTies` | sann/usann | Likt deler poenget. Usann: alle på delt førsteplass får fullt. |
 | `handicap.allowanceOverride` | tall eller `null` | Én andel for alle former. `null`: per form. |
@@ -33,6 +37,7 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `formats.allowedFormIDs` | liste | Formene arrangøren kan velge. |
 | `formats.maxPerBay` | tall | Største lag i en bås. |
 | `formats.matchStrokes` | `lowestFromScratch` / `fullHandicap` | Slag i match. |
+| `formats.drawMethod` | `standings` / `avoidRepeats` / `manual` | Trekning av matcher: etter tabellen, tilfeldig uten gjentakelser, eller manuelt. Skrives bare når det ikke er `standings`. |
 | `bets.lockAheadHoles` | tall | Veddemål: hvor mange hull foran spilleren det første åpne hullet ligger. |
 | `bets.maxStakePerBet` | tall | Veddemål: mest én spiller kan ha på ett veddemål. |
 | `bets.stakeOptions` | liste | Veddemål: beløpsknappene i vedd-arket. |
@@ -246,7 +251,13 @@ maks per bås under 1; ingen tillatte former, ukjent form, og standardform som i
 | Skilletegn | `Season.jacketBoard` | `table.tiebreaks` | hulldifferanse, stablefordsum |
 | Utvalg sorteres på poeng, så hulldifferanse | `Season.matchResults` | bli (del av «beste N») | – |
 | Navn skiller til slutt | `Season.jacketBoard` | bli (alltid siste) | – |
-| Rundevekt (`multiplier`), 0 = teller ikke | `Season.weight` | bli (lagres per runde av arrangøren) | 1 |
+| Rundevekt (`multiplier`), 0 = teller ikke | `Season.effectiveWeight` | bli (lagres per runde av arrangøren) | 1 |
+| Kveld som ikke teller (`Round.counts`) | `Season.effectiveWeight` | bli (lagres per runde; som vekt 0) | teller |
+| Poengtabell for kvelden (`Round.pointsTable`) | `Season.effectiveWeight` | `table.pointsTables` (navn → `multiplier`, ganges med vekten; ukjent navn: 1) | ingen |
+| Minste antall kvelder for plass | `Season.jacketBoard`, `standings` | `table.minEvenings` | ingen grense |
+| Sum eller snitt | `Season.jacketBoard` | `table.aggregation` | `sum` |
+| Likhet: skilletegn eller playoff om førsteplassen | `Season.jacketBoard`, `standings`, `Playoff` | `table.tieRule` | `tiebreaks` |
+| Trekning av matcher | `Season.draw`, `Draw` | `formats.drawMethod` | `standings` |
 | To runder samme dato = én kveld | `Season.eveningDates` | bli (definisjon) | – |
 
 ## Former og oppsett
@@ -267,6 +278,48 @@ maks per bås under 1; ingen tillatte former, ukjent form, og standardform som i
 - `round`: som `evening`, men per runde.
 - Stablefordsummen: `round` (Golfgutu, beste 5 runder) eller `evening` (summen av kveldens runder).
 - Med `best: null` gir alle enhetene samme svar: alt teller.
+
+### Tabellregler og playoff (steg 6)
+
+Fixtures: `tabellregler.json` (regnet for hånd) og `trekning.json` (trekningen, skrevet av Swift-motoren og
+fasit for TypeScript). Tester: `TableRulesTests.swift` og `web/golfgutu-core/test/tablerules.test.ts`.
+Reglene kan kombineres. Med Golfgutu-oppsettet er alt som før (feltene skrives ikke, og goldenfilene er uendret).
+
+- **Vekten en runde teller med** (`Season.effectiveWeight`): 0 når `Round.counts` er `false`, ellers
+  `weight · multiplier` for poengtabellen runden peker på (`Round.pointsTable`; ingen eller ukjent: 1).
+  Den gjelder overalt der vekten gjaldt før: matcher, trekant, sidepremier, tabellen fra stableford og
+  stablefordsummen. Motoren leser `counts` og `pointsTable` fra runden (øyeblikksbildet); `rounds.weight` virker som før.
+- **Minste antall kvelder** (`table.minEvenings`): en kveld er spilt når spilleren har poeng eller en match i
+  en runde som teller (vekt over 0). To runder samme dato er én kveld. De som har færre, står **under de
+  rangerte, uten plass** (`Standing.place = nil`, `JacketRow.qualified = false`), sortert på total og navn,
+  så de ser hvor mye som mangler.
+- **Snitt** (`table.aggregation = average`): de tellende poengene (matcher eller stableford, pluss
+  sidepremier, uten avrunding) delt på antall spilte kvelder som teller. En kveld der alt ble strøket av
+  «beste N», regnes ikke med. Så avrundes snittet etter `roundingStep`. Ingen kvelder: 0.
+- **Plass** (`Season.standings(playoffWinner:)`): delt plass (1, 1, 3) når total og alle skillene er like.
+  Jakketavla (`jacketBoard`) har samme rekkefølge.
+- **Playoff** (`table.tieRule = playoff`): bare om førsteplassen. Står flere likt øverst (og minst én har
+  spilt), viser tabellen delt førsteplass og `playoffPending`. Andre likheter er delt plass, og `tiebreaks`
+  brukes ikke (navn ordner innenfor plassen). Playoffen er en egen kort runde (`rounds.kind = playoff`), og
+  `Playoff.decide` avgjør den: hullene i valgt rekkefølge (forslag `Playoff.suggestedHoles`: siste, første,
+  siste), laveste score vinner hullet, de uten beste score er ute, første hull med én beste avgjør. Med
+  vinneren (`playoffWinner`) står hen først med plass 1, og resten av gruppa deler andreplassen.
+  **Netto eller brutto** følger handicapmodellen på playoff-runden: netto med spillerens handicap i runden
+  (andel, frosne handicap, seeding) og slag etter stroke index, som i en vanlig runde. Andel 0
+  (bruttoformer) og `hcpExtern` gir brutto.
+- **Skjul de siste hullene** (`Round.hideLastHoles`, 3 når valget er på): `Round.hidingLastHoles(revealedTo:)`
+  fjerner scorene på de siste N hullene som spilles (`hiddenHoleIndices`) til runden er låst, så tavla og
+  tabellen regnes uten dem. Hvem ser hva bestemmer appen: spillerne i `revealedTo` vises med alle hull
+  (markøren skal se båsen hun fører; arrangøren kan få alle), alle andre ser runden uten de skjulte hullene.
+  Sidepremiene skjules ikke av motoren.
+- **Trekning** (`formats.drawMethod`, `Season.draw`): `standings` er `Triangle.drawMatches` som før.
+  `avoidRepeats` (`Draw.avoidingRepeats`): deltakerne stokkes med et frø (sortert på id, Fisher–Yates bakfra
+  med SplitMix64, som cupen), grådig paring med færrest tidligere møter (`Draw.meetings` over sesongens
+  matcher; trekant: alle tre møter hverandre), så bytter mellom grupper så lenge det gir færre gjentakelser.
+  Oddetall gir én trekant, som før. `manual`: `Season.draw` gir `nil`, og `Draw.validate` sjekker oppsettet
+  (alle én gang, grupper på to eller tre, én trekant bare ved oddetall) med norske meldinger.
+- **Lag**: `Teams.random` (stokket med frø, fylt i lag 1, 2, …; siste lag kan bli mindre) og `Teams.swap`
+  (bytter lagene til to spillere).
 
 ## Veddemål
 
@@ -295,4 +348,8 @@ Se `Bets.swift` og `docs/veddemaal-poeng.md`. Fixture: `veddemaal.json`.
 1. **Par 3–6 og lengdegrensene** er plausibilitetssjekker for banebiblioteket. Blir i koden til vi vet om noen trenger par 7 eller andre grenser.
 2. **Trekant rangert på stableford** og **oddetall gir trekant** er slik PWA-en gjør det. Andre grupper vil kanskje ha fri runde (bye) i stedet. Ikke tatt med nå.
 3. **Sidepremier i kvelds-telling:** med `evening` og `round` er sidepremiene en del av kveldens poeng og strykes med kvelden. Med `match` strykes de aldri (PWA-en). Valgt fordi «tabellpoeng per kveld» naturlig tar med alt kvelden ga. Brukeren bør bekrefte.
-4. **`fullHandicap` i match** er det eneste alternativet til «laveste fra scratch». Prosent av forskjellen (f.eks. 90 % som WHS anbefaler for fourball) er ikke tatt med.
+4. **Playoff og matchslag:** playoffen regner netto med fullt spillehandicap i playoff-runden, også når
+   sesongen spiller match med «laveste fra scratch». Slagene på et hull blir da ikke alltid de samme som
+   forskjellen ville gitt. Valgt fordi playoffen er slagspill hull for hull, og fordi det virker også når
+   tre eller flere står likt. **Bekreftet av Thomas 11.10.2026.**
+5. **`fullHandicap` i match** er det eneste alternativet til «laveste fra scratch». Prosent av forskjellen (f.eks. 90 % som WHS anbefaler for fourball) er ikke tatt med.

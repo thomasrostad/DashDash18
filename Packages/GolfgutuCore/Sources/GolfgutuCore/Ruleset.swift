@@ -117,6 +117,43 @@ public struct Ruleset: Hashable, Sendable {
         case stableford
     }
 
+    /// Hvordan de tellende poengene blir til totalen i tabellen.
+    public enum Aggregation: String, Codable, Hashable, Sendable, CaseIterable {
+        /// Summen (Golfgutu).
+        case sum
+        /// Snittet per spilte kveld som teller (summen delt på antall kvelder).
+        case average
+    }
+
+    /// Hva som skjer når spillere står likt i tabellen.
+    public enum TieRule: String, Codable, Hashable, Sendable, CaseIterable {
+        /// Skillene i `tiebreaks`, så navn. Like på alle skillene gir delt plass (Golfgutu).
+        case tiebreaks
+        /// Delt førsteplass avgjøres med playoff (`Playoff`). Til den er spilt, viser tabellen delt
+        /// plass. Andre likheter er delt plass; `tiebreaks` brukes ikke.
+        case playoff
+    }
+
+    /// En navngitt poengtabell (f.eks. «finale» som teller dobbelt). Kvelden peker på den med
+    /// `Round.pointsTable`; poengene ganges med `multiplier` i tillegg til rundevekten.
+    public struct PointsTable: Codable, Hashable, Sendable {
+        public var multiplier: Double
+
+        public init(multiplier: Double) {
+            self.multiplier = multiplier
+        }
+    }
+
+    /// Trekningen av matcher.
+    public enum DrawMethod: String, Codable, Hashable, Sendable, CaseIterable {
+        /// Etter tabellen (sveitsisk, `Triangle.drawMatches`). Golfgutu.
+        case standings
+        /// Tilfeldig, med færrest mulig møter som har vært før i sesongen (`Draw.avoidingRepeats`).
+        case avoidRepeats
+        /// Arrangøren setter opp matchene selv. Motoren sjekker bare oppsettet (`Draw.validate`).
+        case manual
+    }
+
     /// Hva tabellpoengene kommer fra.
     public enum TablePointsSource: String, Codable, Hashable, Sendable, CaseIterable {
         /// Matcher og trekanter (`matchPoints`, `trianglePoints`), pluss sidepremiene. Golfgutu.
@@ -144,10 +181,21 @@ public struct Ruleset: Hashable, Sendable {
         public var tiebreaks: [Tiebreak]
         /// Poengene rundes til nærmeste multiplum av dette (0,5 = halve poeng). `nil`: ingen avrunding.
         public var roundingStep: Double?
+        /// Minste antall spilte kvelder (som teller) for å få plass i tabellen. De som har færre, står
+        /// under de rangerte, uten plass. `nil` eller 0: alle rangeres (Golfgutu).
+        public var minEvenings: Int?
+        /// Sum (Golfgutu) eller snitt per spilte kveld som teller.
+        public var aggregation: Aggregation
+        /// Navngitte poengtabeller (navn → tabell). Tom: ingen (Golfgutu).
+        public var pointsTables: [String: PointsTable]
+        /// Likhet: skillene (Golfgutu) eller playoff om førsteplassen.
+        public var tieRule: TieRule
 
         public init(matchPoints: MatchPoints, trianglePoints: [Double], counting: Counting,
                     stablefordCounting: Counting, tiebreaks: [Tiebreak], roundingStep: Double?,
-                    pointsSource: TablePointsSource = .matches) {
+                    pointsSource: TablePointsSource = .matches, minEvenings: Int? = nil,
+                    aggregation: Aggregation = .sum, pointsTables: [String: PointsTable] = [:],
+                    tieRule: TieRule = .tiebreaks) {
             self.pointsSource = pointsSource
             self.matchPoints = matchPoints
             self.trianglePoints = trianglePoints
@@ -155,6 +203,10 @@ public struct Ruleset: Hashable, Sendable {
             self.stablefordCounting = stablefordCounting
             self.tiebreaks = tiebreaks
             self.roundingStep = roundingStep
+            self.minEvenings = minEvenings
+            self.aggregation = aggregation
+            self.pointsTables = pointsTables
+            self.tieRule = tieRule
         }
     }
 
@@ -256,12 +308,16 @@ public struct Ruleset: Hashable, Sendable {
         /// Største lag som får plass i en bås.
         public var maxPerBay: Int
         public var matchStrokes: MatchStrokes
+        /// Trekningen av matcher. Golfgutu: etter tabellen.
+        public var drawMethod: DrawMethod
 
-        public init(defaultFormID: String, allowedFormIDs: [String], maxPerBay: Int, matchStrokes: MatchStrokes) {
+        public init(defaultFormID: String, allowedFormIDs: [String], maxPerBay: Int, matchStrokes: MatchStrokes,
+                    drawMethod: DrawMethod = .standings) {
             self.defaultFormID = defaultFormID
             self.allowedFormIDs = allowedFormIDs
             self.maxPerBay = maxPerBay
             self.matchStrokes = matchStrokes
+            self.drawMethod = drawMethod
         }
     }
 
@@ -435,6 +491,7 @@ extension Ruleset: Codable {
 extension Ruleset.TableRules: Codable {
     private enum CodingKeys: String, CodingKey {
         case pointsSource, matchPoints, trianglePoints, counting, stablefordCounting, tiebreaks, roundingStep
+        case minEvenings, aggregation, pointsTables, tieRule
     }
 
     public init(from decoder: Decoder) throws {
@@ -448,6 +505,10 @@ extension Ruleset.TableRules: Codable {
         tiebreaks = try c.decodeIfPresent([Ruleset.Tiebreak].self, forKey: .tiebreaks) ?? g.tiebreaks
         // `null` er et valg (ingen avrunding); mangler feltet, gjelder Golfgutu.
         roundingStep = c.contains(.roundingStep) ? try c.decodeIfPresent(Double.self, forKey: .roundingStep) : g.roundingStep
+        minEvenings = try c.decodeIfPresent(Int.self, forKey: .minEvenings) ?? g.minEvenings
+        aggregation = try c.decodeIfPresent(Ruleset.Aggregation.self, forKey: .aggregation) ?? g.aggregation
+        pointsTables = try c.decodeIfPresent([String: Ruleset.PointsTable].self, forKey: .pointsTables) ?? g.pointsTables
+        tieRule = try c.decodeIfPresent(Ruleset.TieRule.self, forKey: .tieRule) ?? g.tieRule
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -460,6 +521,11 @@ extension Ruleset.TableRules: Codable {
         try c.encode(roundingStep, forKey: .roundingStep)
         // Bare når tabellen ikke teller matcher, så Golfgutu-JSON-en og eldre regelsett er som før.
         if pointsSource != .matches { try c.encode(pointsSource, forKey: .pointsSource) }
+        // Tabellreglene fra steg 6 skrives bare når de ikke er standard, av samme grunn.
+        try c.encodeIfPresent(minEvenings, forKey: .minEvenings)
+        if aggregation != .sum { try c.encode(aggregation, forKey: .aggregation) }
+        if !pointsTables.isEmpty { try c.encode(pointsTables, forKey: .pointsTables) }
+        if tieRule != .tiebreaks { try c.encode(tieRule, forKey: .tieRule) }
     }
 }
 
@@ -501,7 +567,7 @@ extension Ruleset.HandicapRules: Codable {
 }
 
 extension Ruleset.FormatRules: Codable {
-    private enum CodingKeys: String, CodingKey { case defaultFormID, allowedFormIDs, maxPerBay, matchStrokes }
+    private enum CodingKeys: String, CodingKey { case defaultFormID, allowedFormIDs, maxPerBay, matchStrokes, drawMethod }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -510,5 +576,16 @@ extension Ruleset.FormatRules: Codable {
         allowedFormIDs = try c.decodeIfPresent([String].self, forKey: .allowedFormIDs) ?? g.allowedFormIDs
         maxPerBay = try c.decodeIfPresent(Int.self, forKey: .maxPerBay) ?? g.maxPerBay
         matchStrokes = try c.decodeIfPresent(Ruleset.MatchStrokes.self, forKey: .matchStrokes) ?? g.matchStrokes
+        drawMethod = try c.decodeIfPresent(Ruleset.DrawMethod.self, forKey: .drawMethod) ?? g.drawMethod
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(defaultFormID, forKey: .defaultFormID)
+        try c.encode(allowedFormIDs, forKey: .allowedFormIDs)
+        try c.encode(maxPerBay, forKey: .maxPerBay)
+        try c.encode(matchStrokes, forKey: .matchStrokes)
+        // Bare når trekningen ikke er etter tabellen, så Golfgutu-JSON-en er som før.
+        if drawMethod != .standings { try c.encode(drawMethod, forKey: .drawMethod) }
     }
 }

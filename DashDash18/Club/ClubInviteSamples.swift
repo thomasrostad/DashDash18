@@ -33,7 +33,7 @@ struct ClubInviteSampleScreen: View {
             NavigationStack {
                 JoinClubView(user: .preview, initialCode: Self.invite.code, preloaded: Self.preview)
                     .toolbar {
-                        ToolbarItem(placement: .cancellationAction) { Button("Lukk") {} }
+                        DDCancelToolbarItem { Button("Lukk") {} }
                     }
             }
         case .blimedbekreft:
@@ -41,7 +41,7 @@ struct ClubInviteSampleScreen: View {
                 ClubInviteConfirmView(invite: Self.invite, user: .preview, currentClub: "Fredagsgolfen",
                                       preloaded: Self.preview, onJoined: { _, _ in }, onClose: {})
                     .toolbar {
-                        ToolbarItem(placement: .cancellationAction) { Button("Lukk") {} }
+                        DDCancelToolbarItem { Button("Lukk") {} }
                     }
             }
         case .logininvitasjon:

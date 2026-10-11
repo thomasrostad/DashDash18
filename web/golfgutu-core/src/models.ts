@@ -148,6 +148,12 @@ export interface Round {
   locked: boolean;
   /** Rundens frosne spillehandicap: spiller-id → handicap i hele slag. */
   playingHandicaps: Map<string, number>;
+  /** Kvelden teller (`false` = som vekt 0, «kveld som ikke teller»). Standard: sann. */
+  counts: boolean;
+  /** Navnet på en poengtabell i regelsettet (`table.pointsTables`). `null` eller ukjent: 1. */
+  pointsTable: string | null;
+  /** Antall hull på slutten som skjules for andre til runden er låst. 0: av. */
+  hideLastHoles: number;
 }
 
 /** En runde med Swift-motorens standardverdier for feltene som ikke er gitt. */
@@ -174,6 +180,9 @@ export function makeRound(r: Partial<Round> = {}): Round {
     date: r.date ?? null,
     locked: r.locked ?? false,
     playingHandicaps: r.playingHandicaps ?? new Map(),
+    counts: r.counts ?? true,
+    pointsTable: r.pointsTable ?? null,
+    hideLastHoles: r.hideLastHoles ?? 0,
   };
 }
 
@@ -313,6 +322,9 @@ export function decodeRound(x: unknown, path = "$"): Round {
     date: optString(o, "date", path),
     locked: optBool(o, "locked", path) ?? false,
     playingHandicaps: frozen ? stringKeyedMap(frozen, `${path}.playingHandicaps`, asNumber) : new Map(),
+    counts: optBool(o, "counts", path) ?? true,
+    pointsTable: optString(o, "pointsTable", path),
+    hideLastHoles: optInt(o, "hideLastHoles", path) ?? 0,
   };
 }
 

@@ -149,7 +149,7 @@ struct InviteShareSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .ddNavigationChrome()
         .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 Button("Ferdig") { dismiss() }
             }
         }

@@ -88,7 +88,7 @@ struct ScorekortSheet: View {
             .ddNavigationChrome()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                DDConfirmToolbarItem {
                     Button("Ferdig") { dismiss() }
                 }
             }

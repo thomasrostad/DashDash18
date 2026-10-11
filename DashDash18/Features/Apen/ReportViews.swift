@@ -86,7 +86,7 @@ struct ReportSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                DDCancelToolbarItem {
                     Button(sent ? "Ferdig" : "Avbryt") { dismiss() }
                         .tint(Color.ddOnDark)
                 }

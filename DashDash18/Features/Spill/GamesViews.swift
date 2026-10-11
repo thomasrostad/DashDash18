@@ -393,7 +393,7 @@ struct NyttSpillArk: View {
             .navigationTitle("Nytt spill")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                DDCancelToolbarItem {
                     Button("Avbryt") { dismiss() }
                 }
             }

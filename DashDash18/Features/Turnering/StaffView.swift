@@ -266,10 +266,10 @@ private struct AddStaffSheet: View {
         .navigationTitle("Legg til i staben")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt") { dismiss() }
             }
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 Button("Legg til") { if let picked { onAdd(picked, role) } }
                     .disabled(picked == nil)
             }
