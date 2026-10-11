@@ -40,7 +40,14 @@ Vilkårene (hullduell, birdie, par, pallen) regnes av regelmotoren i Swift. Å g
 2. **Neste:** la en hvilken som helst deltaker i runden gjøre opp *etter at runden er låst*. `settle_bet` må da sjekke resultatet selv for de enkle vilkårene (hullscorer finnes i basen), eller bare godta det når to telefoner sier det samme. Dette må vurderes for juks.
 3. **Senere:** en Edge Function med en TypeScript-utgave av vilkårene, testet mot de samme JSON-fixturene som GolfgutuCore (samme tanke som «tabellen på serveren» i fase 24).
 
-## Valg for Thomas
+## Svar fra Thomas 11.10.2026
+
+- Veddemål er av som standard og slås på per turnering i innstillingene. For enkeltrunder på banen kan det velges i oppsettet.
+- Med i liga, cup og morro, i private turneringer uten klubb (krever B) og i løse runder.
+- Poengbanken følger der veddemålene er slått på: én per turnering, og én per runde for enkeltrunder.
+- Oppgjøret gjøres av serveren med regelmotoren i TypeScript når runden låses (C3).
+
+## Valg for Thomas (besvart over)
 
 1. **Poengbank:** én per turnering (forslaget), eller én felles per klubb og sesong som nå?
 2. **Private turneringer uten klubb:** skal de ha veddemål? Det krever B, som er mest arbeid.
