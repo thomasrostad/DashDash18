@@ -346,7 +346,7 @@ private struct TradFullImage: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.black)
                 .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
+                    DDConfirmToolbarItem {
                         Button("Lukk") { dismiss() }
                     }
                 }

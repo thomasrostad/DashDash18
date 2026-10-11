@@ -36,7 +36,7 @@ struct RulesetEditorView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if !isReadOnly {
-                ToolbarItem(placement: .confirmationAction) {
+                DDConfirmToolbarItem {
                     Button("Lagre") { save() }
                         .disabled(!draft.canSave || !draft.hasChanges || isSaving)
                 }
@@ -96,7 +96,7 @@ struct RulesetCustomizeView: View {
             .ddNavigationChrome()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                DDConfirmToolbarItem {
                     Button("Ferdig") {
                         rules = draft.rules
                         dismiss()

@@ -152,7 +152,7 @@ struct TVCodeSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .ddNavigationChrome()
         .toolbar {
-            ToolbarItem(placement: .confirmationAction) { Button("Ferdig") { dismiss() } }
+            DDConfirmToolbarItem { Button("Ferdig") { dismiss() } }
         }
         .task { if model.code == nil { await model.load() } }
         .confirmationDialog("Trekke tilbake koden?", isPresented: $confirmsRevoke, titleVisibility: .visible) {

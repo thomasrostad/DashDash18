@@ -28,7 +28,7 @@ struct TroppAddView: View {
             .disabled(isBusy)
             .discardChangesGuard(hasChanges: !(name.isEmpty && handicapText.isEmpty) && !isBusy, alwaysShowsCancel: true)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                DDConfirmToolbarItem {
                     // Verktøylinja arves ikke av `.disabled` over, så dobbelttrykk sperres her.
                     Button("Legg til", action: add)
                         .disabled(isBusy || name.trimmingCharacters(in: .whitespaces).isEmpty)

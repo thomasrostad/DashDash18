@@ -302,10 +302,10 @@ struct MatchEditor: View {
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt") { onDone(.cancel) }
             }
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 Button("Ferdig") {
                     var saved = match
                     if saved.isTriangle { saved.result = nil }

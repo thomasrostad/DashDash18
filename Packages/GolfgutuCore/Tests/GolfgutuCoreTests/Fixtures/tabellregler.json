@@ -1,0 +1,149 @@
+{
+  "_kilde": "Regnet for hånd (steg 6, tabellregler og playoff; finnes ikke i PWA-en). Tabellen teller stablefordpoengene (table.pointsSource = stableford, ingen sidepremier). «poeng» er stablefordpoengene per spiller i runden (testen lager scorer som gir dem: 18 hull par 4, handicap 0). «teller: false» er en kveld som ikke teller (som vekt 0). «poengtabell» peker på en navngitt poengtabell i regelsettet (table.pointsTables); en ukjent tabell gir 1. «kvelder» er kveldene spilleren har spilt som teller. «plass» null: ikke kvalifisert (under table.minEvenings), står under de rangerte. «playoff»: «venter» (delt førsteplass med playoff), «vant» (vant playoffen), ellers null. Feltene som mangler i regelsettet, har Golfgutu-verdien (skille på hulldifferanse og stablefordsum, stablefordsummen beste 5 runder).",
+  "_regning": {
+    "sum": "Anne: r1 30 + r2 40 + r3 20 + r4 35 = 125 (r5 teller ikke). Bjørn: 36 + 30 + 34 + 30 = 130. Cato: 33 + 33 + 38 = 104. Dag: 20 + 25 = 45. Eva har ikke spilt. Kvelder: Anne 4, Bjørn 4, Cato 3, Dag 2 (r5 teller ikke), Eva 0.",
+    "finale": "r4 teller dobbelt (finale = 2): Anne 30 + 40 + 20 + 70 = 160, Bjørn 36 + 30 + 34 + 60 = 160, Cato 33 + 33 + 76 = 142, Dag 20 + 50 = 70. Anne og Bjørn er like på total, hulldifferanse (0) og stablefordsum (160, også vektet), så de deler førsteplassen.",
+    "snitt": "Snitt per spilte kveld, avrundet til nærmeste halve: Anne 125 / 4 = 31,25 → 31,5; Bjørn 130 / 4 = 32,5; Cato 104 / 3 = 34,67 → 34,5; Dag 45 / 2 = 22,5; Eva 0.",
+    "alt": "Finale 2, snitt, minst 3 kvelder, playoff: Cato 142 / 3 = 47,33 → 47,5; Anne 160 / 4 = 40; Bjørn 160 / 4 = 40 (delt andreplass, ingen playoff); Dag (2 kvelder) og Eva (0) er ikke kvalifisert."
+  },
+  "spillere": [
+    { "id": "A", "name": "Anne" },
+    { "id": "B", "name": "Bjørn" },
+    { "id": "C", "name": "Cato" },
+    { "id": "D", "name": "Dag" },
+    { "id": "E", "name": "Eva" }
+  ],
+  "runder": [
+    { "id": "r1", "dato": "2026-05-01", "vekt": 1, "poeng": { "A": 30, "B": 36, "C": 33, "D": 20 } },
+    { "id": "r2", "dato": "2026-05-08", "vekt": 1, "poeng": { "A": 40, "B": 30, "C": 33 } },
+    { "id": "r3", "dato": "2026-05-15", "vekt": 1, "poeng": { "A": 20, "B": 34 } },
+    { "id": "r4", "dato": "2026-05-22", "vekt": 1, "poengtabell": "finale", "poeng": { "A": 35, "B": 30, "C": 38, "D": 25 } },
+    { "id": "r5", "dato": "2026-05-29", "vekt": 1, "teller": false, "poeng": { "A": 10, "B": 40, "C": 40, "D": 40 } }
+  ],
+  "saker": [
+    {
+      "navn": "sum, finalen er ukjent tabell",
+      "regelsett": { "version": 2, "table": { "pointsSource": "stableford", "counting": { "unit": "evening", "best": null }, "roundingStep": null } },
+      "tavle": [
+        { "id": "B", "plass": 1, "total": 130, "kvelder": 4, "playoff": null },
+        { "id": "A", "plass": 2, "total": 125, "kvelder": 4, "playoff": null },
+        { "id": "C", "plass": 3, "total": 104, "kvelder": 3, "playoff": null },
+        { "id": "D", "plass": 4, "total": 45, "kvelder": 2, "playoff": null },
+        { "id": "E", "plass": 5, "total": 0, "kvelder": 0, "playoff": null }
+      ]
+    },
+    {
+      "navn": "finalen teller dobbelt, delt førsteplass",
+      "regelsett": { "version": 2, "table": { "pointsSource": "stableford", "counting": { "unit": "evening", "best": null }, "roundingStep": null, "pointsTables": { "finale": { "multiplier": 2 } } } },
+      "tavle": [
+        { "id": "A", "plass": 1, "total": 160, "kvelder": 4, "playoff": null },
+        { "id": "B", "plass": 1, "total": 160, "kvelder": 4, "playoff": null },
+        { "id": "C", "plass": 3, "total": 142, "kvelder": 3, "playoff": null },
+        { "id": "D", "plass": 4, "total": 70, "kvelder": 2, "playoff": null },
+        { "id": "E", "plass": 5, "total": 0, "kvelder": 0, "playoff": null }
+      ]
+    },
+    {
+      "navn": "playoff venter",
+      "regelsett": { "version": 2, "table": { "pointsSource": "stableford", "counting": { "unit": "evening", "best": null }, "roundingStep": null, "pointsTables": { "finale": { "multiplier": 2 } }, "tieRule": "playoff" } },
+      "tavle": [
+        { "id": "A", "plass": 1, "total": 160, "kvelder": 4, "playoff": "venter" },
+        { "id": "B", "plass": 1, "total": 160, "kvelder": 4, "playoff": "venter" },
+        { "id": "C", "plass": 3, "total": 142, "kvelder": 3, "playoff": null },
+        { "id": "D", "plass": 4, "total": 70, "kvelder": 2, "playoff": null },
+        { "id": "E", "plass": 5, "total": 0, "kvelder": 0, "playoff": null }
+      ]
+    },
+    {
+      "navn": "playoff vunnet av Bjørn",
+      "regelsett": { "version": 2, "table": { "pointsSource": "stableford", "counting": { "unit": "evening", "best": null }, "roundingStep": null, "pointsTables": { "finale": { "multiplier": 2 } }, "tieRule": "playoff" } },
+      "playoffVinner": "B",
+      "tavle": [
+        { "id": "B", "plass": 1, "total": 160, "kvelder": 4, "playoff": "vant" },
+        { "id": "A", "plass": 2, "total": 160, "kvelder": 4, "playoff": null },
+        { "id": "C", "plass": 3, "total": 142, "kvelder": 3, "playoff": null },
+        { "id": "D", "plass": 4, "total": 70, "kvelder": 2, "playoff": null },
+        { "id": "E", "plass": 5, "total": 0, "kvelder": 0, "playoff": null }
+      ]
+    },
+    {
+      "navn": "minst 3 kvelder",
+      "regelsett": { "version": 2, "table": { "pointsSource": "stableford", "counting": { "unit": "evening", "best": null }, "roundingStep": null, "minEvenings": 3 } },
+      "tavle": [
+        { "id": "B", "plass": 1, "total": 130, "kvelder": 4, "playoff": null },
+        { "id": "A", "plass": 2, "total": 125, "kvelder": 4, "playoff": null },
+        { "id": "C", "plass": 3, "total": 104, "kvelder": 3, "playoff": null },
+        { "id": "D", "plass": null, "total": 45, "kvelder": 2, "playoff": null },
+        { "id": "E", "plass": null, "total": 0, "kvelder": 0, "playoff": null }
+      ]
+    },
+    {
+      "navn": "snitt per kveld",
+      "regelsett": { "version": 2, "table": { "pointsSource": "stableford", "counting": { "unit": "evening", "best": null }, "roundingStep": 0.5, "aggregation": "average" } },
+      "tavle": [
+        { "id": "C", "plass": 1, "total": 34.5, "kvelder": 3, "playoff": null },
+        { "id": "B", "plass": 2, "total": 32.5, "kvelder": 4, "playoff": null },
+        { "id": "A", "plass": 3, "total": 31.5, "kvelder": 4, "playoff": null },
+        { "id": "D", "plass": 4, "total": 22.5, "kvelder": 2, "playoff": null },
+        { "id": "E", "plass": 5, "total": 0, "kvelder": 0, "playoff": null }
+      ]
+    },
+    {
+      "navn": "alt sammen: finale, snitt, minst 3 kvelder og playoff",
+      "regelsett": { "version": 2, "table": { "pointsSource": "stableford", "counting": { "unit": "evening", "best": null }, "roundingStep": 0.5, "pointsTables": { "finale": { "multiplier": 2 } }, "aggregation": "average", "minEvenings": 3, "tieRule": "playoff" } },
+      "tavle": [
+        { "id": "C", "plass": 1, "total": 47.5, "kvelder": 3, "playoff": null },
+        { "id": "A", "plass": 2, "total": 40, "kvelder": 4, "playoff": null },
+        { "id": "B", "plass": 2, "total": 40, "kvelder": 4, "playoff": null },
+        { "id": "D", "plass": null, "total": 35, "kvelder": 2, "playoff": null },
+        { "id": "E", "plass": null, "total": 0, "kvelder": 0, "playoff": null }
+      ]
+    }
+  ],
+  "playoff": {
+    "_regning": "Testbanen (18 hull par 4, stroke index 1–18, slope 113, CR = par). Anne og Cato har handicap 0, Bjørn 18: banehandicap 18, med andel 1 ett slag på hvert hull, med andel 0 ingen. «hull» er rundens 0-baserte hullindekser i rekkefølgen de spilles (forslaget: 18, 1, 18 = 17, 0, 17). «slag» er bruttoslagene per playoff-hull. Laveste netto vinner hullet; de som ikke har beste score, er ute; første hull med én beste avgjør. Netto med rundens andel: brutto når andelen er 0. «avgjort» er posisjonen i playoffen (0-basert).",
+    "spillere": [
+      { "id": "A", "name": "Anne", "handicap": 0 },
+      { "id": "B", "name": "Bjørn", "handicap": 18 },
+      { "id": "C", "name": "Cato", "handicap": 0 }
+    ],
+    "saker": [
+      { "navn": "netto: Bjørn vinner på andre hull", "andel": 1, "spillere": ["A", "B"], "hull": [17, 0, 17], "slag": { "A": [4, 4], "B": [5, 4] }, "forventet": { "vinner": "B", "avgjort": 1 } },
+      { "navn": "brutto: Anne vinner på første hull", "andel": 0, "spillere": ["A", "B"], "hull": [17, 0, 17], "slag": { "A": [4, 4], "B": [5, 4] }, "forventet": { "vinner": "A", "avgjort": 0 } },
+      { "navn": "venter på score", "andel": 1, "spillere": ["A", "B", "C"], "hull": [17, 0, 17], "slag": { "A": [4, 4], "B": [5, 5], "C": [4] }, "forventet": { "igjen": ["A", "B", "C"], "neste": 1 } },
+      { "navn": "Bjørn er ute, Anne og Cato videre", "andel": 1, "spillere": ["A", "B", "C"], "hull": [17, 0, 17], "slag": { "A": [3], "B": [5], "C": [3] }, "forventet": { "igjen": ["A", "C"], "neste": 1 } },
+      { "navn": "alle hullene delt", "andel": 1, "spillere": ["A", "C"], "hull": [17, 0, 17], "slag": { "A": [4, 4, 4], "C": [4, 4, 4] }, "forventet": { "igjen": ["A", "C"], "neste": null } },
+      { "navn": "ingen score ennå", "andel": 1, "spillere": ["A", "C"], "hull": [17, 0, 17], "slag": {}, "forventet": { "igjen": ["A", "C"], "neste": 0 } }
+    ]
+  },
+  "skjul": {
+    "_regning": "Scorer som gir 36 poeng (par på alle hull, 2 poeng per hull). Skjules de siste tre hullene, gir de 0 poeng for den som ser på (hull uten score). 18 hull: 15 · 2 = 30. 9 hull: 6 · 2 = 12. Låst runde eller hideLastHoles 0: ingenting skjules. Spillerne i «viser» ser alle hullene sine.",
+    "saker": [
+      { "navn": "18 hull, pågår", "holeCount": 18, "holeStart": 0, "hideLastHoles": 3, "locked": false, "skjulte": [15, 16, 17], "viser": [], "poeng": { "A": 30, "B": 30 } },
+      { "navn": "18 hull, Anne fører", "holeCount": 18, "holeStart": 0, "hideLastHoles": 3, "locked": false, "skjulte": [15, 16, 17], "viser": ["A"], "poeng": { "A": 36, "B": 30 } },
+      { "navn": "9 hull fra hull 10", "holeCount": 9, "holeStart": 9, "hideLastHoles": 3, "locked": false, "skjulte": [6, 7, 8], "viser": [], "poeng": { "A": 12, "B": 12 } },
+      { "navn": "låst", "holeCount": 18, "holeStart": 0, "hideLastHoles": 3, "locked": true, "skjulte": [], "viser": [], "poeng": { "A": 36, "B": 36 } },
+      { "navn": "av", "holeCount": 18, "holeStart": 0, "hideLastHoles": 0, "locked": false, "skjulte": [], "viser": [], "poeng": { "A": 36, "B": 36 } }
+    ]
+  },
+  "manuell": {
+    "_regning": "Manuell trekning: hver deltaker nøyaktig én gang, grupper på to, og én trekant (tre) bare når antallet er oddetall.",
+    "saker": [
+      { "navn": "gyldig, partall", "deltakere": ["A", "B", "C", "D"], "grupper": [["A", "B"], ["C", "D"]], "feil": [] },
+      { "navn": "gyldig, oddetall", "deltakere": ["A", "B", "C", "D", "E"], "grupper": [["A", "B"], ["C", "D", "E"]], "feil": [] },
+      { "navn": "dobbel og mangler", "deltakere": ["A", "B", "C", "D"], "grupper": [["A", "B"], ["C", "A"]], "feil": ["dobbel:A", "mangler:D"] },
+      { "navn": "ukjent spiller", "deltakere": ["A", "B"], "grupper": [["A", "X"]], "feil": ["ukjent:X", "mangler:B"] },
+      { "navn": "for stor gruppe", "deltakere": ["A", "B", "C", "D"], "grupper": [["A", "B", "C", "D"]], "feil": ["gruppe:0:4"] },
+      { "navn": "trekant med partall", "deltakere": ["A", "B", "C", "D", "E", "F"], "grupper": [["A", "B", "C"], ["D", "E", "F"]], "feil": ["trekanter:2"] }
+    ]
+  },
+  "møter": {
+    "_regning": "Tidligere møter: runde 1 har A–B og trekanten C, D, E; runde 2 har A–B og A–C. A–B 2, A–C 1, C–D 1, C–E 1, D–E 1.",
+    "runder": [
+      { "id": "m1", "matches": [ { "matchNo": 1, "playerA": "A", "playerB": "B" }, { "matchNo": 2, "playerA": "C", "playerB": "D", "playerC": "E" } ] },
+      { "id": "m2", "matches": [ { "matchNo": 1, "playerA": "A", "playerB": "B" }, { "matchNo": 2, "playerA": "A", "playerB": "C" } ] }
+    ],
+    "forventet": { "A|B": 2, "A|C": 1, "C|D": 1, "C|E": 1, "D|E": 1 },
+    "gjentakelser": { "grupper": [["A", "B"], ["C", "D", "E"]], "antall": 5 }
+  }
+}

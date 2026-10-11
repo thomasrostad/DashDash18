@@ -1,4 +1,4 @@
--- 034: turneringen som kjerne, trinn 4 (gjennomføringsplanen steg 1). IKKE KJØRT. Krever godkjenning.
+-- 034: turneringen som kjerne, trinn 4 (gjennomføringsplanen steg 1). Godkjent og kjørt på test 11.10.2026.
 --
 -- Rydder bort reglene fra da en klubb bare hadde én sesong og én runde om gangen
 -- (docs/fase-22-turnering-som-kjerne.md kap. 4, 5 og 6). Etter 034 kan en klubb

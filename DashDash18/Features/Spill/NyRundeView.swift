@@ -30,7 +30,7 @@ struct NyRundeView: View {
         .disabled(model.isStarting)
         .safeAreaInset(edge: .bottom) { bottomPanel }
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt") { dismiss() }
             }
         }
