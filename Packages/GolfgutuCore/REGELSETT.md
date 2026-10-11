@@ -350,5 +350,6 @@ Se `Bets.swift` og `docs/veddemaal-poeng.md`. Fixture: `veddemaal.json`.
 3. **Sidepremier i kvelds-telling:** med `evening` og `round` er sidepremiene en del av kveldens poeng og strykes med kvelden. Med `match` strykes de aldri (PWA-en). Valgt fordi «tabellpoeng per kveld» naturlig tar med alt kvelden ga. Brukeren bør bekrefte.
 4. **Playoff og matchslag:** playoffen regner netto med fullt spillehandicap i playoff-runden, også når
    sesongen spiller match med «laveste fra scratch». Slagene på et hull blir da ikke alltid de samme som
-   forskjellen ville gitt. Valgt fordi playoffen er slagspill hull for hull. Brukeren bør bekrefte.
+   forskjellen ville gitt. Valgt fordi playoffen er slagspill hull for hull, og fordi det virker også når
+   tre eller flere står likt. **Bekreftet av Thomas 11.10.2026.**
 5. **`fullHandicap` i match** er det eneste alternativet til «laveste fra scratch». Prosent av forskjellen (f.eks. 90 % som WHS anbefaler for fourball) er ikke tatt med.

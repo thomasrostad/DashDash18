@@ -42,6 +42,6 @@ Knappefargen (gul med mørk tekst) gjøres med en gang, siden den ikke avhenger 
 | Steg | Status |
 |---|---|
 | Knappefarge | Pågår |
-| 1 | Pågår: 034 skrives |
-| 6 (motoren) | Ferdig på branch `fase-27/motor-tabellregler` (ikke merget): `table.minEvenings`, `aggregation`, `pointsTables`, `tieRule` (playoff), `formats.drawMethod`; på runden `counts`, `pointsTable`, `hideLastHoles`. `Season.standings`, `Playoff`, `Draw`, `Teams` i Swift og TypeScript, fixturer `tabellregler.json` og `trekning.json`. Uten SQL, app-UI og Supabase. Se `Packages/GolfgutuCore/REGELSETT.md` |
+| 1 | 034 kjørt på test 11.10 (kontrollene grønne). Appen og web-admin: PR #70 |
+| 6 (motoren) | Merget (#69): `table.minEvenings`, `aggregation`, `pointsTables`, `tieRule` (playoff), `formats.drawMethod`; på runden `counts`, `pointsTable`, `hideLastHoles`. Playoff med fullt handicap (Thomas 11.10). Se `Packages/GolfgutuCore/REGELSETT.md`. Gjenstår: 047 og appen |
 | Resten | Ikke startet |
