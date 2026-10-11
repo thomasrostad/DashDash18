@@ -28,44 +28,118 @@ nonisolated enum NextEvening {
 /// Hele troppen fordelt på svarene, som PWA-ens `svarOversikt`. «Ikke svart» er alle
 /// aktive medlemmer uten en rad, også ledige navn som aldri har logget inn.
 /// Svar fra noen som ikke er i troppen (arkivert eller ventende) tas ikke med.
+///
+/// sql/045: «Kommer» er `yes` uten venteliste, pluss bekreftede gjester. Ventelista (medlemmer og
+/// gjester) står for seg, i rekkefølgen serveren rykker opp (tid, så id).
 nonisolated struct SignupSummary: Equatable, Sendable {
     struct Entry: Equatable, Identifiable, Sendable {
+        /// Medlemmet, eller den som meldte på gjesten.
         let memberID: UUID
         let name: String
         let comment: String?
-        var id: UUID { memberID }
+        /// Satt for en gjest.
+        var guestID: UUID? = nil
+        /// «gjest av Anders».
+        var invitedBy: String? = nil
+        /// Plassen på ventelista (1 = først).
+        var place: Int? = nil
+        /// Bare for «Ikke svart» når arrangøren ser hvem som har sett kvelden (sql/045). nil: ukjent.
+        var seen: Bool? = nil
+        var id: UUID { guestID ?? memberID }
+        var isGuest: Bool { guestID != nil }
+
+        /// «gjest av Anders», «nr. 2 på ventelista».
+        var detail: String? {
+            var parts: [String] = []
+            if let invitedBy { parts.append("gjest av \(invitedBy)") }
+            if let place { parts.append("nr. \(place) på ventelista") }
+            return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        }
     }
 
+    /// Medlemmer som kommer (ikke ventelista).
     var yes: [Entry] = []
+    /// Bekreftede gjester.
+    var guests: [Entry] = []
+    /// Ventelista, medlemmer og gjester sammen, i rekkefølge.
+    var waitlist: [Entry] = []
     var maybe: [Entry] = []
     var no: [Entry] = []
     var notAnswered: [Entry] = []
 
-    /// - Parameter members: troppen i den rekkefølgen den skal vises.
-    init(members: [ClubMemberRow], signups: [SignupRow]) {
+    /// Alle som kommer: medlemmene og de bekreftede gjestene.
+    var coming: Int { yes.count + guests.count }
+
+    /// - Parameters:
+    ///   - members: troppen i den rekkefølgen den skal vises.
+    ///   - guests: gjestene på kvelden (sql/045).
+    ///   - seen: medlemmene som har sett kvelden. nil: ikke kjent (ikke arrangør, eller uten sql/045).
+    init(members: [ClubMemberRow], signups: [SignupRow], guests: [EventGuestRow] = [], seen: Set<UUID>? = nil) {
         let byMember = Dictionary(signups.map { ($0.memberID, $0) }, uniquingKeysWith: { first, _ in first })
+        let names = Dictionary(members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { first, _ in first })
+        var waiting: [(at: Date, key: String, entry: Entry)] = []
         for member in members where member.status == .active {
             guard let signup = byMember[member.id] else {
-                notAnswered.append(Entry(memberID: member.id, name: member.displayName, comment: nil))
+                notAnswered.append(Entry(memberID: member.id, name: member.displayName, comment: nil,
+                                         seen: seen.map { $0.contains(member.id) }))
                 continue
             }
             let entry = Entry(memberID: member.id, name: member.displayName, comment: SignupInput.cleanComment(signup.comment ?? ""))
             switch signup.status {
-            case .yes: yes.append(entry)
+            case .yes:
+                if let at = signup.waitlistedAt {
+                    waiting.append((at, member.id.uuidString.lowercased(), entry))
+                } else {
+                    yes.append(entry)
+                }
             case .maybe: maybe.append(entry)
             case .no: no.append(entry)
             }
         }
+        for guest in guests {
+            let entry = Entry(memberID: guest.invitedBy, name: guest.name, comment: nil, guestID: guest.id,
+                              invitedBy: names[guest.invitedBy] ?? "et medlem")
+            if let at = guest.waitlistedAt {
+                waiting.append((at, guest.id.uuidString.lowercased(), entry))
+            } else {
+                self.guests.append(entry)
+            }
+        }
+        waitlist = waiting
+            .sorted { ($0.at, $0.key) < ($1.at, $1.key) }
+            .enumerated()
+            .map { index, item in
+                var entry = item.entry
+                entry.place = index + 1
+                return entry
+            }
     }
 
-    /// Gruppene i rekkefølgen de vises: Kommer, Usikker, Kommer ikke, så Ikke svart sist.
+    /// Plassen på ventelista for medlemmet (ikke gjestene).
+    func waitlistPlace(of memberID: UUID) -> Int? {
+        waitlist.first { $0.memberID == memberID && !$0.isGuest }?.place
+    }
+
+    /// De uten svar som har sett kvelden, og de som ikke har sett den. Tom når det ikke er kjent.
+    var notAnsweredSeen: [Entry] { notAnswered.filter { $0.seen == true } }
+    var notSeen: [Entry] { notAnswered.filter { $0.seen == false } }
+    private var knowsSeen: Bool { notAnswered.contains { $0.seen != nil } }
+
+    /// Gruppene i rekkefølgen de vises: Kommer (med gjestene), Venteliste, Usikker, Kommer ikke, så
+    /// Ikke svart sist. Vet vi hvem som har sett kvelden, deles «Ikke svart» i «Ikke svart» og «Ikke sett».
     var groups: [(title: String, entries: [Entry])] {
-        [
-            (SignupStatus.yes.title, yes),
-            (SignupStatus.maybe.title, maybe),
-            (SignupStatus.no.title, no),
-            ("Ikke svart", notAnswered),
-        ]
+        var out: [(title: String, entries: [Entry])] = [(SignupStatus.yes.title, yes + guests)]
+        // Ventelista finnes bare med et tak (sql/045), så den står bare med når noen er på den.
+        if !waitlist.isEmpty { out.append(("Venteliste", waitlist)) }
+        out.append((SignupStatus.maybe.title, maybe))
+        out.append((SignupStatus.no.title, no))
+        if knowsSeen {
+            out.append(("Ikke svart", notAnsweredSeen))
+            out.append(("Ikke sett", notSeen))
+        } else {
+            out.append(("Ikke svart", notAnswered))
+        }
+        return out
     }
 }
 
@@ -123,6 +197,13 @@ nonisolated enum Nudge {
 
     /// «Purret på 4.»
     static func doneText(count: Int) -> String { "Purret på \(count)." }
+
+    /// «2 av dem har ikke sett kvelden ennå.» nil når alle har sett den, eller det ikke er kjent.
+    static func unseenText(unseen: Int, of count: Int) -> String? {
+        guard unseen > 0 else { return nil }
+        if unseen == count { return count == 1 ? "Har ikke sett kvelden ennå." : "Ingen av dem har sett kvelden ennå." }
+        return "\(unseen) av dem har ikke sett kvelden ennå."
+    }
 }
 
 /// Teksten på kortet «Kveldens tråd».
@@ -216,13 +297,17 @@ nonisolated enum SignupUndo {
     /// Mitt svar slik det vises: det som venter, ellers det lagrede.
     static func displayed(saved: SignupRow?, pending: PendingAnswer?, memberID: UUID, clubID: UUID) -> SignupRow? {
         guard let pending else { return saved }
+        // Står du på ventelista og svarer «Kommer» igjen, står du der fortsatt.
+        let waiting = pending.status == .yes && saved?.status == .yes ? saved?.waitlistedAt : nil
         return SignupRow(eventID: pending.eventID, memberID: memberID, clubID: clubID,
-                         status: pending.status, comment: pending.comment)
+                         status: pending.status, comment: pending.comment, waitlistedAt: waiting)
     }
 
     /// Kveldens svar med mitt ventende svar lagt inn, til oversikten over hvem som kommer.
     static func signups(_ signups: [SignupRow], pending: PendingAnswer?, memberID: UUID, clubID: UUID) -> [SignupRow] {
-        guard let mine = displayed(saved: nil, pending: pending, memberID: memberID, clubID: clubID) else { return signups }
+        guard pending != nil,
+              let mine = displayed(saved: signups.first { $0.memberID == memberID }, pending: pending,
+                                   memberID: memberID, clubID: clubID) else { return signups }
         return signups.filter { $0.memberID != memberID } + [mine]
     }
 

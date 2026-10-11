@@ -88,6 +88,8 @@ nonisolated struct HomeEveningInput: Equatable, Sendable {
     var term: DayTerm = .evening
     /// Forrige kveld (`KveldModel.previousEvent`).
     var previous: EventRow?
+    /// «På venteliste (nr. 2)» når mitt «Kommer» står på ventelista (sql/045).
+    var waitlistText: String?
 
     init(clubID: UUID, clubName: String, event: EventRow, today: String, answer: SignupStatus?, coming: Int,
          isOrganizer: Bool) {
@@ -367,6 +369,8 @@ nonisolated struct HomeNextEvening: Equatable, Sendable {
     var previousEventID: UUID? = nil
     /// «Torsdag 8. oktober».
     var previousTitle: String? = nil
+    /// «På venteliste (nr. 2)».
+    var waitlistText: String? = nil
 }
 
 /// Hele Hjem-feeden.

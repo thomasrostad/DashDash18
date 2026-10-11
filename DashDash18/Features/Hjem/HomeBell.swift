@@ -27,6 +27,10 @@ nonisolated enum HomeBellReason: Equatable, Sendable {
     case tipsKing
     /// Du er trukket til sosialkomiteen.
     case committee
+    /// Du (eller gjesten din) fikk plass fra ventelista (sql/045).
+    case promoted
+    /// Noen meldte seg av fra «kommer» (til arrangørene, sql/045).
+    case dropped
 }
 
 nonisolated enum HomeBell {
@@ -58,6 +62,10 @@ nonisolated enum HomeBell {
             return members.contains(me) ? .tipsKing : nil
         case let .committeeDrawn(_, members):
             return members.contains(me) ? .committee : nil
+        case let .waitlistPromoted(member, _, _):
+            return member == me ? .promoted : nil
+        case .signupDropped:
+            return row.recipients?.contains(me) == true ? .dropped : nil
         default:
             return nil
         }

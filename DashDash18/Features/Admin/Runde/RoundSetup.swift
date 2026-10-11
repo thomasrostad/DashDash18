@@ -15,9 +15,9 @@ nonisolated enum RoundParticipants {
     }
 
     /// De som har svart «Kommer», i troppens rekkefølge. Har ingen svart «Kommer», er alle med,
-    /// som i PWA-en: arrangøren tar ut dem som ikke kommer.
+    /// som i PWA-en: arrangøren tar ut dem som ikke kommer. Ventelista er ikke med (sql/045).
     static func initial(roster: [ClubMemberRow], signups: [SignupRow]) -> (ids: [UUID], source: Source) {
-        let coming = Set(signups.filter { $0.status == .yes }.map(\.memberID))
+        let coming = Set(signups.filter(\.isConfirmed).map(\.memberID))
         let ids = roster.filter { coming.contains($0.id) }.map(\.id)
         if ids.isEmpty { return (roster.map(\.id), .everyone) }
         return (ids, .signups)

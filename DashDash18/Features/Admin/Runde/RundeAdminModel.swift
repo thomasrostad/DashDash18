@@ -271,10 +271,7 @@ final class RundeAdminModel {
             signups = []
             return
         }
-        let loadedSignups: [SignupRow] = try await client.from("signups")
-            .select(SignupRow.columns)
-            .eq("event_id", value: eventID)
-            .execute().value
+        let loadedSignups = try await EveningSignupService.signups(client: client, eventIDs: [eventID])
         // Er en annen kveld valgt mens vi hentet, hører svaret ikke til den.
         guard selectedEventID == eventID else { return }
         signups = loadedSignups

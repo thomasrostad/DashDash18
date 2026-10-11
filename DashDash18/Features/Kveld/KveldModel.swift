@@ -28,6 +28,14 @@ final class KveldModel {
     var answerError: String?
     private var members: [ClubMemberRow] = []
     private var signups: [SignupRow] = []
+    /// Tak, frister og gjester for kvelden (sql/045). nil uten 045: påmeldingen er som før.
+    private(set) var settings: EveningSettingsRow?
+    /// Gjestene på kvelden (sql/045).
+    private(set) var guests: [EventGuestRow] = []
+    /// Hvem som har sett kvelden. Bare for arrangøren (rettigheten tournaments), og bare med sql/045.
+    private var seen: Set<UUID>?
+    /// Kvelden «sett» er sendt for, så det ikke sendes ved hver oppfrisking.
+    private var markedSeen: UUID?
     private let undoTimer = SignupUndoTimer()
     private(set) var today = EveningDates.today()
     /// Kveldens nummer i sesongen (plassen i terminlista), når det kan hentes.
@@ -49,6 +57,8 @@ final class KveldModel {
     private var clubID: UUID { context.clubID }
     var memberID: UUID { context.memberID }
     var isOrganizer: Bool { context.isOrganizer }
+    /// Kan endre påmeldingen og går forbi fristene (sql/045).
+    var canManageSignups: Bool { context.can(.tournaments) }
     var clubContext: ClubContext { context }
 
     /// Det ventende svaret, bare når det gjelder kvelden som vises.
@@ -64,8 +74,18 @@ final class KveldModel {
     /// Hvem som kommer, med mitt ventende svar lagt inn.
     var summary: SignupSummary {
         SignupSummary(members: members,
-                      signups: SignupUndo.signups(signups, pending: visiblePending, memberID: memberID, clubID: clubID))
+                      signups: SignupUndo.signups(signups, pending: visiblePending, memberID: memberID, clubID: clubID),
+                      guests: guests, seen: seen)
     }
+
+    /// «På venteliste (nr. 2)» når mitt «Kommer» står på ventelista.
+    var waitlistText: String? {
+        guard mySignup?.isWaitlisted == true else { return nil }
+        return EveningSignupText.waitlist(place: summary.waitlistPlace(of: memberID))
+    }
+
+    /// Gjestene jeg har meldt på.
+    var myGuests: [EventGuestRow] { guests.filter { $0.invitedBy == memberID } }
 
     /// «Kveld» eller «spilledag» (`DayTerm`), satt av skjermen fra miljøet.
     var dayTerm: DayTerm = .evening
@@ -141,6 +161,9 @@ final class KveldModel {
                 eveningNumber = nil
                 self.members = members
                 self.signups = []
+                settings = nil
+                guests = []
+                seen = nil
                 state = .loaded
                 WidgetSnapshotPublisher.publish(nextEvening: nil, today: today)
                 return
@@ -150,16 +173,21 @@ final class KveldModel {
                 .select(EventCommitteeRow.columns)
                 .eq("event_id", value: next.id)
                 .execute().value
-            async let signupRows: [SignupRow] = client.from("signups")
-                .select(SignupRow.columns)
-                .eq("event_id", value: next.id)
-                .execute().value
+            async let signupRows = EveningSignupService.signups(client: client, eventIDs: [next.id])
+            async let settingRows = EveningSignupService.settings(client: client, eventIDs: [next.id])
+            async let guestRows = EveningSignupService.guests(client: client, eventIDs: [next.id])
+            let manages = canManageSignups
+            async let viewRows: [UUID: Set<UUID>]? = manages
+                ? EveningSignupService.views(client: client, eventIDs: [next.id]) : nil
 
             async let number = fetchEveningNumber(of: next)
 
             let committeeIDs = Set(try await committeeRows.map(\.memberID))
             let signups = try await signupRows
             eveningNumber = await number
+            let settingsByEvent = await settingRows
+            let guestList = await guestRows
+            let views = await viewRows
 
             if CompetitionsFeature.isActive {
                 // Bare et merke: feiler hentingen, vises kvelden uten.
@@ -170,8 +198,15 @@ final class KveldModel {
             savedSignup = signups.first { $0.memberID == memberID }
             self.members = members
             self.signups = signups
+            settings = settingsByEvent?[next.id]
+            guests = guestList
+            seen = settingsByEvent == nil ? nil : (views.map { $0[next.id] ?? [] })
             state = .loaded
             WidgetSnapshotPublisher.publish(nextEvening: next, today: today)
+            if markedSeen != next.id {
+                markedSeen = next.id
+                await EveningSignupService.markSeen(client: client, eventID: next.id)
+            }
         } catch {
             if case .loaded = state { return }  // behold det som vises ved en feilet oppfrisking
             state = .failed(DataError.from(error).message)
@@ -193,6 +228,11 @@ final class KveldModel {
     func answer(_ status: SignupStatus) {
         guard let event, mySignup?.status != status else { return }
         answerError = nil
+        // Fristen er ute: si det med en gang i stedet for etter angre-vinduet.
+        if SignupDeadline.blocks(settings, current: savedSignup, new: status, now: .now, isOrganizer: canManageSignups) {
+            answerError = EveningSignupText.deadlinePassed
+            return
+        }
         pendingEvent = event
         pendingAnswer = SignupUndo.begin(pendingAnswer, saved: savedSignup, eventID: event.id,
                                          status: status, comment: mySignup?.comment)
@@ -219,7 +259,7 @@ final class KveldModel {
             }
         } catch {
             if pendingAnswer?.revision == pending.revision { pendingAnswer = nil }
-            answerError = "Klarte ikke å lagre svaret. \(error.message)"
+            answerError = EveningSignupText.answerError(error)
         }
     }
 
@@ -239,22 +279,44 @@ final class KveldModel {
         let comment = SignupInput.cleanComment(raw ?? "")
         guard SignupInput.needsWrite(current: saved, status: status, comment: comment) else { return }
 
-        let before = saved?.status
-        let row = SignupUpsert(eventID: event.id, memberID: memberID, clubID: clubID, status: status, comment: comment)
-        do {
-            let saved: [SignupRow] = try await client.from("signups")
-                .upsert(row, onConflict: "event_id,member_id")
-                .select(SignupRow.columns)
-                .execute().value
-            guard let mine = saved.first else { throw DataError.notAllowed }
-            if mine.eventID == self.event?.id { savedSignup = mine }
-        } catch {
-            throw DataError.from(error)
+        // Fra ventelista er ingen «kommer» å melde av (serveren melder selv om opprykk).
+        let before = saved.flatMap { $0.isWaitlisted ? nil : $0.status }
+        // Tom kommentar tømmer den (`evening_signup`: null beholder).
+        let result = try await EveningSignupService.answer(client: client, event: event, member: nil,
+                                                           ownMemberID: memberID, status: status, comment: comment ?? "")
+        if event.id == self.event?.id {
+            savedSignup = SignupRow(eventID: event.id, memberID: memberID, clubID: clubID, status: status,
+                                    comment: comment, waitlistedAt: result?.waitlisted == true ? .now : nil,
+                                    late: result?.late ?? false)
         }
-        // Bare det som er nytt for de andre (`svarLinje`); en kommentar er ingen hendelse.
-        if let news = SignupNews.event(member: memberID, from: before, to: status, eventDate: event.eventDate) {
+        // Bare det som er nytt for de andre (`svarLinje`); en kommentar er ingen hendelse, og et
+        // «Kommer» som havnet på ventelista er ingen påmelding.
+        if let news = SignupNews.event(member: memberID, from: before, to: status, eventDate: event.eventDate,
+                                       waitlisted: result?.waitlisted ?? false) {
             await activityLog.logQuietly(news, eventID: event.id)
         }
+        await load()
+    }
+
+    // MARK: Gjester
+
+    /// Melder på en gjest (sql/045, når kvelden tillater det).
+    func addGuest(_ raw: String) async throws(DataError) {
+        guard let event else { throw .invalid("Ingen \(dayTerm.one) å melde på til.") }
+        let name = try GuestInput.clean(raw).get()
+        if SignupDeadline.blocksGuest(settings, adding: true, waitlisted: false, now: .now, isOrganizer: canManageSignups) {
+            throw .invalid(EveningSignupText.deadlinePassed)
+        }
+        try await EveningSignupService.addGuest(client: client, eventID: event.id, name: name, invitedBy: nil)
+        await load()
+    }
+
+    func removeGuest(_ guest: EventGuestRow) async throws(DataError) {
+        if SignupDeadline.blocksGuest(settings, adding: false, waitlisted: guest.waitlistedAt != nil, now: .now,
+                                      isOrganizer: canManageSignups) {
+            throw .invalid(EveningSignupText.deadlinePassed)
+        }
+        try await EveningSignupService.removeGuest(client: client, guestID: guest.id)
         await load()
     }
 

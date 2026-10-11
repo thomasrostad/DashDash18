@@ -184,6 +184,11 @@ struct HjemEveningCard: View {
                     .accessibilityAddTraits(selected ? .isSelected : [])
                 }
             }
+            if let waitlist = evening.waitlistText, pendingText == nil {
+                Label(waitlist, systemImage: "hourglass")
+                    .font(.ddCallout)
+                    .foregroundStyle(Color.ddInkSecondary)
+            }
             if let pendingText {
                 HStack {
                     Text(pendingText)

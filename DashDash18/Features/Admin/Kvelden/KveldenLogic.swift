@@ -43,8 +43,27 @@ nonisolated enum EveningSignup {
         eventDate >= today && Nudge.isOffered(isOrganizer: true, summary: summary)
     }
 
-    /// Gruppene som har noen i seg: «Kommer», «Usikker», «Kommer ikke», «Ikke svart».
+    /// Gruppene som har noen i seg: «Kommer», «Venteliste», «Usikker», «Kommer ikke», «Ikke svart»
+    /// (og «Ikke sett» når det er kjent). Gjester står med «(gjest av Anders)».
     static func groups(_ summary: SignupSummary) -> [(title: String, names: [String])] {
-        summary.groups.filter { !$0.entries.isEmpty }.map { ($0.title, $0.entries.map(\.name)) }
+        summary.groups.filter { !$0.entries.isEmpty }.map { group in
+            (group.title, group.entries.map { entry in
+                entry.invitedBy.map { "\(entry.name) (gjest av \($0))" } ?? entry.name
+            })
+        }
+    }
+
+    /// Det arrangøren har slått på for kvelden: «14 av 16 plasser», fristene og gjester.
+    static func settingsLines(_ settings: EveningSettingsRow, summary: SignupSummary,
+                              includeGuests: Bool = true) -> [String] {
+        var lines: [String] = []
+        if let text = EveningSignupText.capacity(coming: summary.coming, max: settings.maxPlayers,
+                                                 waitlist: summary.waitlist.count) {
+            lines.append(text)
+        }
+        if let date = settings.signupDeadline { lines.append(EveningSignupText.deadline("Påmeldingsfrist", date)) }
+        if let date = settings.withdrawDeadline { lines.append(EveningSignupText.deadline("Avmeldingsfrist", date)) }
+        if settings.allowGuests && includeGuests { lines.append("Gjester er tillatt") }
+        return lines
     }
 }

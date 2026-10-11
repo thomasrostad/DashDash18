@@ -19,10 +19,7 @@ enum TipsQueries {
             .select(ClubMemberRow.columns)
             .eq("club_id", value: event.clubID)
             .execute().value
-        async let signupRows: [SignupRow] = client.from("signups")
-            .select(SignupRow.columns)
-            .eq("event_id", value: eventID)
-            .execute().value
+        async let signupRows = EveningSignupService.signups(client: client, eventIDs: [eventID])
         async let couponRows: [TipsRow] = client.from("tips")
             .select(TipsRow.columns)
             .eq("event_id", value: eventID)

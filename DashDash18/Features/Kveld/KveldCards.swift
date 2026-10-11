@@ -76,6 +76,20 @@ struct SignupSection: View {
                 }
                 .disabled(isBusy)
 
+                if let waitlist = model.waitlistText, model.pendingAnswer == nil {
+                    Label(waitlist, systemImage: "hourglass")
+                        .font(.ddCallout)
+                        .foregroundStyle(Color.ddInk)
+                }
+                if let settings = model.settings {
+                    ForEach(EveningSignup.settingsLines(settings, summary: model.summary, includeGuests: false),
+                            id: \.self) { line in
+                        Text(line)
+                            .font(.ddCaption)
+                            .foregroundStyle(Color.ddInkSecondary)
+                    }
+                }
+
                 if let pending = model.pendingAnswer {
                     HStack {
                         Text(SignupUndo.text(pending.status))
@@ -186,7 +200,7 @@ struct SignupSection: View {
             do throws(DataError) {
                 try await action()
             } catch {
-                self.error = "Klarte ikke å lagre svaret. \(error.message)"
+                self.error = EveningSignupText.answerError(error)
             }
         }
     }
@@ -208,7 +222,12 @@ struct SignupOverviewSection: View {
                             DDAvatar(name: entry.name)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(entry.name)
-                                    .font(entry.memberID == myID ? .ddBodyEmphasis : .ddBody)
+                                    .font(!entry.isGuest && entry.memberID == myID ? .ddBodyEmphasis : .ddBody)
+                                if let detail = entry.detail {
+                                    Text(detail)
+                                        .font(.ddCaption)
+                                        .foregroundStyle(Color.ddInkSecondary)
+                                }
                                 if let comment = entry.comment {
                                     Text("«\(comment)»")
                                         .font(.ddCaption)
@@ -223,6 +242,76 @@ struct SignupOverviewSection: View {
                     }
                 }
                 .ddCard(padding: DDSpacing.l)
+            }
+        }
+    }
+}
+
+/// Gjestene mine på kvelden (sql/045, når arrangøren har slått på gjester). De teller mot taket.
+struct GuestSection: View {
+    let model: KveldModel
+    @State private var name = ""
+    @State private var isBusy = false
+    @State private var error: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
+            DDSectionLabel("Gjester")
+            VStack(alignment: .leading, spacing: DDSpacing.m) {
+                ForEach(model.myGuests) { guest in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(guest.name).font(.ddBody)
+                            if guest.waitlistedAt != nil {
+                                Text("På venteliste")
+                                    .font(.ddCaption)
+                                    .foregroundStyle(Color.ddInkSecondary)
+                            }
+                        }
+                        Spacer()
+                        Button("Fjern") { run { () async throws(DataError) in try await model.removeGuest(guest) } }
+                            .buttonStyle(.ddText)
+                    }
+                    DDDivider()
+                }
+                if model.myGuests.count < GuestInput.perMember {
+                    HStack {
+                        TextField("Navn på gjesten", text: $name)
+                            .textInputAutocapitalization(.words)
+                            .submitLabel(.done)
+                            .ddField()
+                        Button("Legg til", action: add)
+                            .buttonStyle(.dd(.primary, compact: true))
+                            .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
+                if let error {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .ddErrorStyle()
+                }
+            }
+            .disabled(isBusy)
+            .ddCard()
+        }
+    }
+
+    private func add() {
+        let text = name
+        run { () async throws(DataError) in
+            try await model.addGuest(text)
+            name = ""
+        }
+    }
+
+    private func run(_ action: @escaping () async throws(DataError) -> Void) {
+        isBusy = true
+        error = nil
+        Task {
+            defer { isBusy = false }
+            do throws(DataError) {
+                try await action()
+            } catch {
+                self.error = error.message
             }
         }
     }

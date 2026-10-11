@@ -53,7 +53,9 @@ nonisolated enum DataError: Error, Equatable {
         switch sqlState {
         case "42501": .notAllowed
         case "23505": .duplicate
-        case "22023", "23514", "23503", "55000", "P0002": .invalid(message)
+        case "22023", "23514", "23503", "55000", "P0002", "54000": .invalid(message)
+        // Fristen for påmelding eller avmelding er ute (sql/045).
+        case "DDB02": .invalid(EveningSignupText.deadlinePassed)
         default: .unknown(message)
         }
     }

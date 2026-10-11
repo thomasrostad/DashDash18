@@ -154,8 +154,9 @@ private struct HjemClubContent: View {
         guard let event = kveld.event else { return nil }
         var input = HomeEveningInput(clubID: context.clubID, clubName: context.membership.club.name, event: event,
                                      today: kveld.today, answer: kveld.mySignup?.status,
-                                     coming: kveld.summary.yes.count, isOrganizer: kveld.isOrganizer)
+                                     coming: kveld.summary.coming, isOrganizer: kveld.isOrganizer)
         input.term = dayTerm
+        input.waitlistText = kveld.waitlistText
         input.previous = kveld.previousEvent
         return input
     }
