@@ -21,6 +21,29 @@
 | App Store | Målet for første versjon (B1 endres) |
 | Roller | Klubben lager egne roller. Malene er Eier, Arrangør, Kasserer, Sosialkomité og Medlem, og klubben kan endre dem, gi dem nytt navn eller lage nye. Hver rolle får rettigheter i fire grupper: turneringer og regler, runder og føring, medlemmer og invitasjon, penger og moderering |
 
+### Oppsett og konkurranseformer (11.10.2026, Thomas)
+
+| Tema | Beslutning |
+|---|---|
+| Nye former | Amerikaner og Københavner (sjekkes mot NGFs dokument før koding), skins som turneringsform som kan telle i tabellen, og lag mot lag (Ryder Cup) som oppskrift. Ikke eclectic |
+| Oddetall i lagformer | Bare trekant, som i dag. Ikke blind eller ghost |
+| Flere konkurranser per runde | Ja, fritt. Alle leser de samme hullscorene (f.eks. Stableford individuelt, bestball i par, skins og egne premier på første og siste ni) |
+| Longest drive og nærmest pinnen | Ett hull av hver per runde, som i dag |
+| Trekning av matcher | Arrangøren velger: etter tabellen (som i dag), tilfeldig uten gjentakelser over sesongen, eller manuelt |
+| Lag | Tilfeldige lag. Arrangøren kan bytte to spillere |
+| Tavla mens kvelden pågår | «Skjul de tre siste hullene» som valg per kveld. Ikke «uoffisielt til avsluttet», ikke Stableford mot par, ikke «skjul scoren min» |
+| Tabellregler | Alle fire, og de kan kombineres: minste antall kvelder, navngitte poengtabeller (finale teller mer), snitt i stedet for sum, og kveld som ikke teller |
+| Playoff-hull | Arrangøren velger hull og rekkefølge når playoffen starter. Forslag i appen: 18, så 1, så 18 igjen |
+| Handicap før kvelden | Spilleren holder det oppdatert selv. Ønske: hentes automatisk fra GolfBox. Det går ikke i dag: NGF gir ikke tredjepartsapper tilgang, og Unionsdatabasen med åpne API-er er forsinket (se researchen). Å be om GolfBox-innlogging er en felle (feller nr. 12). Vi følger med og kobler på når NGF åpner |
+| Føring | Som i dag: markøren fører, arrangøren kan alltid rette. Ingen «ta over føringen» |
+| Gjenbruk av oppsett | Usikker. Mitt forslag: «Samme som sist» (én knapp, ny trekning) og «Sesong fra mal» (startdato, ukedag, antall; «bare denne» eller «denne og fremtidige») først, fordi de sparer mest tid hver uke. «Ny sesong fra forrige» og spillbiblioteket etterpå. Åpent til Thomas har sett det |
+
+Endringer i planen som følger av dette:
+
+- Fase 29: «uoffisielt», Stableford mot par og «ta over føringen» tas ut. «Skjul de tre siste hullene» kommer inn. Flere LD/KP-hull tas ut. Amerikaner, Københavner, skins som form og lag mot lag kommer inn.
+- Fase 30: eclectic tas ut. De fire tabellreglene og playoff om førsteplassen kommer inn. Trekningsvalg (tabell, uten gjentakelser, manuelt) og tilfeldige lag med bytte.
+- Handicapkilde: ingen ny innstilling nå. GolfBox-henting står som ønske til NGF åpner.
+
 Konsekvenser for planen:
 
 - M4, M5 og spørsmål 2: B10 endres. Del regningen får status «sendt» og «bekreftet» (`bill_splits`, `bill_split_shares`). Veddemål og tippekupong blir med som i dag.
@@ -30,7 +53,7 @@ Konsekvenser for planen:
 - Spørsmål 5: regelsettet får `tieRule = playoff` for førsteplassen. Playoff-hullene føres som en egen kort runde (`rounds.kind = playoff`) koblet til turneringen, slik at slag per hull fortsatt er det eneste som lagres.
 - Spørsmål 6: ingen ny standard. NGF-settet legges til som valg i regelsettet.
 
-Fortsatt åpne: aldersgrense (spørsmål 8), blind og ghost (10), «klubb» som navn (11), og valgene i `docs/vedd-per-turnering.md`.
+Fortsatt åpne: aldersgrense (spørsmål 8), «klubb» som navn (11), gjenbruk av oppsett (over), og valgene i `docs/vedd-per-turnering.md`.
 
 ## Kort fortalt
 
