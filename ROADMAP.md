@@ -418,7 +418,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
   - [x] Lasttest på SQL-nivå av 036–038 (`sql/lokal/lasttest_fase24.sql`, 09.10): Tavla 53 ms i ett kall, folk du kjenner 1,3 ms, turneringslista 2,6 ms. Funn: `my_loose_rounds` 296 ms, rettet i 039 (5,7 ms, kjørt på test 09.10). Lasttest gjennom PostgREST krever Docker (ikke installert).
   - [ ] Sanntid via Broadcast (`sql/040`, `BroadcastFeature` av): runden og Tavla lytter på private kanaler per runde og klubb i stedet for alle hullscorer i basen. Kjørt på test 09.10 (meldingene og tilgangen sjekket). Flagget slås på etter prøving med to telefoner.
 - [ ] Fase 26: TV med kode, turneringer med tidsvindu og web-admin. Plan: `docs/fase-26-tv-tidsvindu-web.md`.
-- [ ] Fase 27–34: konkurranser, påmelding, medlemmer og sosialt lag (oppdrag 11.10.2026). Gap-analyse, datamodell, oppgaver og spørsmål: `docs/plan-konkurranser-og-sosialt.md`. **Venter på godkjenning og svar.**
+- [ ] Fase 27–34: konkurranser, påmelding, medlemmer og sosialt lag (oppdrag 11.10.2026). Gap-analyse, datamodell, oppgaver og spørsmål: `docs/plan-konkurranser-og-sosialt.md`. Svar fra Thomas 11.10 under «Beslutninger» i planen: alle målgrupper, alt med, egne roller per klubb, playoff om førsteplassen, automatisk opprykk, Dash18 Prod, App Store som mål.
   - [ ] Fase 27: tekniske prøver (push fra Edge Function finnes; offline-køen og Broadcast med to telefoner).
   - [ ] Fase 28: grunnmur (eier og eieroverføring, invitasjoner med kort kode, tak og utløp, RPC i stedet for skrivepolicyer, hjelpere i `private`, RLS-tester).
   - [ ] Fase 29: formatmotor og runde (lagform og poengtelling som to akser, NGF/WHS-handicapsett, flere spill per runde, øyeblikksbilde, «uoffisielt», oppskrifter, «ta over føringen»).
@@ -505,6 +505,7 @@ Etter v1: Android (B13), Apple Watch, GPS.
 Status: **Tatt** (av deg, eller av meg etter fullmakt), **Utsatt** eller **Åpen**.
 
 ### B1 – Distribusjon · Tatt
+**11.10.2026 (Thomas): offentlig App Store er målet for første versjon.** Teksten under gjaldt fram til da.
 **Ekstern TestFlight med e-postinvitasjon.** Du har Apple Developer-konto. Uten ekte penger i appen er Apples beta-gjennomgang lite risikabelt. Bygg utløper etter 90 dager og må fornyes. Offentlig App Store er ikke et mål for v1.
 
 ### B2 – Spillogikk · Tatt (meg)
@@ -554,6 +555,7 @@ Holdes utenfor git (`.gitignore`), fordi mappa inneholder nøkler.
 **Apple, Google og e-postkode.** Apple native (`AuthenticationServices` + `signInWithIdToken`), Google via OAuth i `supabase-swift` uten ekstra SDK, e-postkode som i dag. Med ny database er det ingen gamle kontoer å koble, men en spiller kan koble flere måter til samme konto. Supabase-konfig godkjennes av deg.
 
 ### B10 – Veddemål og penger · Tatt (deg): poeng i stedet for penger, i fase 10
+**11.10.2026 (Thomas):** «Del regningen» får status: din del merkes «sendt» når du kommer tilbake fra Vipps, og mottakeren bekrefter. Ingen penger går gjennom appen. Veddemål og tippekupong er med, i poeng.
 Ingen kroner i appen: ingen skyldliste, Vipps, bøter eller utlegg i v1. Tippekupongen bruker poeng eller «for æra». Åpen gjeld i PWA-en gjøres opp der før den fryses.
 
 ### B11 – GPS · Tatt (meg)
@@ -588,7 +590,7 @@ Utenfor v1. Databasen har ingen banegeometri.
 - **iPad-tilpasset bred modus.** Appen kjører på iPad som iPhone-layout.
 - **Plakaten for kvelden** (canvas til Instagram).
 - **Sameksistens med PWA-en** mot samme database.
-- **Skins og halve slag.** Kan legges til i regelsettet senere.
+- **Halve slag.** Kan legges til i regelsettet senere. (Skins finnes som spill på runden, fase 14.)
 - **Den gamle banken** (`bank_bevegelser`, saldo, innskudd) importeres ikke.
 
 ---

@@ -2,7 +2,35 @@
 
 11.10.2026. Grunnlag: oppdraget fra Thomas (konkurranser, påmelding, medlemmer og sosialt lag) og researchrapporten i [`research/golfapper-research.md`](research/golfapper-research.md). Kartlagt mot iOS-appen (`DashDash18/`, `Packages/GolfgutuCore/`), appens SQL (`sql/001`–`043`, alt kjørt på test, ingenting i prod), web (`web/`) og PWA-en (`referanse/golfgutu-pwa/`, bare lest).
 
-**Status: venter på godkjenning.** Ingen Swift-kode eller SQL er skrevet for dette. Fasene er lagt inn i `ROADMAP.md` som fase 27–34.
+**Status:** svarene fra Thomas 11.10.2026 står under «Beslutninger». Ingen Swift-kode eller SQL er skrevet for dette ennå. Fasene er lagt inn i `ROADMAP.md` som fase 27–34.
+
+## Beslutninger 11.10.2026 (Thomas)
+
+| Tema | Beslutning |
+|---|---|
+| Målgruppe | Alle: vennegjenger, klubber og simulatorsentre fra første versjon |
+| Funksjoner | Alt blir med. Ingenting skjules bak flagg som er av (veddemål, tippekupong, spill på runden, Del regningen, TV, web-admin og stab) |
+| Rekkefølge | Alle fire bygges: rydde modellen (034–035), påmelding per kveld, tavla og resultatkort, App Store-grunnmur |
+| Handicap | Dynamisk: velges i regelsettet per turnering, som i dag. Ingen fast standard |
+| Standardsvar | Som i dag: ingen rad betyr «ikke svart» |
+| Frister | Ingen frister som standard. Arrangøren slår dem på |
+| Venteliste | Automatisk opprykk når det blir ledig plass, med varsel |
+| Likhet i sesongtabellen | Playoff, som i PGA, bare om førsteplassen. Spilles på stedet etter siste runde, på banen eller i simulatoren etter hva turneringen bruker. Tabellen viser delt plass til playoffen er spilt. Andre likheter er delt plass |
+| Prod | Nytt Supabase-prosjekt «Dash18 Prod», med samme oppsett som Dash18 Test |
+| Del regningen | Din del merkes «sendt» automatisk når du kommer tilbake fra Vipps. Mottakeren bekrefter eller sier at den ikke kom. Ingen penger gjennom appen, ingen avtale med Vipps |
+| App Store | Målet for første versjon (B1 endres) |
+| Roller | Klubben lager egne roller. Malene er Eier, Arrangør, Kasserer, Sosialkomité og Medlem, og klubben kan endre dem, gi dem nytt navn eller lage nye. Hver rolle får rettigheter i fire grupper: turneringer og regler, runder og føring, medlemmer og invitasjon, penger og moderering |
+
+Konsekvenser for planen:
+
+- M4, M5 og spørsmål 2: B10 endres. Del regningen får status «sendt» og «bekreftet» (`bill_splits`, `bill_split_shares`). Veddemål og tippekupong blir med som i dag.
+- M6 og spørsmål 9: B1 endres til App Store.
+- M2 og spørsmål 3: i stedet for flagg og en eierkolonne kommer `club_roles` (navn, rettigheter) og `club_member_roles`. Hjelperne i RLS spør etter rettighet (`private.has_club_right(club, right)`), ikke etter `is_organizer`. `is_organizer` og `is_treasurer` speiles til gamle bygg er borte.
+- Spørsmål 4: påmelding per kveld har tak og automatisk opprykk, frister bare når arrangøren slår dem på, og ingen standardsvar.
+- Spørsmål 5: regelsettet får `tieRule = playoff` for førsteplassen. Playoff-hullene føres som en egen kort runde (`rounds.kind = playoff`) koblet til turneringen, slik at slag per hull fortsatt er det eneste som lagres.
+- Spørsmål 6: ingen ny standard. NGF-settet legges til som valg i regelsettet.
+
+Fortsatt åpne: aldersgrense (spørsmål 8), blind og ghost (10), «klubb» som navn (11), og valgene i `docs/vedd-per-turnering.md`.
 
 ## Kort fortalt
 
