@@ -1,0 +1,181 @@
+{
+  "_kilde": "Trekningen over en sesong med 8 spillere og 7 omganger (steg 6). «tabell» er trekningen etter tabellen (Triangle.drawMatches) når alle står likt (0 poeng): de samme parene hver gang. «utenGjentakelser» er Draw.avoidingRepeats med frø omgang + 1 og møtene fra omgangene før: ingen gjentakelser (en full serie). «gjentakelser…» er summen av møter som har vært før. Gruppene og lagene er skrevet av Swift-motoren (SplitMix64) og er fasit for TypeScript; egenskapene (alle én gang, færre gjentakelser) er sjekket i testene.",
+  "gjentakelserTabell": 84,
+  "gjentakelserUten": 0,
+  "lag": {
+    "frø": 42,
+    "lag": {
+      "p1": 3,
+      "p2": 1,
+      "p3": 2,
+      "p4": 1,
+      "p5": 3,
+      "p6": 4,
+      "p7": 2,
+      "p8": 4
+    },
+    "spillere": ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"],
+    "størrelse": 2
+  },
+  "oddetall": {
+    "frø": 42,
+    "grupper": [
+      ["p3", "p5"],
+      ["p7", "p1"],
+      ["p4", "p2", "p6"]
+    ],
+    "spillere": [
+      {
+        "id": "p1",
+        "name": "Anne"
+      },
+      {
+        "id": "p2",
+        "name": "Bjørn"
+      },
+      {
+        "id": "p3",
+        "name": "Cato"
+      },
+      {
+        "id": "p4",
+        "name": "Dag"
+      },
+      {
+        "id": "p5",
+        "name": "Eva"
+      },
+      {
+        "id": "p6",
+        "name": "Frida"
+      },
+      {
+        "id": "p7",
+        "name": "Geir"
+      }
+    ]
+  },
+  "omganger": 7,
+  "spillere": [
+    {
+      "id": "p1",
+      "name": "Anne"
+    },
+    {
+      "id": "p2",
+      "name": "Bjørn"
+    },
+    {
+      "id": "p3",
+      "name": "Cato"
+    },
+    {
+      "id": "p4",
+      "name": "Dag"
+    },
+    {
+      "id": "p5",
+      "name": "Eva"
+    },
+    {
+      "id": "p6",
+      "name": "Frida"
+    },
+    {
+      "id": "p7",
+      "name": "Geir"
+    },
+    {
+      "id": "p8",
+      "name": "Hilde"
+    }
+  ],
+  "tabell": [
+    [
+      ["p1", "p2"],
+      ["p3", "p4"],
+      ["p5", "p6"],
+      ["p7", "p8"]
+    ],
+    [
+      ["p8", "p7"],
+      ["p6", "p5"],
+      ["p4", "p3"],
+      ["p2", "p1"]
+    ],
+    [
+      ["p1", "p2"],
+      ["p3", "p4"],
+      ["p5", "p6"],
+      ["p7", "p8"]
+    ],
+    [
+      ["p8", "p7"],
+      ["p6", "p5"],
+      ["p4", "p3"],
+      ["p2", "p1"]
+    ],
+    [
+      ["p1", "p2"],
+      ["p3", "p4"],
+      ["p5", "p6"],
+      ["p7", "p8"]
+    ],
+    [
+      ["p8", "p7"],
+      ["p6", "p5"],
+      ["p4", "p3"],
+      ["p2", "p1"]
+    ],
+    [
+      ["p1", "p2"],
+      ["p3", "p4"],
+      ["p5", "p6"],
+      ["p7", "p8"]
+    ]
+  ],
+  "utenGjentakelser": [
+    [
+      ["p5", "p4"],
+      ["p3", "p8"],
+      ["p6", "p7"],
+      ["p1", "p2"]
+    ],
+    [
+      ["p6", "p3"],
+      ["p8", "p5"],
+      ["p2", "p4"],
+      ["p1", "p7"]
+    ],
+    [
+      ["p8", "p1"],
+      ["p2", "p5"],
+      ["p3", "p7"],
+      ["p4", "p6"]
+    ],
+    [
+      ["p7", "p2"],
+      ["p1", "p6"],
+      ["p8", "p4"],
+      ["p5", "p3"]
+    ],
+    [
+      ["p1", "p4"],
+      ["p3", "p2"],
+      ["p5", "p7"],
+      ["p6", "p8"]
+    ],
+    [
+      ["p2", "p6"],
+      ["p3", "p4"],
+      ["p7", "p8"],
+      ["p5", "p1"]
+    ],
+    [
+      ["p2", "p8"],
+      ["p5", "p6"],
+      ["p3", "p1"],
+      ["p7", "p4"]
+    ]
+  ]
+}

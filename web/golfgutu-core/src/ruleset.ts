@@ -56,6 +56,23 @@ export interface Counting {
 export type Tiebreak = "holeDifference" | "stableford";
 export const TIEBREAKS: readonly Tiebreak[] = ["holeDifference", "stableford"];
 
+/** Hvordan de tellende poengene blir til totalen: summen, eller snittet per spilte kveld som teller. */
+export type Aggregation = "sum" | "average";
+export const AGGREGATIONS: readonly Aggregation[] = ["sum", "average"];
+
+/** Likhet i tabellen: skillene (Golfgutu), eller playoff om førsteplassen (andre likheter er delt plass). */
+export type TieRule = "tiebreaks" | "playoff";
+export const TIE_RULES: readonly TieRule[] = ["tiebreaks", "playoff"];
+
+/** En navngitt poengtabell (f.eks. «finale» = 2). Kvelden peker på den med `Round.pointsTable`. */
+export interface PointsTable {
+  multiplier: number;
+}
+
+/** Trekningen av matcher: etter tabellen (Golfgutu), uten gjentakelser, eller manuelt. */
+export type DrawMethod = "standings" | "avoidRepeats" | "manual";
+export const DRAW_METHODS: readonly DrawMethod[] = ["standings", "avoidRepeats", "manual"];
+
 /** Hva tabellpoengene kommer fra. */
 export type TablePointsSource = "matches" | "stableford";
 export const TABLE_POINTS_SOURCES: readonly TablePointsSource[] = ["matches", "stableford"];
@@ -71,6 +88,12 @@ export interface TableRules {
   tiebreaks: Tiebreak[];
   /** Poengene rundes til nærmeste multiplum av dette. `null`: ingen avrunding. */
   roundingStep: number | null;
+  /** Minste antall spilte kvelder som teller for å få plass. `null` eller 0: alle rangeres. */
+  minEvenings: number | null;
+  aggregation: Aggregation;
+  /** Navngitte poengtabeller. Tom: ingen. */
+  pointsTables: Record<string, PointsTable>;
+  tieRule: TieRule;
 }
 
 export interface SidePrize {
@@ -124,6 +147,7 @@ export interface FormatRules {
   allowedFormIDs: string[];
   maxPerBay: number;
   matchStrokes: MatchStrokes;
+  drawMethod: DrawMethod;
 }
 
 /** Tippekupongen (bare reglene; tips-logikken er ikke portert). */
@@ -296,6 +320,10 @@ export const GOLFGUTU: Readonly<Ruleset> = deepFreeze({
     stablefordCounting: { unit: "round", best: 5 },
     tiebreaks: ["holeDifference", "stableford"],
     roundingStep: 0.5,
+    minEvenings: null,
+    aggregation: "sum",
+    pointsTables: {},
+    tieRule: "tiebreaks",
   },
   sidePrizes: {
     longestDrive: { enabled: true, points: 1 },
@@ -318,6 +346,7 @@ export const GOLFGUTU: Readonly<Ruleset> = deepFreeze({
     allowedFormIDs: ALL_FORMS.map((f) => f.id),
     maxPerBay: 4,
     matchStrokes: "lowestFromScratch",
+    drawMethod: "standings",
   },
   tips: GOLFGUTU_TIPS,
   bets: GOLFGUTU_BETS,
@@ -452,7 +481,18 @@ function decodeTable(x: unknown, path: string): TableRules {
     tiebreaks: tb ? tb.map((t, i) => enumValue(t, TIEBREAKS, `${path}.tiebreaks[${i}]`)) : [...g.tiebreaks],
     // `null` er et valg (ingen avrunding); mangler feltet, gjelder Golfgutu.
     roundingStep: has(o, "roundingStep") ? optNumber(o, "roundingStep", path) : g.roundingStep,
+    minEvenings: optInt(o, "minEvenings", path) ?? g.minEvenings,
+    aggregation: optEnum(o, "aggregation", AGGREGATIONS, path) ?? g.aggregation,
+    pointsTables: decodePointsTables(optObject(o, "pointsTables", path), `${path}.pointsTables`),
+    tieRule: optEnum(o, "tieRule", TIE_RULES, path) ?? g.tieRule,
   };
+}
+
+function decodePointsTables(o: JSONObject | null, path: string): Record<string, PointsTable> {
+  const out: Record<string, PointsTable> = {};
+  if (o === null) return out;
+  for (const [k, v] of Object.entries(o)) out[k] = { multiplier: reqNumber(obj(v, `${path}.${k}`), "multiplier", `${path}.${k}`) };
+  return out;
 }
 
 function decodeSidePrizes(x: unknown, path: string): SidePrizeRules {
@@ -498,6 +538,7 @@ function decodeFormats(x: unknown, path: string): FormatRules {
     allowedFormIDs: allowed ? stringArray(allowed, `${path}.allowedFormIDs`) : [...g.allowedFormIDs],
     maxPerBay: optInt(o, "maxPerBay", path) ?? g.maxPerBay,
     matchStrokes: optEnum(o, "matchStrokes", MATCH_STROKES, path) ?? g.matchStrokes,
+    drawMethod: optEnum(o, "drawMethod", DRAW_METHODS, path) ?? g.drawMethod,
   };
 }
 
@@ -650,6 +691,16 @@ export function encodeRuleset(r: Ruleset): JSONObject {
   };
   // Bare når tabellen ikke teller matcher, så Golfgutu-JSON-en og eldre regelsett er som før.
   if (r.table.pointsSource !== "matches") table.pointsSource = r.table.pointsSource;
+  // Tabellreglene fra steg 6 skrives bare når de ikke er standard, av samme grunn.
+  if (r.table.minEvenings !== null && r.table.minEvenings !== undefined) table.minEvenings = r.table.minEvenings;
+  if (r.table.aggregation !== "sum") table.aggregation = r.table.aggregation;
+  const pt = r.table.pointsTables ?? {};
+  if (Object.keys(pt).length > 0) {
+    const tables: JSONObject = {};
+    for (const [k, v] of Object.entries(pt)) tables[k] = { multiplier: v.multiplier };
+    table.pointsTables = tables;
+  }
+  if (r.table.tieRule !== "tiebreaks") table.tieRule = r.table.tieRule;
   const teamHandicap: JSONObject = {};
   for (const [k, v] of Object.entries(r.handicap.teamHandicap)) {
     teamHandicap[k] = v.weights !== undefined ? { method: v.method, weights: [...v.weights] } : { method: v.method };
@@ -671,7 +722,14 @@ export function encodeRuleset(r: Ruleset): JSONObject {
       externalHandicap: r.handicap.externalHandicap,
       teamHandicap,
     },
-    formats: { ...r.formats, allowedFormIDs: [...r.formats.allowedFormIDs] },
+    formats: {
+      defaultFormID: r.formats.defaultFormID,
+      allowedFormIDs: [...r.formats.allowedFormIDs],
+      maxPerBay: r.formats.maxPerBay,
+      matchStrokes: r.formats.matchStrokes,
+      // Bare når trekningen ikke er etter tabellen.
+      ...(r.formats.drawMethod !== "standings" ? { drawMethod: r.formats.drawMethod } : {}),
+    },
     tips: { ...r.tips, stakeOptions: [...r.tips.stakeOptions] },
     bets: {
       lockAheadHoles: r.bets.lockAheadHoles,

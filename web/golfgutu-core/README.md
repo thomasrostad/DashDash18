@@ -83,7 +83,10 @@ Stegene finnes også hver for seg: `decodeTavlaData`, `decodeSeasonRow`, `tavlaI
 `new TavlaStandings(input, me)`, `tavlaToJSON`. Liga og morro: `PersonDirectory`, `CompetitionScope`
 (`input(...)`), `new LeagueStandings(input, me)`. Cup: `CupStandings`, `cupSeeded`, `cupDraw`, `cupBracket`,
 `cupDecide`. Selve motoren: `Season` (jakketavla, stablefordsummen, utvalget), `decodeRuleset`/`encodeRuleset`,
-`validateRuleset`, `effectiveHandicap`, `roundPoints`, `matchStanding` og resten i `src/`.
+`validateRuleset`, `effectiveHandicap`, `roundPoints`, `matchStanding` og resten i `src/`. Tabellreglene fra
+steg 6: `Season.standings` (plass, kvalifisert, playoff), `Season.effectiveWeight`, `Season.draw`,
+`decidePlayoff`, `hidingLastHoles`, `avoidingRepeats`, `validateDraw`, `randomTeams`, `swapTeams`
+(se `Packages/GolfgutuCore/REGELSETT.md`).
 
 ## Hva som er portert
 
@@ -99,6 +102,7 @@ Stegene finnes også hver for seg: `decodeTavlaData`, `decodeSeasonRow`, `tavlaI
 | Scoring, Truncation | `scoring.ts`, `truncation.ts` |
 | Match, Triangle, SidePrize | `match.ts`, `triangle.ts`, `sideprize.ts` |
 | Season | `season.ts` |
+| Playoff (playoff og «skjul de siste hullene»), Draw (trekning og lag) | `playoff.ts`, `draw.ts` |
 | Competitions (liga, cup, SplitMix64) | `competitions.ts` |
 
 Fra appen (`DashDash18/`): radtypene (`Data/Rows.swift`, `FoundationRows.swift`) i `app/rows.ts`,

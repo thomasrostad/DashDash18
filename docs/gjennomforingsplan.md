@@ -43,5 +43,5 @@ Knappefargen (gul med mørk tekst) gjøres med en gang, siden den ikke avhenger 
 |---|---|
 | Knappefarge | Pågår |
 | 1 | Pågår: 034 skrives |
-| 6 (motoren) | Pågår parallelt: tabellregler og playoff i GolfgutuCore og TypeScript, uten SQL |
+| 6 (motoren) | Ferdig på branch `fase-27/motor-tabellregler` (ikke merget): `table.minEvenings`, `aggregation`, `pointsTables`, `tieRule` (playoff), `formats.drawMethod`; på runden `counts`, `pointsTable`, `hideLastHoles`. `Season.standings`, `Playoff`, `Draw`, `Teams` i Swift og TypeScript, fixturer `tabellregler.json` og `trekning.json`. Uten SQL, app-UI og Supabase. Se `Packages/GolfgutuCore/REGELSETT.md` |
 | Resten | Ikke startet |

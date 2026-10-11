@@ -121,6 +121,22 @@ public struct Season: Sendable {
         /// Tellende stablefordpoeng i tabellen (vektet, før avrunding) når tabellen teller stableford.
         /// 0 når tabellen teller matcher.
         public var roundPoints: Double = 0
+        /// Kveldene spilleren har spilt som teller (score eller match i en runde med vekt over 0).
+        public var evenings: Int = 0
+        /// Har spilt nok kvelder til å rangeres (`table.minEvenings`). Alltid sann uten grense.
+        public var qualified: Bool = true
+    }
+
+    /// En rad i tabellen med plass (`standings(playoffWinner:)`).
+    public struct Standing: Hashable, Sendable {
+        public var row: JacketRow
+        /// 1, 1, 3 …: delt plass har samme nummer. `nil`: ikke kvalifisert (for få kvelder), står under
+        /// de rangerte.
+        public var place: Int?
+        /// Delt førsteplass med `tieRule` `playoff`, og playoffen er ikke avgjort.
+        public var playoffPending: Bool
+        /// Vant playoffen om førsteplassen.
+        public var wonPlayoff: Bool
     }
 
     /// En rad i stablefordtavla (`seasonBoardNytt`).
@@ -186,7 +202,7 @@ public struct Season: Sendable {
     private func stablefordTableSelection(for playerID: String) -> TableSelection {
         let side = sidePrizeResults(for: playerID)
         let chronological = rounds.indices.compactMap { i -> RoundScore? in
-            guard Self.weight(rounds[i]) != 0, let p = weightedRoundPoints(i, playerID: playerID) else { return nil }
+            guard effectiveWeight(rounds[i]) != 0, let p = weightedRoundPoints(i, playerID: playerID) else { return nil }
             return RoundScore(roundIndex: i, roundID: rounds[i].id, points: p)
         }
         let all = chronological.enumerated().sorted { x, y in
@@ -216,7 +232,7 @@ public struct Season: Sendable {
     private func matchResultsInOrder(for playerID: String) -> [MatchResult] {
         var all: [MatchResult] = []
         for (i, round) in rounds.enumerated() {
-            let weight = Self.weight(round)
+            let weight = effectiveWeight(round)
             if weight == 0 { continue }
             for m in round.matches where MatchPlay.involves(m, playerID: playerID, in: round) {
                 if m.isTriangle {
@@ -281,7 +297,7 @@ public struct Season: Sendable {
     public func sidePrizeResults(for playerID: String) -> [SidePrizeResult] {
         var out: [SidePrizeResult] = []
         for (i, round) in rounds.enumerated() {
-            let weight = Self.weight(round)
+            let weight = effectiveWeight(round)
             if weight == 0 { continue }
             for kind in [SideClaim.Kind.drive, .kp] where ruleset.sidePrizes[kind].enabled {
                 let winners = SidePrizes.winners(SidePrizes.claims(kind, in: round, claims: claims))
@@ -309,7 +325,7 @@ public struct Season: Sendable {
     /// `rundePoengVektet`: rundens poeng ganget med vekten. `nil` når spilleren ikke har poeng i runden.
     public func weightedRoundPoints(_ roundIndex: Int, playerID: String) -> Double? {
         guard let p = pointsByRound[roundIndex][playerID] else { return nil }
-        return Double(p) * Self.weight(rounds[roundIndex])
+        return Double(p) * effectiveWeight(rounds[roundIndex])
     }
 
     /// `tellendeRunderFor`: rundene som teller i stablefordsummen, best først (vekten legges på før
@@ -345,33 +361,112 @@ public struct Season: Sendable {
     /// alle i troppen, med det som teller etter regelsettet.
     /// Sortert på total, så regelsettets skilletegn (Golfgutu: hulldifferanse, stablefordsum), så navn (norsk).
     public func jacketBoard() -> [JacketRow] {
+        let table = ruleset.table
+        let minEvenings = table.minEvenings ?? 0
         let rows = players.map { p -> JacketRow in
             let selection = tableSelection(for: p.id)
             let d = selection.matches
             let s = Self.matchSum(d.counting, rules: ruleset)
             let side = selection.sidePrizes.counting.reduce(0) { $0 + $1.points }
-            if ruleset.table.pointsSource == .stableford {
+            let played = playedEvenings(for: p.id)
+            var row: JacketRow
+            if table.pointsSource == .stableford {
                 let r = selection.rounds
                 let points = r.counting.reduce(0) { $0 + $1.points }
-                return JacketRow(player: p, total: ruleset.roundTablePoints(points + side), duel: 0, side: side,
-                                 matches: 0, holes: 0, played: r.counting.count + r.dropped.count,
-                                 stableford: stablefordTotal(for: p.id), roundPoints: points)
+                row = JacketRow(player: p, total: ruleset.roundTablePoints(points + side), duel: 0, side: side,
+                                matches: 0, holes: 0, played: r.counting.count + r.dropped.count,
+                                stableford: stablefordTotal(for: p.id), roundPoints: points)
+            } else {
+                row = JacketRow(player: p, total: ruleset.roundTablePoints(s.points + side), duel: s.points, side: side,
+                                matches: s.matches, holes: s.holes, played: d.counting.count + d.dropped.count,
+                                stableford: stablefordTotal(for: p.id))
             }
-            return JacketRow(player: p, total: ruleset.roundTablePoints(s.points + side), duel: s.points, side: side,
-                             matches: s.matches, holes: s.holes, played: d.counting.count + d.dropped.count,
-                             stableford: stablefordTotal(for: p.id))
+            row.evenings = played.count
+            row.qualified = minEvenings <= 0 || played.count >= minEvenings
+            if table.aggregation == .average {
+                // Snitt per spilte kveld som teller: kvelder der alt ble strøket av «beste N», regnes ikke.
+                let counted = selection.matches.counting.map(\.roundIndex) + selection.rounds.counting.map(\.roundIndex)
+                    + selection.sidePrizes.counting.map(\.roundIndex)
+                let dropped = selection.matches.dropped.map(\.roundIndex) + selection.rounds.dropped.map(\.roundIndex)
+                    + selection.sidePrizes.dropped.map(\.roundIndex)
+                let droppedEvenings = Set(dropped.map { Self.eveningKey(rounds[$0]) })
+                    .subtracting(counted.map { Self.eveningKey(rounds[$0]) })
+                let divisor = played.subtracting(droppedEvenings).count
+                let raw = d.counting.reduce(0) { $0 + $1.points } + selection.rounds.counting.reduce(0) { $0 + $1.points } + side
+                row.total = divisor > 0 ? ruleset.roundTablePoints(raw / Double(divisor)) : 0
+            }
+            return row
         }
         return rows.sorted { a, b in
+            if a.qualified != b.qualified { return a.qualified }
             if a.total != b.total { return a.total > b.total }
-            for t in ruleset.table.tiebreaks {
-                switch t {
-                case .holeDifference where a.holes != b.holes: return a.holes > b.holes
-                case .stableford where a.stableford != b.stableford: return a.stableford > b.stableford
-                default: continue
+            if table.tieRule == .tiebreaks {
+                for t in table.tiebreaks {
+                    switch t {
+                    case .holeDifference where a.holes != b.holes: return a.holes > b.holes
+                    case .stableford where a.stableford != b.stableford: return a.stableford > b.stableford
+                    default: continue
+                    }
                 }
             }
             return NorwegianSort.areInIncreasingOrder(a.player.name, b.player.name)
         }
+    }
+
+    /// Kveldene (nøklene) spilleren har spilt som teller: runder med vekt over 0 der spilleren har
+    /// poeng eller er med i en match.
+    func playedEvenings(for playerID: String) -> Set<String> {
+        Set(rounds.indices.filter { i in
+            effectiveWeight(rounds[i]) != 0
+                && (pointsByRound[i][playerID] != nil
+                    || rounds[i].matches.contains { MatchPlay.involves($0, playerID: playerID, in: rounds[i]) })
+        }.map { Self.eveningKey(rounds[$0]) })
+    }
+
+    /// Tabellen med plass. Rekkefølgen er jakketavlas, med disse tilleggene:
+    /// - Like på total (og på alle skillene med `tieRule` `tiebreaks`) gir delt plass: 1, 1, 3.
+    /// - Ikke kvalifisert (`table.minEvenings`): ingen plass, under de rangerte.
+    /// - `tieRule` `playoff`: står flere likt øverst (og minst én har spilt), er playoffen ventende
+    ///   (`playoffPending`) til `playoffWinner` er gitt. Vinneren (fra `Playoff.decide`) står først med
+    ///   plass 1; de andre i gruppa deler andreplassen. En vinner utenfor gruppa endrer ingenting.
+    public func standings(playoffWinner: String? = nil) -> [Standing] {
+        let table = ruleset.table
+        var rows = jacketBoard()
+        func same(_ a: JacketRow, _ b: JacketRow) -> Bool {
+            guard a.total == b.total else { return false }
+            if table.tieRule == .playoff { return true }
+            return table.tiebreaks.allSatisfy { t in
+                switch t {
+                case .holeDifference: a.holes == b.holes
+                case .stableford: a.stableford == b.stableford
+                }
+            }
+        }
+        var pending = false
+        var winner: String?
+        let ranked = rows.prefix { $0.qualified }
+        if table.tieRule == .playoff, ranked.count >= 2, same(ranked[0], ranked[1]), ranked[0].evenings > 0 {
+            let group = ranked.prefix { same($0, ranked[0]) }
+            if let w = playoffWinner, let i = group.firstIndex(where: { $0.player.id == w }) {
+                rows.insert(rows.remove(at: i), at: 0)
+                winner = w
+            } else {
+                pending = true
+            }
+        }
+        var out: [Standing] = []
+        for (i, row) in rows.enumerated() {
+            guard row.qualified else {
+                out.append(Standing(row: row, place: nil, playoffPending: false, wonPlayoff: false))
+                continue
+            }
+            let previous = i > 0 ? rows[i - 1] : nil
+            let shares = previous.map { same(row, $0) && $0.player.id != winner } ?? false
+            let place = shares ? out[i - 1].place : i + 1
+            out.append(Standing(row: row, place: place, playoffPending: pending && place == 1,
+                                wonPlayoff: row.player.id == winner))
+        }
+        return out
     }
 
     /// `seasonBoardNytt`: stablefordsummen, alle i troppen. Sortert på sum, så navn (norsk).
@@ -382,6 +477,17 @@ public struct Season: Sendable {
                                  counting: d.counting.count, dropped: d.dropped.count)
         }.sorted { a, b in
             a.total != b.total ? a.total > b.total : NorwegianSort.areInIncreasingOrder(a.player.name, b.player.name)
+        }
+    }
+
+    /// Trekningen etter regelsettets `formats.drawMethod`: etter tabellen (`drawMatches`), uten
+    /// gjentakelser (færrest mulig møter fra rundene i sesongen, gjentakbar med `seed`), eller `nil` for
+    /// manuell (arrangøren setter opp matchene; sjekk dem med `Draw.validate`).
+    public func draw(_ participants: [Player], round: Int, seed: UInt64) -> [[String]]? {
+        switch ruleset.formats.drawMethod {
+        case .standings: drawMatches(participants, round: round)
+        case .avoidRepeats: Draw.avoidingRepeats(participants, previous: Draw.meetings(in: rounds), seed: seed)
+        case .manual: nil
         }
     }
 
@@ -437,5 +543,14 @@ public struct Season: Sendable {
     /// Rundevekten. NaN regnes som 0 (`if(!vekt)` i JS).
     static func weight(_ round: Round) -> Double {
         round.weight.isNaN ? 0 : round.weight
+    }
+
+    /// Vekten runden teller med: 0 når kvelden ikke teller (`counts`), ellers rundevekten ganget med
+    /// poengtabellen den peker på (`table.pointsTables`; ukjent eller ingen: 1). Med Golfgutu-oppsettet
+    /// er dette rundevekten.
+    public func effectiveWeight(_ round: Round) -> Double {
+        guard round.counts else { return 0 }
+        let multiplier = round.pointsTable.flatMap { ruleset.table.pointsTables[$0]?.multiplier } ?? 1
+        return Self.weight(round) * multiplier
     }
 }
