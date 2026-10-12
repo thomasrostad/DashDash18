@@ -58,6 +58,8 @@ private struct HjemClubContent: View {
     @State private var route: HjemRoute?
     /// Sist arrangørens telefon gjorde opp veddemålene fra Hjem (`BetSweep`).
     @State private var lastBetSweep: Date?
+    /// Serveren gjør opp veddemålene (sql/052): Hjem feier ikke.
+    @State private var betsServerSettles = false
     /// Runden er bedt om før den var hentet.
     @State private var wantsRound = false
     /// Sosialt (sql/050): arkene for kommentarer, emojivelgeren og «Hvem har reagert».
@@ -223,11 +225,14 @@ private struct HjemClubContent: View {
     private func loadAdmin() async {
         guard context.isOrganizer else { return }
         await admin.load()
-        // Veddemålene gjøres opp på arrangørens telefon. Før skjedde det bare når veddemålene ble
-        // åpnet; nå også fra Hjem, høyst hvert femte minutt (09.10.2026).
-        if BetSweep.isDue(last: lastBetSweep, now: .now) {
+        // Veddemålene gjøres opp på arrangørens telefon fra Hjem, høyst hvert femte minutt
+        // (09.10.2026). Med 052 gjør serveren det når runden låses: da feier ikke Hjem lenger
+        // (første henting viser det), og telefonen er bare reserve når Vedd åpnes.
+        if BetSweep.isDue(last: lastBetSweep, now: .now, serverSettles: betsServerSettles) {
             lastBetSweep = .now
-            await BetsModel(context: context).load()
+            let bets = BetsModel(context: context)
+            await bets.load()
+            betsServerSettles = bets.serverSettles
         }
     }
 

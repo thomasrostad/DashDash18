@@ -116,9 +116,10 @@ final class NewTournamentModel {
             do {
                 let season = try await seasons.create(name: draft.trimmedName, rules: draft.seasonRules,
                                                       activate: activatesNewSeason)
-                if draft.schedule != nil, let client = list.client {
+                if (draft.schedule != nil || draft.betsEnabled), let client = list.client {
                     createdCompetitionID = await ReuseService.competitionID(client: client, seasonID: season.id)
                 }
+                if draft.betsEnabled, let id = createdCompetitionID { await enableBets(competitionID: id) }
                 if CompetitionsFeature.isActive { await list.load() }
                 return true
             } catch {
@@ -130,6 +131,7 @@ final class NewTournamentModel {
             if let created = await list.create(draft.competitionDraft, purchases: purchases) {
                 notice = Self.notice(for: created)
                 if draft.clubID != nil { createdCompetitionID = created.id }
+                if draft.betsEnabled { await enableBets(competitionID: created.id) }
                 return true
             }
             error = list.error
@@ -172,6 +174,22 @@ extension NewTournamentModel {
 
 extension NewTournamentModel {
     /// Meldingen etter «Lag», eller nil når alt gikk som det skulle.
+    /// «Veddemål» var på i utkastet: slås på i den nye turneringen (sql/052). Uten 052 skjer det
+    /// ingenting; feiler det ellers, står turneringen uten, og meldingen sier hvor det slås på.
+    func enableBets(competitionID: UUID) async {
+        guard BetsFeature.isEnabled, let client = list.client else { return }
+        do {
+            try await BetsQueries.setEnabled(client: client, scope: .competition(competitionID), enabled: true)
+        } catch where BetsQueries.isMissing(error) {
+            return
+        } catch {
+            notice = Self.betsNotEnabledNotice
+        }
+    }
+
+    nonisolated static let betsNotEnabledNotice =
+        "Turneringen er laget, men veddemål ble ikke slått på. Slå det på i turneringens innstillinger."
+
     nonisolated static func notice(for created: CompetitionsModel.Created) -> String? {
         created.creditLinked ? nil : CompetitionPurchase.creditNotLinkedNotice
     }
@@ -383,6 +401,13 @@ struct NyTurneringDetailsView: View {
                 DayTermSection(term: $draft.dayTerm)
             }
             rulesSection
+            if BetsFeature.isEnabled {
+                Section {
+                    Toggle("Veddemål", isOn: $draft.betsEnabled)
+                } footer: {
+                    DDFooter(BetTexts.toggleFooter)
+                }
+            }
             if model.supportsTemplates {
                 if draft.clubID != nil {
                     SchedulePlanSection(plan: $draft.schedule)
