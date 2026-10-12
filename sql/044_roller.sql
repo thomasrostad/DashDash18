@@ -1,4 +1,4 @@
--- 044: egne roller per klubb (gjennomføringsplanen steg 2, docs/roller.md). Venter på godkjenning.
+-- 044: egne roller per klubb (gjennomføringsplanen steg 2, docs/roller.md). Godkjent og kjørt på test 12.10.2026.
 --
 -- Hva: klubben får egne roller med rettigheter i fire grupper, i stedet for de to
 -- flaggene is_organizer og is_treasurer.
