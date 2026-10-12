@@ -6,6 +6,8 @@ import {
 import { errorText } from "./supabase.ts";
 import { kindText, longDate, statusText } from "./text.ts";
 import { RulesEditor } from "./RulesEditor.tsx";
+import { BETS_TOGGLE_HELP, toggledText } from "./bets.ts";
+import { betsEnabled, setBetsEnabled } from "./betsApi.ts";
 
 /** Én turnering: påmeldte, påmelding og venteliste, stab, «Spill når det passer» og sletting. */
 export function TournamentDetail({ competition, roster, onBack, onChanged }: {
@@ -139,6 +141,7 @@ export function TournamentDetail({ competition, roster, onBack, onChanged }: {
               </label>
             </>
           )}
+          <BetsSwitch competitionID={competition.id} busy={busy} run={run} />
           <DeleteTournament competition={competition} busy={busy} onDelete={(typed) => run(async () => {
             const r = await deleteTournament(competition.id, typed);
             setNotice(`${r.name} er slettet.`);
@@ -147,6 +150,33 @@ export function TournamentDetail({ competition, roster, onBack, onChanged }: {
         </div>
       </div>
     </section>
+  );
+}
+
+/** «Veddemål» (sql/052): av som standard. Skjult uten 052. */
+function BetsSwitch({ competitionID, busy, run }: {
+  competitionID: string; busy: boolean; run: (action: () => Promise<void>, done: string) => Promise<void>;
+}) {
+  const [on, setOn] = useState<boolean | null>(null);
+  useEffect(() => {
+    let live = true;
+    betsEnabled(competitionID).then((v) => { if (live) setOn(v); }).catch(() => { if (live) setOn(null); });
+    return () => { live = false; };
+  }, [competitionID]);
+  if (on === null) return null;
+  return (
+    <>
+      <h3>Veddemål</h3>
+      <p className="muted">{BETS_TOGGLE_HELP}</p>
+      <label className="check">
+        <input type="checkbox" checked={on} disabled={busy}
+          onChange={(e) => {
+            const next = e.target.checked;
+            run(async () => { await setBetsEnabled(competitionID, next); setOn(next); }, toggledText(next));
+          }} />
+        Veddemål i turneringen
+      </label>
+    </>
   );
 }
 

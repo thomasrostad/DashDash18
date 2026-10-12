@@ -125,6 +125,11 @@ struct TournamentSetupRows: View {
             AdminHubRow("Stab", "Flere arrangører og funksjonærer som fører for gruppene sine.",
                         systemImage: "person.2.badge.gearshape")
         }
+        // sql/052: av som standard, slås på her. Vises ikke uten 052.
+        if BetsFeature.isEnabled {
+            BetsSwitchRow(model: BetsSwitchModel(client: context.client, scope: .competition(competition.id)))
+                .id(competition.id)
+        }
     }
 }
 

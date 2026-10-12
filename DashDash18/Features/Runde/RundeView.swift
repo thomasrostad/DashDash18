@@ -1,4 +1,5 @@
 import GolfgutuCore
+import Supabase
 import SwiftUI
 
 /// Kveld under spill: markørlinja, sol-stripa, hullprikkene, hullkortet og «Bayen nå».
@@ -38,7 +39,13 @@ struct RundeView: View {
                     if let context = model.clubContext, let eventID = game.snapshot.round.eventID {
                         KveldExtrasButtons(model: KveldExtrasModel(context: context, eventID: eventID))
                             .id(eventID)
-                        VeddKnapp(game: game, me: model.viewer.memberID)
+                    }
+                    // Veddemål i turneringen runden teller i, eller i rundens egen bank (sql/052).
+                    if let bets = betsAccess {
+                        // Eieren av en løs runde slår veddemål på for runden (egen bank).
+                        VeddKnapp(game: game, me: model.viewer.memberID, client: bets.client, viewer: bets.viewer,
+                                  ownsRound: model.looseContext.map { game.snapshot.loose?.ownerID == $0.userID } ?? false)
+                            .id(game.snapshot.round.id)
                     }
                     if model.looseContext != nil {
                         LooseRoundActions(model: model)
@@ -77,6 +84,13 @@ struct RundeView: View {
             }
         }
         .animation(reduceMotion ? nil : .smooth(duration: 0.32), value: model.celebration?.id)
+    }
+
+    /// Klienten og deg for veddemålene: klubben som er valgt, eller profilen i en løs runde.
+    private var betsAccess: (client: SupabaseClient, viewer: BetViewer)? {
+        if let context = model.clubContext { return (context.client, context.betViewer) }
+        if let loose = model.looseContext { return (loose.client, BetViewer(userID: loose.userID)) }
+        return nil
     }
 
     @ViewBuilder

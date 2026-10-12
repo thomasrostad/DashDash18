@@ -67,6 +67,8 @@ enum CompetitionQueries {
         let matches: [CompetitionMatchRow]
         /// Playoff-runden om førsteplassen (sql/047, `rounds.playoff_for`). Står ikke blant rundene.
         var playoff: RoundSnapshot? = nil
+        /// De tellende rundene med spiller-id-ene slik runden har dem (veddemålenes vilkår, sql/052).
+        var rawRounds: [RoundSnapshot] = []
     }
 
     /// Playoff-runden for turneringen: den som går, ellers den sist startede. nil uten 047.
@@ -127,7 +129,8 @@ enum CompetitionQueries {
         let scope = CompetitionScope(competition: competition, links: links, participants: participants)
         return Detail(competition: competition, participants: participants.filter { $0.competitionID == competition.id },
                       scope: scope, input: scope.input(candidates: snapshots, directory: directory),
-                      directory: directory, matches: matches, playoff: await playoffRound)
+                      directory: directory, matches: matches, playoff: await playoffRound,
+                      rawRounds: scope.countedRounds(snapshots))
     }
 
     /// Spillerne i klubbrundene som «medlemmer» med navn og profil fra `round_roster`, for den som

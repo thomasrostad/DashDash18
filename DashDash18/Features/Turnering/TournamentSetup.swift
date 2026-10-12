@@ -181,6 +181,8 @@ nonisolated struct TournamentDraft: Equatable, Sendable {
     var dayTerm: DayTerm = .playingDay
     /// Fast plan for spilledagene (sql/049): etter «Lag» tilbys «Lag serie» med planen. Bare i en klubb.
     var schedule: SeriesPlan? = nil
+    /// Veddemål i turneringen (sql/052). Av som standard; slås på etter «Lag» (`bets_set_enabled`).
+    var betsEnabled = false
 
     init(template: RulesetTemplate, clubID: UUID?, name: String, today: String) {
         self.template = template

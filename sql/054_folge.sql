@@ -1,4 +1,4 @@
--- 054: følge andre spillere (gjennomføringsplanen steg 13). Venter på godkjenning.
+-- 054: følge andre spillere (gjennomføringsplanen steg 13). Godkjent og kjørt på test 12.10.2026.
 --
 -- Krever 001–052 (kjøres på test etter dem; 052b er infrastruktur og spiller ingen rolle her).
 -- Bygger på 017/019 (profiles, can_see_profile, user_blocks, block_user, content_reports),

@@ -1,17 +1,22 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Veddemålene i sesongen: banken øverst, åpne (utfordret deg, dine, resten), avgjorte, og
+/// Veddemålene i én bank: banken øverst, åpne (utfordret deg, dine, resten), avgjorte, og
 /// veien til poengtabellen. Nytt veddemål fra verktøylinja. Bak `BetsFeature.isEnabled`.
 struct BetsView: View {
     @Environment(\.clubContext) private var context
-    /// Åpne vedd-arket med en gang (fra runden): på en spiller, eller på deg selv med din egen id.
+    /// Banken. Uten: hovedturneringen i klubben som er valgt.
+    var model: BetsModel?
+    /// Åpne vedd-arket med en gang (fra runden): på en spiller (id-en i runden), eller på deg selv
+    /// med din egen.
     var against: UUID?
-    /// Runden «Vedd» ble trykket i. Arket bruker den, ikke bare hovedturneringens aktive runde.
+    /// Runden «Vedd» ble trykket i. Arket bruker den, ikke bare bankens aktive runde.
     var roundID: UUID?
 
     var body: some View {
-        if let context {
+        if let model {
+            BetsContent(model: model, openFor: against, roundID: roundID)
+        } else if let context {
             BetsContent(model: BetsModel(context: context), openFor: against, roundID: roundID)
         } else {
             ContentUnavailableView("Ikke logget inn", systemImage: "person.crop.circle.badge.questionmark")
@@ -42,12 +47,15 @@ private struct BetsContent: View {
                 await model.load()
                 if !openedInitial, let openFor, let board = model.board {
                     openedInitial = true
-                    // Veddemål hører til hovedturneringen (sesongen) til `bets` får turneringen (trinn 5).
-                    // En runde i en annen turnering får en forklaring i stedet for et ark for feil runde.
-                    if let roundID, board.games[roundID] == nil {
-                        notice = BetTexts.otherTournament(seasonName: board.seasonName)
+                    // Før 052 hører veddemålene til hovedturneringen (sesongen). En runde i en annen
+                    // turnering får en forklaring i stedet for et ark for feil runde.
+                    if !board.enabled {
+                        notice = BetTexts.notEnabled
+                    } else if let roundID, board.games[roundID] == nil {
+                        notice = BetTexts.otherTournament(seasonName: board.title)
                     } else {
-                        sheet = SheetTarget(against: openFor == model.clubContext.memberID ? nil : openFor)
+                        let person = board.person(ofPlayer: openFor)
+                        sheet = SheetTarget(against: person == board.me ? nil : person)
                     }
                 }
             }
@@ -56,7 +64,7 @@ private struct BetsContent: View {
                 if phase == .active { Task { await model.load() } }
             }
             .toolbar {
-                if let board = model.board {
+                if let board = model.board, board.enabled {
                     ToolbarItem(placement: .topBarTrailing) {
                         NewBetMenu(board: board) { sheet = SheetTarget(against: $0) }
                     }
@@ -90,7 +98,9 @@ private struct BetsContent: View {
                     .buttonStyle(.dd(.primary))
             }
         case .loaded:
-            if let board = model.board {
+            if let board = model.board, !board.enabled, board.isEmpty {
+                BetsOffView(model: model)
+            } else if let board = model.board {
                 BetsList(model: model, board: board)
             } else {
                 ContentUnavailableView("Ingen turnering i gang", systemImage: "trophy",
@@ -100,7 +110,7 @@ private struct BetsContent: View {
     }
 }
 
-/// «+»: vedd på deg selv eller på en spiller i runden (ellers troppen).
+/// «+»: vedd på deg selv eller på en spiller i runden (ellers banken).
 private struct NewBetMenu: View {
     let board: BetsBoard
     let open: (UUID?) -> Void
@@ -109,7 +119,7 @@ private struct NewBetMenu: View {
         Menu {
             Button("Om meg selv") { open(nil) }
             Section("Vedd på") {
-                ForEach(opponents, id: \.self) { id in
+                ForEach(board.opponents(in: board.activeGame), id: \.self) { id in
                     Button(board.names[id] ?? "Ukjent") { open(id) }
                 }
             }
@@ -118,20 +128,65 @@ private struct NewBetMenu: View {
         }
         .tint(Color.ddOnDark)
     }
+}
 
-    private var opponents: [UUID] {
-        let ids = board.activeGame.map { $0.snapshot.players.map(\.memberID) } ?? Array(board.names.keys)
-        return ids.filter { $0 != board.me }
-            .sorted { NorwegianSort.areInIncreasingOrder(board.names[$0] ?? "", board.names[$1] ?? "") }
+/// Veddemål er av og ingen finnes ennå. Arrangøren kan slå det på her.
+private struct BetsOffView: View {
+    let model: BetsModel
+    @State private var error: String?
+
+    var body: some View {
+        ContentUnavailableView {
+            Label("Veddemål er ikke slått på", systemImage: "die.face.5")
+        } description: {
+            Text(model.canToggle ? "Slå på, så kan alle som er med vedde poeng." : "Arrangøren kan slå det på.")
+        } actions: {
+            if model.canToggle {
+                Button("Slå på veddemål") { turnOn() }
+                    .buttonStyle(.dd(.primary))
+                    .disabled(model.isSaving)
+            }
+            if let error {
+                Text(error).ddErrorStyle()
+            }
+        }
+    }
+
+    private func turnOn() {
+        error = nil
+        Task {
+            do {
+                try await model.setEnabled(true)
+            } catch {
+                self.error = DataError.from(error).message
+            }
+        }
     }
 }
 
 private struct BetsList: View {
     let model: BetsModel
     let board: BetsBoard
+    @State private var toggleError: String?
 
     var body: some View {
         DDList {
+            if !board.enabled {
+                Section {
+                    DDInfoStripe(BetTexts.notEnabled + " Veddemålene som finnes, gjøres opp som før.")
+                }
+            }
+            if model.canToggle {
+                Section {
+                    Toggle("Veddemål på", isOn: Binding(get: { board.enabled }, set: { on in toggle(on) }))
+                        .disabled(model.isSaving)
+                    if let toggleError {
+                        Text(toggleError).ddErrorStyle()
+                    }
+                } footer: {
+                    DDFooter(BetTexts.toggleFooter)
+                }
+            }
             Section {
                 BankHeader(board: board)
                     .listRowBackground(Color.ddHeroCard)
@@ -143,7 +198,7 @@ private struct BetsList: View {
                         .foregroundStyle(Color.ddForestInk)
                 }
             }
-            if board.openCount == 0 {
+            if board.openCount == 0, board.enabled {
                 Section {
                     ContentUnavailableView("Ingen åpne veddemål", systemImage: "die.face.5",
                                            description: Text(board.settled.isEmpty
@@ -160,6 +215,17 @@ private struct BetsList: View {
                         SettledRow(item: item)
                     }
                 }
+            }
+        }
+    }
+
+    private func toggle(_ on: Bool) {
+        toggleError = nil
+        Task {
+            do {
+                try await model.setEnabled(on)
+            } catch {
+                toggleError = DataError.from(error).message
             }
         }
     }
