@@ -6,11 +6,13 @@ import SwiftUI
 /// Pushes inn i en `NavigationStack` (tittelen settes her).
 struct TradView: View {
     let eventID: UUID
+    /// Åpner kameraet med en gang (bildeoppfordringen, sql/050).
+    var startsWithCamera = false
     @Environment(\.clubContext) private var context
 
     var body: some View {
         if let context {
-            TradContent(model: TradModel(context: context, eventID: eventID))
+            TradContent(model: TradModel(context: context, eventID: eventID), startsWithCamera: startsWithCamera)
         } else {
             ContentUnavailableView("Ingen klubb valgt", systemImage: "bubble.left.and.bubble.right")
         }
@@ -20,6 +22,12 @@ struct TradView: View {
 private struct TradContent: View {
     @Environment(\.dayTerm) private var dayTerm
     @State var model: TradModel
+    var startsWithCamera = false
+    @State private var cameraOpened = false
+    /// Sosialt (sql/050): kommentarer, emojivelgeren og «Hvem har reagert».
+    @State private var comments: CommentsModel?
+    @State private var emojiTarget: TradTarget?
+    @State private var whoTarget: TradTarget?
     @Environment(\.scenePhase) private var scenePhase
     @FocusState private var composerFocused: Bool
     @State private var photoItem: PhotosPickerItem?
@@ -41,6 +49,18 @@ private struct TradContent: View {
             .navigationTitle(DayTerm.capitalized(dayTerm.possessive) + " tråd")
             .ddNavigationChrome()
             .task { await model.load() }
+            .task {
+                guard startsWithCamera, !cameraOpened else { return }
+                cameraOpened = true
+                if TradCameraPicker.isAvailable { openCamera() }
+            }
+            .sheet(item: $comments) { CommentsSheet(model: $0) }
+            .sheet(item: $emojiTarget) { target in
+                EmojiPickerSheet { emoji in Task { await model.toggleReaction(emoji, on: target.id) } }
+            }
+            .sheet(item: $whoTarget) { target in
+                ReactionWhoSheet { try await model.who(target.id) }
+            }
             .onAppear {
                 model.isVisible = true
                 model.markReadIfVisible()
@@ -136,6 +156,20 @@ private struct TradContent: View {
         }
     }
 
+    /// Brikkene og kommentarene under boblen, når noen har reagert eller kommentert.
+    private func social(for item: TradModel.Item) -> TradBubbleSocial? {
+        guard model.socialAvailable, !item.isPending else { return nil }
+        let chips = model.chips(for: item.id)
+        let count = model.commentCounts[item.id] ?? 0
+        guard !chips.isEmpty || count > 0 else { return nil }
+        return TradBubbleSocial(
+            chips: chips,
+            toggle: { emoji in Task { await model.toggleReaction(emoji, on: item.id) } },
+            showWho: { whoTarget = TradTarget(id: item.id) },
+            comments: count > 0 ? ReactionBarComments(count: count, open: { comments = model.comments(for: item.message) })
+                                : nil)
+    }
+
     private func openCamera() {
         Task {
             if await CameraAccess.requestIfNeeded() { showsCamera = true } else { cameraDenied = true }
@@ -147,9 +181,20 @@ private struct TradContent: View {
             ScrollView {
                 LazyVStack(spacing: 12) {
                     ForEach(model.items) { item in
-                        TradBubble(item: item, model: model)
+                        TradBubble(item: item, model: model, social: social(for: item))
                             .id(item.id)
                             .contextMenu {
+                                if model.socialAvailable, !item.isPending {
+                                    ReactionMenuItems(isMine: { model.hasReacted($0, on: item.id) },
+                                                      toggle: { emoji in Task { await model.toggleReaction(emoji, on: item.id) } },
+                                                      pickOther: { emojiTarget = TradTarget(id: item.id) },
+                                                      showWho: model.chips(for: item.id).isEmpty ? nil
+                                                          : { whoTarget = TradTarget(id: item.id) })
+                                    Button(ReactionText.commentsLabel(model.commentCounts[item.id] ?? 0),
+                                           systemImage: "bubble.left") {
+                                        comments = model.comments(for: item.message)
+                                    }
+                                }
                                 if !item.message.body.isEmpty {
                                     Button("Kopier", systemImage: "doc.on.doc") {
                                         UIPasteboard.general.string = item.message.body
@@ -207,9 +252,22 @@ private struct TradContent: View {
 
 // MARK: - Boble
 
+private struct TradTarget: Identifiable {
+    let id: UUID
+}
+
+/// Reaksjonene og kommentarene under en melding (sql/050).
+private struct TradBubbleSocial {
+    let chips: [ReactionChip]
+    let toggle: (String) -> Void
+    let showWho: () -> Void
+    let comments: ReactionBarComments?
+}
+
 private struct TradBubble: View {
     let item: TradModel.Item
     let model: TradModel
+    var social: TradBubbleSocial?
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
@@ -231,6 +289,10 @@ private struct TradBubble: View {
                 if !item.message.body.isEmpty {
                     Text(attributedBody)
                         .ddBubble(mine: item.isMine)
+                }
+                if let social {
+                    ReactionBar(chips: social.chips, showsAddButton: false, toggle: social.toggle,
+                                showWho: social.chips.isEmpty ? nil : social.showWho, comments: social.comments)
                 }
                 Text(item.isPending ? "Sender …" : TradTimeLabel.text(for: item.message.createdAt, now: Date()))
                     .font(.dd(.sans, size: 12, relativeTo: .caption2))

@@ -34,6 +34,16 @@ enum HomeFeedQueries {
         var competitionInputs: [CompetitionInput] = []
         /// Tråden: meldinger der du er nevnt, til bjella.
         var mentions: [ThreadMessageRow] = []
+        /// Reaksjoner og kommentarer per hendelse fra `feed_page` (sql/050).
+        var social: [UUID: ActivitySocial] = [:]
+        /// Sidene fra `feed_page`. nil: den gamle hentingen (uten 050), med vinduet på 30 dager.
+        var paging: Paging?
+
+        struct Paging: Equatable, Sendable {
+            /// Der neste side starter (den eldste linja som er hentet, også linjer uten klubb).
+            var cursor: FeedCursor?
+            var hasMore: Bool
+        }
 
         /// Navn på medlemmer i alle klubbene, deltakere i rundene og spillerne i turneringene.
         var names: [UUID: String] {
@@ -58,6 +68,8 @@ enum HomeFeedQueries {
             input.links = links
             input.activity = activity
             input.reactions = reactions
+            input.social = social
+            input.paged = paging != nil
             input.names = names
             input.roundLabels = roundLabels
             input.rounds = rounds
@@ -80,8 +92,18 @@ enum HomeFeedQueries {
         let clubIDs = clubs.map(\.id.uuidString)
         var raw = Raw()
 
-        // Klubbene: aktiviteten og troppene.
-        if !clubIDs.isEmpty {
+        // Klubbene: aktiviteten og troppene. Etter sql/050 første side av `feed_page`, med reaksjonene
+        // og antall kommentarer. Mangler 050, hentes det som før.
+        if !clubIDs.isEmpty, let page = try await firstPage(client: client, clubs: clubs) {
+            async let members: [ClubMemberRow] = client.from("club_members")
+                .select(ClubMemberRow.columns)
+                .in("club_id", values: clubIDs)
+                .execute().value
+            raw.apply(page: page, limit: FeedPaging.pageSize)
+            raw.members = try await members
+            raw.mentions = (try? await mentions(client: client, viewer: viewer, clubIDs: clubIDs,
+                                                since: bellSince ?? since)) ?? []
+        } else if !clubIDs.isEmpty {
             async let activity: [ActivityRow] = (SetQueriesFeature.isEnabled
                 ? client.rpc("my_activity", params: ActivityParams(p_club_ids: clubs.map(\.id), p_since: since))
                     .select(ActivityLog.columns)
@@ -150,6 +172,28 @@ enum HomeFeedQueries {
         }
         raw.roundLabels = (try? await labels(client: client, activity: raw.activity, known: raw.rounds)) ?? [:]
         return raw
+    }
+
+    /// Første side av `feed_page`, eller nil når 050 mangler (eller er slått av).
+    private static func firstPage(client: SupabaseClient, clubs: [HomeClub]) async throws -> [FeedPageRow]? {
+        guard SocialFeature.isEnabled else { return nil }
+        do {
+            return try await SocialService(client: client).feedPage(clubIDs: clubs.map(\.id), before: nil)
+        } catch where SocialService.isMissing(error) {
+            return nil
+        }
+    }
+
+    /// Neste side av feeden, med rundenavnene for det som er nytt.
+    static func nextPage(client: SupabaseClient, clubs: [HomeClub], raw: Raw) async throws -> Raw {
+        guard let paging = raw.paging, paging.hasMore, let cursor = paging.cursor else { return raw }
+        let page = try await SocialService(client: client).feedPage(clubIDs: clubs.map(\.id), before: cursor)
+        var out = raw
+        out.apply(page: page, limit: FeedPaging.pageSize, appending: true)
+        if let more = try? await labels(client: client, activity: out.activity, known: out.rounds) {
+            out.roundLabels.merge(more) { a, _ in a }
+        }
+        return out
     }
 
     /// Klubbrundene du spilte, låst i vinduet, nyeste først, med alt under.
@@ -282,5 +326,37 @@ enum HomeFeedQueries {
             out += try await query(ids[start..<min(start + chunkSize, ids.count)].map(\.uuidString))
         }
         return out
+    }
+}
+
+
+extension HomeFeedQueries.Raw {
+    /// Legger inn en side fra `feed_page`. Hendelser uten klubb hører ikke til klubbfeeden ennå, men
+    /// teller for neste side (nøkkelen og om det er mer).
+    mutating func apply(page: [FeedPageRow], limit: Int, appending: Bool = false) {
+        let rows = page.filter { $0.activity.clubID != nil }
+        for row in rows { social[row.activity.id] = row.social }
+        let pageCursor = FeedCursor(last: page.map(\.activity))
+        if appending {
+            activity = FeedPaging.appending(rows.map(\.activity), to: activity)
+            paging = Paging(cursor: pageCursor ?? paging?.cursor, hasMore: FeedPaging.hasMore(pageCount: page.count, limit: limit))
+        } else {
+            activity = rows.map(\.activity)
+            paging = Paging(cursor: pageCursor, hasMore: FeedPaging.hasMore(pageCount: page.count, limit: limit))
+        }
+    }
+
+    /// Første side hentet på nytt, med eldre sider som alt var hentet (`FeedPaging.refreshed`).
+    mutating func keepOlderPages(from previous: Self, limit: Int) {
+        guard let paging, let old = previous.paging, paging.hasMore else { return }
+        let merged = FeedPaging.refreshed(first: activity, limit: 1, existing: previous.activity)
+        let kept = merged.filter { row in !activity.contains(where: { $0.id == row.id }) }
+        guard !kept.isEmpty else { return }
+        activity = merged
+        for row in kept {
+            if let s = previous.social[row.id] { social[row.id] = s }
+            if let roundID = row.roundID, roundLabels[roundID] == nil { roundLabels[roundID] = previous.roundLabels[roundID] }
+        }
+        self.paging = old
     }
 }

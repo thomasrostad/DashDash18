@@ -115,6 +115,11 @@ nonisolated struct HomeFeedInput: Sendable {
     /// `activity` fra alle klubbene dine (RLS), nyeste først.
     var activity: [ActivityRow] = []
     var reactions: [ActivityReactionRow] = []
+    /// Reaksjonene og antall kommentarer per hendelse fra `feed_page` (sql/050). Tom uten 050: da
+    /// brukes `reactions` (det faste settet).
+    var social: [UUID: ActivitySocial] = [:]
+    /// Feeden hentes i sider (`feed_page`): da står det som er hentet, uansett alder.
+    var paged = false
     /// Navn på medlemmer (alle klubbene), deltakere og profiler.
     var names: [UUID: String] = [:]
     /// Bane og rundenummer for rundene aktivitetslinjene peker på.
@@ -178,11 +183,32 @@ nonisolated struct HomeFeedPill: Identifiable, Equatable, Sendable {
     }
 }
 
-/// Reaksjonene under et kort, og hvor et trykk skal (`ActivityLog(clubID:).toggle`).
-nonisolated struct HomeReactions: Equatable, Sendable {
+/// Reaksjonene under et kort, og hvor et trykk skal (`react` etter sql/050, ellers
+/// `ActivityLog(clubID:).toggle`).
+nonisolated struct HomeReactions: Equatable, Sendable, Identifiable {
     let activityID: UUID
     let clubID: UUID
     let chips: [ReactionChip]
+    /// Antall kommentarer (sql/050). nil: uten 050, da finnes verken kommentarer eller andre emojier
+    /// enn det faste settet.
+    var commentCount: Int? = nil
+
+    var id: UUID { activityID }
+    /// 050 finnes: alle emojier og kommentarer.
+    var isSocial: Bool { commentCount != nil }
+    var target: SocialTarget { SocialTarget(kind: .activity, id: activityID, clubID: clubID) }
+}
+
+/// «Ta et bilde av gjengen» (sql/050): når runden din er låst, med knappen til kameraet i tråden.
+nonisolated struct HomePhotoPromptCard: Equatable, Sendable {
+    let activityID: UUID
+    let clubID: UUID
+    /// Kvelden tråden hører til.
+    let eventID: UUID
+    let title: String
+    /// «Del det i tråden, så har alle det.» med runden foran når den er kjent.
+    let detail: String
+    let reactions: HomeReactions?
 }
 
 /// «Birdie 2»: et scoremerke på «Din runde», med tonen fra `ScoreName.tone`.
@@ -277,6 +303,8 @@ nonisolated struct HomeLine: Equatable, Identifiable, Sendable {
     let context: String
     let time: String
     let reactions: HomeReactions?
+    /// Kommentarene linja handler om (`comment_added`, `mentioned`): trykk åpner dem.
+    var opens: SocialTarget? = nil
 }
 
 nonisolated struct HomeFeedCard: Identifiable, Equatable, Sendable {
@@ -284,6 +312,7 @@ nonisolated struct HomeFeedCard: Identifiable, Equatable, Sendable {
         case myRound(HomeMyRoundCard)
         case feat(HomeFeatCard)
         case table(HomeTableCard)
+        case photoPrompt(HomePhotoPromptCard)
         /// Én eller flere kompakte linjer fra samme kilde, etter hverandre.
         case lines([HomeLine])
     }

@@ -47,7 +47,7 @@ nonisolated enum HomeSummaryBuilder {
             case .table: "table"
             case .feat: "feat"
             case .myRound: "round"
-            case .line: "line"
+            case .line, .photoPrompt: "line"
             }
             guard kinds.insert(kind).inserted else { continue }
             parts.append(phrase)

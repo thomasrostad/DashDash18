@@ -39,6 +39,9 @@ struct HjemVarslerView: View {
     @Environment(\.clubContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @State private var announcement: VarslerModel?
+    @State private var comments: CommentsModel?
+    @State private var emojiTarget: HomeReactions?
+    @State private var whoTarget: HomeReactions?
 
     var body: some View {
         content
@@ -55,6 +58,13 @@ struct HjemVarslerView: View {
             }
             .sheet(item: $announcement, onDismiss: { Task { await model.load() } }) { sheetModel in
                 AnnouncementSheet(model: sheetModel)
+            }
+            .sheet(item: $comments) { CommentsSheet(model: $0) }
+            .sheet(item: $emojiTarget) { target in
+                EmojiPickerSheet { emoji in Task { await model.toggle(emoji, on: target) } }
+            }
+            .sheet(item: $whoTarget) { target in
+                ReactionWhoSheet { try await model.who(target) }
             }
             .alert("Noe gikk galt", isPresented: Binding(
                 get: { model.errorMessage != nil },
@@ -102,9 +112,25 @@ struct HjemVarslerView: View {
                                 ActivityLineView(display: item.display, time: item.time, isUnread: item.isUnread,
                                                  chips: item.chips,
                                                  hasReacted: { model.hasReacted($0, on: item.target) },
-                                                 toggle: { reaction in
-                                                     Task { await model.toggle(reaction, on: item.target) }
-                                                 })
+                                                 toggle: { emoji in
+                                                     Task { await model.toggle(emoji, on: item.target) }
+                                                 },
+                                                 pickOther: item.target.isSocial ? { emojiTarget = item.target } : nil,
+                                                 showWho: item.target.isSocial && !item.chips.isEmpty
+                                                     ? { whoTarget = item.target } : nil)
+                                .overlay(alignment: .bottomTrailing) {
+                                    // Kommentaren eller omtalen: trykk for å se kommentarene.
+                                    if let target = item.opens {
+                                        Button("Se kommentarene") {
+                                            let moderator = target.clubID == context?.clubID ? context?.can(.money) : nil
+                                            comments = model.comments(for: target, canModerate: moderator)
+                                        }
+                                        .font(.ddCaption)
+                                        .foregroundStyle(Color.ddForestInk)
+                                        .buttonStyle(.plain)
+                                        .frame(minHeight: 44)
+                                    }
+                                }
                             }
                         }
                     }

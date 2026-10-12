@@ -21,7 +21,8 @@ nonisolated extension HomeFeed {
     static func build(_ input: HomeFeedInput) -> HomeFeed {
         let context = HomeFeedContext(input)
         let drafts = HomeFeedDrafts(context).all
-            .filter { $0.date >= input.now.addingTimeInterval(-window) && $0.date <= input.now.addingTimeInterval(600) }
+            .filter { (input.paged || $0.date >= input.now.addingTimeInterval(-window))
+                && $0.date <= input.now.addingTimeInterval(600) }
             .sorted { $0.date != $1.date ? $0.date > $1.date : $0.id < $1.id }
         let filtered = drafts.filter { input.filter == .all || $0.filters.contains(input.filter) }
         return HomeFeed(
@@ -302,6 +303,10 @@ nonisolated struct HomeFeedContext: Sendable {
 
     func reactions(_ row: ActivityRow?) -> HomeReactions? {
         guard let row, let club = row.clubID else { return nil }
+        if let social = input.social[row.id] {
+            return HomeReactions(activityID: row.id, clubID: club, chips: social.summary.chips(),
+                                 commentCount: social.commentCount)
+        }
         return HomeReactions(activityID: row.id, clubID: club,
                              chips: ActivityReactions.chips(for: row.id, in: input.reactions, me: row.clubMember(of: viewer),
                                                             name: { input.names[$0] }))

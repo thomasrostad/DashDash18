@@ -52,6 +52,10 @@ final class TradModel {
     private(set) var isLive = false
     /// Skjermen står framme. Da merkes tråden som lest når nye meldinger kommer.
     var isVisible = false
+    /// Reaksjoner og kommentarer på meldingene (sql/050). Av når 050 mangler, eller uten nett.
+    private(set) var socialAvailable = false
+    private(set) var reactions: [ReactionRow] = []
+    private(set) var commentCounts: [UUID: Int] = [:]
 
     let eventID: UUID
     let images: TradImageStore
@@ -155,6 +159,7 @@ final class TradModel {
             pending.removeAll { confirmed.contains($0.id) }
             state = .loaded
             markReadIfVisible()
+            await loadSocial()
             signedURLs.retryFailed()
             avatarURLs.retryFailed()
             await refreshImageURLs()
@@ -185,6 +190,64 @@ final class TradModel {
         if let mark = TradUnread.readMark(messages, viewer: viewer, current: current) {
             readStore.setLastSeen(mark, memberID: viewer, eventID: eventID)
         }
+    }
+
+    // MARK: Reaksjoner og kommentarer (sql/050)
+
+    private func loadSocial() async {
+        guard SocialFeature.isEnabled, let client else { return }
+        let service = SocialService(client: client)
+        let ids = messages.map(\.id)
+        do {
+            async let rows = service.reactions(.message, ids: ids)
+            async let counts = service.commentCounts(.message, ids: ids)
+            reactions = try await rows
+            commentCounts = try await counts
+            socialAvailable = true
+        } catch {
+            if SocialService.isMissing(error) { socialAvailable = false }
+        }
+    }
+
+    func chips(for message: UUID) -> [ReactionChip] {
+        ReactionRows.chips(for: .message, id: message, in: reactions, me: [viewer], name: { names[$0] })
+    }
+
+    func hasReacted(_ emoji: String, on message: UUID) -> Bool {
+        reactions.contains { $0.targetKind == .message && $0.targetID == message && $0.personID == viewer && $0.emoji == emoji }
+    }
+
+    /// Vises med en gang og rulles tilbake hvis basen sier nei.
+    func toggleReaction(_ emoji: String, on message: UUID) async {
+        guard socialAvailable, let client else { return }
+        let target = SocialTarget(kind: .message, id: message, clubID: clubID)
+        let had = hasReacted(emoji, on: message)
+        let before = reactions
+        reactions = ReactionRows.toggled(emoji, on: target, person: viewer, isMember: true, in: reactions, now: now())
+        do {
+            try await SocialService(client: client).react(emoji, on: target, !had)
+        } catch {
+            reactions = before
+            errorMessage = "Klarte ikke å lagre reaksjonen: " + DataError.from(error).message
+        }
+    }
+
+    func who(_ message: UUID) async throws -> [ReactionWhoGroup] {
+        if let client {
+            let fresh = try await SocialService(client: client).reactions(.message, ids: [message])
+            reactions = reactions.filter { $0.targetID != message } + fresh
+        }
+        return ReactionWho.groups(reactions.filter { $0.targetKind == .message && $0.targetID == message },
+                                  name: { names[$0] })
+    }
+
+    /// Kommentarene på en melding.
+    func comments(for message: ThreadMessageRow) -> CommentsModel {
+        let model = CommentsModel(target: SocialTarget(kind: .message, id: message.id, clubID: clubID), me: viewer,
+                                  isModerator: isOrganizer, isTargetAuthor: message.memberID == viewer,
+                                  people: directory.people, names: names, client: client)
+        model.onCountChange = { [weak self] count in self?.commentCounts[message.id] = count }
+        return model
     }
 
     // MARK: Rapporter og blokker (fase 17)
@@ -379,6 +442,13 @@ final class TradModel {
         // Sletting kan ikke filtreres på kveld i Supabase Realtime (bare primærnøkkelen følger
         // med), så den lyttes på for hele tabellen og sjekkes mot id-ene her.
         let deletions = channel.postgresChange(DeleteAction.self, schema: "public", table: "thread_messages")
+        // Reaksjoner og kommentarer i klubben (sql/050): hentes på nytt.
+        let socialChanges = socialAvailable
+            ? [channel.postgresChange(AnyAction.self, schema: "public", table: "reactions",
+                                      filter: .eq("club_id", value: clubID)),
+               channel.postgresChange(AnyAction.self, schema: "public", table: "comments",
+                                      filter: .eq("club_id", value: clubID))]
+            : []
         let statuses = channel.statusChange
         self.channel = channel
         listenTasks = [
@@ -403,7 +473,11 @@ final class TradModel {
             Task {
                 try? await channel.subscribeWithError()
             },
-        ]
+        ] + socialChanges.map { changes in
+            Task { [weak self] in
+                for await _ in changes { await self?.loadSocial() }
+            }
+        }
     }
 
     /// Gir true når kanalen nettopp kom opp.

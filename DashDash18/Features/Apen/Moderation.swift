@@ -10,6 +10,8 @@ nonisolated enum ReportKind: String, Codable, Sendable {
     case image
     case member
     case profile
+    /// En kommentar (sql/050).
+    case comment
 
     var title: String {
         switch self {
@@ -17,6 +19,7 @@ nonisolated enum ReportKind: String, Codable, Sendable {
         case .image: "Rapporter bildet"
         case .member: "Rapporter navnet"
         case .profile: "Rapporter profilen"
+        case .comment: "Rapporter kommentaren"
         }
     }
 
@@ -27,6 +30,7 @@ nonisolated enum ReportKind: String, Codable, Sendable {
         case .image: "Bilde"
         case .member: "Navn i troppen"
         case .profile: "Profil"
+        case .comment: "Kommentar"
         }
     }
 }

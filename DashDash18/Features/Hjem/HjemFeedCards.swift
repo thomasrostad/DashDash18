@@ -34,55 +34,44 @@ struct HjemTimeLabel: View {
     }
 }
 
-/// Reaksjonsbrikkene, med en knapp for å legge til en ny.
+/// Reaksjonsbrikkene, «Reager» og (etter sql/050) kommentarene.
 struct HjemReactionsRow: View {
     let reactions: HomeReactions
-    let hasReacted: (ActivityReaction) -> Bool
-    let toggle: (ActivityReaction) -> Void
+    let actions: HjemActions
 
     var body: some View {
-        HStack(spacing: 6) {
-            ReactionChipsView(chips: reactions.chips, onTap: toggle)
-            Menu {
-                ForEach(ActivityReaction.allCases, id: \.self) { reaction in
-                    Button {
-                        toggle(reaction)
-                    } label: {
-                        Text(reaction.rawValue + "  " + (hasReacted(reaction) ? "Fjern" : reaction.accessibilityName))
-                    }
-                }
-            } label: {
-                Image(systemName: "face.smiling")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(Color.ddInkSecondary)
-                    .frame(width: 32, height: 32)
-                    .background(Circle().strokeBorder(Color.ddHairline, lineWidth: 1))
-                    .contentShape(Circle())
-            }
-            .accessibilityLabel("Reager")
-        }
+        ReactionBar(chips: reactions.chips,
+                    toggle: { actions.toggle($0, reactions) },
+                    pickOther: reactions.isSocial ? actions.pickEmoji.map { pick in { pick(reactions) } } : nil,
+                    showWho: reactions.chips.isEmpty ? nil : actions.showWho.map { show in { show(reactions) } },
+                    comments: comments)
+    }
+
+    private var comments: ReactionBarComments? {
+        guard let count = reactions.commentCount, let open = actions.openComments else { return nil }
+        return ReactionBarComments(count: count, open: { open(reactions.target) })
     }
 }
 
-/// Langt trykk på et kort gir hele reaksjonssettet (som i Varsler), også når ingen har reagert ennå.
+/// Langt trykk på et kort gir hele reaksjonssettet (som i Varsler), også når ingen har reagert ennå,
+/// og «Kommenter» etter sql/050.
 struct HjemReactionMenu: ViewModifier {
     let target: HomeReactions?
-    let hasReacted: (ActivityReaction, HomeReactions) -> Bool
-    let toggle: (ActivityReaction, HomeReactions) -> Void
+    let actions: HjemActions
 
     func body(content: Content) -> some View {
         if let target {
             content.contextMenu {
-                ForEach(ActivityReaction.allCases, id: \.self) { reaction in
-                    Button {
-                        toggle(reaction, target)
-                    } label: {
-                        Text(reaction.rawValue + "  "
-                             + (hasReacted(reaction, target) ? "Fjern" : reaction.accessibilityName))
+                ReactionMenuItems(isMine: { actions.hasReacted($0, target) }, toggle: { actions.toggle($0, target) },
+                                  pickOther: target.isSocial ? actions.pickEmoji.map { pick in { pick(target) } } : nil,
+                                  showWho: target.chips.isEmpty ? nil : actions.showWho.map { show in { show(target) } })
+                if target.isSocial, let open = actions.openComments {
+                    Button(ReactionText.commentsLabel(target.commentCount ?? 0), systemImage: "bubble.left") {
+                        open(target.target)
                     }
                 }
-                let who = target.chips.map { $0.reaction.rawValue + " " + NorwegianList.join($0.names) }
-                if !who.isEmpty {
+                let who = target.chips.filter { !$0.names.isEmpty }.map { $0.emoji + " " + NorwegianList.join($0.names) }
+                if !who.isEmpty, actions.showWho == nil {
                     Section("Har reagert") {
                         ForEach(who, id: \.self) { Text($0) }
                     }
@@ -91,6 +80,54 @@ struct HjemReactionMenu: ViewModifier {
         } else {
             content
         }
+    }
+}
+
+// MARK: - Bildeoppfordring
+
+/// «Ta et bilde av gjengen» (sql/050): kameraet åpnes rett i kveldens tråd.
+struct HjemPhotoPromptCardView: View {
+    let card: HomePhotoPromptCard
+    let feedCard: HomeFeedCard
+    /// nil: tråden er i en annen klubb enn den Hjem står i.
+    let open: (() -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                DDIconTile(systemImage: "camera.fill")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(card.title)
+                        .font(.ddBodyEmphasis)
+                        .foregroundStyle(Color.ddInk)
+                    Text(card.detail)
+                        .font(.ddCaption)
+                        .foregroundStyle(Color.ddInkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.top, 7)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                HjemTimeLabel(time: feedCard.time, isUnread: feedCard.isUnread)
+                    .padding(.top, 9)
+            }
+            .accessibilityElement(children: .combine)
+            HStack(spacing: 8) {
+                HjemSourcePill(source: feedCard.source)
+                Spacer(minLength: 8)
+                if let open {
+                    Button(action: open) {
+                        Label(PhotoPrompt.action, systemImage: "camera")
+                    }
+                    .buttonStyle(.dd(.primary, compact: true))
+                    .accessibilityHint("Åpner kameraet i tråden.")
+                } else {
+                    Text("Åpne klubben for å dele bildet.")
+                        .font(.ddCaption)
+                        .foregroundStyle(Color.ddInkSecondary)
+                }
+            }
+        }
+        .ddCard()
     }
 }
 
@@ -335,6 +372,7 @@ struct HjemLinesCardView: View {
     let feedCard: HomeFeedCard
     let reactionsRow: (HomeReactions) -> HjemReactionsRow?
     let menu: (HomeReactions?) -> HjemReactionMenu
+    var openComments: ((SocialTarget) -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -353,6 +391,13 @@ struct HjemLinesCardView: View {
                             .foregroundStyle(Color.ddInkSecondary)
                         if let reactions = line.reactions, let row = reactionsRow(reactions) {
                             row.padding(.top, 4)
+                        }
+                        if let target = line.opens, let openComments {
+                            Button("Se kommentarene") { openComments(target) }
+                                .font(.dd(.sans, size: 15, weight: .semibold, relativeTo: .body))
+                                .foregroundStyle(Color.ddForestInk)
+                                .frame(minHeight: 44)
+                                .buttonStyle(.plain)
                         }
                     }
                     .padding(.top, 7)
