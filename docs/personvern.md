@@ -26,6 +26,7 @@ Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer
 | Kalenderlenken din (en tilfeldig kode) | For at kveldene du er påmeldt på, skal dukke opp i kalenderen din | Avtale |
 | Kjøp i appen (produkt, transaksjons-id, status) | For å låse opp turneringer du har betalt for | Avtale og regnskapsplikt |
 | Rapporter og blokkeringer | For å holde appen fri for støtende innhold | Berettiget interesse (art. 6 nr. 1 f) |
+| *(Etter 054)* Hvem du følger og hvem som følger deg, om du vil godkjenne følgere og være synlig i søket, QR-koden din, og en logg over søk og forespørsler (slettes etter to døgn) | For at du skal kunne følge andre spillere, og for å hindre misbruk av søket | Avtale, og berettiget interesse for loggen |
 
 Vi lagrer **ikke** posisjonen din, kontaktene dine eller bilder du ikke selv deler. Bilder du tar eller velger, krympes på telefonen, og metadata som GPS-posisjon fjernes før opplasting.
 
@@ -40,7 +41,9 @@ Appen ber om tilgang til kameraet bare når du vil ta et bilde til tråden eller
 - En **regning** ser bare den som laget den, mottakeren og de som skal betale. Vipps-nummeret står bare på regningen, aldri på profilen, og slettes når alle har betalt.
 - **Kalenderlenken** er personlig: den som har den, ser datoene og stedene for kveldene du er påmeldt på, ikke hvem andre som kommer. Du kan lage en ny eller skru den av under Deg.
 - En **konkurranse** ser deltakerne og klubben den hører til.
-- Andre brukere kan ikke søke deg opp.
+- Andre brukere kan ikke søke deg opp. *(Gjelder til 054 er kjørt. Etter 054 erstattes linjen med teksten under.)*
+- *(Etter 054)* **Søk:** andre innloggede kan finne deg på navn (minst tre bokstaver). De ser navnet, bildet og navnet på én klubb du er med i, ikke e-post eller handicap. Du kan skjule deg fra søket under **Deg**. Den du har blokkert, eller som har blokkert deg, finner deg ikke. Søk er begrenset per time.
+- *(Etter 054)* **Følge:** andre kan be om å følge deg. Nye følgere må godkjennes av deg, med mindre du slår godkjenning av. Den som viser QR-koden sin, godkjenner at den som skanner følger med en gang; du kan lage en ny kode når som helst. Den som følger deg (godtatt), ser profilen din og dine ferdige runder (dato, bane, slag og hull), kan reagere og kommentere på dem, og kan legge deg til i runder og turneringer. Pågående runder vises ikke. Du kan fjerne følgere, og blokkering fjerner følging begge veier.
 
 ## Hvor dataene ligger
 
@@ -51,6 +54,7 @@ Dataene lagres hos **Supabase** (database, innlogging, fillagring og serverfunks
 Vi lagrer opplysningene så lenge du har en konto. Sletter du kontoen:
 
 - slettes innloggingen, profilen, push-tokenene, kalenderlenken, meldingene og bildene dine i tråden, portrettet og blokkeringene dine,
+- *(etter 054)* slettes følgingen (begge veier), QR-koden, søkeloggen og kortene for dine ferdige runder med reaksjonene og kommentarene på dem,
 - slettes Vipps-nummeret ditt fra regningene,
 - navnet ditt byttes til **«Slettet spiller»** i klubber og runder, mens scorene står, slik at tabellene til de andre ikke endres,
 - kjøpsopplysninger beholdes uten kobling til deg så lenge regnskapsloven krever det.
