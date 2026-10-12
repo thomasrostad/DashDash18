@@ -102,7 +102,13 @@ enum RundeQueries {
             .select(SideClaimRow.columns)
             .eq("round_id", value: id).execute().value
 
+        // Konkurransene og øyeblikksbildet (sql/048). Mangler de, er alt som før.
+        async let competitions = RoundFormatsQueries.competitions(client: client, roundID: id)
+        async let freeze = RoundFormatsQueries.freeze(client: client, roundID: id)
+
         var snapshot = RoundSnapshot(round: round)
+        snapshot.competitions = await competitions
+        snapshot.freeze = await freeze
         snapshot.roundHoles = try await holes
         snapshot.players = try await players
         snapshot.matches = try await matches

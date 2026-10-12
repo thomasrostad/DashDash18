@@ -28,6 +28,28 @@ final class CourseLibraryModel {
         let userID: UUID
     }
 
+    // MARK: Øyeblikksbildet (sql/048)
+
+    /// Rundene som går i klubben på banen, når den innloggede kan sette opp runder. Etter at par eller
+    /// indeks er rettet, tilbys «Oppdater øyeblikksbildet» for dem (en startet runde bruker hullene fra start).
+    func activeRounds(on courseID: UUID) async -> [UUID] {
+        guard RoundFormatsFeature.isAvailable, let context, context.can(.rounds) else { return [] }
+        struct Row: Decodable { let id: UUID }
+        let rows: [Row] = (try? await context.client.from("rounds")
+            .select("id")
+            .eq("club_id", value: context.clubID)
+            .eq("course_id", value: courseID)
+            .eq("status", value: RoundStatus.active.rawValue)
+            .execute().value) ?? []
+        return rows.map(\.id)
+    }
+
+    /// «Oppdater øyeblikksbildet» for rundene (`round_snapshot_refresh`).
+    func refreshSnapshots(_ roundIDs: [UUID]) async throws(DataError) {
+        guard let context else { return }
+        for id in roundIDs { try await RoundFormatsQueries.refreshSnapshot(client: context.client, roundID: id) }
+    }
+
     init(context: ClubContext, courseSet: GolfgutuCourseSet? = try? GolfgutuCourseSet.load()) {
         self.context = context
         self.courseSet = courseSet

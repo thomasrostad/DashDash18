@@ -16,6 +16,9 @@ struct CourseEditView: View {
     @State private var playable: (course: SlopeCourseRow, tees: [CourseTeeRow])?
 
     @State private var showsIndex: Bool
+    /// Rundene som går på banen etter at hullene er lagret: «Oppdater øyeblikksbildet» (sql/048).
+    @State private var activeRounds: [UUID] = []
+    @State private var asksSnapshot = false
 
     /// - Parameter initialDraft: et ferdig utfylt skjema for en ny bane (skjermprøvene).
     init(model: CourseLibraryModel, item: CourseListItem?, initialDraft: CourseDraft? = nil) {
@@ -83,6 +86,26 @@ struct CourseEditView: View {
                 Button("Lagre") { save(validation) }
                     .disabled(isBusy || (item != nil && draft == original))
             }
+        }
+        .confirmationDialog("Oppdater øyeblikksbildet?",
+                            isPresented: $asksSnapshot,
+                            titleVisibility: .visible) {
+            Button("Oppdater øyeblikksbildet") {
+                let rounds = activeRounds
+                run {
+                    try await model.refreshSnapshots(rounds)
+                    activeRounds = []
+                    dismiss()
+                }
+            }
+            Button("Ikke nå", role: .cancel) {
+                activeRounds = []
+                dismiss()
+            }
+        } message: {
+            Text(activeRounds.count == 1
+                 ? "En runde går på banen og bruker hullene fra start. Skal den få de nye?"
+                 : "\(activeRounds.count) runder går på banen og bruker hullene fra start. Skal de få de nye?")
         }
         .confirmationDialog("Slette \(item?.course.name ?? "banen")?", isPresented: $askDelete, titleVisibility: .visible) {
             Button("Slett", role: .destructive) { delete() }
@@ -287,8 +310,15 @@ struct CourseEditView: View {
         triedToSave = true
         guard let values = validation.values else { return }
         run {
-            try await model.save(values, id: item?.id)
-            dismiss()
+            let saved = try await model.save(values, id: item?.id)
+            // Var banen i bruk i en runde som går, tilbys et nytt øyeblikksbilde av hullene.
+            let rounds = item == nil ? [] : await model.activeRounds(on: saved.id)
+            if rounds.isEmpty {
+                dismiss()
+            } else {
+                activeRounds = rounds
+                asksSnapshot = true
+            }
         }
     }
 

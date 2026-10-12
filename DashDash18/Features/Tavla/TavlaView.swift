@@ -152,6 +152,10 @@ struct TavlaList: View {
                     }
                     // Playoff om førsteplassen (sql/047).
                     PlayoffCard(standings: standings, onChange: onChange)
+                    // Lag mot lag (sql/048): poengene til sidene over rundene.
+                    if let table = standings.teamVsTeamTable {
+                        TeamVsTeamTavlaCard(table: table)
+                    }
                     // Hva alle har slått, runde for runde, med scorekortet bak hver rute.
                     NavigationLink {
                         TavlaRoundsView(standings: standings)

@@ -16,6 +16,15 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
     case cup
     /// Morroturnering (`LeagueRules.fun`).
     case fun
+    /// Amerikaner hver kveld (steg 7): formens poeng er tabellpoengene (`table.formPoints`).
+    case amerikanerSeries
+    /// Københavner hver kveld (steg 7), som Amerikaner med tre i gruppen.
+    case kobenhavnerSeries
+    /// Skins hver kveld (steg 7): hvert skin gir `formPlay.skinPoints` i tabellen.
+    case skinsSeries
+    /// Lag mot lag (Ryder Cup, steg 7): to sider, fourball-matcher lag mot lag, poeng til siden
+    /// (`RyderCup`, `formPlay.teamMatch`). Tabellen for spillerne er som i matchspill-serien.
+    case teamVsTeam
 
     /// Navnet i «Ny turnering».
     public var title: String {
@@ -24,6 +33,10 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
         case .matchSeries: "Matchspill-serie"
         case .cup: "Cup"
         case .fun: "Morroturnering"
+        case .amerikanerSeries: "Amerikaner"
+        case .kobenhavnerSeries: "Københavner"
+        case .skinsSeries: "Skins"
+        case .teamVsTeam: "Lag mot lag"
         }
     }
 
@@ -34,6 +47,10 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
         case .matchSeries: "Matcher hver kveld gir poeng i tabellen, med sidepremier og seeding."
         case .cup: "Utslag i matchspill. Den som vinner, går videre."
         case .fun: "Stableford-poengene teller rett fram, runde for runde."
+        case .amerikanerSeries: "Fire i gruppa deler 12 poeng per hull. Poengene går i tabellen."
+        case .kobenhavnerSeries: "Tre i gruppa deler 6 poeng per hull. Poengene går i tabellen."
+        case .skinsSeries: "Hvert hull er et skin. Skinsene går i tabellen."
+        case .teamVsTeam: "To sider spiller fourball lag mot lag og samler poeng."
         }
     }
 
@@ -43,6 +60,10 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
         case .stablefordSeries: Self.stablefordSeriesRules
         case .matchSeries: Ruleset.golfgutu
         case .cup, .fun: Self.competitionRules
+        case .amerikanerSeries: Self.formPointsRules(form: "amerikaner")
+        case .kobenhavnerSeries: Self.formPointsRules(form: "kobenhavner")
+        case .skinsSeries: Self.formPointsRules(form: "skins")
+        case .teamVsTeam: Self.teamVsTeamRules
         }
     }
 
@@ -66,6 +87,25 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
         r.sidePrizes.closestToPin.enabled = false
         r.handicap.seedingGroups = []
         r.formats.defaultFormID = "stableford"
+        return r
+    }()
+
+    /// Amerikaner, Københavner og skins: stableford-serien der tabellpoengene er formens poeng
+    /// (`table.formPoints`), med formen som standard. De nye formene (Amerikaner, Københavner) legges til
+    /// de tillatte.
+    static func formPointsRules(form: String) -> Ruleset {
+        var r = stablefordSeriesRules
+        r.table.formPoints = true
+        r.formats.defaultFormID = form
+        if !r.formats.allowedFormIDs.contains(form) { r.formats.allowedFormIDs.append(form) }
+        return r
+    }
+
+    /// Lag mot lag: Golfgutu-oppsettet med fourball som standardform. Sidene settes per runde
+    /// (`round_players.side`), og lagtabellen regnes med `RyderCup`.
+    static let teamVsTeamRules: Ruleset = {
+        var r = Ruleset.golfgutu
+        r.formats.defaultFormID = "fourball"
         return r
     }()
 

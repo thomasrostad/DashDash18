@@ -38,4 +38,8 @@ export * from "./app/roundgame.ts";
 export * from "./app/tavla.ts";
 export * from "./app/playoffround.ts";
 export * from "./app/competition.ts";
+<<<<<<< HEAD
 export * from "./app/betsettle.ts";
+=======
+export * from "./app/roundcomp.ts";
+>>>>>>> origin/main

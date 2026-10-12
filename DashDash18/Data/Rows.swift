@@ -370,6 +370,8 @@ nonisolated struct RoundPlayerRow: Codable, Equatable, Sendable {
     var bayNo: Int?
     var isMarker: Bool
     var teamNo: Int?
+    /// Lag mot lag (sql/048): side 1 eller 2. Hentes bare når kolonnen finnes (`RoundFormatsFeature`).
+    var side: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case roundID = "round_id"
@@ -381,9 +383,13 @@ nonisolated struct RoundPlayerRow: Codable, Equatable, Sendable {
         case bayNo = "bay_no"
         case isMarker = "is_marker"
         case teamNo = "team_no"
+        case side
     }
 
-    static let columns =
+    /// `side` (sql/048) bare når kolonnen finnes.
+    static var columns: String { baseColumns + (RoundFormatsFeature.isAvailable ? ", side" : "") }
+
+    static let baseColumns =
         "round_id, member_id, club_id, handicap_index, seed_group, playing_handicap, bay_no, is_marker, team_no"
 }
 

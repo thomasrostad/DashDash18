@@ -274,6 +274,19 @@ test("stableford-serien", () => {
   ]);
 });
 
+test("steg 7: Amerikaner, Københavner, skins og lag mot lag", () => {
+  for (const [t, form] of [["amerikanerSeries", "amerikaner"], ["kobenhavnerSeries", "kobenhavner"], ["skinsSeries", "skins"]] as const) {
+    const r = templateRules(t);
+    assert.ok(r.table.formPoints && r.table.pointsSource === "stableford", t);
+    assert.equal(r.formats.defaultFormID, form);
+    assert.ok(r.formats.allowedFormIDs.includes(form));
+    assert.equal(matchingTemplate(r), t);
+  }
+  assert.equal(templateRules("teamVsTeam").formats.defaultFormID, "fourball");
+  assert.deepEqual(templateDifferences("teamVsTeam", GOLFGUTU), ["formats.defaultFormID"]);
+  assert.equal(matchingTemplate(GOLFGUTU), "matchSeries");
+});
+
 test("gjenkjenning", () => {
   assert.equal(matchingTemplate(GOLFGUTU), "matchSeries");
   assert.equal(matchingTemplate(templateRules("stablefordSeries")), "stablefordSeries");

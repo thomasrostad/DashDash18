@@ -31,7 +31,11 @@ nonisolated enum TournamentSetup {
 
     /// Kan oppsettet lages uten klubb?
     static func allowsPrivate(_ template: RulesetTemplate) -> Bool {
-        template != .matchSeries
+        // Formene fra steg 7 trenger kvelder, båser og lag i en klubb, som matchspill-serien.
+        switch template {
+        case .stablefordSeries, .cup, .fun: true
+        case .matchSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam: false
+        }
     }
 
     /// Symbolet på kortet i steg 1.
@@ -41,6 +45,10 @@ nonisolated enum TournamentSetup {
         case .matchSeries: "person.2"
         case .cup: "point.3.connected.trianglepath.dotted"
         case .fun: "party.popper"
+        case .amerikanerSeries: "square.grid.2x2"
+        case .kobenhavnerSeries: "triangle"
+        case .skinsSeries: "dollarsign.circle"
+        case .teamVsTeam: "flag.2.crossed"
         }
     }
 
@@ -48,7 +56,7 @@ nonisolated enum TournamentSetup {
     static func target(_ template: RulesetTemplate, clubID: UUID?) -> Target {
         switch template {
         case .stablefordSeries: clubID == nil ? .competition(.league) : .season
-        case .matchSeries: .season
+        case .matchSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam: .season
         case .cup: .competition(.cup)
         case .fun: .competition(.fun)
         }
@@ -98,7 +106,8 @@ nonisolated enum TournamentSetup {
         let parts = calendar.dateComponents([.year, .month], from: now)
         let word = seasonWord(month: parts.month ?? 1)
         let base = switch template {
-        case .stablefordSeries, .matchSeries: "\(word) \(parts.year ?? 2026)"
+        case .stablefordSeries, .matchSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam:
+            "\(word) \(parts.year ?? 2026)"
         case .cup: "\(word)cupen"
         case .fun: "\(word)morro"
         }

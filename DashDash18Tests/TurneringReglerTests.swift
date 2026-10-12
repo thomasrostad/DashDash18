@@ -24,7 +24,9 @@ struct TurneringReglerTests {
 
     /// Ligger to oppsett like nær, vinner det som teller det samme (matcher eller stableford).
     @Test func likAvstandGirOppsettetSomTellerDetSamme() {
-        #expect(RulesetSummary.candidates(for: .season, rules: .golfgutu) == [.matchSeries, .stablefordSeries])
+        // Formene fra steg 7 kommer etter (bare som sesong i en klubb).
+        #expect(RulesetSummary.candidates(for: .season, rules: .golfgutu)
+                == [.matchSeries, .stablefordSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam])
         #expect(RulesetSummary.candidates(for: .league, rules: RulesetTemplate.stablefordSeries.rules)
                 == [.stablefordSeries, .matchSeries])
         #expect(RulesetSummary.candidates(for: .cup, rules: .golfgutu) == [.cup])

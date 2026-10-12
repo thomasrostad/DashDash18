@@ -74,7 +74,8 @@ function Details({ clubID, template, comps, initial, canTemplates, onUseTemplate
   clubID: string; template: RulesetTemplate; comps: Competition[]; initial: TournamentTemplate | null;
   canTemplates: boolean; onUseTemplate: (t: SetupTemplate) => void; onDone: () => void; onBack: () => void;
 }) {
-  const isSeries = template === "stablefordSeries" || template === "matchSeries";
+  // Alle oppsettene utenom cup og morro er serier i klubben (sesong), også de fra steg 7.
+  const isSeries = template !== null && template !== "cup" && template !== "fun";
   const base = rulesFrom(initial, template);
   const today = todayISO();
   const [name, setName] = useState(suggestedName(template, comps.map((c) => c.name)));
