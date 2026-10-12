@@ -14,6 +14,8 @@ struct RundeSetupStep: View {
 
     private var rules: Ruleset { model.rules }
     private var coreCourse: Course? { model.coreCourse(for: draft) }
+    /// Trekningen etter regelsettet (`formats.drawMethod`).
+    private var plan: MatchDrawPlan { model.drawPlan(for: draft) }
 
     var body: some View {
         let form = draft.form
@@ -54,7 +56,7 @@ struct RundeSetupStep: View {
         Section {
             Picker("Form", selection: Binding(
                 get: { draft.formID },
-                set: { draft.setForm($0, rules: rules, roster: model.members) }
+                set: { draft.setForm($0, rules: rules, roster: model.members, plan: plan) }
             )) {
                 ForEach(formChoices) { f in
                     Text(f.name + supportNote(f)).tag(f.id)
@@ -104,7 +106,7 @@ struct RundeSetupStep: View {
             ForEach(draft.participants, id: \.self) { id in
                 Picker(model.memberName(id), selection: Binding(
                     get: { draft.teams[id] },
-                    set: { draft.teams[id] = $0; draft.redrawMatches(roster: model.members) }
+                    set: { draft.teams[id] = $0; draft.redrawMatches(roster: model.members, plan: plan) }
                 )) {
                     Text("Uten lag").tag(Int?.none)
                     ForEach(1...numbers, id: \.self) { n in
@@ -112,11 +114,17 @@ struct RundeSetupStep: View {
                     }
                 }
             }
-            Button("Foreslå lag", systemImage: "wand.and.stars") {
-                draft.teams = TeamPlanner.suggested(participants: draft.participants, form: form,
-                                                    maxPerBay: rules.formats.maxPerBay)
-                draft.redrawMatches(roster: model.members)
+            Button("Tilfeldige lag", systemImage: "dice") {
+                draft.teams = TeamPlanner.random(participants: draft.participants, form: form,
+                                                 maxPerBay: rules.formats.maxPerBay, seed: .random(in: .min ... .max))
+                draft.redrawMatches(roster: model.members, plan: plan)
             }
+            NavigationLink {
+                TeamSwapView(model: model, draft: $draft, plan: plan)
+            } label: {
+                Label("Bytt to spillere", systemImage: "arrow.left.arrow.right")
+            }
+            .disabled(Set(draft.participants.compactMap { draft.teams[$0] }).count < 2)
         } header: {
             DDHeader("Lag · \(form.teamSize) per lag")
         } footer: {
@@ -149,8 +157,15 @@ struct RundeSetupStep: View {
                 editingMatch = MatchEditItem(index: nil, match: form.isTeamForm ? .teams(1, 2) : MatchDraft())
             }
             Menu {
-                Button("Trekk matchene på nytt", systemImage: "dice") {
-                    draft.redrawMatches(roster: model.members)
+                if plan.method == .manual {
+                    // Manuelt: arrangøren setter opp matchene, men kan få et forslag etter tabellen.
+                    Button("Foreslå matcher etter tabellen", systemImage: "list.number") {
+                        draft.redrawMatches(roster: model.members, plan: .standings)
+                    }
+                } else {
+                    Button("Trekk matchene på nytt", systemImage: "dice") {
+                        draft.redrawMatches(roster: model.members, plan: plan)
+                    }
                 }
                 Button("Sett matchene sammen i \(draft.groupTerm.definitePlural)", systemImage: "square.grid.2x2") {
                     draft.reshuffleBays(count: bayCount)
@@ -160,6 +175,8 @@ struct RundeSetupStep: View {
             }
         } header: {
             DDHeader("Matcher")
+        } footer: {
+            if !form.isTeamForm, let text = MatchDrawText.footer(plan: plan, matches: draft.matches) { DDFooter(text) }
         }
     }
 
@@ -341,7 +358,7 @@ struct FlereValgSample: View {
     init() {
         let model = RundeAdminModel.sample()
         var draft = model.newDraft()!
-        draft.prepareSetup(rules: model.rules, roster: model.members)
+        draft.prepareSetup(rules: model.rules, roster: model.members, plan: model.drawPlan(for: draft))
         self.model = model
         _draft = State(initialValue: draft)
     }

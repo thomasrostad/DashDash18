@@ -28,6 +28,23 @@ test("TV-tabellen er appens tabell (samme regelmotor og tekster)", () => {
   assert.ok(tv.latest === null || tv.latest.lines.every((l, i, a) => i === 0 || a[i - 1].points >= l.points));
 });
 
+test("TV med tabellreglene: delt plass, playoff og uten plass som i appen (steg 6)", () => {
+  fixture.sesonger.forEach((season: { id: string; club_id: string; name: string; status: string; rules: unknown }, i: number) => {
+    const board = { ...fixture.tavlaData, competition: { name: season.name, season_id: season.id, club_id: season.club_id,
+      status: season.status, rules: season.rules, club_name: null } };
+    const tv = buildTVPayload(board);
+    const app = expected.tavla[i] as { rows: { placeText: string; name: string; totalText: string; detail: string }[] };
+    assert.deepEqual(tv.rows.map((r) => [r.place, r.name, r.total, r.detail]),
+                     app.rows.map((r) => [r.placeText, r.name, r.totalText, r.detail]), season.name);
+  });
+  const playoff = fixture.sesonger.findIndex((s: { name: string }) => s.name === "Playoff 2026");
+  const s = fixture.sesonger[playoff];
+  const tv = buildTVPayload({ ...fixture.tavlaData, competition: { name: s.name, season_id: s.id, club_id: s.club_id, status: s.status, rules: s.rules } });
+  assert.deepEqual(tv.rows.slice(0, 3).map((r) => r.place), ["1.", "1.", "1."]);
+  assert.ok(tv.rows[0].detail.startsWith("Playoff · "));
+  assert.equal(tv.rows.at(-1)?.place, "–");
+});
+
 test("TV for liga er appens ligatabell (sql/043)", () => {
   const d = fixture.tavlaData;
   const club = d.members[0].club_id;

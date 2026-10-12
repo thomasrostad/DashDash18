@@ -67,3 +67,7 @@ section > .card { margin-bottom: 16px; }
 button.card.choice { text-align: left; border: 0; display: grid; gap: 6px; color: var(--ink); font: inherit; cursor: pointer; }
 button.card.choice:hover { outline: 2px solid var(--gold); }
 fieldset:disabled { opacity: .6; }
+
+/* Poengtabellene i «Reglene»: navn, ganger og «Fjern» på én linje. */
+.inline-fields { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.inline-fields input { flex: 1; min-width: 0; }

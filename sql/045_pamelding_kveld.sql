@@ -1,4 +1,4 @@
--- 045: påmelding per kveld (gjennomføringsplanen steg 4). Venter på godkjenning.
+-- 045: påmelding per kveld (gjennomføringsplanen steg 4). Godkjent og kjørt på test 12.10.2026 (etter 044).
 --
 -- Krever 001–044 (044_roller kjøres på test før denne: private.has_club_right).
 --

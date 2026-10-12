@@ -134,6 +134,7 @@ struct RulesetForm<Bottom: View>: View {
             return f.hasPrefix("scoring") || f.hasPrefix("table.trianglePoints") || f.hasPrefix("table.stablefordCounting")
                 || f.hasPrefix("table.tiebreaks") || f.hasPrefix("table.roundingStep") || f.hasPrefix("handicap.seedingGroups")
                 || f.hasPrefix("handicap.teamHandicap") || f.hasPrefix("formats")
+                || f.hasPrefix("table.minEvenings") || f.hasPrefix("table.pointsTables")
         }
     }
 
@@ -151,6 +152,7 @@ struct RulesetForm<Bottom: View>: View {
                 if showsAdvanced {
                     scoringSection
                     RulesetTableSections(draft: $draft)
+                    RulesetTableRulesSection(draft: $draft)
                     RulesetHandicapSection(draft: $draft)
                     RulesetFormatSection(draft: $draft)
                 }
