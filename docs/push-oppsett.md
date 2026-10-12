@@ -83,6 +83,12 @@ select cron.schedule('dd18-paaminnelse', '0 8 * * *', $$select public.queue_even
 
 Har du blokkert noen (`user_blocks`, sql/019), får du ikke push om det de gjør: trådmeldingene deres (også når de nevner deg), og linjer der de er aktøren eller spilleren det handler om (store scorer, sidepremier, påmelding, ny spiller, ledelsen, tippekongen, melding til alle og purring fra dem). Bare den som blokkerer slipper, som i tråden. Linja står fortsatt i Varsler. `push-send` leser `club_members` og `user_blocks` med service-rollen for hver jobb som ellers ville blitt sendt. Feiler lesingen, prøves jobben igjen i stedet for å sendes ufiltrert. Ingen ny SQL trengs. Reglene står i `pushOriginators` i `logic.ts`.
 
+## Varsler, steg 5 (sql/046)
+
+`sql/046_varsler.sql` (venter på godkjenning) gir fire grupper (Spillet, Sosialt, Kvelden, Arrangør), demping av én kveld, ett «kvelden er i gang» per kveld (`round_started` går ikke lenger som push), `collapse` per kveld og gruppe i `push_job_payload`, push i turneringer uten klubb, loggen `notifications` og grunnmuren for e-post til dem uten push. Hva `push-send` og appen må endre, står øverst i fila.
+
+E-post krever SMTP. Det må du sette opp: Supabase → test → **Authentication** → **SMTP Settings** (avsender, vert, port, bruker, passord), eller en e-posttjeneste med API-nøkkel som secret for `push-send`. Til det er gjort, sendes ingen e-post; `push_email_recipients` bare forteller hvem som skulle fått den.
+
 ## Prod
 
 Ingenting av dette gjøres på prod før du sier ja. Da gjentas steg 3–6 mot prod. TestFlight-bygg bruker production-APNs også mot test-databasen, og det fungerer fordi miljøet står på hver telefon.

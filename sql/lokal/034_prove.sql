@@ -103,7 +103,11 @@ select pg_temp.feil($$insert into public.activity (club_id, competition_id, kind
                       values (null, null, 'test', 'club', '{}')$$, '23514');
 insert into public.activity (id, club_id, competition_id, kind, category, data)
 values ('a0000000-0000-0000-0000-0000000034d1', null, :'liga', 'test', 'club', '{}');
-select pg_temp.lik((select count(*)::int from public.push_queue where activity_id = 'a0000000-0000-0000-0000-0000000034d1'), 0, 'D0 hendelsen uten klubb går ikke i push-køen');
+-- Før 046 går den ikke i køen. Etter 046 (push per turnering) går den i køen med turneringen.
+select pg_temp.lik((select count(*)::int from public.push_queue where activity_id = 'a0000000-0000-0000-0000-0000000034d1'),
+                   case when exists (select 1 from information_schema.columns where table_schema = 'public'
+                                       and table_name = 'push_queue' and column_name = 'competition_id') then 1 else 0 end,
+                   'D0 hendelsen uten klubb: ikke i push-køen før 046, i køen med turneringen etter 046');
 select pg_temp.som(:'u1'); set role authenticated;
 select pg_temp.lik((select count(*)::int from public.activity where id = 'a0000000-0000-0000-0000-0000000034d1'), 1, 'D1 medlem som ser ligaen, ser hendelsen');
 reset role;
