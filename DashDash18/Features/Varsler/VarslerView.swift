@@ -1,3 +1,4 @@
+import GolfgutuCore
 import SwiftUI
 
 /// Varsler for klubben: «I dag» og «Tidligere», med uleste, reaksjoner og «Melding til alle» for
@@ -6,6 +7,7 @@ import SwiftUI
 struct VarslerContent: View {
     @State var model: VarslerModel
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dayTerm) private var dayTerm
     @State private var showsAnnouncement = false
 
     var body: some View {
@@ -32,6 +34,7 @@ struct VarslerContent: View {
             }
             .task { await model.load() }
             .refreshable { await model.load() }
+            .onChange(of: dayTerm, initial: true) { _, term in model.dayTerm = term }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { Task { await model.load() } }
             }

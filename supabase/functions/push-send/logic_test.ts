@@ -10,16 +10,20 @@ import {
   apnsBody,
   attachAlreadyNotified,
   attachBlocks,
+  attachCompetitionBlocks,
   classifyApnsResponse,
   clubAllows,
+  dayTermThe,
   dropoutLookup,
   eveningLongText,
+  eveningStartedText,
   formatMeters,
   type JobPayload,
   type MemberPayload,
   nameLookup,
   planPush,
   playerAllows,
+  pushLogResults,
   pushOriginators,
   summarize,
   tableHeadline,
@@ -336,6 +340,7 @@ Deno.test("alle typene appen skriver har en norsk tekst (ActivityEvent.knownKind
     bet_resolved: ["bet", { question: "Q", resolution: "yes" }],
     waitlist_promoted: ["signup", { member: ANDERS }],
     signup_dropped: ["signup", { member: ANDERS }],
+    evening_started: ["round", {}],
   };
   for (const [kind, [category, data]] of Object.entries(minimal)) {
     const shown = text(activity(kind, category, data));
@@ -668,4 +673,153 @@ Deno.test("plassbytte: den linja handler om står bak (blokkering)", () => {
   const blocked = attachBlocks(job(a), [{ id: CATO, user_id: "u-cato" }, { id: BJORN, user_id: "u-bjorn" }],
     [{ blocker_id: "u-cato", blocked_id: "u-bjorn" }]);
   eq(planPush(blocked, NOW).notifications.map((n) => n.memberId).sort(), [ANDERS, BJORN]);
+});
+
+// --- Varsler, steg 5 (sql/046) -----------------------------------------------
+
+const STARTED = activity("evening_started", "round",
+  { event_date: "2026-10-08", round_no: 1, course_name: "Pebble Beach", hole_count: 18 }, { actor_member_id: THOMAS });
+
+Deno.test("046: collapse fra svaret blir apns-collapse-id, ellers som før", () => {
+  const p = { ...job(EAGLE), collapse: "event-event-1-game", group: "game" };
+  is(planPush(p, NOW).notifications[0].collapseId, "event-event-1-game");
+  const lead = activity("lead_changed", "lead", { after_hole: 9, leaders: [BJORN], points: 19, outcome: "took_lead" }, { actor_member_id: null });
+  is(planPush({ ...job(lead), collapse: null }, NOW).notifications[0].collapseId, "lead-round-1");
+  is(planPush({ ...job(lead), collapse: "x".repeat(80) }, NOW).notifications[0].collapseId, "x".repeat(64));
+});
+
+Deno.test("046: «kvelden er i gang» med dato, runde og bane", () => {
+  is(text(STARTED).emoji, "🏁");
+  is(text(STARTED).text, "Runden er i gang: torsdag 8. oktober · Runde 1 – Pebble Beach");
+  is(activityDisplay(STARTED, names, "evening").text, "Kvelden er i gang: torsdag 8. oktober · Runde 1 – Pebble Beach");
+  is(activityDisplay(STARTED, names, "playingDay").text,
+    "Spilledagen er i gang: torsdag 8. oktober · Runde 1 – Pebble Beach");
+  is(eveningStartedText({ day_term: "spilledag", round_no: 2 }), "Spilledagen er i gang: Runde 2");
+  is(eveningStartedText({ event_date: "2026-10-08" }), "Runden er i gang: torsdag 8. oktober");
+  is(eveningStartedText({ course_name: "Losby" }), "Runden er i gang: Losby");
+  is(eveningStartedText({}), "Runden er i gang");
+  is(dayTermThe("Kveld"), "Kvelden");
+  is(dayTermThe("noe annet"), undefined);
+  is(dayTermThe(null), undefined);
+});
+
+Deno.test("046: «kvelden er i gang» går til alle andre, med ordet fra svaret", () => {
+  const plan = planPush({ ...job(STARTED), day_term: "evening" }, NOW);
+  eq(plan.notifications.map((n) => n.memberId).sort(), [ANDERS, BJORN, CATO].sort());
+  is(plan.notifications[0].body, "🏁 Kvelden er i gang: torsdag 8. oktober · Runde 1 – Pebble Beach");
+  is(plan.notifications[0].category, "round");
+});
+
+const withUsers = (ms: MemberPayload[]) => ms.map((m) => ({ ...m, user_id: m.active ? `u-${m.display_name}` : null }));
+const reasons = (p: JobPayload, results = [] as { token: string; status: number; reason?: string }[]) =>
+  Object.fromEntries(pushLogResults(p, planPush(p, NOW), results).map((r) => [r.user_id, r.reason ?? r.status]));
+
+Deno.test("046: dempet eller gruppe av gir ingen push, og grunnen logges", () => {
+  const ms = withUsers(members({ [BJORN]: { muted: true, devices: [] }, [CATO]: { group_off: true, devices: [] } }));
+  const p = job(EAGLE, { members: ms });
+  const plan = planPush(p, NOW);
+  eq(plan.notifications.map((n) => n.memberId), [THOMAS]);
+  eq(pushLogResults(p, plan, [{ token: "thomas-token", status: 200 }]), [
+    { user_id: "u-Anders", channel: "push", status: "skipped", reason: "actor" },
+    { user_id: "u-Bjørn", channel: "push", status: "skipped", reason: "muted" },
+    { user_id: "u-Cato", channel: "push", status: "skipped", reason: "group_off" },
+    { user_id: "u-Thomas", channel: "push", status: "sent" },
+  ]);
+});
+
+Deno.test("046: loggen gir grunn for kategori, klubb, mottakerliste, blokkering og alder", () => {
+  const ms = withUsers(members({ [BJORN]: { disabled_categories: ["score"] } }));
+  eq(reasons(job(EAGLE, { members: ms })),
+    { "u-Anders": "actor", "u-Bjørn": "category_off", "u-Cato": "ikke sendt", "u-Thomas": "ikke sendt" });
+  eq(reasons(job(EAGLE, { members: ms, club: ["score"] })),
+    { "u-Anders": "actor", "u-Bjørn": "club_off", "u-Cato": "club_off", "u-Thomas": "club_off" });
+  eq(reasons(job({ ...EAGLE, created_at: "2026-10-08T17:00:00Z" }, { members: ms })),
+    { "u-Anders": "actor", "u-Bjørn": "too_old", "u-Cato": "too_old", "u-Thomas": "too_old" });
+  eq(reasons(job({ ...EAGLE, recipients: [CATO] }, { members: ms }), [{ token: "cato-token", status: 200 }]),
+    { "u-Anders": "actor", "u-Bjørn": "not_recipient", "u-Cato": "sent", "u-Thomas": "not_recipient" });
+  const blocked = attachBlocks(job(EAGLE, { members: ms }),
+    [{ id: ANDERS, user_id: "ua" }, { id: CATO, user_id: "uc" }], [{ blocker_id: "uc", blocked_id: "ua" }]);
+  is(reasons(blocked)["u-Cato"], "blocked");
+  // Kladd logges ikke, og ledige navn (uten innlogging) logges aldri.
+  const draft = job({ ...EAGLE, round_status: "draft" }, { members: ms });
+  eq(pushLogResults(draft, planPush(draft, NOW)), []);
+  ok(!("u-Carl" in reasons(job(EAGLE, { members: ms }))));
+});
+
+Deno.test("046: sent når minst én telefon fikk den, ellers failed med APNs-grunnen", () => {
+  const ms = withUsers(members({
+    [THOMAS]: { devices: [
+      { token: "t1", environment: "production", bundle_id: null },
+      { token: "t2", environment: "sandbox", bundle_id: null },
+    ] },
+  }));
+  const p = job(EAGLE, { members: ms });
+  const plan = planPush(p, NOW);
+  const results = plan.notifications.map((n) =>
+    n.token === "t1" ? { token: n.token, status: 410, reason: "Unregistered" } :
+    n.token === "t2" ? { token: n.token, status: 200 } :
+    { token: n.token, status: 400, reason: "BadDeviceToken" }
+  );
+  const log = Object.fromEntries(pushLogResults(p, plan, results).map((r) => [r.user_id, r]));
+  is(log["u-Thomas"].status, "sent");
+  is(log["u-Bjørn"].status, "failed");
+  is(log["u-Bjørn"].reason, "400 BadDeviceToken");
+});
+
+Deno.test("046: tråden logger nevnt, av, forfatter og demping", () => {
+  const ms = withUsers(members({ [CATO]: { thread_mode: "off" }, [BJORN]: { muted: true, devices: [] } }));
+  eq(reasons(thread("Hei @Bjørn @Thomas", ANDERS, [BJORN, THOMAS], { members: ms }), [{ token: "thomas-token", status: 200 }]),
+    { "u-Anders": "actor", "u-Bjørn": "muted", "u-Cato": "category_off", "u-Thomas": "sent" });
+  eq(reasons(thread("Hei", ANDERS, [], { members: ms })),
+    { "u-Anders": "actor", "u-Cato": "category_off", "u-Thomas": "not_recipient", "u-Bjørn": "not_recipient" });
+});
+
+// Turnering uten klubb: medlemmene er profiler.
+const P1 = "10000000-0000-0000-0000-000000000001";
+const P2 = "10000000-0000-0000-0000-000000000002";
+const P3 = "10000000-0000-0000-0000-000000000003";
+const ACTOR_MEMBER = "20000000-0000-0000-0000-000000000001";
+
+function competitionJob(a: ActivityPayload): JobPayload {
+  return {
+    job_id: 3,
+    kind: "activity",
+    club: { id: null, name: "Sommerserien", disabled_categories: [] },
+    activity: a,
+    message: null,
+    members: [member(P1, "Per"), member(P2, "Pål", { is_organizer: true }), member(P3, "Espen")],
+    audience: "competition",
+    competition: { id: "comp-1", name: "Sommerserien" },
+    group: "evening",
+    collapse: null,
+  };
+}
+
+Deno.test("046: turnering uten klubb får threadId competition-<id> og turneringens navn", () => {
+  const plan = planPush(competitionJob(activity("announcement", "announcement", { text: "Hei" }, { actor_member_id: null })), NOW);
+  eq(plan.notifications.map((n) => n.threadId), ["competition-comp-1", "competition-comp-1", "competition-comp-1"]);
+  is(plan.notifications[0].title, "Sommerserien");
+});
+
+Deno.test("046: turnering uten klubb: aktøren og blokkering leses per innlogging", () => {
+  const a = activity("announcement", "announcement", { text: "Hei" }, { actor_member_id: ACTOR_MEMBER });
+  const p = attachCompetitionBlocks(competitionJob(a), [{ id: ACTOR_MEMBER, user_id: P2 }],
+    [{ blocker_id: P3, blocked_id: P2 }, { blocker_id: "en-annen", blocked_id: P2 }]);
+  is(p.actor_user_id, P2);
+  eq(p.members.find((m) => m.id === P3)!.blocked_member_ids, [ACTOR_MEMBER]);
+  eq(to(p), [P1]);
+  eq(reasons(p, [{ token: "per-token", status: 200 }]), { [P1]: "sent", [P2]: "actor", [P3]: "blocked" });
+});
+
+Deno.test("046: turnering uten klubb: en profil som står bak, blokkeres direkte", () => {
+  const a = activity("signup_dropped", "signup", { member: P1, event_date: "2026-10-08" }, { actor_member_id: null });
+  const p = attachCompetitionBlocks(competitionJob(a), [], [{ blocker_id: P2, blocked_id: P1 }]);
+  // Pål har blokkert Per, som linja handler om. Ingen aktør, så Per og Espen får den.
+  eq(to(p), [P1, P3]);
+});
+
+Deno.test("046: uten 046-feltene er alt som før", () => {
+  const plan = planPush(job(EAGLE), NOW);
+  is(plan.notifications[0].threadId, "club-club-1");
+  eq(pushLogResults(job(EAGLE), plan), []);
 });

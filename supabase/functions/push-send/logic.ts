@@ -24,6 +24,11 @@
 //     legger mottakerne der i already_notified_ids. De hoppes over her: de
 //     har fått serverens varsel (med «etter fristen»). Alle andre får appens.
 //     Feiler oppslaget, pushes linja som før (heller to varsler enn ingen).
+//   * Varsler, steg 5 (sql/046): grupper og demping avgjøres i push_job_payload (devices er
+//     tom, og muted/group_off sier hvorfor). collapse fra svaret blir apns-collapse-id.
+//     evening_started har egen tekst. Turneringer uten klubb (audience = 'competition') har
+//     profil-id-er som medlemmer, og threadId competition-<id>. pushLogResults gir loggen per
+//     mottaker til push_log_result (sent, failed eller skipped med grunn).
 //
 // Tekstene følger ActivityText.display i appen (DashDash18/Data/Activity.swift),
 // med emojien foran, siden et varsel ikke har ikon.
@@ -88,6 +93,15 @@ export interface MemberPayload {
    * før planPush. Mangler feltet, er ingen blokkert.
    */
   blocked_member_ids?: string[];
+  // sql/046. Mangler i eldre svar (da gjelder det som før).
+  /** Innloggingen (auth.uid()). null for ledige navn. */
+  user_id?: string | null;
+  disabled_groups?: string[] | null;
+  email_fallback?: boolean;
+  /** Har dempet kvelden (devices er da tom). */
+  muted?: boolean;
+  /** Har slått av gruppen linja hører til (devices er da tom). */
+  group_off?: boolean;
 }
 
 export interface ActivityPayload {
@@ -118,7 +132,8 @@ export interface MessagePayload {
 export interface JobPayload {
   job_id: number;
   kind: "activity" | "thread";
-  club: { id: string; name: string; disabled_categories: string[] | null };
+  /** id er null for turneringer uten klubb (sql/046): da er name turneringens navn. */
+  club: { id: string | null; name: string; disabled_categories: string[] | null };
   activity: ActivityPayload | null;
   message: MessagePayload | null;
   members: MemberPayload[];
@@ -128,6 +143,22 @@ export interface JobPayload {
    * med attachAlreadyNotified() før planPush. Mangler feltet, gjelder ingen.
    */
   already_notified_ids?: string[];
+  // sql/046. Mangler i eldre svar.
+  /** Gruppen linja hører til: game, social, evening eller organizer. */
+  group?: string | null;
+  /** apns-collapse-id for linjer med kveld: event-<kveld>-<gruppe>. */
+  collapse?: string | null;
+  event_id?: string | null;
+  competition?: { id: string; name: string } | null;
+  /** 'club': id-ene er klubbmedlemmer. 'competition' (turnering uten klubb): id-ene er profiler. */
+  audience?: "club" | "competition";
+  /** Hva en dag heter («kveld» eller «spilledag»), når svaret har det. Ellers nøytral tekst. */
+  day_term?: string | null;
+  /**
+   * Innloggingen bak actor_member_id. Kommer ikke fra push_job_payload(): index.ts fyller
+   * det for turneringer uten klubb, der mottakerne er profiler og ikke klubbmedlemmer.
+   */
+  actor_user_id?: string | null;
 }
 
 /** Ett varsel til én telefon. */
@@ -150,6 +181,8 @@ export interface PushPlan {
   /** Satt når ingenting skal sendes, med grunnen (lagres i push_queue.result). */
   skipped?: string;
   notifications: PushNotification[];
+  /** De med innlogging som ikke får den, med grunn (sql/046: push_log_result). */
+  skippedMembers?: MemberSkip[];
 }
 
 // ---------------------------------------------------------------------------
@@ -323,35 +356,126 @@ export function hasBlockedAny(member: MemberPayload, originators: readonly strin
   return blocked.length > 0 && originators.some((id) => blocked.includes(id));
 }
 
+// ---------------------------------------------------------------------------
+// Hvem får, og hvorfor ikke (sql/046: logg per mottaker)
+// ---------------------------------------------------------------------------
+
+/**
+ * Hvorfor et medlem ikke fikk push (notifications.reason). Bare for dem med innlogging.
+ *   actor          den som gjorde det (eller skrev meldingen)
+ *   not_recipient  ikke på mottakerlista, har fått varsel om det samme, eller ikke nevnt i tråden
+ *   too_old        linja eller meldingen var for gammel da senderen kom til den
+ *   club_off       arrangøren har slått av kategorien (eller tråden) for klubben
+ *   muted          har dempet kvelden
+ *   group_off      har slått av gruppen
+ *   category_off   har slått av kategorien (eller tråden)
+ *   blocked        har blokkert den som står bak
+ */
+export type SkipReason =
+  | "actor"
+  | "not_recipient"
+  | "too_old"
+  | "club_off"
+  | "muted"
+  | "group_off"
+  | "category_off"
+  | "blocked";
+
+export interface MemberSkip {
+  memberId: string;
+  reason: SkipReason;
+}
+
+/** Innloggingen bak et medlem: user_id fra 046, ellers id-en selv for turneringer uten klubb. */
+export function memberUserId(payload: JobPayload, member: MemberPayload): string | null {
+  if (member.user_id) return member.user_id;
+  return payload.audience === "competition" ? member.id : null;
+}
+
+/** Er medlemmet den som gjorde det? Klubbmedlem-id, eller innloggingen (turnering uten klubb). */
+export function isActor(payload: JobPayload, member: MemberPayload, actorId: string | null | undefined): boolean {
+  if (actorId && member.id === actorId) return true;
+  const actorUser = payload.actor_user_id;
+  return !!actorUser && memberUserId(payload, member) === actorUser;
+}
+
+/** Bare aktive med innlogging logges. Ledige navn og de som har gått ut, logges ikke. */
+function loggable(payload: JobPayload, member: MemberPayload): boolean {
+  return member.active && memberUserId(payload, member) !== null;
+}
+
+/**
+ * Grunnen til at medlemmet ikke får linja, i fast rekkefølge, eller null når det skal ha den.
+ * "none" betyr ingen telefon (eller ikke aktivt): ingen push, og ingenting å logge.
+ */
+function activitySkip(
+  payload: JobPayload,
+  activity: ActivityPayload,
+  m: MemberPayload,
+  originators: readonly string[],
+  jobReason: SkipReason | null,
+): SkipReason | "none" | null {
+  if (!m.active) return "none";
+  if (isActor(payload, m, activity.actor_member_id)) return "actor";
+  if (activity.recipients !== null && !activity.recipients.includes(m.id)) return "not_recipient";
+  if ((payload.already_notified_ids ?? []).includes(m.id)) return "not_recipient";
+  if (jobReason) return jobReason;
+  if (m.muted) return "muted";
+  if (m.group_off) return "group_off";
+  if (!playerAllows(m, activity.category as ActivityCategory)) return "category_off";
+  if (hasBlockedAny(m, originators)) return "blocked";
+  if (!reachable(m)) return "none";
+  return null;
+}
+
+function threadSkip(
+  payload: JobPayload,
+  message: MessagePayload,
+  m: MemberPayload,
+  fromOrganizer: boolean,
+  jobReason: SkipReason | null,
+): SkipReason | "none" | null {
+  if (!m.active) return "none";
+  if (m.id === message.member_id || isActor(payload, m, message.member_id)) return "actor";
+  const mode = threadMode(m);
+  if (mode === "off") return "category_off";
+  if (mode === "mentions" && !fromOrganizer && !(message.mentions ?? []).includes(m.id)) return "not_recipient";
+  if (jobReason) return jobReason;
+  if (m.muted) return "muted";
+  if (m.group_off) return "group_off";
+  if (hasBlockedAny(m, [message.member_id])) return "blocked";
+  if (!reachable(m)) return "none";
+  return null;
+}
+
 /** Mottakerne av en linje i aktivitetsloggen. */
 export function activityRecipients(payload: JobPayload, activity: ActivityPayload): MemberPayload[] {
-  const category = activity.category as ActivityCategory;
-  const listed = activity.recipients;
   const originators = pushOriginators(payload);
-  const notified = payload.already_notified_ids ?? [];
-  return payload.members.filter((m) =>
-    reachable(m) &&
-    m.id !== activity.actor_member_id &&
-    (listed === null || listed.includes(m.id)) &&
-    !notified.includes(m.id) &&
-    playerAllows(m, category) &&
-    !hasBlockedAny(m, originators)
-  );
+  return payload.members.filter((m) => activitySkip(payload, activity, m, originators, null) === null);
 }
 
 /** Mottakerne av en melding i tråden. */
 export function threadRecipients(payload: JobPayload, message: MessagePayload): MemberPayload[] {
-  const author = payload.members.find((m) => m.id === message.member_id);
-  const fromOrganizer = author?.is_organizer ?? false;
-  const mentions = message.mentions ?? [];
-  return payload.members.filter((m) => {
-    if (!reachable(m) || m.id === message.member_id) return false;
-    if (hasBlockedAny(m, [message.member_id])) return false;
-    switch (threadMode(m)) {
-      case "off": return false;
-      case "all": return true;
-      case "mentions": return fromOrganizer || mentions.includes(m.id);
-    }
+  const fromOrganizer = payload.members.find((m) => m.id === message.member_id)?.is_organizer ?? false;
+  return payload.members.filter((m) => threadSkip(payload, message, m, fromOrganizer, null) === null);
+}
+
+/** De som ikke får linja, med grunn. Bare dem med innlogging. */
+function activitySkips(payload: JobPayload, activity: ActivityPayload, jobReason: SkipReason | null): MemberSkip[] {
+  const originators = pushOriginators(payload);
+  return payload.members.flatMap((m) => {
+    if (!loggable(payload, m)) return [];
+    const reason = activitySkip(payload, activity, m, originators, jobReason);
+    return reason && reason !== "none" ? [{ memberId: m.id, reason }] : [];
+  });
+}
+
+function threadSkips(payload: JobPayload, message: MessagePayload, jobReason: SkipReason | null): MemberSkip[] {
+  const fromOrganizer = payload.members.find((m) => m.id === message.member_id)?.is_organizer ?? false;
+  return payload.members.flatMap((m) => {
+    if (!loggable(payload, m)) return [];
+    const reason = threadSkip(payload, message, m, fromOrganizer, jobReason);
+    return reason && reason !== "none" ? [{ memberId: m.id, reason }] : [];
   });
 }
 
@@ -369,34 +493,54 @@ function tooOld(createdAt: string, maxAgeMs: number, now: Date): boolean {
   return !Number.isFinite(t) || now.getTime() - t > maxAgeMs;
 }
 
+/** aps.thread-id for linjene: klubben, eller turneringen når den ikke har klubb (sql/046). */
+export function activityThreadId(payload: JobPayload): string {
+  if (payload.audience === "competition" && payload.competition?.id) return `competition-${payload.competition.id}`;
+  return `club-${payload.club.id ?? payload.competition?.id ?? "ukjent"}`;
+}
+
+/**
+ * apns-collapse-id: payload.collapse fra 046 (event-<kveld>-<gruppe>) når den finnes, ellers
+ * ledelsen i runden og tabellen i konkurransen som før. APNs tillater høyst 64 byte.
+ */
+export function activityCollapseId(payload: JobPayload, activity: ActivityPayload): string | undefined {
+  if (payload.collapse) return payload.collapse.slice(0, 64);
+  const competition = str(activity.data?.competition);
+  if (activity.kind === "lead_changed" && activity.round_id) return `lead-${activity.round_id}`.slice(0, 64);
+  if (activity.kind === "table_changed" && competition) return `table-${competition}`.slice(0, 64);
+  return undefined;
+}
+
 function planActivity(payload: JobPayload, now: Date): PushPlan {
   const activity = payload.activity;
-  if (!activity) return { skipped: "linja finnes ikke", notifications: [] };
-  if (activity.round_status === "draft") return { skipped: "kladdrunde", notifications: [] };
+  if (!activity) return { skipped: "linja finnes ikke", notifications: [], skippedMembers: [] };
+  if (activity.round_status === "draft") return { skipped: "kladdrunde", notifications: [], skippedMembers: [] };
   if (!isActivityCategory(activity.category)) {
-    return { skipped: `ukjent kategori ${activity.category}`, notifications: [] };
+    return { skipped: `ukjent kategori ${activity.category}`, notifications: [], skippedMembers: [] };
   }
-  if (tooOld(activity.created_at, MAX_AGE_MS.activity, now)) return { skipped: "for gammel", notifications: [] };
+  if (tooOld(activity.created_at, MAX_AGE_MS.activity, now)) {
+    return { skipped: "for gammel", notifications: [], skippedMembers: activitySkips(payload, activity, "too_old") };
+  }
   if (!clubAllows(payload.club, activity.category)) {
-    return { skipped: `${activity.category} er av for klubben`, notifications: [] };
+    return {
+      skipped: `${activity.category} er av for klubben`,
+      notifications: [],
+      skippedMembers: activitySkips(payload, activity, "club_off"),
+    };
   }
   const to = activityRecipients(payload, activity);
-  if (to.length === 0) return { skipped: "ingen mottakere", notifications: [] };
+  const skippedMembers = activitySkips(payload, activity, null);
+  if (to.length === 0) return { skipped: "ingen mottakere", notifications: [], skippedMembers };
 
   const names = nameLookup(payload.members);
-  const display = activityDisplay(activity, names);
+  const display = activityDisplay(activity, names, payload.day_term);
   const title = payload.club.name;
   const body = `${display.emoji} ${display.text}`;
   const data: Record<string, string> = { type: "activity", activity_id: activity.id, kind: activity.kind };
   if (activity.event_id) data.event_id = activity.event_id;
   if (activity.round_id) data.round_id = activity.round_id;
-  // Et nyere varsel erstatter det forrige: ledelsen i runden, og tabellen i konkurransen.
-  const competition = str(activity.data?.competition);
-  const collapseId = activity.kind === "lead_changed" && activity.round_id
-    ? `lead-${activity.round_id}`.slice(0, 64)
-    : activity.kind === "table_changed" && competition
-    ? `table-${competition}`.slice(0, 64)
-    : undefined;
+  const collapseId = activityCollapseId(payload, activity);
+  const threadId = activityThreadId(payload);
 
   return {
     notifications: to.flatMap((m) =>
@@ -407,22 +551,32 @@ function planActivity(payload: JobPayload, now: Date): PushPlan {
         title,
         body,
         category: activity.category as PushCategory,
-        threadId: `club-${payload.club.id}`,
+        threadId,
         collapseId,
         data,
       }))
     ),
+    skippedMembers,
   };
 }
 
 function planThread(payload: JobPayload, now: Date): PushPlan {
   const message = payload.message;
-  if (!message) return { skipped: "meldingen finnes ikke", notifications: [] };
-  if (message.pushed_at) return { skipped: "pushet fra før", notifications: [] };
-  if (tooOld(message.created_at, MAX_AGE_MS.thread, now)) return { skipped: "for gammel", notifications: [] };
-  if (!clubAllows(payload.club, "thread")) return { skipped: "tråden er av for klubben", notifications: [] };
+  if (!message) return { skipped: "meldingen finnes ikke", notifications: [], skippedMembers: [] };
+  if (message.pushed_at) return { skipped: "pushet fra før", notifications: [], skippedMembers: [] };
+  if (tooOld(message.created_at, MAX_AGE_MS.thread, now)) {
+    return { skipped: "for gammel", notifications: [], skippedMembers: threadSkips(payload, message, "too_old") };
+  }
+  if (!clubAllows(payload.club, "thread")) {
+    return {
+      skipped: "tråden er av for klubben",
+      notifications: [],
+      skippedMembers: threadSkips(payload, message, "club_off"),
+    };
+  }
   const to = threadRecipients(payload, message);
-  if (to.length === 0) return { skipped: "ingen mottakere", notifications: [] };
+  const skippedMembers = threadSkips(payload, message, null);
+  if (to.length === 0) return { skipped: "ingen mottakere", notifications: [], skippedMembers };
 
   const author = payload.members.find((m) => m.id === message.member_id)?.display_name ?? "Noen";
   const title = message.event_date
@@ -443,6 +597,87 @@ function planThread(payload: JobPayload, now: Date): PushPlan {
         data,
       }))
     ),
+    skippedMembers,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Loggen (push_log_result i sql/046)
+// ---------------------------------------------------------------------------
+
+/** Ett resultat til push_log_result. user_id når vi har den, ellers member_id (klubbens jobber). */
+export interface LogResult {
+  user_id?: string;
+  member_id?: string;
+  channel: "push" | "email";
+  status: "sent" | "failed" | "skipped";
+  reason?: string;
+}
+
+/**
+ * Loggen for én jobb: skipped med grunn fra planen, og sent eller failed per medlem etter APNs
+ * (sent når minst én telefon fikk den). `results` står i samme rekkefølge som
+ * plan.notifications (sendAll beholder rekkefølgen). Medlemmer uten innlogging logges ikke.
+ */
+export function pushLogResults(payload: JobPayload, plan: PushPlan, results: SendResult[] = []): LogResult[] {
+  const byId = new Map(payload.members.map((m) => [m.id, m]));
+  const who = (memberId: string): Pick<LogResult, "user_id" | "member_id"> | null => {
+    const m = byId.get(memberId);
+    const user = m ? memberUserId(payload, m) : null;
+    if (user) return { user_id: user };
+    return null;
+  };
+  const out: LogResult[] = [];
+  for (const s of plan.skippedMembers ?? []) {
+    const id = who(s.memberId);
+    if (id) out.push({ ...id, channel: "push", status: "skipped", reason: s.reason });
+  }
+  const perMember = new Map<string, { sent: boolean; reasons: Set<string> }>();
+  plan.notifications.forEach((n, i) => {
+    const entry = perMember.get(n.memberId) ?? { sent: false, reasons: new Set<string>() };
+    const r = results[i];
+    if (r && classifyApnsResponse(r.status, r.reason) === "sent") entry.sent = true;
+    else entry.reasons.add(r ? `${r.status}${r.reason ? " " + r.reason : ""}` : "ikke sendt");
+    perMember.set(n.memberId, entry);
+  });
+  for (const [memberId, entry] of perMember) {
+    const id = who(memberId);
+    if (!id) continue;
+    out.push(entry.sent
+      ? { ...id, channel: "push", status: "sent" }
+      : { ...id, channel: "push", status: "failed", reason: [...entry.reasons].join(", ").slice(0, 200) });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Turneringer uten klubb (sql/046): blokkering per innlogging
+// ---------------------------------------------------------------------------
+
+/**
+ * For audience = 'competition' er medlemmene profiler (id = innloggingen). De som står bak
+ * (pushOriginators) kan være klubbmedlemmer eller profiler: `links` gir innloggingen bak
+ * klubbmedlemmene, og en id som ikke står der, leses som en profil. Fyller blocked_member_ids
+ * med de originators medlemmet har blokkert, og actor_user_id. Ren funksjon.
+ */
+export function attachCompetitionBlocks(payload: JobPayload, links: MemberLink[], blocks: BlockRow[]): JobPayload {
+  const originators = pushOriginators(payload);
+  const userOf = new Map(links.filter((l) => l.user_id).map((l) => [l.id, l.user_id!]));
+  const resolve = (id: string) => userOf.get(id) ?? id;
+  const blockedBy = new Map<string, Set<string>>();
+  for (const b of blocks) {
+    if (!blockedBy.has(b.blocker_id)) blockedBy.set(b.blocker_id, new Set());
+    blockedBy.get(b.blocker_id)!.add(b.blocked_id);
+  }
+  const actor = payload.activity?.actor_member_id;
+  return {
+    ...payload,
+    actor_user_id: payload.actor_user_id ?? (actor ? userOf.get(actor) ?? null : null),
+    members: payload.members.map((m) => {
+      const blocked = blockedBy.get(memberUserId(payload, m) ?? "");
+      const ids = blocked ? originators.filter((o) => blocked.has(resolve(o))) : [];
+      return { ...m, blocked_member_ids: [...new Set([...(m.blocked_member_ids ?? []), ...ids])] };
+    }),
   };
 }
 
@@ -583,8 +818,39 @@ export function tableHeadline(table: TableSpot[], competitionName: string, round
   }
 }
 
+/**
+ * «Kvelden» eller «Spilledagen» (DayTerm i appen), eller undefined når ordet ikke er kjent.
+ * Godtar appens nøkler (evening, playingDay) og de norske ordene.
+ */
+export function dayTermThe(term: unknown): string | undefined {
+  switch (typeof term === "string" ? term.trim().toLowerCase() : "") {
+    case "evening":
+    case "kveld":
+      return "Kvelden";
+    case "playingday":
+    case "playing_day":
+    case "spilledag":
+      return "Spilledagen";
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * «🏁 Kvelden er i gang: torsdag 8. oktober · Runde 1 – Pebble Beach» (sql/046). Uten kjent
+ * ord for dagen: «Runden er i gang», som passer både kveld og spilledag.
+ */
+export function eveningStartedText(data: Record<string, unknown>, dayTerm?: unknown): string {
+  const head = `${dayTermThe(data.day_term ?? dayTerm) ?? "Runden"} er i gang`;
+  const date = str(data.event_date) ? eveningLongText(str(data.event_date)!) : undefined;
+  const roundNo = num(data.round_no), course = str(data.course_name);
+  const round = (roundNo !== undefined && roundNo > 0) || course ? roundTitle(roundNo, course) : undefined;
+  const parts = [date, round].filter((x): x is string => !!x);
+  return parts.length ? `${head}: ${parts.join(" · ")}` : head;
+}
+
 /** Teksten for en linje. Mangler et felt hendelsen ikke klarer seg uten, blir den den nøytrale teksten. */
-export function activityDisplay(activity: ActivityPayload, name: NameLookup): ActivityDisplay {
+export function activityDisplay(activity: ActivityPayload, name: NameLookup, dayTerm?: unknown): ActivityDisplay {
   const d = activity.data ?? {};
   const who = (id: unknown) => name(str(id));
   const list = (v: string[]) => norwegianList(v.map((id) => name(id)));
@@ -604,6 +870,9 @@ export function activityDisplay(activity: ActivityPayload, name: NameLookup): Ac
       if (extras.length) text += " — " + extras.join(", ");
       return { emoji: "🏌️", text };
     }
+    // sql/046: én per kveld, skrevet av serveren når den første runden starter.
+    case "evening_started":
+      return { emoji: "🏁", text: eveningStartedText(d, dayTerm) };
     case "round_locked":
       return { emoji: "🔒", text: `${actor} låste ${roundTitle(num(d.round_no), str(d.course_name))}` };
     case "round_deleted":
