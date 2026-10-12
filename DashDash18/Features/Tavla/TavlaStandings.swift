@@ -62,14 +62,27 @@ nonisolated struct TavlaStandings: Sendable {
     let season: Season
     let claims: [SideClaim]
 
-    init(_ input: TavlaInput, me: UUID?) {
+    /// Playoff-runden om førsteplassen (sql/047), når den finnes. Står ikke blant `snapshots`.
+    let playoff: PlayoffState?
+    /// De som deler førsteplassen og venter på playoff, i tabellens rekkefølge.
+    let tiedForFirst: [UUID]
+    /// En runde som går, skjuler de siste hullene for deg (sql/047).
+    let hidesLastHoles: Bool
+
+    /// - Parameter viewer: den som ser på. Med «skjul de tre siste hullene» ser andre enn båsen din og
+    ///   arrangøren (`isOrganizer`: rettigheten `rounds`) rundene uten de siste hullene til de er låst.
+    ///   nil: alt vises (tabellen regnes for et varsel etter låsing).
+    init(_ input: TavlaInput, me: UUID?, viewer: Viewer? = nil) {
         self.me = me
         seasonName = input.season.name
         seasonID = input.season.id
         status = input.season.status
         rules = input.season.rules
 
-        let snapshots = input.rounds
+        // En playoff (sql/047) er ingen vanlig runde: den teller ikke og står ikke i «Alle runder».
+        let visible = input.rounds.map { HiddenHoles.apply($0, viewer: viewer) }
+        hidesLastHoles = input.rounds.contains { HiddenHoles.isHiding($0, viewer: viewer) }
+        let snapshots = visible.ordinary
             .filter { $0.round.status != .draft }
             .sorted { a, b in
                 let da = a.eventDate ?? "", db = b.eventDate ?? ""
@@ -95,8 +108,17 @@ nonisolated struct TavlaStandings: Sendable {
         eveningsPlayed = Season.eveningCount(withPoints)
 
         // Plassene fra motoren: delt plass (1, 1, 3), de uten nok kvelder nederst, og playoff om
-        // førsteplassen. Playoff-runder finnes ikke ennå (047), så playoffen står som ventende.
-        rows = season.standings().enumerated().map { i, s in
+        // førsteplassen. Vinneren av playoff-runden (`Playoff.decide`) går inn i tabellen.
+        let pending = season.standings()
+        let tied = PlayoffRules.tied(pending)
+        tiedForFirst = tied.compactMap(UUID.init(uuidString:))
+        let playoff = PlayoffRules.current(input.rounds, competitionID: nil).map {
+            PlayoffState(snapshot: $0, tied: tied.compactMap(UUID.init(uuidString:)))
+        }
+        self.playoff = playoff
+        let winner = PlayoffRules.winner(playoff, tied: tied)
+        let standings = winner.map { season.standings(playoffWinner: $0) } ?? pending
+        rows = standings.enumerated().map { i, s in
             let r = s.row
             let id = UUID(uuidString: r.player.id)!
             let played = rounds.indices.filter { season.roundPoints($0)[r.player.id] != nil }.map { rounds[$0] }

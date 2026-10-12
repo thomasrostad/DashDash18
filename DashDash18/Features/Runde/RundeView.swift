@@ -28,6 +28,9 @@ struct RundeView: View {
                     BayenNaaListe(rows: game.bayenNaa(viewer: model.viewer), term: game.groupTerm) { member in
                         scorecardFor = ScorecardTarget(memberID: member)
                     }
+                    if model.hidesLastHoles {
+                        DDInfoStripe(HiddenHoles.note + ".")
+                    }
                     if !game.isDecidedHoleByHole, let matches {
                         MatchkortSection(card: matches)
                     }

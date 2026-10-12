@@ -30,6 +30,8 @@ struct AppRoot: View {
                     ClubGate(services: services, user: user)
                 }
                 .id(user.id)
+                // Tabellreglene på runden (sql/047): finnes kolonnene? Svaret huskes til neste oppstart.
+                .task(id: user.id) { await RoundRulesFeature.detect(client: services.client) }
                 .task(id: user.id) { await services.club.load(userID: user.id) }
                 .task(id: user.id) { services.outbox.start(userID: user.id) }
                 .task(id: user.id) { await services.push.start(userID: user.id) }

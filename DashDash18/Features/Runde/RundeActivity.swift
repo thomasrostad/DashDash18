@@ -68,8 +68,9 @@ nonisolated extension RoundGame {
 
     /// Store scorer blant hullene som ble ført for første gang (`loggStorScore`). En retting
     /// (spilleren er ikke i `fresh`) gir ingen.
+    /// Ingen på et skjult hull (sql/047, «skjul de tre siste hullene»): varselet ville vist scoren.
     func bigScoreEventsAfterSaving(hole: Int, fresh: [FreshScore]) -> [ActivityEvent] {
-        guard status == .active else { return [] }
+        guard status == .active, !round.hiddenHoleIndices.contains(hole) else { return [] }
         return bigScoreEvents(hole: hole, saved: fresh)
     }
 
@@ -80,7 +81,7 @@ nonisolated extension RoundGame {
     /// mangle i tallene, og ledelsen blir aldri meldt.
     func shouldCheckLead(afterSaving hole: Int, fresh: [FreshScore]) -> Bool {
         status == .active && !fresh.isEmpty && rules.leadCheckpoints.contains(hole + 1)
-            && !MatchPlay.isDecidedHoleByHole(round)
+            && !MatchPlay.isDecidedHoleByHole(round) && !round.hiddenHoleIndices.contains(hole)
     }
 
     /// Ledelsen etter `hole` på denne runden, når runden går.

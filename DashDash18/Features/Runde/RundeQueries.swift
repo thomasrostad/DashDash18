@@ -6,19 +6,20 @@ import Supabase
 /// og nærmest pinnen. Score skrives aldri herfra (se `ScoreSubmitting`).
 enum RundeQueries {
     /// Brukes fortsatt i Konkurranser/. Ny kode bruker `RoundRow.columns`.
-    static let roundColumns = RoundRow.columns
+    static var roundColumns: String { RoundRow.columns }
 
     /// En runde som går i klubben, med alt under. Etter sql/034 kan flere gå samtidig (én per
     /// spilledag og pulje): da vinner den som er bedt om, ellers en du spiller i, ellers den nyeste
     /// (`ActiveRounds.pick`). Med én runde (som før 034) er det den.
     static func activeRound(client: SupabaseClient, clubID: UUID, memberID: UUID?,
                             preferred: UUID? = nil) async throws -> RoundSnapshot? {
-        let rounds: [RoundRow] = try await client.from("rounds")
+        let allRounds: [RoundRow] = try await client.from("rounds")
             .select(RoundRow.columns)
             .eq("club_id", value: clubID)
             .eq("status", value: RoundStatus.active.rawValue)
             .order("started_at", ascending: false)
             .execute().value
+        let rounds = allRounds.ordinary
         var mine: Set<UUID> = []
         if rounds.count > 1, let memberID {
             struct Played: Decodable {

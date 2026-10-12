@@ -14,6 +14,8 @@ nonisolated struct MyRoundItem: Equatable, Identifiable, Sendable {
     let leader: String?
     /// Sorteres nyeste først.
     let sortKey: Date
+    /// En playoff om førsteplassen i en turnering uten klubb (sql/047). Åpnes i `PlayoffScreen`.
+    var isPlayoff: Bool = false
 }
 
 nonisolated enum MyRounds {
@@ -28,6 +30,7 @@ nonisolated enum MyRounds {
     }
 
     static func item(_ snapshot: RoundSnapshot, userID: UUID, referenceYear: Int? = nil) -> MyRoundItem {
+        if snapshot.round.isPlayoff { return playoffItem(snapshot, referenceYear: referenceYear) }
         let game = RoundGame(snapshot)
         let viewer = LooseRoundRights.viewer(info: snapshot.loose, userID: userID)
         let rows = game.bayenNaa(viewer: viewer)
@@ -47,6 +50,28 @@ nonisolated enum MyRounds {
             mine: rows.first(where: \.isMe).map { "Du: " + placeText($0) + value($0) },
             leader: leaderLine(rows, finished: finished, holeCount: game.holeCount),
             sortKey: snapshot.round.lockedAt ?? snapshot.round.startedAt ?? .distantPast
+        )
+    }
+
+    /// En playoff står som «Playoff», ikke som en vanlig runde: hullene og hvem som vant.
+    static func playoffItem(_ snapshot: RoundSnapshot, referenceYear: Int? = nil) -> MyRoundItem {
+        let playoff = PlayoffState(snapshot: snapshot)
+        var parts: [String] = []
+        if let day = snapshot.eventDate {
+            parts.append(EveningDates.longText(day, referenceYear: referenceYear, capitalized: true))
+        }
+        let holes = playoff.holes.count
+        parts.append(holes == 1 ? "1 playoff-hull" : "\(holes) playoff-hull")
+        parts.append(snapshot.players.count == 1 ? "1 spiller" : "\(snapshot.players.count) spillere")
+        return MyRoundItem(
+            id: snapshot.round.id,
+            title: "Playoff",
+            subtitle: parts.joined(separator: " · "),
+            status: snapshot.round.status,
+            mine: nil,
+            leader: playoff.statusText { snapshot.names[$0] ?? "Ukjent" },
+            sortKey: snapshot.round.lockedAt ?? snapshot.round.startedAt ?? .distantPast,
+            isPlayoff: true
         )
     }
 

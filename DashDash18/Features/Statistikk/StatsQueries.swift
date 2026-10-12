@@ -53,6 +53,7 @@ enum StatsQueries {
                 .in("status", values: [RoundStatus.active.rawValue, RoundStatus.locked.rawValue])
                 .execute().value
         }
+        rounds = rounds.filter { !$0.isPlayoff }
         if case .member(_, let clubID, _) = scope {
             rounds = rounds.filter { $0.clubID == clubID }
         }

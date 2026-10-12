@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { allowanceFor, courseHoles, formSetup, isTeamForm, rulesetSuggestions, suggestedClosestToPinHole, suggestedLongestDriveHole } from "../../../golfgutu-core/src/index.ts";
+import { type Ruleset, allowanceFor, courseHoles, formSetup, isTeamForm, rulesetSuggestions, suggestedClosestToPinHole, suggestedLongestDriveHole } from "../../../golfgutu-core/src/index.ts";
 import { dayDrawPlan, loadSlopeCatalog, loadSourceCourses, saveDraft, startRound, type DayData, type ListRound } from "./api.ts";
 import {
   coreCourseWithTee, courseItemReady, courseSummary, filterSlope, previousTeeID, slopePlace, suggestedTee, teeDetail,
@@ -10,7 +10,7 @@ import {
   groupTerm, includePlayer, isTeamMatch, isTriangleMatch, makeMarker, markerIn, membersIn, moveSeat, playerMatch,
   playersSummary, redrawMatches, reshuffleBays, roundTitle, seatFor, setCourse, setForm, setStart, setVenue, setupIssues,
   sidePrizeChoice, startOptions, startProblems, startTitle, teamMatch, teamProblem, termCount, termNumbered,
-  termPluralTitle, venueTitle, WEIGHTS, MAX_BAYS, type MatchDraft, type RoundDraft,
+  termPluralTitle, venueTitle, WEIGHTS, MAX_BAYS, HIDE_LAST_HOLES, pointsTableChoices, type MatchDraft, type RoundDraft,
 } from "./logic.ts";
 
 /**
@@ -51,7 +51,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
   const ready = courses.filter(courseItemReady);
   const courseCheck = item ? { name: item.course.name, isReady: courseItemReady(item) } : null;
   const saveIssues = setupIssues(draft, courseCheck, rules, roster, false);
-  const blocking = data.allRounds.find((r) => r.status === "active" && r.id !== draft.roundID) ?? null;
+  const blocking = data.allRounds.find((r) => r.status === "active" && r.id !== draft.roundID && r.kind !== "playoff") ?? null;
   const problems = startProblems(setupIssues(draft, courseCheck, rules, roster, true), term, blocking ? titleOf(blocking) : null);
   const title = roundTitle(draft.roundNo, item?.course.name);
 
@@ -65,7 +65,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
   async function act(start: boolean) {
     setBusy(true); setError(null);
     try {
-      const ctx = { clubID, rules, roster, course: item };
+      const ctx = { clubID, rules, roster, course: item, tableRules: data.tableRules };
       if (start) {
         await startRound(ctx, draft, titleOf);
         onDone(`${title} er startet.`);
@@ -272,8 +272,10 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
         </div>
       </div>
 
-      <details className="card" open={draft.weight !== 1 || (!draft.externalHandicap && draft.allowance !== allowanceDefault())}>
+      <details className="card" open={draft.weight !== 1 || (!draft.externalHandicap && draft.allowance !== allowanceDefault())
+        || !draft.counts || draft.pointsTable !== null || draft.hideLastHoles > 0}>
         <summary><strong>Avansert</strong></summary>
+        {data.tableRules && <TableRulesFields rules={rules} value={draft} onChange={(v) => setDraft({ ...draft, ...v })} />}
         <label>Hvor mye runden teller
           <select value={draft.weight} onChange={(e) => setDraft({ ...draft, weight: Number(e.target.value) })}>
             {WEIGHTS.map((w) => <option key={w.value} value={w.value}>{w.title}</option>)}
@@ -420,3 +422,28 @@ function SlopePicker({ exclude, onPick }: { exclude: Set<string>; onPick: (c: Sl
     </fieldset>
   );
 }
+
+/** sql/047: «Teller ikke i tabellen», poengtabell og «Skjul de tre siste hullene». Også i RoundView. */
+export function TableRulesFields({ rules, value, onChange, disabled = false }: {
+  rules: Ruleset; value: TableRulesValue; onChange: (v: TableRulesValue) => void; disabled?: boolean;
+}) {
+  const choices = pointsTableChoices(rules, value.pointsTable);
+  return (
+    <>
+      <label className="check"><input type="checkbox" disabled={disabled} checked={!value.counts}
+        onChange={(e) => onChange({ ...value, counts: !e.target.checked })} />Teller ikke i tabellen</label>
+      {value.counts && choices.length > 1 && (
+        <label>Poengtabell
+          <select disabled={disabled} value={value.pointsTable ?? ""} onChange={(e) => onChange({ ...value, pointsTable: e.target.value || null })}>
+            {choices.map((c) => <option key={c.value ?? ""} value={c.value ?? ""}>{c.title}</option>)}
+          </select>
+        </label>
+      )}
+      <label className="check"><input type="checkbox" disabled={disabled} checked={value.hideLastHoles > 0}
+        onChange={(e) => onChange({ ...value, hideLastHoles: e.target.checked ? HIDE_LAST_HOLES : 0 })} />Skjul de tre siste hullene</label>
+      {value.hideLastHoles > 0 && <p className="muted">Spillerne ser sine egne. Alle andre ser dem når runden er låst.</p>}
+    </>
+  );
+}
+
+export interface TableRulesValue { counts: boolean; pointsTable: string | null; hideLastHoles: number }

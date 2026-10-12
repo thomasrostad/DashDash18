@@ -483,6 +483,12 @@ export interface RoundDraft {
   externalHandicap: boolean;
   allowance: number;
   venue: Venue;
+  /** sql/047: runden teller i tabellen («Teller ikke i tabellen» = false). */
+  counts: boolean;
+  /** sql/047: poengtabellen i `table.pointsTables`, eller null («Vanlig»). */
+  pointsTable: string | null;
+  /** sql/047: hull som skjules til runden er låst (`HIDE_LAST_HOLES` eller 0). */
+  hideLastHoles: number;
 }
 
 export const draftForm = (d: RoundDraft) => formById(d.formID);
@@ -505,7 +511,7 @@ export function newDraft(p: {
     ldEnabled: p.rules.sidePrizes.longestDrive.enabled, ldHoleIndex: null,
     kpEnabled: p.rules.sidePrizes.closestToPin.enabled, kpHoleIndex: null,
     weight: 1, externalHandicap: p.rules.handicap.externalHandicap, allowance: allowanceFor(p.rules, form),
-    venue: "simulator",
+    venue: "simulator", counts: true, pointsTable: null, hideLastHoles: 0,
   };
 }
 
@@ -528,6 +534,10 @@ export interface SavedRound {
   kpEnabled: boolean;
   kpHoleIndex: number | null;
   venue: string | null;
+  /** sql/047. Mangler de (før 047), gjelder standardverdiene. */
+  counts?: boolean;
+  pointsTable?: string | null;
+  hideLastHoles?: number;
 }
 
 export interface SavedPlayer {
@@ -566,6 +576,7 @@ export function savedDraft(round: SavedRound, players: readonly SavedPlayer[], m
     ldEnabled: round.ldEnabled, ldHoleIndex: round.ldHoleIndex, kpEnabled: round.kpEnabled, kpHoleIndex: round.kpHoleIndex,
     weight: round.weight, externalHandicap: round.externalHandicap, allowance: round.handicapAllowance,
     venue: venueFromStored(round.venue),
+    counts: round.counts ?? true, pointsTable: round.pointsTable ?? null, hideLastHoles: round.hideLastHoles ?? 0,
   };
 }
 
@@ -720,8 +731,10 @@ export function setupIssues(d: RoundDraft, course: { name: string; isReady: bool
 // MARK: - Det som sendes
 
 /** Raden i `rounds` (upsert på id). Status settes for seg. Tomme felt sendes som null. */
-export function roundWrite(d: RoundDraft, clubID: UUID, course: Course | null): Record<string, unknown> {
+export function roundWrite(d: RoundDraft, clubID: UUID, course: Course | null, tableRules = false): Record<string, unknown> {
   return {
+    // sql/047: bare når kolonnene finnes (`tableRules`), ellers avviser databasen hele raden.
+    ...(tableRules ? tableRulesPatch(d) : {}),
     id: d.roundID,
     club_id: clubID,
     event_id: d.eventID,
@@ -1064,10 +1077,47 @@ export { GOLFGUTU };
  * Runden som stopper start av `roundID`: en annen runde som går på samme spilledag og i samme pulje.
  * Runder på andre spilledager er ikke i veien etter sql/034 (før 034 stopper databasen dem selv).
  */
-export function blockingRound<T extends { id: UUID; eventID: UUID | null; waveNo: number }>(
+export function blockingRound<T extends { id: UUID; eventID: UUID | null; waveNo: number; kind?: string }>(
   active: readonly T[], roundID: UUID, eventID: UUID, wave: number,
 ): T | null {
-  return active.find((r) => r.id !== roundID && r.eventID === eventID && r.waveNo === wave) ?? null;
+  // En playoff (sql/047) stopper ingen vanlig runde.
+  return active.find((r) => r.id !== roundID && r.eventID === eventID && r.waveNo === wave && r.kind !== "playoff") ?? null;
+}
+
+// MARK: - Tabellregler på runden (sql/047)
+
+/** «Skjul de tre siste hullene». */
+export const HIDE_LAST_HOLES = 3;
+
+/** Kolonnene for tabellreglene, slik `rounds` lagrer dem. */
+export function tableRulesPatch(d: Pick<RoundDraft, "counts" | "pointsTable" | "hideLastHoles">): Record<string, unknown> {
+  return {
+    counts: d.counts,
+    points_table: d.pointsTable !== null && d.pointsTable.trim() !== "" ? d.pointsTable : null,
+    hide_last_holes: Math.max(0, Math.min(9, Math.round(d.hideLastHoles))),
+  };
+}
+
+/** Valgene for poengtabell: «Vanlig» (ingen), så regelsettets tabeller med gangetallet. */
+export function pointsTableChoices(rules: Ruleset, current: string | null = null): { value: string | null; title: string }[] {
+  const tables = rules.table.pointsTables ?? {};
+  const names = Object.keys(tables).sort((a, b) => a.localeCompare(b, "nb"));
+  // En tabell som er fjernet fra regelsettet, vises fortsatt så valget ikke forsvinner i stillhet.
+  if (current !== null && !names.includes(current)) names.push(current);
+  const factor = (n: number) => String(n).replace(".", ",");
+  return [
+    { value: null, title: "Vanlig" },
+    ...names.map((n) => ({ value: n, title: tables[n] ? `${capitalize(n)} (× ${factor(tables[n].multiplier)})` : capitalize(n) })),
+  ];
+}
+
+function capitalize(s: string): string {
+  return s.length === 0 ? s : s[0].toLocaleUpperCase("nb") + s.slice(1);
+}
+
+/** Vanlige runder: uten playoffen om førsteplassen (sql/047), som aldri teller og vises for seg. */
+export function ordinaryRounds<T extends { kind?: string }>(rounds: readonly T[]): T[] {
+  return rounds.filter((r) => r.kind !== "playoff");
 }
 
 /**
