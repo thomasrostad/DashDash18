@@ -5,6 +5,8 @@ Cloudflare Worker for https://dashdash18.com. Den gjør to ting:
 - **Universelle lenker.** Serverer `apple-app-site-association` (på `/.well-known/apple-app-site-association` og `/apple-app-site-association`), slik at iOS åpner `https://dashdash18.com/klubb/KODE`, `/runde/KODE` og `/konkurranse/KODE` i Atten.
 - **Invitasjonssider.** Har man ikke appen, åpnes de samme adressene i nettleseren. Siden viser koden, en knapp som åpner `dashdash://<type>/KODE`, og hvordan man får appen.
 
+- **Kalenderabonnement** (steg 10, `sql/051`). `/kalender/<token>.ics` henter `calendar_feed(token)` med den publiserbare nøkkelen (`SUPABASE_URL`, `SUPABASE_KEY`, som TV-siden) og svarer med iCalendar: kveldene medlemmet er bekreftet påmeldt på, med tid i Europe/Oslo (VTIMEZONE), tre timer per kveld, heldag når kvelden ikke har tid, og `REFRESH-INTERVAL`/`X-PUBLISHED-TTL` på én time. Lenken er personlig: `Cache-Control: private, max-age=300`, ukjent eller avskrudd lenke gir 404. Appen åpner `webcal://dashdash18.com/kalender/<token>.ics`.
+
 `/` er en kort side om Atten. Alt annet gir 404. Siden har ingen sporing, ingen cookies og ingen eksterne skript.
 
 ## Endre tekst

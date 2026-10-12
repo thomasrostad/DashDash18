@@ -1,4 +1,5 @@
 import { fetchTVPayload, normalizeTVCode, tvBoardPage, tvCodePage, type TVEnv } from "./tv.ts";
+import { calendarResponse } from "./kalender.ts";
 // Atten på https://dashdash18.com: filen som kobler domenet til appen (universelle lenker),
 // og en enkel side for invitasjonslenker når appen ikke er installert.
 //
@@ -222,6 +223,12 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
         "Cache-Control": "public, max-age=3600",
       },
     });
+  }
+
+  // Kalenderabonnement (steg 10, sql/051): personlig lenke, iCalendar.
+  const calendar = /^\/kalender\/([^/]+)\.ics$/.exec(pathname);
+  if (calendar) {
+    return calendarResponse(calendar[1], env, isHead);
   }
 
   const nonce = crypto.randomUUID().replace(/-/g, "");
