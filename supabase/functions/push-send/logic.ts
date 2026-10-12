@@ -29,6 +29,10 @@
 //     evening_started har egen tekst. Turneringer uten klubb (audience = 'competition') har
 //     profil-id-er som medlemmer, og threadId competition-<id>. pushLogResults gir loggen per
 //     mottaker til push_log_result (sent, failed eller skipped med grunn).
+//   * Sosialt (sql/050): comment_added, mentioned og photo_prompt har egne tekster. Mottakerne
+//     står i recipients: medlems-id-er i klubben, profil-id-er i en turnering uten klubb
+//     (isRecipient). Den som skrev kommentaren (actor_member_id, eller data.author_profile uten
+//     klubb) er aktøren og står bak (blokkering).
 //
 // Tekstene følger ActivityText.display i appen (DashDash18/Data/Activity.swift),
 // med emojien foran, siden et varsel ikke har ikon.
@@ -271,6 +275,13 @@ export function pushOriginators(payload: JobPayload): string[] {
       if (subject) out.add(subject.spot.member);
       break;
     }
+    // sql/050: den som skrev kommentaren (profilen uten klubb; i klubben er det actor_member_id).
+    case "comment_added":
+    case "mentioned": {
+      const author = str(d.author_profile);
+      if (author) out.add(author);
+      break;
+    }
   }
   return [...out];
 }
@@ -396,7 +407,23 @@ export function memberUserId(payload: JobPayload, member: MemberPayload): string
 export function isActor(payload: JobPayload, member: MemberPayload, actorId: string | null | undefined): boolean {
   if (actorId && member.id === actorId) return true;
   const actorUser = payload.actor_user_id;
-  return !!actorUser && memberUserId(payload, member) === actorUser;
+  if (actorUser && memberUserId(payload, member) === actorUser) return true;
+  // sql/050: kommentaren uten klubb er skrevet av en profil (data.author_profile).
+  const authorProfile = str(payload.activity?.data?.author_profile);
+  return !!authorProfile && memberUserId(payload, member) === authorProfile;
+}
+
+/**
+ * Står medlemmet på mottakerlista? null = alle. I en klubb er id-ene medlemmer; i en turnering
+ * uten klubb (audience 'competition') er de profiler (sql/034, 050), og medlemmet leses som
+ * innloggingen.
+ */
+export function isRecipient(payload: JobPayload, activity: ActivityPayload, member: MemberPayload): boolean {
+  if (activity.recipients === null) return true;
+  if (activity.recipients.includes(member.id)) return true;
+  if (payload.audience !== "competition") return false;
+  const user = memberUserId(payload, member);
+  return !!user && activity.recipients.includes(user);
 }
 
 /** Bare aktive med innlogging logges. Ledige navn og de som har gått ut, logges ikke. */
@@ -417,7 +444,7 @@ function activitySkip(
 ): SkipReason | "none" | null {
   if (!m.active) return "none";
   if (isActor(payload, m, activity.actor_member_id)) return "actor";
-  if (activity.recipients !== null && !activity.recipients.includes(m.id)) return "not_recipient";
+  if (!isRecipient(payload, activity, m)) return "not_recipient";
   if ((payload.already_notified_ids ?? []).includes(m.id)) return "not_recipient";
   if (jobReason) return jobReason;
   if (m.muted) return "muted";
@@ -539,6 +566,11 @@ function planActivity(payload: JobPayload, now: Date): PushPlan {
   const data: Record<string, string> = { type: "activity", activity_id: activity.id, kind: activity.kind };
   if (activity.event_id) data.event_id = activity.event_id;
   if (activity.round_id) data.round_id = activity.round_id;
+  const targetKind = str(activity.data?.target_kind), targetId = str(activity.data?.target_id);
+  if (targetKind && targetId) {
+    data.target_kind = targetKind;
+    data.target_id = targetId;
+  }
   const collapseId = activityCollapseId(payload, activity);
   const threadId = activityThreadId(payload);
 
@@ -1021,9 +1053,33 @@ export function activityDisplay(activity: ActivityPayload, name: NameLookup, day
       if (!competition || !competitionName || !table?.length) return UNKNOWN;
       return { emoji: "📊", text: tableHeadline(table, competitionName, num(d.round_no), name) };
     }
+    // sql/050: skrevet av serveren til mottakerne (forfatteren av målet, de som følger, de som nevnes).
+    case "comment_added":
+    case "mentioned": {
+      const author = str(d.author_name) ?? actor;
+      const quote = quotedPreview(d.preview);
+      const verb = activity.kind === "mentioned" ? "nevnte deg" : "kommenterte";
+      return { emoji: "💬", text: `${author} ${verb}${quote ? `: ${quote}` : ""}` };
+    }
+    case "photo_prompt":
+      return { emoji: "📸", text: PHOTO_PROMPT_TEXT };
     default:
       return UNKNOWN;
   }
+}
+
+/** Bildeoppfordringen (sql/050), som PhotoPrompt.title i appen. */
+export const PHOTO_PROMPT_TEXT = "Ta et bilde av gjengen";
+/** Lengden på sitatet i comment_added og mentioned (SocialComment.previewLength i appen). */
+export const COMMENT_PREVIEW_MAX = 80;
+
+/** «Hei der» i sitattegn, på én linje og kuttet, eller undefined når den er tom. */
+export function quotedPreview(preview: unknown): string | undefined {
+  const clean = String(preview ?? "").replace(/\s+/g, " ").trim();
+  if (!clean) return undefined;
+  const chars = Array.from(clean);
+  const short = chars.length > COMMENT_PREVIEW_MAX ? chars.slice(0, COMMENT_PREVIEW_MAX - 1).join("") + "…" : clean;
+  return `«${short}»`;
 }
 
 // ---------------------------------------------------------------------------

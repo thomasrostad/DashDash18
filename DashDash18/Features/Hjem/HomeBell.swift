@@ -31,6 +31,10 @@ nonisolated enum HomeBellReason: Equatable, Sendable {
     case promoted
     /// Noen meldte seg av fra «kommer» (til arrangørene, sql/045).
     case dropped
+    /// Ny kommentar på noe du skrev eller følger (sql/050).
+    case commented
+    /// «Ta et bilde av gjengen» (sql/050).
+    case photoPrompt
 }
 
 nonisolated enum HomeBell {
@@ -66,6 +70,13 @@ nonisolated enum HomeBell {
             return member == me ? .promoted : nil
         case .signupDropped:
             return row.recipients?.contains(me) == true ? .dropped : nil
+        // sql/050: mottakerlista avgjør (arrangøren ser alle linjene, men de gjelder andre).
+        case .commentAdded:
+            return row.recipients?.contains(me) == true ? .commented : nil
+        case .mentioned:
+            return row.recipients?.contains(me) == true ? .mentioned : nil
+        case .photoPrompt:
+            return row.recipients?.contains(me) == true ? .photoPrompt : nil
         default:
             return nil
         }

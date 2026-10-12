@@ -18,8 +18,18 @@ struct HjemActions {
     var openEvening: () -> Void = {}
     var answer: (SignupStatus) -> Void = { _ in }
     var undoAnswer: () -> Void = {}
-    var toggle: (ActivityReaction, HomeReactions) -> Void = { _, _ in }
-    var hasReacted: (ActivityReaction, HomeReactions) -> Bool = { r, t in t.chips.contains { $0.reaction == r && $0.isMine } }
+    var toggle: (String, HomeReactions) -> Void = { _, _ in }
+    var hasReacted: (String, HomeReactions) -> Bool = { e, t in t.chips.contains { $0.emoji == e && $0.isMine } }
+    /// «Annen emoji …» (sql/050).
+    var pickEmoji: ((HomeReactions) -> Void)?
+    /// «Hvem har reagert».
+    var showWho: ((HomeReactions) -> Void)?
+    /// Kommentarene på en hendelse eller melding (sql/050).
+    var openComments: ((SocialTarget) -> Void)?
+    /// «Ta bilde» på bildeoppfordringen. nil (eller nil fra funksjonen): tråden er ikke her.
+    var openPhotoPrompt: ((HomePhotoPromptCard) -> (() -> Void)?)?
+    /// Eldre linjer (`feed_page`). nil: ingen sider.
+    var loadMore: (() -> Void)?
     var openTable: (UUID) -> Void = { _ in }
     var share: (UUID) -> ResultShare? = { _ in nil }
     /// Arrangørens knapp for neste steg på «Neste kveld» (fase 21). nil: ingen knapp.
@@ -40,6 +50,7 @@ struct HjemFeedView: View {
     var onRetry: () -> Void = {}
     /// Skjermprøven av nedre del (`hjembunn`) starter nederst.
     var scrollAnchor: UnitPoint?
+    var isLoadingMore = false
 
     var body: some View {
         ScrollView {
@@ -119,6 +130,9 @@ struct HjemFeedView: View {
                     HjemCardView(card: card, actions: actions)
                 }
             }
+            if let loadMore = actions.loadMore, !feed.isEmpty {
+                HjemLoadMore(isLoading: isLoadingMore, load: loadMore)
+            }
         }
     }
 }
@@ -143,24 +157,47 @@ struct HjemCardView: View {
                 actions.openTable(c.competitionID)
             }
             .modifier(menu(c.reactions))
+        case .photoPrompt(let c):
+            HjemPhotoPromptCardView(card: c, feedCard: card, open: actions.openPhotoPrompt?(c))
+                .modifier(menu(c.reactions))
         case .lines(let lines):
-            HjemLinesCardView(lines: lines, feedCard: card, reactionsRow: visibleRow, menu: menu)
+            HjemLinesCardView(lines: lines, feedCard: card, reactionsRow: visibleRow, menu: menu,
+                              openComments: actions.openComments)
         }
     }
 
     private func row(_ target: HomeReactions) -> HjemReactionsRow {
-        HjemReactionsRow(reactions: target,
-                         hasReacted: { actions.hasReacted($0, target) },
-                         toggle: { actions.toggle($0, target) })
+        HjemReactionsRow(reactions: target, actions: actions)
     }
 
-    /// Raden bare når noen har reagert; ellers holder langt trykk (`menu`).
+    /// Raden bare når noen har reagert eller kommentert; ellers holder langt trykk (`menu`).
     private func visibleRow(_ target: HomeReactions) -> HjemReactionsRow? {
-        target.chips.isEmpty ? nil : row(target)
+        target.chips.isEmpty && (target.commentCount ?? 0) == 0 ? nil : row(target)
     }
 
     private func menu(_ target: HomeReactions?) -> HjemReactionMenu {
-        HjemReactionMenu(target: target, hasReacted: actions.hasReacted, toggle: actions.toggle)
+        HjemReactionMenu(target: target, actions: actions)
+    }
+}
+
+/// Nederst i feeden: henter neste side når den kommer fram, og har en knapp om det stopper.
+struct HjemLoadMore: View {
+    let isLoading: Bool
+    let load: () -> Void
+
+    var body: some View {
+        HStack {
+            Spacer()
+            if isLoading {
+                ProgressView("Henter eldre …")
+            } else {
+                Button("Vis eldre", action: load)
+                    .buttonStyle(.dd(.secondary, compact: true))
+            }
+            Spacer()
+        }
+        .padding(.top, DDSpacing.l)
+        .onAppear(perform: load)
     }
 }
 

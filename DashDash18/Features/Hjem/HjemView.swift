@@ -12,6 +12,8 @@ enum HjemRoute: Hashable {
     case competition(UUID)
     /// En løs runde fra «Pågår nå».
     case looseRound(UUID)
+    /// Kveldens tråd, med kameraet åpent (bildeoppfordringen, sql/050).
+    case thread(UUID, camera: Bool)
 }
 
 /// Ber Hjem åpne runden som går (arrangørsidens «Gå til runden»). RootView eier den.
@@ -58,6 +60,10 @@ private struct HjemClubContent: View {
     @State private var lastBetSweep: Date?
     /// Runden er bedt om før den var hentet.
     @State private var wantsRound = false
+    /// Sosialt (sql/050): arkene for kommentarer, emojivelgeren og «Hvem har reagert».
+    @State private var comments: CommentsModel?
+    @State private var emojiTarget: HomeReactions?
+    @State private var whoTarget: HomeReactions?
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dayTerm) private var dayTerm
     @Environment(\.selectTab) private var selectTab
@@ -76,7 +82,15 @@ private struct HjemClubContent: View {
     var body: some View {
         HjemFeedView(feed: home.feed, state: home.state,
                      pendingAnswer: kveld.pendingAnswer.map { SignupUndo.text($0.status) },
-                     answerError: kveld.answerError, actions: actions, onRetry: reload)
+                     answerError: kveld.answerError, actions: actions, onRetry: reload,
+                     isLoadingMore: home.isLoadingMore)
+            .sheet(item: $comments) { CommentsSheet(model: $0) }
+            .sheet(item: $emojiTarget) { target in
+                EmojiPickerSheet { emoji in Task { await home.toggle(emoji, on: target) } }
+            }
+            .sheet(item: $whoTarget) { target in
+                ReactionWhoSheet { try await home.who(target) }
+            }
             .refreshable {
                 async let a: Void = home.load()
                 async let b: Void = kveld.load()
@@ -170,13 +184,27 @@ private struct HjemClubContent: View {
             openEvening: { route = .evening },
             answer: { kveld.answer($0) },
             undoAnswer: { kveld.undoAnswer() },
-            toggle: { reaction, target in Task { await home.toggle(reaction, on: target) } },
+            toggle: { emoji, target in Task { await home.toggle(emoji, on: target) } },
             hasReacted: { home.hasReacted($0, on: $1) },
+            pickEmoji: { emojiTarget = $0 },
+            showWho: { whoTarget = $0 },
+            openComments: openComments,
+            openPhotoPrompt: { card in
+                // Tråden hører til klubben Hjem står i (`TradView` bruker klubbkonteksten).
+                guard card.clubID == context.clubID else { return nil }
+                return { route = .thread(card.eventID, camera: true) }
+            },
+            loadMore: home.canLoadMore ? { Task { await home.loadMore() } } : nil,
             openTable: openTable,
             share: { home.share(round: $0) },
             organizer: organizerStep,
             invite: invite
         )
+    }
+
+    private func openComments(_ target: SocialTarget) {
+        let moderator = target.clubID == context.clubID ? context.can(.money) : nil
+        comments = home.comments(for: target, canModerate: moderator)
     }
 
     /// «Inviter spillere» mens troppen er liten (`ClubInvite.homeCardRosterLimit`). Troppen telles
@@ -281,6 +309,8 @@ private struct HjemClubContent: View {
             KveldenView(eventID: id, terminliste: TerminlisteModel(context: context), admin: admin)
         case .competition(let id):
             HjemCompetitionScreen(context: context, competitionID: id)
+        case .thread(let eventID, let camera):
+            TradView(eventID: eventID, startsWithCamera: camera)
         case .looseRound(let id):
             LooseRoundScreen(context: LooseRoundContext(client: context.client, userID: context.user.id, roundID: id))
                 .onDisappear { Task { await home.load() } }
@@ -314,4 +344,8 @@ private struct HjemCompetitionScreen: View {
         .ddNavigationChrome()
         .task { await model.load() }
     }
+}
+
+extension CommentsModel: Identifiable {
+    nonisolated var id: ObjectIdentifier { ObjectIdentifier(self) }
 }

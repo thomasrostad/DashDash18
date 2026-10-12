@@ -129,6 +129,14 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
     var guestName: String?
     /// `signup_dropped` (sql/045): meldte av etter avmeldingsfristen.
     var late: Bool?
+    /// `comment_added` og `mentioned` (sql/050): hva som ble kommentert (`activity` eller `message`),
+    /// kommentaren, starten av teksten og navnet på den som skrev (profilen uten klubb).
+    var targetKind: String? = nil
+    var targetID: UUID? = nil
+    var commentID: UUID? = nil
+    var preview: String? = nil
+    var authorName: String? = nil
+    var authorProfile: UUID? = nil
 
     init(member: UUID? = nil, members: [UUID]? = nil, hole: Int? = nil, holeIndex: Int? = nil, name: String? = nil,
          strokes: Int? = nil, par: Int? = nil, afterHole: Int? = nil, leaders: [UUID]? = nil, points: Int? = nil,
@@ -202,6 +210,12 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         case table
         case guestName = "guest_name"
         case late
+        case targetKind = "target_kind"
+        case targetID = "target_id"
+        case commentID = "comment_id"
+        case preview
+        case authorName = "author_name"
+        case authorProfile = "author_profile"
     }
 
     /// Tåler felt med feil type (en annen klient, en eldre versjon): feltet blir nil,
@@ -248,6 +262,12 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         table = get(.table)
         guestName = get(.guestName)
         late = get(.late)
+        targetKind = get(.targetKind)
+        targetID = get(.targetID)
+        commentID = get(.commentID)
+        preview = get(.preview)
+        authorName = get(.authorName)
+        authorProfile = get(.authorProfile)
     }
 }
 
@@ -432,6 +452,12 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     /// Kvelden er i gang (sql/046, skrevet av serveren når den første vanlige runden starter). Én per
     /// kveld. Kategori `round`, gruppe Kvelden.
     case eveningStarted(eventDate: String?, roundNo: Int?, courseName: String?, holeCount: Int?)
+    /// Ny kommentar på noe du skrev eller følger (sql/050, skrevet av serveren til `recipients`).
+    case commentAdded(SocialComment)
+    /// Du er nevnt i en kommentar (sql/050).
+    case mentioned(SocialComment)
+    /// «Ta et bilde av gjengen» når runden låses (sql/050, til spillerne i runden).
+    case photoPrompt(eventDate: String?, roundNo: Int?, courseName: String?)
     case unknown(kind: String)
 
     /// Alle kjente nøkler, for tester og dokumentasjon.
@@ -439,7 +465,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         "round_started", "round_locked", "round_deleted", "big_score", "lead_changed", "side_prize",
         "score_corrected", "signup", "nudge", "reminder", "announcement", "committee_drawn",
         "member_joined", "tips_king", "bet_created", "bet_challenge", "bet_resolved", "table_changed",
-        "waitlist_promoted", "signup_dropped", "evening_started",
+        "waitlist_promoted", "signup_dropped", "evening_started", "comment_added", "mentioned", "photo_prompt",
     ]
 
     var kind: String {
@@ -465,6 +491,9 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .waitlistPromoted: "waitlist_promoted"
         case .signupDropped: "signup_dropped"
         case .eveningStarted: "evening_started"
+        case .commentAdded: "comment_added"
+        case .mentioned: "mentioned"
+        case .photoPrompt: "photo_prompt"
         case .unknown(let kind): kind
         }
     }
@@ -480,7 +509,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .nudge: .nudge
         case .reminder: .reminder
         case .announcement: .announcement
-        case .committeeDrawn: .social
+        case .committeeDrawn, .commentAdded, .mentioned, .photoPrompt: .social
         case .memberJoined: .club
         case .tipsKing: .tips
         case .betCreated, .betChallenge, .betResolved: .bet
@@ -532,6 +561,10 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             ActivityData(member: member, eventDate: eventDate, late: late)
         case let .eveningStarted(eventDate, roundNo, courseName, holeCount):
             ActivityData(eventDate: eventDate, roundNo: roundNo, courseName: courseName, holeCount: holeCount)
+        case let .commentAdded(c), let .mentioned(c):
+            c.data
+        case let .photoPrompt(eventDate, roundNo, courseName):
+            ActivityData(eventDate: eventDate, roundNo: roundNo, courseName: courseName)
         case .unknown:
             ActivityData()
         }
@@ -608,6 +641,12 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case "evening_started":
             self = .eveningStarted(eventDate: d.eventDate, roundNo: d.roundNo, courseName: d.courseName,
                                    holeCount: d.holeCount)
+        case "comment_added":
+            self = .commentAdded(SocialComment(d))
+        case "mentioned":
+            self = .mentioned(SocialComment(d))
+        case "photo_prompt":
+            self = .photoPrompt(eventDate: d.eventDate, roundNo: d.roundNo, courseName: d.courseName)
         default:
             self = .unknown(kind: kind)
         }
@@ -828,6 +867,19 @@ nonisolated enum ActivityText {
                                                 name: { who($0) })
             return ActivityDisplay(symbol: "list.number", emoji: "📊", text: text)
 
+        case let .commentAdded(c):
+            let author = c.authorName ?? who(actor)
+            return ActivityDisplay(symbol: "bubble.left.fill", emoji: "💬",
+                                   text: author + " kommenterte" + (SocialComment.quoted(c.preview).map { ": " + $0 } ?? ""))
+
+        case let .mentioned(c):
+            let author = c.authorName ?? who(actor)
+            return ActivityDisplay(symbol: "at", emoji: "💬",
+                                   text: author + " nevnte deg" + (SocialComment.quoted(c.preview).map { ": " + $0 } ?? ""))
+
+        case .photoPrompt:
+            return ActivityDisplay(symbol: "camera.fill", emoji: "📸", text: PhotoPrompt.title)
+
         case .unknown:
             return ActivityDisplay(symbol: "clock", emoji: "🔔", text: "Ny hendelse i klubben")
         }
@@ -888,12 +940,30 @@ nonisolated enum ActivityFeed {
 
 /// Brikkene under en linje: bare emojiene noen har brukt, med antall, i fast rekkefølge.
 nonisolated struct ReactionChip: Equatable, Identifiable, Sendable {
-    let reaction: ActivityReaction
+    /// Emojien. Etter sql/050 kan det være hvilken som helst (én), ikke bare det faste settet.
+    let emoji: String
     let count: Int
     let isMine: Bool
-    /// Hvem som har reagert, sortert på navn (norsk).
+    /// Hvem som har reagert, sortert på navn (norsk). Tom når bare antallet er kjent (`feed_page`).
     let names: [String]
-    var id: String { reaction.rawValue }
+    var id: String { emoji }
+
+    init(emoji: String, count: Int, isMine: Bool, names: [String] = []) {
+        self.emoji = emoji
+        self.count = count
+        self.isMine = isMine
+        self.names = names
+    }
+
+    init(reaction: ActivityReaction, count: Int, isMine: Bool, names: [String]) {
+        self.init(emoji: reaction.rawValue, count: count, isMine: isMine, names: names)
+    }
+
+    /// Det faste settet, når emojien er en av dem.
+    var reaction: ActivityReaction? { ActivityReaction(rawValue: emoji) }
+
+    /// «Tommel opp», ellers emojien selv.
+    var accessibilityName: String { reaction?.accessibilityName ?? emoji }
 }
 
 nonisolated enum ActivityReactions {

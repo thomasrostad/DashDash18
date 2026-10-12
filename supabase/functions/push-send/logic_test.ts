@@ -18,6 +18,7 @@ import {
   eveningLongText,
   eveningStartedText,
   formatMeters,
+  isRecipient,
   type JobPayload,
   type MemberPayload,
   nameLookup,
@@ -25,6 +26,7 @@ import {
   playerAllows,
   pushLogResults,
   pushOriginators,
+  quotedPreview,
   summarize,
   tableHeadline,
   tableSpots,
@@ -822,4 +824,65 @@ Deno.test("046: uten 046-feltene er alt som før", () => {
   const plan = planPush(job(EAGLE), NOW);
   is(plan.notifications[0].threadId, "club-club-1");
   eq(pushLogResults(job(EAGLE), plan), []);
+});
+
+// ---------------------------------------------------------------------------
+// Sosialt (sql/050): kommentarer, omtale og bildeoppfordring
+// ---------------------------------------------------------------------------
+
+const COMMENT_DATA = {
+  target_kind: "activity", target_id: "act-0", comment_id: "c-1", preview: "Hei   der\nfolkens",
+  author_name: "Anders Berg",
+};
+
+Deno.test("050: tekstene for kommentar, omtale og bildeoppfordring", () => {
+  const name = nameLookup(members());
+  eq(activityDisplay(activity("comment_added", "social", COMMENT_DATA), name),
+    { emoji: "💬", text: "Anders Berg kommenterte: «Hei der folkens»" });
+  eq(activityDisplay(activity("mentioned", "social", COMMENT_DATA), name),
+    { emoji: "💬", text: "Anders Berg nevnte deg: «Hei der folkens»" });
+  // Uten navn i data: aktøren. Uten tekst: uten sitat.
+  eq(activityDisplay(activity("comment_added", "social", {}), name), { emoji: "💬", text: "Anders kommenterte" });
+  eq(activityDisplay(activity("photo_prompt", "social", { event_date: "2026-10-08", round_no: 3 }, { actor_member_id: null }), name),
+    { emoji: "📸", text: "Ta et bilde av gjengen" });
+});
+
+Deno.test("050: sitatet kuttes til 80 tegn", () => {
+  const q = quotedPreview("a".repeat(120))!;
+  is(Array.from(q).length, 82);
+  ok(q.endsWith("…»"));
+  is(quotedPreview("   "), undefined);
+  is(quotedPreview(undefined), undefined);
+});
+
+Deno.test("050: kommentaren går bare til mottakerne, ikke til den som skrev", () => {
+  const a = activity("comment_added", "social", COMMENT_DATA, { recipients: [THOMAS, BJORN] });
+  const plan = planPush(job(a), NOW);
+  eq(plan.notifications.map((n) => n.memberId).sort(), [BJORN, THOMAS].sort());
+  eq(plan.notifications[0].data.target_kind, "activity");
+  eq(plan.notifications[0].data.target_id, "act-0");
+  // Ingen collapse fra 046 for kommentarer: hver står.
+  is(plan.notifications[0].collapseId, undefined);
+});
+
+Deno.test("050: turnering uten klubb: mottakerne er profil-id-er, forfatteren er en profil", () => {
+  const data = { ...COMMENT_DATA, author_profile: P1, author_name: "Per" };
+  const a = activity("comment_added", "social", data, { actor_member_id: null, recipients: [P1, P3] });
+  const p = competitionJob(a);
+  // Per skrev: får ikke sin egen. Espen står på lista. Pål gjør ikke.
+  eq(to(p), [P3]);
+  eq(reasons(p, [{ token: "espen-token", status: 200 }]), { [P1]: "actor", [P2]: "not_recipient", [P3]: "sent" });
+  // Forfatteren står bak: den som har blokkert Per, får ikke push.
+  eq(pushOriginators(p), [P1]);
+  const blocked = attachCompetitionBlocks(p, [], [{ blocker_id: P3, blocked_id: P1 }]);
+  eq(to(blocked), []);
+});
+
+Deno.test("050: mottakerlista leses som innloggingen uten klubb", () => {
+  const a = activity("mentioned", "social", COMMENT_DATA, { recipients: ["user-espen"] });
+  const p = { ...competitionJob(a), members: [member("annen-id", "Espen", { user_id: "user-espen" })] };
+  ok(isRecipient(p, a, p.members[0]));
+  // I en klubb er id-ene medlemmer: innloggingen teller ikke.
+  ok(!isRecipient(job(a), a, member("annen-id", "Espen", { user_id: "user-espen" })));
+  ok(isRecipient(job(a), { ...a, recipients: null }, member("hvem-som-helst", "X")));
 });

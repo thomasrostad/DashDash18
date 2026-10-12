@@ -12,12 +12,15 @@ nonisolated struct HomeFeedDraft: Sendable {
         /// Påmeldinger som kan slås sammen: navnene og kvelden.
         var signupNames: [String] = []
         var signupDate: String?
+        /// Kommentarene linja handler om.
+        var opens: SocialTarget?
     }
 
     enum Kind: Sendable {
         case myRound(HomeMyRoundCard)
         case feat(HomeFeatCard)
         case table(HomeTableCard)
+        case photoPrompt(HomePhotoPromptCard)
         case line(LineDraft)
     }
 
@@ -43,7 +46,7 @@ nonisolated struct HomeFeedDraft: Sendable {
     func line(now: Date) -> HomeLine {
         let l = lineDraft ?? LineDraft(symbol: "clock", text: "", context: "")
         return HomeLine(id: id, symbol: l.symbol, text: l.text, context: l.context,
-                        time: ActivityFeed.relativeTime(date, now: now), reactions: l.reactions)
+                        time: ActivityFeed.relativeTime(date, now: now), reactions: l.reactions, opens: l.opens)
     }
 
     func card(now: Date) -> HomeFeedCard {
@@ -51,6 +54,7 @@ nonisolated struct HomeFeedDraft: Sendable {
         case .myRound(let c): .myRound(c)
         case .feat(let c): .feat(c)
         case .table(let c): .table(c)
+        case .photoPrompt(let c): .photoPrompt(c)
         case .line: .lines([line(now: now)])
         }
         return HomeFeedCard(id: id, date: date, time: ActivityFeed.relativeTime(date, now: now), source: source,
@@ -119,12 +123,38 @@ nonisolated struct HomeFeedDrafts: Sendable {
             return HomeFeedDraft(id: id, date: row.createdAt, source: placement.source, filters: placement.filters,
                                  kind: .line(lineDraft(row, placement: placement)), isUnread: unread, isOwn: own)
 
+        // Sosialt (sql/050): bare til mottakerne. Arrangøren ser alle linjene med mottakerliste (RLS),
+        // men får dem ikke i feeden når de gjelder andre.
+        case let .commentAdded(comment), let .mentioned(comment):
+            guard isRecipient(row) else { return nil }
+            var line = lineDraft(row, placement: placement)
+            line.reactions = nil
+            line.opens = comment.target(clubID: row.clubID)
+            return HomeFeedDraft(id: id, date: row.createdAt, source: placement.source, filters: placement.filters,
+                                 kind: .line(line), isUnread: unread, isOwn: own)
+
+        case .photoPrompt:
+            guard isRecipient(row), let club = row.clubID, let event = row.eventID else { return nil }
+            let place = row.roundID.flatMap { HomeFeedText.roundPlace(input.roundLabels[$0]) }
+            let card = HomePhotoPromptCard(activityID: row.id, clubID: club, eventID: event, title: PhotoPrompt.title,
+                                           detail: [place, PhotoPrompt.line].compactMap { $0 }.joined(separator: " · "),
+                                           reactions: context.reactions(row))
+            return HomeFeedDraft(id: id, date: row.createdAt, source: placement.source, filters: placement.filters,
+                                 kind: .photoPrompt(card), isUnread: unread, isOwn: false)
+
         // Ikke i feeden: rundene som startes og låses (dine egne står som «Din runde»), ledelsen
         // underveis (står i «Pågår nå»), rettinger, purring og påminnelser (bjella og «Neste kveld»),
         // veddemål, nye medlemmer og ukjente typer.
         default:
             return nil
         }
+    }
+
+    /// Står du på mottakerlista? (Uten liste: alle.)
+    private func isRecipient(_ row: ActivityRow) -> Bool {
+        guard let recipients = row.recipients else { return true }
+        guard let me = row.clubMember(of: context.viewer) else { return false }
+        return recipients.contains(me)
     }
 
     private func lineDraft(_ row: ActivityRow, placement: (source: HomeFeedSource, filters: Set<HomeFeedFilter>))

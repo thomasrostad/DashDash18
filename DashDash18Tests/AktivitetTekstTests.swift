@@ -40,6 +40,11 @@ private let samples: [ActivityEvent] = [
     .waitlistPromoted(member: anders, guestName: nil, eventDate: "2026-10-08"),
     .signupDropped(member: bjorn, eventDate: "2026-10-08", late: true),
     .eveningStarted(eventDate: "2026-10-08", roundNo: 1, courseName: "Pebble Beach", holeCount: 18),
+    .commentAdded(SocialComment(targetKind: "activity", targetID: id(500), commentID: id(501), preview: "Hei",
+                                authorName: "Anders")),
+    .mentioned(SocialComment(targetKind: "message", targetID: id(502), commentID: id(503), preview: "@Thomas",
+                             authorProfile: id(100))),
+    .photoPrompt(eventDate: "2026-10-08", roundNo: 3, courseName: "Losby"),
 ]
 
 /// Veddemål (012): PWA-ens ordlyd fra handleUtfordring og markets, med poeng for kroner.
