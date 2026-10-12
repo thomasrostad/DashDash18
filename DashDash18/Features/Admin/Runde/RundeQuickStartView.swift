@@ -77,7 +77,7 @@ struct RundeQuickStartView: View {
                 .navigationBarTitleDisplayMode(.inline)
         }
         .onAppear {
-            draft.prepareSetup(rules: rules, roster: model.members)
+            draft.prepareSetup(rules: rules, roster: model.members, plan: model.drawPlan(for: draft))
             bayCount = max(1, draft.bays.bayCount)
             // Uten valg mellom simulator og ekte bane følger stedet banen (bare i en ny runde).
             if original == nil, !draft.isSaved, !showsVenue, let course = selectedCourse {
@@ -96,7 +96,7 @@ struct RundeQuickStartView: View {
             if originalLinks == nil, links.isLoaded { originalLinks = links.selected }
         }
         .onChange(of: draft.participants) { _, _ in
-            draft.prepareSetup(rules: rules, roster: model.members)
+            draft.prepareSetup(rules: rules, roster: model.members, plan: model.drawPlan(for: draft))
         }
         .messageAlert("Det gikk ikke", text: $error)
     }

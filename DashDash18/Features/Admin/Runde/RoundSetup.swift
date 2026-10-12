@@ -81,16 +81,79 @@ nonisolated struct MatchDraft: Equatable, Sendable {
     }
 }
 
+/// Hvordan matchene trekkes (steg 6, `formats.drawMethod`): etter tabellen (som i dag), tilfeldig uten
+/// gjentakelser (med møtene fra turneringens tidligere runder), eller manuelt (arrangøren setter dem opp).
+nonisolated struct MatchDrawPlan: Equatable, Sendable {
+    var method: Ruleset.DrawMethod
+    /// Hvor mange ganger hvert par har møtt hverandre før (`Draw.pairKey` → antall).
+    var previous: [String: Int]
+
+    /// Som i dag: etter tabellen, uten historikk.
+    static let standings = MatchDrawPlan(method: .standings, previous: [:])
+
+    /// Planen for regelsettet, med møtene i rundene som er spilt (`Draw.meetings`, regnet fra radene).
+    /// Kladder og runden som settes opp, teller ikke.
+    static func make(rules: Ruleset, rounds: [RoundRow], matches: [RoundMatchRow],
+                     players: [UUID: [RoundPlayerRow]], excluding roundID: UUID? = nil) -> MatchDrawPlan {
+        let played = Set(rounds.filter { $0.status != .draft && $0.id != roundID }.map(\.id))
+        return MatchDrawPlan(method: rules.formats.drawMethod,
+                             previous: meetings(matches.filter { played.contains($0.roundID) }, players: players))
+    }
+
+    /// `Draw.meetings` for lagrede matcher: motstanderne møter hverandre; i en trekant møter alle tre
+    /// hverandre. En lagmatch slår opp lagene i rundens spillere (`team_no`).
+    static func meetings(_ matches: [RoundMatchRow], players: [UUID: [RoundPlayerRow]]) -> [String: Int] {
+        var out: [String: Int] = [:]
+        for m in matches {
+            if let a = m.teamA, let b = m.teamB {
+                let roster = players[m.roundID] ?? []
+                let sideA = roster.filter { $0.teamNo == a }.map(\.memberID.uuidString)
+                let sideB = roster.filter { $0.teamNo == b }.map(\.memberID.uuidString)
+                for x in sideA { for y in sideB where x != y { out[Draw.pairKey(x, y), default: 0] += 1 } }
+                continue
+            }
+            let ids = [m.playerA, m.playerB, m.playerC].compactMap { $0?.uuidString }
+            if m.playerC != nil {
+                Draw.addMeetings([ids], to: &out)
+            } else if ids.count == 2 {
+                out[Draw.pairKey(ids[0], ids[1]), default: 0] += 1
+            }
+        }
+        return out
+    }
+
+    /// Hvor mange møter i matchene som har vært før.
+    func repeats(in matches: [MatchDraft]) -> Int {
+        Draw.repeats(matches.filter { !$0.isTeamMatch }.map { $0.members().map(\.uuidString) }, previous: previous)
+    }
+}
+
 nonisolated enum MatchPlanner {
+    /// Trekningen etter planen: etter tabellen (`drawIndividual`, som i dag), tilfeldig uten gjentakelser
+    /// (`Draw.avoidingRepeats` med `seed`), eller ingen matcher når arrangøren setter dem opp selv.
+    static func draw(_ participants: [ClubMemberRow], plan: MatchDrawPlan, seed: UInt64) -> [MatchDraft] {
+        switch plan.method {
+        case .standings:
+            return drawIndividual(participants)
+        case .manual:
+            return []
+        case .avoidRepeats:
+            let players = participants.map { Player(id: $0.id.uuidString, name: $0.displayName) }
+            return Draw.avoidingRepeats(players, previous: plan.previous, seed: seed).compactMap(matchDraft)
+        }
+    }
+
+    private static func matchDraft(_ ids: [String]) -> MatchDraft? {
+        let uuids = ids.compactMap(UUID.init(uuidString:))
+        guard uuids.count >= 2 else { return nil }
+        return .players(uuids[0], uuids[1], uuids.count > 2 ? uuids[2] : nil)
+    }
+
     /// `trekkMatcher` (første omgang) for de som er med. Uten stilling sorteres det på navn (norsk).
     static func drawIndividual(_ participants: [ClubMemberRow], standing: [UUID: Double] = [:]) -> [MatchDraft] {
         let players = participants.map { Player(id: $0.id.uuidString, name: $0.displayName) }
         let byString = Dictionary(uniqueKeysWithValues: standing.map { ($0.key.uuidString, $0.value) })
-        return Triangle.drawMatches(players, round: 0, standing: byString).compactMap { ids in
-            let uuids = ids.compactMap(UUID.init(uuidString:))
-            guard uuids.count >= 2 else { return nil }
-            return .players(uuids[0], uuids[1], uuids.count > 2 ? uuids[2] : nil)
-        }
+        return Triangle.drawMatches(players, round: 0, standing: byString).compactMap(matchDraft)
     }
 
     /// Lag mot lag i lagnummerets rekkefølge: 1 mot 2, 3 mot 4 (`handleStartRunde`).
@@ -153,6 +216,26 @@ nonisolated enum MatchPlanner {
     }
 }
 
+/// Linja under matchene: hvordan de trekkes, og hvor mange møter som har vært før. Nil som i dag (etter tabellen).
+nonisolated enum MatchDrawText {
+    static func footer(plan: MatchDrawPlan, matches: [MatchDraft]) -> String? {
+        switch plan.method {
+        case .standings:
+            return nil
+        case .manual:
+            return "Du setter opp matchene selv."
+        case .avoidRepeats:
+            let repeats = plan.repeats(in: matches)
+            let tail = switch repeats {
+            case 0: "Ingen har møtt hverandre før."
+            case 1: "1 møte har vært før."
+            default: "\(repeats) møter har vært før."
+            }
+            return "Trekkes tilfeldig uten gjentakelser. " + tail
+        }
+    }
+}
+
 // MARK: - Lag
 
 nonisolated enum TeamPlanner {
@@ -169,6 +252,21 @@ nonisolated enum TeamPlanner {
             }
         }
         return teams
+    }
+
+    /// Tilfeldige lag (`Teams.random`): deltakerne stokkes med frøet, så fylles lagstørrelsene fra formen
+    /// som i `suggested`. Tomt når formen ikke går opp med antallet.
+    static func random(participants: [UUID], form: CompetitionForm, maxPerBay: Int, seed: UInt64) -> [UUID: Int] {
+        let shuffled = Teams.random(participants.map(\.uuidString), teamSize: 1, seed: seed)
+        let order = participants.sorted { (shuffled[$0.uuidString] ?? 0) < (shuffled[$1.uuidString] ?? 0) }
+        return suggested(participants: order, form: form, maxPerBay: maxPerBay)
+    }
+
+    /// Bytter lagene til to spillere (`Teams.swap`). Uendret når de er på samme lag eller en mangler lag.
+    static func swap(_ teams: [UUID: Int], _ a: UUID, _ b: UUID) -> [UUID: Int] {
+        let swapped = Teams.swap(Dictionary(uniqueKeysWithValues: teams.map { ($0.key.uuidString, $0.value) }),
+                                 a.uuidString, b.uuidString)
+        return Dictionary(uniqueKeysWithValues: swapped.compactMap { k, v in UUID(uuidString: k).map { ($0, v) } })
     }
 
     /// `lesLagOppsett`: går lagene opp? `nil` = i orden. Bare deltakerne telles, og alle må ha lag.

@@ -96,7 +96,7 @@ nonisolated struct RoundsGrid: Equatable, Sendable {
 nonisolated extension TavlaStandings {
     var roundGrid: RoundsGrid {
         RoundsGrid.make(snapshots: snapshots, season: season, title: roundTitle,
-                        rows: rows.map { ($0.memberID, $0.name, "\($0.place).", $0.isMe, nil) })
+                        rows: rows.map { ($0.memberID, $0.name, $0.qualified ? "\($0.place)." : "–", $0.isMe, nil) })
     }
 
     /// Runden bak en rute, til scorekortet.

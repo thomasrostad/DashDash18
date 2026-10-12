@@ -8,14 +8,14 @@ import { eveningSignups } from "../signupsApi.ts";
 import {
   decodeCourseHoleRecord, decodeCourseRow, decodeHoleScoreRow, decodeRoundHoleRow, decodeRoundMatchRow, decodeRoundPlayerRow,
   decodeRoundRow, decodeRuleset, decodeSideClaimRow, GOLFGUTU, makeSnapshot, rulesetDay,
-  type CourseHoleRecord, type DayTerm, type RoundPlayerRow, type RoundRow, type Ruleset,
+  type CourseHoleRecord, type DayTerm, type RoundMatchRow, type RoundPlayerRow, type RoundRow, type Ruleset,
 } from "../../../golfgutu-core/src/index.ts";
 import {
   coreCourseWithTee, courseItemReady, findTee, makeCourseItem, type CourseItem, type CourseKind, type CourseTee, type SlopeCourse,
 } from "./courses.ts";
 import { RoundGame, cutPatch, cutPatchMatches, type CutChoice } from "./game.ts";
 import {
-  blockingRound, dataErrorText, deletedMessage, mainActiveSeason, mainSeasonIDs, roundTitle, saveErrorText, setupIssues, setupParams, startErrorText, issueMessage,
+  blockingRound, dataErrorText, drawPlan, type DrawPlan, deletedMessage, mainActiveSeason, mainSeasonIDs, roundTitle, saveErrorText, setupIssues, setupParams, startErrorText, issueMessage,
   groupTerm, roundWrite, sortedByName, type DeleteSummary, type RosterMember, type RoundDraft, type SignupRow,
 } from "./logic.ts";
 import { startListParams, type StartGroupDraft, type StartGroupRow } from "./startlist.ts";
@@ -63,6 +63,36 @@ export interface DayData {
   courses: CourseItem[];
   /** Mitt medlemskap i klubben (`cut_by`). */
   myMemberID: string | null;
+  /** Rundene i turneringen dagen hører til (til trekningen uten gjentakelser). */
+  seasonRoundIDs: string[];
+  /** Matchene i turneringens runder. Hentes bare når trekningen er «uten gjentakelser» (steg 6). */
+  seasonMatches: RoundMatchRow[];
+}
+
+/** Trekningen for en runde på dagen: regelsettets `formats.drawMethod`, med møtene i turneringens andre runder. */
+export function dayDrawPlan(data: DayData, roundID: string | null): DrawPlan {
+  const ids = new Set(data.seasonRoundIDs);
+  return drawPlan(data.rules, data.allRounds.filter((r) => ids.has(r.id)), data.seasonMatches, data.players, roundID);
+}
+
+/** Rundene på turneringens dager, og matchene deres når trekningen trenger dem (`loadSeasonMatches` i appen). */
+async function loadSeasonHistory(event: EventRow, rules: Ruleset, allRounds: readonly ListRound[]): Promise<{ ids: string[]; matches: RoundMatchRow[] }> {
+  if ((rules.formats.drawMethod ?? "standings") !== "avoidRepeats") return { ids: [], matches: [] };
+  const column = event.season_id ? "season_id" : event.competition_id ? "competition_id" : null;
+  const value = event.season_id ?? event.competition_id;
+  if (column === null || value === null) return { ids: [], matches: [] };
+  const { data: days, error } = await supabase.from("events").select("id").eq(column, value);
+  if (error) throw error;
+  const dayIDs = new Set(((days ?? []) as { id: string }[]).map((d) => d.id.toLowerCase()));
+  const ids = allRounds.filter((r) => r.eventID !== null && dayIDs.has(r.eventID) && r.status !== "draft").map((r) => r.id);
+  const matches: RoundMatchRow[] = [];
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data, error: mErr } = await supabase.from("round_matches")
+      .select("round_id, match_no, player_a, player_b, player_c, team_a, team_b, result").in("round_id", ids.slice(i, i + 100));
+    if (mErr) throw mErr;
+    matches.push(...((data ?? []) as unknown[]).map((x) => decodeRoundMatchRow(x)));
+  }
+  return { ids, matches };
 }
 
 /** Turneringen dagen hører til: sesongens (`season_id`) eller turneringens egen (`competition_id`). */
@@ -177,9 +207,11 @@ export async function loadDay(clubID: string, event: EventRow, comps: readonly C
     const missing = [...new Set(allRounds.map((r) => r.courseID).filter((x): x is string => x !== null && !known.has(x)))];
     // Feiler hentingen av hentede baner, vises rundene uten banenavn, som i appen.
     courses = courses.concat(await loadSourceCourses(missing).catch(() => []));
+    const history = await loadSeasonHistory(event, rules, allRounds);
     return {
       rules, dayTerm: rulesetDay(rules), roster, signups: (signupsRes.data ?? []) as SignupRow[], allRounds, players, courses,
       myMemberID: ((meRes.data ?? []) as { id: string }[])[0]?.id ?? null,
+      seasonRoundIDs: history.ids, seasonMatches: history.matches,
     };
   } catch (e) {
     fail(e);

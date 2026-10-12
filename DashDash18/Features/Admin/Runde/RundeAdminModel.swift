@@ -50,6 +50,8 @@ final class RundeAdminModel {
     private(set) var activeComplete = false
     /// Rundene på sesongens kvelder, for forslaget fra forrige runde.
     private(set) var seasonRounds: [RoundRow] = []
+    /// Matchene i turneringens spilte runder. Hentes bare når trekningen er «uten gjentakelser» (steg 6).
+    private(set) var seasonMatches: [RoundMatchRow] = []
     /// Hentede baner (slope.no med hull, fase 20b) som er valgt i et oppsett eller brukt i klubbens
     /// runder. Står bak klubbens egne i `allCourses`.
     private(set) var sourceCourses: [CourseListItem] = []
@@ -258,6 +260,26 @@ final class RundeAdminModel {
         let seasonEventIDs = Set(events.map(\.id))
         seasonRounds = loaded.filter { $0.eventID.map(seasonEventIDs.contains) ?? false }
         rounds = roundsForSelectedEvent()
+        try await loadSeasonMatches()
+    }
+
+    /// Møtene fra før til trekningen uten gjentakelser: matchene i turneringens spilte runder.
+    private func loadSeasonMatches() async throws {
+        let ids = seasonRounds.filter { $0.status != .draft }.map(\.id.uuidString)
+        guard rules.formats.drawMethod == .avoidRepeats, !ids.isEmpty else {
+            seasonMatches = []
+            return
+        }
+        seasonMatches = try await client.from("round_matches")
+            .select(RoundMatchRow.columns)
+            .in("round_id", values: ids)
+            .execute().value
+    }
+
+    /// Trekningen for runden: regelsettets `formats.drawMethod`, med møtene i turneringens andre runder.
+    func drawPlan(for draft: RoundDraft) -> MatchDrawPlan {
+        MatchDrawPlan.make(rules: rules, rounds: seasonRounds, matches: seasonMatches, players: playersByRound,
+                           excluding: draft.roundID)
     }
 
     private func roundsForSelectedEvent() -> [RoundRow] {
@@ -312,7 +334,7 @@ final class RundeAdminModel {
         draft.courseID = courses.first?.id
         QuickStart.applySuggestion(from: previousRound(for: event), to: &draft, courses: courses, rules: rules)
         if draft.teeID == nil { draft.teeID = suggestedTeeID(for: course(draft.courseID)) }
-        QuickStart.autoArrange(&draft, rules: rules, roster: members)
+        QuickStart.autoArrange(&draft, rules: rules, roster: members, plan: drawPlan(for: draft))
         return draft
     }
 
@@ -345,7 +367,7 @@ final class RundeAdminModel {
             var draft = RoundDraft.saved(round, players: players, matches: matches, participants: ids, source: source)
             if players.isEmpty {
                 // Ingen oppsett lagret ennå: forslag som for en ny runde.
-                draft.redrawMatches(roster: members)
+                draft.redrawMatches(roster: members, plan: drawPlan(for: draft))
                 draft.reshuffleBays(count: BayPlan.defaultBayCount(players: ids.count, maxPerBay: rules.formats.maxPerBay))
             }
             return draft

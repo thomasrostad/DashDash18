@@ -26,6 +26,7 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `table.aggregation` | `sum` / `average` | Summen, eller snittet per spilte kveld som teller. Skrives bare når det er `average`. |
 | `table.pointsTables` | navn → `{multiplier}` | Navngitte poengtabeller (f.eks. `"finale": {"multiplier": 2}`). Kvelden peker på én med `pointsTable`. Skrives bare når den ikke er tom. |
 | `table.tieRule` | `tiebreaks` / `playoff` | Likhet: skillene, eller playoff om førsteplassen (andre likheter er delt plass). Skrives bare når det er `playoff`. |
+| `table.formPoints` | sann/usann | Med `pointsSource` `stableford`: rundens poeng i tabellen er formens egne (skins vunnet · `skinPoints`, Amerikaner- og Københavnerpoeng; stableford for andre former). Standard usann. Skrives bare når sann. |
 | `sidePrizes.longestDrive`, `sidePrizes.closestToPin` | `{enabled, points}` | Av/på og poeng per premie. |
 | `sidePrizes.splitTies` | sann/usann | Likt deler poenget. Usann: alle på delt førsteplass får fullt. |
 | `handicap.allowanceOverride` | tall eller `null` | Én andel for alle former. `null`: per form. |
@@ -43,6 +44,12 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `bets.stakeOptions` | liste | Veddemål: beløpsknappene i vedd-arket. |
 | `bets.defaultStake` | tall | Veddemål: beløpet som er valgt når arket åpnes. |
 | `bets.startingPoints` | tall eller `null` | Poengbanken: startbeholdning per sesong. `null`: ingen bank, bare taket gjelder. |
+| `formPlay.pointsGames` | navn → `{players, handicap, points}` | Poengspillene (`amerikaner`, `kobenhavner`). `handicap` er `{net, allowance, fromLowest}`. `points`: likhetsmønster → poeng per plass (se «Formene fra steg 7»). Mangler et spill eller et felt: standarden. |
+| `formPlay.skins` | `{handicap, valuePerSkin, carryOver, leftover}` | Skins som form, samme felt som rundespillet (`SkinsRules`). Standard: netto, fullt handicap, 10, carry-over, `lapse`. |
+| `formPlay.skinPoints` | tall | Tabellpoeng per skin vunnet (med `table.formPoints`). Standard 1. |
+| `formPlay.teamMatch` | `{win, draw, loss}` | Lag mot lag: poeng til siden per match. Standard 1 / 0,5 / 0. |
+
+`formPlay` skrives bare når gruppen ikke er standard, så JSON-en for Golfgutu og eldre regelsett er som før.
 
 Felt som mangler i JSON-en, får Golfgutu-verdien. `null` er et valg der feltet tillater det
 (`best`, `roundingStep`, `allowanceOverride`). Skjemaets standard `{"version": 1}` blir Golfgutu-oppsettet.
@@ -268,6 +275,8 @@ maks per bås under 1; ingen tillatte former, ukjent form, og standardform som i
 | Tillatte former | `Ruleset.suggestions`, `allowedForms` | `formats.allowedFormIDs` | alle 16 |
 | Maks per bås | `Ruleset.setup`, `suggestions` | `formats.maxPerBay` | 4 |
 | Formkatalogen (lag, kort, regning, støtte, hjelpetekst) | `CompetitionForm.all` | bli (katalog; andelen ligger i regelsettet) | 16 former |
+| Nye former (Amerikaner, Københavner) | `CompetitionForm.added`, `catalog` | bli (katalog) | ikke tillatt |
+| Formen som to akser (lagform, poengtelling) | `CompetitionForm.axes`, `form(axes:)` | bli (definisjon) | – |
 | Ukjent form → stableford | `CompetitionForm.form(id:)` | bli (som `formForRunde`, gjelder lagrede runder) | – |
 | Minst 2 spillere, oddetall gir én trekant | `CompetitionForm.setup` | bli, se åpne spørsmål | – |
 
@@ -321,6 +330,100 @@ Reglene kan kombineres. Med Golfgutu-oppsettet er alt som før (feltene skrives 
 - **Lag**: `Teams.random` (stokket med frø, fylt i lag 1, 2, …; siste lag kan bli mindre) og `Teams.swap`
   (bytter lagene til to spillere).
 
+## Formene fra steg 7
+
+Fixture: `formater.json` (regnet for hånd). Tester: `FormatTests.swift` og `web/golfgutu-core/test/formats.test.ts`.
+Med Golfgutu-oppsettet er alt som før: de nye formene er ikke tillatt, `formPlay` og `table.formPoints`
+skrives ikke, og goldenfilene er uendret.
+
+### To akser
+
+En form er lagform (`TeamForm`) og poengtelling (`ScoringMethod`), `FormAxes`. Katalogens id-er er faste par
+av akser, én til én begge veier (`CompetitionForm.axes`, `CompetitionForm.form(axes:)`), så `Round.gameType`
+og alle id-er i JSON er som før. Typen heter `ScoringMethod` fordi `Scoring` allerede er stablefordregningen.
+
+| JSON | Verdier |
+|---|---|
+| `TeamForm` | `{"type":"individual"}`, `{"type":"pairs","pairs":"fourball"/"foursome"/"greensome"/"chapman"/"aggregate"}`, `{"type":"team","size":4}`, `{"type":"scramble","size":2}` |
+| `ScoringMethod` | `{"type":"strokePlay","net":true}`, `{"type":"stableford","net":false}`, `{"type":"parBogey"}`, `{"type":"maximumScore"}`, `{"type":"matchPlay"}`, `{"type":"pointsGame","game":"amerikaner"/"kobenhavner"}`, `{"type":"skins"}` |
+
+| Form-id | Lagform | Poengtelling |
+|---|---|---|
+| stableford / stableford-brutto | individual | stableford netto / brutto |
+| slag-netto / slag-brutto | individual | strokePlay netto / brutto |
+| par-bogey, maks-score, match, skins | individual | parBogey, maximumScore, matchPlay, skins |
+| fourball | pairs fourball | strokePlay netto (beste netto per hull) |
+| fourball-4 | team 4 | strokePlay netto |
+| sammenlagt-lag | pairs aggregate | strokePlay netto |
+| foursome, greensome, chapman | pairs (samme navn) | stableford netto |
+| scramble-2, scramble-4 | scramble 2 / 4 | stableford netto |
+| amerikaner, kobenhavner (nye) | individual | pointsGame |
+
+### Amerikaner og Københavner (NGF)
+
+Kilde: Norges Golfforbund, «Spilleformer», sist endret 4. oktober 2023
+(`golfforbundet.no/files/documents/spilletyper-og-spilleformer-2023.pdf`).
+
+- **Amerikaner, side 3:** fire spiller slagspill om 12 poeng per hull. Beste 8, nest beste 4, resten 0.
+  Én best og to nest best: 8, 2, 2, 0. Én best og tre like: 9, 1, 1, 1. To best: 6, 6, 0, 0. Tre best:
+  4, 4, 4, 0. Alle like: 3, 3, 3, 3.
+- **Københavner, side 4:** tre spillere deler 6 poeng per hull. 4, 2, 0. Én best og to like: 4, 1, 1. To
+  best: 3, 3, 0. Alle like: 2, 2, 2.
+
+Tabellene ligger i regelsettet (`formPlay.pointsGames.<spill>.points`) med NGF-tallene som standard.
+Nøkkelen er likhetsmønsteret, gruppestørrelsene fra beste score og nedover: Amerikaner `1-1-1-1` og `1-1-2`
+(8, 4, 0, 0), `1-2-1` (8, 2, 2, 0), `1-3` (9, 1, 1, 1), `2-1-1` og `2-2` (6, 6, 0, 0), `3-1` (4, 4, 4, 0),
+`4` (3, 3, 3, 3); Københavner `1-1-1` (4, 2, 0), `1-2` (4, 1, 1), `2-1` (3, 3, 0), `3` (2, 2, 2). To like
+på tredjeplass i Amerikaner er «resten 0», og «to best» gjelder uansett hvordan de to siste står. Like
+scorer får snittet av plassene sine (med NGF-tallene er de like).
+
+- **Netto eller brutto:** dokumentet sier ikke noe om handicap. Standard er netto med fullt spillehandicap
+  i runden (`handicap: {net: true, allowance: 1}`); brutto er `net: false`.
+- **Hull:** et hull regnes når alle i gruppen har score. Mangler noen score når runden er ferdig (låst eller
+  avkortet), teller ikke hullet (`void`). Feil antall spillere eller et mønster som mangler i tabellen gir
+  ingen poeng.
+- **Grupper** (`FormPlay.groups(in:)`): rundens lag er gruppene (lagnummeret er flighten). Uten lag er alle
+  med score én gruppe.
+
+### Skins som form
+
+`FormPlay.tablePoints` og `RoundCompetitions` bruker rundespillet (`SkinsGame`) med `formPlay.skins`, som
+standard det samme som rundespillet: carry-over, og det som står igjen etter siste hull faller bort. Alle med
+score spiller mot hverandre. I tabellen gir hvert skin `formPlay.skinPoints` poeng.
+
+### Formens poeng i tabellen
+
+`table.formPoints` (med `pointsSource` `stableford`; ellers sier valideringen fra): rundens poeng er
+`FormPlay.tablePoints` (skins, Amerikaner, Københavner; stableford for de andre formene), vektet og telt som
+stableford-tabellen (beste N, sidepremier, snitt). Stablefordsummen (skille og profil) er fortsatt stableford.
+
+### Lag mot lag (Ryder Cup)
+
+`RyderCup.evaluate(rounds:sides:roster:rules:)`: to sider (spiller → 1 eller 2), rundens matcher (singel
+spiller mot spiller, fourball og foursome lag mot lag med rundens lag) regnet med `MatchPlay`. Seier, delt og
+tap gir `formPlay.teamMatch` til siden. En match der spillerne ikke hører til hver sin side, teller ikke
+(`invalid`). Runder som ikke teller hoppes over; poengene vektes ikke. `RyderCup.pairings` parer side 1 sine
+lag mot side 2 sine i lagnummerets rekkefølge (som `MatchPlanner.teamMatches` i appen), `RyderCup.singles`
+første mot første.
+
+### Flere konkurranser på samme runde
+
+`RoundCompetitions.evaluate`: en liste `RoundCompetition` (`id`, `teamForm`, `scoring`, `entrants` (lag eller
+grupper; utelatt: hver for seg, eller alle i én gruppe), `holes` (`{first, last}`, 0-basert; utelatt: alle) og
+`allowance` (utelatt: 1)) regnet fra de samme hullscorene. Støttet: stableford og slagspill individuelt, i
+fourball/lag (beste ball per hull) og sammenlagt; skins; Amerikaner og Københavner. Ikke ennå
+(`supported: false`): én ball per lag (foursome, greensome, chapman, scramble), par/bogey, maksimumscore og
+matchspill (matchene regnes av `MatchPlay`). Plass: like deler plass (1, 1, 3). I slagspill står de med flest
+hull først.
+
+### Øyeblikksbildet ved start
+
+`FrozenRound.start(round, roster:, ruleset:)` er en ren funksjon som fryser regelsettet, hullene
+(`courseHoles()`), spillehandicapet til hver i troppen (`Handicap.effective`), formen og lagene. JSON-nøkler:
+`ruleset`, `holes`, `playingHandicaps`, `gameType`, `teams`. `RoundCompetitions.evaluate(frozen, scores:)`
+regner fra det, så endringer i regelsettet, banen eller handicapet etter start ikke endrer resultatet.
+Lagringen (sql 048) gjør appen.
+
 ## Veddemål
 
 Se `Bets.swift` og `docs/veddemaal-poeng.md`. Fixture: `veddemaal.json`.
@@ -353,3 +456,7 @@ Se `Bets.swift` og `docs/veddemaal-poeng.md`. Fixture: `veddemaal.json`.
    forskjellen ville gitt. Valgt fordi playoffen er slagspill hull for hull, og fordi det virker også når
    tre eller flere står likt. **Bekreftet av Thomas 11.10.2026.**
 5. **`fullHandicap` i match** er det eneste alternativet til «laveste fra scratch». Prosent av forskjellen (f.eks. 90 % som WHS anbefaler for fourball) er ikke tatt med.
+6. **Amerikaner og Københavner netto eller brutto:** NGF-dokumentet sier ikke noe om handicap. Standard er
+   netto med fullt spillehandicap; kan endres per spill i regelsettet. Bør bekreftes av Thomas.
+7. **Grupper i poengspill** leses fra rundens lag (lagnummer = flight). Appen må sette gruppene som lag når
+   formen er Amerikaner eller Københavner.

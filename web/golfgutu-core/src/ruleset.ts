@@ -24,7 +24,7 @@ import {
   type JSONObject,
 } from "./decode.ts";
 import { DAY_TERMS, type DayTerm } from "./dayterm.ts";
-import { ALL_FORMS, type CompetitionForm } from "./forms.ts";
+import { ALL_FORMS, FORM_CATALOG, POINTS_GAME_KINDS, type CompetitionForm, type PointsGameKind } from "./forms.ts";
 import { deepCopy, deepEqual, jsRound } from "./jsmath.ts";
 
 // MARK: Typer
@@ -94,6 +94,8 @@ export interface TableRules {
   /** Navngitte poengtabeller. Tom: ingen. */
   pointsTables: Record<string, PointsTable>;
   tieRule: TieRule;
+  /** Med `pointsSource` `stableford`: rundens poeng er formens egne (skins, Amerikaner, Københavner). */
+  formPoints: boolean;
 }
 
 export interface SidePrize {
@@ -204,6 +206,77 @@ export interface CompetitionRules {
   cup: CupRules;
 }
 
+// MARK: Formene fra steg 7 (FormPlay.swift)
+
+/** Handicap i et spill (`GameHandicap`). */
+export interface GameHandicap {
+  net: boolean;
+  allowance: number;
+  fromLowest: boolean;
+}
+
+export type SkinsLeftover = "lapse" | "split";
+export const SKINS_LEFTOVERS: readonly SkinsLeftover[] = ["lapse", "split"];
+
+/** Skins (`SkinsRules`). */
+export interface SkinsRules {
+  handicap: GameHandicap;
+  valuePerSkin: number;
+  carryOver: boolean;
+  leftover: SkinsLeftover;
+}
+
+/** Ett poengspill (`PointsGameRules`): poengene per hull etter likhetsmønster («1-2-1»). */
+export interface PointsGameRules {
+  players: number;
+  handicap: GameHandicap;
+  points: Record<string, number[]>;
+}
+
+/** Regelverdiene for formene fra steg 7 (`FormPlayRules`). */
+export interface FormPlayRules {
+  pointsGames: Record<string, PointsGameRules>;
+  skins: SkinsRules;
+  skinPoints: number;
+  teamMatch: MatchPoints;
+}
+
+const FULL_HANDICAP: GameHandicap = { net: true, allowance: 1, fromLowest: false };
+
+/** Skins-malen (`SkinsRules.standard`): netto, fullt handicap, 10 per skin, carry-over, resten faller bort. */
+export const STANDARD_SKINS: Readonly<SkinsRules> = deepFreeze({
+  handicap: { ...FULL_HANDICAP }, valuePerSkin: 10, carryOver: true, leftover: "lapse",
+} as SkinsRules);
+
+/**
+ * Poengspillene etter NGF «Spilleformer» (4. oktober 2023): Amerikaner side 3 (12 poeng per hull),
+ * Københavner side 4 (6 poeng per hull). Netto med fullt handicap (dokumentet sier ikke noe om handicap).
+ */
+export const STANDARD_POINTS_GAMES: Readonly<Record<PointsGameKind, PointsGameRules>> = deepFreeze({
+  amerikaner: {
+    players: 4, handicap: { ...FULL_HANDICAP }, points: {
+      "1-1-1-1": [8, 4, 0, 0], "1-1-2": [8, 4, 0, 0], "1-2-1": [8, 2, 2, 0], "1-3": [9, 1, 1, 1],
+      "2-1-1": [6, 6, 0, 0], "2-2": [6, 6, 0, 0], "3-1": [4, 4, 4, 0], "4": [3, 3, 3, 3],
+    },
+  },
+  kobenhavner: {
+    players: 3, handicap: { ...FULL_HANDICAP }, points: { "1-1-1": [4, 2, 0], "1-2": [4, 1, 1], "2-1": [3, 3, 0], "3": [2, 2, 2] },
+  },
+});
+
+/** `FormPlayRules.standard`: NGF-poengene, skins som rundespillet med 1 tabellpoeng per skin, lag mot lag 1/½/0. */
+export const STANDARD_FORM_PLAY: Readonly<FormPlayRules> = deepFreeze({
+  pointsGames: deepCopy(STANDARD_POINTS_GAMES) as Record<string, PointsGameRules>,
+  skins: deepCopy(STANDARD_SKINS) as SkinsRules,
+  skinPoints: 1,
+  teamMatch: { win: 1, draw: 0.5, loss: 0 },
+} as FormPlayRules);
+
+/** Reglene for poengspillet, med standarden når det mangler. */
+export function pointsGameRules(r: Ruleset, kind: PointsGameKind): PointsGameRules {
+  return r.formPlay.pointsGames[kind] ?? STANDARD_POINTS_GAMES[kind];
+}
+
 /** Regelsettet. */
 export interface Ruleset {
   /** Antall kvelder i sesongen. */
@@ -221,6 +294,8 @@ export interface Ruleset {
   competition: CompetitionRules | null;
   /** Hva en dag heter. `null`: «kveld». Bare ord, ikke en regel. */
   dayTerm: DayTerm | null;
+  /** Formene fra steg 7. Standard: `STANDARD_FORM_PLAY`, og da skrives gruppen ikke. */
+  formPlay: FormPlayRules;
 }
 
 /** Versjonen som skrives. */
@@ -324,6 +399,7 @@ export const GOLFGUTU: Readonly<Ruleset> = deepFreeze({
     aggregation: "sum",
     pointsTables: {},
     tieRule: "tiebreaks",
+    formPoints: false,
   },
   sidePrizes: {
     longestDrive: { enabled: true, points: 1 },
@@ -353,6 +429,7 @@ export const GOLFGUTU: Readonly<Ruleset> = deepFreeze({
   leadCheckpoints: GOLFGUTU_LEAD_CHECKPOINTS,
   competition: null,
   dayTerm: null,
+  formPlay: deepCopy(STANDARD_FORM_PLAY),
 } as Ruleset);
 
 /** En kopi av Golfgutu-oppsettet som kan endres. */
@@ -393,7 +470,7 @@ export function allowanceFor(r: Ruleset, form: CompetitionForm): number {
 
 /** De tillatte formene, i katalogens rekkefølge. */
 export function allowedForms(r: Ruleset): CompetitionForm[] {
-  return ALL_FORMS.filter((f) => r.formats.allowedFormIDs.includes(f.id));
+  return FORM_CATALOG.filter((f) => r.formats.allowedFormIDs.includes(f.id));
 }
 
 /** Avrunding til nærmeste multiplum av `step` (JS `Math.round`). Uten trinn: uendret. */
@@ -485,6 +562,7 @@ function decodeTable(x: unknown, path: string): TableRules {
     aggregation: optEnum(o, "aggregation", AGGREGATIONS, path) ?? g.aggregation,
     pointsTables: decodePointsTables(optObject(o, "pointsTables", path), `${path}.pointsTables`),
     tieRule: optEnum(o, "tieRule", TIE_RULES, path) ?? g.tieRule,
+    formPoints: optBool(o, "formPoints", path) ?? g.formPoints,
   };
 }
 
@@ -539,6 +617,66 @@ function decodeFormats(x: unknown, path: string): FormatRules {
     maxPerBay: optInt(o, "maxPerBay", path) ?? g.maxPerBay,
     matchStrokes: optEnum(o, "matchStrokes", MATCH_STROKES, path) ?? g.matchStrokes,
     drawMethod: optEnum(o, "drawMethod", DRAW_METHODS, path) ?? g.drawMethod,
+  };
+}
+
+function decodeGameHandicap(o: JSONObject | null, fallback: GameHandicap, path: string): GameHandicap {
+  if (o === null) return { ...fallback };
+  return {
+    net: optBool(o, "net", path) ?? fallback.net,
+    allowance: optNumber(o, "allowance", path) ?? fallback.allowance,
+    fromLowest: optBool(o, "fromLowest", path) ?? fallback.fromLowest,
+  };
+}
+
+/** Skins fra JSON: det som mangler, får malens verdi. */
+export function decodeSkinsRules(x: unknown, path = "$"): SkinsRules {
+  const o = obj(x, path);
+  const s = STANDARD_SKINS;
+  return {
+    handicap: decodeGameHandicap(optObject(o, "handicap", path), s.handicap, `${path}.handicap`),
+    valuePerSkin: optInt(o, "valuePerSkin", path) ?? s.valuePerSkin,
+    carryOver: optBool(o, "carryOver", path) ?? s.carryOver,
+    leftover: optEnum(o, "leftover", SKINS_LEFTOVERS, path) ?? s.leftover,
+  };
+}
+
+function decodeFormPlay(x: unknown, path: string): FormPlayRules {
+  const o = obj(x, path);
+  const s = STANDARD_FORM_PLAY;
+  const pointsGames = deepCopy(s.pointsGames) as Record<string, PointsGameRules>;
+  const pg = optObject(o, "pointsGames", path);
+  if (pg) {
+    for (const [k, v] of Object.entries(pg)) {
+      const p = `${path}.pointsGames.${k}`;
+      const g = obj(v, p);
+      const base: PointsGameRules = POINTS_GAME_KINDS.includes(k as PointsGameKind)
+        ? STANDARD_POINTS_GAMES[k as PointsGameKind] : { players: 0, handicap: FULL_HANDICAP, points: {} };
+      const pts = optObject(g, "points", p);
+      let points: Record<string, number[]>;
+      if (pts) {
+        points = {};
+        for (const [pattern, list] of Object.entries(pts)) {
+          if (!Array.isArray(list)) throw new DecodeError(`${p}.points.${pattern}`, "ventet en liste");
+          points[pattern] = numberArray(list, `${p}.points.${pattern}`);
+        }
+      } else {
+        points = deepCopy(base.points) as Record<string, number[]>;
+      }
+      pointsGames[k] = {
+        players: optInt(g, "players", p) ?? base.players,
+        handicap: decodeGameHandicap(optObject(g, "handicap", p), base.handicap, `${p}.handicap`),
+        points,
+      };
+    }
+  }
+  const sk = optObject(o, "skins", path);
+  const tm = optObject(o, "teamMatch", path);
+  return {
+    pointsGames,
+    skins: sk ? decodeSkinsRules(sk, `${path}.skins`) : deepCopy(s.skins) as SkinsRules,
+    skinPoints: optNumber(o, "skinPoints", path) ?? s.skinPoints,
+    teamMatch: tm ? decodeMatchPoints(tm, `${path}.teamMatch`) : { ...s.teamMatch },
   };
 }
 
@@ -621,6 +759,7 @@ export function decodeRuleset(x: unknown, path = "$"): Ruleset {
     const lc = optArray(o, "leadCheckpoints", path);
     const c = optObject(o, "competition", path);
     const dt = optEnum(o, "dayTerm", DAY_TERMS, path);
+    const fp = optObject(o, "formPlay", path);
     return {
       evenings: optInt(o, "evenings", path) ?? r.evenings,
       scoring: s ? decodeScoring(s, `${path}.scoring`) : r.scoring,
@@ -633,6 +772,7 @@ export function decodeRuleset(x: unknown, path = "$"): Ruleset {
       leadCheckpoints: lc ? numberArray(lc, `${path}.leadCheckpoints`, true) : r.leadCheckpoints,
       competition: c ? decodeCompetitionRules(c, `${path}.competition`) : null,
       dayTerm: dt,
+      formPlay: fp ? decodeFormPlay(fp, `${path}.formPlay`) : r.formPlay,
     };
   }
   // Versjon 1. `countingEvenings` gjaldt matcher (`TELLENDE_MATCHER`), `stablefordCountingEvenings` runder.
@@ -701,6 +841,7 @@ export function encodeRuleset(r: Ruleset): JSONObject {
     table.pointsTables = tables;
   }
   if (r.table.tieRule !== "tiebreaks") table.tieRule = r.table.tieRule;
+  if (r.table.formPoints) table.formPoints = true;
   const teamHandicap: JSONObject = {};
   for (const [k, v] of Object.entries(r.handicap.teamHandicap)) {
     teamHandicap[k] = v.weights !== undefined ? { method: v.method, weights: [...v.weights] } : { method: v.method };
@@ -751,5 +892,32 @@ export function encodeRuleset(r: Ruleset): JSONObject {
     };
   }
   if (r.dayTerm !== null) out.dayTerm = r.dayTerm;
+  // Bare når formreglene ikke er standard.
+  if (r.formPlay !== undefined && !deepEqual(r.formPlay, STANDARD_FORM_PLAY)) out.formPlay = encodeFormPlay(r.formPlay);
   return out;
+}
+
+function encodeGameHandicap(h: GameHandicap): JSONObject {
+  return { net: h.net, allowance: h.allowance, fromLowest: h.fromLowest };
+}
+
+/** Formreglene som JSON, med samme felt som Swift skriver. */
+export function encodeFormPlay(f: FormPlayRules): JSONObject {
+  const pointsGames: JSONObject = {};
+  for (const [k, g] of Object.entries(f.pointsGames)) {
+    const points: JSONObject = {};
+    for (const [pattern, list] of Object.entries(g.points)) points[pattern] = [...list];
+    pointsGames[k] = { players: g.players, handicap: encodeGameHandicap(g.handicap), points };
+  }
+  return {
+    pointsGames,
+    skins: {
+      handicap: encodeGameHandicap(f.skins.handicap),
+      valuePerSkin: f.skins.valuePerSkin,
+      carryOver: f.skins.carryOver,
+      leftover: f.skins.leftover,
+    },
+    skinPoints: f.skinPoints,
+    teamMatch: { ...f.teamMatch },
+  };
 }

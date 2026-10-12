@@ -97,14 +97,14 @@ nonisolated struct RoundDraft: Equatable, Sendable {
 
     /// Lag og matcher klare for oppsettet (`handleStartRunde`): forslag til lag i en lagform uten lag,
     /// og matchene trekkes på nytt når de lagrede ikke kan stå med de som er med.
-    mutating func prepareSetup(rules: Ruleset, roster: [ClubMemberRow]) {
+    mutating func prepareSetup(rules: Ruleset, roster: [ClubMemberRow], plan: MatchDrawPlan = .standings) {
         if form.isTeamForm && teams.isEmpty {
             teams = TeamPlanner.suggested(participants: participants, form: form, maxPerBay: rules.formats.maxPerBay)
         }
         // Teller tabellen stableford (fase 18), gir matcher ingen poeng, så de trekkes ikke.
         guard rules.table.pointsSource == .matches else { matches = []; return }
         if !MatchPlanner.canKeep(matches, participants: participants, teams: teams, isTeamForm: form.isTeamForm) {
-            redrawMatches(roster: roster)
+            redrawMatches(roster: roster, plan: plan)
         }
     }
 
@@ -131,7 +131,7 @@ nonisolated struct RoundDraft: Equatable, Sendable {
     }
 
     /// Skifter form: ny andel fra regelsettet, og lag og matcher legges på nytt.
-    mutating func setForm(_ id: String, rules: Ruleset, roster: [ClubMemberRow]) {
+    mutating func setForm(_ id: String, rules: Ruleset, roster: [ClubMemberRow], plan: MatchDrawPlan = .standings) {
         formID = id
         allowance = rules.allowance(for: form)
         if form.isTeamForm {
@@ -139,16 +139,18 @@ nonisolated struct RoundDraft: Equatable, Sendable {
         } else {
             teams = [:]
         }
-        redrawMatches(roster: roster)
+        redrawMatches(roster: roster, plan: plan)
     }
 
-    /// Trekker matchene på nytt: lag mot lag i lagformer, `trekkMatcher` ellers.
-    mutating func redrawMatches(roster: [ClubMemberRow]) {
+    /// Trekker matchene på nytt: lag mot lag i lagformer, ellers etter planen (`formats.drawMethod`):
+    /// etter tabellen (`trekkMatcher`), tilfeldig uten gjentakelser med `seed`, eller ingen (manuelt).
+    mutating func redrawMatches(roster: [ClubMemberRow], plan: MatchDrawPlan = .standings,
+                                seed: UInt64 = .random(in: .min ... .max)) {
         if form.isTeamForm {
             matches = MatchPlanner.teamMatches(teams.filter { participants.contains($0.key) })
         } else {
             let included = Set(participants)
-            matches = MatchPlanner.drawIndividual(roster.filter { included.contains($0.id) })
+            matches = MatchPlanner.draw(roster.filter { included.contains($0.id) }, plan: plan, seed: seed)
         }
     }
 

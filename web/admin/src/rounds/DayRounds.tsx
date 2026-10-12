@@ -3,7 +3,7 @@ import type { Competition, EventRow } from "../data.ts";
 import { longDate, todayISO } from "../text.ts";
 import { capitalized, dayThe } from "../../../golfgutu-core/src/index.ts";
 import {
-  deleteRound, deleteSummary, loadDay, loadGame, loadSetup, lockAll, lockRound, competitionFor,
+  dayDrawPlan, deleteRound, deleteSummary, loadDay, loadGame, loadSetup, lockAll, lockRound, competitionFor,
   type DayData, type ListRound,
 } from "./api.ts";
 import { courseItemReady, previousTeeID, suggestedTee } from "./courses.ts";
@@ -81,7 +81,7 @@ export function DayRounds({ clubID, event, days, comps, onBack }: {
       const item = data.courses.find((c) => c.course.id === d.courseID);
       if (item) d = { ...d, teeID: suggestedTee(item.tees, previousTeeID(data.allRounds, item.course.id))?.id ?? null };
     }
-    setView({ kind: "setup", draft: autoArrange(d, data.rules, data.roster) });
+    setView({ kind: "setup", draft: autoArrange(d, data.rules, data.roster, dayDrawPlan(data, d.roundID)) });
   }
 
   /** Kladden slik den er lagret. Uten oppsett: forslag som for en ny runde. */
@@ -92,7 +92,7 @@ export function DayRounds({ clubID, event, days, comps, onBack }: {
       const { ids, source } = draftParticipants(data.roster, players, data.signups);
       let d = savedDraft(r, players, matches, ids, source);
       if (players.length === 0) {
-        d = redrawMatches(d, data.roster);
+        d = redrawMatches(d, data.roster, dayDrawPlan(data, d.roundID));
         d = reshuffleBays(d, defaultBayCount(ids.length, data.rules.formats.maxPerBay));
       }
       setView({ kind: "setup", draft: d });

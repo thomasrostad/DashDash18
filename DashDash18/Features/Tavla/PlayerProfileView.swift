@@ -117,7 +117,7 @@ private struct ProfileHeader: View {
                 }
             }
             Spacer(minLength: 8)
-            if standings.hasResults {
+            if standings.hasResults && profile.row.qualified {
                 DDPill("\(profile.row.place). plass", tone: .sun)
                     .fixedSize()
             }
