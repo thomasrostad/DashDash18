@@ -17,7 +17,8 @@ nonisolated struct TavlaStandings: Sendable {
     struct Row: Identifiable, Hashable, Sendable {
         let memberID: UUID
         let name: String
-        /// 1, 2, 3 … i tabellens rekkefølge (`jakketavle`).
+        /// Plassen fra `Season.standings`: delt plass har samme nummer (1, 1, 3). For en som ikke er
+        /// kvalifisert (`table.minEvenings`): plassen i rekkefølgen, under de rangerte (vises som «–»).
         let place: Int
         /// Duell (eller stablefordpoeng) + sidepremier, avrundet etter regelsettet.
         let total: Double
@@ -36,6 +37,10 @@ nonisolated struct TavlaStandings: Sendable {
         var roundPoints: Double = 0
         /// Spilte runder når tabellen teller stableford (spilte matcher ellers).
         var played: Int = 0
+        /// Har spilt nok kvelder til å få plass (`table.minEvenings`). Alltid sann uten grense.
+        var qualified: Bool = true
+        /// Delt førsteplass som skal avgjøres med playoff (`tieRule` `playoff`).
+        var playoffPending: Bool = false
 
         var id: UUID { memberID }
     }
@@ -89,13 +94,16 @@ nonisolated struct TavlaStandings: Sendable {
         let withPoints = rounds.indices.filter { !season.roundPoints($0).isEmpty }.map { rounds[$0] }
         eveningsPlayed = Season.eveningCount(withPoints)
 
-        rows = season.jacketBoard().enumerated().map { i, r in
+        // Plassene fra motoren: delt plass (1, 1, 3), de uten nok kvelder nederst, og playoff om
+        // førsteplassen. Playoff-runder finnes ikke ennå (047), så playoffen står som ventende.
+        rows = season.standings().enumerated().map { i, s in
+            let r = s.row
             let id = UUID(uuidString: r.player.id)!
             let played = rounds.indices.filter { season.roundPoints($0)[r.player.id] != nil }.map { rounds[$0] }
-            return Row(memberID: id, name: r.player.name, place: i + 1, total: r.total, duel: r.duel, side: r.side,
-                       matches: r.matches, holes: r.holes, stableford: r.stableford,
+            return Row(memberID: id, name: r.player.name, place: s.place ?? i + 1, total: r.total, duel: r.duel,
+                       side: r.side, matches: r.matches, holes: r.holes, stableford: r.stableford,
                        evenings: Season.eveningCount(played), isMe: id == me, roundPoints: r.roundPoints,
-                       played: r.played)
+                       played: r.played, qualified: s.place != nil, playoffPending: s.playoffPending)
         }
     }
 
@@ -126,8 +134,18 @@ nonisolated struct TavlaStandings: Sendable {
     var countsStableford: Bool { rules.table.pointsSource == .stableford }
 
     /// Linja under navnet: «+3 hull · 112 stableford · 4 kvelder» med matcher, og «6 kvelder · beste 5
-    /// teller» med stableford.
+    /// teller» med stableford. «Playoff · » foran ved delt førsteplass som avgjøres med playoff, og
+    /// «· minst 4 kvelder for plass» bak for en som ikke har spilt nok.
     func detail(_ row: Row) -> String {
+        var text = baseDetail(row)
+        if row.playoffPending { text = "Playoff · " + text }
+        if !row.qualified, let min = rules.table.minEvenings {
+            text += " · minst \(rules.day.count(min)) for plass"
+        }
+        return text
+    }
+
+    private func baseDetail(_ row: Row) -> String {
         let evenings = rules.day.count(row.evenings)
         guard countsStableford else {
             let holes = row.holes > 0 ? "+\(row.holes)" : "\(row.holes)"
@@ -167,9 +185,15 @@ nonisolated struct TavlaStandings: Sendable {
     /// plasser, ingenting å dele, og ingen topp 3 i widgeten.
     var hasResults: Bool { eveningsPlayed > 0 && !rows.isEmpty }
 
-    /// Plassen slik tabellen viser den: «3.», eller «–» før første kveld.
+    /// Plassen slik tabellen viser den: «3.» (delt plass: «1.», «1.», «3.»), eller «–» før første kveld
+    /// og for en som ikke har spilt nok kvelder.
     func placeText(_ row: Row) -> String {
-        hasResults ? "\(row.place)." : "–"
+        hasResults && row.qualified ? "\(row.place)." : "–"
+    }
+
+    /// Står spilleren på pallen (plass 1–3)? Ikke de uten plass.
+    func isOnPodium(_ row: Row) -> Bool {
+        row.qualified && row.place <= 3
     }
 
     func row(_ member: UUID) -> Row? {

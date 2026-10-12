@@ -30,12 +30,15 @@ nonisolated enum RulesetExplanation {
         }
 
         out.append(countingSentence(table.counting, term: rules.day))
+        out.append(contentsOf: tableRuleSentences(table, term: rules.day))
         out.append(contentsOf: sidePrizeSentences(rules.sidePrizes))
 
         if let step = table.roundingStep {
             out.append("Tabellpoengene rundes til nærmeste \(RuleFormat.number(step)).")
         }
-        if !table.tiebreaks.isEmpty {
+        if table.tieRule == .playoff {
+            out.append("Står flere likt på første plass, avgjøres det med playoff. Annet likt er delt plass.")
+        } else if !table.tiebreaks.isEmpty {
             out.append("Ved likt poeng skiller \(RuleFormat.list(table.tiebreaks.map(RuleNames.inSentence), last: "så")).")
         }
         out.append(stablefordSentence(table.stablefordCounting, term: rules.day))
@@ -56,6 +59,21 @@ nonisolated enum RulesetExplanation {
         let noun = RuleNames.nouns(c.unit, term: term)
         guard let best = c.best else { return "Alle \(noun.plural) teller." }
         return best == 1 ? "Den beste \(noun.definite) teller." : "De \(best) beste \(noun.definitePlural) teller."
+    }
+
+    /// Tabellreglene fra steg 6, bare når de er i bruk (Golfgutu har ingen).
+    private static func tableRuleSentences(_ table: Ruleset.TableRules, term: DayTerm) -> [String] {
+        var out: [String] = []
+        if table.aggregation == .average {
+            out.append("Tabellen viser snittet per \(term.one) som teller.")
+        }
+        for (name, t) in table.pointsTables.sorted(by: { $0.key < $1.key }) {
+            out.append("\(name) teller \(RuleFormat.number(t.multiplier)) ganger.")
+        }
+        if let min = table.minEvenings, min > 0 {
+            out.append("Du må ha spilt minst \(term.count(min)) for å få plass i tabellen.")
+        }
+        return out
     }
 
     private static func stablefordSentence(_ c: Ruleset.Counting, term: DayTerm) -> String {
@@ -120,6 +138,11 @@ nonisolated enum RulesetExplanation {
         case .lowestFromScratch: out.append("I match spiller den laveste fra scratch.")
         case .fullHandicap: out.append("I match spiller alle på fullt handicap.")
         }
+        switch f.drawMethod {
+        case .standings: break
+        case .avoidRepeats: out.append("Matchene trekkes tilfeldig, med færrest mulig gjentakelser.")
+        case .manual: out.append("Arrangøren setter opp matchene.")
+        }
         return out
     }
 }
@@ -177,6 +200,28 @@ nonisolated enum RuleNames {
         switch strokes {
         case .lowestFromScratch: "Laveste fra scratch"
         case .fullHandicap: "Fullt handicap"
+        }
+    }
+
+    static func title(_ aggregation: Ruleset.Aggregation) -> String {
+        switch aggregation {
+        case .sum: "Sum"
+        case .average: "Snitt"
+        }
+    }
+
+    static func title(_ rule: Ruleset.TieRule) -> String {
+        switch rule {
+        case .tiebreaks: "Skilletegn"
+        case .playoff: "Playoff"
+        }
+    }
+
+    static func title(_ method: Ruleset.DrawMethod) -> String {
+        switch method {
+        case .standings: "Etter tabellen"
+        case .avoidRepeats: "Tilfeldig uten gjentakelser"
+        case .manual: "Manuelt"
         }
     }
 

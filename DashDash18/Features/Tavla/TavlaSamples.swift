@@ -60,10 +60,11 @@ enum TavlaSamples {
     }
 
     /// Sesongen med Golfgutu-oppsettet, eller en stableford-serie (`tavlastableford`, 6 kvelder spilt).
-    static func standings(finished: Bool = false, stableford: Bool = false) -> TavlaStandings {
+    /// - Parameter rules: et annet regelsett (skjermprøven `tavlaregler`: playoff og minste antall kvelder).
+    static func standings(finished: Bool = false, stableford: Bool = false, rules: Ruleset? = nil) -> TavlaStandings {
         let season = SeasonRow(id: id(9002), clubID: club, name: stableford ? "Høst 2026" : "Vår 2026",
                                status: finished ? .finished : .active,
-                               rules: stableford ? RulesetTemplate.stablefordSeries.rules : .golfgutu)
+                               rules: rules ?? (stableford ? RulesetTemplate.stablefordSeries.rules : .golfgutu))
         let rounds = stableford
             ? (1...6).map { round($0, date: "2026-\(String(format: "%02d", $0 + 3))-14") }
             : (1...5).map { round($0, date: "2026-0\($0 + 4)-14") }

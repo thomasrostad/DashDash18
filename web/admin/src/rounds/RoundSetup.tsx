@@ -1,15 +1,15 @@
 import { useMemo, useState } from "react";
 import { allowanceFor, courseHoles, formSetup, isTeamForm, rulesetSuggestions, suggestedClosestToPinHole, suggestedLongestDriveHole } from "../../../golfgutu-core/src/index.ts";
-import { loadSlopeCatalog, loadSourceCourses, saveDraft, startRound, type DayData, type ListRound } from "./api.ts";
+import { dayDrawPlan, loadSlopeCatalog, loadSourceCourses, saveDraft, startRound, type DayData, type ListRound } from "./api.ts";
 import {
   coreCourseWithTee, courseItemReady, courseSummary, filterSlope, previousTeeID, slopePlace, suggestedTee, teeDetail,
   teeGenderTitle, SLOPE_PICKER_LIMIT, type CourseItem, type SlopeCourse,
 } from "./courses.ts";
 import {
-  applySidePrize, bayCount as highestBay, bayNumbers, coreRound, draftForm, prepareSetup, excludePlayer, formChoices,
+  applySidePrize, bayCount as highestBay, drawFooter, randomSeed, randomTeamsFor, STANDINGS_PLAN, swapTwo, bayNumbers, coreRound, draftForm, prepareSetup, excludePlayer, formChoices,
   groupTerm, includePlayer, isTeamMatch, isTriangleMatch, makeMarker, markerIn, membersIn, moveSeat, playerMatch,
   playersSummary, redrawMatches, reshuffleBays, roundTitle, seatFor, setCourse, setForm, setStart, setVenue, setupIssues,
-  sidePrizeChoice, startOptions, startProblems, startTitle, suggestedTeams, teamMatch, teamProblem, termCount, termNumbered,
+  sidePrizeChoice, startOptions, startProblems, startTitle, teamMatch, teamProblem, termCount, termNumbered,
   termPluralTitle, venueTitle, WEIGHTS, MAX_BAYS, type MatchDraft, type RoundDraft,
 } from "./logic.ts";
 
@@ -24,7 +24,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
 }) {
   // Som `onAppear` i appen: lag og matcher klare, og uten valg mellom simulator og ekte bane følger stedet banen.
   const [draft, setDraft] = useState<RoundDraft>(() => {
-    let d = prepareSetup(initial, data.rules, data.roster);
+    let d = prepareSetup(initial, data.rules, data.roster, dayDrawPlan(data, initial.roundID));
     const ready = data.courses.filter(courseItemReady);
     const showsVenue = new Set(ready.map((c) => c.kind)).size > 1;
     const c = data.courses.find((x) => x.course.id === d.courseID);
@@ -37,6 +37,10 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
   const [error, setError] = useState<string | null>(null);
   const rules = data.rules;
   const roster = data.roster;
+  // Trekningen etter regelsettet (`formats.drawMethod`), med møtene i turneringens andre runder.
+  const plan = useMemo(() => dayDrawPlan(data, draft.roundID), [data, draft.roundID]);
+  const [swapA, setSwapA] = useState("");
+  const [swapB, setSwapB] = useState("");
   const name = (id: string) => roster.find((m) => m.id === id)?.name ?? "Ukjent";
 
   const item = courses.find((c) => c.course.id === draft.courseID) ?? null;
@@ -174,7 +178,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
             <h4>Ikke med</h4>
             <div className="chips">
               {roster.filter((m) => !draft.participants.includes(m.id)).map((m) => (
-                <button key={m.id} className="link" onClick={() => setDraft(prepareSetup(includePlayer(draft, m.id, roster), rules, roster))}>+ {m.name}</button>
+                <button key={m.id} className="link" onClick={() => setDraft(prepareSetup(includePlayer(draft, m.id, roster), rules, roster, plan))}>+ {m.name}</button>
               ))}
             </div>
             <p className="muted small">Trykk for å ta med. Han havner i {term.definite} med færrest.</p>
@@ -184,7 +188,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
 
       <div className="card">
         <h3>Form</h3>
-        <select value={draft.formID} onChange={(e) => setDraft(setForm(draft, e.target.value, rules, roster))}>
+        <select value={draft.formID} onChange={(e) => setDraft(setForm(draft, e.target.value, rules, roster, plan))}>
           {formChoices(rules, draft.formID).map((f) => (
             <option key={f.id} value={f.id}>{f.name}{f.support === "delvis" ? " · ikke ferdig" : f.support === "mangler" ? " · ikke støttet ennå" : ""}</option>
           ))}
@@ -213,7 +217,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
                 <select value={draft.teams[id] ?? ""} onChange={(e) => {
                   const teams = { ...draft.teams };
                   if (e.target.value) teams[id] = Number(e.target.value); else delete teams[id];
-                  setDraft(redrawMatches({ ...draft, teams }, roster));
+                  setDraft(redrawMatches({ ...draft, teams }, roster, plan));
                 }}>
                   <option value="">Uten lag</option>
                   {Array.from({ length: numbers }, (_, i) => i + 1).map((n) => <option key={n} value={n}>Lag {n}</option>)}
@@ -221,7 +225,21 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
               </label>
             ));
           })()}
-          <button className="link" onClick={() => setDraft(redrawMatches({ ...draft, teams: suggestedTeams(draft.participants, form, rules.formats.maxPerBay) }, roster))}>Foreslå lag</button>
+          <button className="link" onClick={() => setDraft(redrawMatches({ ...draft, teams: randomTeamsFor(draft.participants, form, rules.formats.maxPerBay, randomSeed()) }, roster, plan))}>Tilfeldige lag</button>
+          <div className="inline">
+            <select aria-label="Første spiller" value={swapA} onChange={(e) => { setSwapA(e.target.value); setSwapB(""); }}>
+              <option value="">Bytt …</option>
+              {draft.participants.filter((id) => draft.teams[id] !== undefined).map((id) => <option key={id} value={id}>{name(id)} · lag {draft.teams[id]}</option>)}
+            </select>
+            <select aria-label="Andre spiller" value={swapB} disabled={!swapA} onChange={(e) => setSwapB(e.target.value)}>
+              <option value="">… med</option>
+              {draft.participants.filter((id) => draft.teams[id] !== undefined && draft.teams[id] !== draft.teams[swapA]).map((id) => <option key={id} value={id}>{name(id)} · lag {draft.teams[id]}</option>)}
+            </select>
+            <button className="link" disabled={!swapA || !swapB} onClick={() => {
+              setDraft(redrawMatches({ ...draft, teams: swapTwo(draft.teams, swapA, swapB) }, roster, plan));
+              setSwapA(""); setSwapB("");
+            }}>Bytt to spillere</button>
+          </div>
           {(() => { const p = teamProblem(draft.teams, draft.participants, form, rules.formats.maxPerBay); return p ? <p className="error small">{p}</p> : null; })()}
         </div>
       )}
@@ -235,9 +253,12 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
           ))}
           <div className="inline">
             <button className="link" onClick={() => setDraft({ ...draft, matches: [...draft.matches, isTeamForm(form) ? teamMatch(1, 2) : playerMatch(null, null)] })}>Ny match</button>
-            <button className="link" onClick={() => setDraft(redrawMatches(draft, roster))}>Trekk matchene på nytt</button>
+            {plan.method === "manual"
+              ? <button className="link" onClick={() => setDraft(redrawMatches(draft, roster, STANDINGS_PLAN))}>Foreslå matcher etter tabellen</button>
+              : <button className="link" onClick={() => setDraft(redrawMatches(draft, roster, plan))}>Trekk matchene på nytt</button>}
             <button className="link" onClick={() => setDraft(reshuffleBays(draft, bays))}>Sett matchene sammen i {term.definitePlural}</button>
           </div>
+          {!isTeamForm(form) && drawFooter(plan, draft.matches) && <p className="muted small">{drawFooter(plan, draft.matches)}</p>}
         </div>
       )}
 
@@ -302,7 +323,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
         <span>{name(id)}{seat?.isMarker && <span className="pill">Markør</span>}</span>
         <select value={seat?.bay ?? ""} onChange={(e) => {
           const v = e.target.value;
-          if (v === "out") setDraft(prepareSetup(excludePlayer(draft, id), rules, roster));
+          if (v === "out") setDraft(prepareSetup(excludePlayer(draft, id), rules, roster, plan));
           else setDraft({ ...draft, bays: moveSeat(draft.bays, id, Number(v)) });
         }}>
           {!seat && <option value="">Uten {term.singular}</option>}

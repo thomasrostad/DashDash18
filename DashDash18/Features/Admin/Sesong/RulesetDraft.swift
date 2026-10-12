@@ -45,6 +45,7 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
     private var rememberedStablefordBest: Int
     private var rememberedRoundingStep: Double
     private var rememberedAllowance: Double
+    private var rememberedMinEvenings: Int
 
     init(_ rules: Ruleset, kind: CompetitionKind = .season) {
         self.init(rules, base: RulesetSummary.template(for: rules, kind: kind))
@@ -62,6 +63,8 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
         rememberedRoundingStep = rules.table.roundingStep ?? g.table.roundingStep ?? 0
         rememberedAllowance = rules.handicap.allowanceOverride
             ?? rules.allowance(for: CompetitionForm.form(id: rules.formats.defaultFormID))
+        // Når grensen slås på, starter den på halvparten av kveldene (minst 1), eller det som sto der før.
+        rememberedMinEvenings = rules.table.minEvenings.flatMap { $0 > 0 ? $0 : nil } ?? max(1, rules.evenings / 2)
     }
 
     // MARK: Status
@@ -195,6 +198,71 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
 
     mutating func moveTiebreaks(from source: IndexSet, to destination: Int) {
         rules.table.tiebreaks.moveAll(from: source, to: destination)
+    }
+
+    // MARK: Tabell: minste antall kvelder, poengtabeller (steg 6)
+
+    /// «Minste antall kvelder»: av (alle rangeres) som standard.
+    var hasMinEvenings: Bool {
+        get { (rules.table.minEvenings ?? 0) > 0 }
+        set {
+            if newValue {
+                rules.table.minEvenings = rememberedMinEvenings
+            } else {
+                if let min = rules.table.minEvenings, min > 0 { rememberedMinEvenings = min }
+                rules.table.minEvenings = nil
+            }
+        }
+    }
+
+    var minEvenings: Int {
+        get { rules.table.minEvenings ?? rememberedMinEvenings }
+        set { rules.table.minEvenings = newValue; rememberedMinEvenings = newValue }
+    }
+
+    /// En navngitt poengtabell i lista (regelsettet holder dem som navn → gange).
+    struct NamedPointsTable: Hashable, Sendable {
+        let name: String
+        let multiplier: Double
+    }
+
+    /// Poengtabellene sortert på navn (norsk).
+    var pointsTables: [NamedPointsTable] {
+        rules.table.pointsTables
+            .map { NamedPointsTable(name: $0.key, multiplier: $0.value.multiplier) }
+            .sorted { NorwegianSort.areInIncreasingOrder($0.name, $1.name) }
+    }
+
+    /// Ny poengtabell: «Finale» × 2 først, så «Tabell 2», «Tabell 3» …
+    mutating func addPointsTable() {
+        var name = "Finale"
+        var n = 2
+        while rules.table.pointsTables[name] != nil {
+            name = "Tabell \(n)"
+            n += 1
+        }
+        rules.table.pointsTables[name] = Ruleset.PointsTable(multiplier: 2)
+    }
+
+    /// Gir en poengtabell nytt navn. Usann når navnet er tomt eller i bruk (da står det gamle).
+    @discardableResult
+    mutating func renamePointsTable(_ old: String, to new: String) -> Bool {
+        let name = new.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let table = rules.table.pointsTables[old] else { return false }
+        if name == old { return true }
+        guard !name.isEmpty, rules.table.pointsTables[name] == nil else { return false }
+        rules.table.pointsTables[old] = nil
+        rules.table.pointsTables[name] = table
+        return true
+    }
+
+    mutating func setPointsTableMultiplier(_ name: String, _ multiplier: Double) {
+        guard rules.table.pointsTables[name] != nil else { return }
+        rules.table.pointsTables[name] = Ruleset.PointsTable(multiplier: multiplier)
+    }
+
+    mutating func removePointsTable(_ name: String) {
+        rules.table.pointsTables[name] = nil
     }
 
     // MARK: Handicap

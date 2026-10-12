@@ -31,10 +31,16 @@ struct RulesetFormatSection: View {
             } label: {
                 RuleFieldLabel(title: "Slag i match", changeNote: draft.changeNote(.matchStrokes))
             }
+            Picker(selection: $draft.rules.formats.drawMethod) {
+                ForEach(Ruleset.DrawMethod.allCases, id: \.self) { Text(RuleNames.title($0)).tag($0) }
+            } label: {
+                RuleFieldLabel(title: "Trekning av matcher", changeNote: draft.changeNote(.drawMethod))
+            }
         } header: {
             DDHeader(RulesetSection.formats.title)
         } footer: {
-            RuleSectionFooter(text: "Laveste fra scratch: den beste i matchen spiller uten slag.",
+            RuleSectionFooter(text: "Laveste fra scratch: den beste i matchen spiller uten slag. "
+                              + "Uten gjentakelser: tilfeldig, med færrest mulig møter fra før i turneringen.",
                               issues: draft.issues(in: .formats))
         }
     }

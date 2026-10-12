@@ -1,5 +1,5 @@
 {
- "_kilde": "Laget med tools/tavla-fixture.py etter TavlaSamples.swift, utvidet. Svaret fra RPC-en tavla_data (sql/036) og tre sesongrader (Golfgutu, stableford-serie med «spilledag», eget oppsett).",
+ "_kilde": "Laget med tools/tavla-fixture.py etter TavlaSamples.swift, utvidet. Svaret fra RPC-en tavla_data (sql/036) og fem sesongrader (Golfgutu, stableford-serie med «spilledag», eget oppsett, playoff med minste antall kvelder, snitt med poengtabell).",
  "me": "00000000-0000-0000-0000-000000000008",
  "tavlaData": {
   "events": [
@@ -6320,6 +6320,46 @@
     },
     "formats": {
      "matchStrokes": "fullHandicap"
+    }
+   }
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000009003",
+   "club_id": "00000000-0000-0000-0000-000000009000",
+   "name": "Playoff 2026",
+   "status": "active",
+   "rules": {
+    "version": 2,
+    "table": {
+     "tieRule": "playoff",
+     "minEvenings": 2,
+     "roundingStep": 1,
+     "counting": {
+      "unit": "evening",
+      "best": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000009004",
+   "club_id": "00000000-0000-0000-0000-000000009000",
+   "name": "Snitt 2026",
+   "status": "active",
+   "rules": {
+    "version": 2,
+    "dayTerm": "playingDay",
+    "table": {
+     "minEvenings": 3,
+     "aggregation": "average",
+     "pointsTables": {
+      "Finale": {
+       "multiplier": 2
+      }
+     }
+    },
+    "formats": {
+     "drawMethod": "avoidRepeats"
     }
    }
   }
