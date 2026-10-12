@@ -1,5 +1,5 @@
 -- 048: formater, flere konkurranser på samme runde og øyeblikksbildet ved start
--- (gjennomføringsplanen steg 7). FORSLAG, venter på godkjenning. Ikke kjørt på test eller prod.
+-- (gjennomføringsplanen steg 7). Godkjent og kjørt på test 12.10.2026.
 --
 -- Krever 001–047 og 049–051 (044_roller: private.has_club_right; 047: rounds.kind, playoff_for,
 -- tavla_data og TV-funksjonene slik de er nå; 049: previous_round_setup). Prøvd lokalt
