@@ -69,7 +69,7 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
       )}
 
       {tab === "turneringer" && creating && comps && (
-        <NewTournament clubID={clubID} comps={comps} onCancel={() => setCreating(false)}
+        <NewTournament clubID={clubID} comps={comps} canTemplates={viewer.rights.has("tournaments")} onCancel={() => setCreating(false)}
           onDone={() => { setCreating(false); load(); }} />
       )}
 
@@ -96,7 +96,8 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
       )}
 
       {tab === "terminliste" && (!days || !comps || !roster ? <p className="muted">Henter …</p> : (
-        <Schedule clubID={clubID} days={days} comps={comps} roster={roster} committees={committees} onChanged={load} />
+        <Schedule clubID={clubID} days={days} comps={comps} roster={roster} committees={committees} onChanged={load}
+          canTournaments={viewer.rights.has("tournaments")} canRounds={viewer.rights.has("rounds")} />
       ))}
 
       {tab === "tropp" && (!roster ? <p className="muted">Henter …</p> : (

@@ -19,6 +19,11 @@ final class NewTournamentModel {
     /// Turneringen er laget, men noe gjenstår (kjøpet ble ikke koblet). Arket står til brukeren har
     /// lest det.
     private(set) var notice: String?
+    /// Turneringsmalene (sql/049): klubbens for arrangøren, ellers dine egne. nil: 049 mangler eller
+    /// ikke hentet, og malene skjules.
+    private(set) var templateStore: SetupTemplateStore?
+    /// Turneringsraden som ble laget (for «Lag serie» etterpå). Bare for klubbens turneringer.
+    private(set) var createdCompetitionID: UUID?
     private let now: Date
 
     init(list: CompetitionsModel, seasons: SesongAdminModel?, offersPrivate: Bool, now: Date = .now) {
@@ -77,6 +82,11 @@ final class NewTournamentModel {
         await seasons?.load()
         if CompetitionsFeature.isActive { await list.load() }
         guard let client = list.client else { return }
+        if templateStore == nil {
+            let store = SetupTemplateStore(client: client, clubID: canCreateInClub ? list.clubID : nil, kind: .tournament)
+            await store.load()
+            templateStore = store
+        }
         if let club = list.clubID, canCreateInClub {
             members = (try? await CompetitionQueries.activeMembers(client: client, clubID: club)) ?? []
         }
@@ -104,7 +114,11 @@ final class NewTournamentModel {
                 return false
             }
             do {
-                try await seasons.create(name: draft.trimmedName, rules: draft.seasonRules, activate: activatesNewSeason)
+                let season = try await seasons.create(name: draft.trimmedName, rules: draft.seasonRules,
+                                                      activate: activatesNewSeason)
+                if draft.schedule != nil, let client = list.client {
+                    createdCompetitionID = await ReuseService.competitionID(client: client, seasonID: season.id)
+                }
                 if CompetitionsFeature.isActive { await list.load() }
                 return true
             } catch {
@@ -115,12 +129,44 @@ final class NewTournamentModel {
             list.error = nil
             if let created = await list.create(draft.competitionDraft, purchases: purchases) {
                 notice = Self.notice(for: created)
+                if draft.clubID != nil { createdCompetitionID = created.id }
                 return true
             }
             error = list.error
             list.error = nil
             return false
         }
+    }
+}
+
+// MARK: Maler og serie (sql/049)
+
+extension NewTournamentModel {
+    /// Malene finnes (049 er kjørt).
+    var supportsTemplates: Bool { templateStore?.isAvailable == true }
+
+    /// Utkastet fra en lagret mal, med et ledig navn. nil når malen ikke kan leses eller ikke passer
+    /// (en matchspill-serie uten klubb).
+    func draft(from row: SetupTemplateRow) -> TournamentDraft? {
+        guard let payload = row.decode(TournamentTemplatePayload.self),
+              templates.contains(payload.template) else { return nil }
+        let base = draft(for: payload.template)
+        return payload.draft(name: base.name, clubID: base.clubID, today: EveningDates.today())
+    }
+
+    func saveTemplate(_ draft: TournamentDraft, name: String) async throws(DataError) {
+        guard let templateStore else { throw .notAllowed }
+        try await templateStore.save(name: name, payload: TournamentTemplatePayload(draft: draft))
+    }
+
+    /// Tilbys «Lag serie» etter «Lag»? En klubbturnering med fast plan.
+    func offersSeries(_ draft: TournamentDraft) -> Bool {
+        supportsTemplates && draft.schedule != nil && draft.clubID != nil && createdCompetitionID != nil
+    }
+
+    func createSeries(firstDate: String, plan: SeriesPlan) async throws(DataError) -> CreateSeriesResult {
+        guard let client = list.client, let id = createdCompetitionID else { throw .notAllowed }
+        return try await ReuseService.createSeries(client: client, competitionID: id, firstDate: firstDate, plan: plan)
     }
 }
 
@@ -153,6 +199,9 @@ struct NyTurneringView: View {
                 Text("Du kan tilpasse reglene i neste steg.")
                     .font(.ddCaption)
                     .foregroundStyle(Color.ddInkSecondary)
+                if let store = model.templateStore, let rows = store.templates, !rows.isEmpty {
+                    savedTemplates(rows, store: store)
+                }
             }
             .padding(.horizontal, DDSpacing.gutter)
             .padding(.vertical, DDSpacing.l)
@@ -168,7 +217,84 @@ struct NyTurneringView: View {
         .navigationDestination(for: RulesetTemplate.self) { template in
             NyTurneringDetailsView(model: model, draft: model.draft(for: template), onDone: onDone)
         }
+        .navigationDestination(for: SavedTemplateRoute.self) { route in
+            if let row = model.templateStore?.templates?.first(where: { $0.id == route.id }),
+               let draft = model.draft(from: row) {
+                NyTurneringDetailsView(model: model, draft: draft, onDone: onDone)
+            } else {
+                ContentUnavailableView("Malen passer ikke her", systemImage: "doc.questionmark")
+            }
+        }
         .task { await model.load() }
+    }
+
+    /// «Egne maler» under oppsettene: reglene og planen fra en tidligere turnering.
+    private func savedTemplates(_ rows: [SetupTemplateRow], store: SetupTemplateStore) -> some View {
+        VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
+            HStack {
+                Text("Egne maler")
+                    .font(.ddBodyEmphasis)
+                    .foregroundStyle(Color.ddForestInk)
+                Spacer()
+                NavigationLink("Endre") { TemplateListView(store: store) }
+                    .font(.ddCallout)
+            }
+            .padding(.top, DDSpacing.l)
+            ForEach(rows) { row in
+                NavigationLink(value: SavedTemplateRoute(id: row.id)) {
+                    SavedTemplateCard(row: row)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+/// En lagret mal i steg 1.
+private struct SavedTemplateRoute: Hashable {
+    let id: UUID
+}
+
+private struct SavedTemplateCard: View {
+    let row: SetupTemplateRow
+
+    var body: some View {
+        let payload = row.decode(TournamentTemplatePayload.self)
+        HStack(spacing: 14) {
+            Image(systemName: "doc.on.doc")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(Color.ddForestInk)
+                .frame(width: 32)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(row.name)
+                    .font(.ddBodyEmphasis)
+                    .foregroundStyle(Color.ddInk)
+                if let payload {
+                    Text(SavedTemplateCard.subtitle(payload))
+                        .font(.ddCallout)
+                        .foregroundStyle(Color.ddInkSecondary)
+                }
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Color.ddInkSecondary)
+                .accessibilityHidden(true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(.rect)
+        .ddCard()
+        .accessibilityElement(children: .combine)
+    }
+
+    /// «Matchspill-serie · Hver torsdag kl. 18:00».
+    static func subtitle(_ payload: TournamentTemplatePayload) -> String {
+        var parts = [payload.template.title]
+        if let plan = payload.schedule {
+            parts.append(SeriesText.summary(weekday: plan.weekday, everyWeeks: plan.everyWeeks, startTime: plan.startTime))
+        }
+        return parts.joined(separator: " · ")
     }
 }
 
@@ -213,6 +339,9 @@ struct NyTurneringDetailsView: View {
     @State private var draft: TournamentDraft
     @State private var isSaving = false
     @State private var showsPaywall = false
+    @State private var showsSaveTemplate = false
+    /// «Lag serie» etter «Lag», med planen fra utkastet (sql/049).
+    @State private var seriesOffer: SeriesSheetItem?
     @Environment(PurchaseService.self) private var purchases: PurchaseService?
 
     init(model: NewTournamentModel, draft: TournamentDraft, onDone: @escaping () -> Void) {
@@ -254,6 +383,34 @@ struct NyTurneringDetailsView: View {
                 DayTermSection(term: $draft.dayTerm)
             }
             rulesSection
+            if model.supportsTemplates {
+                if draft.clubID != nil {
+                    SchedulePlanSection(plan: $draft.schedule)
+                }
+                Section {
+                    Button("Lagre som mal", systemImage: "square.and.arrow.down") { showsSaveTemplate = true }
+                        .foregroundStyle(Color.ddForestInk)
+                } footer: {
+                    DDFooter("Neste gang kan du starte fra malen under «Egne maler».")
+                }
+            }
+        }
+        .saveTemplatePrompt(isPresented: $showsSaveTemplate, suggestion: draft.trimmedName) { name async throws(DataError) in
+            try await model.saveTemplate(draft, name: name)
+        }
+        .sheet(item: $seriesOffer) { item in
+            NavigationStack {
+                EventSeriesSheet(plan: item.plan, taken: [],
+                                 create: { (first, plan) async throws(DataError) -> CreateSeriesResult in
+                                     try await model.createSeries(firstDate: first, plan: plan)
+                                 },
+                                 done: {
+                                     seriesOffer = nil
+                                     onDone()
+                                 })
+            }
+            .environment(\.dayTerm, draft.target == .season ? draft.dayTerm : .playingDay)
+            .interactiveDismissDisabled()
         }
         .navigationTitle(draft.template.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -368,7 +525,12 @@ struct NyTurneringDetailsView: View {
         isSaving = true
         Task {
             defer { isSaving = false }
-            if await model.create(draft, purchases: purchases), model.notice == nil { onDone() }
+            guard await model.create(draft, purchases: purchases), model.notice == nil else { return }
+            if model.offersSeries(draft) {
+                seriesOffer = SeriesSheetItem(plan: draft.schedule)
+            } else {
+                onDone()
+            }
         }
     }
 }

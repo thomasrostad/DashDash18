@@ -1,4 +1,4 @@
--- 050: sosialt (gjennomføringsplanen steg 9). Venter på godkjenning. Ikke kjørt på test.
+-- 050: sosialt (gjennomføringsplanen steg 9). Godkjent og kjørt på test 12.10.2026.
 --
 -- Krever 001–047 og 049 (kjøres på test etter dem): 008 (activity, activity_reactions,
 -- thread_messages), 019 (blokkering, rapporter, delete_account_data), 034 (hendelser uten
