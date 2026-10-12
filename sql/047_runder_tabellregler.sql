@@ -1,4 +1,4 @@
--- 047: tabellregler på runden og playoff-runden (gjennomføringsplanen steg 6). Venter på godkjenning.
+-- 047: tabellregler på runden og playoff-runden (gjennomføringsplanen steg 6). Godkjent og kjørt på test 12.10.2026.
 --
 -- Krever 001–045 (044_roller: private.has_club_right; 042: competition_auto_count_round;
 -- 043: tv_competition_data).
