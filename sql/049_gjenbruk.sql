@@ -1,4 +1,4 @@
--- 049: gjenbruk av oppsett (gjennomføringsplanen steg 8). Godkjent og kjørt på test 12.10.2026. Ikke kjørt på test.
+-- 049: gjenbruk av oppsett (gjennomføringsplanen steg 8). Godkjent og kjørt på test 12.10.2026.
 --
 -- Krever 001–047 (044_roller: private.has_club_right; 034: én spilledag per turnering og dato,
 -- flere kvelder per dato i en klubb; 047: rounds.kind, counts, points_table, hide_last_holes).

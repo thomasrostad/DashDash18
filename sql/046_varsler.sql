@@ -1,5 +1,4 @@
--- 046: varsler (gjennomføringsplanen steg 5). FORSLAG, venter på godkjenning. Ikke kjørt
--- mot Supabase.
+-- 046: varsler (gjennomføringsplanen steg 5). Godkjent og kjørt på test 12.10.2026.
 --
 -- Krever 001–045 og 047 (kjøres på test etter dem). Rører ikke 047s tabeller.
 --
