@@ -170,6 +170,8 @@ nonisolated struct TournamentDraft: Equatable, Sendable {
     /// Hva en dag heter i en ny serie med dager (`DayTerm`). Nye turneringer sier «spilledag»
     /// (09.10.2026); Golfgutu-sesongen fra før beholder «kveld». Lagres i regelsettet (`seasonRules`).
     var dayTerm: DayTerm = .playingDay
+    /// Fast plan for spilledagene (sql/049): etter «Lag» tilbys «Lag serie» med planen. Bare i en klubb.
+    var schedule: SeriesPlan? = nil
 
     init(template: RulesetTemplate, clubID: UUID?, name: String, today: String) {
         self.template = template

@@ -209,7 +209,7 @@ export async function addMember(clubID: string, name: string, handicap: number |
  * ellers går den ved siden av. `p_as_main` sendes alltid, så dette krever at 034 er kjørt.
  */
 export async function createSeason(clubID: string, name: string, rules: Record<string, unknown>, start: boolean,
-  asMain = true): Promise<void> {
+  asMain = true): Promise<string> {
   const { data, error } = await supabase.from("seasons")
     .insert({ club_id: clubID, name: name.trim(), status: "planned", rules }).select("id").single();
   if (error) throw error;
@@ -217,6 +217,7 @@ export async function createSeason(clubID: string, name: string, rules: Record<s
     const { error: aErr } = await supabase.rpc("activate_season", activateSeasonParams((data as { id: string }).id, asMain));
     if (aErr) throw new Error(`Turneringen er laget, men ikke startet. ${aErr.message}`);
   }
+  return (data as { id: string }).id;
 }
 
 /** Cup eller morroturnering i klubben (create_competition_with_entrants, sql/022). Gir id-en. */

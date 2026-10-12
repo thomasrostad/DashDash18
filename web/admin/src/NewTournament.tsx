@@ -1,18 +1,34 @@
 import { useState } from "react";
 import { createCompetition, createSeason, setPlaysWhenItSuits, type Competition } from "./data.ts";
-import { encodeRuleset, RULESET_TEMPLATES, templateRules, templateSummary, templateTitle, validateRuleset, type RulesetTemplate } from "./engine.ts";
-import { errorText } from "./supabase.ts";
+import { decodeRuleset, encodeRuleset, RULESET_TEMPLATES, templateRules, templateSummary, templateTitle, validateRuleset, type Ruleset, type RulesetTemplate } from "./engine.ts";
+import { decodeTournamentTemplate, encodeTournamentTemplate, weekdayName, type ScheduleTemplate, type SetupTemplate, type TournamentTemplate } from "./reuse.ts";
+import { SeriesForm } from "./SeriesForm.tsx";
+import { TemplateBar } from "./Templates.tsx";
+import { supabase, errorText } from "./supabase.ts";
 import { todayISO } from "./text.ts";
 
 /** «Ny turnering» som i appen: velg oppsett, navn og det viktigste. Reglene kommer fra samme maler (golfgutu-core). */
-export function NewTournament({ clubID, comps, onDone, onCancel }: {
-  clubID: string; comps: Competition[]; onDone: () => void; onCancel: () => void;
+export function NewTournament({ clubID, comps, canTemplates = false, onDone, onCancel }: {
+  clubID: string; comps: Competition[];
+  /** Egne maler for turneringer (rettigheten tournaments, sql/049). */
+  canTemplates?: boolean;
+  onDone: () => void; onCancel: () => void;
 }) {
   const [template, setTemplate] = useState<RulesetTemplate | null>(null);
+  /** Malen arrangøren valgte («Bruk mal»), med en nøkkel så skjemaet fylles på nytt. */
+  const [fromTemplate, setFromTemplate] = useState<{ key: string; value: TournamentTemplate } | null>(null);
+  function use(t: SetupTemplate) {
+    const value = decodeTournamentTemplate(t.payload);
+    const setup = value.template ?? setupFor(value.kind);
+    if (!setup) return;
+    setTemplate(setup);
+    setFromTemplate({ key: `${t.id}-${Date.now()}`, value });
+  }
   return template === null ? (
     <section>
       <button className="link" onClick={onCancel}>← Avbryt</button>
       <h2>Ny turnering</h2>
+      {canTemplates && <TemplateBar clubID={clubID} kind="tournament" canSave={false} payload={() => ({})} onUse={use} />}
       <div className="grid2">
         {RULESET_TEMPLATES.map((t) => (
           <button key={t} className="card choice" onClick={() => setTemplate(t)}>
@@ -23,8 +39,26 @@ export function NewTournament({ clubID, comps, onDone, onCancel }: {
       </div>
     </section>
   ) : (
-    <Details clubID={clubID} template={template} comps={comps} onDone={onDone} onBack={() => setTemplate(null)} />
+    <Details key={fromTemplate?.key ?? template} clubID={clubID} template={template} comps={comps} initial={fromTemplate?.value ?? null}
+      canTemplates={canTemplates} onUseTemplate={use} onDone={onDone} onBack={() => { setTemplate(null); setFromTemplate(null); }} />
   );
+}
+
+/** Oppsettet for en mal uten `template` (eldre eller laget et annet sted). */
+function setupFor(kind: TournamentTemplate["kind"]): RulesetTemplate | null {
+  return kind === "cup" ? "cup" : kind === "fun" ? "fun" : kind === "season" || kind === "league" ? "stablefordSeries" : null;
+}
+
+/** Regelsettet fra malen, eller oppsettets når malen mangler eller ikke kan leses. */
+function rulesFrom(t: TournamentTemplate | null, template: RulesetTemplate): Ruleset {
+  if (t?.rules) { try { return decodeRuleset(t.rules); } catch { /* oppsettets regler */ } }
+  return templateRules(template);
+}
+
+/** Turneringen som ble laget: konkurransens id (sesongens speil for en serie). */
+async function competitionIDForSeason(seasonID: string): Promise<string | null> {
+  const { data } = await supabase.from("competitions").select("id").eq("season_id", seasonID).maybeSingle();
+  return (data as { id: string } | null)?.id ?? null;
 }
 
 function suggestedName(t: RulesetTemplate, taken: string[]): string {
@@ -36,19 +70,24 @@ function suggestedName(t: RulesetTemplate, taken: string[]): string {
   return name;
 }
 
-function Details({ clubID, template, comps, onDone, onBack }: {
-  clubID: string; template: RulesetTemplate; comps: Competition[]; onDone: () => void; onBack: () => void;
+function Details({ clubID, template, comps, initial, canTemplates, onUseTemplate, onDone, onBack }: {
+  clubID: string; template: RulesetTemplate; comps: Competition[]; initial: TournamentTemplate | null;
+  canTemplates: boolean; onUseTemplate: (t: SetupTemplate) => void; onDone: () => void; onBack: () => void;
 }) {
   const isSeries = template === "stablefordSeries" || template === "matchSeries";
-  const base = templateRules(template);
+  const base = rulesFrom(initial, template);
   const today = todayISO();
   const [name, setName] = useState(suggestedName(template, comps.map((c) => c.name)));
   const [evenings, setEvenings] = useState(base.evenings);
-  const [dayTerm, setDayTerm] = useState<"evening" | "playingDay">("playingDay");
+  const [dayTerm, setDayTerm] = useState<"evening" | "playingDay">(initial && base.dayTerm === "evening" ? "evening" : "playingDay");
   const [start, setStart] = useState(false);
   const [asMain, setAsMain] = useState(true);
-  const [entry, setEntry] = useState(template === "cup" ? "listed" : "club");
-  const [signupOpen, setSignupOpen] = useState(true);
+  const [entry, setEntry] = useState<string>(template === "cup" ? "listed" : initial?.entry ?? "club");
+  const [signupOpen, setSignupOpen] = useState(initial?.signupOpen ?? true);
+  /** Fast spilledag (sql/049): lagres i malen, og «Lag serie» tilbys etter at turneringen er laget. */
+  const [schedule, setSchedule] = useState<ScheduleTemplate | null>(initial?.schedule ?? null);
+  /** Turneringen er laget og har en plan: «Lag serie» før vi er ferdige. */
+  const [seriesFor, setSeriesFor] = useState<string | null>(null);
   const [hasPeriod, setHasPeriod] = useState(false);
   const [startsOn, setStartsOn] = useState(today);
   const [endsOn, setEndsOn] = useState(today);
@@ -60,7 +99,7 @@ function Details({ clubID, template, comps, onDone, onBack }: {
   const activeMain = comps.find((c) => c.kind === "season" && c.status === "active" && c.is_main);
 
   function rules() {
-    const r = templateRules(template);
+    const r = rulesFrom(initial, template);
     if (isSeries) { r.evenings = evenings; r.dayTerm = dayTerm; }
     if (template === "fun" && r.competition) r.competition.fun.bestRounds = whenItSuits ? best : r.competition.fun.bestRounds;
     return r;
@@ -75,8 +114,10 @@ function Details({ clubID, template, comps, onDone, onBack }: {
     if ((hasPeriod || whenItSuits) && endsOn < startsOn) { setError("Perioden slutter før den starter."); return; }
     setBusy(true); setError(null);
     try {
+      let createdID: string | null = null;
       if (isSeries) {
-        await createSeason(clubID, name, encodeRuleset(r), start, !activeMain || asMain);
+        const seasonID = await createSeason(clubID, name, encodeRuleset(r), start, !activeMain || asMain);
+        if (schedule) createdID = await competitionIDForSeason(seasonID);
       } else {
         const period = hasPeriod || whenItSuits;
         const id = await createCompetition({
@@ -84,9 +125,28 @@ function Details({ clubID, template, comps, onDone, onBack }: {
           startsOn: period ? startsOn : null, endsOn: period ? endsOn : null, signupOpen: (template === "cup" || entry === "listed") && signupOpen,
         });
         if (whenItSuits) await setPlaysWhenItSuits(id, true);
+        createdID = id;
       }
+      if (schedule && createdID) { setSeriesFor(createdID); return; }
       onDone();
     } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
+  }
+
+  function payload(): Record<string, unknown> {
+    return encodeTournamentTemplate({
+      template, kind: isSeries ? "season" : (template as "cup" | "fun"), rules: encodeRuleset(rules()), schedule,
+      venue: schedule?.venue ?? null, entry: template === "cup" ? "listed" : (entry as "listed" | "club" | "open"),
+      signupOpen, maxEntrants: initial?.maxEntrants ?? null,
+    });
+  }
+
+  if (seriesFor) {
+    return (
+      <section>
+        <h2>{name.trim()} er laget</h2>
+        <SeriesForm comps={[]} competitionID={seriesFor} schedule={schedule} onDone={onDone} onCancel={onDone} />
+      </section>
+    );
   }
 
   return (
@@ -145,9 +205,35 @@ function Details({ clubID, template, comps, onDone, onBack }: {
             </div>
           )}
         </>}
+        {canTemplates && (
+          <fieldset>
+            <legend>Fast spilledag</legend>
+            <label className="check"><input type="checkbox" checked={schedule !== null}
+              onChange={(e) => setSchedule(e.target.checked ? { weekday: 4, everyWeeks: 1, count: Math.min(52, evenings || 10), startTime: "18:00", venue: null } : null)} />Lag serie etterpå</label>
+            {schedule && (
+              <div className="grid2 tight">
+                <label>Ukedag
+                  <select value={schedule.weekday} onChange={(e) => setSchedule({ ...schedule, weekday: Number(e.target.value) })}>
+                    {[1, 2, 3, 4, 5, 6, 7].map((d) => <option key={d} value={d}>{weekdayName(d)}</option>)}
+                  </select>
+                </label>
+                <label>Antall<input type="number" min={1} max={52} value={schedule.count}
+                  onChange={(e) => setSchedule({ ...schedule, count: Math.min(52, Math.max(1, Number(e.target.value))) })} /></label>
+                <label>Hver
+                  <select value={schedule.everyWeeks} onChange={(e) => setSchedule({ ...schedule, everyWeeks: Number(e.target.value) })}>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => <option key={n} value={n}>{n === 1 ? "uke" : `${n}. uke`}</option>)}
+                  </select>
+                </label>
+                <label>Tid<input type="time" value={schedule.startTime ?? ""} onChange={(e) => setSchedule({ ...schedule, startTime: e.target.value || null })} /></label>
+                <label>Sted<input value={schedule.venue ?? ""} maxLength={80} onChange={(e) => setSchedule({ ...schedule, venue: e.target.value || null })} /></label>
+              </div>
+            )}
+          </fieldset>
+        )}
         {error && <p className="error">{error}</p>}
         <div className="inline"><button className="primary" disabled={busy}>Lag turneringen</button></div>
       </form>
+      {canTemplates && <TemplateBar clubID={clubID} kind="tournament" payload={payload} onUse={onUseTemplate} />}
     </section>
   );
 }

@@ -127,6 +127,8 @@ private struct AdminHubContent: View {
     @State private var openEvent: UUID?
     @State private var showsNewTournament = false
     @State private var creating: EventEditItem?
+    /// «Lag serie» (sql/049).
+    @State private var creatingSeries: SeriesSheetItem?
     @State private var pendingDelete: EventRow?
     @State private var drawPlan: IdentifiedPlan?
     @State private var perEvening = 2
@@ -198,6 +200,9 @@ private struct AdminHubContent: View {
                 Menu {
                     Button("Ny \(term.one)", systemImage: "calendar.badge.plus") { newEvening() }
                         .disabled(terminliste.state != .loaded)
+                    if terminliste.supportsSeries {
+                        Button("Lag serie", systemImage: "calendar.day.timeline.left") { newSeries() }
+                    }
                     Button("Ny turnering", systemImage: "trophy") { showsNewTournament = true }
                 } label: {
                     Label("Ny", systemImage: "plus")
@@ -229,6 +234,19 @@ private struct AdminHubContent: View {
                     if loads { Task { await model.load() } }
                 }
             }
+        }
+        .sheet(item: $creatingSeries) { item in
+            NavigationStack {
+                EventSeriesSheet(plan: item.plan, taken: terminliste.takenDates,
+                                 create: { (first, plan) async throws(DataError) -> CreateSeriesResult in
+                                     try await terminliste.createSeries(firstDate: first, plan: plan)
+                                 },
+                                 done: {
+                                     creatingSeries = nil
+                                     if loads { Task { await model.load() } }
+                                 })
+            }
+            .environment(\.dayTerm, term)
         }
         .sheet(item: $drawPlan) { item in
             NavigationStack {
@@ -340,6 +358,12 @@ private struct AdminHubContent: View {
                         .foregroundStyle(Color.ddForestInk)
                 }
                 .disabled(terminliste.state != .loaded)
+                if terminliste.supportsSeries {
+                    Button { newSeries() } label: {
+                        Label("Lag serie", systemImage: "calendar.day.timeline.left")
+                            .foregroundStyle(Color.ddForestInk)
+                    }
+                }
             }
         } header: {
             DDHeader(timelineTitle(parts.focus == nil ? DayTerm.capitalized(term.theMany) : "Kommende \(term.many)"))
@@ -395,7 +419,8 @@ private struct AdminHubContent: View {
                 EveningRowLabel(event: event, referenceYear: referenceYear, isPast: isPast,
                                 committee: terminliste.committeeNames(for: event.id),
                                 signups: terminliste.signupText(for: event.id),
-                                action: progress.action, status: status)
+                                action: progress.action, status: status,
+                                series: isPast ? nil : terminliste.series(for: event.id)?.summary)
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
@@ -619,6 +644,14 @@ private struct AdminHubContent: View {
 
     private func newEvening() {
         creating = EventEditItem(draft: terminliste.draft(for: nil))
+    }
+
+    /// «Lag serie»: tid og sted som sist.
+    private func newSeries() {
+        let last = terminliste.events.last
+        let weekday = EventSeriesDates.isoWeekday(EveningDates.today()) ?? 4
+        creatingSeries = SeriesSheetItem(plan: SeriesPlan(weekday: weekday, count: 10, startTime: last?.startTime,
+                                                          venue: last?.venue))
     }
 
     private func draw() {

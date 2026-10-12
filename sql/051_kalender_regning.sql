@@ -1,4 +1,4 @@
--- 051: kalender og «Del regningen» (gjennomføringsplanen steg 10). IKKE KJØRT. Krever godkjenning.
+-- 051: kalender og «Del regningen» (gjennomføringsplanen steg 10). Godkjent og kjørt på test 12.10.2026.
 --
 -- Krever 001–049 (045: signups.waitlisted_at; 046: push_group og grupper; 044: private-skjemaet).
 -- Rører ikke 050 (reaksjoner, kommentarer, feed) og ikke push_group/push_group_map (se punkt 2e).
