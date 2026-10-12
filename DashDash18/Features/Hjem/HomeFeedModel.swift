@@ -3,7 +3,8 @@ import Observation
 import Supabase
 
 /// Hjem-feeden (fase 19): henter alt fra klubbene, turneringene og rundene dine, bygger `HomeFeed`,
-/// og holder den oppdatert. Realtime på `activity` og `activity_reactions` i alle klubbene dine;
+/// og holder den oppdatert. Etter sql/050 i sider (`feed_page`) med reaksjoner og kommentarer.
+/// Realtime på `activity` og `reactions`/`comments` (uten 050: `activity_reactions`) i alle klubbene dine;
 /// i tillegg hentes alt på nytt når appen blir aktiv (`load()` fra viewet), fordi realtime ikke sender
 /// det som kom mens den var borte (som Varsler).
 ///
@@ -24,6 +25,10 @@ final class HomeFeedModel {
     private(set) var bellCount = 0
     private(set) var isLive = false
     var errorMessage: String?
+    /// Henter neste side (`feed_page`).
+    private(set) var isLoadingMore = false
+    /// Er det eldre linjer å hente? Bare med sider (sql/050).
+    var canLoadMore: Bool { raw.paging?.hasMore == true }
 
     var filter: HomeFeedFilter = .all { didSet { if filter != oldValue { rebuild() } } }
     /// Realtime bare mens Hjem står framme (settes av Hjem). Bjella i de andre fanene henter uten.
@@ -125,8 +130,11 @@ final class HomeFeedModel {
     private func fetch() async {
         guard let client else { return }
         do {
-            raw = try await HomeFeedQueries.load(client: client, viewer: viewer, clubs: clubs, now: clock(),
-                                                 bellSince: bellSeen?.lastSeen(fallbackClubs: clubs.map(\.id)))
+            var fresh = try await HomeFeedQueries.load(client: client, viewer: viewer, clubs: clubs, now: clock(),
+                                                       bellSince: bellSeen?.lastSeen(fallbackClubs: clubs.map(\.id)))
+            // Sidene som alt er hentet, blir stående (Realtime og dra ned henter bare første side).
+            fresh.keepOlderPages(from: raw, limit: FeedPaging.pageSize)
+            raw = fresh
             if !hasOpened {
                 hasOpened = true
                 seenAtOpen = seen?.lastSeen(fallbackClubs: clubs.map(\.id))
@@ -138,6 +146,20 @@ final class HomeFeedModel {
         } catch {
             if state == .loaded { return }  // behold det som vises
             state = .failed(DataError.from(error).message)
+        }
+    }
+
+    /// Neste side av feeden (eldre linjer), når det finnes mer.
+    func loadMore() async {
+        guard let client, canLoadMore, !isLoadingMore else { return }
+        isLoadingMore = true
+        defer { isLoadingMore = false }
+        do {
+            raw = try await HomeFeedQueries.nextPage(client: client, clubs: clubs, raw: raw)
+            rebuild()
+        } catch is CancellationError {
+        } catch {
+            errorMessage = "Fikk ikke hentet eldre: " + DataError.from(error).message
         }
     }
 
@@ -180,14 +202,21 @@ final class HomeFeedModel {
 
     /// Linjene i Varsler: det som angår deg, med reaksjoner og navn.
     func bellSections(now: Date? = nil) -> [HomeBellSection] {
-        HomeBellList.sections(bellRows, reactions: raw.reactions, names: raw.names, viewer: viewer,
+        HomeBellList.sections(bellRows, reactions: raw.reactions, social: raw.social, names: raw.names, viewer: viewer,
                               lastSeen: bellSeenAtOpen, now: now ?? clock())
     }
 
     /// Har du reagert med denne på linja?
-    func hasReacted(_ reaction: ActivityReaction, on target: HomeReactions) -> Bool {
-        guard let me = viewer.memberships[target.clubID] else { return false }
+    func hasReacted(_ emoji: String, on target: HomeReactions) -> Bool {
+        if let social = raw.social[target.activityID] { return social.summary.has(emoji) }
+        guard let me = viewer.memberships[target.clubID], let reaction = ActivityReaction(rawValue: emoji) else {
+            return false
+        }
         return ActivityReactions.has(reaction, on: target.activityID, by: me, in: raw.reactions)
+    }
+
+    func hasReacted(_ reaction: ActivityReaction, on target: HomeReactions) -> Bool {
+        hasReacted(reaction.rawValue, on: target)
     }
 
     // MARK: Oppslag for kortene
@@ -207,8 +236,32 @@ final class HomeFeedModel {
 
     // MARK: Reaksjoner
 
-    /// Vises med en gang og rulles tilbake hvis basen sier nei (som Varsler).
+    /// Vises med en gang og rulles tilbake hvis basen sier nei (som Varsler). Etter sql/050 med
+    /// `react` og hvilken som helst emoji; ellers det faste settet i `activity_reactions`.
+    func toggle(_ emoji: String, on target: HomeReactions) async {
+        if let social = raw.social[target.activityID] {
+            let had = social.summary.has(emoji)
+            raw.social[target.activityID]?.summary = social.summary.toggled(emoji)
+            rebuild()
+            guard let client else { return }
+            do {
+                try await SocialService(client: client).react(emoji, on: target.target, !had)
+            } catch {
+                raw.social[target.activityID]?.summary = social.summary
+                rebuild()
+                errorMessage = "Klarte ikke å lagre reaksjonen: " + DataError.from(error).message
+            }
+            return
+        }
+        guard let reaction = ActivityReaction(rawValue: emoji) else { return }
+        await toggleLegacy(reaction, on: target)
+    }
+
     func toggle(_ reaction: ActivityReaction, on target: HomeReactions) async {
+        await toggle(reaction.rawValue, on: target)
+    }
+
+    private func toggleLegacy(_ reaction: ActivityReaction, on target: HomeReactions) async {
         guard let me = viewer.memberships[target.clubID] else { return }
         let had = ActivityReactions.has(reaction, on: target.activityID, by: me, in: raw.reactions)
         let before = raw.reactions
@@ -226,6 +279,35 @@ final class HomeFeedModel {
         }
     }
 
+    /// «Hvem har reagert»: radene fra `reactions` (050), ellers navnene som alt er hentet.
+    func who(_ target: HomeReactions) async throws -> [ReactionWhoGroup] {
+        guard raw.social[target.activityID] != nil, let client else { return ReactionWho.groups(target.chips) }
+        let rows = try await SocialService(client: client).reactions(.activity, ids: [target.activityID])
+        let names = raw.names
+        return ReactionWho.groups(rows, name: { names[$0] })
+    }
+
+    // MARK: Kommentarer
+
+    /// Kommentarene på en hendelse eller en melding i en av klubbene dine. `canModerate`: rettigheten
+    /// «penger» i klubben (kan slette andres); uten svar brukes arrangøren.
+    func comments(for target: SocialTarget, canModerate: Bool? = nil) -> CommentsModel? {
+        guard let club = target.clubID, let me = viewer.memberships[club] else { return nil }
+        let author = target.kind == .activity ? raw.activity.first { $0.id == target.id }?.actorMemberID : nil
+        let people = raw.members.filter { $0.clubID == club && $0.status != .archived }
+            .map { TradPerson(id: $0.id, name: $0.displayName) }
+        let model = CommentsModel(target: target, me: me, isModerator: canModerate ?? viewer.organizerClubs.contains(club),
+                                  isTargetAuthor: author == me, people: people, names: raw.names, client: client)
+        model.onCountChange = { [weak self] count in self?.setCommentCount(count, on: target.id) }
+        return model
+    }
+
+    private func setCommentCount(_ count: Int, on activityID: UUID) {
+        guard raw.social[activityID] != nil, raw.social[activityID]?.commentCount != count else { return }
+        raw.social[activityID]?.commentCount = count
+        rebuild()
+    }
+
     // MARK: Realtime
 
     private func startRealtime() async {
@@ -234,8 +316,14 @@ final class HomeFeedModel {
         let channel = client.channel("hjem-\(profile.uuidString)")
         let activity = channel.postgresChange(InsertAction.self, schema: "public", table: "activity",
                                               filter: .in("club_id", values: ids))
-        let reactionChanges = channel.postgresChange(AnyAction.self, schema: "public", table: "activity_reactions",
+        // Etter sql/050: `reactions` og `comments`. Ellers det faste settet.
+        let social = raw.paging != nil
+        let reactionChanges = channel.postgresChange(AnyAction.self, schema: "public",
+                                                     table: social ? "reactions" : "activity_reactions",
                                                      filter: .in("club_id", values: ids))
+        let commentChanges = social
+            ? channel.postgresChange(AnyAction.self, schema: "public", table: "comments", filter: .in("club_id", values: ids))
+            : nil
         let statuses = channel.statusChange
         self.channel = channel
         listenTasks = [
@@ -250,6 +338,10 @@ final class HomeFeedModel {
             },
             Task { [weak self] in
                 for await _ in reactionChanges { await self?.load() }
+            },
+            Task { [weak self] in
+                guard let commentChanges else { return }
+                for await _ in commentChanges { await self?.load() }
             },
             Task { try? await channel.subscribeWithError() },
         ]

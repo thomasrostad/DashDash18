@@ -82,9 +82,13 @@ struct ActivityRowView: View {
     let model: VarslerModel
 
     var body: some View {
+        // Klubbens logg bruker det faste settet (`activity_reactions`), også etter sql/050.
         ActivityLineView(display: item.display, time: item.time, isUnread: item.isUnread, chips: item.chips,
-                         hasReacted: { model.hasReacted($0, on: item.id) },
-                         toggle: { reaction in Task { await model.toggle(reaction, on: item.id) } })
+                         hasReacted: { ActivityReaction(rawValue: $0).map { model.hasReacted($0, on: item.id) } ?? false },
+                         toggle: { emoji in
+                             guard let reaction = ActivityReaction(rawValue: emoji) else { return }
+                             Task { await model.toggle(reaction, on: item.id) }
+                         })
     }
 }
 
@@ -95,8 +99,11 @@ struct ActivityLineView: View {
     let time: String
     let isUnread: Bool
     let chips: [ReactionChip]
-    let hasReacted: (ActivityReaction) -> Bool
-    let toggle: (ActivityReaction) -> Void
+    let hasReacted: (String) -> Bool
+    let toggle: (String) -> Void
+    /// «Annen emoji …» (sql/050). nil: bare det faste settet.
+    var pickOther: (() -> Void)?
+    var showWho: (() -> Void)?
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -129,16 +136,9 @@ struct ActivityLineView: View {
         .padding(.vertical, 6)
         .accessibilityElement(children: .combine)
         .contextMenu {
-            ForEach(ActivityReaction.allCases, id: \.self) { reaction in
-                let mine = hasReacted(reaction)
-                Button {
-                    toggle(reaction)
-                } label: {
-                    Text(reaction.rawValue + "  " + (mine ? "Fjern" : reaction.accessibilityName))
-                }
-            }
-            let who = chips.map { $0.reaction.rawValue + " " + NorwegianList.join($0.names) }
-            if !who.isEmpty {
+            ReactionMenuItems(isMine: hasReacted, toggle: toggle, pickOther: pickOther, showWho: showWho)
+            let who = chips.filter { !$0.names.isEmpty }.map { $0.emoji + " " + NorwegianList.join($0.names) }
+            if !who.isEmpty, showWho == nil {
                 Section("Har reagert") {
                     ForEach(who, id: \.self) { Text($0) }
                 }
@@ -150,18 +150,18 @@ struct ActivityLineView: View {
 /// Brikkene: emoji og antall. Trykk setter eller fjerner din egen.
 struct ReactionChipsView: View {
     let chips: [ReactionChip]
-    let onTap: (ActivityReaction) -> Void
+    let onTap: (String) -> Void
 
     var body: some View {
         HStack(spacing: 6) {
             ForEach(chips) { chip in
                 Button {
-                    onTap(chip.reaction)
+                    onTap(chip.emoji)
                 } label: {
-                    DDReactionChip(emoji: chip.reaction.rawValue, count: chip.count, isMine: chip.isMine)
+                    DDReactionChip(emoji: chip.emoji, count: chip.count, isMine: chip.isMine)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(chip.reaction.accessibilityName), \(chip.count): \(NorwegianList.join(chip.names))")
+                .accessibilityLabel(ReactionText.chipLabel(chip))
                 .accessibilityAddTraits(chip.isMine ? .isSelected : [])
             }
         }
