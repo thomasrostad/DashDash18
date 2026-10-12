@@ -53,6 +53,26 @@ final class TerminlisteModel {
     /// Tak, frister, gjester og logg finnes (sql/045 er kjørt).
     var supportsSignupRules: Bool { settings != nil }
 
+    /// Seriene i klubben (sql/049), serie-id → serien. nil når 049 ikke er kjørt: da skjules «Lag serie»
+    /// og valget «Bare denne» / «Denne og fremtidige».
+    private(set) var series: [UUID: EventSeriesRow]?
+    /// Kveld → serien den ble laget i.
+    private(set) var eventSeries: [UUID: UUID] = [:]
+    /// Turneringsraden nye serier hører til: turneringen, eller sesongens rad i `competitions`.
+    private(set) var seriesCompetitionID: UUID?
+
+    /// «Lag serie» kan vises: 049 finnes, og lista hører til en turnering.
+    var supportsSeries: Bool { series != nil && seriesCompetitionID != nil }
+
+    /// Serien kvelden hører til, når 049 finnes.
+    func series(for eventID: UUID?) -> EventSeriesRow? {
+        guard let eventID, let id = eventSeries[eventID] else { return nil }
+        return series?[id]
+    }
+
+    /// Datoene turneringen alt har (de hoppes over i en ny serie).
+    var takenDates: Set<String> { Set(events.map(\.eventDate)) }
+
     private let context: ClubContext
     /// Turneringen kveldene hører til (fase 21). nil: hovedturneringen (den aktive).
     let tournamentID: UUID?
@@ -107,7 +127,9 @@ final class TerminlisteModel {
             committees = Dictionary(grouping: committee, by: \.eventID).mapValues { $0.map(\.memberID) }
             members = KveldQueries.sortedByName(roster)
             state = .loaded
-            await loadSignups()
+            async let signupsDone: Void = loadSignups()
+            async let seriesDone: Void = loadSeries()
+            _ = await (signupsDone, seriesDone)
         } catch {
             if case .loaded = state { return }  // behold det vi har ved en feilet oppfrisking
             state = .failed(DataError.from(error).message)
@@ -127,6 +149,52 @@ final class TerminlisteModel {
         settings = await settingRows
         guests = Dictionary(grouping: await guestRows, by: \.eventID)
         views = settings == nil ? nil : await viewRows
+    }
+
+    /// Seriene og turneringsraden de hører til (sql/049). Bare et tillegg: feiler det, skjules seriene.
+    private func loadSeries() async {
+        let loaded = await ReuseService.series(client: client, clubID: clubID)
+        series = loaded?.series
+        eventSeries = loaded?.eventSeries ?? [:]
+        guard loaded != nil else { seriesCompetitionID = nil; return }
+        if let competition {
+            seriesCompetitionID = competition.id
+        } else if let season = activeSeason {
+            seriesCompetitionID = await ReuseService.competitionID(client: client, seasonID: season.id)
+        } else {
+            seriesCompetitionID = nil
+        }
+    }
+
+    // MARK: Serier (sql/049)
+
+    /// «Lag serie»: spilledagene fra og med `firstDate`. Datoer turneringen alt har, hoppes over.
+    func createSeries(firstDate: String, plan: SeriesPlan) async throws(DataError) -> CreateSeriesResult {
+        guard let competitionID = seriesCompetitionID else { throw .notAllowed }
+        let result = try await ReuseService.createSeries(client: client, competitionID: competitionID,
+                                                         firstDate: firstDate, plan: plan)
+        await load()
+        return result
+    }
+
+    /// Lagrer en kveld i en serie. «Bare denne» er en vanlig lagring. «Denne og fremtidige» flytter
+    /// tid, sted og dato for denne og senere kvelder i serien (`update_event_series`), og lagrer så
+    /// notatet, komiteen og påmeldingen for denne. Gir en melding når noen kvelder ble hoppet over.
+    func save(_ draft: EventDraft, scope: SeriesScope) async throws(DataError) -> String? {
+        guard scope == .future, let id = draft.id, let event = events.first(where: { $0.id == id }),
+              series(for: id) != nil else {
+            try await save(draft)
+            return nil
+        }
+        let venue = try EventInput.text(draft.venue, max: EventInput.venueMax, field: "Sted").get()
+        let date = EveningDates.dateString(from: draft.date)
+        let dates = Dictionary(events.map { ($0.id, $0.eventDate) }, uniquingKeysWith: { a, _ in a })
+        let result = try await ReuseService.updateSeries(
+            client: client, eventID: id, scope: .future,
+            startTime: draft.hasTime ? EveningDates.timeString(from: draft.time) : nil,
+            venue: venue, newDate: date == event.eventDate ? nil : date)
+        try await save(draft)
+        return SeriesText.updated(result, dates: dates)
     }
 
     /// Hele troppen fordelt på svarene for kvelden, med gjestene og hvem som har sett den.

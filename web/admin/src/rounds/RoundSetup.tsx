@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
 import { type Ruleset, allowanceFor, courseHoles, formSetup, isTeamForm, rulesetSuggestions, suggestedClosestToPinHole, suggestedLongestDriveHole } from "../../../golfgutu-core/src/index.ts";
+import { applyPreviousPlayers, applyRoundTemplate, decodeRoundTemplate, encodeRoundTemplate, type PreviousSetup } from "../reuse.ts";
+import { TemplateBar } from "../Templates.tsx";
+import { longDate } from "../text.ts";
+import { autoArrange } from "./logic.ts";
 import { dayDrawPlan, loadSlopeCatalog, loadSourceCourses, saveDraft, startRound, type DayData, type ListRound } from "./api.ts";
 import {
   coreCourseWithTee, courseItemReady, courseSummary, filterSlope, previousTeeID, slopePlace, suggestedTee, teeDetail,
@@ -18,8 +22,12 @@ import {
  * RundeBaysStep, RundeSetupStep): bane og tee, start, spillere og båser, form, lag, matcher, sidepremier og
  * vekt og handicap. Lagres som kladd eller startes med de samme RPC-ene som appen.
  */
-export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }: {
+export function RoundSetup({ clubID, data, initial, titleOf, previous = null, canTemplates = false, onCancel, onDone }: {
   clubID: string; data: DayData; initial: RoundDraft; titleOf: (r: ListRound) => string;
+  /** «Samme som sist» fra `previous_round_setup` (sql/049): spillerne og båsene som forslag. */
+  previous?: PreviousSetup | null;
+  /** «Lagre som mal» og «Bruk mal» (rettigheten rounds, sql/049). */
+  canTemplates?: boolean;
   onCancel: () => void; onDone: (text: string) => void;
 }) {
   // Som `onAppear` i appen: lag og matcher klare, og uten valg mellom simulator og ekte bane følger stedet banen.
@@ -80,9 +88,39 @@ export function RoundSetup({ clubID, data, initial, titleOf, onCancel, onDone }:
     }
   }
 
+  const readyCourses = () => courses.filter(courseItemReady)
+    .map((c) => ({ id: c.course.id, isReady: true, holeCount: c.holes.length, teeIDs: c.tees.map((t) => t.id) }));
+
+  /** Spillerne fra sist, eller en ny trekning med dem som er med nå. */
+  function usePlayers(fromLast: boolean) {
+    if (!previous) return;
+    let d = fromLast ? applyPreviousPlayers(draft, previous, roster) : { ...draft, participants: initial.participants, participantSource: initial.participantSource, teams: {}, matches: [] };
+    d = fromLast ? prepareSetup(d, rules, roster, plan) : autoArrange(d, rules, roster, plan);
+    setDraft(d);
+    setBays(Math.max(1, highestBay(d.bays)));
+  }
+
   return (
     <div className="setup">
       <h3>{draft.isSaved ? `Fortsett kladd · ${title}` : `Sett opp ${title}`}</h3>
+
+      {!draft.isSaved && previous && previous.players.length > 0 && (
+        <div className="card">
+          <h3>Samme som sist</h3>
+          <p className="muted small">Banen og valgene er fylt inn fra runde {previous.roundNo}{previous.eventDate ? ` ${longDate(previous.eventDate)}` : ""}.</p>
+          <div className="inline">
+            <button type="button" onClick={() => usePlayers(true)}>Bruk spillerne fra sist</button>
+            <button type="button" onClick={() => usePlayers(false)}>Ny trekning</button>
+          </div>
+        </div>
+      )}
+
+      {canTemplates && (
+        <TemplateBar clubID={clubID} kind="round" payload={() => encodeRoundTemplate(draft)} onUse={(t) => {
+          const d = applyRoundTemplate(draft, decodeRoundTemplate(t.payload), readyCourses(), rules.formats.allowedFormIDs, data.tableRules);
+          setDraft(prepareSetup(d, rules, roster, plan));
+        }} />
+      )}
 
       <div className="card">
         <h3>Bane</h3>

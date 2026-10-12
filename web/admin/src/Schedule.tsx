@@ -6,10 +6,15 @@ import { DayRounds } from "./rounds/DayRounds.tsx";
 import { EveningSignups } from "./EveningSignups.tsx";
 import { settingsForm, type EveningSettings, type SettingsForm } from "./signups.ts";
 import { eveningSettings, saveSettings } from "./signupsApi.ts";
+import { seriesText } from "./reuse.ts";
+import { reuseAvailable, seriesFor, updateEventSeries, type SeriesRow } from "./reuseApi.ts";
+import { SeriesForm } from "./SeriesForm.tsx";
 
 /** Terminlista: kvelder og spilledager for alle turneringene i klubben, med ny, endre, slette og komité. */
-export function Schedule({ clubID, days, comps, roster, committees, onChanged }: {
+export function Schedule({ clubID, days, comps, roster, committees, onChanged, canTournaments = true, canRounds = true }: {
   clubID: string; days: EventRow[]; comps: Competition[]; roster: Member[]; committees: Record<string, string[]>; onChanged: () => void;
+  /** Rettighetene (sql/044): serier krever tournaments, maler for runder krever rounds. */
+  canTournaments?: boolean; canRounds?: boolean;
 }) {
   const [editing, setEditing] = useState<EventRow | "new" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -17,8 +22,24 @@ export function Schedule({ clubID, days, comps, roster, committees, onChanged }:
   const [signupsFor, setSignupsFor] = useState<EventRow | null>(null);
   /** Tak, frister og gjester per dato (sql/045). null: 045 er ikke kjørt, så feltene skjules. */
   const [settings, setSettings] = useState<Record<string, EveningSettings> | null>(null);
+  /** Serier (sql/049). null: 049 er ikke kjørt, så «Lag serie» og valget for serien skjules. */
+  const [series, setSeries] = useState<{ eventSeries: Record<string, string>; series: Record<string, SeriesRow> } | null>(null);
+  const [makingSeries, setMakingSeries] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const today = todayISO();
   const ids = days.map((d) => d.id).join(",");
+  useEffect(() => {
+    let live = true;
+    reuseAvailable().then(async (ok) => {
+      const s = ok ? await seriesFor(clubID) : null;
+      if (live) setSeries(s);
+    });
+    return () => { live = false; };
+  }, [clubID, ids]);
+  const seriesOf = (e: EventRow): SeriesRow | null => {
+    const id = series?.eventSeries[e.id];
+    return id ? series?.series[id] ?? null : null;
+  };
   useEffect(() => {
     let live = true;
     eveningSettings(ids ? ids.split(",") : []).then((s) => { if (live) setSettings(s); });
@@ -38,18 +59,26 @@ export function Schedule({ clubID, days, comps, roster, committees, onChanged }:
   }
 
   if (roundsFor) {
-    return <DayRounds clubID={clubID} event={roundsFor} days={days} comps={comps} onBack={() => { setRoundsFor(null); onChanged(); }} />;
+    return <DayRounds clubID={clubID} event={roundsFor} days={days} comps={comps} canTemplates={canRounds} onBack={() => { setRoundsFor(null); onChanged(); }} />;
   }
 
   return (
     <section>
-      <div className="inline"><button className="primary" onClick={() => setEditing("new")}>Ny dato</button></div>
+      <div className="inline">
+        <button className="primary" onClick={() => { setEditing("new"); setNotice(null); }}>Ny dato</button>
+        {series && canTournaments && <button onClick={() => { setMakingSeries(true); setNotice(null); }}>Lag serie</button>}
+      </div>
       {error && <p className="error">{error}</p>}
+      {notice && <p className="muted">{notice}</p>}
+      {makingSeries && (
+        <SeriesForm comps={comps} onDone={() => { setMakingSeries(false); onChanged(); }} onCancel={() => setMakingSeries(false)} />
+      )}
       {editing && (
         <EventForm clubID={clubID} event={editing === "new" ? null : editing} comps={comps} roster={roster}
           committee={editing === "new" ? [] : committees[editing.id] ?? []}
           settings={settings === null ? null : settingsForm(editing === "new" ? null : settings[editing.id])}
-          lastVenue={days.at(-1)?.venue ?? ""} onDone={() => { setEditing(null); onChanged(); }} onCancel={() => setEditing(null)} />
+          lastVenue={days.at(-1)?.venue ?? ""} inSeries={editing !== "new" && series !== null && seriesOf(editing) !== null} days={days}
+          onDone={(text) => { setEditing(null); setNotice(text ?? null); onChanged(); }} onCancel={() => setEditing(null)} />
       )}
       {days.length === 0 ? <p className="muted">Ingen kvelder eller spilledager ennå.</p> : (
         <table>
@@ -57,7 +86,7 @@ export function Schedule({ clubID, days, comps, roster, committees, onChanged }:
           <tbody>
             {days.map((e) => (
               <tr key={e.id} className={e.event_date < today ? "past" : ""}>
-                <td>{longDate(e.event_date)}</td>
+                <td>{longDate(e.event_date)}{seriesOf(e) && <div className="muted small">{seriesText(seriesOf(e)!)}</div>}</td>
                 <td>{timeText(e.start_time) ?? "–"}</td>
                 <td>{e.venue ?? "–"}</td>
                 <td>{nameOf(e)}</td>
@@ -77,12 +106,15 @@ export function Schedule({ clubID, days, comps, roster, committees, onChanged }:
   );
 }
 
-function EventForm({ clubID, event, comps, roster, committee, settings, lastVenue, onDone, onCancel }: {
+function EventForm({ clubID, event, comps, roster, committee, settings, lastVenue, inSeries, days, onDone, onCancel }: {
   clubID: string; event: EventRow | null; comps: Competition[]; roster: Member[]; committee: string[];
   /** null: sql/045 er ikke kjørt. */
   settings: SettingsForm | null;
-  lastVenue: string; onDone: () => void; onCancel: () => void;
+  /** Datoen hører til en serie (sql/049): dato, tid og sted endres med update_event_series. */
+  inSeries: boolean; days: EventRow[];
+  lastVenue: string; onDone: (text?: string) => void; onCancel: () => void;
 }) {
+  const [scope, setScope] = useState<"one" | "future">("one");
   const [rules, setRules] = useState<SettingsForm | null>(settings);
   const choices = comps.filter((c) => c.status !== "finished" && c.kind !== "game" && (c.kind === "season" ? c.season_id : c.club_id));
   const initialChoice = event
@@ -107,9 +139,22 @@ function EventForm({ clubID, event, comps, roster, committee, settings, lastVenu
     };
     setBusy(true); setError(null);
     try {
+      let text: string | undefined;
+      if (event && inSeries) {
+        // Dato, tid og sted for denne (og eventuelt de neste) i serien i én transaksjon.
+        const moved = date !== event.event_date;
+        const changed = moved || (input.start_time ?? null) !== (event.start_time ?? null) || (venue.trim() || null) !== (event.venue ?? null);
+        if (changed || scope === "future") {
+          const r = await updateEventSeries({ eventID: event.id, scope, startTime: time || null, venue: venue || null, newDate: moved ? date : null });
+          if (r.skipped.length > 0) {
+            const skipped = r.skipped.map((id) => days.find((d) => d.id === id)?.event_date).filter((d): d is string => !!d);
+            text = `Ikke endret (passert eller startet): ${skipped.map((d) => longDate(d)).join(", ")}.`;
+          }
+        }
+      }
       const id = await saveEvent(clubID, event?.id ?? null, input, members);
       if (rules && settings && JSON.stringify(rules) !== JSON.stringify(settings)) await saveSettings(id, rules);
-      onDone();
+      onDone(text);
     }
     catch (err) { setError(errorText(err)); }
     finally { setBusy(false); }
@@ -130,6 +175,14 @@ function EventForm({ clubID, event, comps, roster, committee, settings, lastVenu
           </select>
         </label>
       </div>
+      {inSeries && (
+        <fieldset>
+          <legend>Datoen er en del av en serie</legend>
+          <label className="check"><input type="radio" name="scope" checked={scope === "one"} onChange={() => setScope("one")} />Bare denne</label>
+          <label className="check"><input type="radio" name="scope" checked={scope === "future"} onChange={() => setScope("future")} />Denne og fremtidige</label>
+          {scope === "future" && <p className="muted small">Tid og sted gjelder de neste i serien. Ny dato flytter dem like mange dager. Passerte og startede røres ikke.</p>}
+        </fieldset>
+      )}
       <label>Notat<input value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} /></label>
       <fieldset>
         <legend>Sosialkomité</legend>

@@ -10,6 +10,10 @@ struct EventEditor: View {
     @State private var error: String?
     @State private var isBusy = false
     @State private var confirmDelete = false
+    /// «Bare denne» eller «Denne og fremtidige», for en kveld i en serie (sql/049).
+    @State private var scope: SeriesScope = .one
+    /// Kvelder som ikke ble endret (passert eller startet). Vises før arket lukkes.
+    @State private var notice: String?
 
     var body: some View {
         DDForm {
@@ -32,6 +36,10 @@ struct EventEditor: View {
                     .lineLimit(2...5)
             } footer: {
                 DDFooter("Én \(dayTerm.one) per dato.")
+            }
+
+            if let series = model.series(for: draft.id) {
+                seriesSection(series)
             }
 
             if model.supportsSignupRules {
@@ -82,10 +90,27 @@ struct EventEditor: View {
                 }
             }
         }
+        .messageAlert("Serien er endret", text: Binding(get: { notice }, set: { if $0 == nil { notice = nil; done() } }))
         .confirmationDialog("Slette \(dayTerm.the)?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Slett", role: .destructive, action: delete)
         } message: {
             Text("Påmeldingene og sosialkomiteen for \(dayTerm.the) slettes også.")
+        }
+    }
+
+    /// Serien kvelden hører til: «Hver torsdag kl. 18:00», og om endringen gjelder bare denne.
+    private func seriesSection(_ series: EventSeriesRow) -> some View {
+        Section {
+            Picker("Endre", selection: $scope) {
+                ForEach(SeriesScope.allCases, id: \.self) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+        } header: {
+            DDHeader("Serie · \(series.summary)")
+        } footer: {
+            DDFooter(scope == .one
+                     ? "Bare \(dayTerm.the) endres."
+                     : "Tid, sted og dato endres også for senere \(dayTerm.many) i serien. Passerte og startede står.")
         }
     }
 
@@ -134,7 +159,20 @@ struct EventEditor: View {
     }
 
     private func save() {
-        run { () async throws(DataError) in try await model.save(draft) }
+        isBusy = true
+        error = nil
+        Task {
+            defer { isBusy = false }
+            do throws(DataError) {
+                if let message = try await model.save(draft, scope: scope) {
+                    notice = message
+                } else {
+                    done()
+                }
+            } catch {
+                self.error = error.message
+            }
+        }
     }
 
     private func delete() {

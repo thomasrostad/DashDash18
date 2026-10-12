@@ -25,6 +25,13 @@ struct RundeQuickStartView: View {
     @State private var originalLinks: Set<UUID>?
     /// «Teller også i …» (fase 15). Nil når `CompetitionsFeature` er av.
     @State var links: CompetitionLinkModel?
+    /// «Samme som sist» fra serveren (sql/049). nil: ingen, eller 049 mangler (da står forslaget fra
+    /// `QuickStart.previousRound`).
+    @State private var previous: PreviousRoundSetup?
+    /// Klubbens rundemaler (sql/049). nil: skjult.
+    @State private var templates: SetupTemplateStore?
+    @State private var showsSaveTemplate = false
+    @State private var showsTemplates = false
 
     private var rules: Ruleset { model.rules }
     private var term: GroupTerm { draft.groupTerm }
@@ -34,6 +41,11 @@ struct RundeQuickStartView: View {
     var body: some View {
         DDForm {
             summarySection
+            if let previous, !draft.isSaved {
+                PreviousRoundSection(previous: previous, term: term,
+                                     samePlayers: { model.applyPlayers(from: previous, to: &draft) },
+                                     freshDraw: { model.freshDraw(&draft) })
+            }
             if let links {
                 // Skjules av seg selv når det ikke finnes noe å koble til.
                 CountsAlsoInSection(model: links, candidates: links.candidates(players: linkPlayers))
@@ -70,6 +82,19 @@ struct RundeQuickStartView: View {
                 .ddNavigationChrome()
                 .navigationBarTitleDisplayMode(.inline)
         }
+        .navigationDestination(isPresented: $showsTemplates) {
+            if let templates { TemplateListView(store: templates) }
+        }
+        .toolbar {
+            if let templates, templates.isAvailable {
+                ToolbarItem(placement: .topBarTrailing) { templateMenu(templates) }
+            }
+        }
+        .saveTemplatePrompt(isPresented: $showsSaveTemplate,
+                            suggestion: selectedCourse?.course.name ?? "") { name async throws(DataError) in
+            try await templates?.save(name: name, payload: RoundTemplatePayload(draft: draft))
+        }
+        .task { await loadReuse() }
         .navigationDestination(isPresented: $showsMore) {
             RundeSetupStep(model: model, draft: $draft, bayCount: bayCount)
                 .navigationTitle("Flere valg")
@@ -99,6 +124,48 @@ struct RundeQuickStartView: View {
             draft.prepareSetup(rules: rules, roster: model.members, plan: model.drawPlan(for: draft))
         }
         .messageAlert("Det gikk ikke", text: $error)
+    }
+
+    // MARK: Gjenbruk (sql/049)
+
+    private func templateMenu(_ store: SetupTemplateStore) -> some View {
+        Menu {
+            if let rows = store.templates, !rows.isEmpty {
+                Menu("Bruk mal", systemImage: "doc.on.doc") {
+                    ForEach(rows) { row in
+                        Button(row.name) { use(row) }
+                    }
+                }
+            }
+            Button("Lagre som mal", systemImage: "square.and.arrow.down") { showsSaveTemplate = true }
+            Button("Maler", systemImage: "list.bullet") { showsTemplates = true }
+        } label: {
+            Label("Mal", systemImage: "doc.on.doc")
+        }
+    }
+
+    private func use(_ row: SetupTemplateRow) {
+        guard let setup = row.decode(RoundTemplatePayload.self) else {
+            error = "Malen kunne ikke leses."
+            return
+        }
+        model.apply(setup, to: &draft)
+    }
+
+    /// Malene, og forslaget fra forrige runde for en ny runde. Fyller inn oppsettet bare når ingenting
+    /// er endret ennå; spillerne står til arrangøren velger «Samme spillere».
+    private func loadReuse() async {
+        if templates == nil, let store = model.roundTemplates() {
+            templates = store
+            await store.load()
+        }
+        guard !draft.isSaved, previous == nil else { return }
+        guard case .found(let setup) = await model.previousSetup(for: draft.eventID) else { return }
+        previous = setup
+        let untouched = original == nil || original == draft
+        guard untouched else { return }
+        model.apply(setup.setup, to: &draft)
+        original = draft
     }
 
     /// Noe er endret siden skjermen åpnet: kladden eller «Teller også i …».
