@@ -102,6 +102,8 @@ nonisolated struct StatsRoundRow: Codable, Equatable, Identifiable, Sendable {
     var slopeRating: Int? = nil
     /// Teens par frosset ved start når teen har egne hull (sql/030). Tom = banens par.
     var teePar: Int? = nil
+    /// `normal` eller `playoff` (sql/047). En playoff er ingen vanlig runde og står utenfor statistikken.
+    var kind: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -110,6 +112,7 @@ nonisolated struct StatsRoundRow: Codable, Equatable, Identifiable, Sendable {
         case courseID = "course_id"
         case name
         case status
+        case kind
         case holeCount = "hole_count"
         case firstHole = "first_hole"
         case format
@@ -122,11 +125,16 @@ nonisolated struct StatsRoundRow: Codable, Equatable, Identifiable, Sendable {
     }
 
     /// Rundens CR og slope (sql/029) bare når `SlopeNoFeature` er på, teens par (sql/030) bare med `usesHoles`.
-    static let columns = """
+    /// `kind` (sql/047) bare når kolonnen finnes (`RoundRulesFeature`).
+    static var columns: String { baseColumns + (RoundRulesFeature.isAvailable ? ", kind" : "") }
+
+    static let baseColumns = """
         id, club_id, event_id, course_id, name, status, hole_count, first_hole, format, \
         handicap_allowance, external_handicap, started_at
         """ + (SlopeNoFeature.isEnabled ? ", course_rating, slope_rating" : "")
         + (SlopeNoFeature.isEnabled && SlopeNoFeature.usesHoles ? ", tee_par" : "")
+
+    var isPlayoff: Bool { kind == "playoff" }
 }
 
 /// Spilleren i runden: frosset indeks og spillehandicap. Klubb kan være tom (løs runde).

@@ -84,7 +84,12 @@ struct SpillView: View {
             if phase == .active { Task { await model.load() } }
         }
         .navigationDestination(item: $openRound) { roundID in
-            if let context = model.looseContext(roundID) {
+            if let client = model.client, (model.ongoing + model.finished).contains(where: { $0.id == roundID && $0.isPlayoff }) {
+                // En playoff (sql/047) føres hull for hull i rekkefølgen, ikke på hullkortet.
+                PlayoffScreen(model: PlayoffModel(client: client, roundID: roundID, tied: [], viewer: nil,
+                                                  userID: model.userID, canManage: false), showsClose: false)
+                    .onDisappear { Task { await model.load() } }
+            } else if let context = model.looseContext(roundID) {
                 LooseRoundScreen(context: context)
                     .onDisappear { Task { await model.load() } }
             }

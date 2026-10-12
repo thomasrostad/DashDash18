@@ -8,9 +8,11 @@ import {
   activityDisplay,
   type ActivityPayload,
   apnsBody,
+  attachAlreadyNotified,
   attachBlocks,
   classifyApnsResponse,
   clubAllows,
+  dropoutLookup,
   eveningLongText,
   formatMeters,
   type JobPayload,
@@ -371,6 +373,34 @@ Deno.test("opprykk går bare til den som fikk plass, avmelding til arrangørene"
   eq(planPush(job(dropped), NOW).notifications.map((n) => n.memberId), [THOMAS]);
   // Den som meldte seg av, står bak: har mottakeren blokkert hen, blir det ingen push.
   ok(pushOriginators(job(dropped)).includes(BJORN));
+});
+
+Deno.test("forfall: ett varsel per person (appens linje og serverens signup_dropped)", () => {
+  // Bjørn melder forfall. Serveren varsler arrangøren (Thomas), appens linje går til alle andre.
+  const app = activity("signup", "signup", { member: BJORN, status: "no", event_date: "2026-10-08" }, { actor_member_id: BJORN });
+  eq(dropoutLookup(job(app)), { eventId: "event-1", member: BJORN, createdAt: RECENT });
+  eq(planPush(job(app), NOW).notifications.map((n) => n.memberId), [THOMAS, ANDERS, CATO]);
+  const server = { recipients: [THOMAS], created_at: "2026-10-08T17:58:59Z" };
+  const withDrop = attachAlreadyNotified(job(app), [server]);
+  eq(withDrop.already_notified_ids, [THOMAS]);
+  eq(planPush(withDrop, NOW).notifications.map((n) => n.memberId), [ANDERS, CATO]);
+  // Serverens linje går fortsatt bare til arrangøren.
+  const dropped = activity("signup_dropped", "signup", { member: BJORN }, { actor_member_id: BJORN, recipients: [THOMAS] });
+  eq(planPush(job(dropped), NOW).notifications.map((n) => n.memberId), [THOMAS]);
+});
+
+Deno.test("forfall: bare forfall, og bare signup_dropped nær i tid", () => {
+  const yes = activity("signup", "signup", { member: BJORN, status: "yes" }, { actor_member_id: BJORN });
+  eq(dropoutLookup(job(yes)), null);
+  eq(attachAlreadyNotified(job(yes), [{ recipients: [THOMAS], created_at: RECENT }]).already_notified_ids, undefined);
+  const noEvent = activity("signup", "signup", { member: BJORN, status: "no" }, { event_id: null });
+  eq(dropoutLookup(job(noEvent)), null);
+  const app = activity("signup", "signup", { member: BJORN, status: "no" }, { actor_member_id: BJORN });
+  // En gammel avmelding (mer enn ti minutter unna) gjelder ikke.
+  eq(attachAlreadyNotified(job(app), [{ recipients: [THOMAS], created_at: "2026-10-08T17:40:00Z" }]).already_notified_ids, undefined);
+  eq(planPush(attachAlreadyNotified(job(app), []), NOW).notifications.length, 3);
+  // recipients null: alle har fått den.
+  eq(planPush(attachAlreadyNotified(job(app), [{ recipients: null, created_at: RECENT }]), NOW).skipped, "ingen mottakere");
 });
 
 Deno.test("ny runde", () => {

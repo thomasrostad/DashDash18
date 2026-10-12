@@ -21,7 +21,8 @@ function row(p: Partial<RoundRow> = {}): RoundRow {
     id: roundID, clubID: id(800), eventID: id(803), courseID, roundNo: 1, name: null, status: "active", holeCount: 18,
     firstHole: 1, teeTime: null, format: "stableford", handicapAllowance: 1, externalHandicap: false, weight: 1,
     ldEnabled: true, ldHoleIndex: null, kpEnabled: true, kpHoleIndex: null, cutRule: null, cutAfter: null, venue: null,
-    teeID: null, teeName: null, courseRating: null, slopeRating: null, teePar: null, ...p,
+    teeID: null, teeName: null, courseRating: null, slopeRating: null, teePar: null,
+    counts: true, pointsTable: null, hideLastHoles: 0, kind: "normal", playoffFor: null, playoffHoles: null, ...p,
   };
 }
 

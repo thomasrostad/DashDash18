@@ -127,7 +127,7 @@ struct CompetitionDetailView: View {
         case .loaded:
             switch model.content {
             case .season(let standings?):
-                TavlaList(standings: standings)
+                TavlaList(standings: standings) { await model.load() }
             case .league(let standings):
                 scroll { LeagueTableSection(standings: standings) }
             case .cup(let cup):

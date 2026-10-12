@@ -35,4 +35,5 @@ export * from "./competitions.ts";
 export * from "./app/rows.ts";
 export * from "./app/roundgame.ts";
 export * from "./app/tavla.ts";
+export * from "./app/playoffround.ts";
 export * from "./app/competition.ts";

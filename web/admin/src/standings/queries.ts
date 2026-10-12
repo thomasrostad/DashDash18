@@ -4,6 +4,7 @@
 import { supabase } from "../supabase.ts";
 import type { Competition } from "../data.ts";
 import type { CompetitionRaw, RoundRosterRow } from "./model.ts";
+import { hasTableRules, TABLE_RULES_COLUMNS } from "../rounds/api.ts";
 
 const competitionColumns = "id, kind, name, club_id, owner_id, season_id, status, entry, rules, starts_on, ends_on, is_main";
 const seasonColumns = "id, club_id, name, status, rules";
@@ -45,9 +46,18 @@ export async function loadCompetition(competitionID: string): Promise<Competitio
   if (!competition) throw new Error("Fant ikke turneringen.");
   const roundIDs = (links as { round_id: string }[]).map((l) => l.round_id);
 
-  // Kladder teller ikke.
-  const rounds = roundIDs.length === 0 ? [] : await rows(supabase.from("rounds").select(roundColumns)
-    .in("id", roundIDs).in("status", ["active", "locked"]));
+  // Kladder teller ikke. Med sql/047 kommer playoff-rundene (`playoff_for`) med; de kobles aldri i
+  // competition_rounds, og tabellen holder dem utenfor det som teller.
+  const tableRules = await hasTableRules();
+  const columns = tableRules ? `${roundColumns}, ${TABLE_RULES_COLUMNS}` : roundColumns;
+  const [linked, playoffs] = await Promise.all([
+    roundIDs.length === 0 ? Promise.resolve([] as unknown[]) : rows(supabase.from("rounds").select(columns)
+      .in("id", roundIDs).in("status", ["active", "locked"])),
+    tableRules ? rows(supabase.from("rounds").select(columns).eq("playoff_for", competitionID).eq("kind", "playoff")
+      .in("status", ["active", "locked"])) : Promise.resolve([] as unknown[]),
+  ]);
+  const seen = new Set((linked as { id: string }[]).map((r) => r.id));
+  const rounds = [...linked, ...(playoffs as { id: string }[]).filter((r) => !seen.has(r.id))];
   const typed = rounds as { id: string; club_id: string | null; event_id: string | null; course_id: string | null }[];
   const ids = typed.map((r) => r.id);
   const courseIDs = [...new Set(typed.map((r) => r.course_id).filter((x): x is string => !!x))];
@@ -97,4 +107,25 @@ export async function loadCompetition(competitionID: string): Promise<Competitio
     competition, participants, links, rounds, roundHoles, players, matches, scores, claims, courses, courseHoles, events,
     clubMembers, roundMembers, seasons: [...byID, ...active], mainSeasonIDs, roster: roster as RoundRosterRow[], roundParticipants, profiles, cupMatches,
   };
+}
+
+/** Feil fra playoff-RPC-ene med norsk tekst fra databasen når den finnes. */
+function playoffError(e: { message: string; code?: string }): Error {
+  if (e.code === "PGRST202" || e.code === "42883") return new Error("Playoff krever en nyere database.");
+  return new Error(e.message);
+}
+
+/** «Start playoff»: `create_playoff_round` (sql/047). Hullene er rundens 0-baserte hull i rekkefølge. */
+export async function startPlayoff(competitionID: string, memberIDs: string[], holes: number[]): Promise<string> {
+  const { data, error } = await supabase.rpc("create_playoff_round", {
+    p_competition_id: competitionID, p_event_id: null, p_member_ids: memberIDs, p_holes: holes, p_course_id: null,
+  });
+  if (error) throw playoffError(error);
+  return (data as { round_id: string }).round_id;
+}
+
+/** «Legg til hull»: `playoff_set_holes` (sql/047) med hele lista (hull som har score, beholdes). */
+export async function setPlayoffHoles(roundID: string, holes: number[]): Promise<void> {
+  const { error } = await supabase.rpc("playoff_set_holes", { p_round_id: roundID, p_holes: holes });
+  if (error) throw playoffError(error);
 }

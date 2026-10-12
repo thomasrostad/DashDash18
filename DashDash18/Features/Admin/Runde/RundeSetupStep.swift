@@ -27,6 +27,7 @@ struct RundeSetupStep: View {
             if options.showsMatches { matchSection(form) }
             sidePrizeSection(holes)
             advancedSection(form, options: options)
+            if RoundRulesFeature.isAvailable { tableSection }
             let issues = model.issues(draft, forStart: true)
             if !issues.isEmpty {
                 DDSection("Før runden kan starte") {
@@ -265,6 +266,32 @@ struct RundeSetupStep: View {
                     }
                 }
             }
+        }
+    }
+}
+
+// MARK: - Tabellen (sql/047)
+
+extension RundeSetupStep {
+    /// «Teller ikke i tabellen», poengtabellen og «Skjul de tre siste hullene».
+    var tableSection: some View {
+        Section {
+            Toggle("Teller ikke i tabellen", isOn: Binding(get: { !draft.counts }, set: { draft.counts = !$0 }))
+            let tables = RoundTableRules.tableNames(rules)
+            if !tables.isEmpty || draft.pointsTable != nil {
+                Picker("Poengtabell", selection: $draft.pointsTable) {
+                    Text("Vanlig").tag(String?.none)
+                    ForEach(RoundTableRules.choices(tables, current: draft.pointsTable), id: \.self) { name in
+                        Text(RoundTableRules.title(name, rules: rules)).tag(String?.some(name))
+                    }
+                }
+                .disabled(!draft.counts)
+            }
+            Toggle("Skjul de tre siste hullene", isOn: $draft.hidesLastHoles)
+        } header: {
+            Text("Tabellen")
+        } footer: {
+            Text("Skjulte hull vises for andre når runden er låst.")
         }
     }
 }

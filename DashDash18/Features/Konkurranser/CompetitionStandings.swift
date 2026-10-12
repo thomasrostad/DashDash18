@@ -32,7 +32,8 @@ nonisolated struct LeagueStandings: Sendable {
     let snapshots: [RoundSnapshot]
     let season: Season
 
-    init(_ input: CompetitionInput, me: Set<Entrant>) {
+    /// - Parameter playoff: playoff-runden om førsteplassen (sql/047), når den finnes.
+    init(_ input: CompetitionInput, me: Set<Entrant>, playoff: RoundSnapshot? = nil) {
         competition = input.competition
         let rules = input.competition.kind == .fun
             ? input.competition.rules.competitionRules.fun
@@ -49,12 +50,19 @@ nonisolated struct LeagueStandings: Sendable {
                                  uniquingKeysWith: { first, _ in first })
         let byKey = Dictionary(zip(input.roster.map(\.id), zip(input.entrants, input.roster)),
                                uniquingKeysWith: { first, _ in first })
-        rows = League.table(entrants: input.roster.map(\.id), rounds: rounds, rules: rules).compactMap { r in
-            guard let (entrant, player) = byKey[r.playerID] else { return nil }
-            return Row(entrant: entrant, name: player.name, place: r.place, total: r.total, played: r.played,
-                       wins: r.wins, bestRound: r.bestRound, stableford: r.stableford, results: r.results,
-                       isMe: me.contains(entrant))
+        let table = League.table(entrants: input.roster.map(\.id), rounds: rounds, rules: rules).compactMap { r in
+            byKey[r.playerID].map { (result: r, entrant: $0.0, player: $0.1) }
         }
+        // Vinneren av playoffen om førsteplassen står først (sql/047).
+        let places = LeaguePlayoff.apply(places: table.map { ($0.entrant, $0.result.place) }, playoff: playoff)
+        rows = table.enumerated().map { i, t in
+            (i, Row(entrant: t.entrant, name: t.player.name, place: places[t.entrant] ?? t.result.place,
+                    total: t.result.total, played: t.result.played, wins: t.result.wins,
+                    bestRound: t.result.bestRound, stableford: t.result.stableford, results: t.result.results,
+                    isMe: me.contains(t.entrant)))
+        }
+        .sorted { a, b in a.1.place != b.1.place ? a.1.place < b.1.place : a.0 < b.0 }
+        .map(\.1)
     }
 
     /// Minst én runde er spilt av en i tabellen.

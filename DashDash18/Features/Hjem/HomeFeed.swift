@@ -158,7 +158,8 @@ nonisolated extension HomeFeed {
 
     static func live(_ input: HomeLiveInput, context: HomeFeedContext) -> HomeLive {
         let s = input.snapshot
-        let game = RoundGame(s)
+        // «Skjul de tre siste hullene» (sql/047): andre båser ser ikke de siste hullene ennå.
+        let game = RoundGame(HiddenHoles.apply(s, viewer: input.viewer))
         let rows = game.bayenNaa(viewer: input.viewer)
         let mine = rows.first(where: \.isMe)
         let thru = mine?.thru ?? rows.map(\.thru).max() ?? 0

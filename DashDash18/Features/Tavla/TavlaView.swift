@@ -92,7 +92,7 @@ private struct TavlaContent: View {
             }
         case .loaded:
             if let standings = model.standings {
-                TavlaList(standings: standings)
+                TavlaList(standings: standings) { await model.load() }
             } else {
                 // ScrollView, så «dra ned for å hente på nytt» virker også her.
                 ScrollView {
@@ -109,6 +109,8 @@ private struct TavlaContent: View {
 /// Tabellen, «Slik telles det» og veien til oppsummeringen.
 struct TavlaList: View {
     let standings: TavlaStandings
+    /// Hentes på nytt etter at en playoff er startet eller ført.
+    var onChange: (() async -> Void)? = nil
 
     var body: some View {
         ScrollView {
@@ -145,6 +147,11 @@ struct TavlaList: View {
                         }
                     }
                     .ddCard(padding: DDSpacing.l)
+                    if standings.hidesLastHoles {
+                        DDInfoStripe(HiddenHoles.note + ".")
+                    }
+                    // Playoff om førsteplassen (sql/047).
+                    PlayoffCard(standings: standings, onChange: onChange)
                     // Hva alle har slått, runde for runde, med scorekortet bak hver rute.
                     NavigationLink {
                         TavlaRoundsView(standings: standings)
