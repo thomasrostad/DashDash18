@@ -118,7 +118,7 @@ select pg_temp.lik((select count(*) from unnest(array[
                       'waitlist_promoted', 'signup_dropped']) k
                      where not exists (select 1 from public.push_group_map() m where m.kind = k)), 0::bigint,
                    'A5 alle appens kjente kind (ActivityEvent.knownKinds) står i kartet');
-select pg_temp.lik((select count(*) from public.push_group_map()), 22::bigint, 'A6 22 rader i kartet (20 + evening_started + tråden)');
+select pg_temp.lik((select count(*) >= 22 from public.push_group_map()), true, 'A6 minst 22 rader i kartet (20 + evening_started + tråden; senere migreringer legger til)');
 select pg_temp.lik((select count(*) from public.push_group_map() where not (group_key = any (public.push_groups()))
                      or not exists (select 1 from kategorier where kategori = category)), 0::bigint,
                    'A7 kartet har bare kjente grupper og kategorier');
@@ -434,7 +434,7 @@ reset role;
 select pg_temp.som(:'u1'); set role authenticated;
 select pg_temp.feil(format('select public.push_job_payload(%s)', pg_temp.jobb(:'a8')), '42501');
 select pg_temp.feil('select * from public.claim_push_jobs(1)', '42501');
-select pg_temp.lik((select count(*) from public.push_group_map()), 22::bigint, 'H1 appen kan lese kartet');
+select pg_temp.lik((select count(*) >= 22 from public.push_group_map()), true, 'H1 appen kan lese kartet');
 reset role;
 set role anon;
 select pg_temp.feil(format('select public.push_job_payload(%s)', pg_temp.jobb(:'a8')), '42501');
