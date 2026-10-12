@@ -14,7 +14,7 @@ import {
   roundSubtitle, roundTitle, savedDraft, type DeleteSummary, type RoundDraft,
 } from "./logic.ts";
 import { RoundSetup } from "./RoundSetup.tsx";
-import { applyRoundTemplate, decodePreviousSetup, type PreviousSetup } from "../reuse.ts";
+import { applyPreviousCompetitions, applyRoundTemplate, decodePreviousSetup, type PreviousSetup } from "../reuse.ts";
 import { previousRoundSetup } from "../reuseApi.ts";
 import { RoundView } from "./RoundView.tsx";
 import { StartListEditor } from "./StartListEditor.tsx";
@@ -97,6 +97,8 @@ export function DayRounds({ clubID, event, days, comps, canTemplates = true, onB
     d = previous === undefined
       ? applySuggestion(d, previousRound(tournamentRounds, sameTournament, event.event_date), readyCourses, data.rules)
       : previous ? applyRoundTemplate(d, previous.round, readyCourses, data.rules.formats.allowedFormIDs, data.tableRules) : d;
+    // sql/048: konkurransene fra sist som nye rader.
+    if (previous && data.formats) d = applyPreviousCompetitions({ ...d, sides: {} }, previous);
     if (d.teeID === null) {
       const item = data.courses.find((c) => c.course.id === d.courseID);
       if (item) d = { ...d, teeID: suggestedTee(item.tees, previousTeeID(data.allRounds, item.course.id))?.id ?? null };

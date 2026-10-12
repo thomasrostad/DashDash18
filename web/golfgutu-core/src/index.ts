@@ -37,3 +37,4 @@ export * from "./app/roundgame.ts";
 export * from "./app/tavla.ts";
 export * from "./app/playoffround.ts";
 export * from "./app/competition.ts";
+export * from "./app/roundcomp.ts";

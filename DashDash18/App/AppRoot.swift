@@ -32,6 +32,8 @@ struct AppRoot: View {
                 .id(user.id)
                 // Tabellreglene på runden (sql/047): finnes kolonnene? Svaret huskes til neste oppstart.
                 .task(id: user.id) { await RoundRulesFeature.detect(client: services.client) }
+                // Formene fra steg 7 (sql/048): finnes konkurransene, sidene og øyeblikksbildet?
+                .task(id: user.id) { await RoundFormatsFeature.detect(client: services.client) }
                 .task(id: user.id) { await services.club.load(userID: user.id) }
                 .task(id: user.id) { services.outbox.start(userID: user.id) }
                 .task(id: user.id) { await services.push.start(userID: user.id) }

@@ -5,6 +5,8 @@
 import {
   canStartAtTen, keepOnly, venueFromStored, type BaySeat, type MatchDraft, type RosterMember, type RoundDraft, type UUID, type Venue,
 } from "./rounds/logic.ts";
+import { copiedCompetitions } from "./rounds/competitions.ts";
+import { decodeStoredCompetition, type StoredCompetition } from "../../golfgutu-core/src/index.ts";
 
 // MARK: - Serie av spilledager
 
@@ -102,7 +104,7 @@ export interface ScheduleTemplate {
   venue: string | null;
 }
 
-export type SetupKind = "stablefordSeries" | "matchSeries" | "cup" | "fun";
+export type SetupKind = "stablefordSeries" | "matchSeries" | "cup" | "fun" | "amerikanerSeries" | "kobenhavnerSeries" | "skinsSeries" | "teamVsTeam";
 
 /** Turneringsmalen (kind = tournament). */
 export interface TournamentTemplate {
@@ -217,7 +219,7 @@ export function decodeTournamentTemplate(raw: unknown): TournamentTemplate {
     venue: str(s.venue),
   } : null;
   return {
-    template: oneOf(p.template, ["stablefordSeries", "matchSeries", "cup", "fun"] as const),
+    template: oneOf(p.template, ["stablefordSeries", "matchSeries", "cup", "fun", "amerikanerSeries", "kobenhavnerSeries", "skinsSeries", "teamVsTeam"] as const),
     kind: oneOf(p.kind, ["season", "league", "cup", "fun"] as const),
     rules: obj(p.rules),
     schedule,
@@ -263,7 +265,9 @@ export interface PreviousSetup {
   eventDate: string | null;
   roundNo: number;
   round: RoundTemplate;
-  players: { memberID: UUID; bayNo: number | null; isMarker: boolean; teamNo: number | null; seedGroup: number | null }[];
+  players: { memberID: UUID; bayNo: number | null; isMarker: boolean; teamNo: number | null; seedGroup: number | null; side?: 1 | 2 | null }[];
+  /** sql/048: konkurransene i forrige runde (uten id). Tom før 048. */
+  competitions: StoredCompetition[];
   matches: { matchNo: number; playerA: UUID | null; playerB: UUID | null; playerC: UUID | null; teamA: number | null; teamB: number | null }[];
 }
 
@@ -280,8 +284,11 @@ export function decodePreviousSetup(raw: unknown): PreviousSetup | null {
     round: decodeRoundTemplate(p),
     players: list(p.players).flatMap((x) => {
       const id = str(x.member_id);
-      return id ? [{ memberID: id, bayNo: int(x.bay_no), isMarker: bool(x.is_marker) ?? false, teamNo: int(x.team_no), seedGroup: int(x.seed_group) }] : [];
+      const side = int(x.side);
+      return id ? [{ memberID: id, bayNo: int(x.bay_no), isMarker: bool(x.is_marker) ?? false, teamNo: int(x.team_no), seedGroup: int(x.seed_group),
+        side: side === 1 || side === 2 ? side : null }] : [];
     }),
+    competitions: (Array.isArray(p.competitions) ? p.competitions : []).map(decodeStoredCompetition).filter((c): c is StoredCompetition => c !== null),
     matches: list(p.matches).map((x, i) => ({
       matchNo: int(x.match_no) ?? i + 1, playerA: str(x.player_a), playerB: str(x.player_b), playerC: str(x.player_c),
       teamA: int(x.team_a), teamB: int(x.team_b),
@@ -309,7 +316,16 @@ export function applyPreviousPlayers(d: RoundDraft, prev: PreviousSetup, roster:
   const matches: MatchDraft[] = prev.matches
     .filter((m) => ok(m.playerA) && ok(m.playerB) && ok(m.playerC))
     .map((m) => ({ playerA: m.playerA, playerB: m.playerB, playerC: m.playerC, teamA: m.teamA, teamB: m.teamB, result: null }));
-  return { ...d, participants, participantSource: "saved", bays, teams, matches };
+  const sides: Record<UUID, 1 | 2> = {};
+  for (const p of prev.players) if ((p.side === 1 || p.side === 2) && wanted.has(p.memberID)) sides[p.memberID] = p.side;
+  // Sidene bare når 048 er kjørt (utkastet har da `sides`), eller forrige runde hadde sider.
+  const withSides = d.sides !== undefined || Object.keys(sides).length > 0 ? { sides } : {};
+  return { ...d, participants, participantSource: "saved", bays, teams, matches, ...withSides };
+}
+
+/** «Samme som sist» med konkurransene fra forrige runde som nye rader (sql/048). */
+export function applyPreviousCompetitions(d: RoundDraft, prev: PreviousSetup): RoundDraft {
+  return { ...d, competitions: copiedCompetitions(prev.competitions) };
 }
 
 export { venueFromStored };

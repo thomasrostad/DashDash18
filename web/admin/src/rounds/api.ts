@@ -16,10 +16,14 @@ import {
 } from "./courses.ts";
 import { RoundGame, cutPatch, cutPatchMatches, type CutChoice } from "./game.ts";
 import {
-  blockingRound, dataErrorText, drawPlan, type DrawPlan, deletedMessage, mainActiveSeason, mainSeasonIDs, roundTitle, saveErrorText, setupIssues, setupParams, startErrorText, issueMessage,
+  blockingRound, dataErrorText, draftForm, drawPlan, type DrawPlan, deletedMessage, mainActiveSeason, mainSeasonIDs, roundTitle, saveErrorText, setupIssues, setupParams, startErrorText, issueMessage,
   groupTerm, roundWrite, sortedByName, tableRulesPatch, type DeleteSummary, type RosterMember, type RoundDraft, type SignupRow,
 } from "./logic.ts";
 import { startListParams, type StartGroupDraft, type StartGroupRow } from "./startlist.ts";
+import {
+  competitionIssues, competitionsPayload, draftsFromStored, sideProblem, sidesFromRows, withSides, type CompetitionContext,
+} from "./competitions.ts";
+import { decodeStoredCompetition, isTeamForm as coreIsTeamForm, snapshotFields, type SnapshotFields, type StoredCompetition } from "../../../golfgutu-core/src/index.ts";
 
 const ROUND_COLUMNS = "id, club_id, event_id, course_id, round_no, name, status, hole_count, first_hole, tee_time, format, "
   + "handicap_allowance, external_handicap, weight, ld_enabled, ld_hole_index, kp_enabled, kp_hole_index, cut_rule, cut_after, "
@@ -45,6 +49,28 @@ export function hasTableRules(): Promise<boolean> {
     () => { tableRulesProbe = null; return false; },
   );
   return tableRulesProbe;
+}
+
+let formatsProbe: Promise<boolean> | null = null;
+
+/**
+ * Finnes sql/048 (round_competitions, round_players.side, øyeblikksbildet)? Spørres én gang per økt. Uten den
+ * vises ikke konkurransene, sidene eller «Oppdater øyeblikksbildet», og alt annet er som før.
+ */
+export function hasFormats(): Promise<boolean> {
+  formatsProbe ??= Promise.resolve(supabase.from("round_competitions").select("id").limit(1)).then(
+    ({ error }) => {
+      if (error && !isMissing048(error.code)) formatsProbe = null;
+      return !error;
+    },
+    () => { formatsProbe = null; return false; },
+  );
+  return formatsProbe;
+}
+
+/** Tabell, kolonne eller funksjon fra 048 finnes ikke. */
+export function isMissing048(code: string | null | undefined): boolean {
+  return isMissing(code) || ["PGRST205", "PGRST200"].includes(code ?? "");
 }
 
 /** Kolonnene for `rounds`, med sql/047 når den er kjørt. */
@@ -94,6 +120,8 @@ export interface DayData {
   seasonMatches: RoundMatchRow[];
   /** sql/047 er kjørt: «Teller ikke», poengtabell og «Skjul de tre siste hullene» kan velges. */
   tableRules: boolean;
+  /** sql/048 er kjørt: konkurranser i runden, lag mot lag og øyeblikksbildet. */
+  formats?: boolean;
 }
 
 /** Trekningen for en runde på dagen: regelsettets `formats.drawMethod`, med møtene i turneringens andre runder. */
@@ -203,7 +231,7 @@ export async function loadSourceCourses(ids: string[]): Promise<CourseItem[]> {
 export async function loadDay(clubID: string, event: EventRow, comps: readonly Competition[]): Promise<DayData> {
   try {
     const user = (await supabase.auth.getUser()).data.user;
-    const tableRules = await hasTableRules();
+    const [tableRules, formats] = await Promise.all([hasTableRules(), hasFormats()]);
     const columns = tableRules ? `${ROUND_COLUMNS}, ${TABLE_RULES_COLUMNS}` : ROUND_COLUMNS;
     const [rules, membersRes, coursesRes, roundsRes, signupsRes, meRes] = await Promise.all([
       rulesFor(clubID, event, comps),
@@ -241,7 +269,7 @@ export async function loadDay(clubID: string, event: EventRow, comps: readonly C
     return {
       rules, dayTerm: rulesetDay(rules), roster, signups: (signupsRes.data ?? []) as SignupRow[], allRounds, players, courses,
       myMemberID: ((meRes.data ?? []) as { id: string }[])[0]?.id ?? null,
-      seasonRoundIDs: history.ids, seasonMatches: history.matches, tableRules,
+      seasonRoundIDs: history.ids, seasonMatches: history.matches, tableRules, formats,
     };
   } catch (e) {
     fail(e);
@@ -291,6 +319,8 @@ export interface SetupContext {
   course: CourseItem | null;
   /** sql/047 er kjørt: tabellreglene skrives med raden. */
   tableRules?: boolean;
+  /** sql/048 er kjørt: sidene og konkurransene lagres. */
+  formats?: boolean;
 }
 
 function courseCheck(ctx: SetupContext) {
@@ -314,14 +344,92 @@ async function writeRound(ctx: SetupContext, d: RoundDraft): Promise<void> {
 export async function saveDraft(ctx: SetupContext, d: RoundDraft): Promise<void> {
   const issue = setupIssues(d, courseCheck(ctx), ctx.rules, ctx.roster, false)[0];
   if (issue) throw new RoundError(issueMessage(issue, groupTerm(d.venue)));
+  checkFormats(ctx, d);
   await writeRound(ctx, d);
-  const params = setupParams(d.roundID, d, ctx.roster, courseFor(ctx, d), ctx.rules, false);
+  const params = formatsParams(ctx, d, setupParams(d.roundID, d, ctx.roster, courseFor(ctx, d), ctx.rules, false));
   const { data, error } = await supabase.rpc("set_round_setup", params);
   if (error) throw new RoundError(`Runden er lagret, men ikke oppsettet. ${dataErrorText(error)}`);
   const counts = data as { players: number; matches: number };
   if (counts.players !== params.p_players.length || counts.matches !== params.p_matches.length) {
     throw new RoundError("Runden er lagret, men ikke oppsettet. Oppsettet ble ikke lagret slik det sto. Last inn på nytt og sjekk.");
   }
+  await saveCompetitions(ctx, d, "Runden er lagret, men ikke konkurransene.");
+}
+
+/** Det konkurransene trenger fra oppsettet. Lagene bare når formen har lag (som team_no i set_round_setup). */
+export function competitionContext(d: RoundDraft): CompetitionContext {
+  const teams = coreIsTeamForm(draftForm(d)) ? d.teams : {};
+  return { participants: d.participants, teams, bays: d.bays, holeCount: d.holeCount, mainForm: d.formID };
+}
+
+/** Sidene og konkurransene sjekkes før noe skrives (048). */
+function checkFormats(ctx: SetupContext, d: RoundDraft) {
+  if (!ctx.formats) return;
+  const c = competitionContext(d);
+  const side = d.sides ? sideProblem(d.sides, c.teams, d.participants) : null;
+  if (side) throw new RoundError(side);
+  const issue = d.competitions ? competitionIssues(d.competitions, c)[0] : undefined;
+  if (issue) throw new RoundError(issue);
+}
+
+/** «side» per spiller når 048 er kjørt og sidene er hentet. */
+function formatsParams<T extends { p_players: { member_id: string }[] }>(ctx: SetupContext, d: RoundDraft, params: T): T {
+  if (!ctx.formats || !d.sides) return params;
+  return { ...params, p_players: withSides(params.p_players, d.sides) };
+}
+
+/** `round_competitions_set` når runden har (eller hadde) andre konkurranser. Ellers røres ingenting. */
+async function saveCompetitions(ctx: SetupContext, d: RoundDraft, prefix: string): Promise<void> {
+  if (!ctx.formats || !d.competitions || (d.competitions.length === 0 && !d.hadCompetitions)) return;
+  const list = d.competitions.length === 0 ? [] : competitionsPayload(d.competitions, competitionContext(d), d.mainCompetitionID ?? null);
+  const { error } = await supabase.rpc("round_competitions_set", { p_round_id: d.roundID, p_competitions: list });
+  if (error) throw new RoundError(`${prefix} ${dataErrorText(error)}`);
+}
+
+/** Konkurransene og sidene for oppsettet (048). Tomt uten 048. */
+export async function loadFormatsSetup(roundID: string): Promise<{ competitions: StoredCompetition[]; sides: Record<string, 1 | 2> }> {
+  if (!(await hasFormats())) return { competitions: [], sides: {} };
+  const [c, p] = await Promise.all([
+    supabase.from("round_competitions").select("id, round_id, name, is_main, format_version, config, sort_order").eq("round_id", roundID).order("sort_order"),
+    supabase.from("round_players").select("member_id, side").eq("round_id", roundID),
+  ]);
+  if (c.error && !isMissing048(c.error.code)) fail(c.error);
+  if (p.error && !isMissing048(p.error.code)) fail(p.error);
+  return {
+    competitions: ((c.data ?? []) as unknown[]).map(decodeStoredCompetition).filter((x): x is StoredCompetition => x !== null),
+    sides: sidesFromRows((p.data ?? []) as { member_id: string; side: number | null }[]),
+  };
+}
+
+/** Utkastet med konkurransene og sidene som er lagret. */
+export async function withFormats(d: RoundDraft): Promise<RoundDraft> {
+  const { competitions, sides } = await loadFormatsSetup(d.roundID);
+  const { mainID, extras } = draftsFromStored(competitions);
+  return { ...d, sides, competitions: extras, mainCompetitionID: mainID, hadCompetitions: competitions.length > 0 };
+}
+
+/** For rundens side: konkurransene, øyeblikksbildet og sidene (048). null uten 048. */
+export async function loadRoundFormats(roundID: string): Promise<{ competitions: StoredCompetition[]; snapshot: SnapshotFields; sidePlayers: unknown[] } | null> {
+  if (!(await hasFormats())) return null;
+  const [c, r, p] = await Promise.all([
+    supabase.from("round_competitions").select("id, round_id, name, is_main, format_version, config, sort_order").eq("round_id", roundID).order("sort_order"),
+    supabase.from("rounds").select("format, external_handicap, rules_snapshot, holes_snapshot, snapshot_source, snapshot_at").eq("id", roundID).limit(1),
+    supabase.from("round_players").select("member_id, side").eq("round_id", roundID),
+  ]);
+  for (const x of [c, r, p]) if (x.error) { if (isMissing048(x.error.code)) return null; fail(x.error); }
+  const raw = ((r.data ?? []) as Record<string, unknown>[])[0];
+  if (!raw) return null;
+  return {
+    competitions: ((c.data ?? []) as unknown[]).map(decodeStoredCompetition).filter((x): x is StoredCompetition => x !== null),
+    snapshot: snapshotFields(raw),
+    sidePlayers: (p.data ?? []) as unknown[],
+  };
+}
+
+/** «Oppdater øyeblikksbildet» (`round_snapshot_refresh`): regelsettet og hullene på nytt, bare i en aktiv runde. */
+export async function refreshSnapshot(roundID: string): Promise<void> {
+  const { error } = await supabase.rpc("round_snapshot_refresh", { p_round_id: roundID });
+  if (error) fail(error);
 }
 
 /** Rundene som går i klubben nå. Etter sql/034 kan flere gå samtidig (én per spilledag og pulje). */
@@ -347,14 +455,16 @@ export async function startRound(ctx: SetupContext, d: RoundDraft, titleOf: (r: 
   if (blocking) {
     throw new RoundError(`${titleOf(blocking)} går allerede. Lås den før du starter en ny, eller lagre denne som kladd.`);
   }
+  checkFormats(ctx, d);
   await writeRound(ctx, d);
-  const params = setupParams(d.roundID, d, ctx.roster, courseFor(ctx, d), ctx.rules, true);
+  const params = formatsParams(ctx, d, setupParams(d.roundID, d, ctx.roster, courseFor(ctx, d), ctx.rules, true));
   const { data, error } = await supabase.rpc("start_round", params);
   if (error) throw new RoundError("Runden startet ikke. " + startErrorText(error));
   const started = data as { players: number; matches: number; status: string };
   if (started.status !== "active" || started.players !== params.p_players.length || started.matches !== params.p_matches.length) {
     throw new RoundError("Runden startet ikke. Runden ble ikke startet slik oppsettet sto. Last inn på nytt og sjekk.");
   }
+  await saveCompetitions(ctx, d, "Runden er startet, men konkurransene ble ikke lagret.");
 }
 
 /**

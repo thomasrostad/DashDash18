@@ -6,6 +6,8 @@ import {
   CompetitionScope, CupStandings, decodeCompetitionMatch, decodeCompetitionParticipant, decodeCompetitionRound,
   decodeCompetitionRow, decodeProfile, decodeRoundParticipant, decodeTavlaData, LeagueStandings, makeSnapshot,
   decodeRoundRow, HIDDEN_HOLES_NOTE, hidesLastHoles, isPlayoff, PersonDirectory, standingsFromTavlaData, type RoundsGrid, type UUID,
+  competitionBoards, competitionScoreText, decodeRuleset, decodeStoredCompetition, frozenFromRows, makeRoundFromSnapshot,
+  sidesFromRaw, snapshotFields, snapshotHandicap, snapshotRoster, teamMatchResult, type Ruleset, type StoredCompetition, type TavlaData,
 } from "../../golfgutu-core/src/index.ts";
 
 export interface TVEnv {
@@ -25,6 +27,13 @@ export interface TVPayload {
    * serveren sender ikke scorene på dem til TV-en. null ellers.
    */
   note: string | null;
+  /**
+   * De andre konkurransene i runden som går (eller siste runde med dem), sql/048: små paneler med de fem beste.
+   * Bare navn som alt er i svaret. Tom uten 048.
+   */
+  extras: { title: string; lines: { name: string; score: string }[] }[];
+  /** Lag mot lag i samme runde: poengene per side. null uten sider. */
+  teams: { title: string; lines: { name: string; score: string }[] } | null;
 }
 
 /** Notisen når en vanlig runde som går, skjuler de siste hullene. Playoffen teller ikke med. */
@@ -58,6 +67,65 @@ export function buildTVPayload(board: Record<string, unknown>): TVPayload {
     // «Alle runder» har ikke playoffen (sql/047), så siste runde er alltid en vanlig runde.
     latest: latestRound(t.rounds),
     note: hiddenHolesNote(board),
+    ...extraPanels(board, safeRules(comp.rules), () => new Map(list(board, "members").flatMap((x) => {
+      const m = x as { id?: string; display_name?: string | null };
+      return m.id && m.display_name ? [[m.id.toLowerCase(), m.display_name] as [string, string]] : [];
+    }))),
+  };
+}
+
+function safeRules(raw: unknown): Ruleset | null {
+  try { return decodeRuleset(raw); } catch { return null; }
+}
+
+const NO_PANELS = { extras: [] as TVPayload["extras"], teams: null as TVPayload["teams"] };
+
+/**
+ * Panelene for de andre konkurransene (sql/048). Runden er den som går, ellers den siste med konkurranser eller
+ * sider. Regnes fra øyeblikksbildet når runden har det, ellers fra dagens data, med regelmotoren som appen.
+ */
+export function extraPanels(board: Record<string, unknown>, rules: Ruleset | null,
+  namesFor: (roundID: UUID) => Map<UUID, string>): Pick<TVPayload, "extras" | "teams"> {
+  if (rules === null) return NO_PANELS;
+  const comps = list(board, "round_competitions").map(decodeStoredCompetition).filter((c): c is StoredCompetition => c !== null && c.roundID !== null);
+  const rawPlayers = list(board, "players");
+  if (comps.length === 0 && !rawPlayers.some((p) => (p as { side?: unknown })?.side === 1 || (p as { side?: unknown })?.side === 2)) return NO_PANELS;
+  let data: TavlaData;
+  try { data = decodeTavlaData({ ...board, events: [] }); } catch { return NO_PANELS; }
+  const rawRounds = list(board, "rounds") as Record<string, unknown>[];
+  const sidesIn = (id: UUID) => sidesFromRaw(rawPlayers.filter((p) => String((p as { round_id?: string }).round_id ?? "").toLowerCase() === id));
+  const candidates = data.rounds.filter((r) => r.status !== "draft" && !isPlayoff(r)
+    && (comps.some((c) => c.roundID === r.id && !c.isMain) || sidesIn(r.id).size > 0));
+  const round = candidates.filter((r) => r.status === "active").at(-1) ?? candidates.at(-1);
+  if (!round) return NO_PANELS;
+  const names = namesFor(round.id);
+  const snapshot = makeSnapshot(round, {
+    roundHoles: data.roundHoles.filter((h) => h.roundID === round.id),
+    players: data.players.filter((p) => p.roundID === round.id),
+    matches: data.matches.filter((m) => m.roundID === round.id),
+    scores: data.scores.filter((x) => x.roundID === round.id),
+    course: data.courses.find((c) => c.id === round.courseID) ?? null,
+    courseHoles: data.courseHoles.filter((h) => h.courseID === round.courseID),
+    rules, names,
+  });
+  const live = makeRoundFromSnapshot(snapshot);
+  const roster = snapshotRoster(snapshot);
+  const raw = rawRounds.find((r) => String(r.id).toLowerCase() === round.id) ?? {};
+  const frozen = frozenFromRows(snapshotFields(raw), snapshot.players, rules, (m) => snapshotHandicap(snapshot, m, live, roster));
+  const name = (id: string) => names.get(id) ?? "Ukjent";
+  const extras = competitionBoards({
+    competitions: comps.filter((c) => c.roundID === round.id), roundFormat: round.format, frozen,
+    live: { round: live, roster, rules },
+  }).filter((b) => !b.isMain).map((b) => ({
+    title: b.name,
+    lines: b.supported
+      ? b.rows.slice(0, 5).map((r) => ({ name: `${r.rank}. ${r.players.map(name).join(" og ")}`, score: competitionScoreText(r.score) }))
+      : [{ name: "Ikke støttet ennå", score: "" }],
+  }));
+  const team = teamMatchResult(live, sidesIn(round.id), roster, frozen?.ruleset ?? rules);
+  return {
+    extras,
+    teams: team ? { title: "Lag mot lag", lines: team.table.map((r) => ({ name: `Side ${r.side}`, score: competitionScoreText(r.points) })) } : null,
   };
 }
 
@@ -111,6 +179,7 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
       })),
       latest: null,
       note: null,
+      ...NO_PANELS,
     };
   }
 
@@ -149,6 +218,7 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
     rows: l.rows.map((r) => ({ place: l.placeText(r), name: r.name, total: LeagueStandings.points(r.total), detail: l.detail(r) })),
     latest: latestRound(l.roundGrid()),
     note: hiddenHolesNote(board),
+    ...extraPanels(board, comp.rules, (id) => names.get(id) ?? new Map()),
   };
 }
 
@@ -190,7 +260,9 @@ const STYLE = `
   form { display:flex; gap:1em; justify-content:center; margin-top:2em; } input { font:inherit; font-size:1.6em; padding:.4em .6em; width:9em;
     text-transform:uppercase; letter-spacing:.15em; border-radius:.4em; border:0; } button { font:inherit; font-size:1.3em; padding:.4em 1em;
     border-radius:999px; border:0; background:var(--gold); color:#21292B; font-weight:600; }
-  @media (orientation: portrait) { .body { flex-direction:column; } aside { width:100%; } .detail { display:none; } }
+  .side { width:30vw; display:flex; flex-direction:column; gap:2vh; min-height:0; overflow:hidden; } .side aside { width:100%; }
+  aside.small { padding:.9em 1.2em; font-size:.8em; } #extras { display:flex; flex-direction:column; gap:2vh; }
+  @media (orientation: portrait) { .body { flex-direction:column; } .side, aside { width:100%; } .detail { display:none; } }
 `;
 
 function shell(title: string, body: string, nonce: string, script: string): string {
@@ -228,6 +300,9 @@ function render(){
   $("latest").innerHTML = l ? '<h2 class="'+(l.ongoing?"live":"")+'">'+(l.ongoing?"Pågår nå":"Siste runde")+'</h2><div class="dim">'+esc(l.title)+'</div>'
     + l.lines.map((x,i)=>'<div class="line"><span class="dim">'+(i+1)+'.</span><span>'+esc(x.name)+'</span><b>'+x.points+'</b></div>').join("") : "";
   $("latest").style.display = l ? "" : "none";
+  const panels = (data.teams ? [data.teams] : []).concat(data.extras || []);
+  $("extras").innerHTML = panels.map(p => '<aside class="small"><h2>'+esc(p.title)+'</h2>'
+    + p.lines.map(x=>'<div class="line"><span>'+esc(x.name)+'</span><b>'+esc(x.score)+'</b></div>').join("")+'</aside>').join("");
   $("note").textContent = data.note || ""; $("note").style.display = data.note ? "" : "none";
 }
 async function load(){
@@ -240,5 +315,5 @@ clock(); setInterval(clock, 15000); load(); setInterval(load, 15000); setInterva
 window.addEventListener("resize", render);`;
   return shell("Atten · TV", `<main id="main"><header><div><h1 id="name">Atten</h1><div class="dim" id="played">Henter tabellen …</div></div>
 <div class="clock" id="clock"></div></header><div class="body"><div class="table"><div id="rows"></div><div class="dots" id="dots"></div></div>
-<aside id="latest" style="display:none"></aside></div><div class="dim" id="note" style="display:none"></div></main>`, nonce, script);
+<div class="side"><aside id="latest" style="display:none"></aside><div id="extras"></div></div></div><div class="dim" id="note" style="display:none"></div></main>`, nonce, script);
 }

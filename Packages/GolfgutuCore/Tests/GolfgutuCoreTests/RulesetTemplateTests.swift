@@ -25,6 +25,20 @@ struct RulesetTemplateTests {
         #expect(RulesetTemplate.fun.rules == expected)
     }
 
+    /// Steg 7: Amerikaner, Københavner og skins teller formens poeng; lag mot lag er fourball.
+    @Test func formOppsettene() {
+        for (t, form) in [(RulesetTemplate.amerikanerSeries, "amerikaner"), (.kobenhavnerSeries, "kobenhavner"),
+                          (.skinsSeries, "skins")] {
+            let r = t.rules
+            #expect(r.table.formPoints && r.table.pointsSource == .stableford, "\(t)")
+            #expect(r.formats.defaultFormID == form && r.formats.allowedFormIDs.contains(form), "\(t)")
+            #expect(RulesetTemplate.matching(r) == t)
+        }
+        #expect(RulesetTemplate.teamVsTeam.rules.formats.defaultFormID == "fourball")
+        #expect(RulesetTemplate.teamVsTeam.differences(in: .golfgutu) == ["formats.defaultFormID"])
+        #expect(RulesetTemplate.matching(.golfgutu) == .matchSeries)
+    }
+
     @Test func stablefordSerien() {
         let r = RulesetTemplate.stablefordSeries.rules
         let g = Ruleset.golfgutu

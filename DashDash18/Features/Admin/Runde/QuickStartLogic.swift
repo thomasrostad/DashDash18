@@ -158,7 +158,7 @@ nonisolated enum QuickStart {
         switch issue {
         case .noCourse, .courseNotReady: .course
         case .tooFewPlayers, .bayWithoutMarker: .players
-        case .formNotAllowed, .formNotSupported, .teams, .matches, .sidePrizeOutsideRound: .moreOptions
+        case .formNotAllowed, .formNotSupported, .teams, .matches, .sidePrizeOutsideRound, .sides, .competitions: .moreOptions
         }
     }
 }

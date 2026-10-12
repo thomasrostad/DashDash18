@@ -42,6 +42,17 @@ nonisolated struct RoundDraft: Equatable, Sendable {
     var pointsTable: String? = nil
     /// «Skjul de tre siste hullene» (`hide_last_holes` 3, ellers 0).
     var hidesLastHoles: Bool = false
+    /// Lag mot lag (sql/048): side 1 eller 2 per spiller. Tom: runden er ikke lag mot lag.
+    var sides: [UUID: Int] = [:]
+    /// De ekstra konkurransene i runden (sql/048). Hovedkonkurransen er formen.
+    var competitions: [RoundCompetitionDraft] = []
+    /// Raden til hovedkonkurransen, når runden har rader i `round_competitions`.
+    var mainCompetitionID: UUID? = nil
+    /// Runden har rader i `round_competitions` fra før (så en tom liste må lagres for å slette dem).
+    var hasSavedCompetitions: Bool = false
+
+    /// Runden spilles lag mot lag.
+    var isTeamVsTeam: Bool { !sides.isEmpty }
 
     /// Antall skjulte hull når valget er på.
     static let hiddenHoleCount = 3
@@ -71,13 +82,17 @@ nonisolated struct RoundDraft: Equatable, Sendable {
 
     /// Kladden slik den er lagret.
     static func saved(_ round: RoundRow, players: [RoundPlayerRow], matches: [RoundMatchRow],
-                      participants: [UUID], source: RoundParticipants.Source) -> RoundDraft {
+                      participants: [UUID], source: RoundParticipants.Source,
+                      competitions: [RoundCompetitionRow] = []) -> RoundDraft {
         let order = Dictionary(uniqueKeysWithValues: participants.enumerated().map { ($1, $0) })
         let seats = players
             .compactMap { p in p.bayNo.map { BaySeat(memberID: p.memberID, bay: $0, isMarker: p.isMarker) } }
             .sorted { (order[$0.memberID] ?? .max) < (order[$1.memberID] ?? .max) }
         var teams: [UUID: Int] = [:]
         for p in players { if let t = p.teamNo { teams[p.memberID] = t } }
+        var sides: [UUID: Int] = [:]
+        for p in players { if let side = p.side { sides[p.memberID] = side } }
+        let (mainID, extra) = CompetitionSetup.drafts(from: competitions)
         // Arrangørsiden henter bare klubbens runder, og de har alltid en kveld (`rounds_home_check`,
         // sql/017). Mangler den likevel, avviser databasen lagringen (fremmednøkkelen til kvelden).
         return RoundDraft(
@@ -91,7 +106,8 @@ nonisolated struct RoundDraft: Equatable, Sendable {
             kpEnabled: round.kpEnabled, kpHoleIndex: round.kpHoleIndex,
             weight: round.weight, externalHandicap: round.externalHandicap, allowance: round.handicapAllowance,
             venue: Venue(stored: round.venue),
-            counts: round.countsInTable, pointsTable: round.pointsTable, hidesLastHoles: round.hiddenLastHoles > 0
+            counts: round.countsInTable, pointsTable: round.pointsTable, hidesLastHoles: round.hiddenLastHoles > 0,
+            sides: sides, competitions: extra, mainCompetitionID: mainID, hasSavedCompetitions: !competitions.isEmpty
         )
     }
 
@@ -150,6 +166,7 @@ nonisolated struct RoundDraft: Equatable, Sendable {
         } else {
             teams = [:]
         }
+        if isTeamVsTeam { sides = TeamVsTeam.suggested(participants: participants, teams: teams) }
         redrawMatches(roster: roster, plan: plan)
     }
 
@@ -157,7 +174,11 @@ nonisolated struct RoundDraft: Equatable, Sendable {
     /// etter tabellen (`trekkMatcher`), tilfeldig uten gjentakelser med `seed`, eller ingen (manuelt).
     mutating func redrawMatches(roster: [ClubMemberRow], plan: MatchDrawPlan = .standings,
                                 seed: UInt64 = .random(in: .min ... .max)) {
-        if form.isTeamForm {
+        if isTeamVsTeam {
+            // Lag mot lag: side 1 mot side 2 (sql/048).
+            matches = TeamVsTeam.matches(participants: participants, teams: teams, sides: sides,
+                                         isTeamForm: form.isTeamForm)
+        } else if form.isTeamForm {
             matches = MatchPlanner.teamMatches(teams.filter { participants.contains($0.key) })
         } else {
             let included = Set(participants)
@@ -177,11 +198,18 @@ nonisolated struct RoundDraft: Equatable, Sendable {
         let wanted = Set(participants + [memberID])
         participants = roster.map(\.id).filter { wanted.contains($0) }
         bays.add(memberID)
+        if isTeamVsTeam {
+            // Lag mot lag: på siden med færrest.
+            let one = participants.filter { sides[$0] == 1 }.count
+            let two = participants.filter { sides[$0] == 2 }.count
+            sides[memberID] = one <= two ? 1 : 2
+        }
     }
 
     /// Tar ut en spiller fra runden, båsen, laget og matchene han sto i.
     mutating func exclude(_ memberID: UUID) {
         participants.removeAll { $0 == memberID }
+        sides[memberID] = nil
         bays.move(memberID, to: nil)
         teams[memberID] = nil
         matches.removeAll { !$0.isTeamMatch && $0.members().contains(memberID) }
@@ -200,6 +228,10 @@ nonisolated enum RoundSetupIssue: Equatable, Sendable {
     case teams(String)
     case matches([String])
     case sidePrizeOutsideRound(Int)
+    /// Lag mot lag: sidene går ikke opp (sql/048).
+    case sides(String)
+    /// Konkurransene i runden (sql/048).
+    case competitions(String)
 
     /// Meldingen med rundens ord for gruppene (bås / flight).
     func message(_ term: GroupTerm) -> String {
@@ -222,6 +254,8 @@ nonisolated enum RoundSetupIssue: Equatable, Sendable {
             problems.joined(separator: " ")
         case .sidePrizeOutsideRound(let holes):
             "Longest drive og nærmest pinnen må ligge innenfor de \(holes) hullene."
+        case .sides(let text), .competitions(let text):
+            text
         }
     }
 }
@@ -248,6 +282,7 @@ nonisolated enum RoundSetupCheck {
 
         if let ld = draft.ldHoleIndex, ld >= draft.holeCount { issues.append(.sidePrizeOutsideRound(draft.holeCount)) }
         else if let kp = draft.kpHoleIndex, kp >= draft.holeCount { issues.append(.sidePrizeOutsideRound(draft.holeCount)) }
+        if let problem = CompetitionSetup.problem(draft) { issues.append(.competitions(problem)) }
 
         guard forStart else { return issues }
 
@@ -266,6 +301,11 @@ nonisolated enum RoundSetupCheck {
         let names = Dictionary(uniqueKeysWithValues: roster.map { ($0.id, $0.displayName) })
         let problems = MatchPlanner.problems(draft.matches, participants: draft.participants, teams: draft.teams, names: names)
         if !problems.isEmpty { issues.append(.matches(problems)) }
+        if draft.isTeamVsTeam,
+           let problem = TeamVsTeam.problem(sides: draft.sides, teams: form.isTeamForm ? draft.teams : [:],
+                                            participants: draft.participants) {
+            issues.append(.sides(problem))
+        }
         return issues
     }
 }
@@ -399,6 +439,10 @@ nonisolated struct RoundSetupParams: Encodable, Equatable, Sendable {
         let isMarker: Bool
         let teamNo: Int?
         let playingHandicap: Int?
+        /// Lag mot lag (sql/048). Sendes bare når `includesSide` (kolonnen finnes); da også som null,
+        /// så en side som er tatt bort, tømmes. Uten nøkkelen lar databasen siden stå.
+        var side: Int? = nil
+        var includesSide = false
 
         enum CodingKeys: String, CodingKey {
             case memberID = "member_id"
@@ -406,6 +450,7 @@ nonisolated struct RoundSetupParams: Encodable, Equatable, Sendable {
             case isMarker = "is_marker"
             case teamNo = "team_no"
             case playingHandicap = "playing_handicap"
+            case side
         }
 
         func encode(to encoder: any Encoder) throws {
@@ -415,6 +460,7 @@ nonisolated struct RoundSetupParams: Encodable, Equatable, Sendable {
             try c.encode(isMarker, forKey: .isMarker)
             try c.encode(teamNo, forKey: .teamNo)
             try c.encode(playingHandicap, forKey: .playingHandicap)
+            if includesSide { try c.encode(side, forKey: .side) }
         }
     }
 
@@ -463,7 +509,8 @@ nonisolated struct RoundSetupParams: Encodable, Equatable, Sendable {
     /// - Parameter withPlayingHandicap: ved start regnes spillehandicapet med `effectiveHandicap`
     ///   og lagres som rundens fasit (beslutning). I en kladd sendes null.
     static func make(roundID: UUID, draft: RoundDraft, roster: [ClubMemberRow], course: Course?,
-                     rules: Ruleset, withPlayingHandicap: Bool) -> RoundSetupParams {
+                     rules: Ruleset, withPlayingHandicap: Bool,
+                     includeSide: Bool = RoundFormatsFeature.isAvailable) -> RoundSetupParams {
         let byID = Dictionary(uniqueKeysWithValues: roster.map { ($0.id, $0) })
         let ids = draft.participants.filter { byID[$0] != nil }
         let included = Set(ids)
@@ -483,7 +530,8 @@ nonisolated struct RoundSetupParams: Encodable, Equatable, Sendable {
                 ? Int(rules.effectiveHandicap(for: player, in: round, roster: corePlayers))
                 : nil
             return PlayerEntry(memberID: id, bayNo: seat?.bay, isMarker: seat?.isMarker ?? false,
-                               teamNo: isTeamForm ? draft.teams[id] : nil, playingHandicap: handicap)
+                               teamNo: isTeamForm ? draft.teams[id] : nil, playingHandicap: handicap,
+                               side: draft.isTeamVsTeam ? draft.sides[id] : nil, includesSide: includeSide)
         }
         let matches = draft.matches.enumerated().map { i, m in
             MatchEntry(matchNo: i + 1, playerA: m.isTeamMatch ? nil : m.playerA, playerB: m.isTeamMatch ? nil : m.playerB,

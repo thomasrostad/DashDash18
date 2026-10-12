@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { type Ruleset, allowanceFor, courseHoles, formSetup, isTeamForm, rulesetSuggestions, suggestedClosestToPinHole, suggestedLongestDriveHole } from "../../../golfgutu-core/src/index.ts";
 import { applyPreviousPlayers, applyRoundTemplate, decodeRoundTemplate, encodeRoundTemplate, type PreviousSetup } from "../reuse.ts";
 import { TemplateBar } from "../Templates.tsx";
 import { longDate } from "../text.ts";
 import { autoArrange } from "./logic.ts";
-import { dayDrawPlan, loadSlopeCatalog, loadSourceCourses, saveDraft, startRound, type DayData, type ListRound } from "./api.ts";
+import { competitionContext, dayDrawPlan, loadSlopeCatalog, loadSourceCourses, saveDraft, startRound, withFormats, type DayData, type ListRound } from "./api.ts";
+import { CompetitionsCard, SidesCard } from "./CompetitionsSetup.tsx";
 import {
   coreCourseWithTee, courseItemReady, courseSummary, filterSlope, previousTeeID, slopePlace, suggestedTee, teeDetail,
   teeGenderTitle, SLOPE_PICKER_LIMIT, type CourseItem, type SlopeCourse,
@@ -45,6 +46,17 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
   const [error, setError] = useState<string | null>(null);
   const rules = data.rules;
   const roster = data.roster;
+  // sql/048: konkurransene og sidene. En lagret kladd henter dem; en ny runde starter tom (eller fra «Samme som sist»).
+  const formats = data.formats === true;
+  useEffect(() => {
+    if (!formats) return;
+    if (initial.isSaved && initial.competitions === undefined) {
+      withFormats(initial).then((f) => setDraft((d) => ({ ...d, sides: f.sides, competitions: f.competitions, mainCompetitionID: f.mainCompetitionID, hadCompetitions: f.hadCompetitions })),
+        (e) => setError((e as Error).message));
+    } else {
+      setDraft((d) => ({ ...d, sides: d.sides ?? {}, competitions: d.competitions ?? [] }));
+    }
+  }, [formats, initial]);
   // Trekningen etter regelsettet (`formats.drawMethod`), med møtene i turneringens andre runder.
   const plan = useMemo(() => dayDrawPlan(data, draft.roundID), [data, draft.roundID]);
   const [swapA, setSwapA] = useState("");
@@ -73,7 +85,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
   async function act(start: boolean) {
     setBusy(true); setError(null);
     try {
-      const ctx = { clubID, rules, roster, course: item, tableRules: data.tableRules };
+      const ctx = { clubID, rules, roster, course: item, tableRules: data.tableRules, formats };
       if (start) {
         await startRound(ctx, draft, titleOf);
         onDone(`${title} er startet.`);
@@ -280,6 +292,16 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
           </div>
           {(() => { const p = teamProblem(draft.teams, draft.participants, form, rules.formats.maxPerBay); return p ? <p className="error small">{p}</p> : null; })()}
         </div>
+      )}
+
+      {formats && draft.competitions && (
+        <CompetitionsCard list={draft.competitions} ctx={competitionContext(draft)} name={name}
+          onChange={(competitions) => setDraft({ ...draft, competitions })} />
+      )}
+
+      {formats && draft.sides && (
+        <SidesCard participants={draft.participants} sides={draft.sides} teams={competitionContext(draft).teams} name={name}
+          onChange={(sides) => setDraft({ ...draft, sides })} />
       )}
 
       {rules.table.pointsSource === "matches" && (

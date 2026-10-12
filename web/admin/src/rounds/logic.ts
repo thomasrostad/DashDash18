@@ -8,6 +8,7 @@ import {
   makeRound, norwegianCompare, roundAwayFromZero, suggestedClosestToPinHole, suggestedLongestDriveHole,
   type CompetitionForm, type Course, type Round, type RoundMatchRow, type RoundPlayerRow as CoreRoundPlayerRow, type Ruleset,
 } from "../../../golfgutu-core/src/index.ts";
+import type { CompetitionDraft } from "./competitions.ts";
 
 export type UUID = string;
 export type RoundStatus = "draft" | "active" | "locked";
@@ -489,6 +490,14 @@ export interface RoundDraft {
   pointsTable: string | null;
   /** sql/047: hull som skjules til runden er låst (`HIDE_LAST_HOLES` eller 0). */
   hideLastHoles: number;
+  /** sql/048: lag mot lag, side 1 eller 2 per spiller. Mangler: sidene røres ikke. */
+  sides?: Record<UUID, 1 | 2>;
+  /** sql/048: de andre konkurransene i runden. Mangler: konkurransene røres ikke. */
+  competitions?: CompetitionDraft[];
+  /** sql/048: id-en til hovedkonkurransen når runden har rader. */
+  mainCompetitionID?: UUID | null;
+  /** sql/048: runden har lagrede konkurranser (så en tom liste sletter dem). */
+  hadCompetitions?: boolean;
 }
 
 export const draftForm = (d: RoundDraft) => formById(d.formID);
