@@ -34,6 +34,8 @@ private let samples: [ActivityEvent] = [
     .betCreated(question: "Noen får birdie på hull 3", side: "no", points: 20),
     .betChallenge(question: "Anders slår Thomas netto på hull 7", against: anders, side: "yes", points: 50),
     .betResolved(question: "Anders slår Thomas netto på hull 7", resolution: "yes"),
+    .billShareSent(title: "Simulatorleie", name: "Anders"),
+    .billShareDisputed(title: "Simulatorleie", name: "Thomas"),
     .tableChanged(competition: id(500), competitionName: "Jakkeracet", roundNo: 3,
                   table: [ActivityTableSpot(member: anders, place: 1, from: 1, points: 58),
                           ActivityTableSpot(member: thomas, place: 3, from: 5, points: 49.5)]),

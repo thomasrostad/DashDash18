@@ -33,6 +33,8 @@
 //     står i recipients: medlems-id-er i klubben, profil-id-er i en turnering uten klubb
 //     (isRecipient). Den som skrev kommentaren (actor_member_id, eller data.author_profile uten
 //     klubb) er aktøren og står bak (blokkering).
+//   * Del regningen (sql/051): bill_share_sent og bill_share_disputed har egen tekst
+//     (data.title, data.name) og går bare til mottakeren på linja (recipients).
 //
 // Tekstene følger ActivityText.display i appen (DashDash18/Data/Activity.swift),
 // med emojien foran, siden et varsel ikke har ikon.
@@ -881,6 +883,16 @@ export function eveningStartedText(data: Record<string, unknown>, dayTerm?: unkn
   return parts.length ? `${head}: ${parts.join(" · ")}` : head;
 }
 
+/** «Anders har sendt sin del for Simulatorleie» (sql/051, til mottakeren). */
+export function billShareSentText(data: Record<string, unknown>): string {
+  return `${str(data.name)?.trim() || "Noen"} har sendt sin del for ${str(data.title)?.trim() || "regningen"}`;
+}
+
+/** «Thomas sier at din del for Simulatorleie ikke kom» (sql/051, til den som skal betale). */
+export function billShareDisputedText(data: Record<string, unknown>): string {
+  return `${str(data.name)?.trim() || "Mottakeren"} sier at din del for ${str(data.title)?.trim() || "regningen"} ikke kom`;
+}
+
 /** Teksten for en linje. Mangler et felt hendelsen ikke klarer seg uten, blir den den nøytrale teksten. */
 export function activityDisplay(activity: ActivityPayload, name: NameLookup, dayTerm?: unknown): ActivityDisplay {
   const d = activity.data ?? {};
@@ -1047,6 +1059,11 @@ export function activityDisplay(activity: ActivityPayload, name: NameLookup, day
       }
       return { emoji: "↩️", text: `Veddemål annullert: «${question}»` };
     }
+    // Del regningen (sql/051): data.title og data.name (den som betalte, eller mottakeren).
+    case "bill_share_sent":
+      return { emoji: "💸", text: billShareSentText(d) };
+    case "bill_share_disputed":
+      return { emoji: "❓", text: billShareDisputedText(d) };
     case "table_changed": {
       const competition = str(d.competition), competitionName = str(d.competition_name);
       const table = tableSpots(d.table);

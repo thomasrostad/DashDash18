@@ -2,6 +2,8 @@ import SwiftUI
 
 /// «Del regningen»: hva det gjelder, beløpet, hvem som la ut (mottaker i Vipps) og hvem som deler.
 /// Hver ser sin del og trykker «Åpne Vipps». Bare felles utgifter, aldri veddemål (B10).
+/// Med `saveContext` og sql/051 kan regningen lagres og følges opp i «Mine oppgjør». Uten 051
+/// deles den som før, uten lagring.
 struct BillSplitView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
@@ -14,6 +16,14 @@ struct BillSplitView: View {
     @State private var phoneText = ""
     @State private var newName = ""
     @State private var copied: String?
+    /// Navn → profil for dem med innlogging (lagres som profil på delen).
+    private let profiles: [String: UUID]
+    private let saveContext: BillService.SaveContext?
+    /// sql/051 finnes. nil til det er sjekket.
+    @State private var canSave: Bool?
+    @State private var isSaving = false
+    @State private var saveError: String?
+    @State private var saved = false
     /// Feltet med tastaturet. Tall- og telefontastaturet har ingen returtast, så «Ferdig» over
     /// tastaturet, dra i lista og knappene under lukker det.
     @FocusState private var focused: Field?
@@ -21,8 +31,12 @@ struct BillSplitView: View {
     private enum Field: Hashable { case note, amount, name, phone }
 
     /// `people`: navnene i runden (eller tomt). Den første er deg, som foreslås som mottaker.
-    init(people: [String], amount: String = "", payer: String? = nil, phone: String = "") {
+    /// `profiles`: navn → profil-id for dem med innlogging. `saveContext`: hvor regningen lagres.
+    init(people: [String], amount: String = "", payer: String? = nil, phone: String = "",
+         profiles: [String: UUID] = [:], saveContext: BillService.SaveContext? = nil) {
         let names = BillSplit.unique(people)
+        self.profiles = profiles
+        self.saveContext = saveContext
         _people = State(initialValue: names)
         _included = State(initialValue: Set(names))
         _payer = State(initialValue: payer ?? names.first)
@@ -115,7 +129,7 @@ struct BillSplitView: View {
                 } header: {
                     DDHeader("Vipps til")
                 } footer: {
-                    DDFooter("Nummeret lagres ikke. Det står bare i teksten dere kopierer.")
+                    DDFooter(phoneFooter)
                 }
 
                 if let total, !shares.isEmpty {
@@ -153,6 +167,9 @@ struct BillSplitView: View {
                     } footer: {
                         DDFooter("Vipps fyller ikke inn beløpet for private betalinger. Kopier beløpet, åpne Vipps og send til \(payer ?? "mottakeren")\(phone.map { " på \(VippsRecipient.formatted($0))" } ?? ""). Veddemål gjøres opp i poeng, aldri her.")
                     }
+                    if canSave == true, saveContext != nil {
+                        saveSection(total: total)
+                    }
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -171,6 +188,83 @@ struct BillSplitView: View {
             }
         }
         .tint(Color.ddForestInk)
+        .task {
+            if canSave == nil, let saveContext {
+                canSave = await BillService.isAvailable(client: saveContext.client)
+            }
+        }
+    }
+
+    // MARK: Lagre (sql/051)
+
+    private var payeePerson: BillPerson? {
+        payer.map { BillPerson(name: $0, profileID: profiles[$0]) }
+    }
+
+    /// Du er selv mottakeren: bare da kan nummeret lagres på regningen.
+    private var payeeIsMe: Bool {
+        guard let saveContext, let id = payeePerson?.profileID else { return false }
+        return id == saveContext.userID
+    }
+
+    private var phoneFooter: String {
+        guard canSave == true, saveContext != nil else {
+            return "Nummeret lagres ikke. Det står bare i teksten dere kopierer."
+        }
+        return payeeIsMe
+            ? "Lagrer du regningen, står nummeret på den til alle har betalt. Så slettes det."
+            : "Bare mottakeren kan lagre sitt eget nummer. Det står i teksten dere kopierer."
+    }
+
+    @ViewBuilder
+    private func saveSection(total: NOK) -> some View {
+        Section {
+            if saved, let saveContext {
+                Label("Lagret", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(Color.ddForestInk)
+                NavigationLink {
+                    BillSettlementsView(client: saveContext.client, userID: saveContext.userID)
+                } label: {
+                    Label("Mine oppgjør", systemImage: "list.bullet.rectangle")
+                }
+            } else {
+                Button {
+                    focused = nil
+                    Task { await save(total: total) }
+                } label: {
+                    HStack(spacing: DDSpacing.s) {
+                        Text("Lagre og følg opp")
+                        if isSaving { ProgressView() }
+                    }
+                }
+                .buttonStyle(.dd(.primary, fullWidth: true))
+                .disabled(isSaving || payeePerson == nil)
+                if let saveError {
+                    Label(saveError, systemImage: "exclamationmark.triangle").ddErrorStyle()
+                }
+            }
+        } footer: {
+            DDFooter("De med innlogging ser sin del i «Mine oppgjør» under Deg. Delen merkes sendt når de kommer tilbake fra Vipps.")
+        }
+    }
+
+    private func save(total: NOK) async {
+        guard let saveContext, let payee = payeePerson else { return }
+        let plan = BillSplit.plan(total: total, people: sharing, payer: payer)
+        guard !plan.shares.isEmpty, plan.sum == total.ore else { return }
+        isSaving = true
+        saveError = nil
+        defer { isSaving = false }
+        do {
+            _ = try await BillService.create(
+                context: saveContext, title: BillSplit.title(purpose: purpose, note: note), total: total,
+                payee: payee, payeeShare: plan.payeeShare,
+                shares: plan.shares.map { (BillPerson(name: $0.name, profileID: profiles[$0.name]), $0.amount) },
+                payeeVipps: phone)
+            saved = true
+        } catch {
+            saveError = error.message
+        }
     }
 
     private func addName() {

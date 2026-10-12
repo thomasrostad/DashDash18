@@ -35,6 +35,8 @@ nonisolated enum HomeBellReason: Equatable, Sendable {
     case commented
     /// «Ta et bilde av gjengen» (sql/050).
     case photoPrompt
+    /// Del regningen: en del er sendt til deg, eller din del kom ikke frem (sql/051).
+    case bill
 }
 
 nonisolated enum HomeBell {
@@ -77,6 +79,8 @@ nonisolated enum HomeBell {
             return row.recipients?.contains(me) == true ? .mentioned : nil
         case .photoPrompt:
             return row.recipients?.contains(me) == true ? .photoPrompt : nil
+        case .billShareSent, .billShareDisputed:
+            return row.recipients?.contains(me) == true ? .bill : nil
         default:
             return nil
         }
