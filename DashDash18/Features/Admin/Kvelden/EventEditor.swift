@@ -34,6 +34,10 @@ struct EventEditor: View {
                 DDFooter("Én \(dayTerm.one) per dato.")
             }
 
+            if model.supportsSignupRules {
+                signupSection
+            }
+
             Section {
                 ForEach(model.members) { member in
                     Button {
@@ -83,6 +87,42 @@ struct EventEditor: View {
         } message: {
             Text("Påmeldingene og sosialkomiteen for \(dayTerm.the) slettes også.")
         }
+    }
+
+    /// Tak, frister og gjester (sql/045). Alt er av som standard.
+    private var signupSection: some View {
+        Section {
+            Toggle("Maks antall", isOn: $draft.rules.hasMax)
+            if draft.rules.hasMax {
+                Stepper("\(draft.rules.maxPlayers) plasser", value: $draft.rules.maxPlayers,
+                        in: EveningRulesDraft.maxRange)
+            }
+            Toggle("Påmeldingsfrist", isOn: $draft.rules.hasSignupDeadline)
+            if draft.rules.hasSignupDeadline {
+                DatePicker("Frist", selection: $draft.rules.signupDeadline)
+            }
+            Toggle("Avmeldingsfrist", isOn: $draft.rules.hasWithdrawDeadline)
+            if draft.rules.hasWithdrawDeadline {
+                DatePicker("Frist", selection: $draft.rules.withdrawDeadline)
+            }
+            Toggle("Tillat gjester", isOn: $draft.rules.allowGuests)
+        } header: {
+            DDHeader("Påmelding")
+        } footer: {
+            DDFooter("Når \(dayTerm.the) er full, havner nye på ventelista og rykker opp når noen melder av. Etter fristen kan bare arrangøren endre.")
+        }
+        .onChange(of: draft.rules.hasSignupDeadline) { _, on in
+            if on, draft.id == nil { draft.rules.signupDeadline = suggestedDeadline }
+        }
+        .onChange(of: draft.rules.hasWithdrawDeadline) { _, on in
+            if on, draft.id == nil { draft.rules.withdrawDeadline = suggestedDeadline }
+        }
+    }
+
+    /// Kl. 12 dagen før kvelden.
+    private var suggestedDeadline: Date {
+        EveningRulesDraft(nil, eventDate: EveningDates.date(from: EveningDates.dateString(from: draft.date)) ?? draft.date)
+            .signupDeadline
     }
 
     private func toggle(_ id: UUID) {

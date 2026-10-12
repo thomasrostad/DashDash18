@@ -185,8 +185,8 @@ export interface BlockRow {
  *   tråden:        forfatteren
  *   alle linjer:   actor_member_id (den som utløste den: føreren, arrangøren
  *                  som purret eller skrev til alle, den som rettet)
- *   big_score, side_prize, signup, member_joined: data.member (spilleren det
- *                  handler om, som ikke alltid er den som førte)
+ *   big_score, side_prize, signup, member_joined, signup_dropped: data.member
+ *                  (spilleren det handler om, som ikke alltid er den som førte)
  *   lead_changed:  lederne; tips_king: tippekongene
  *   table_changed: den linja handler om (ny leder eller den som klatret mest)
  * Ikke med: de som bare nevnes uten å ha gjort noe (den som ble passert på
@@ -207,6 +207,7 @@ export function pushOriginators(payload: JobPayload): string[] {
     case "big_score":
     case "side_prize":
     case "signup":
+    case "signup_dropped":
     case "member_joined": {
       const member = str(d.member);
       if (member) out.add(member);
@@ -606,6 +607,17 @@ export function activityDisplay(activity: ActivityPayload, name: NameLookup): Ac
         return { emoji: "↩️", text: `${who(member)} er likevel usikker` + (date ? ` på ${date}` : "") };
       }
       return UNKNOWN;
+    }
+    // sql/045: skrevet av serveren. Opprykket går bare til den som fikk plass (recipients).
+    case "waitlist_promoted": {
+      const date = evening(d.event_date), guest = str(d.guest_name);
+      const when = date ? ` ${date}` : "";
+      return { emoji: "🎉", text: guest ? `${guest} har fått plass${when} (gjesten din)` : `Du har fått plass${when}` };
+    }
+    case "signup_dropped": {
+      const member = str(d.member), date = evening(d.event_date);
+      if (!member) return UNKNOWN;
+      return { emoji: "↩️", text: `${who(member)} har meldt seg av` + (date ? ` ${date}` : "") + (d.late === true ? " etter fristen" : "") };
     }
     case "nudge": {
       const date = evening(d.event_date);

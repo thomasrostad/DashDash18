@@ -14,6 +14,8 @@ struct EventDraft: Equatable {
     var venue: String
     var note: String
     var committee: Set<UUID>
+    /// Tak, frister og gjester (sql/045). Står av for nye kvelder.
+    var rules = EveningRulesDraft()
 }
 
 /// Kveldene for arrangøren: terminlista med sosialkomiteene, påmeldingen per kveld og troppen
@@ -41,6 +43,15 @@ final class TerminlisteModel {
     private(set) var members: [ClubMemberRow] = []
     /// Kveld → svarene. Feiler hentingen, står kveldene uten påmelding.
     private(set) var signups: [UUID: [SignupRow]] = [:]
+    /// Kveld → tak, frister og gjester (sql/045). nil når 045 ikke er kjørt: innstillingene skjules.
+    private(set) var settings: [UUID: EveningSettingsRow]?
+    /// Kveld → gjestene (sql/045).
+    private(set) var guests: [UUID: [EventGuestRow]] = [:]
+    /// Kveld → medlemmene som har sett den (sql/045). nil: ikke kjent.
+    private(set) var views: [UUID: Set<UUID>]?
+
+    /// Tak, frister, gjester og logg finnes (sql/045 er kjørt).
+    var supportsSignupRules: Bool { settings != nil }
 
     private let context: ClubContext
     /// Turneringen kveldene hører til (fase 21). nil: hovedturneringen (den aktive).
@@ -103,19 +114,55 @@ final class TerminlisteModel {
         }
     }
 
-    /// Svarene på sesongens kvelder. Bare et tillegg i lista, så en feil gir ingen feilet skjerm.
+    /// Svarene på sesongens kvelder, med tak, gjester og «sett» (sql/045). Bare et tillegg i lista,
+    /// så en feil gir ingen feilet skjerm.
     private func loadSignups() async {
         guard !events.isEmpty else { signups = [:]; return }
-        let rows: [SignupRow]? = try? await client.from("signups")
-            .select(SignupRow.columns)
-            .in("event_id", values: events.map(\.id.uuidString))
-            .execute().value
-        if let rows { signups = Dictionary(grouping: rows, by: \.eventID) }
+        let ids = events.map(\.id)
+        async let rows = try? EveningSignupService.signups(client: client, eventIDs: ids)
+        async let settingRows = EveningSignupService.settings(client: client, eventIDs: ids)
+        async let guestRows = EveningSignupService.guests(client: client, eventIDs: ids)
+        async let viewRows = EveningSignupService.views(client: client, eventIDs: ids)
+        if let rows = await rows { signups = Dictionary(grouping: rows, by: \.eventID) }
+        settings = await settingRows
+        guests = Dictionary(grouping: await guestRows, by: \.eventID)
+        views = settings == nil ? nil : await viewRows
     }
 
-    /// Hele troppen fordelt på svarene for kvelden.
+    /// Hele troppen fordelt på svarene for kvelden, med gjestene og hvem som har sett den.
     func signupSummary(for eventID: UUID) -> SignupSummary {
-        SignupSummary(members: members, signups: signups[eventID] ?? [])
+        SignupSummary(members: members, signups: signups[eventID] ?? [], guests: guests[eventID] ?? [],
+                      seen: views.map { $0[eventID] ?? [] })
+    }
+
+    /// «9 av 12 kommer + 2 gjester · 1 på venteliste».
+    func signupText(for eventID: UUID) -> String {
+        Tonight.signupText(signups[eventID] ?? [], guests: guests[eventID] ?? [], rosterCount: members.count)
+    }
+
+    // MARK: Påmeldingen (arrangøren, sql/045)
+
+    /// Endrer svaret for et medlem. `status` nil fjerner svaret. Arrangøren går forbi fristene.
+    func setAnswer(_ event: EventRow, member: UUID, status: SignupStatus?) async throws(DataError) {
+        try await EveningSignupService.answer(client: client, event: event, member: member,
+                                              ownMemberID: context.memberID, status: status, comment: nil)
+        await loadSignups()
+    }
+
+    /// Melder på en gjest for et medlem.
+    func addGuest(_ event: EventRow, name raw: String, invitedBy: UUID) async throws(DataError) {
+        let name = try GuestInput.clean(raw).get()
+        try await EveningSignupService.addGuest(client: client, eventID: event.id, name: name, invitedBy: invitedBy)
+        await loadSignups()
+    }
+
+    func removeGuest(_ guest: EventGuestRow) async throws(DataError) {
+        try await EveningSignupService.removeGuest(client: client, guestID: guest.id)
+        await loadSignups()
+    }
+
+    func log(for event: EventRow) async throws(DataError) -> [SignupLogRow] {
+        try await EveningSignupService.log(client: client, eventID: event.id)
     }
 
     /// Purrer på dem som ikke har svart på kvelden (samme purring som i Kveld). Gir teksten
@@ -151,13 +198,15 @@ final class TerminlisteModel {
                 venue: last?.venue ?? "", note: "", committee: []
             )
         }
+        let date = EveningDates.date(from: event.eventDate) ?? .now
         return EventDraft(
             id: event.id, seasonID: event.seasonID, competitionID: event.seasonID == nil ? event.competitionID : nil,
             date: EveningDates.date(from: event.eventDate) ?? .now,
             hasTime: event.startTime != nil,
             time: event.startTime.flatMap { EveningDates.time(from: $0) } ?? EveningDates.time(from: "17:00")!,
             venue: event.venue ?? "", note: event.note ?? "",
-            committee: Set(committees[event.id] ?? [])
+            committee: Set(committees[event.id] ?? []),
+            rules: EveningRulesDraft(settings?[event.id], eventDate: date)
         )
     }
 
@@ -193,6 +242,7 @@ final class TerminlisteModel {
         guard let event = saved.first else { throw .notAllowed }  // RLS sa nei uten feilkode
 
         try await setCommittee(eventID: event.id, to: draft.committee)
+        try await saveRules(draft.rules, eventID: event.id)
         await load()
     }
 
@@ -238,6 +288,18 @@ final class TerminlisteModel {
             throw DataError.from(error)
         }
         await load()
+    }
+
+    /// Tak, frister og gjester (sql/045). Bare når 045 finnes og noe er endret.
+    private func saveRules(_ rules: EveningRulesDraft, eventID: UUID) async throws(DataError) {
+        guard let settings else { return }
+        let wanted = rules.settings(id: eventID)
+        guard wanted != (settings[eventID] ?? .off(eventID)) else { return }
+        do throws(DataError) {
+            try await EveningSignupService.saveSettings(client: client, wanted)
+        } catch {
+            throw .invalid("Datoen er lagret, men ikke påmeldingen. \(error.message)")
+        }
     }
 
     /// Bytter komiteen for en kveld i én transaksjon (RPC `set_event_committee`, sql/005,

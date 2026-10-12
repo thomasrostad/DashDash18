@@ -37,6 +37,8 @@ private let samples: [ActivityEvent] = [
     .tableChanged(competition: id(500), competitionName: "Jakkeracet", roundNo: 3,
                   table: [ActivityTableSpot(member: anders, place: 1, from: 1, points: 58),
                           ActivityTableSpot(member: thomas, place: 3, from: 5, points: 49.5)]),
+    .waitlistPromoted(member: anders, guestName: nil, eventDate: "2026-10-08"),
+    .signupDropped(member: bjorn, eventDate: "2026-10-08", late: true),
 ]
 
 /// Veddemål (012): PWA-ens ordlyd fra handleUtfordring og markets, med poeng for kroner.

@@ -155,6 +155,8 @@ struct KveldExtrasButtons: View {
 struct NudgeSection: View {
     /// De som ikke har svart.
     let targets: [SignupSummary.Entry]
+    /// Hvor mange av dem som ikke har sett kvelden (sql/045). 0: ikke kjent, eller alle har sett den.
+    var unseen: Int = 0
     /// Sender purringen. Gir teksten som skal vises etterpå.
     let onSend: () async throws(DataError) -> String
     @State private var confirming = false
@@ -167,6 +169,11 @@ struct NudgeSection: View {
             Button(Nudge.buttonTitle(count: targets.count), systemImage: "alarm") { confirming = true }
                 .buttonStyle(.dd(.secondary, fullWidth: true))
                 .disabled(isSending)
+            if let unseen = Nudge.unseenText(unseen: unseen, of: targets.count) {
+                Text(unseen)
+                    .font(.ddCaption)
+                    .foregroundStyle(Color.ddInkSecondary)
+            }
             if let message {
                 Text(message)
                     .font(.ddCallout)

@@ -211,11 +211,13 @@ export type ParticipantSource = "signups" | "everyone" | "saved";
 export interface SignupRow {
   member_id: UUID;
   status: "yes" | "maybe" | "no" | string;
+  /** Satt: på ventelista (sql/045). Teller ikke som «kommer». */
+  waitlisted_at?: string | null;
 }
 
-/** De som har svart «Kommer», i troppens rekkefølge. Har ingen svart «Kommer», er alle med. */
+/** De som har svart «Kommer» (ikke ventelista), i troppens rekkefølge. Har ingen svart «Kommer», er alle med. */
 export function initialParticipants(roster: readonly RosterMember[], signups: readonly SignupRow[]): { ids: UUID[]; source: ParticipantSource } {
-  const coming = new Set(signups.filter((s) => s.status === "yes").map((s) => s.member_id));
+  const coming = new Set(signups.filter((s) => s.status === "yes" && !s.waitlisted_at).map((s) => s.member_id));
   const ids = roster.filter((m) => coming.has(m.id)).map((m) => m.id);
   if (ids.length === 0) return { ids: roster.map((m) => m.id), source: "everyone" };
   return { ids, source: "signups" };

@@ -98,8 +98,13 @@ nonisolated enum LeadTracker {
 nonisolated enum SignupNews {
     /// `svarLinje`: bare det som er nytt for de andre. «Kommer ikke» uten å ha sagt ja er ingen
     /// nyhet, og en kommentar er ingen hendelse.
-    static func event(member: UUID, from old: SignupStatus?, to new: SignupStatus, eventDate: String?) -> ActivityEvent? {
-        if new == .yes && old != .yes { return .signup(member: member, status: .yes, eventDate: eventDate) }
+    /// `waitlisted`: svaret havnet på ventelista (sql/045). Da har ingen meldt seg på ennå; serveren
+    /// melder fra (`waitlist_promoted`) når plassen kommer.
+    static func event(member: UUID, from old: SignupStatus?, to new: SignupStatus, eventDate: String?,
+                      waitlisted: Bool = false) -> ActivityEvent? {
+        if new == .yes && old != .yes {
+            return waitlisted ? nil : .signup(member: member, status: .yes, eventDate: eventDate)
+        }
         if old == .yes && new == .no { return .signup(member: member, status: .no, eventDate: eventDate) }
         if old == .yes && new == .maybe { return .signup(member: member, status: .maybe, eventDate: eventDate) }
         return nil

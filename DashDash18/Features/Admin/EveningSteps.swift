@@ -160,12 +160,17 @@ nonisolated enum Tonight {
         return players > 0 && scoredHoles >= players * holes
     }
 
-    /// «9 av 12 kommer · 1 usikker», eller «Ingen har svart ennå».
-    static func signupText(_ signups: [SignupRow], rosterCount: Int) -> String {
-        let yes = signups.filter { $0.status == .yes }.count
+    /// «9 av 12 kommer · 1 usikker», eller «Ingen har svart ennå». «Kommer» er uten ventelista
+    /// (sql/045); bekreftede gjester og ventelista står for seg: «9 av 12 kommer + 2 gjester · 1 på venteliste».
+    static func signupText(_ signups: [SignupRow], guests: [EventGuestRow] = [], rosterCount: Int) -> String {
+        let yes = signups.filter(\.isConfirmed).count
         let maybe = signups.filter { $0.status == .maybe }.count
-        if signups.isEmpty { return "Ingen har svart ennå · \(rosterCount) i troppen" }
+        let confirmedGuests = guests.filter { $0.waitlistedAt == nil }.count
+        let waiting = signups.filter(\.isWaitlisted).count + guests.count - confirmedGuests
+        if signups.isEmpty && guests.isEmpty { return "Ingen har svart ennå · \(rosterCount) i troppen" }
         var text = "\(yes) av \(rosterCount) kommer"
+        if confirmedGuests > 0 { text += confirmedGuests == 1 ? " + 1 gjest" : " + \(confirmedGuests) gjester" }
+        if waiting > 0 { text += " · \(waiting) på venteliste" }
         if maybe > 0 { text += " · \(maybe) " + (maybe == 1 ? "usikker" : "usikre") }
         return text
     }

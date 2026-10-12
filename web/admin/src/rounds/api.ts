@@ -4,6 +4,7 @@
 
 import { supabase } from "../supabase.ts";
 import type { Competition, EventRow } from "../data.ts";
+import { eveningSignups } from "../signupsApi.ts";
 import {
   decodeCourseHoleRecord, decodeCourseRow, decodeHoleScoreRow, decodeRoundHoleRow, decodeRoundMatchRow, decodeRoundPlayerRow,
   decodeRoundRow, decodeRuleset, decodeSideClaimRow, GOLFGUTU, makeSnapshot, rulesetDay,
@@ -180,7 +181,7 @@ export async function loadDay(clubID: string, event: EventRow, comps: readonly C
       supabase.from("club_members").select("id, display_name, handicap_index, seed_group, user_id").eq("club_id", clubID).eq("status", "active"),
       supabase.from("courses").select(COURSE_COLUMNS).eq("club_id", clubID),
       supabase.from("rounds").select(ROUND_COLUMNS).eq("club_id", clubID).order("round_no"),
-      supabase.from("signups").select("member_id, status").eq("event_id", event.id),
+      eveningSignups(event.id).then((data) => ({ data, error: null }), (error) => ({ data: null, error })),
       user ? supabase.from("club_members").select("id").eq("club_id", clubID).eq("user_id", user.id).limit(1) : Promise.resolve({ data: [], error: null }),
     ]);
     for (const r of [membersRes, coursesRes, roundsRes, signupsRes]) if (r.error) throw r.error;

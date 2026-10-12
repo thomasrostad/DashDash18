@@ -128,6 +128,10 @@ nonisolated struct SignupRow: Codable, Equatable, Sendable {
     let clubID: UUID
     var status: SignupStatus
     var comment: String?
+    /// Satt: «Kommer», men på ventelista (sql/045). Status er fortsatt `yes`.
+    var waitlistedAt: Date? = nil
+    /// Meldte av etter avmeldingsfristen (sql/045).
+    var late: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case eventID = "event_id"
@@ -135,9 +139,32 @@ nonisolated struct SignupRow: Codable, Equatable, Sendable {
         case clubID = "club_id"
         case status
         case comment
+        case waitlistedAt = "waitlisted_at"
+        case late
     }
 
+    /// Kolonnene som finnes uten sql/045.
     static let columns = "event_id, member_id, club_id, status, comment"
+    /// Med ventelista og sen avmelding (sql/045).
+    static let columnsWithWaitlist = columns + ", waitlisted_at, late"
+
+    /// Teller som «kommer»: `yes` og ikke på ventelista.
+    var isConfirmed: Bool { status == .yes && waitlistedAt == nil }
+    var isWaitlisted: Bool { status == .yes && waitlistedAt != nil }
+}
+
+nonisolated extension SignupRow {
+    /// Uten sql/045 mangler `waitlisted_at` og `late`: da er ingen på ventelista.
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        eventID = try c.decode(UUID.self, forKey: .eventID)
+        memberID = try c.decode(UUID.self, forKey: .memberID)
+        clubID = try c.decode(UUID.self, forKey: .clubID)
+        status = try c.decode(SignupStatus.self, forKey: .status)
+        comment = try c.decodeIfPresent(String.self, forKey: .comment)
+        waitlistedAt = try c.decodeIfPresent(Date.self, forKey: .waitlistedAt)
+        late = try c.decodeIfPresent(Bool.self, forKey: .late) ?? false
+    }
 }
 
 nonisolated struct CourseRow: Codable, Equatable, Identifiable, Sendable {

@@ -332,6 +332,8 @@ Deno.test("alle typene appen skriver har en norsk tekst (ActivityEvent.knownKind
     bet_created: ["bet", { question: "Q" }],
     bet_challenge: ["bet", { question: "Q", against: ANDERS }],
     bet_resolved: ["bet", { question: "Q", resolution: "yes" }],
+    waitlist_promoted: ["signup", { member: ANDERS }],
+    signup_dropped: ["signup", { member: ANDERS }],
   };
   for (const [kind, [category, data]] of Object.entries(minimal)) {
     const shown = text(activity(kind, category, data));
@@ -348,6 +350,27 @@ Deno.test("påmelding, påminnelse og purring uten dato", () => {
   is(text(activity("nudge", "nudge", {})).text, "Hvem kommer? Svar i appen.");
   is(text(activity("round_deleted", "round", { round_no: 3, course_name: "St Andrews" }, { actor_member_id: THOMAS })).text,
     "Thomas slettet Runde 3 – St Andrews");
+});
+
+Deno.test("venteliste og avmelding (sql/045)", () => {
+  is(text(activity("waitlist_promoted", "signup", { member: ANDERS, event_date: "2026-10-08" })).text,
+    "Du har fått plass torsdag 8. oktober");
+  is(text(activity("waitlist_promoted", "signup", { member: ANDERS, guest_name: "Ola" })).text,
+    "Ola har fått plass (gjesten din)");
+  is(text(activity("signup_dropped", "signup", { member: BJORN, event_date: "2026-10-08", late: false })).text,
+    "Bjørn har meldt seg av torsdag 8. oktober");
+  is(text(activity("signup_dropped", "signup", { member: BJORN, late: true })).text, "Bjørn har meldt seg av etter fristen");
+  is(text(activity("signup_dropped", "signup", {})).text, "Ny hendelse i klubben");
+});
+
+Deno.test("opprykk går bare til den som fikk plass, avmelding til arrangørene", () => {
+  const promoted = activity("waitlist_promoted", "signup", { member: BJORN, event_date: "2026-10-08" },
+    { recipients: [BJORN] });
+  eq(planPush(job(promoted), NOW).notifications.map((n) => n.memberId), [BJORN]);
+  const dropped = activity("signup_dropped", "signup", { member: BJORN }, { actor_member_id: BJORN, recipients: [THOMAS] });
+  eq(planPush(job(dropped), NOW).notifications.map((n) => n.memberId), [THOMAS]);
+  // Den som meldte seg av, står bak: har mottakeren blokkert hen, blir det ingen push.
+  ok(pushOriginators(job(dropped)).includes(BJORN));
 });
 
 Deno.test("ny runde", () => {

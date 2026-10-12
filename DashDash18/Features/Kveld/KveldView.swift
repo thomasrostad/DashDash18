@@ -81,8 +81,12 @@ private struct KveldContent: View {
                         }
                         SignupSection(model: model)
                             .padding(.top, DDSpacing.l)
+                        if model.settings?.allowGuests == true {
+                            GuestSection(model: model)
+                        }
                         if Nudge.isOffered(isOrganizer: model.isOrganizer, summary: model.summary) {
-                            NudgeSection(targets: model.nudgeTargets) { () async throws(DataError) -> String in
+                            NudgeSection(targets: model.nudgeTargets,
+                                         unseen: model.summary.notSeen.count) { () async throws(DataError) -> String in
                                 try await model.nudge()
                             }
                         }

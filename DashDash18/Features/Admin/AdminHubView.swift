@@ -394,8 +394,7 @@ private struct AdminHubContent: View {
             HStack {
                 EveningRowLabel(event: event, referenceYear: referenceYear, isPast: isPast,
                                 committee: terminliste.committeeNames(for: event.id),
-                                signups: Tonight.signupText(terminliste.signups[event.id] ?? [],
-                                                            rosterCount: terminliste.members.count),
+                                signups: terminliste.signupText(for: event.id),
                                 action: progress.action, status: status)
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
@@ -424,8 +423,7 @@ private struct AdminHubContent: View {
                 // Kortet åpner Kvelden; knappen under er en egen knapp i samme rad.
                 Button { openEvent = event.id } label: {
                     EveningNowCard(event: event,
-                                   signups: Tonight.signupText(terminliste.signups[event.id] ?? [],
-                                                               rosterCount: terminliste.members.count),
+                                   signups: terminliste.signupText(for: event.id),
                                    progress: progress,
                                    status: Tonight.statusText(action: progress.action, rounds: own,
                                                               activeTitle: model.activeRound.map(model.title),

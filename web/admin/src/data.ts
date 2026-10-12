@@ -162,7 +162,8 @@ export async function committees(clubID: string): Promise<Record<string, string[
   return out;
 }
 
-export async function saveEvent(clubID: string, id: string | null, e: EventInput, committee: string[]): Promise<void> {
+/** Lagrer datoen og komiteen. Gir id-en til datoen. */
+export async function saveEvent(clubID: string, id: string | null, e: EventInput, committee: string[]): Promise<string> {
   const row: Record<string, unknown> = {
     club_id: clubID, season_id: e.season_id, event_date: e.event_date, start_time: e.start_time,
     venue: e.venue?.trim() || null, note: e.note?.trim() || null,
@@ -174,8 +175,10 @@ export async function saveEvent(clubID: string, id: string | null, e: EventInput
     if (error.code === "23505") throw new Error("Datoen står allerede i terminlista.");
     throw error;
   }
-  const { error: cErr } = await supabase.rpc("set_event_committee", { p_event_id: (data as { id: string }).id, p_member_ids: committee });
+  const savedID = (data as { id: string }).id;
+  const { error: cErr } = await supabase.rpc("set_event_committee", { p_event_id: savedID, p_member_ids: committee });
   if (cErr) throw new Error(`Datoen er lagret, men ikke sosialkomiteen. ${cErr.message}`);
+  return savedID;
 }
 
 export async function deleteEvent(id: string): Promise<void> {

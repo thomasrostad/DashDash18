@@ -125,6 +125,10 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
     var competition: UUID?
     var competitionName: String?
     var table: [ActivityTableSpot]?
+    /// `waitlist_promoted` (sql/045): gjesten som fikk plass. Uten: medlemmet selv.
+    var guestName: String?
+    /// `signup_dropped` (sql/045): meldte av etter avmeldingsfristen.
+    var late: Bool?
 
     init(member: UUID? = nil, members: [UUID]? = nil, hole: Int? = nil, holeIndex: Int? = nil, name: String? = nil,
          strokes: Int? = nil, par: Int? = nil, afterHole: Int? = nil, leaders: [UUID]? = nil, points: Int? = nil,
@@ -134,7 +138,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
          text: String? = nil, from: Int? = nil, to: Int? = nil, coming: Int? = nil, unsure: Int? = nil,
          correct: Int? = nil, possible: Int? = nil, question: String? = nil, against: UUID? = nil,
          side: String? = nil, resolution: String? = nil, competition: UUID? = nil, competitionName: String? = nil,
-         table: [ActivityTableSpot]? = nil) {
+         table: [ActivityTableSpot]? = nil, guestName: String? = nil, late: Bool? = nil) {
         self.member = member
         self.members = members
         self.hole = hole
@@ -172,6 +176,8 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         self.competition = competition
         self.competitionName = competitionName
         self.table = table
+        self.guestName = guestName
+        self.late = late
     }
 
     enum CodingKeys: String, CodingKey {
@@ -194,6 +200,8 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         case competition
         case competitionName = "competition_name"
         case table
+        case guestName = "guest_name"
+        case late
     }
 
     /// Tåler felt med feil type (en annen klient, en eldre versjon): feltet blir nil,
@@ -238,6 +246,8 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         competition = get(.competition)
         competitionName = get(.competitionName)
         table = get(.table)
+        guestName = get(.guestName)
+        late = get(.late)
     }
 }
 
@@ -415,6 +425,10 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     /// Plassbytte i en konkurranses tabell etter at en runde er låst (fase 19). `roundNo` er antall
     /// tellende runder i konkurransen etter runden. Kategori `round`: den kommer av at runden ble låst.
     case tableChanged(competition: UUID, competitionName: String, roundNo: Int?, table: [ActivityTableSpot])
+    /// Fikk plass fra ventelista (sql/045, skrevet av serveren). `guestName`: gjesten du meldte på.
+    case waitlistPromoted(member: UUID, guestName: String?, eventDate: String?)
+    /// Meldte seg av fra «kommer» (sql/045, skrevet av serveren, til arrangørene).
+    case signupDropped(member: UUID, eventDate: String?, late: Bool)
     case unknown(kind: String)
 
     /// Alle kjente nøkler, for tester og dokumentasjon.
@@ -422,6 +436,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         "round_started", "round_locked", "round_deleted", "big_score", "lead_changed", "side_prize",
         "score_corrected", "signup", "nudge", "reminder", "announcement", "committee_drawn",
         "member_joined", "tips_king", "bet_created", "bet_challenge", "bet_resolved", "table_changed",
+        "waitlist_promoted", "signup_dropped",
     ]
 
     var kind: String {
@@ -444,6 +459,8 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .betChallenge: "bet_challenge"
         case .betResolved: "bet_resolved"
         case .tableChanged: "table_changed"
+        case .waitlistPromoted: "waitlist_promoted"
+        case .signupDropped: "signup_dropped"
         case .unknown(let kind): kind
         }
     }
@@ -455,7 +472,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .leadChanged: .lead
         case .sidePrize: .sidePrize
         case .scoreCorrected: .setup
-        case .signup: .signup
+        case .signup, .waitlistPromoted, .signupDropped: .signup
         case .nudge: .nudge
         case .reminder: .reminder
         case .announcement: .announcement
@@ -505,6 +522,10 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             ActivityData(question: question, resolution: resolution)
         case let .tableChanged(competition, competitionName, roundNo, table):
             ActivityData(roundNo: roundNo, competition: competition, competitionName: competitionName, table: table)
+        case let .waitlistPromoted(member, guestName, eventDate):
+            ActivityData(member: member, eventDate: eventDate, guestName: guestName)
+        case let .signupDropped(member, eventDate, late):
+            ActivityData(member: member, eventDate: eventDate, late: late)
         case .unknown:
             ActivityData()
         }
@@ -572,6 +593,12 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             guard let competition = d.competition, let name = d.competitionName, let table = d.table,
                   !table.isEmpty else { self = .unknown(kind: kind); return }
             self = .tableChanged(competition: competition, competitionName: name, roundNo: d.roundNo, table: table)
+        case "waitlist_promoted":
+            guard let member = d.member else { self = .unknown(kind: kind); return }
+            self = .waitlistPromoted(member: member, guestName: d.guestName, eventDate: d.eventDate)
+        case "signup_dropped":
+            guard let member = d.member else { self = .unknown(kind: kind); return }
+            self = .signupDropped(member: member, eventDate: d.eventDate, late: d.late ?? false)
         default:
             self = .unknown(kind: kind)
         }
@@ -700,6 +727,16 @@ nonisolated enum ActivityText {
                 return ActivityDisplay(symbol: "arrow.uturn.backward", emoji: "↩️",
                                        text: "\(who(member)) er likevel usikker" + (date.map { " på \($0)" } ?? ""))
             }
+
+        case let .waitlistPromoted(_, guestName, eventDate):
+            let date = evening(eventDate).map { " \($0)" } ?? ""
+            let text = guestName.map { "\($0) har fått plass" + date + " (gjesten din)" } ?? "Du har fått plass" + date
+            return ActivityDisplay(symbol: "checkmark.circle.fill", emoji: "🎉", text: text)
+
+        case let .signupDropped(member, eventDate, late):
+            var text = "\(who(member)) har meldt seg av" + (evening(eventDate).map { " \($0)" } ?? "")
+            if late { text += " etter fristen" }
+            return ActivityDisplay(symbol: "person.fill.xmark", emoji: "↩️", text: text)
 
         case let .nudge(eventDate):
             var text = "Hvem kommer" + (evening(eventDate).map { " \($0)" } ?? "") + "?"

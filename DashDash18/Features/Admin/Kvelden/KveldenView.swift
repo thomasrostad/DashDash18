@@ -244,7 +244,7 @@ struct KveldenView: View {
     private func signupSection(_ event: EventRow, hidesNudge: Bool) -> some View {
         let summary = terminliste.signupSummary(for: event.id)
         return Section {
-            Text(Tonight.signupText(terminliste.signups[event.id] ?? [], rosterCount: terminliste.members.count))
+            Text(terminliste.signupText(for: event.id))
                 .font(.ddBodyEmphasis)
                 .foregroundStyle(Color.ddInk)
             ForEach(EveningSignup.groups(summary), id: \.title) { group in
@@ -256,10 +256,24 @@ struct KveldenView: View {
                         .foregroundStyle(Color.ddInkSecondary)
                 }
             }
+            if let settings = terminliste.settings?[event.id] {
+                ForEach(EveningSignup.settingsLines(settings, summary: summary), id: \.self) { line in
+                    Text(line).font(.ddCaption).foregroundStyle(Color.ddInkSecondary)
+                }
+            }
             if !hidesNudge,
                EveningSignup.offersNudge(eventDate: event.eventDate, today: EveningDates.today(), summary: summary) {
-                NudgeSection(targets: Nudge.targets(summary)) { () async throws(DataError) -> String in
+                NudgeSection(targets: Nudge.targets(summary), unseen: summary.notSeen.count) { () async throws(DataError) -> String in
                     try await terminliste.nudge(event)
+                }
+            }
+            if admin.clubContext.can(.tournaments) {
+                NavigationLink {
+                    SignupAdminView(model: terminliste, event: event)
+                } label: {
+                    Label("Endre påmeldingen", systemImage: "person.2.badge.gearshape")
+                        .labelStyle(DDIconLabelStyle())
+                        .foregroundStyle(Color.ddInk)
                 }
             }
         } header: {

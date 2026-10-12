@@ -128,7 +128,9 @@ nonisolated struct TipsBoard: Sendable {
         let summary = SignupSummary(members: sorted, signups: input.signups.filter { $0.eventID == input.event.id })
         let candidate = { (e: SignupSummary.Entry) in Candidate(memberID: e.memberID, name: short[e.memberID] ?? e.name) }
         let coming = summary.yes.map(candidate)
-        let rest = (summary.maybe + summary.notAnswered + summary.no).map(candidate)
+        // Ventelista kommer ikke (ennå), så den står blant resten. Gjester tipper ikke.
+        let rest = (summary.waitlist.filter { !$0.isGuest } + summary.maybe + summary.notAnswered + summary.no)
+            .map(candidate)
         firstCandidates = coming.isEmpty ? rest : coming
         otherCandidates = coming.isEmpty ? [] : rest
         missing = summary.yes.map(\.memberID).filter { !delivered.contains($0) }

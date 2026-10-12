@@ -197,7 +197,8 @@ nonisolated extension HomeFeed {
                                detail: detail.joined(separator: " · "), answer: e.answer, isOrganizer: e.isOrganizer,
                                previousEventID: e.previous?.id,
                                previousTitle: e.previous.map { EveningDates.longText($0.eventDate, referenceYear: referenceYear,
-                                                                                      capitalized: true) })
+                                                                                      capitalized: true) },
+                               waitlistText: e.waitlistText)
     }
 }
 
