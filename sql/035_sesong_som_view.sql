@@ -1,5 +1,5 @@
 -- 035: seasons blir et view over competitions (gjennomføringsplanen steg 3, fase 22 trinn 5).
--- VENTER PÅ GODKJENNING. Ikke kjørt på test eller prod.
+-- Godkjent og kjørt på test 12.10.2026.
 --
 -- Krever 001–054 (034 er kjørt). Bygger på 017 (competitions, competitions_sync_season,
 -- competition_claim_main), 031 (events.competition_id i takt med season_id), 033
