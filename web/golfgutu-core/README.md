@@ -86,7 +86,11 @@ Stegene finnes også hver for seg: `decodeTavlaData`, `decodeSeasonRow`, `tavlaI
 `validateRuleset`, `effectiveHandicap`, `roundPoints`, `matchStanding` og resten i `src/`. Tabellreglene fra
 steg 6: `Season.standings` (plass, kvalifisert, playoff), `Season.effectiveWeight`, `Season.draw`,
 `decidePlayoff`, `hidingLastHoles`, `avoidingRepeats`, `validateDraw`, `randomTeams`, `swapTeams`
-(se `Packages/GolfgutuCore/REGELSETT.md`).
+(se `Packages/GolfgutuCore/REGELSETT.md`). Formene fra steg 7: `formAxes`/`formByAxes` (lagform og
+poengtelling), `evaluatePointsGame` (Amerikaner og Københavner etter NGF), `evaluateSkins`,
+`formTablePoints` (med `table.formPoints`), `evaluateRyderCup`/`ryderCupPairings`/`ryderCupSingles` (lag mot
+lag), `evaluateRoundCompetitions` (flere konkurranser på samme runde) og `freezeRound`/
+`evaluateFrozenCompetitions` (øyeblikksbildet ved start). Fixture: `formater.json`, test: `test/formats.test.ts`.
 
 ## Hva som er portert
 
@@ -95,7 +99,9 @@ steg 6: `Season.standings` (plass, kvalifisert, playoff), `Season.effectiveWeigh
 | JSMath | `jsmath.ts` |
 | Models, Match (modellen), SidePrize (modellen) | `models.ts` |
 | Ruleset, DayTerm, RulesetTemplate, RulesetValidation | `ruleset.ts`, `dayterm.ts`, `template.ts`, `validation.ts` |
-| CompetitionForm, FormSetup | `forms.ts`, `formsetup.ts` |
+| CompetitionForm, FormAxes, FormSetup | `forms.ts`, `formsetup.ts` |
+| FormPlay (poengspill, tabellpoeng), skins-delen av GameSkins og GameContext | `formplay.ts` |
+| RyderCup, RoundCompetitions (med FrozenRound) | `rydercup.ts`, `roundcompetitions.ts` |
 | CourseRules | `course.ts` |
 | Handicap | `handicap.ts` |
 | WHS | `whs.ts` |
@@ -110,6 +116,6 @@ Fra appen (`DashDash18/`): radtypene (`Data/Rows.swift`, `FoundationRows.swift`)
 `app/roundgame.ts`, `TavlaData`, `TavlaStandings` og `RoundsGrid` i
 `app/tavla.ts`, og `CompetitionScope`, `LeagueStandings` og `CupStandings` i `app/competition.ts`.
 
-Ikke portert ennå: `Bets` (veddemål), `Games`, `GameNassau`, `GameSkins`, `GameWolf` (spill på runden),
+Ikke portert ennå: `Bets` (veddemål), `Games`, `GameNassau`, `GameWolf` og oppgjøret i `GameSkins` (spill på runden),
 `Tips` (tippekupongen) og `PlayerStats` (profilstatistikk). Regelsettets felt for tips og veddemål leses og
 skrives likevel, så regelsett-JSON-en går fram og tilbake uten tap, og valideringen sjekker dem.

@@ -1,0 +1,191 @@
+{
+  "kilde": "Steg 7 (formater). Regnet for hånd. Amerikaner og Københavner etter NGF «Spilleformer» (sist endret 4. oktober 2023), side 3 og 4. Banen: 18 hull, par 4, indeks 1–18. Frosne spillehandicap: a 0, b 18 (ett slag på hvert hull), c 0, d 9 (ett slag på hull 1–9).",
+  "akser": [
+    { "id": "stableford", "teamForm": { "type": "individual" }, "scoring": { "type": "stableford", "net": true } },
+    { "id": "stableford-brutto", "teamForm": { "type": "individual" }, "scoring": { "type": "stableford", "net": false } },
+    { "id": "slag-netto", "teamForm": { "type": "individual" }, "scoring": { "type": "strokePlay", "net": true } },
+    { "id": "slag-brutto", "teamForm": { "type": "individual" }, "scoring": { "type": "strokePlay", "net": false } },
+    { "id": "par-bogey", "teamForm": { "type": "individual" }, "scoring": { "type": "parBogey" } },
+    { "id": "maks-score", "teamForm": { "type": "individual" }, "scoring": { "type": "maximumScore" } },
+    { "id": "match", "teamForm": { "type": "individual" }, "scoring": { "type": "matchPlay" } },
+    { "id": "fourball", "teamForm": { "type": "pairs", "pairs": "fourball" }, "scoring": { "type": "strokePlay", "net": true } },
+    { "id": "fourball-4", "teamForm": { "type": "team", "size": 4 }, "scoring": { "type": "strokePlay", "net": true } },
+    { "id": "sammenlagt-lag", "teamForm": { "type": "pairs", "pairs": "aggregate" }, "scoring": { "type": "strokePlay", "net": true } },
+    { "id": "foursome", "teamForm": { "type": "pairs", "pairs": "foursome" }, "scoring": { "type": "stableford", "net": true } },
+    { "id": "greensome", "teamForm": { "type": "pairs", "pairs": "greensome" }, "scoring": { "type": "stableford", "net": true } },
+    { "id": "chapman", "teamForm": { "type": "pairs", "pairs": "chapman" }, "scoring": { "type": "stableford", "net": true } },
+    { "id": "scramble-2", "teamForm": { "type": "scramble", "size": 2 }, "scoring": { "type": "stableford", "net": true } },
+    { "id": "scramble-4", "teamForm": { "type": "scramble", "size": 4 }, "scoring": { "type": "stableford", "net": true } },
+    { "id": "skins", "teamForm": { "type": "individual" }, "scoring": { "type": "skins" } },
+    { "id": "amerikaner", "teamForm": { "type": "individual" }, "scoring": { "type": "pointsGame", "game": "amerikaner" } },
+    { "id": "kobenhavner", "teamForm": { "type": "individual" }, "scoring": { "type": "pointsGame", "game": "kobenhavner" } }
+  ],
+  "poengspill": [
+    { "spill": "amerikaner", "monster": "1-1-1-1", "scorer": { "a": 3, "b": 4, "c": 5, "d": 6 }, "poeng": { "a": 8, "b": 4, "c": 0, "d": 0 } },
+    { "spill": "amerikaner", "monster": "1-1-2", "scorer": { "a": 3, "b": 4, "c": 5, "d": 5 }, "poeng": { "a": 8, "b": 4, "c": 0, "d": 0 } },
+    { "spill": "amerikaner", "monster": "1-2-1", "scorer": { "a": 3, "b": 4, "c": 4, "d": 5 }, "poeng": { "a": 8, "b": 2, "c": 2, "d": 0 } },
+    { "spill": "amerikaner", "monster": "1-3", "scorer": { "a": 3, "b": 4, "c": 4, "d": 4 }, "poeng": { "a": 9, "b": 1, "c": 1, "d": 1 } },
+    { "spill": "amerikaner", "monster": "1-3", "scorer": { "a": 5, "b": 5, "c": 5, "d": 3 }, "poeng": { "a": 1, "b": 1, "c": 1, "d": 9 } },
+    { "spill": "amerikaner", "monster": "2-1-1", "scorer": { "a": 3, "b": 3, "c": 4, "d": 5 }, "poeng": { "a": 6, "b": 6, "c": 0, "d": 0 } },
+    { "spill": "amerikaner", "monster": "2-2", "scorer": { "a": 4, "b": 3, "c": 4, "d": 3 }, "poeng": { "a": 0, "b": 6, "c": 0, "d": 6 } },
+    { "spill": "amerikaner", "monster": "3-1", "scorer": { "a": 3, "b": 3, "c": 3, "d": 4 }, "poeng": { "a": 4, "b": 4, "c": 4, "d": 0 } },
+    { "spill": "amerikaner", "monster": "4", "scorer": { "a": 4, "b": 4, "c": 4, "d": 4 }, "poeng": { "a": 3, "b": 3, "c": 3, "d": 3 } },
+    { "spill": "kobenhavner", "monster": "1-1-1", "scorer": { "a": 3, "b": 4, "c": 5 }, "poeng": { "a": 4, "b": 2, "c": 0 } },
+    { "spill": "kobenhavner", "monster": "1-2", "scorer": { "a": 3, "b": 4, "c": 4 }, "poeng": { "a": 4, "b": 1, "c": 1 } },
+    { "spill": "kobenhavner", "monster": "2-1", "scorer": { "a": 5, "b": 4, "c": 4 }, "poeng": { "a": 0, "b": 3, "c": 3 } },
+    { "spill": "kobenhavner", "monster": "3", "scorer": { "a": 4, "b": 4, "c": 4 }, "poeng": { "a": 2, "b": 2, "c": 2 } }
+  ],
+  "runde": {
+    "handicap": { "a": 0, "b": 18, "c": 0, "d": 9 },
+    "scorer": {
+      "a": [3, 4, 4, 4, 5, 4, 4, 5, 4, 4, 3, 4, 4, 5, 4, 4, 4, 4],
+      "b": [5, 4, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 4, 5, 5, 5, 6, 5],
+      "c": [4, 5, 4, 4, 4, 4, 3, 5, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4],
+      "d": [5, 5, 4, 5, 5, 5, 5, 5, 6, 4, 4, 4, 5, 4, 3, 4, 4, 4]
+    },
+    "konkurranser": [
+      { "id": "stableford", "teamForm": { "type": "individual" }, "scoring": { "type": "stableford", "net": true } },
+      { "id": "bestball", "teamForm": { "type": "pairs", "pairs": "fourball" }, "scoring": { "type": "stableford", "net": true }, "entrants": [["a", "b"], ["c", "d"]] },
+      { "id": "skins", "teamForm": { "type": "individual" }, "scoring": { "type": "skins" } },
+      { "id": "forste-ni", "teamForm": { "type": "individual" }, "scoring": { "type": "stableford", "net": true }, "holes": { "first": 0, "last": 8 } },
+      { "id": "siste-ni", "teamForm": { "type": "individual" }, "scoring": { "type": "stableford", "net": true }, "holes": { "first": 9, "last": 17 } },
+      { "id": "amerikaner", "teamForm": { "type": "individual" }, "scoring": { "type": "pointsGame", "game": "amerikaner" } },
+      { "id": "slag-brutto", "teamForm": { "type": "individual" }, "scoring": { "type": "strokePlay", "net": false } },
+      { "id": "foursome", "teamForm": { "type": "pairs", "pairs": "foursome" }, "scoring": { "type": "stableford", "net": true }, "entrants": [["a", "b"], ["c", "d"]] }
+    ],
+    "forventet": [
+      { "id": "stableford", "stottet": true, "rader": [
+        { "spillere": ["b"], "score": 36, "hull": 18, "plass": 1 },
+        { "spillere": ["d"], "score": 36, "hull": 18, "plass": 1 },
+        { "spillere": ["a"], "score": 35, "hull": 18, "plass": 3 },
+        { "spillere": ["c"], "score": 34, "hull": 18, "plass": 4 }
+      ] },
+      { "id": "bestball", "stottet": true, "rader": [
+        { "spillere": ["a", "b"], "score": 40, "hull": 18, "plass": 1 },
+        { "spillere": ["c", "d"], "score": 39, "hull": 18, "plass": 2 }
+      ] },
+      { "id": "skins", "stottet": true, "rader": [
+        { "spillere": ["a"], "score": 5, "hull": 18, "plass": 1 },
+        { "spillere": ["c"], "score": 4, "hull": 18, "plass": 2 },
+        { "spillere": ["b"], "score": 3, "hull": 18, "plass": 3 },
+        { "spillere": ["d"], "score": 3, "hull": 18, "plass": 3 }
+      ] },
+      { "id": "forste-ni", "stottet": true, "rader": [
+        { "spillere": ["b"], "score": 18, "hull": 9, "plass": 1 },
+        { "spillere": ["d"], "score": 18, "hull": 9, "plass": 1 },
+        { "spillere": ["a"], "score": 17, "hull": 9, "plass": 3 },
+        { "spillere": ["c"], "score": 17, "hull": 9, "plass": 3 }
+      ] },
+      { "id": "siste-ni", "stottet": true, "rader": [
+        { "spillere": ["a"], "score": 18, "hull": 9, "plass": 1 },
+        { "spillere": ["b"], "score": 18, "hull": 9, "plass": 1 },
+        { "spillere": ["d"], "score": 18, "hull": 9, "plass": 1 },
+        { "spillere": ["c"], "score": 17, "hull": 9, "plass": 4 }
+      ] },
+      { "id": "amerikaner", "stottet": true, "rader": [
+        { "spillere": ["d"], "score": 61, "hull": 18, "plass": 1 },
+        { "spillere": ["b"], "score": 55, "hull": 18, "plass": 2 },
+        { "spillere": ["a"], "score": 53, "hull": 18, "plass": 3 },
+        { "spillere": ["c"], "score": 47, "hull": 18, "plass": 4 }
+      ] },
+      { "id": "slag-brutto", "stottet": true, "rader": [
+        { "spillere": ["a"], "score": 73, "hull": 18, "plass": 1 },
+        { "spillere": ["c"], "score": 74, "hull": 18, "plass": 2 },
+        { "spillere": ["d"], "score": 81, "hull": 18, "plass": 3 },
+        { "spillere": ["b"], "score": 90, "hull": 18, "plass": 4 }
+      ] },
+      { "id": "foursome", "stottet": false, "rader": [] }
+    ],
+    "amerikanerHull": [
+      { "a": 9, "b": 1, "c": 1, "d": 1 },
+      { "a": 2, "b": 8, "c": 0, "d": 2 },
+      { "a": 1, "b": 1, "c": 1, "d": 9 },
+      { "a": 3, "b": 3, "c": 3, "d": 3 },
+      { "a": 0, "b": 4, "c": 4, "d": 4 },
+      { "a": 4, "b": 0, "c": 4, "d": 4 },
+      { "a": 1, "b": 1, "c": 9, "d": 1 },
+      { "a": 0, "b": 6, "c": 0, "d": 6 },
+      { "a": 4, "b": 4, "c": 4, "d": 0 },
+      { "a": 3, "b": 3, "c": 3, "d": 3 },
+      { "a": 9, "b": 1, "c": 1, "d": 1 },
+      { "a": 3, "b": 3, "c": 3, "d": 3 },
+      { "a": 2, "b": 8, "c": 2, "d": 0 },
+      { "a": 0, "b": 4, "c": 4, "d": 4 },
+      { "a": 1, "b": 1, "c": 1, "d": 9 },
+      { "a": 4, "b": 4, "c": 0, "d": 4 },
+      { "a": 4, "b": 0, "c": 4, "d": 4 },
+      { "a": 3, "b": 3, "c": 3, "d": 3 }
+    ],
+    "skinsHull": [
+      { "state": "won", "winners": ["a"], "value": 1 },
+      { "state": "won", "winners": ["b"], "value": 1 },
+      { "state": "won", "winners": ["d"], "value": 1 },
+      { "state": "halved", "winners": ["a", "b", "c", "d"], "value": 0 },
+      { "state": "halved", "winners": ["b", "c", "d"], "value": 0 },
+      { "state": "halved", "winners": ["a", "c", "d"], "value": 0 },
+      { "state": "won", "winners": ["c"], "value": 4 },
+      { "state": "halved", "winners": ["b", "d"], "value": 0 },
+      { "state": "halved", "winners": ["a", "b", "c"], "value": 0 },
+      { "state": "halved", "winners": ["a", "b", "c", "d"], "value": 0 },
+      { "state": "won", "winners": ["a"], "value": 4 },
+      { "state": "halved", "winners": ["a", "b", "c", "d"], "value": 0 },
+      { "state": "won", "winners": ["b"], "value": 2 },
+      { "state": "halved", "winners": ["b", "c", "d"], "value": 0 },
+      { "state": "won", "winners": ["d"], "value": 2 },
+      { "state": "halved", "winners": ["a", "b", "d"], "value": 0 },
+      { "state": "halved", "winners": ["a", "c", "d"], "value": 0 },
+      { "state": "halved", "winners": ["a", "b", "c", "d"], "value": 0 }
+    ]
+  },
+  "tabell": {
+    "kommentar": "To låste runder med scorene fra «runde»: r1 skins, r2 amerikaner. Tabellen teller rundepoeng (stableford), alle runder teller, skille stablefordsum. Med formPoints: skins vunnet (1 per skin) og amerikanerpoeng. Uten: stableford.",
+    "runder": [
+      { "id": "r1", "gameType": "skins", "date": "2026-05-05" },
+      { "id": "r2", "gameType": "amerikaner", "date": "2026-05-12" }
+    ],
+    "navn": { "a": "Anne", "b": "Bjørn", "c": "Cecilie", "d": "Dag" },
+    "medFormpoeng": [
+      { "id": "d", "total": 64, "stableford": 72 },
+      { "id": "b", "total": 58, "stableford": 72 },
+      { "id": "a", "total": 58, "stableford": 70 },
+      { "id": "c", "total": 51, "stableford": 68 }
+    ],
+    "utenFormpoeng": [
+      { "id": "b", "total": 72, "stableford": 72 },
+      { "id": "d", "total": 72, "stableford": 72 },
+      { "id": "a", "total": 70, "stableford": 70 },
+      { "id": "c", "total": 68, "stableford": 68 }
+    ]
+  },
+  "lagMotLag": {
+    "kommentar": "Ryder Cup med scorene fra «runde». Side 1: a og b. Side 2: c og d. r1 singler (match, laveste fra scratch): a–c vinner a 4–3 i hull, b–d delt 8–8 (b får 9 slag). r2 fourball (lag 1 = a+b, lag 2 = c+d): lag 1 vinner 4–3 i hull. a–b i r2 er to fra samme side og teller ikke.",
+    "sider": { "a": 1, "b": 1, "c": 2, "d": 2 },
+    "runder": [
+      { "id": "r1", "gameType": "match", "teams": {}, "matches": [
+        { "matchNo": 1, "playerA": "a", "playerB": "c" },
+        { "matchNo": 2, "playerA": "b", "playerB": "d" }
+      ] },
+      { "id": "r2", "gameType": "fourball", "teams": { "a": 1, "b": 1, "c": 2, "d": 2 }, "matches": [
+        { "matchNo": 1, "teamA": 1, "teamB": 2 },
+        { "matchNo": 2, "playerA": "a", "playerB": "b" }
+      ] }
+    ],
+    "forventet": {
+      "matcher": [
+        { "runde": 0, "matchNo": 1, "sideA": 1, "sideB": 2, "state": "decided", "utfallA": 1, "poengA": 1, "poengB": 0 },
+        { "runde": 0, "matchNo": 2, "sideA": 1, "sideB": 2, "state": "decided", "utfallA": 0.5, "poengA": 0.5, "poengB": 0.5 },
+        { "runde": 1, "matchNo": 1, "sideA": 1, "sideB": 2, "state": "decided", "utfallA": 1, "poengA": 1, "poengB": 0 },
+        { "runde": 1, "matchNo": 2, "sideA": null, "sideB": null, "state": "invalid", "utfallA": null, "poengA": 0, "poengB": 0 }
+      ],
+      "tabell": [
+        { "side": 1, "poeng": 2.5, "vunnet": 2, "delt": 1, "tapt": 0 },
+        { "side": 2, "poeng": 0.5, "vunnet": 0, "delt": 1, "tapt": 2 }
+      ]
+    },
+    "parring": {
+      "lag": { "a": 1, "b": 1, "e": 2, "f": 2, "c": 3, "d": 3, "g": 4, "h": 4 },
+      "sider": { "a": 1, "b": 1, "e": 1, "f": 1, "c": 2, "d": 2, "g": 2, "h": 2 },
+      "forventet": [{ "teamA": 1, "teamB": 3 }, { "teamA": 2, "teamB": 4 }]
+    }
+  }
+}

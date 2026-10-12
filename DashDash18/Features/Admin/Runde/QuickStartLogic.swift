@@ -78,8 +78,9 @@ nonisolated enum QuickStart {
 
     /// Ny runde fordelt automatisk: lag (i lagform) og matcher, så gruppene med duellpartnerne
     /// samlet og så få grupper som rommer alle (`foreslaatteBaaser`).
-    static func autoArrange(_ draft: inout RoundDraft, rules: Ruleset, roster: [ClubMemberRow]) {
-        draft.prepareSetup(rules: rules, roster: roster)
+    static func autoArrange(_ draft: inout RoundDraft, rules: Ruleset, roster: [ClubMemberRow],
+                            plan: MatchDrawPlan = .standings) {
+        draft.prepareSetup(rules: rules, roster: roster, plan: plan)
         draft.reshuffleBays(count: BayPlan.defaultBayCount(players: draft.participants.count,
                                                            maxPerBay: rules.formats.maxPerBay))
     }

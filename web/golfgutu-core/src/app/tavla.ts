@@ -57,7 +57,10 @@ export function tavlaInput(data: TavlaData, season: SeasonRow): TavlaInput {
 export interface TavlaRow {
   memberID: UUID;
   name: string;
-  /** 1, 2, 3 … i tabellens rekkefølge. */
+  /**
+   * Plassen fra `Season.standings`: delt plass har samme nummer (1, 1, 3). For en som ikke er kvalifisert
+   * (`table.minEvenings`): plassen i rekkefølgen, under de rangerte (vises som «–»).
+   */
   place: number;
   /** Duell (eller stablefordpoeng) + sidepremier, avrundet etter regelsettet. */
   total: number;
@@ -76,6 +79,10 @@ export interface TavlaRow {
   roundPoints: number;
   /** Spilte runder når tabellen teller stableford (spilte matcher ellers). */
   played: number;
+  /** Har spilt nok kvelder til å få plass (`table.minEvenings`). Alltid sann uten grense. */
+  qualified: boolean;
+  /** Delt førsteplass som skal avgjøres med playoff (`tieRule` `playoff`). */
+  playoffPending: boolean;
 }
 
 /** Norske navn på enhetene «beste N» telles i (`RuleNames.nouns`). */
@@ -159,12 +166,15 @@ export class TavlaStandings {
     const withPoints = rounds.filter((_, i) => season.roundPoints(i).size > 0);
     this.eveningsPlayed = eveningCount(withPoints);
 
-    this.rows = season.jacketBoard().map((r, i) => {
+    // Plassene fra motoren: delt plass (1, 1, 3), de uten nok kvelder nederst, og playoff om førsteplassen.
+    // Playoff-runder finnes ikke ennå (047), så playoffen står som ventende.
+    this.rows = season.standings().map((s, i) => {
+      const r = s.row;
       const played = rounds.filter((_, n) => season.roundPoints(n).has(r.player.id));
       return {
         memberID: r.player.id,
         name: r.player.name,
-        place: i + 1,
+        place: s.place ?? i + 1,
         total: r.total,
         duel: r.duel,
         side: r.side,
@@ -175,6 +185,8 @@ export class TavlaStandings {
         isMe: r.player.id === this.me,
         roundPoints: r.roundPoints,
         played: r.played,
+        qualified: s.place !== null,
+        playoffPending: s.playoffPending,
       };
     });
   }
@@ -198,8 +210,19 @@ export class TavlaStandings {
     return this.eveningsPlayed > 0 && this.rows.length > 0;
   }
 
-  /** «+3 hull · 112 stableford · 4 kvelder», eller med stableford «6 kvelder · beste 5 teller». */
+  /**
+   * «+3 hull · 112 stableford · 4 kvelder», eller med stableford «6 kvelder · beste 5 teller». «Playoff · » foran
+   * ved delt førsteplass som avgjøres med playoff, og «· minst 4 kvelder for plass» bak for en uten nok kvelder.
+   */
   detail(row: TavlaRow): string {
+    let text = this.baseDetail(row);
+    if (row.playoffPending) text = `Playoff · ${text}`;
+    const min = this.rules.table.minEvenings;
+    if (!row.qualified && min !== null && min !== undefined) text += ` · minst ${dayCount(rulesetDay(this.rules), min)} for plass`;
+    return text;
+  }
+
+  private baseDetail(row: TavlaRow): string {
     const day = rulesetDay(this.rules);
     const evenings = dayCount(day, row.evenings);
     if (!this.countsStableford) {
@@ -233,9 +256,9 @@ export class TavlaStandings {
     return parts.join(" · ");
   }
 
-  /** Plassen slik tabellen viser den: «3.», eller «–» før første kveld. */
+  /** Plassen slik tabellen viser den: «3.» (delt: «1.», «1.», «3.»), eller «–» før første kveld og uten nok kvelder. */
   placeText(row: TavlaRow): string {
-    return this.hasResults ? `${row.place}.` : "–";
+    return this.hasResults && row.qualified ? `${row.place}.` : "–";
   }
 
   row(member: UUID): TavlaRow | null {
@@ -287,7 +310,7 @@ export class TavlaStandings {
   /** «Alle runder» for sesongen. */
   roundGrid(): RoundsGrid {
     return makeRoundsGrid(this.snapshots, this.season, (i) => this.roundTitle(i),
-      this.rows.map((r) => ({ playerID: r.memberID, name: r.name, place: `${r.place}.`, isMe: r.isMe, counted: null })));
+      this.rows.map((r) => ({ playerID: r.memberID, name: r.name, place: r.qualified ? `${r.place}.` : "–", isMe: r.isMe, counted: null })));
   }
 }
 

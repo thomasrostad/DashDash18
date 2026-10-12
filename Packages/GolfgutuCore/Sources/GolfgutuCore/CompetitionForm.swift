@@ -102,9 +102,10 @@ extension CompetitionForm {
                         help: "Hvert hull er en pott. Deling gjør at potten vokser til neste."),
     ]
 
-    /// `konkurranseform`: formen med denne id-en, ellers standardformen.
+    /// `konkurranseform`: formen med denne id-en, ellers standardformen. Slår opp i hele katalogen
+    /// (`catalog`), så de nye formene (Amerikaner, Københavner) finnes; PWA-ens id-er gir det samme som før.
     public static func form(id: String?) -> CompetitionForm {
-        all.first { $0.id == id } ?? all.first { $0.id == defaultID }!
+        catalog.first { $0.id == id } ?? all.first { $0.id == defaultID }!
     }
 }
 

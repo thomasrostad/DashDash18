@@ -2,6 +2,7 @@
 // 380–775, 1052–1095 og 2307–2342), styrt av regelsettet. Med Golfgutu-oppsettet gir alt samme svar
 // som PWA-en. Rundens poeng regnes fra scorene.
 
+import { formTablePoints } from "./formplay.ts";
 import { jsRound, norwegianLess, norwegianString, sortedStrings } from "./jsmath.ts";
 import { avoidingRepeats, meetings } from "./draw.ts";
 import { matchInvolves, matchSides, matchStanding, outcomeForA, pointsForOutcome } from "./match.ts";
@@ -188,6 +189,8 @@ export class Season {
   readonly claims: readonly SideClaim[];
   readonly ruleset: Ruleset;
   private readonly pointsByRound: Map<string, number>[];
+  /** Rundepoengene i tabellen med `table.formPoints` (og `pointsSource` `stableford`). Tom ellers. */
+  private readonly formPointsByRound: Map<string, number>[];
 
   /**
    * `playingHandicaps`: rundens frosne spillehandicap, runde-id → spiller-id → slag. Legges på rundene
@@ -211,6 +214,8 @@ export class Season {
     this.claims = claims;
     this.ruleset = ruleset;
     this.pointsByRound = this.rounds.map((r) => scoreRoundPoints(r, players, ruleset));
+    this.formPointsByRound = ruleset.table.formPoints && ruleset.table.pointsSource === "stableford"
+      ? this.rounds.map((r) => formTablePoints(r, players, ruleset)) : [];
   }
 
   // MARK: Matcher
@@ -266,7 +271,7 @@ export class Season {
     const chronological: RoundScore[] = [];
     this.rounds.forEach((round, i) => {
       if (this.effectiveWeight(round) === 0) return;
-      const p = this.weightedRoundPoints(i, playerID);
+      const p = this.weightedTableRoundPoints(i, playerID);
       if (p === null) return;
       chronological.push({ roundIndex: i, roundID: round.id, points: p });
     });
@@ -377,6 +382,14 @@ export class Season {
   /** Rundens poeng (`round_points`), regnet fra scorene. */
   roundPoints(roundIndex: number): Map<string, number> {
     return this.pointsByRound[roundIndex];
+  }
+
+  /** Rundens poeng i tabellen ganget med vekten: formens poeng med `table.formPoints`, ellers stablefordpoengene. */
+  weightedTableRoundPoints(roundIndex: number, playerID: string): number | null {
+    if (this.formPointsByRound.length === 0) return this.weightedRoundPoints(roundIndex, playerID);
+    const p = this.formPointsByRound[roundIndex].get(playerID);
+    if (p === undefined) return null;
+    return p * this.effectiveWeight(this.rounds[roundIndex]);
   }
 
   /** `rundePoengVektet`: rundens poeng ganget med vekten. `null` når spilleren ikke har poeng i runden. */
