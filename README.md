@@ -49,6 +49,7 @@ Status 12.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detalje
 | [`CLAUDE.md`](CLAUDE.md) | Arbeidsregler for Claude Code. Gjelder også for mennesker |
 | [`docs/gjoremal.md`](docs/gjoremal.md) | Det som må gjøres manuelt (App Store Connect, Supabase-konsoll, Google) |
 | [`sql/README.md`](sql/README.md) | Databasemigreringer og status per fil (test og prod) |
+| [`docs/folge.md`](docs/folge.md) | Følge andre spillere (steg 13): hva Strava og andre gjør, Thomas sine valg, personvern og datamodell |
 | [`docs/gjennomforingsplan.md`](docs/gjennomforingsplan.md) | Arbeidsrekkefølgen for alt som ble besluttet 11.10: tolv steg med SQL-nummer, avhengigheter og status |
 | [`docs/plan-konkurranser-og-sosialt.md`](docs/plan-konkurranser-og-sosialt.md) | Gap-analyse og plan (fase 27–34): konkurranser, påmelding, medlemmer og sosialt lag, mot researchen i `docs/research/golfapper-research.md`. Venter på godkjenning |
 | [`docs/fase-26-tv-tidsvindu-web.md`](docs/fase-26-tv-tidsvindu-web.md) | Plan: TV med kode, turneringer med tidsvindu, regelmotoren i TypeScript og web-admin |

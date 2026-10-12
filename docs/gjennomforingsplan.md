@@ -25,6 +25,7 @@ Grunnlag: «Beslutninger» i [`plan-konkurranser-og-sosialt.md`](plan-konkurrans
 | **9** | **Sosialt.** Reaksjoner på alt med fri emoji bak «+», flate kommentarer med @-omtale og «følg tråden», felles feed med sider (`feed_page`), bildeoppfordring når runden låses | `050` | Hjem, tråden, varsler | 5 |
 | **10** | **Kalender og Del regningen.** Kalenderabonnement per medlem (påmeldte kvelder, ICS fra Workeren). Del regningen lagres med «sendt» (automatisk etter Vipps) og «bekreftet» av mottaker | `051` | Deg, Kveld, Del regningen | 4 |
 | **11** | **Veddemål overalt.** Av som standard, slås på per turnering eller runde. Poengbank per turnering eller runde. Profiler i private turneringer. Oppgjør på serveren med motoren i TypeScript når runden låses | `052` | Vedd, oppsett, innstillinger, oppgjørsfunksjon | 3, 7 |
+| **13** | **Følge andre spillere** (`docs/folge.md`): følging med godkjenning, navnesøk, QR, «Følg X» etter runden, «Følger»-fane i feeden, reaksjoner og kommentarer, invitasjoner | `054` | Deg, søk, profil, feed, «Ny runde» | 9 |
 | **12** | **App Store-grunnmur og prod.** Invitasjon med kort kode, utløp, tak og tilbaketrekking, «krev godkjenning», «lås»; vilkår godtatt og håndhevet; myk sletting og tekstfilter; varsel til Thomas ved rapport; Apple-token ved sletting; demogruppe; knappene i verktøylinja (gule). Så Dash18 Prod med alle migreringer | `053` | Klubb, tråd, Deg, `delete-account`, invitasjonssiden | Alle |
 
 Knappefargen (gul med mørk tekst) gjøres med en gang, siden den ikke avhenger av noe.
