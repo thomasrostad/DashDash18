@@ -24,7 +24,7 @@ final class KveldExtrasModel {
         async let input = try? TipsQueries.load(client: context.client, eventID: eventID)
         if let summary = await thread { self.thread = summary }
         if let input = await input {
-            tips = TipsBoard(input, me: context.memberID, isOrganizer: context.isOrganizer)
+            tips = TipsBoard(input, me: context.memberID, isOrganizer: context.can(.money))
         }
     }
 }

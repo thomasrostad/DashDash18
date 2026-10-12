@@ -8,7 +8,7 @@ struct BanerAdminView: View {
     var body: some View {
         Group {
             if let model {
-                CourseListView(model: model, isOrganizer: context?.isOrganizer ?? false)
+                CourseListView(model: model, isOrganizer: context?.can(.rounds) ?? false)
             } else {
                 ContentUnavailableView("Ingen klubb", systemImage: "map", description: Text("Velg en klubb først."))
             }

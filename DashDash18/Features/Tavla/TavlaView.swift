@@ -44,7 +44,7 @@ private struct TavlaContent: View {
                 if model.standings != nil {
                     ToolbarItem(placement: .topBarTrailing) {
                         // Arrangøren kan også vise Tavla på en skjerm uten appen (TV-kode, sql/041).
-                        if TVCodeFeature.isEnabled, model.clubContext.isOrganizer {
+                        if TVCodeFeature.isEnabled, model.clubContext.can(.tournaments) {
                             Menu {
                                 Button("Vis på denne enheten", systemImage: "tv") { showsTV = true }
                                 Button("TV-kode for en annen skjerm", systemImage: "qrcode") { showsTVCode = true }
