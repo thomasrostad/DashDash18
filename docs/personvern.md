@@ -22,6 +22,8 @@ Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer
 | Scorer, runder, matcher, sidepremier, tips, veddemål i poeng og statistikk du fører selv | Det er selve tjenesten | Avtale |
 | Meldinger og bilder i kveldens tråd, og portrettet ditt | For at gjengen skal kunne snakke sammen | Avtale |
 | Push-token (en kode for telefonen din) og varselvalgene dine | For å sende varsler du har slått på | Samtykke (du sier ja i iOS), kan trekkes når som helst |
+| Regninger du deler («Del regningen»): hva det gjelder, beløpet, hvem som skal betale, og om delen er sendt og mottatt. Vipps-nummeret ditt bare når du selv får pengene og legger det inn | For at gjengen skal kunne gjøre opp. Ingen penger går gjennom appen | Avtale |
+| Kalenderlenken din (en tilfeldig kode) | For at kveldene du er påmeldt på, skal dukke opp i kalenderen din | Avtale |
 | Kjøp i appen (produkt, transaksjons-id, status) | For å låse opp turneringer du har betalt for | Avtale og regnskapsplikt |
 | Rapporter og blokkeringer | For å holde appen fri for støtende innhold | Berettiget interesse (art. 6 nr. 1 f) |
 
@@ -35,6 +37,8 @@ Appen ber om tilgang til kameraet bare når du vil ta et bilde til tråden eller
 
 - Det du legger inn i en **klubb**, ser bare aktive medlemmer i klubben.
 - En **løs runde** ser bare eieren og de som er med.
+- En **regning** ser bare den som laget den, mottakeren og de som skal betale. Vipps-nummeret står bare på regningen, aldri på profilen, og slettes når alle har betalt.
+- **Kalenderlenken** er personlig: den som har den, ser datoene og stedene for kveldene du er påmeldt på, ikke hvem andre som kommer. Du kan lage en ny eller skru den av under Deg.
 - En **konkurranse** ser deltakerne og klubben den hører til.
 - Andre brukere kan ikke søke deg opp.
 
@@ -46,7 +50,8 @@ Dataene lagres hos **Supabase** (database, innlogging, fillagring og serverfunks
 
 Vi lagrer opplysningene så lenge du har en konto. Sletter du kontoen:
 
-- slettes innloggingen, profilen, push-tokenene, meldingene og bildene dine i tråden, portrettet og blokkeringene dine,
+- slettes innloggingen, profilen, push-tokenene, kalenderlenken, meldingene og bildene dine i tråden, portrettet og blokkeringene dine,
+- slettes Vipps-nummeret ditt fra regningene,
 - navnet ditt byttes til **«Slettet spiller»** i klubber og runder, mens scorene står, slik at tabellene til de andre ikke endres,
 - kjøpsopplysninger beholdes uten kobling til deg så lenge regnskapsloven krever det.
 

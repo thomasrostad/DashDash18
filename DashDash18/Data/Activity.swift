@@ -120,6 +120,8 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
     var against: UUID?
     var side: String?
     var resolution: String?
+    /// `bill_share_sent`/`bill_share_disputed` (sql/051): hva regningen gjelder. Navnet står i `name`.
+    var title: String?
     /// `table_changed` (fase 19): konkurransen, navnet slik det var (push har ikke konkurransene),
     /// og tabellen etter runden: topp 3 og alle som flyttet seg (`TableChange`).
     var competition: UUID?
@@ -137,7 +139,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
          courseName: String? = nil, holeCount: Int? = nil, bays: Int? = nil, ldHole: Int? = nil, kpHole: Int? = nil,
          text: String? = nil, from: Int? = nil, to: Int? = nil, coming: Int? = nil, unsure: Int? = nil,
          correct: Int? = nil, possible: Int? = nil, question: String? = nil, against: UUID? = nil,
-         side: String? = nil, resolution: String? = nil, competition: UUID? = nil, competitionName: String? = nil,
+         side: String? = nil, resolution: String? = nil, title: String? = nil, competition: UUID? = nil, competitionName: String? = nil,
          table: [ActivityTableSpot]? = nil, guestName: String? = nil, late: Bool? = nil) {
         self.member = member
         self.members = members
@@ -173,6 +175,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         self.against = against
         self.side = side
         self.resolution = resolution
+        self.title = title
         self.competition = competition
         self.competitionName = competitionName
         self.table = table
@@ -196,7 +199,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         case ldHole = "ld_hole"
         case kpHole = "kp_hole"
         case text, from, to, coming, unsure, correct, possible
-        case question, against, side, resolution
+        case question, against, side, resolution, title
         case competition
         case competitionName = "competition_name"
         case table
@@ -243,6 +246,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         against = get(.against)
         side = get(.side)
         resolution = get(.resolution)
+        title = get(.title)
         competition = get(.competition)
         competitionName = get(.competitionName)
         table = get(.table)
@@ -422,6 +426,11 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     case betChallenge(question: String, against: UUID, side: String?, points: Int?)
     /// Avgjort av arrangøren eller av appen (`resolve_bet`, `settle_bet`). `void` = annullert.
     case betResolved(question: String, resolution: String)
+    /// Del regningen (sql/051, skrevet av serveren). `sent`: den som skal betale, har sendt sin del
+    /// (til mottakeren; `name` er den som betalte). `disputed`: mottakeren sier at delen ikke kom
+    /// (til den som skal betale; `name` er mottakeren). `title` er hva regningen gjelder.
+    case billShareSent(title: String?, name: String?)
+    case billShareDisputed(title: String?, name: String?)
     /// Plassbytte i en konkurranses tabell etter at en runde er låst (fase 19). `roundNo` er antall
     /// tellende runder i konkurransen etter runden. Kategori `round`: den kommer av at runden ble låst.
     case tableChanged(competition: UUID, competitionName: String, roundNo: Int?, table: [ActivityTableSpot])
@@ -440,6 +449,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         "score_corrected", "signup", "nudge", "reminder", "announcement", "committee_drawn",
         "member_joined", "tips_king", "bet_created", "bet_challenge", "bet_resolved", "table_changed",
         "waitlist_promoted", "signup_dropped", "evening_started",
+        "bill_share_sent", "bill_share_disputed",
     ]
 
     var kind: String {
@@ -461,6 +471,8 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .betCreated: "bet_created"
         case .betChallenge: "bet_challenge"
         case .betResolved: "bet_resolved"
+        case .billShareSent: "bill_share_sent"
+        case .billShareDisputed: "bill_share_disputed"
         case .tableChanged: "table_changed"
         case .waitlistPromoted: "waitlist_promoted"
         case .signupDropped: "signup_dropped"
@@ -480,7 +492,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .nudge: .nudge
         case .reminder: .reminder
         case .announcement: .announcement
-        case .committeeDrawn: .social
+        case .committeeDrawn, .billShareSent, .billShareDisputed: .social
         case .memberJoined: .club
         case .tipsKing: .tips
         case .betCreated, .betChallenge, .betResolved: .bet
@@ -524,6 +536,8 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             ActivityData(points: points, question: question, against: against, side: side)
         case let .betResolved(question, resolution):
             ActivityData(question: question, resolution: resolution)
+        case let .billShareSent(title, name), let .billShareDisputed(title, name):
+            ActivityData(name: name, title: title)
         case let .tableChanged(competition, competitionName, roundNo, table):
             ActivityData(roundNo: roundNo, competition: competition, competitionName: competitionName, table: table)
         case let .waitlistPromoted(member, guestName, eventDate):
@@ -595,6 +609,10 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case "bet_resolved":
             guard let question = d.question, let resolution = d.resolution else { self = .unknown(kind: kind); return }
             self = .betResolved(question: question, resolution: resolution)
+        case "bill_share_sent":
+            self = .billShareSent(title: d.title, name: d.name)
+        case "bill_share_disputed":
+            self = .billShareDisputed(title: d.title, name: d.name)
         case "table_changed":
             guard let competition = d.competition, let name = d.competitionName, let table = d.table,
                   !table.isEmpty else { self = .unknown(kind: kind); return }
@@ -660,6 +678,21 @@ nonisolated enum ActivityText {
             parts.append(courseName)
         }
         return parts.isEmpty ? head : head + ": " + parts.joined(separator: " · ")
+    }
+
+    /// «Anders har sendt sin del for Simulatorleie» (sql/051).
+    static func billShareSent(title: String?, name: String?) -> String {
+        "\(nonEmpty(name) ?? "Noen") har sendt sin del for \(nonEmpty(title) ?? "regningen")"
+    }
+
+    /// «Thomas sier at din del for Simulatorleie ikke kom» (sql/051).
+    static func billShareDisputed(title: String?, name: String?) -> String {
+        "\(nonEmpty(name) ?? "Mottakeren") sier at din del for \(nonEmpty(title) ?? "regningen") ikke kom"
+    }
+
+    private static func nonEmpty(_ text: String?) -> String? {
+        guard let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else { return nil }
+        return trimmed
     }
 
     static func display(_ event: ActivityEvent, actor: UUID?, recipients: [UUID]? = nil, term: DayTerm? = nil,
@@ -822,6 +855,15 @@ nonisolated enum ActivityText {
             default:
                 return ActivityDisplay(symbol: "xmark.circle", emoji: "↩️", text: "Veddemål annullert: «\(question)»")
             }
+
+        // Del regningen (sql/051): samme tekst som push-send.
+        case let .billShareSent(title, name):
+            return ActivityDisplay(symbol: "creditcard", emoji: "💸",
+                                   text: billShareSent(title: title, name: name))
+
+        case let .billShareDisputed(title, name):
+            return ActivityDisplay(symbol: "exclamationmark.bubble", emoji: "❓",
+                                   text: billShareDisputed(title: title, name: name))
 
         case let .tableChanged(_, competitionName, roundNo, table):
             let text = TableChangeText.headline(table: table, competitionName: competitionName, roundNo: roundNo,

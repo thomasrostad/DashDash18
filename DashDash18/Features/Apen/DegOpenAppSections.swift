@@ -1,7 +1,8 @@
 import Supabase
 import SwiftUI
 
-/// Nederst under Deg (med og uten klubb): personvern og vilkår, blokkerte og «Slett konto».
+/// Nederst under Deg (med og uten klubb): «Mine oppgjør» og kalenderen (sql/051), personvern og
+/// vilkår, blokkerte og «Slett konto».
 /// Med flaggene av (og lenkene ikke publisert) vises ingenting, så Deg er som før.
 struct DegOpenAppSections: View {
     let client: SupabaseClient?
@@ -10,6 +11,10 @@ struct DegOpenAppSections: View {
     @State private var showsDeletion = false
 
     var body: some View {
+        if let client {
+            DegCalendarBillsSections(client: client, user: user,
+                                     showsCalendar: club?.memberships.contains { $0.status == .active } == true)
+        }
         if ModerationFeature.isEnabled, let client {
             Section {
                 NavigationLink { BlockedUsersView(service: ModerationService(client: client)) } label: {
