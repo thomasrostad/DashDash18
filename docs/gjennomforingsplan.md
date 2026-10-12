@@ -43,6 +43,7 @@ Knappefargen (gul med mørk tekst) gjøres med en gang, siden den ikke avhenger 
 |---|---|
 | Knappefarge | Pågår |
 | 1 | 034 kjørt på test 11.10 (kontrollene grønne). Appen og web-admin: PR #70 |
+| 2 | 044 kjørt på test 12.10 (2 klubber med eier, 36 policyer med rettighet, flaggene likt med rollene). Lokalt: kontrollen 10 av 10, `lokal/044_prove.sql` 112 av 112. Appen og web-admin: PR #75 |
 | 6 (motoren) | Merget (#69): `table.minEvenings`, `aggregation`, `pointsTables`, `tieRule` (playoff), `formats.drawMethod`; på runden `counts`, `pointsTable`, `hideLastHoles`. Playoff med fullt handicap (Thomas 11.10). Se `Packages/GolfgutuCore/REGELSETT.md`. Appen og web-admin (#76): Tavla, TV og Tabeller med delt plass, uten plass og playoff-merke; de nye reglene i «Tilpass reglene» og «Reglene»; trekning etter `drawMethod` og tilfeldige lag med bytte. Gjenstår: 047 (`counts`, `pointsTable`, `hideLastHoles`, `rounds.kind = playoff`) og playoff-runden |
 | 7 (motoren) | Merget (#74): lagform og poengtelling som to akser (`FormAxes`), Amerikaner og Københavner etter NGF (side 3 og 4) med poengtabellene i `formPlay.pointsGames`, skins i tabellen (`table.formPoints`, `formPlay.skinPoints`), lag mot lag (`RyderCup`, `formPlay.teamMatch`), flere konkurranser på samme runde (`RoundCompetitions`) og øyeblikksbildet ved start (`FrozenRound`). Swift og TS. Se `Packages/GolfgutuCore/REGELSETT.md`. Gjenstår: 048, oppsett, føring og Tavla |
 | Resten | Ikke startet |
