@@ -14,8 +14,7 @@ enum TavlaQueries {
 
     /// Sesongen Tavla og Vedd viser: hovedturneringen, ikke en vilkårlig aktiv serie (sql/034).
     static func mainSeason(client: SupabaseClient, clubID: UUID) async throws -> SeasonRow? {
-        async let rows: [SeasonRow] = client.from("seasons")
-            .select(SeasonRow.columns)
+        async let rows: [SeasonRow] = SeasonQuery.select(client)
             .eq("club_id", value: clubID)
             .in("status", values: [SeasonStatus.active.rawValue, SeasonStatus.finished.rawValue])
             .order("created_at", ascending: false)

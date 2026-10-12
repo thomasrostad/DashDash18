@@ -91,11 +91,10 @@ final class TerminlisteModel {
 
     func load() async {
         do {
-            let seasonQuery = client.from("seasons")
-                .select(SeasonRow.columns)
+            let seasonQuery = SeasonQuery.select(client)
                 .eq("club_id", value: clubID)
             // Den valgte turneringen, ellers hovedturneringen (flere serier kan være aktive, sql/034).
-            async let seasons: [SeasonRow] = (tournamentID.map { seasonQuery.eq("id", value: $0) }
+            async let seasons: [SeasonRow] = (tournamentID.map { seasonQuery.eq("season_id", value: $0) }
                 ?? seasonQuery.eq("status", value: SeasonStatus.active.rawValue))
                 .execute().value
             async let mains: Set<UUID> = tournamentID == nil

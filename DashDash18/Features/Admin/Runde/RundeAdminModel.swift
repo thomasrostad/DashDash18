@@ -157,8 +157,7 @@ final class RundeAdminModel {
 
     func load() async {
         do {
-            async let seasonRows: [SeasonRow] = client.from("seasons")
-                .select(SeasonRow.columns)
+            async let seasonRows: [SeasonRow] = SeasonQuery.select(client)
                 .eq("club_id", value: clubID)
                 .execute().value
             async let eventRows: [EventRow] = client.from("events")

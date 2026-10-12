@@ -1,6 +1,18 @@
 import Foundation
 import Supabase
 
+/// Sesongene leses fra turneringsradene: `competitions` med `season_id` (gjennomføringsplanen steg 3).
+/// Etter sql/035 er `seasons` et view over de samme radene; før 035 holder 033-triggerne dem like.
+/// Radene og kolonnene er de samme som fra `seasons`, med `season_id` som sesongens id
+/// (`SeasonRow.columns`). Filtrer på sesongen med `season_id`, ikke `id` (turneringsradens egen id).
+nonisolated enum SeasonQuery {
+    static func select(_ client: SupabaseClient) -> PostgrestFilterBuilder {
+        client.from("competitions")
+            .select(SeasonRow.columns)
+            .not("season_id", operator: .is, value: "null")
+    }
+}
+
 /// Klubbens hovedturnering (`competitions.is_main`). Etter sql/034 kan en klubb ha flere aktive
 /// serier samtidig, men bare én aktiv hovedturnering. Der appen trenger «klubbens sesong» (Tavla,
 /// Vedd, Tropp, arrangørsiden, regelsettet uten kveld), er det hovedturneringen, aldri en vilkårlig

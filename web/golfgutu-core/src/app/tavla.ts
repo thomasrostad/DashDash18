@@ -511,8 +511,8 @@ export function tavlaToJSON(t: TavlaStandings): TavlaJSON {
 }
 
 /**
- * Hele veien i ett kall: svaret fra `tavla_data` (JSON) og sesongraden (`seasons`: id, club_id, name,
- * status, rules) → tabellen som JSON. `me`: medlems-id-en til den som ser på (valgfri).
+ * Hele veien i ett kall: svaret fra `tavla_data` (JSON) og sesongraden (id, club_id, name, status, rules;
+ * fra `competitions` med `season_id` som id, gjennomføringsplanen steg 3) → tabellen som JSON. `me`: medlems-id-en til den som ser på (valgfri).
  */
 export function standingsFromTavlaData(tavlaDataJSON: unknown, seasonRowJSON: unknown, me: string | null = null): TavlaJSON {
   const data = decodeTavlaData(tavlaDataJSON);

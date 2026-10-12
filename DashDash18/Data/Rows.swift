@@ -63,7 +63,9 @@ nonisolated struct SeasonRow: Codable, Equatable, Identifiable, Sendable {
         case rules
     }
 
-    static let columns = "id, club_id, name, status, rules"
+    /// Kolonnelista mot turneringsraden (`competitions`), der sesongens id er `season_id`
+    /// (gjennomføringsplanen steg 3, sql/035). Hentes med `SeasonQuery`, aldri fra `seasons`.
+    static let columns = "id:season_id, club_id, name, status, rules"
 }
 
 nonisolated struct EventRow: Codable, Equatable, Identifiable, Sendable {

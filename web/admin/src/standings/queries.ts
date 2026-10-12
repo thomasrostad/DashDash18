@@ -5,9 +5,9 @@ import { supabase } from "../supabase.ts";
 import type { Competition } from "../data.ts";
 import type { CompetitionRaw, RoundRosterRow } from "./model.ts";
 import { hasTableRules, TABLE_RULES_COLUMNS } from "../rounds/api.ts";
+import { seasonRows } from "../seasons.ts";
 
 const competitionColumns = "id, kind, name, club_id, owner_id, season_id, status, entry, rules, starts_on, ends_on, is_main";
-const seasonColumns = "id, club_id, name, status, rules";
 const roundColumns =
   "id, club_id, event_id, course_id, round_no, name, status, hole_count, first_hole, tee_time, format, " +
   "handicap_allowance, external_handicap, weight, ld_enabled, ld_hole_index, kp_enabled, kp_hole_index, " +
@@ -28,7 +28,7 @@ export async function loadSeason(c: Competition): Promise<{ tavlaData: unknown; 
   if (!c.season_id) throw new Error("Serien mangler sesong.");
   const [rpc, seasons] = await Promise.all([
     supabase.rpc("tavla_data", { p_season_id: c.season_id }),
-    rows(supabase.from("seasons").select(seasonColumns).eq("id", c.season_id)),
+    rows(seasonRows().eq("season_id", c.season_id)),
   ]);
   if (rpc.error) throw rpc.error;
   const season = seasons[0] ?? { id: c.season_id, club_id: c.club_id, name: c.name, status: c.status, rules: c.rules };
@@ -89,8 +89,8 @@ export async function loadCompetition(competitionID: string): Promise<Competitio
   // Regelsettet per runde: kveldens sesong, ellers klubbens aktive sesong.
   const seasonIDs = [...new Set((events as { season_id: string | null }[]).map((e) => e.season_id).filter((x): x is string => !!x))];
   const [byID, active, mains] = await Promise.all([
-    seasonIDs.length === 0 ? none : rows(supabase.from("seasons").select(seasonColumns).in("id", seasonIDs)),
-    roundClubs.length === 0 ? none : rows(supabase.from("seasons").select(seasonColumns).in("club_id", roundClubs).eq("status", "active")),
+    seasonIDs.length === 0 ? none : rows(seasonRows().in("season_id", seasonIDs)),
+    roundClubs.length === 0 ? none : rows(seasonRows().in("club_id", roundClubs).eq("status", "active")),
     // Hovedturneringene: flere serier kan være aktive (sql/034), og regelsettet uten kveld er hovedturneringens.
     roundClubs.length === 0 ? none : rows(supabase.from("competitions").select("season_id").in("club_id", roundClubs).eq("is_main", true)),
   ]);
