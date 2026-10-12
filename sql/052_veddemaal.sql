@@ -1,4 +1,4 @@
--- 052: veddemål overalt (gjennomføringsplanen steg 11). VENTER PÅ GODKJENNING. Ikke kjørt på test.
+-- 052: veddemål overalt (gjennomføringsplanen steg 11). Godkjent og kjørt på test 12.10.2026.
 --
 -- Krever 001–051 (012 veddemål, 031–034 turneringer, 044 rettigheter og private-skjemaet,
 -- 047 bets_guard_playoff, 048 rounds.rules_snapshot). Rører ikke runde-oppsettet (set_round_setup,
