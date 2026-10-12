@@ -9,21 +9,31 @@
 //   APNS_KEY_ID, APNS_TEAM_ID, APNS_PRIVATE_KEY, APNS_BUNDLE_ID
 //   PUSH_HOOK_SECRET   delt hemmelighet; webhooken sender den som x-push-secret
 // Satt av Supabase selv: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+// Valgfritt, e-post til dem uten push (av til alle fire er satt, se email.ts):
+//   SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM (og SMTP_PORT, standard 465)
 //
-// Logikken (hvem, hva, tekstene) ligger i logic.ts, APNs i apns.ts.
+// Logikken (hvem, hva, tekstene) ligger i logic.ts, APNs i apns.ts, e-posten i email.ts.
+// Med sql/046: loggen per mottaker (push_log_result) skrives etter hver jobb. Feiler den
+// (for eksempel uten 046), går jobben som før.
 
 import { ApnsClient, sendAll } from "./apns.ts";
+import { type EmailRecipient, emailEligible, sendEmails, smtpConfig, SmtpSender } from "./email.ts";
 import {
   attachAlreadyNotified,
   attachBlocks,
+  attachCompetitionBlocks,
   type BlockRow,
   DROP_WINDOW_MS,
   dropoutLookup,
   type DroppedRow,
   type JobPayload,
+  type LogResult,
   type MemberLink,
   planPush,
+  type PushPlan,
+  pushLogResults,
   pushOriginators,
+  type SendResult,
   summarize,
 } from "./logic.ts";
 
@@ -93,9 +103,10 @@ class Db {
 async function withBlocks(db: Db, payload: JobPayload): Promise<JobPayload> {
   const originators = pushOriginators(payload);
   if (originators.length === 0) return payload;
+  if (payload.audience === "competition") return withCompetitionBlocks(db, payload, originators);
   const links = await db.select<MemberLink>(
     "club_members",
-    `select=id,user_id&club_id=eq.${encodeURIComponent(payload.club.id)}&user_id=not.is.null`,
+    `select=id,user_id&club_id=eq.${encodeURIComponent(payload.club.id ?? "")}&user_id=not.is.null`,
   );
   const users = [...new Set(links.filter((l) => originators.includes(l.id) && l.user_id).map((l) => l.user_id!))];
   if (users.length === 0) return payload;
@@ -104,6 +115,60 @@ async function withBlocks(db: Db, payload: JobPayload): Promise<JobPayload> {
     `select=blocker_id,blocked_id&blocked_id=in.(${users.map(encodeURIComponent).join(",")})`,
   );
   return blocks.length ? attachBlocks(payload, links, blocks) : payload;
+}
+
+/**
+ * Turnering uten klubb (sql/046): mottakerne er profiler. De som står bak kan være
+ * klubbmedlemmer (actor_member_id) eller profiler; klubbmedlemmene slås opp for innloggingen,
+ * og user_blocks leses rett på innloggingene. Feiler et oppslag, prøves jobben igjen.
+ */
+async function withCompetitionBlocks(db: Db, payload: JobPayload, originators: string[]): Promise<JobPayload> {
+  const list = originators.map(encodeURIComponent).join(",");
+  const links = await db.select<MemberLink>("club_members", `select=id,user_id&id=in.(${list})&user_id=not.is.null`);
+  const users = [...new Set([
+    ...links.map((l) => l.user_id!).filter(Boolean),
+    ...originators.filter((o) => !links.some((l) => l.id === o)),
+  ])];
+  const blocks = users.length
+    ? await db.select<BlockRow>(
+      "user_blocks",
+      `select=blocker_id,blocked_id&blocked_id=in.(${users.map(encodeURIComponent).join(",")})`,
+    )
+    : [];
+  return attachCompetitionBlocks(payload, links, blocks);
+}
+
+/** Loggen per mottaker (push_log_result, sql/046). Feiler den, går jobben som før. */
+async function logResults(db: Db, jobId: number, results: LogResult[]): Promise<string | undefined> {
+  if (results.length === 0) return undefined;
+  try {
+    await db.rpc("push_log_result", { p_job_id: jobId, p_results: results.slice(0, 5000) });
+    return undefined;
+  } catch (error) {
+    return String((error as Error)?.message ?? error).slice(0, 200);
+  }
+}
+
+/**
+ * E-post til dem uten push (email.ts). Bare når SMTP er satt opp og jobben er en av linjene
+ * som kan gå som e-post. Uten SMTP: ingenting, og ingen logg.
+ */
+async function runEmail(db: Db, payload: JobPayload, now: Date): Promise<Record<string, unknown> | undefined> {
+  const config = smtpConfig((k) => Deno.env.get(k));
+  if (!config || !emailEligible(payload, now)) return undefined;
+  try {
+    const recipients = await db.rpc<EmailRecipient[] | null>("push_email_recipients", { p_job_id: payload.job_id });
+    if (!recipients?.length) return undefined;
+    const logs = await sendEmails(new SmtpSender(config), payload, recipients);
+    const logError = await logResults(db, payload.job_id, logs);
+    return {
+      email_sent: logs.filter((l) => l.status === "sent").length,
+      email_failed: logs.filter((l) => l.status === "failed").length,
+      ...(logError ? { log_error: logError } : {}),
+    };
+  } catch (error) {
+    return { email_error: String((error as Error)?.message ?? error).slice(0, 200) };
+  }
 }
 
 /**
@@ -178,15 +243,24 @@ Deno.serve(async (request) => {
       // Først uten blokkeringene: hoppes jobben over uansett (gammel, av,
       // ingen mottakere), trengs ingen oppslag.
       const now = new Date();
-      let plan = planPush(payload, now);
-      if (!plan.skipped) plan = planPush(await withBlocks(db, await withDropouts(db, payload)), now);
+      let plan: PushPlan = planPush(payload, now);
+      let planned = payload;
+      if (!plan.skipped) {
+        planned = await withBlocks(db, await withDropouts(db, payload));
+        plan = planPush(planned, now);
+      }
+      // E-posten går for seg, også når ingen skal ha push (det er da den trengs).
+      const email = await runEmail(db, planned, now);
       if (plan.skipped) {
-        await db.rpc("finish_push_job", { p_job_id: job.id, p_ok: true, p_result: { skipped: plan.skipped } });
-        report.push({ job: job.id, skipped: plan.skipped });
+        const logError = await logResults(db, job.id, pushLogResults(planned, plan));
+        await db.rpc("finish_push_job", { p_job_id: job.id, p_ok: true, p_result: { skipped: plan.skipped, ...email } });
+        report.push({ job: job.id, skipped: plan.skipped, ...email, ...(logError ? { log_error: logError } : {}) });
         continue;
       }
-      const summary = summarize(await sendAll(apns, plan.notifications));
-      const result = { sent: summary.sent, failed: summary.failed, removed: summary.deadTokens.length };
+      const sent: SendResult[] = await sendAll(apns, plan.notifications);
+      const summary = summarize(sent);
+      const logError = await logResults(db, job.id, pushLogResults(planned, plan, sent));
+      const result = { sent: summary.sent, failed: summary.failed, removed: summary.deadTokens.length, ...email };
       await db.rpc("finish_push_job", {
         p_job_id: job.id,
         p_ok: summary.ok,
@@ -194,7 +268,12 @@ Deno.serve(async (request) => {
         p_error: summary.error ?? null,
         p_dead_tokens: summary.deadTokens,
       });
-      report.push({ job: job.id, ...result, ...(summary.error ? { error: summary.error } : {}) });
+      report.push({
+        job: job.id,
+        ...result,
+        ...(summary.error ? { error: summary.error } : {}),
+        ...(logError ? { log_error: logError } : {}),
+      });
     } catch (error) {
       const message = String((error as Error)?.message ?? error).slice(0, 500);
       report.push({ job: job.id, error: message });

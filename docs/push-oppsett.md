@@ -85,9 +85,45 @@ Har du blokkert noen (`user_blocks`, sql/019), får du ikke push om det de gjør
 
 ## Varsler, steg 5 (sql/046)
 
-`sql/046_varsler.sql` (venter på godkjenning) gir fire grupper (Spillet, Sosialt, Kvelden, Arrangør), demping av én kveld, ett «kvelden er i gang» per kveld (`round_started` går ikke lenger som push), `collapse` per kveld og gruppe i `push_job_payload`, push i turneringer uten klubb, loggen `notifications` og grunnmuren for e-post til dem uten push. Hva `push-send` og appen må endre, står øverst i fila.
+`sql/046_varsler.sql` er kjørt på test (12.10). Den gir fire grupper (Spillet, Sosialt, Kvelden, Arrangør), demping av én kveld, ett «kvelden er i gang» per kveld (`round_started` går ikke lenger som push), `collapse` per kveld og gruppe i `push_job_payload`, push i turneringer uten klubb, loggen `notifications` og grunnmuren for e-post til dem uten push.
 
-E-post krever SMTP. Det må du sette opp: Supabase → test → **Authentication** → **SMTP Settings** (avsender, vert, port, bruker, passord), eller en e-posttjeneste med API-nøkkel som secret for `push-send`. Til det er gjort, sendes ingen e-post; `push_email_recipients` bare forteller hvem som skulle fått den.
+Det `push-send` gjør med 046 (krever ny deploy, se steg 5 over):
+
+- **Collapse.** `payload.collapse` (`event-<kveld>-<gruppe>`) blir `apns-collapse-id`, så et nyere varsel i samme gruppe samme kveld erstatter det forrige. Uten den: `lead-<runde>` og `table-<turnering>` som før.
+- **«Kvelden er i gang».** `🏁 Kvelden er i gang: torsdag 8. oktober · Runde 1 – Pebble Beach`. Står ordet for dagen i svaret (`day_term`), brukes «Kvelden» eller «Spilledagen»; ellers «Runden er i gang».
+- **Logg.** Etter hver jobb kalles `push_log_result` med én rad per mottaker med innlogging: `sent` eller `failed` (med APNs-grunnen) etter sendingen, og `skipped` med grunn: `actor`, `not_recipient`, `too_old`, `club_off`, `muted`, `group_off`, `category_off` eller `blocked`. Ledige navn uten innlogging logges ikke. Feiler loggen (for eksempel uten 046), går pushen som før, og feilen står i svaret som `log_error`.
+- **Turneringer uten klubb** (`audience = 'competition'`): mottakerne er profiler, blokkering leses rett fra `user_blocks`, og varslene grupperes som `competition-<id>` på låseskjermen.
+- **E-post** (`email.ts`): se under.
+
+Testene: `deno test supabase/functions/push-send/`. Uten Deno går de med Node 22+ og en liten shim som gjør `Deno.test` om til `node:test`:
+
+```sh
+echo 'import { test } from "node:test"; globalThis.Deno = { test: (n, f) => test(n, f), env: { get: () => undefined } };' > /tmp/deno-shim.mjs
+cd supabase/functions/push-send && node --import /tmp/deno-shim.mjs --test logic_test.ts apns_test.ts email_test.ts
+```
+
+### E-post til dem uten push (av til du setter opp SMTP)
+
+`push-send` sender e-post bare når alle fire secrets under finnes. Mangler én, skjer ingenting: ingen oppslag, ingen e-post, ingen logg. Da kaller den `push_email_recipients(jobb)` for linjene som kan gå som e-post (melding til alle, purring, påminnelse, plass fra ventelista og avmelding til arrangøren), sender én e-post per mottaker og logger `channel = 'email'` i `notifications`. Mottakerne er de som har e-post på (Deg → Varsler, på som standard), ikke har noen telefon registrert og ikke har slått av kategorien, gruppen eller kvelden.
+
+Ingen nye avhengigheter: en liten SMTP-klient over TLS (`Deno.connectTls`, `AUTH LOGIN`) i `email.ts`. Edge Functions stenger port 25 og 587, så bruk **465** (TLS fra start).
+
+Det du må gjøre:
+
+1. Velg en e-posttjeneste med SMTP på port 465 (for eksempel Resend, Postmark, SendGrid eller Brevo) og godkjenn avsenderdomenet der (SPF og DKIM i DNS for `dashdash18.com`).
+2. Supabase → test → **Edge Functions** → **Secrets**:
+
+| Navn | Verdi |
+|---|---|
+| `SMTP_HOST` | Verten, for eksempel `smtp.resend.com` |
+| `SMTP_USER` | Brukernavnet (hos Resend: `resend`) |
+| `SMTP_PASS` | Passordet eller API-nøkkelen |
+| `SMTP_FROM` | Avsenderen, for eksempel `Atten <varsler@dashdash18.com>` |
+| `SMTP_PORT` | Valgfri, standard `465` |
+
+3. Deploy `push-send` på nytt (steg 5). Prøv med en konto uten telefon i `push_devices`: send «Melding til alle», og se `notifications` (`channel = 'email'`) og `push_queue.result` (`email_sent`, `email_failed`).
+
+Samme tjeneste kan brukes for innloggingskodene (Authentication → SMTP Settings), men det er en egen innstilling.
 
 ## Prod
 

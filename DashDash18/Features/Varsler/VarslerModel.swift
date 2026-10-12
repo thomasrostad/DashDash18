@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 import Observation
 import Supabase
 
@@ -35,6 +36,8 @@ final class VarslerModel {
     private(set) var isLive = false
     private(set) var isSending = false
     var errorMessage: String?
+    /// Hva en dag heter i klubben (settes av skjermen fra miljøet), for «Kvelden er i gang».
+    var dayTerm: DayTerm?
 
     let me: UUID
     let isOrganizer: Bool
@@ -87,7 +90,7 @@ final class VarslerModel {
 
     private func item(_ row: ActivityRow, now: Date) -> Item {
         Item(row: row,
-             display: ActivityText.display(row, name: name),
+             display: ActivityText.display(row, term: dayTerm, name: name),
              time: ActivityFeed.relativeTime(row.createdAt, now: now),
              isUnread: ActivityFeed.isUnread(row, lastSeen: seenAtOpen, me: me),
              chips: ActivityReactions.chips(for: row.id, in: reactions, me: me, name: name))
