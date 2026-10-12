@@ -1,7 +1,7 @@
 import Supabase
 import SwiftUI
 
-/// Nederst under Deg (med og uten klubb): «Mine oppgjør» og kalenderen (sql/051), personvern og
+/// Nederst under Deg (med og uten klubb): «Følger» (sql/054), «Mine oppgjør» og kalenderen (sql/051), personvern og
 /// vilkår, blokkerte og «Slett konto».
 /// Med flaggene av (og lenkene ikke publisert) vises ingenting, så Deg er som før.
 struct DegOpenAppSections: View {
@@ -11,6 +11,10 @@ struct DegOpenAppSections: View {
     @State private var showsDeletion = false
 
     var body: some View {
+        // Følge andre spillere (sql/054). Skjult uten 054.
+        if let client {
+            DegFollowSection(client: client, user: user)
+        }
         if let client {
             DegCalendarBillsSections(client: client, user: user,
                                      showsCalendar: club?.memberships.contains { $0.status == .active } == true)

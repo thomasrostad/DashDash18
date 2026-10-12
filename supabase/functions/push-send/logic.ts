@@ -35,6 +35,11 @@
 //     klubb) er aktøren og står bak (blokkering).
 //   * Del regningen (sql/051): bill_share_sent og bill_share_disputed har egen tekst
 //     (data.title, data.name) og går bare til mottakeren på linja (recipients).
+//   * Følge (sql/054): personlige linjer uten klubb og turnering har audience 'person'.
+//     Medlemmene er mottakerlista (profil-id-er), aktøren er activity.actor_profile_id (også
+//     for blokkering), tittelen er «Atten» og threadId 'follow' (kommentarer: card-<kort>).
+//     follow_requested, follow_accepted og followed har egen tekst (data.actor_name).
+//     round_finished går aldri som push (køen tar den ikke heller).
 //
 // Tekstene følger ActivityText.display i appen (DashDash18/Data/Activity.swift),
 // med emojien foran, siden et varsel ikke har ikon.
@@ -121,6 +126,8 @@ export interface ActivityPayload {
   recipients: string[] | null;
   created_at: string;
   round_status: string | null;
+  /** sql/054: aktøren som profil på personlige linjer (uten klubb og turnering). */
+  actor_profile_id?: string | null;
 }
 
 export interface MessagePayload {
@@ -156,8 +163,11 @@ export interface JobPayload {
   collapse?: string | null;
   event_id?: string | null;
   competition?: { id: string; name: string } | null;
-  /** 'club': id-ene er klubbmedlemmer. 'competition' (turnering uten klubb): id-ene er profiler. */
-  audience?: "club" | "competition";
+  /**
+   * 'club': id-ene er klubbmedlemmer. 'competition' (turnering uten klubb) og 'person'
+   * (personlige linjer, sql/054): id-ene er profiler.
+   */
+  audience?: "club" | "competition" | "person";
   /** Hva en dag heter («kveld» eller «spilledag»), når svaret har det. Ellers nøytral tekst. */
   day_term?: string | null;
   /**
@@ -255,6 +265,8 @@ export function pushOriginators(payload: JobPayload): string[] {
   const a = payload.activity;
   if (!a) return [];
   if (a.actor_member_id) out.add(a.actor_member_id);
+  // sql/054: personlige linjer har aktøren som profil.
+  if (a.actor_profile_id) out.add(a.actor_profile_id);
   const d = a.data ?? {};
   switch (a.kind) {
     case "big_score":
@@ -399,10 +411,15 @@ export interface MemberSkip {
   reason: SkipReason;
 }
 
-/** Innloggingen bak et medlem: user_id fra 046, ellers id-en selv for turneringer uten klubb. */
+/** Er id-ene i jobben profiler (turnering uten klubb, eller personlige linjer fra sql/054)? */
+export function profileAudience(payload: JobPayload): boolean {
+  return payload.audience === "competition" || payload.audience === "person";
+}
+
+/** Innloggingen bak et medlem: user_id fra 046, ellers id-en selv når id-ene er profiler. */
 export function memberUserId(payload: JobPayload, member: MemberPayload): string | null {
   if (member.user_id) return member.user_id;
-  return payload.audience === "competition" ? member.id : null;
+  return profileAudience(payload) ? member.id : null;
 }
 
 /** Er medlemmet den som gjorde det? Klubbmedlem-id, eller innloggingen (turnering uten klubb). */
@@ -410,6 +427,9 @@ export function isActor(payload: JobPayload, member: MemberPayload, actorId: str
   if (actorId && member.id === actorId) return true;
   const actorUser = payload.actor_user_id;
   if (actorUser && memberUserId(payload, member) === actorUser) return true;
+  // sql/054: personlige linjer har aktøren som profil.
+  const actorProfile = payload.activity?.actor_profile_id;
+  if (actorProfile && memberUserId(payload, member) === actorProfile) return true;
   // sql/050: kommentaren uten klubb er skrevet av en profil (data.author_profile).
   const authorProfile = str(payload.activity?.data?.author_profile);
   return !!authorProfile && memberUserId(payload, member) === authorProfile;
@@ -423,7 +443,7 @@ export function isActor(payload: JobPayload, member: MemberPayload, actorId: str
 export function isRecipient(payload: JobPayload, activity: ActivityPayload, member: MemberPayload): boolean {
   if (activity.recipients === null) return true;
   if (activity.recipients.includes(member.id)) return true;
-  if (payload.audience !== "competition") return false;
+  if (!profileAudience(payload)) return false;
   const user = memberUserId(payload, member);
   return !!user && activity.recipients.includes(user);
 }
@@ -522,8 +542,19 @@ function tooOld(createdAt: string, maxAgeMs: number, now: Date): boolean {
   return !Number.isFinite(t) || now.getTime() - t > maxAgeMs;
 }
 
-/** aps.thread-id for linjene: klubben, eller turneringen når den ikke har klubb (sql/046). */
+/** Følgevarslene (sql/054): personlige linjer om følging. */
+export const FOLLOW_KINDS: readonly string[] = ["follow_requested", "follow_accepted", "followed"];
+
+/**
+ * aps.thread-id for linjene: klubben, eller turneringen når den ikke har klubb (sql/046).
+ * Personlige linjer (sql/054): 'follow' for følging, card-<kort> for kommentarer på et kort.
+ */
 export function activityThreadId(payload: JobPayload): string {
+  if (payload.audience === "person") {
+    const target = str(payload.activity?.data?.target_id);
+    if (!FOLLOW_KINDS.includes(payload.activity?.kind ?? "") && target) return `card-${target}`;
+    return "follow";
+  }
   if (payload.audience === "competition" && payload.competition?.id) return `competition-${payload.competition.id}`;
   return `club-${payload.club.id ?? payload.competition?.id ?? "ukjent"}`;
 }
@@ -544,6 +575,10 @@ function planActivity(payload: JobPayload, now: Date): PushPlan {
   const activity = payload.activity;
   if (!activity) return { skipped: "linja finnes ikke", notifications: [], skippedMembers: [] };
   if (activity.round_status === "draft") return { skipped: "kladdrunde", notifications: [], skippedMembers: [] };
+  // sql/054: kortet i «Følger» er ikke et varsel.
+  if (activity.kind === "round_finished") {
+    return { skipped: "round_finished går ikke som push", notifications: [], skippedMembers: [] };
+  }
   if (!isActivityCategory(activity.category)) {
     return { skipped: `ukjent kategori ${activity.category}`, notifications: [], skippedMembers: [] };
   }
@@ -1075,14 +1110,28 @@ export function activityDisplay(activity: ActivityPayload, name: NameLookup, day
     case "mentioned": {
       const author = str(d.author_name) ?? actor;
       const quote = quotedPreview(d.preview);
-      const verb = activity.kind === "mentioned" ? "nevnte deg" : "kommenterte";
+      // sql/054: på et kort i «Følger» (personlig linje uten klubb og turnering).
+      const card = !!activity.actor_profile_id && d.target_kind === "activity";
+      const verb = activity.kind === "mentioned" ? "nevnte deg" : card ? "kommenterte runden" : "kommenterte";
       return { emoji: "💬", text: `${author} ${verb}${quote ? `: ${quote}` : ""}` };
     }
+    // sql/054: følging. Navnet står i data.actor_name.
+    case "follow_requested":
+      return { emoji: "👋", text: `${actorName(d)} vil følge deg` };
+    case "follow_accepted":
+      return { emoji: "✅", text: `${actorName(d)} godtok forespørselen din` };
+    case "followed":
+      return { emoji: "👋", text: `${actorName(d)} følger deg nå` };
     case "photo_prompt":
       return { emoji: "📸", text: PHOTO_PROMPT_TEXT };
     default:
       return UNKNOWN;
   }
+}
+
+/** Navnet på den som vil følge, godtok eller følger (sql/054, data.actor_name). */
+function actorName(d: Record<string, unknown>): string {
+  return str(d.actor_name)?.trim() || "Noen";
 }
 
 /** Bildeoppfordringen (sql/050), som PhotoPrompt.title i appen. */

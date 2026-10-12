@@ -14,6 +14,8 @@ struct AppRoot: View {
     /// og vises når klubbene er hentet (`ClubInviteFlow`).
     @State private var pendingClubInvite: ClubInvite? = PendingClubInviteStore().load()
     @State private var presentedClubInvite: PresentedClubInvite?
+    /// Følgelenken (`dashdash18.com/folg/KODE`, sql/054). Venter til du er logget inn.
+    @State private var pendingFollow: FollowLink?
 
     var body: some View {
         Group {
@@ -34,6 +36,8 @@ struct AppRoot: View {
                 .task(id: user.id) { await RoundRulesFeature.detect(client: services.client) }
                 // Formene fra steg 7 (sql/048): finnes konkurransene, sidene og øyeblikksbildet?
                 .task(id: user.id) { await RoundFormatsFeature.detect(client: services.client) }
+                // Følge andre spillere (sql/054): finnes funksjonene?
+                .task(id: user.id) { await FollowFeature.detect(client: services.client) }
                 .task(id: user.id) { await services.club.load(userID: user.id) }
                 .task(id: user.id) { services.outbox.start(userID: user.id) }
                 .task(id: user.id) { await services.push.start(userID: user.id) }
@@ -61,6 +65,9 @@ struct AppRoot: View {
                     JoinCompetitionFromLinkView(client: services.client, code: code)
                 }
             }
+        }
+        .sheet(item: Binding(get: { signedInUser == nil ? nil : pendingFollow }, set: { pendingFollow = $0 })) { link in
+            FollowFromLinkView(client: services.client, link: link)
         }
         .onChange(of: clubInviteStep, initial: true) { _, step in presentClubInvite(step) }
         .sheet(item: $presentedClubInvite) { presented in
@@ -108,6 +115,10 @@ extension AppRoot {
         if let invite = ClubInvite(url: url) {
             PendingClubInviteStore().save(invite)
             pendingClubInvite = invite
+            return
+        }
+        if let follow = FollowLink(url: url) {
+            pendingFollow = follow
             return
         }
         guard let link = AppLink.parse(url, rounds: LooseRoundsFeature.isEnabled,
