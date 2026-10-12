@@ -14,6 +14,8 @@ struct EveningRowLabel: View {
     /// Neste steg eller resultatet. nil til rundene er hentet.
     var action: TonightAction?
     var status: String?
+    /// «Hver torsdag kl. 18:00» når kvelden hører til en serie (sql/049).
+    var series: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -31,6 +33,11 @@ struct EveningRowLabel: View {
                 if !details.isEmpty {
                     Text(details.joined(separator: " · "))
                         .font(.dd(.sans, size: 14, relativeTo: .subheadline))
+                        .foregroundStyle(Color.ddInkSecondary)
+                }
+                if let series {
+                    Label(series, systemImage: "repeat")
+                        .font(.dd(.sans, size: 13, relativeTo: .footnote))
                         .foregroundStyle(Color.ddInkSecondary)
                 }
                 if let signups {

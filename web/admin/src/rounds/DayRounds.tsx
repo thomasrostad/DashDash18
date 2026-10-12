@@ -14,13 +14,15 @@ import {
   roundSubtitle, roundTitle, savedDraft, type DeleteSummary, type RoundDraft,
 } from "./logic.ts";
 import { RoundSetup } from "./RoundSetup.tsx";
+import { applyRoundTemplate, decodePreviousSetup, type PreviousSetup } from "../reuse.ts";
+import { previousRoundSetup } from "../reuseApi.ts";
 import { RoundView } from "./RoundView.tsx";
 import { StartListEditor } from "./StartListEditor.tsx";
 import "./rounds.css";
 
 type View =
   | { kind: "list" }
-  | { kind: "setup"; draft: RoundDraft }
+  | { kind: "setup"; draft: RoundDraft; previous?: PreviousSetup | null }
   | { kind: "round"; round: ListRound; cut: boolean }
   | { kind: "startlist" };
 
@@ -29,8 +31,10 @@ type View =
  * lista med status, ny runde og kladd, start, lås, slett, «Avslutt kvelden», hele runden med retting og
  * avkorting, og startlista.
  */
-export function DayRounds({ clubID, event, days, comps, onBack }: {
-  clubID: string; event: EventRow; days: EventRow[]; comps: Competition[]; onBack: () => void;
+export function DayRounds({ clubID, event, days, comps, canTemplates = true, onBack }: {
+  clubID: string; event: EventRow; days: EventRow[]; comps: Competition[];
+  /** Rettigheten rounds: «Lagre som mal» og «Bruk mal» (sql/049). */
+  canTemplates?: boolean; onBack: () => void;
 }) {
   const [data, setData] = useState<DayData | null>(null);
   const [view, setView] = useState<View>({ kind: "list" });
@@ -66,8 +70,19 @@ export function DayRounds({ clubID, event, days, comps, onBack }: {
     finally { setBusy(false); }
   }
 
-  /** Ny runde: de påmeldte, forslaget fra forrige runde i turneringen, og gruppene fordelt automatisk. */
+  /**
+   * Ny runde: de påmeldte, forslaget fra forrige runde i turneringen, og gruppene fordelt automatisk.
+   * «Samme som sist» kommer fra `previous_round_setup` (sql/049); uten den gjelder forslaget herfra.
+   */
   function startNew() {
+    if (!data) return;
+    run(async () => {
+      const raw = await previousRoundSetup(event.id).catch(() => undefined);
+      startNewWith(raw === undefined ? undefined : decodePreviousSetup(raw));
+    });
+  }
+
+  function startNewWith(previous: PreviousSetup | null | undefined) {
     if (!data) return;
     const ready = data.courses.filter(courseItemReady);
     const { ids, source } = initialParticipants(data.roster, data.signups);
@@ -78,13 +93,15 @@ export function DayRounds({ clubID, event, days, comps, onBack }: {
     d = { ...d, courseID: ready[0]?.course.id ?? null };
     const sameTournament = days.filter((e) => (event.season_id ? e.season_id === event.season_id : e.competition_id === event.competition_id && !e.season_id));
     const tournamentRounds = data.allRounds.filter((r) => r.eventID !== null && r.kind !== "playoff" && sameTournament.some((e) => e.id === r.eventID));
-    d = applySuggestion(d, previousRound(tournamentRounds, sameTournament, event.event_date),
-      ready.map((c) => ({ id: c.course.id, isReady: true, holeCount: c.holes.length, teeIDs: c.tees.map((t) => t.id) })), data.rules);
+    const readyCourses = ready.map((c) => ({ id: c.course.id, isReady: true, holeCount: c.holes.length, teeIDs: c.tees.map((t) => t.id) }));
+    d = previous === undefined
+      ? applySuggestion(d, previousRound(tournamentRounds, sameTournament, event.event_date), readyCourses, data.rules)
+      : previous ? applyRoundTemplate(d, previous.round, readyCourses, data.rules.formats.allowedFormIDs, data.tableRules) : d;
     if (d.teeID === null) {
       const item = data.courses.find((c) => c.course.id === d.courseID);
       if (item) d = { ...d, teeID: suggestedTee(item.tees, previousTeeID(data.allRounds, item.course.id))?.id ?? null };
     }
-    setView({ kind: "setup", draft: autoArrange(d, data.rules, data.roster, dayDrawPlan(data, d.roundID)) });
+    setView({ kind: "setup", draft: autoArrange(d, data.rules, data.roster, dayDrawPlan(data, d.roundID)), previous: previous ?? null });
   }
 
   /** Kladden slik den er lagret. Uten oppsett: forslag som for en ny runde. */
@@ -151,7 +168,7 @@ export function DayRounds({ clubID, event, days, comps, onBack }: {
     return (
       <section>
         {header}
-        <RoundSetup clubID={clubID} data={data} initial={view.draft} titleOf={titleOf}
+        <RoundSetup clubID={clubID} data={data} initial={view.draft} titleOf={titleOf} previous={view.previous ?? null} canTemplates={canTemplates}
           onCancel={() => setView({ kind: "list" })}
           onDone={async (text) => { setView({ kind: "list" }); setNotice(text); await load(); }} />
       </section>
