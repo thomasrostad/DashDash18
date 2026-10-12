@@ -32,9 +32,14 @@ export * from "./season.ts";
 export * from "./draw.ts";
 export * from "./playoff.ts";
 export * from "./competitions.ts";
+export * from "./bets.ts";
 export * from "./app/rows.ts";
 export * from "./app/roundgame.ts";
 export * from "./app/tavla.ts";
 export * from "./app/playoffround.ts";
 export * from "./app/competition.ts";
+<<<<<<< HEAD
+export * from "./app/betsettle.ts";
+=======
 export * from "./app/roundcomp.ts";
+>>>>>>> origin/main
