@@ -103,7 +103,10 @@ class Db {
 async function withBlocks(db: Db, payload: JobPayload): Promise<JobPayload> {
   const originators = pushOriginators(payload);
   if (originators.length === 0) return payload;
-  if (payload.audience === "competition") return withCompetitionBlocks(db, payload, originators);
+  // Turnering uten klubb og personlige linjer (sql/054): mottakerne er profiler.
+  if (payload.audience === "competition" || payload.audience === "person") {
+    return withCompetitionBlocks(db, payload, originators);
+  }
   const links = await db.select<MemberLink>(
     "club_members",
     `select=id,user_id&club_id=eq.${encodeURIComponent(payload.club.id ?? "")}&user_id=not.is.null`,

@@ -2,8 +2,10 @@
 
 Cloudflare Worker for https://dashdash18.com. Den gjør to ting:
 
-- **Universelle lenker.** Serverer `apple-app-site-association` (på `/.well-known/apple-app-site-association` og `/apple-app-site-association`), slik at iOS åpner `https://dashdash18.com/klubb/KODE`, `/runde/KODE` og `/konkurranse/KODE` i Atten.
+- **Universelle lenker.** Serverer `apple-app-site-association` (på `/.well-known/apple-app-site-association` og `/apple-app-site-association`), slik at iOS åpner `https://dashdash18.com/klubb/KODE`, `/runde/KODE`, `/konkurranse/KODE` og `/folg/KODE` i Atten.
 - **Invitasjonssider.** Har man ikke appen, åpnes de samme adressene i nettleseren. Siden viser koden, en knapp som åpner `dashdash://<type>/KODE`, og hvordan man får appen.
+
+- **Følgekoden** (steg 13, `sql/054`). `/folg/KODE` (8 tegn uten I, O, 0 og 1) står i AASA-filen, så QR-koden i «Min kode» åpner appen. Uten appen viser siden «Åpne Atten for å følge» med koden og en knapp til `dashdash://folg/KODE`. Ugyldig kode gir 404.
 
 - **Kalenderabonnement** (steg 10, `sql/051`). `/kalender/<token>.ics` henter `calendar_feed(token)` med den publiserbare nøkkelen (`SUPABASE_URL`, `SUPABASE_KEY`, som TV-siden) og svarer med iCalendar: kveldene medlemmet er bekreftet påmeldt på, med tid i Europe/Oslo (VTIMEZONE), tre timer per kveld, heldag når kvelden ikke har tid, og `REFRESH-INTERVAL`/`X-PUBLISHED-TTL` på én time. Lenken er personlig: `Cache-Control: private, max-age=300`, ukjent eller avskrudd lenke gir 404. Appen åpner `webcal://dashdash18.com/kalender/<token>.ics`.
 

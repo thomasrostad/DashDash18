@@ -23,6 +23,8 @@ final class HomeFeedModel {
     private(set) var feed: HomeFeed
     /// Tallet på bjella: det som angår deg (`HomeBell`), nyere enn sist bjella ble åpnet.
     private(set) var bellCount = 0
+    /// Personlige varsler (sql/054): følging og kommentarer på kort i «Følger». Tom uten 054.
+    private(set) var personal: [PersonalActivity] = []
     private(set) var isLive = false
     var errorMessage: String?
     /// Henter neste side (`feed_page`).
@@ -102,9 +104,24 @@ final class HomeFeedModel {
 
     private func rebuild() {
         feed = HomeFeed.build(input)
-        bellCount = HomeBell.unreadCount(raw.activity, mentions: raw.mentions,
-                                         lastSeen: bellSeen?.lastSeen(fallbackClubs: clubs.map(\.id)) ?? bellPreviewSeen,
+        let bellLastSeen = bellSeen?.lastSeen(fallbackClubs: clubs.map(\.id)) ?? bellPreviewSeen
+        bellCount = HomeBell.unreadCount(raw.activity, mentions: raw.mentions, lastSeen: bellLastSeen,
                                          viewer: viewer, myRounds: raw.myRoundIDs(viewer: viewer))
+            + (viewer.profileID.map { PersonalActivityText.unreadCount(personal, me: $0, lastSeen: bellLastSeen) } ?? 0)
+    }
+
+    /// De personlige varslene som vises i Varsler, nyeste først.
+    var personalRows: [PersonalActivity] {
+        viewer.profileID.map { PersonalActivityText.notifications(personal, me: $0) } ?? []
+    }
+
+    /// Henter de personlige varslene på nytt (etter Godta eller Avslå).
+    func reloadPersonal() async {
+        guard let client, FollowFeature.isAvailable else { return }
+        if let rows = try? await FollowService(client: client).notifications() {
+            personal = rows
+            rebuild()
+        }
     }
 
     /// Bjellas «sist sett» i skjermprøven (ingen lagring).
@@ -135,6 +152,9 @@ final class HomeFeedModel {
             // Sidene som alt er hentet, blir stående (Realtime og dra ned henter bare første side).
             fresh.keepOlderPages(from: raw, limit: FeedPaging.pageSize)
             raw = fresh
+            if FollowFeature.isAvailable {
+                personal = (try? await FollowService(client: client).notifications()) ?? personal
+            }
             if !hasOpened {
                 hasOpened = true
                 seenAtOpen = seen?.lastSeen(fallbackClubs: clubs.map(\.id))
@@ -184,7 +204,7 @@ final class HomeFeedModel {
 
     /// Bjella er åpnet.
     func markBellSeen() {
-        let newest = (raw.activity.map(\.createdAt) + raw.mentions.map(\.createdAt)).max()
+        let newest = (raw.activity.map(\.createdAt) + raw.mentions.map(\.createdAt) + personal.map(\.createdAt)).max()
         if let newest { bellSeen?.markSeen(upTo: newest) }
         bellCount = 0
     }
