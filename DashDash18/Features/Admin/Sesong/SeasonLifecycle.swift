@@ -72,14 +72,17 @@ nonisolated enum SeasonLifecycle {
     }
 }
 
-/// Feltene som sendes ved ny sesong.
+/// Feltene som sendes ved ny sesong. id lages her, så raden kan leses tilbake fra turneringsraden
+/// (`competitions.season_id`) uten å lese `seasons`.
 nonisolated struct NewSeasonPayload: Encodable, Sendable {
+    var id = UUID()
     let clubID: UUID
     let name: String
     let status: SeasonStatus
     let rules: Ruleset
 
     enum CodingKeys: String, CodingKey {
+        case id
         case clubID = "club_id"
         case name, status, rules
     }

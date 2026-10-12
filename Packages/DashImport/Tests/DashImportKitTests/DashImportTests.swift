@@ -262,7 +262,12 @@ struct SQLTests {
         let sql = try ImportRun.sql(snapshotDirectory: Fixture.directory).sql
         let statements = sql.components(separatedBy: "insert into public.").dropFirst()
         #expect(statements.count >= 15)
-        #expect(statements.allSatisfy { $0.contains("on conflict (") })
+        // Sesongen er unntaket: «finnes den, oppdater; ellers lag den», fordi seasons er et view etter sql/035.
+        #expect(statements.filter { !$0.hasPrefix("seasons ") }.allSatisfy { $0.contains("on conflict (") })
+        #expect(statements.filter { $0.hasPrefix("seasons ") }.count == 1)
+        #expect(sql.contains("if exists (select 1 from public.seasons where id = "))
+        #expect(sql.contains("update public.seasons set name = "))
+        #expect(!sql.contains("insert into public.seasons (id, club_id, name, status, rules) values\n"))
         #expect(sql.components(separatedBy: "\nbegin;").count == 2)
         #expect(sql.components(separatedBy: "\ncommit;").count == 2)
         for table in ["hole_scores", "round_players", "round_matches", "round_holes", "side_claims", "signups", "course_holes"] {

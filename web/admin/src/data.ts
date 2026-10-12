@@ -205,19 +205,22 @@ export async function addMember(clubID: string, name: string, handicap: number |
 
 /**
  * Ny serie i klubben (sesong): lagres planlagt, og startes med activate_season når arrangøren vil.
+ * Skrives til `seasons` uten å lese svaret derfra (steg 3): før sql/035 lager tabellen turneringsraden,
+ * etter 035 gjør INSTEAD OF-triggeren på viewet det. id-en lages her.
  * `asMain` (sql/034): serien tar over som hovedturnering, og den forrige aktive hovedturneringen avsluttes;
  * ellers går den ved siden av. `p_as_main` sendes alltid, så dette krever at 034 er kjørt.
  */
 export async function createSeason(clubID: string, name: string, rules: Record<string, unknown>, start: boolean,
   asMain = true): Promise<string> {
-  const { data, error } = await supabase.from("seasons")
-    .insert({ club_id: clubID, name: name.trim(), status: "planned", rules }).select("id").single();
+  const id = crypto.randomUUID();
+  const { error } = await supabase.from("seasons")
+    .insert({ id, club_id: clubID, name: name.trim(), status: "planned", rules });
   if (error) throw error;
   if (start) {
-    const { error: aErr } = await supabase.rpc("activate_season", activateSeasonParams((data as { id: string }).id, asMain));
+    const { error: aErr } = await supabase.rpc("activate_season", activateSeasonParams(id, asMain));
     if (aErr) throw new Error(`Turneringen er laget, men ikke startet. ${aErr.message}`);
   }
-  return (data as { id: string }).id;
+  return id;
 }
 
 /** Cup eller morroturnering i klubben (create_competition_with_entrants, sql/022). Gir id-en. */
@@ -233,12 +236,12 @@ export async function createCompetition(p: {
   return data as string;
 }
 
-/** Lagrer regelsettet: sesongens i seasons (speiles til turneringen), de andres i competitions. */
+/**
+ * Lagrer regelsettet i turneringsraden, også for en sesong (steg 3): før sql/035 skriver 033-triggeren
+ * det tilbake til `seasons`, etter 035 er `seasons` et view over raden.
+ */
 export async function saveRules(c: Competition, rules: Record<string, unknown>): Promise<void> {
-  const q = c.kind === "season" && c.season_id
-    ? supabase.from("seasons").update({ rules }).eq("id", c.season_id)
-    : supabase.from("competitions").update({ rules }).eq("id", c.id);
-  const { error } = await q;
+  const { error } = await supabase.from("competitions").update({ rules }).eq("id", c.id);
   if (error) throw error;
 }
 

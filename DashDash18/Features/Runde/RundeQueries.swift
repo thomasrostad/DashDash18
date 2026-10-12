@@ -131,11 +131,11 @@ enum RundeQueries {
     /// Regelsettet til kveldens sesong, ellers hovedturneringens, ellers Golfgutu-oppsettet.
     static func rules(client: SupabaseClient, clubID: UUID, seasonID: UUID?) async throws -> Ruleset {
         if let seasonID {
-            let rows: [SeasonRow] = try await client.from("seasons").select(SeasonRow.columns)
-                .eq("id", value: seasonID).execute().value
+            let rows: [SeasonRow] = try await SeasonQuery.select(client)
+                .eq("season_id", value: seasonID).execute().value
             if let season = rows.first { return season.rules }
         }
-        async let active: [SeasonRow] = client.from("seasons").select(SeasonRow.columns)
+        async let active: [SeasonRow] = SeasonQuery.select(client)
             .eq("club_id", value: clubID)
             .eq("status", value: SeasonStatus.active.rawValue)
             .execute().value

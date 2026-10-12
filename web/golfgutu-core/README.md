@@ -71,7 +71,8 @@ Regler som gjelder her som i Swift (se `CLAUDE.md`):
 import { standingsFromTavlaData } from "./src/index.ts";
 
 // tavlaData: svaret fra `rpc('tavla_data', { p_season_id })`.
-// season: raden fra `seasons` (id, club_id, name, status, rules).
+// season: sesongraden (id, club_id, name, status, rules), hentet fra `competitions` med
+//         `select("id:season_id, club_id, name, status, rules")` (`seasons` er et view etter sql/035).
 const tabell = standingsFromTavlaData(tavlaData, season, medlemsIdTilDenSomSer);
 // tabell.rows: plass, navn, total, duell, sidepremier, matcher, hull, stableford, kvelder, isMe,
 //   og tekstene placeText («3.» eller «–»), totalText («4,5»), detail («+3 hull · 112 stableford · 4 kvelder»)

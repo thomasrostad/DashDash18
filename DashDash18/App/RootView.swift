@@ -156,8 +156,7 @@ enum DayTermQueries {
     /// Hovedturneringen (`MainTournament.tableSeason`), ellers den sist opprettede. «Kveld» når ingen
     /// finnes eller hentingen feiler.
     static func main(client: SupabaseClient, clubID: UUID) async -> DayTerm {
-        async let fetched: [SeasonRow]? = try? await client.from("seasons")
-            .select(SeasonRow.columns)
+        async let fetched: [SeasonRow]? = try? await SeasonQuery.select(client)
             .eq("club_id", value: clubID)
             .order("created_at", ascending: false)
             .execute().value

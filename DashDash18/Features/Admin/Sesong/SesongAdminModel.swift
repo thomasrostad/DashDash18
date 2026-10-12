@@ -5,6 +5,11 @@ import Supabase
 
 /// Sesongene i klubben og handlingene arrangøren gjør med dem. RLS slipper bare arrangører til å skrive;
 /// hver skriving leser raden tilbake, så en skriving RLS stoppet blir en feil og ikke en stille glipp.
+///
+/// Gjennomføringsplanen steg 3: sesongene leses og endres i turneringsraden (`competitions` med
+/// `season_id`, `SeasonQuery`). Bare ny sesong og sletting av en planlagt skriver `seasons`, uten å lese
+/// svaret derfra: før sql/035 er det tabellen (som lager turneringsraden), etter 035 et view med
+/// INSTEAD OF-triggere som skriver turneringsraden. Raden leses så tilbake fra `competitions`.
 @Observable
 final class SesongAdminModel {
     enum LoadState: Equatable {
@@ -41,8 +46,14 @@ final class SesongAdminModel {
         return context
     }
 
-    private var table: PostgrestQueryBuilder {
+    /// Bare for ny sesong og sletting av en planlagt (se over). Lesing og endring går via `competitions`.
+    private var seasonsWrite: PostgrestQueryBuilder {
         get throws(DataError) { try connection().client.from("seasons") }
+    }
+
+    /// Sesongens turneringsrad, med `season_id` som nøkkel.
+    private var competitions: PostgrestQueryBuilder {
+        get throws(DataError) { try connection().client.from("competitions") }
     }
 
     func season(id: UUID) -> SeasonRow? {
@@ -53,8 +64,7 @@ final class SesongAdminModel {
         guard let context else { return }
         do {
             async let mains = MainTournament.seasonIDs(client: context.client, clubID: context.clubID)
-            seasons = try await table
-                .select(SeasonRow.columns)
+            seasons = try await SeasonQuery.select(context.client)
                 .eq("club_id", value: context.clubID)
                 .order("created_at", ascending: false)
                 .execute()
@@ -70,9 +80,13 @@ final class SesongAdminModel {
     /// når `activate` er satt, samme vei som «Aktiver turneringen».
     @discardableResult
     func create(name: String, rules: Ruleset, activate: Bool) async throws(DataError) -> SeasonRow {
-        let payload = NewSeasonPayload(clubID: try connection().clubID, name: name, status: .planned, rules: rules)
+        let context = try connection()
+        let payload = NewSeasonPayload(clubID: context.clubID, name: name, status: .planned, rules: rules)
         let row: SeasonRow = try await write {
-            try await table.insert(payload).select().single().execute().value
+            try await seasonsWrite.insert(payload, returning: .minimal).execute()
+            return try await SeasonQuery.select(context.client)
+                .eq("season_id", value: payload.id)
+                .single().execute().value
         }
         seasons.insert(row, at: 0)
         guard activate else { return row }
@@ -118,11 +132,14 @@ final class SesongAdminModel {
         guard season.status == .planned else {
             throw .invalid("Bare planlagte turneringer kan slettes.")
         }
-        let deleted: [SeasonRow]
+        let context = try connection()
+        let remaining: [SeasonRow]
         do {
-            deleted = try await write {
-                try await table.delete().eq("id", value: season.id).eq("status", value: SeasonStatus.planned.rawValue)
-                    .select().execute().value
+            remaining = try await write {
+                try await seasonsWrite.delete(returning: .minimal)
+                    .eq("id", value: season.id).eq("status", value: SeasonStatus.planned.rawValue)
+                    .execute()
+                return try await SeasonQuery.select(context.client).eq("season_id", value: season.id).execute().value
             }
         } catch {
             // 23503 (blir `.invalid`): kvelder i terminlista peker på sesongen (on delete restrict).
@@ -131,7 +148,8 @@ final class SesongAdminModel {
             }
             throw error
         }
-        guard !deleted.isEmpty else { throw .notAllowed }
+        // Står raden fortsatt, stoppet RLS slettingen (eller sesongen var ikke planlagt lenger).
+        guard remaining.isEmpty else { throw .notAllowed }
         seasons.removeAll { $0.id == season.id }
     }
 
@@ -152,7 +170,7 @@ final class SesongAdminModel {
 
     private func update(_ id: UUID, _ patch: some Encodable & Sendable) async throws(DataError) {
         let rows: [SeasonRow] = try await write {
-            try await table.update(patch).eq("id", value: id).select().execute().value
+            try await competitions.update(patch).eq("season_id", value: id).select(SeasonRow.columns).execute().value
         }
         // Ingen rad tilbake: RLS stoppet skrivingen (eller raden finnes ikke lenger).
         guard let row = rows.first else { throw .notAllowed }

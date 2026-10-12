@@ -98,9 +98,8 @@ enum StatsQueries {
 
         let seasonIDs = Array(Set(events.compactMap(\.seasonID))).map(\.uuidString)
         if !seasonIDs.isEmpty {
-            let seasons: [SeasonRow] = try await client.from("seasons")
-                .select(SeasonRow.columns)
-                .in("id", values: seasonIDs).execute().value
+            let seasons: [SeasonRow] = try await SeasonQuery.select(client)
+                .in("season_id", values: seasonIDs).execute().value
             let rules = Dictionary(seasons.map { ($0.id, $0.rules) }, uniquingKeysWith: { a, _ in a })
             for e in events {
                 if let s = e.seasonID, let r = rules[s] { input.eventRules[e.id] = r }

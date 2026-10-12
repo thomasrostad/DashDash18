@@ -70,9 +70,7 @@ public enum SQLWriter {
                     update: ["display_name", "handicap_index", "seed_group", "is_organizer", "is_treasurer"]))
 
         emit("-- Sesongen med Golfgutu-regelsettet. Regelsettet overskrives ikke ved ny import.")
-        emit(upsert("seasons", ["id", "club_id", "name", "status", "rules"],
-                    [[q(plan.season.id), club, q(plan.season.name), q(plan.season.status), q(plan.season.rulesJSON) + "::jsonb"]],
-                    conflict: "id", update: ["name", "status"]))
+        emit(seasonUpsert(plan, club: club))
 
         emit("-- Banebiblioteket.")
         emit(upsert("courses",
@@ -199,6 +197,28 @@ public enum SQLWriter {
     }
 
     // MARK: Byggeklosser
+
+    /// Sesongen: oppdater navn og status hvis den finnes, ellers lag den. Uten «on conflict», fordi
+    /// `seasons` er et view med INSTEAD OF-triggere etter sql/035 (gjennomføringsplanen steg 3), og
+    /// Postgres tåler ikke «on conflict» mot et view. Virker likt før 035 (tabellen).
+    static func seasonUpsert(_ plan: ImportPlan, club: String) -> String {
+        let id = q(plan.season.id)
+        return """
+        -- Uten «on conflict»: seasons er et view etter sql/035.
+        do $season$
+        begin
+          if exists (select 1 from public.seasons where id = \(id)) then
+            update public.seasons set name = \(q(plan.season.name)), status = \(q(plan.season.status))
+             where id = \(id);
+          else
+            insert into public.seasons (id, club_id, name, status, rules)
+            values (\(id), \(club), \(q(plan.season.name)), \(q(plan.season.status)), \(q(plan.season.rulesJSON))::jsonb);
+          end if;
+        end
+        $season$;
+
+        """
+    }
 
     static func upsert(_ table: String, _ columns: [String], _ rows: [[String]], conflict: String, update: [String]?) -> String {
         guard !rows.isEmpty else { return "-- \(table): ingen rader.\n" }

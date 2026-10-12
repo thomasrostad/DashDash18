@@ -4,6 +4,7 @@
 
 import { supabase } from "../supabase.ts";
 import type { Competition, EventRow } from "../data.ts";
+import { seasonRows } from "../seasons.ts";
 import { eveningSignups } from "../signupsApi.ts";
 import { isMissing } from "../signups.ts";
 import {
@@ -160,9 +161,9 @@ export function competitionFor(e: EventRow, comps: readonly Competition[]): Comp
  * på en spilledag i liga, cup og morro, ellers den aktive sesongens, ellers Golfgutu-oppsettet.
  */
 async function rulesFor(clubID: string, e: EventRow, comps: readonly Competition[]): Promise<Ruleset> {
-  const { data, error } = await supabase.from("seasons").select("id, status, rules").eq("club_id", clubID);
+  const { data, error } = await seasonRows("id:season_id, status, rules").eq("club_id", clubID);
   if (error) throw error;
-  const seasons = (data ?? []) as { id: string; status: string; rules: unknown }[];
+  const seasons = (data ?? []) as unknown as { id: string; status: string; rules: unknown }[];
   if (e.season_id) {
     const s = seasons.find((x) => x.id === e.season_id);
     if (s) return decodeRuleset(s.rules);

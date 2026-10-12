@@ -64,9 +64,7 @@ final class TroppModel {
     /// brukes Golfgutu-gruppene.
     private func loadSeedGroups() async {
         do {
-            async let rows: [SeasonRow] = context.client
-                .from("seasons")
-                .select(SeasonRow.columns)
+            async let rows: [SeasonRow] = SeasonQuery.select(context.client)
                 .eq("club_id", value: context.clubID)
                 .eq("status", value: SeasonStatus.active.rawValue)
                 .execute()
