@@ -20,6 +20,13 @@ struct NyRundeView: View {
             guestsSection
             scoringSection
             formSection
+            if BetsFeature.isEnabled {
+                Section {
+                    Toggle("Veddemål", isOn: $model.betsEnabled)
+                } footer: {
+                    DDFooter("Egen poengbank for runden. Alle med profil kan vedde. Av som standard.")
+                }
+            }
             if let links = model.links {
                 CountsAlsoInSection(model: links, candidates: links.candidates(players: model.linkPlayers))
             }

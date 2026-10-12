@@ -161,6 +161,11 @@ struct CompetitionDetailView: View {
                 } else if let list {
                     CompetitionSignupButton(model: list, competition: model.competition)
                 }
+                // sql/052: veddemål i turneringen, og bryteren for den som styrer den.
+                if BetsFeature.isEnabled, let client = list?.client, let profile = model.access.profileID {
+                    CompetitionBetsCard(client: client, viewer: BetViewer(access: model.access, userID: profile),
+                                        competitionID: model.competition.id, isAdmin: model.isAdmin)
+                }
                 body()
             }
             .padding(.horizontal, DDSpacing.gutter)

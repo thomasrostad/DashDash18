@@ -139,6 +139,8 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
     var preview: String? = nil
     var authorName: String? = nil
     var authorProfile: UUID? = nil
+    /// `bet_resolved` (sql/052): avgjort av serveren (`bet-settle`) fra scorene.
+    var server: Bool? = nil
 
     init(member: UUID? = nil, members: [UUID]? = nil, hole: Int? = nil, holeIndex: Int? = nil, name: String? = nil,
          strokes: Int? = nil, par: Int? = nil, afterHole: Int? = nil, leaders: [UUID]? = nil, points: Int? = nil,
@@ -219,6 +221,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         case preview
         case authorName = "author_name"
         case authorProfile = "author_profile"
+        case server
     }
 
     /// Tåler felt med feil type (en annen klient, en eldre versjon): feltet blir nil,
@@ -272,6 +275,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         preview = get(.preview)
         authorName = get(.authorName)
         authorProfile = get(.authorProfile)
+        server = get(.server)
     }
 }
 
@@ -445,7 +449,8 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     /// Utfordring mot én spiller (`create_bet` med motpart).
     case betChallenge(question: String, against: UUID, side: String?, points: Int?)
     /// Avgjort av arrangøren eller av appen (`resolve_bet`, `settle_bet`). `void` = annullert.
-    case betResolved(question: String, resolution: String)
+    /// `server`: avgjort av scorene på serveren (`bet-settle`, sql/052).
+    case betResolved(question: String, resolution: String, server: Bool = false)
     /// Del regningen (sql/051, skrevet av serveren). `sent`: den som skal betale, har sendt sin del
     /// (til mottakeren; `name` er den som betalte). `disputed`: mottakeren sier at delen ikke kom
     /// (til den som skal betale; `name` er mottakeren). `title` er hva regningen gjelder.
@@ -563,8 +568,12 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             ActivityData(points: points, question: question, side: side)
         case let .betChallenge(question, against, side, points):
             ActivityData(points: points, question: question, against: against, side: side)
-        case let .betResolved(question, resolution):
-            ActivityData(question: question, resolution: resolution)
+        case let .betResolved(question, resolution, server):
+            {
+                var d = ActivityData(question: question, resolution: resolution)
+                if server { d.server = true }
+                return d
+            }()
         case let .billShareSent(title, name), let .billShareDisputed(title, name):
             ActivityData(name: name, title: title)
         case let .tableChanged(competition, competitionName, roundNo, table):
@@ -641,7 +650,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             self = .betChallenge(question: question, against: against, side: d.side, points: d.points)
         case "bet_resolved":
             guard let question = d.question, let resolution = d.resolution else { self = .unknown(kind: kind); return }
-            self = .betResolved(question: question, resolution: resolution)
+            self = .betResolved(question: question, resolution: resolution, server: d.server ?? false)
         case "bill_share_sent":
             self = .billShareSent(title: d.title, name: d.name)
         case "bill_share_disputed":
@@ -886,13 +895,15 @@ nonisolated enum ActivityText {
             return ActivityDisplay(symbol: "chart.line.uptrend.xyaxis", emoji: "📈",
                                    text: "\(who(actor)) åpnet «\(question)»" + stake)
 
-        case let .betResolved(question, resolution):
+        case let .betResolved(question, resolution, server):
             switch resolution {
             case "yes", "no":
+                let head = server ? "Avgjort av scorene" : "Veddemål avgjort"
                 return ActivityDisplay(symbol: "trophy.fill", emoji: "🏆",
-                                       text: "Veddemål avgjort: «\(question)» → \(resolution == "yes" ? "JA" : "NEI")")
+                                       text: "\(head): «\(question)» → \(resolution == "yes" ? "JA" : "NEI")")
             default:
-                return ActivityDisplay(symbol: "xmark.circle", emoji: "↩️", text: "Veddemål annullert: «\(question)»")
+                let head = server ? "Annullert av scorene" : "Veddemål annullert"
+                return ActivityDisplay(symbol: "xmark.circle", emoji: "↩️", text: "\(head): «\(question)»")
             }
 
         // Del regningen (sql/051): samme tekst som push-send.

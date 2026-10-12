@@ -12,6 +12,8 @@ final class NyRundeModel {
     private(set) var me: ProfileRow?
     private(set) var isStarting = false
     var error: String?
+    /// Veddemål med egen poengbank for runden (sql/052). Av som standard; slås på etter start.
+    var betsEnabled = false
 
     let rules: Ruleset
     private let client: SupabaseClient?
@@ -110,6 +112,20 @@ final class NyRundeModel {
         }
     }
 
+    /// Slår veddemål på i runden som er startet (`bets_set_enabled`). Gir en melding når det feilet;
+    /// uten 052 skjer det ingenting.
+    static func enableBets(client: SupabaseClient, roundID: UUID) async -> String? {
+        guard BetsFeature.isEnabled else { return nil }
+        do {
+            try await BetsQueries.setEnabled(client: client, scope: .round(roundID), enabled: true)
+            return nil
+        } catch where BetsQueries.isMissing(error) {
+            return nil
+        } catch {
+            return "Runden er startet, men veddemål ble ikke slått på. Slå det på i runden."
+        }
+    }
+
     /// Starter runden. Gir rundens id, eller nil (feilen står i `error`).
     func start() async -> UUID? {
         guard let client, !isStarting,
@@ -121,6 +137,9 @@ final class NyRundeModel {
             let id = try await LooseRoundQueries.start(client: client, setup)
             if let links, let message = await links.save(roundID: id, players: linkPlayers) {
                 // Runden er startet; bare koblingen feilet.
+                self.error = message
+            }
+            if betsEnabled, let message = await Self.enableBets(client: client, roundID: id) {
                 self.error = message
             }
             return id

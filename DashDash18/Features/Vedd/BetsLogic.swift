@@ -42,11 +42,14 @@ nonisolated struct BetConditionRecord: Codable, Equatable, Sendable {
     }
 }
 
-/// `bets`.
+/// `bets`. Siden 052 hører veddemålet til en turnering (`competition_id`) eller en enkeltrunde
+/// (`round_scope`), og personene kan være profiler (private turneringer, løse runder).
 nonisolated struct BetRow: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
-    let clubID: UUID
-    var seasonID: UUID
+    /// Tom i turneringer uten klubb og i løse runder (052).
+    var clubID: UUID?
+    /// Tom utenfor sesongturneringer (052).
+    var seasonID: UUID?
     var eventID: UUID?
     var roundID: UUID?
     var creatorID: UUID?
@@ -59,9 +62,26 @@ nonisolated struct BetRow: Codable, Equatable, Identifiable, Sendable {
     var resolvedBy: UUID?
     var resolvedAt: String?
     var createdAt: String
+    /// 052: turneringens bank, eller enkeltrundens (`round_scope`). Nøyaktig én av dem.
+    var competitionID: UUID? = nil
+    var roundScope: UUID? = nil
+    /// 052: profilene ved siden av medlemmene.
+    var creatorProfileID: UUID? = nil
+    var againstProfileID: UUID? = nil
+    var resolvedByProfile: UUID? = nil
 
+    /// Kolonnene før 052.
     static let columns = "id, club_id, season_id, event_id, round_id, creator_id, against_id, question, condition, "
         + "status, resolution, closed_at, resolved_by, resolved_at, created_at"
+    /// Med 052.
+    static let columnsV2 = columns + ", competition_id, round_scope, creator_profile_id, against_profile_id, resolved_by_profile"
+
+    /// Personen som la ut veddemålet: medlemmet, ellers profilen.
+    var creator: UUID? { creatorID ?? creatorProfileID }
+    /// Personen veddemålet er rettet mot.
+    var against: UUID? { againstID ?? againstProfileID }
+    /// Arrangøren som avgjorde for hånd. Tom: scorene (telefonens feiing eller serveren).
+    var resolver: UUID? { resolvedBy ?? resolvedByProfile }
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -76,20 +96,34 @@ nonisolated struct BetRow: Codable, Equatable, Identifiable, Sendable {
         case resolvedBy = "resolved_by"
         case resolvedAt = "resolved_at"
         case createdAt = "created_at"
+        case competitionID = "competition_id"
+        case roundScope = "round_scope"
+        case creatorProfileID = "creator_profile_id"
+        case againstProfileID = "against_profile_id"
+        case resolvedByProfile = "resolved_by_profile"
     }
 }
 
-/// `bet_stakes`.
+/// `bet_stakes`. Siden 052: medlem eller profil, og `person_key` som husker personen når en konto
+/// slettes.
 nonisolated struct BetStakeRow: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     let betID: UUID
-    let clubID: UUID
-    var memberID: UUID
+    var clubID: UUID?
+    var memberID: UUID?
     var side: BetSide
     var points: Int
     var createdAt: String
+    var profileID: UUID? = nil
+    var personKey: UUID? = nil
 
+    /// Kolonnene før 052.
     static let columns = "id, bet_id, club_id, member_id, side, points, created_at"
+    /// Med 052.
+    static let columnsV2 = columns + ", profile_id, person_key"
+
+    /// Personen som satset: `person_key`, ellers medlemmet eller profilen.
+    var person: UUID? { personKey ?? memberID ?? profileID }
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -98,6 +132,8 @@ nonisolated struct BetStakeRow: Codable, Equatable, Identifiable, Sendable {
         case memberID = "member_id"
         case side, points
         case createdAt = "created_at"
+        case profileID = "profile_id"
+        case personKey = "person_key"
     }
 }
 
@@ -129,6 +165,90 @@ nonisolated struct CreateBetParams: Encodable, Equatable, Sendable {
         try c.encode(against, forKey: .against)
         try c.encode(side, forKey: .side)
         try c.encode(points, forKey: .points)
+    }
+}
+
+/// `create_bet_v2` (052): turneringens bank (runden må høre til den) eller enkeltrundens. Alle
+/// argumentene sendes, også de tomme.
+nonisolated struct CreateBetV2Params: Encodable, Equatable, Sendable {
+    var competitionID: UUID?
+    var roundID: UUID?
+    var question: String
+    var condition: BetConditionRecord?
+    var againstMember: UUID?
+    var againstProfile: UUID?
+    var side: BetSide
+    var points: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case competitionID = "p_competition_id", roundID = "p_round_id", question = "p_question"
+        case condition = "p_condition", againstMember = "p_against_member", againstProfile = "p_against_profile"
+        case side = "p_side", points = "p_points"
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(competitionID, forKey: .competitionID)
+        try c.encode(roundID, forKey: .roundID)
+        try c.encode(question, forKey: .question)
+        try c.encode(condition, forKey: .condition)
+        try c.encode(againstMember, forKey: .againstMember)
+        try c.encode(againstProfile, forKey: .againstProfile)
+        try c.encode(side, forKey: .side)
+        try c.encode(points, forKey: .points)
+    }
+}
+
+/// `bet_bank` (052): turnering eller runde, nøyaktig én. Uten person gjelder den som spør.
+nonisolated struct BetScopeParams: Encodable, Equatable, Sendable {
+    let competitionID: UUID?
+    let roundID: UUID?
+
+    init(_ scope: BetScope) {
+        switch scope {
+        case .competition(let id): competitionID = id; roundID = nil
+        case .round(let id): competitionID = nil; roundID = id
+        }
+    }
+
+    private enum CodingKeys: String, CodingKey { case competitionID = "p_competition_id", roundID = "p_round_id" }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(competitionID, forKey: .competitionID)
+        try c.encode(roundID, forKey: .roundID)
+    }
+}
+
+/// `bets_set_enabled(turnering, runde, på)` (052).
+nonisolated struct BetsSetEnabledParams: Encodable, Equatable, Sendable {
+    let scope: BetScope
+    let enabled: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case competitionID = "p_competition_id", roundID = "p_round_id", enabled = "p_enabled"
+    }
+
+    func encode(to encoder: Encoder) throws {
+        let ids = BetScopeParams(scope)
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(ids.competitionID, forKey: .competitionID)
+        try c.encode(ids.roundID, forKey: .roundID)
+        try c.encode(enabled, forKey: .enabled)
+    }
+}
+
+/// Svaret fra `bet_bank`: netto, det som står ute, saldo og ledig.
+nonisolated struct BetBankRow: Decodable, Equatable, Sendable {
+    var net: Double
+    var atStake: Double
+    var balance: Double
+    var available: Double
+
+    enum CodingKeys: String, CodingKey {
+        case net
+        case atStake = "at_stake"
+        case balance, available
     }
 }
 
@@ -164,13 +284,17 @@ nonisolated enum BetMapping {
                            b: condition.b.flatMap(UUID.init(uuidString:)))
     }
 
+    /// Innsatsene er nøklet på personen (`person_key`: medlem eller profil), så profiler i private
+    /// turneringer og løse runder teller som alle andre. Vilkåret bruker spiller-id-ene i runden.
     static func bet(_ row: BetRow, stakes: [BetStakeRow]) -> Bet {
         Bet(id: key(row.id), status: row.status, resolution: row.resolution, closedAt: row.closedAt,
-            condition: condition(row.condition, roundID: row.roundID), against: row.againstID.map(key),
-            creatorID: row.creatorID.map(key),
+            condition: condition(row.condition, roundID: row.roundID), against: row.against.map(key),
+            creatorID: row.creator.map(key),
             stakes: stakes.filter { $0.betID == row.id }
                 .sorted { $0.createdAt < $1.createdAt }
-                .map { BetStake(id: key($0.id), playerID: key($0.memberID), side: $0.side, points: Double($0.points)) })
+                .compactMap { s in
+                    s.person.map { BetStake(id: key(s.id), playerID: key($0), side: s.side, points: Double(s.points)) }
+                })
     }
 }
 
@@ -273,6 +397,11 @@ nonisolated enum BetTexts {
         return text.prefix(1).uppercased() + text.dropFirst()
     }
 
+    /// Veddemål er av der du står (052, `bets_enabled`).
+    static let notEnabled = "Veddemål er ikke slått på."
+    /// Under bryteren «Veddemål».
+    static let toggleFooter = "Av som standard. Slått av kan ingen lage nye veddemål, men de som finnes, gjøres opp som før."
+
     /// Den som avgjør, vedder ikke (besluttet 07.10.2026). Samme ordlyd som `resolve_bet`.
     static let resolverHasStake = "Du har satset på dette veddemålet og kan ikke avgjøre det. En annen arrangør må gjøre det."
 
@@ -324,12 +453,29 @@ nonisolated enum BetErrors {
     private static let ownAccessMessages = ["Du må være logget inn", "Du er ikke aktivt medlem", "Bare arrangøren"]
 }
 
-/// Når arrangørens telefon skal gjøre opp veddemålene fra Hjem (`BetsModel.load` feier).
+/// Når arrangørens telefon skal gjøre opp veddemålene (`BetsModel.load` feier).
+///
+/// Med 052 gjør serveren opp når runden låses (`bet-settle`). Da feier ikke Hjem lenger, og telefonen
+/// er bare reserve: den rører bare runder som har vært låst så lenge at serveren skulle vært ferdig
+/// (`reserveDelay`). Uten 052 er det som før: Hjem feier høyst hvert femte minutt.
 nonisolated enum BetSweep {
     /// Høyst så ofte, så Hjem ikke henter veddemålene ved hver retur.
     static let interval: TimeInterval = 5 * 60
+    /// Serveren prøver straks runden låses og så hvert femte minutt, høyst fem ganger. Etter så lang
+    /// tid regnes oppgjøret som strandet, og arrangørens telefon tar det.
+    static let reserveDelay: TimeInterval = 30 * 60
 
-    static func isDue(last: Date?, now: Date) -> Bool {
-        BetsFeature.isEnabled && (last.map { now.timeIntervalSince($0) >= interval } ?? true)
+    /// Skal Hjem feie nå? Aldri når serveren gjør opp (`serverSettles`).
+    static func isDue(last: Date?, now: Date, serverSettles: Bool = false) -> Bool {
+        guard BetsFeature.isEnabled, !serverSettles else { return false }
+        return last.map { now.timeIntervalSince($0) >= interval } ?? true
+    }
+
+    /// Kan telefonen gjøre opp veddemål i denne runden? Uten serveroppgjør: alltid. Med: bare en
+    /// runde som har vært låst i minst `reserveDelay` (serveren har ikke fått det til).
+    static func phoneMaySettle(roundLocked: Bool, lockedAt: Date?, now: Date, serverSettles: Bool) -> Bool {
+        guard serverSettles else { return true }
+        guard roundLocked, let lockedAt else { return false }
+        return now.timeIntervalSince(lockedAt) >= reserveDelay
     }
 }

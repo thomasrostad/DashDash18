@@ -3,8 +3,9 @@ import GolfgutuCore
 import Observation
 import Supabase
 
-/// Veddemålene i sesongen: henter, legger ut, satser og avgjør. Gjør ingenting mens
-/// `BetsFeature.isEnabled` er av.
+/// Veddemålene i én bank: henter, legger ut, satser og avgjør. Banken er hovedturneringen (Kveld,
+/// Tavla, Hjem), en turnering (turneringssiden, runden) eller en enkeltrunde (løse runder). Gjør
+/// ingenting mens `BetsFeature.isEnabled` er av.
 @Observable
 final class BetsModel {
     enum LoadState: Equatable {
@@ -14,25 +15,45 @@ final class BetsModel {
         case failed(String)
     }
 
-    private(set) var state: LoadState = BetsFeature.isEnabled ? .loading : .disabled
-    private(set) var board: BetsBoard?
-    private(set) var isSaving = false
-
-    private let context: ClubContext
-    private var isSweeping = false
-
-    init(context: ClubContext) {
-        self.context = context
+    /// Hvor veddemålene hentes fra.
+    enum Target: Equatable, Sendable {
+        /// Klubbens hovedturnering. Uten 052: sesongen som før.
+        case main(clubID: UUID)
+        case competition(UUID)
+        case round(UUID)
     }
 
-    var clubContext: ClubContext { context }
-    private var client: SupabaseClient { context.client }
+    private(set) var state: LoadState = BetsFeature.isEnabled ? .loading : .disabled
+    private(set) var board: BetsBoard?
+    private(set) var input: BetsInput?
+    private(set) var isSaving = false
+
+    let client: SupabaseClient
+    let viewer: BetViewer
+    let target: Target
+    private var isSweeping = false
+
+    init(client: SupabaseClient, viewer: BetViewer, target: Target) {
+        self.client = client
+        self.viewer = viewer
+        self.target = target
+    }
+
+    /// Hovedturneringen i klubben som er valgt.
+    convenience init(context: ClubContext) {
+        self.init(client: context.client, viewer: context.betViewer, target: .main(clubID: context.clubID))
+    }
+
+    /// Kan du slå veddemål av og på her (052)?
+    var canToggle: Bool { input.map(viewer.canToggle) ?? false }
+
+    /// Serveren gjør opp når runden låses (052).
+    var serverSettles: Bool { input?.serverSettles ?? false }
 
     func load() async {
         guard BetsFeature.isEnabled else { state = .disabled; return }
         do {
-            let input = try await BetsQueries.load(client: client, clubID: context.clubID)
-            board = input.map { BetsBoard($0, me: context.memberID, isOrganizer: context.can(.money)) }
+            apply(try await fetch())
             state = .loaded
             await sweep()
         } catch is CancellationError {
@@ -42,14 +63,32 @@ final class BetsModel {
         }
     }
 
-    /// Legger ut veddemålet med din innsats.
+    private func fetch() async throws -> BetsInput? {
+        switch target {
+        case .main(let clubID): try await BetsQueries.load(client: client, clubID: clubID)
+        case .competition(let id): try await BetsQueries.load(client: client, competitionID: id)
+        case .round(let id): try await BetsQueries.load(client: client, roundID: id)
+        }
+    }
+
+    private func apply(_ input: BetsInput?) {
+        self.input = input
+        board = input.map { BetsBoard($0, me: viewer.me(in: $0), isOrganizer: viewer.canResolve($0)) }
+    }
+
+    /// Legger ut veddemålet med din innsats: `create_bet_v2` i bankens turnering eller runde (052),
+    /// ellers `create_bet` i sesongen.
     func create(_ draft: BetSheetDraft) async throws(DataError) {
         guard BetsFeature.isEnabled, let board, !isSaving else { return }
         if let problem = draft.problem(board: board) { throw .invalid(problem) }
         isSaving = true
         defer { isSaving = false }
         do {
-            _ = try await BetsQueries.create(client: client, draft.params(clubID: context.clubID))
+            if let scope = board.scope {
+                _ = try await BetsQueries.create(client: client, draft.params(scope: scope))
+            } else if case .main(let clubID) = target {
+                _ = try await BetsQueries.create(client: client, draft.params(clubID: clubID))
+            }
         } catch {
             throw await rejected(error)
         }
@@ -73,13 +112,26 @@ final class BetsModel {
     /// Arrangøren avgjør (JA, NEI) eller annullerer. Kan ikke angres. Ikke når hun selv har
     /// satset på veddemålet (`resolve_bet` avviser det også).
     func resolve(_ item: BetsBoard.Item, verdict: BetVerdict) async throws(DataError) {
-        guard BetsFeature.isEnabled, context.can(.money), !isSaving else { return }
+        guard BetsFeature.isEnabled, board?.isOrganizer == true, !isSaving else { return }
         if item.resolverHasStake { throw .invalid(BetTexts.resolverHasStake) }
         guard item.canResolve else { return }
         isSaving = true
         defer { isSaving = false }
         do {
             try await BetsQueries.resolve(client: client, betID: item.id, verdict: verdict)
+        } catch {
+            throw await rejected(error)
+        }
+        await load()
+    }
+
+    /// Slår veddemål på eller av i banken (`bets_set_enabled`, 052).
+    func setEnabled(_ on: Bool) async throws(DataError) {
+        guard BetsFeature.isEnabled, let scope = input?.scope, !isSaving else { return }
+        isSaving = true
+        defer { isSaving = false }
+        do {
+            try await BetsQueries.setEnabled(client: client, scope: scope, enabled: on)
         } catch {
             throw await rejected(error)
         }
@@ -101,8 +153,9 @@ final class BetsModel {
     }
 
     /// Arrangørens telefon avgjør det vilkårene gir svar på (`feiMarkeder`), og annullerer delt
-    /// hull og likt resultat (`settle_bet`). Feiler et kall, står veddemålet åpent til neste
-    /// henting eller til en arrangør tar det for hånd.
+    /// hull og likt resultat (`settle_bet`). Med 052 gjør serveren det når runden låses, og
+    /// telefonen tar bare det serveren ikke har rukket (`BetSweep.phoneMaySettle`). Feiler et kall,
+    /// står veddemålet åpent til neste henting eller til en arrangør tar det for hånd.
     private func sweep() async {
         guard let plan = board?.sweepPlan, !plan.isEmpty, !isSweeping else { return }
         isSweeping = true
@@ -116,8 +169,17 @@ final class BetsModel {
                 continue
             }
         }
-        if changed, let input = try? await BetsQueries.load(client: client, clubID: context.clubID) {
-            board = BetsBoard(input, me: context.memberID, isOrganizer: context.can(.money))
+        if changed, let input = try? await fetch() {
+            apply(input)
         }
+    }
+}
+
+extension ClubContext {
+    /// Deg i klubben som er valgt, sett fra veddemålene.
+    var betViewer: BetViewer {
+        BetViewer(userID: user.id, memberships: [clubID: memberID],
+                  moneyClubs: can(.money) ? [clubID] : [],
+                  organizerClubs: (can(.tournaments) || can(.rounds)) ? [clubID] : [])
     }
 }
