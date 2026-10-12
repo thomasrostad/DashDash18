@@ -65,6 +65,21 @@ enum CompetitionQueries {
         let input: CompetitionInput
         let directory: PersonDirectory
         let matches: [CompetitionMatchRow]
+        /// Playoff-runden om førsteplassen (sql/047, `rounds.playoff_for`). Står ikke blant rundene.
+        var playoff: RoundSnapshot? = nil
+    }
+
+    /// Playoff-runden for turneringen: den som går, ellers den sist startede. nil uten 047.
+    static func playoff(client: SupabaseClient, competitionID: UUID) async -> RoundSnapshot? {
+        guard RoundRulesFeature.isAvailable else { return nil }
+        let rows: [RoundRow]? = try? await client.from("rounds")
+            .select(RoundRow.columns)
+            .eq("playoff_for", value: competitionID)
+            .in("status", values: [RoundStatus.active.rawValue, RoundStatus.locked.rawValue])
+            .execute().value
+        guard let rows, !rows.isEmpty else { return nil }
+        let snapshots = (try? await snapshots(client: client, rounds: rows)) ?? []
+        return PlayoffRules.current(snapshots, competitionID: competitionID)
     }
 
     static func detail(client: SupabaseClient, competition: CompetitionRow,
@@ -92,6 +107,7 @@ enum CompetitionQueries {
             ? client.from("competition_matches").select(CompetitionMatchRow.columns)
                 .eq("competition_id", value: competition.id).execute().value
             : []
+        async let playoffRound = competition.kind == .cup ? nil : playoff(client: client, competitionID: competition.id)
 
         let snapshots = try await snapshotRows
         let roster = try await rosterRows
@@ -111,7 +127,7 @@ enum CompetitionQueries {
         let scope = CompetitionScope(competition: competition, links: links, participants: participants)
         return Detail(competition: competition, participants: participants.filter { $0.competitionID == competition.id },
                       scope: scope, input: scope.input(candidates: snapshots, directory: directory),
-                      directory: directory, matches: matches)
+                      directory: directory, matches: matches, playoff: await playoffRound)
     }
 
     /// Spillerne i klubbrundene som «medlemmer» med navn og profil fra `round_roster`, for den som

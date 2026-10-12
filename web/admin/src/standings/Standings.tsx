@@ -4,8 +4,12 @@ import { errorText, supabase } from "../supabase.ts";
 import { kindText, statusText } from "../text.ts";
 import { fileName, gridCsv, tableCsv, type GridMode } from "./csv.ts";
 import type { CupGame, CupSide } from "../../../golfgutu-core/src/index.ts";
-import { competitionData, cupFooter, cupView, leagueView, seasonView, type CupView, type StandingsView, type TableView } from "./model.ts";
-import { loadCompetition, loadSeason } from "./queries.ts";
+import {
+  competitionData, cupFooter, cupView, leagueView, parsePlayoffHoles, playoffHoleNumbers, seasonView,
+  type CupView, type PlayoffPanel, type StandingsView, type TableView,
+} from "./model.ts";
+import { loadCompetition, loadSeason, setPlayoffHoles, startPlayoff } from "./queries.ts";
+import { hasTableRules } from "../rounds/api.ts";
 import { RoundsGridView } from "./RoundsGridView.tsx";
 import "./standings.css";
 
@@ -38,7 +42,12 @@ export function Standings({ comps, membership }: { comps: Competition[]; members
   const [view, setView] = useState<StandingsView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reload, setReload] = useState(0);
+  const [playoffReady, setPlayoffReady] = useState(false);
   const competition = list.find((c) => c.id === id) ?? null;
+
+  // Playoffen kan startes når sql/047 er kjørt (kolonnene og RPC-ene kom samtidig).
+  useEffect(() => { hasTableRules().then(setPlayoffReady, () => setPlayoffReady(false)); }, []);
 
   useEffect(() => {
     if (!competition) return;
@@ -61,7 +70,7 @@ export function Standings({ comps, membership }: { comps: Competition[]; members
       .catch((e) => { if (!cancelled) setError(errorText(e)); })
       .finally(() => { if (!cancelled) setBusy(false); });
     return () => { cancelled = true; };
-  }, [competition?.id, competition?.kind, membership.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [competition?.id, competition?.kind, membership.id, reload]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (list.length === 0) return <p className="muted">Ingen turneringer med tabell ennå.</p>;
 
@@ -79,9 +88,72 @@ export function Standings({ comps, membership }: { comps: Competition[]; members
       </div>
       {error && <p className="error">{error}</p>}
       {busy && <p className="muted">Henter og regner …</p>}
+      {view?.kind === "table" && view.playoff && competition && (
+        <PlayoffSection panel={view.playoff} competitionID={competition.id} canAct={playoffReady} onChanged={() => setReload((n) => n + 1)} />
+      )}
       {view?.kind === "table" && <TableSection view={view} />}
       {view?.kind === "cup" && <CupSection view={view} />}
     </section>
+  );
+}
+
+/**
+ * Playoffen om førsteplassen (sql/047): «Start playoff» med de som står likt og forslaget til hull, og
+ * «Legg til hull» når det fortsatt står likt. Scoren føres i appen (hull for hull, som en vanlig runde).
+ */
+function PlayoffSection({ panel, competitionID, canAct, onChanged }: {
+  panel: PlayoffPanel; competitionID: string; canAct: boolean; onChanged: () => void;
+}) {
+  const [chosen, setChosen] = useState<Set<string>>(() => new Set(panel.tied.map((t) => t.id)));
+  const [holes, setHoles] = useState(() => playoffHoleNumbers(panel.suggested, panel.firstHole));
+  const [extra, setExtra] = useState(() => playoffHoleNumbers(panel.suggested.slice(0, 1), panel.firstHole));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function run(action: () => Promise<void>) {
+    setBusy(true); setError(null);
+    try { await action(); onChanged(); } catch (e) { setError(errorText(e)); } finally { setBusy(false); }
+  }
+
+  const canStart = canAct && panel.round === null && panel.tied.length >= 2;
+  return (
+    <div className="card no-print">
+      <h3>Playoff</h3>
+      <p className="muted">{panel.text}</p>
+      {error && <p className="error">{error}</p>}
+      {canStart && (
+        <>
+          <div className="inline">
+            {panel.tied.map((t) => (
+              <label key={t.id} className="check"><input type="checkbox" checked={chosen.has(t.id)} onChange={(e) => {
+                const next = new Set(chosen);
+                if (e.target.checked) next.add(t.id); else next.delete(t.id);
+                setChosen(next);
+              }} />{t.name}</label>
+            ))}
+          </div>
+          <label>Hull i rekkefølge
+            <input value={holes} onChange={(e) => setHoles(e.target.value)} placeholder="18, 1, 18" />
+          </label>
+          <button className="primary" disabled={busy || chosen.size < 2 || parsePlayoffHoles(holes, panel.holeCount, panel.firstHole) === null}
+            onClick={() => run(async () => {
+              await startPlayoff(competitionID, [...chosen], parsePlayoffHoles(holes, panel.holeCount, panel.firstHole)!);
+            })}>Start playoff</button>
+        </>
+      )}
+      {canAct && panel.round?.canAddHoles && (
+        <div className="inline">
+          <label>Flere hull
+            <input value={extra} onChange={(e) => setExtra(e.target.value)} placeholder="18" />
+          </label>
+          <button disabled={busy || parsePlayoffHoles(extra, panel.holeCount, panel.firstHole) === null}
+            onClick={() => run(async () => {
+              const more = parsePlayoffHoles(extra, panel.holeCount, panel.firstHole)!;
+              await setPlayoffHoles(panel.round!.id, [...panel.round!.holes, ...more].slice(0, panel.holeCount));
+            })}>Legg til hull</button>
+        </div>
+      )}
+    </div>
   );
 }
 

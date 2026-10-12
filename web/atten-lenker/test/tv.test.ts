@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { buildTVPayload, normalizeTVCode, tvBoardPage } from "../src/tv.ts";
 import { handle } from "../src/index.ts";
+import { decodeSeasonRow, decodeTavlaData, tavlaInput, TavlaStandings } from "../../golfgutu-core/src/index.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("../../golfgutu-core/test/fixtures/tavla.json", import.meta.url), "utf8"));
 const expected = JSON.parse(readFileSync(new URL("../../golfgutu-core/test/fixtures/tavla.forventet.json", import.meta.url), "utf8"));
@@ -43,6 +44,49 @@ test("TV med tabellreglene: delt plass, playoff og uten plass som i appen (steg 
   assert.deepEqual(tv.rows.slice(0, 3).map((r) => r.place), ["1.", "1.", "1."]);
   assert.ok(tv.rows[0].detail.startsWith("Playoff · "));
   assert.equal(tv.rows.at(-1)?.place, "–");
+});
+
+test("TV med playoff-runde (sql/047): vinneren først, og playoffen er ikke siste runde", () => {
+  const s = fixture.sesonger.find((x: { name: string }) => x.name === "Playoff 2026");
+  const t = new TavlaStandings(tavlaInput(decodeTavlaData(fixture.tavlaData), decodeSeasonRow(s)));
+  const tied = t.rows.filter((r) => r.playoffPending).map((r) => r.memberID);
+  assert.ok(tied.length >= 2);
+  const template = fixture.tavlaData.rounds.find((r: { status: string; course_id: string | null }) => r.status === "locked" && r.course_id !== null);
+  const pid = "99999999-0000-0000-0000-000000000001";
+  const playoff = { ...template, id: pid, round_no: 9, name: "Playoff", status: "active", handicap_allowance: 0, counts: false,
+    kind: "playoff", playoff_for: s.id, playoff_holes: [17, 0, 17] };
+  const board = {
+    ...fixture.tavlaData,
+    rounds: [...fixture.tavlaData.rounds, playoff],
+    players: [...fixture.tavlaData.players, ...tied.map((m) => ({ round_id: pid, member_id: m, club_id: template.club_id, playing_handicap: 0 }))],
+    scores: [...fixture.tavlaData.scores, ...tied.map((m, i) => ({ round_id: pid, member_id: m, hole_index: 0, strokes: i === 1 ? 3 : 4 }))],
+    competition: { name: s.name, season_id: s.id, club_id: s.club_id, status: s.status, rules: s.rules },
+  };
+  const before = buildTVPayload({ ...fixture.tavlaData, competition: board.competition });
+  const tv = buildTVPayload(board);
+  const winner = t.rows.find((r) => r.memberID === tied[1])!.name;
+  assert.equal(tv.rows[0].name, winner);
+  assert.equal(tv.rows[0].place, "1.");
+  assert.ok(tv.rows.slice(1, tied.length).every((r) => r.place === "2."));
+  assert.ok(!tv.rows[0].detail.startsWith("Playoff"));
+  assert.deepEqual(tv.latest, before.latest, "playoffen er ikke siste runde");
+  assert.equal(tv.note, null, "playoffen skjuler ingen hull");
+});
+
+test("TV med skjulte hull (sql/047): notis mens runden går, ingen når den er låst", () => {
+  const s = fixture.sesonger[0];
+  const competition = { name: s.name, season_id: s.id, club_id: s.club_id, status: s.status, rules: s.rules };
+  const last = fixture.tavlaData.rounds.at(-1);
+  const rounds = (status: string, hide: number) => fixture.tavlaData.rounds.map((r: { id: string }) =>
+    r.id === last.id ? { ...r, status, hide_last_holes: hide } : r);
+  // Serveren sender ikke scorene på de skjulte hullene: de mangler bare, og TV-en regner med det den får.
+  const hiddenScores = fixture.tavlaData.scores.filter((x: { round_id: string; hole_index: number }) => x.round_id !== last.id || x.hole_index < last.hole_count - 3);
+  const tv = buildTVPayload({ ...fixture.tavlaData, rounds: rounds("active", 3), scores: hiddenScores, competition });
+  assert.equal(tv.note, "De siste hullene vises når runden er låst");
+  assert.ok(tv.rows.length > 0);
+  assert.equal(buildTVPayload({ ...fixture.tavlaData, rounds: rounds("locked", 3), competition }).note, null);
+  assert.equal(buildTVPayload({ ...fixture.tavlaData, competition }).note, null);
+  assert.ok(tvBoardPage("ABCDEFGHJK", "n").includes('id="note"'));
 });
 
 test("TV for liga er appens ligatabell (sql/043)", () => {

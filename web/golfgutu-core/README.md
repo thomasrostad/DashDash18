@@ -115,6 +115,12 @@ Fra appen (`DashDash18/`): radtypene (`Data/Rows.swift`, `FoundationRows.swift`)
 `RoundSnapshot`/`RoundGame.makeRound` og scorekortet (`snapshotScorecard`, `snapshotTotal`, `holeNumber`) i
 `app/roundgame.ts`, `TavlaData`, `TavlaStandings` og `RoundsGrid` i
 `app/tavla.ts`, og `CompetitionScope`, `LeagueStandings` og `CupStandings` i `app/competition.ts`.
+sql/047: `decodeRoundRow` leser `counts`, `points_table`, `hide_last_holes`, `kind`, `playoff_for` og
+`playoff_holes` (standardverdier når kolonnene mangler) og gir de tre første til motorens `Round`.
+Playoff-runder (`isPlayoff`) teller aldri: `tavlaInput` legger dem i `playoffs`, `CompetitionScope` kobler dem
+med `playoff_for`, og `TavlaStandings` gir vinneren (`playoffWinner`, `decidePlayoffRound` med
+`hole_index` = posisjon og `playoff_holes[i]` = rundehullet) til `Season.standings`. Se `app/playoffround.ts`
+(også `hidesLastHoles` og `HIDDEN_HOLES_NOTE`) og `test/playoffround.test.ts`.
 
 Ikke portert ennå: `Bets` (veddemål), `Games`, `GameNassau`, `GameWolf` og oppgjøret i `GameSkins` (spill på runden),
 `Tips` (tippekupongen) og `PlayerStats` (profilstatistikk). Regelsettets felt for tips og veddemål leses og

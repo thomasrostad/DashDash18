@@ -258,9 +258,17 @@ export class CompetitionScope {
     this.participants = participants.filter((p) => p.competitionID === competition.id && p.status === "active");
   }
 
-  /** Teller runden? Den må være koblet til konkurransen og startet. */
-  counts(round: { id: UUID; status: string }): boolean {
-    return this.roundIDs.has(round.id) && round.status !== "draft";
+  /** Teller runden? Den må være koblet til konkurransen og startet. En playoff (sql/047) teller aldri. */
+  counts(round: { id: UUID; status: string; kind?: string }): boolean {
+    return this.roundIDs.has(round.id) && round.status !== "draft" && round.kind !== "playoff";
+  }
+
+  /** Playoff-rundene om førsteplassen i konkurransen (`playoff_for`), startet eller låst. */
+  playoffs(candidates: readonly RoundSnapshot[]): RoundSnapshot[] {
+    const id = this.competition.id;
+    return candidates
+      .filter((s) => s.round.kind === "playoff" && s.round.playoffFor === id && s.round.status !== "draft")
+      .map((s) => ({ ...s, rules: this.competition.rules }));
   }
 
   /** Rundene som teller blant de hentede, i Tavlas rekkefølge: dato, så rundenummer. */
@@ -335,7 +343,7 @@ export class CompetitionScope {
     if (c.clubID === null || c.entry !== "club") return null;
     const season: SeasonRow = { id: c.seasonID ?? c.id, clubID: c.clubID, name: c.name, status: c.status, rules: c.rules };
     const rounds = this.countedRounds(candidates).map((s) => ({ ...s, rules: c.rules }));
-    return { season, members: members.filter((m) => m.clubID === c.clubID), rounds };
+    return { season, members: members.filter((m) => m.clubID === c.clubID), rounds, playoffs: this.playoffs(candidates) };
   }
 
   /** Grunnlaget for en hvilken som helst konkurranse. */

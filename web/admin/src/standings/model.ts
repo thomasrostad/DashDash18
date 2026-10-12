@@ -25,7 +25,13 @@ import {
   decodeTavlaData,
   dayMany,
   dayTitle,
+  decidePlayoffRound,
   GOLFGUTU,
+  latestPlayoff,
+  makeRound,
+  makeRoundFromSnapshot,
+  numberOfHoles,
+  suggestedPlayoffHoles,
   LeagueStandings,
   makeSnapshot,
   PersonDirectory,
@@ -70,6 +76,82 @@ export interface TableView {
   numberColumns: { key: string; label: string }[];
   grid: RoundsGrid;
   snapshots: RoundSnapshot[];
+  /** Playoffen om førsteplassen (`table.tieRule = playoff`), eller null. */
+  playoff?: PlayoffPanel | null;
+}
+
+/** Playoffen om førsteplassen slik «Tabeller» viser den (sql/047). */
+export interface PlayoffPanel {
+  /** De som står likt øverst og skal spille (forhåndsvalgt). Tom når playoffen er avgjort. */
+  tied: { id: string; name: string }[];
+  /** Hullene runden har (forslaget regnes av dem). */
+  holeCount: number;
+  /** 1, eller 10 når rundene er «siste ni» (hullnumrene som vises). */
+  firstHole: number;
+  /** Forslaget (`Playoff.suggestedHoles`), rundens 0-baserte hull. */
+  suggested: number[];
+  /** Playoff-runden som finnes, eller null. */
+  round: { id: string; status: string; holes: number[]; canAddHoles: boolean } | null;
+  /** Linja som forklarer stillingen. */
+  text: string;
+}
+
+/** Hullnummer for visning: rundehull 0 = 1 (eller 10 når runden er «siste ni»). */
+export function playoffHoleNumbers(holes: readonly number[], firstHole = 1): string {
+  return holes.map((h) => String(h + (firstHole === 10 ? 10 : 1))).join(", ");
+}
+
+/** «18, 1, 18» → rundens 0-baserte hull. null når teksten ikke er hull i runden. */
+export function parsePlayoffHoles(text: string, holeCount: number, firstHole = 1): number[] | null {
+  const offset = firstHole === 10 ? 10 : 1;
+  const parts = text.split(/[\s,;]+/).filter((x) => x !== "");
+  if (parts.length === 0 || parts.length > holeCount) return null;
+  const out: number[] = [];
+  for (const p of parts) {
+    if (!/^[0-9]+$/.test(p)) return null;
+    const h = Number(p) - offset;
+    if (h < 0 || h >= holeCount) return null;
+    out.push(h);
+  }
+  return out;
+}
+
+/** Playoffen for serien: hvem som står likt, runden som finnes, og hva som gjenstår. */
+export function seasonPlayoff(t: TavlaStandings): PlayoffPanel | null {
+  if ((t.rules.table.tieRule ?? "tiebreaks") !== "playoff") return null;
+  const tied = t.rows.filter((r) => r.playoffPending).map((r) => ({ id: r.memberID, name: r.name }));
+  const latest = latestPlayoff(t.playoffs);
+  if (tied.length < 2 && latest === null) return null;
+  const last = t.snapshots[t.snapshots.length - 1];
+  const holeCount = last ? numberOfHoles(makeRoundFromSnapshot(last)) : 18;
+  const firstHole = last?.round.firstHole ?? 1;
+  const suggested = suggestedPlayoffHoles(makeRound({ holeCount }));
+  const name = (id: string) => t.rows.find((r) => r.memberID === id)?.name ?? "Ukjent";
+  if (latest === null) {
+    return { tied, holeCount, firstHole, suggested, round: null, text: `Delt førsteplass: ${norwegianList(tied.map((x) => x.name))}. Avgjøres med playoff.` };
+  }
+  const holes = latest.round.playoffHoles ?? [];
+  const decision = decidePlayoffRound(latest, tied.length >= 2 ? tied.map((x) => x.id) : null);
+  const shownHoles = playoffHoleNumbers(holes, latest.round.firstHole);
+  let text: string;
+  let canAddHoles = false;
+  if (decision.kind === "won") {
+    text = `${name(decision.winner)} vant playoffen på playoff-hull ${decision.position + 1}.`;
+  } else if (decision.next === null) {
+    canAddHoles = latest.round.status !== "locked" && holes.length < latest.round.holeCount;
+    text = `Fortsatt likt etter ${holes.length} hull: ${norwegianList(decision.remaining.map(name))}.`;
+  } else {
+    text = `Playoff i gang på hull ${shownHoles}.`;
+  }
+  return {
+    tied, holeCount: latest.round.holeCount, firstHole: latest.round.firstHole, suggested,
+    round: { id: latest.round.id, status: latest.round.status, holes, canAddHoles }, text,
+  };
+}
+
+function norwegianList(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} og ${items[items.length - 1]}`;
 }
 
 export interface CupView {
@@ -108,6 +190,7 @@ export function seasonView(tavlaData: unknown, seasonRow: unknown, me: string | 
     numberColumns,
     grid: j.rounds,
     snapshots: t.snapshots,
+    playoff: seasonPlayoff(t),
   };
 }
 

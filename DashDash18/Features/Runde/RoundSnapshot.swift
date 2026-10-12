@@ -98,7 +98,11 @@ nonisolated struct RoundGame: Sendable {
             weight: r.weight,
             date: s.eventDate,
             locked: r.status == .locked,
-            playingHandicaps: frozenHandicaps(s)
+            playingHandicaps: frozenHandicaps(s),
+            // sql/047: en playoff teller aldri (databasen sier det samme, `rounds_playoff_never_counts`).
+            counts: r.countsInTable && !r.isPlayoff,
+            pointsTable: r.pointsTable,
+            hideLastHoles: r.hiddenLastHoles
         )
     }
 

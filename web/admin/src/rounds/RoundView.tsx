@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { capitalized, formById, norwegianCompare, scoreNameLabel, TRUNCATION_RULES, truncationRuleName, type Ruleset, type TruncationRule } from "../../../golfgutu-core/src/index.ts";
 import { longDate } from "../text.ts";
-import { deleteRound, deleteSummary, loadGame, lockRound, saveCut, saveHole, type ListRound } from "./api.ts";
+import { deleteRound, deleteSummary, loadGame, lockRound, saveCut, saveHole, saveTableRules, type ListRound } from "./api.ts";
+import { TableRulesFields, type TableRulesValue } from "./RoundSetup.tsx";
 import {
   correctionButtonTitle, correctionChanged, correctionCurrentText, correctionDoneText, correctionNotice, correctionOutcome,
   correctionParams, cutHint, cutRuleHelp, cutLineText, cutOptionTitle, cutPreview, cutSummary, defaultCutChoice, newCorrection, roundTable,
@@ -13,9 +14,12 @@ import { deleteButtonTitle, deleteMessage, deleteNoun, roundStatusText, type Del
  * Rundens side for arrangøren (RoundTableView, AvkortView): spillere × hull med brutto, sum og poeng, og
  * handlingene på runden (rett en score, avkort, lås, slett). Trykk en rute for å rette den.
  */
-export function RoundView({ round, title, rules, myMemberID, openCut, onLeft }: {
+export function RoundView({ round, title, rules, myMemberID, openCut, onLeft, tableRules = false }: {
   round: ListRound; title: string; rules: Ruleset; myMemberID: string | null; openCut: boolean; onLeft: (text: string) => void;
+  /** sql/047 er kjørt: tabellreglene kan endres her. */
+  tableRules?: boolean;
 }) {
+  const [tr, setTr] = useState<TableRulesValue>({ counts: round.counts, pointsTable: round.pointsTable, hideLastHoles: round.hideLastHoles });
   const [game, setGame] = useState<RoundGame | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -72,6 +76,19 @@ export function RoundView({ round, title, rules, myMemberID, openCut, onLeft }: 
         </>}
         <button className="link" disabled={busy} onClick={() => run(async () => { await load(); })}>Oppdater</button>
       </div>
+
+      {tableRules && round.kind !== "playoff" && (
+        <details className="card" open={!tr.counts || tr.pointsTable !== null || tr.hideLastHoles > 0}>
+          <summary><strong>Tabellen</strong></summary>
+          <TableRulesFields rules={rules} value={tr} disabled={busy} onChange={setTr} />
+          <button disabled={busy || (tr.counts === round.counts && tr.pointsTable === round.pointsTable && tr.hideLastHoles === round.hideLastHoles)}
+            onClick={() => run(async () => {
+              await saveTableRules(round.id, tr);
+              Object.assign(round, tr);
+              setNotice("Lagret.");
+            })}>Lagre</button>
+        </details>
+      )}
 
       {pendingDelete && (
         <div className="card confirm">

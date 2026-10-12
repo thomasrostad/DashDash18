@@ -199,7 +199,14 @@ final class RundeModel {
         let pending = submitter?.pendingSubmissions(roundID: snapshot.round.id) ?? []
         pendingHoles = Set(pending.map(\.holeIndex))
         logConfirmedQueuedHoles(server: snapshot)
-        game = RoundGame(snapshot.overlaying(pending.map(QueuedHole.init)))
+        // «Skjul de tre siste hullene» (sql/047): båsen din og arrangøren ser alt, andre ikke ennå.
+        game = RoundGame(HiddenHoles.apply(snapshot.overlaying(pending.map(QueuedHole.init)), viewer: viewer))
+    }
+
+    /// De siste hullene til de andre båsene er skjult for deg (sql/047).
+    var hidesLastHoles: Bool {
+        guard let snapshot else { return false }
+        return HiddenHoles.isHiding(snapshot, viewer: viewer)
     }
 
     /// `folgerBaasen`: står kortet på båsens hull før hentingen?

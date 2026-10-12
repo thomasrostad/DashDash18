@@ -35,6 +35,16 @@ nonisolated struct RoundDraft: Equatable, Sendable {
     var allowance: Double
     /// Simulator eller ekte bane. Lagres bare når `VenueFeature` er på.
     var venue: Venue = .simulator
+    /// Tabellreglene på runden (sql/047). Lagres bare når kolonnene finnes (`RoundRulesFeature`).
+    /// `counts == false`: «Teller ikke i tabellen».
+    var counts: Bool = true
+    /// Poengtabellen fra regelsettet (`table.pointsTables`). nil: «Vanlig».
+    var pointsTable: String? = nil
+    /// «Skjul de tre siste hullene» (`hide_last_holes` 3, ellers 0).
+    var hidesLastHoles: Bool = false
+
+    /// Antall skjulte hull når valget er på.
+    static let hiddenHoleCount = 3
 
     var form: CompetitionForm { CompetitionForm.form(id: formID) }
 
@@ -80,7 +90,8 @@ nonisolated struct RoundDraft: Equatable, Sendable {
             ldEnabled: round.ldEnabled, ldHoleIndex: round.ldHoleIndex,
             kpEnabled: round.kpEnabled, kpHoleIndex: round.kpHoleIndex,
             weight: round.weight, externalHandicap: round.externalHandicap, allowance: round.handicapAllowance,
-            venue: Venue(stored: round.venue)
+            venue: Venue(stored: round.venue),
+            counts: round.countsInTable, pointsTable: round.pointsTable, hidesLastHoles: round.hiddenLastHoles > 0
         )
     }
 
@@ -285,6 +296,11 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
     /// Teen (sql/029). Sendes bare når `SlopeNoFeature` er på; da også som null, så den tømmes.
     let teeID: UUID?
     let includesTee: Bool
+    /// Tabellreglene (sql/047). Sendes bare når kolonnene finnes; da også som null, så de tømmes.
+    let counts: Bool
+    let pointsTable: String?
+    let hideLastHoles: Int
+    let includesRules: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -305,10 +321,13 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         case kpHoleIndex = "kp_hole_index"
         case venue
         case teeID = "tee_id"
+        case counts
+        case pointsTable = "points_table"
+        case hideLastHoles = "hide_last_holes"
     }
 
     init(draft: RoundDraft, clubID: UUID, course: Course?, includeVenue: Bool = VenueFeature.isEnabled,
-         includeTee: Bool = SlopeNoFeature.isEnabled) {
+         includeTee: Bool = SlopeNoFeature.isEnabled, includeRules: Bool = RoundRulesFeature.isAvailable) {
         id = draft.roundID
         self.clubID = clubID
         eventID = draft.eventID
@@ -330,6 +349,10 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         venue = includeVenue ? draft.venue.rawValue : nil
         includesTee = includeTee
         teeID = includeTee ? draft.teeID : nil
+        includesRules = includeRules
+        counts = draft.counts
+        pointsTable = draft.pointsTable.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }
+        hideLastHoles = draft.hidesLastHoles ? RoundDraft.hiddenHoleCount : 0
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -354,6 +377,12 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         try c.encodeIfPresent(venue, forKey: .venue)
         // Kolonnen finnes først etter sql/029. Uten flagget sendes den ikke.
         if includesTee { try c.encode(teeID, forKey: .teeID) }
+        // Kolonnene finnes først etter sql/047. Uten dem sendes de ikke.
+        if includesRules {
+            try c.encode(counts, forKey: .counts)
+            try c.encode(pointsTable, forKey: .pointsTable)
+            try c.encode(hideLastHoles, forKey: .hideLastHoles)
+        }
     }
 }
 

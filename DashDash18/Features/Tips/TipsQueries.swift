@@ -58,11 +58,13 @@ enum TipsQueries {
 
     /// Kveldens runder (kladder bare for arrangøren, via RLS), i opprettelsesrekkefølge.
     private static func snapshots(client: SupabaseClient, event: TipsEventRow) async throws -> [RoundSnapshot] {
-        let rounds: [RoundRow] = try await client.from("rounds")
+        let allRounds: [RoundRow] = try await client.from("rounds")
             .select(RoundRow.columns)
             .eq("event_id", value: event.id)
             .order("round_no")
             .execute().value
+        // En playoff (sql/047) er ingen runde å tippe på.
+        let rounds = allRounds.ordinary
         guard !rounds.isEmpty else { return [] }
         let ids = rounds.map(\.id.uuidString)
         let courseIDs = Array(Set(rounds.compactMap(\.courseID))).map(\.uuidString)

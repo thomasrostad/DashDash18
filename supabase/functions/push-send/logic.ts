@@ -16,6 +16,14 @@
 //     bak (pushOriginators), får mottakeren ikke push. Bare én retning, som
 //     tråden i 019: den blokkerte får fortsatt push om den som blokkerte.
 //   * Linja står i Varsler i appen uansett. Det er bare pushen som stoppes.
+//   * Forfall gir ett varsel per person (gjennomføringsplanen steg 4 og 6):
+//     appen skriver «meldte forfall» (signup, status no) til alle, og
+//     serveren (sql/045) skriver signup_dropped til arrangørene (recipients).
+//     Når push-send sender appens linje, slår index.ts opp signup_dropped for
+//     samme kveld og medlem innen DROP_WINDOW_MS, og attachAlreadyNotified
+//     legger mottakerne der i already_notified_ids. De hoppes over her: de
+//     har fått serverens varsel (med «etter fristen»). Alle andre får appens.
+//     Feiler oppslaget, pushes linja som før (heller to varsler enn ingen).
 //
 // Tekstene følger ActivityText.display i appen (DashDash18/Data/Activity.swift),
 // med emojien foran, siden et varsel ikke har ikon.
@@ -114,6 +122,12 @@ export interface JobPayload {
   activity: ActivityPayload | null;
   message: MessagePayload | null;
   members: MemberPayload[];
+  /**
+   * Medlemmer som allerede har fått varsel om det samme (forfall: serverens
+   * signup_dropped). Kommer ikke fra push_job_payload(): index.ts fyller det
+   * med attachAlreadyNotified() før planPush. Mangler feltet, gjelder ingen.
+   */
+  already_notified_ids?: string[];
 }
 
 /** Ett varsel til én telefon. */
@@ -257,6 +271,52 @@ export function attachBlocks(payload: JobPayload, links: MemberLink[], blocks: B
   };
 }
 
+// ---------------------------------------------------------------------------
+// Forfall: ett varsel per person
+// ---------------------------------------------------------------------------
+
+/** Hvor nær i tid serverens signup_dropped må være appens forfallslinje. */
+export const DROP_WINDOW_MS = 10 * 60 * 1000;
+
+/** En signup_dropped-linje slik index.ts henter den. */
+export interface DroppedRow {
+  recipients: string[] | null;
+  created_at: string;
+}
+
+/**
+ * Er jobben appens «meldte forfall» (signup med status no)? Da gir den kvelden
+ * og medlemmet index.ts skal slå opp signup_dropped for. Ellers null.
+ */
+export function dropoutLookup(payload: JobPayload): { eventId: string; member: string; createdAt: string } | null {
+  const a = payload.activity;
+  if (payload.kind !== "activity" || !a || a.kind !== "signup" || !a.event_id) return null;
+  const member = str(a.data?.member);
+  if (!member || a.data?.status !== "no") return null;
+  return { eventId: a.event_id, member, createdAt: a.created_at };
+}
+
+/**
+ * Legger mottakerne av serverens signup_dropped (samme kveld og medlem, innen
+ * DROP_WINDOW_MS) i already_notified_ids. recipients null betyr alle.
+ * Ren funksjon, endrer ikke payload.
+ */
+export function attachAlreadyNotified(payload: JobPayload, dropped: DroppedRow[]): JobPayload {
+  const lookup = dropoutLookup(payload);
+  if (!lookup) return payload;
+  const at = Date.parse(lookup.createdAt);
+  const near = dropped.filter((d) => {
+    const t = Date.parse(d.created_at);
+    return Number.isFinite(at) && Number.isFinite(t) && Math.abs(t - at) <= DROP_WINDOW_MS;
+  });
+  if (near.length === 0) return payload;
+  const ids = new Set(payload.already_notified_ids ?? []);
+  for (const d of near) {
+    for (const id of d.recipients ?? payload.members.map((m) => m.id)) ids.add(id);
+  }
+  return { ...payload, already_notified_ids: [...ids] };
+}
+
 /** Har medlemmet blokkert en av dem som står bak hendelsen? */
 export function hasBlockedAny(member: MemberPayload, originators: readonly string[]): boolean {
   const blocked = member.blocked_member_ids ?? [];
@@ -268,10 +328,12 @@ export function activityRecipients(payload: JobPayload, activity: ActivityPayloa
   const category = activity.category as ActivityCategory;
   const listed = activity.recipients;
   const originators = pushOriginators(payload);
+  const notified = payload.already_notified_ids ?? [];
   return payload.members.filter((m) =>
     reachable(m) &&
     m.id !== activity.actor_member_id &&
     (listed === null || listed.includes(m.id)) &&
+    !notified.includes(m.id) &&
     playerAllows(m, category) &&
     !hasBlockedAny(m, originators)
   );

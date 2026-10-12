@@ -10,7 +10,9 @@ nonisolated enum ActiveRounds {
     ///   - rounds: rundene som går i klubben.
     ///   - mine: rundene du spiller i.
     ///   - preferred: runden som er valgt på Hjem eller arrangørsiden.
+    /// En playoff (sql/047) vises ikke her: den føres fra Tavla (`PlayoffView`).
     static func pick(_ rounds: [RoundRow], mine: Set<UUID>, preferred: UUID?) -> RoundRow? {
+        let rounds = rounds.ordinary
         if let preferred, let round = rounds.first(where: { $0.id == preferred }) { return round }
         return rounds.first { mine.contains($0.id) } ?? rounds.first
     }
@@ -18,12 +20,15 @@ nonisolated enum ActiveRounds {
     /// Runden som går for kveldene arrangørsiden viser: den første på en av kveldene, ellers den
     /// første i klubben.
     static func focus(_ rounds: [RoundRow], eventIDs: Set<UUID>) -> RoundRow? {
-        rounds.first { $0.eventID.map(eventIDs.contains) ?? false } ?? rounds.first
+        let rounds = rounds.ordinary
+        return rounds.first { $0.eventID.map(eventIDs.contains) ?? false } ?? rounds.first
     }
 
     /// Runden som stopper start av `roundID`: en annen runde som går på samme kveld og i samme pulje.
     /// Puljer som ikke er kjent, regnes som 1 (standarden i `rounds.wave_no`).
+    /// En playoff stopper ingen (sql/047: regelen gjelder bare vanlige runder).
     static func blocking(_ rounds: [RoundRow], roundID: UUID, eventID: UUID, waves: [UUID: Int]) -> RoundRow? {
+        let rounds = rounds.ordinary
         let wave = waves[roundID] ?? 1
         return rounds.first { $0.id != roundID && $0.eventID == eventID && (waves[$0.id] ?? 1) == wave }
     }

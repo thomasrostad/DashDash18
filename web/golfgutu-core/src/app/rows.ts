@@ -121,6 +121,26 @@ export interface RoundRow {
   courseRating: number | null;
   slopeRating: number | null;
   teePar: number | null;
+  /** Runden teller i tabellen (sql/047). Uten kolonnen: `true`. */
+  counts: boolean;
+  /** Poengtabellen runden peker på (`table.pointsTables`), eller `null` (sql/047). */
+  pointsTable: string | null;
+  /** Antall hull til slutt som skjules til runden er låst («skjul de tre siste»: 3). Uten kolonnen: 0. */
+  hideLastHoles: number;
+  /** `normal` eller `playoff` (sql/047). Uten kolonnen: `normal`. */
+  kind: RoundKind;
+  /** Turneringen playoffen avgjør (bare når `kind` er `playoff`). */
+  playoffFor: UUID | null;
+  /** Playoff-hullene i rekkefølge (rundens 0-baserte hull, kan gjentas). Score for nummer i har `hole_index` i. */
+  playoffHoles: number[] | null;
+}
+
+/** En vanlig runde eller en playoff om førsteplassen (sql/047). */
+export type RoundKind = "normal" | "playoff";
+
+/** Er runden en playoff? Den teller aldri og står ikke i lister over vanlige runder. */
+export function isPlayoff(round: { kind?: RoundKind | string | null }): boolean {
+  return round.kind === "playoff";
 }
 
 /** Overstyring av ett hull for én runde. `holeIndex` er rundens 0-baserte hull. */
@@ -281,6 +301,15 @@ export function decodeRoundRow(x: unknown, path = "$"): RoundRow {
     courseRating: optNumber(o, "course_rating", path),
     slopeRating: optInt(o, "slope_rating", path),
     teePar: optInt(o, "tee_par", path),
+    counts: optBool(o, "counts", path) ?? true,
+    pointsTable: optString(o, "points_table", path),
+    hideLastHoles: optInt(o, "hide_last_holes", path) ?? 0,
+    kind: optString(o, "kind", path) === "playoff" ? "playoff" : "normal",
+    playoffFor: optUUID(o, "playoff_for", path),
+    playoffHoles: optArray(o, "playoff_holes", path)?.map((x, i) => {
+      if (typeof x !== "number" || !Number.isInteger(x)) throw new DecodeError(`${path}.playoff_holes[${i}]`, "ventet et heltall");
+      return x;
+    }) ?? null,
   };
 }
 
