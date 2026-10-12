@@ -912,3 +912,84 @@ Deno.test("051: regningslinjene går bare til mottakeren på linja", () => {
   eq(plan.notifications.map((n) => n.memberId), [THOMAS]);
   is(plan.notifications[0].body, "💸 Anders har sendt sin del for Greenfee");
 });
+
+// --- Følge (sql/054): personlige linjer, audience 'person' -------------------
+
+function personJob(a: ActivityPayload, list: MemberPayload[] = [member(P1, "Per"), member(P3, "Espen")]): JobPayload {
+  return {
+    job_id: 4,
+    kind: "activity",
+    club: { id: null, name: "Atten", disabled_categories: [] },
+    activity: a,
+    message: null,
+    members: list,
+    audience: "person",
+    competition: null,
+    group: "social",
+    collapse: null,
+  };
+}
+
+function follow(kind: string, to: string[], extra: Partial<ActivityPayload> = {}): ActivityPayload {
+  return activity(kind, "social", { actor_name: "Pål", source: "search" },
+    { actor_member_id: null, actor_profile_id: P2, event_id: null, round_id: null, recipients: to, ...extra });
+}
+
+Deno.test("054: tekstene for følging", () => {
+  const name = nameLookup([]);
+  eq(activityDisplay(follow("follow_requested", [P1]), name), { emoji: "👋", text: "Pål vil følge deg" });
+  eq(activityDisplay(follow("follow_accepted", [P1]), name), { emoji: "✅", text: "Pål godtok forespørselen din" });
+  eq(activityDisplay(follow("followed", [P1]), name), { emoji: "👋", text: "Pål følger deg nå" });
+  // Uten navn: «Noen».
+  eq(activityDisplay(activity("followed", "social", { actor_name: " " }, { actor_member_id: null }), name),
+    { emoji: "👋", text: "Noen følger deg nå" });
+});
+
+Deno.test("054: følgevarselet går bare til mottakeren, med tittelen Atten og threadId follow", () => {
+  const plan = planPush(personJob(follow("follow_requested", [P1])), NOW);
+  eq(plan.notifications.map((n) => n.memberId), [P1]);
+  is(plan.notifications[0].title, "Atten");
+  is(plan.notifications[0].body, "👋 Pål vil følge deg");
+  is(plan.notifications[0].threadId, "follow");
+  is(plan.notifications[0].category, "social");
+  eq(reasons(personJob(follow("follow_requested", [P1])), [{ token: "per-token", status: 200 }]),
+    { [P1]: "sent", [P3]: "not_recipient" });
+});
+
+Deno.test("054: aktøren er profilen, og den som har blokkert aktøren får ikke push", () => {
+  const a = follow("followed", [P1, P2]);
+  const withActor = personJob(a, [member(P1, "Per"), member(P2, "Pål")]);
+  // Pål er aktøren og får ikke sin egen.
+  eq(to(withActor), [P1]);
+  eq(pushOriginators(withActor), [P2]);
+  const blocked = attachCompetitionBlocks(withActor, [], [{ blocker_id: P1, blocked_id: P2 }]);
+  eq(to(blocked), []);
+  eq(reasons(blocked), { [P1]: "blocked", [P2]: "actor" });
+});
+
+Deno.test("054: round_finished går aldri som push", () => {
+  const a = activity("round_finished", "round", { player_id: "x" },
+    { actor_member_id: null, actor_profile_id: P2, recipients: null });
+  const plan = planPush(personJob(a), NOW);
+  eq(plan.notifications, []);
+  is(plan.skipped, "round_finished går ikke som push");
+});
+
+Deno.test("054: kommentar på et kort i «Følger»", () => {
+  const data = { ...COMMENT_DATA, author_profile: P2, author_name: "Pål" };
+  const a = activity("comment_added", "social", data,
+    { actor_member_id: null, actor_profile_id: P2, round_id: "round-9", recipients: [P1] });
+  const plan = planPush(personJob(a), NOW);
+  eq(plan.notifications.map((n) => n.memberId), [P1]);
+  is(plan.notifications[0].body, "💬 Pål kommenterte runden: «Hei der folkens»");
+  is(plan.notifications[0].threadId, "card-act-0");
+  is(plan.notifications[0].data.target_id, "act-0");
+  // I klubben er teksten som før.
+  is(text(activity("comment_added", "social", COMMENT_DATA)).text, "Anders Berg kommenterte: «Hei der folkens»");
+});
+
+Deno.test("054: profil-id-er på mottakerlista leses som innloggingen også for person", () => {
+  const a = follow("follow_accepted", ["user-espen"]);
+  const p = personJob(a, [member("annen-id", "Espen", { user_id: "user-espen" })]);
+  ok(isRecipient(p, a, p.members[0]));
+});

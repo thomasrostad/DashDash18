@@ -50,6 +50,11 @@ struct RundeView: View {
                     if model.looseContext != nil {
                         LooseRoundActions(model: model)
                     }
+                    // «Følg medspillerne» når runden er ferdig (sql/054).
+                    if game.status == .locked, let follow = followAccess {
+                        FollowCoPlayersSection(client: follow.client, userID: follow.userID, snapshot: game.snapshot)
+                            .id(game.snapshot.round.id)
+                    }
                     if let access = model.statsAccess {
                         SpillIRunden(game: game, hole: model.currentHole, viewer: model.viewer,
                                      client: access.client, userID: access.userID)
@@ -90,6 +95,13 @@ struct RundeView: View {
     private var betsAccess: (client: SupabaseClient, viewer: BetViewer)? {
         if let context = model.clubContext { return (context.client, context.betViewer) }
         if let loose = model.looseContext { return (loose.client, BetViewer(userID: loose.userID)) }
+        return nil
+    }
+
+    /// Klienten og innloggingen for «Følg medspillerne».
+    private var followAccess: (client: SupabaseClient, userID: UUID)? {
+        if let context = model.clubContext { return (context.client, context.user.id) }
+        if let loose = model.looseContext { return (loose.client, loose.userID) }
         return nil
     }
 

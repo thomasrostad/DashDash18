@@ -1,7 +1,7 @@
 // Kjøres med Node 24 uten Cloudflare: `npm test` (eller `node --test test/`).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import worker, { normalizeCode, APP_ID } from "../src/index.ts";
+import worker, { normalizeCode, normalizeFollowCode, APP_ID } from "../src/index.ts";
 
 const BASE = "https://dashdash18.com";
 
@@ -23,7 +23,7 @@ test("AASA på begge adressene, som JSON uten omdirigering", async () => {
         details: [
           {
             appIDs: [APP_ID],
-            components: [{ "/": "/klubb/*" }, { "/": "/runde/*" }, { "/": "/konkurranse/*" }],
+            components: [{ "/": "/klubb/*" }, { "/": "/runde/*" }, { "/": "/konkurranse/*" }, { "/": "/folg/*" }],
           },
         ],
       },
@@ -114,4 +114,19 @@ test("HEAD uten innhold, andre metoder avvises", async () => {
   const post = await get("/", "POST");
   assert.equal(post.status, 405);
   assert.equal(post.headers.get("allow"), "GET, HEAD");
+});
+
+test("følgekoden (sql/054): side med lenke til appen, ugyldig kode gir 404", async () => {
+  const res = await get("/folg/abcd-efgh");
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  assert.match(html, /Åpne Atten for å følge/);
+  assert.ok(html.includes('<span class="kode">ABCD-EFGH</span>'));
+  assert.ok(html.includes('href="dashdash://folg/ABCDEFGH"'));
+  assert.doesNotMatch(html, /https?:\/\//);
+  assert.equal((await get("/folg/ABCDEFG1")).status, 404);
+  assert.equal((await get("/folg/")).status, 404);
+  assert.equal(normalizeFollowCode(" abcd efgh "), "ABCDEFGH");
+  assert.equal(normalizeFollowCode("ABCDEFGO"), null);
+  assert.equal(normalizeFollowCode("ABCDEFGHJ"), null);
 });

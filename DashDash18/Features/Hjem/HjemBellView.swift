@@ -101,11 +101,17 @@ struct HjemVarslerView: View {
             }
         case .loaded:
             let sections = model.bellSections()
-            if sections.isEmpty {
+            let personal = model.personalRows
+            if sections.isEmpty && personal.isEmpty {
                 ContentUnavailableView("Ingenting ennå", systemImage: "bell",
                                        description: Text("Her kommer det som angår deg: når du blir nevnt, utfordret eller purret på, meldinger til alle og rundene dine. Resten står på Hjem."))
             } else {
                 DDList {
+                    // Følging og kommentarer på kort i «Følger» (sql/054).
+                    if let context {
+                        FollowNotificationsSection(rows: personal, client: context.client, userID: context.user.id,
+                                                   lastSeen: model.bellSeenAtOpen) { await model.reloadPersonal() }
+                    }
                     ForEach(sections) { section in
                         DDSection(section.title) {
                             ForEach(section.items) { item in

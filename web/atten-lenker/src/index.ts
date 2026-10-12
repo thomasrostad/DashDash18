@@ -23,12 +23,26 @@ const INVITE_LENGTH = 10;
 
 type InviteKind = "klubb" | "runde" | "konkurranse";
 
+/// Følgekoden (sql/054, `follow_codes`): 8 tegn uten I, O, 0 og 1. Samme som `FollowLink` i appen.
+const FOLLOW_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const FOLLOW_LENGTH = 8;
+
+/// Følgekoden slik appen tolker den, eller null.
+export function normalizeFollowCode(raw: string): string | null {
+  const cleaned = raw.toUpperCase().replace(/[\s-]/g, "");
+  if (cleaned.length !== FOLLOW_LENGTH) return null;
+  for (const char of cleaned) {
+    if (!FOLLOW_ALPHABET.includes(char)) return null;
+  }
+  return cleaned;
+}
+
 export const AASA = {
   applinks: {
     details: [
       {
         appIDs: [APP_ID],
-        components: [{ "/": "/klubb/*" }, { "/": "/runde/*" }, { "/": "/konkurranse/*" }],
+        components: [{ "/": "/klubb/*" }, { "/": "/runde/*" }, { "/": "/konkurranse/*" }, { "/": "/folg/*" }],
       },
     ],
   },
@@ -167,6 +181,19 @@ function invitePage(kind: InviteKind, code: string, nonce: string): string {
   return page("Invitasjon til Atten", content, nonce, COPY_SCRIPT);
 }
 
+/// `/folg/KODE`: QR-koden for å følge noen. Appen åpner lenken selv; uten appen vises denne.
+function followPage(code: string, nonce: string): string {
+  const appLink = `${APP_SCHEME}://folg/${code}`;
+  const content = `
+<h1>Åpne Atten for å følge</h1>
+<p>Noen vil at du skal følge dem i Atten.</p>
+<span class="kode">${escapeHTML(`${code.slice(0, FOLLOW_LENGTH / 2)}-${code.slice(FOLLOW_LENGTH / 2)}`)}</span>
+<a class="knapp" href="${escapeHTML(appLink)}">Åpne i Atten</a>
+<p class="liten">Eller skriv inn koden under Deg → Følger → Skann kode.</p>
+<p class="liten">${GET_THE_APP_HTML}</p>`;
+  return page("Følg i Atten", content, nonce);
+}
+
 function invalidInvitePage(nonce: string): string {
   const content = `
 <h1>Denne invitasjonen virker ikke</h1>
@@ -258,6 +285,19 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
     if (!code) return htmlResponse(tvCodePage(nonce), 404, nonce, "no-store", isHead);
     if (code !== tv[1]) return Response.redirect(new URL(`/tv/${code}`, request.url).toString(), 302);
     return htmlResponse(tvBoardPage(code, nonce), 200, nonce, "no-store", isHead, true);
+  }
+
+  const follow = /^\/folg\/([^/]*)\/?$/.exec(pathname);
+  if (follow) {
+    let raw = "";
+    try {
+      raw = decodeURIComponent(follow[1]);
+    } catch {
+      raw = "";
+    }
+    const code = normalizeFollowCode(raw);
+    if (!code) return htmlResponse(invalidInvitePage(nonce), 404, nonce, "public, max-age=300", isHead);
+    return htmlResponse(followPage(code, nonce), 200, nonce, "public, max-age=300", isHead);
   }
 
   const invite = matchInvite(pathname);

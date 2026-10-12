@@ -66,6 +66,9 @@ private struct HjemClubContent: View {
     @State private var comments: CommentsModel?
     @State private var emojiTarget: HomeReactions?
     @State private var whoTarget: HomeReactions?
+    /// «Klubben» eller «Følger» (sql/054). Velgeren vises bare når 054 finnes.
+    @State private var feedTab: HjemFeedTab = .club
+    @State private var following: FollowingFeedModel?
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dayTerm) private var dayTerm
     @Environment(\.selectTab) private var selectTab
@@ -82,10 +85,23 @@ private struct HjemClubContent: View {
     }
 
     var body: some View {
-        HjemFeedView(feed: home.feed, state: home.state,
-                     pendingAnswer: kveld.pendingAnswer.map { SignupUndo.text($0.status) },
-                     answerError: kveld.answerError, actions: actions, onRetry: reload,
-                     isLoadingMore: home.isLoadingMore)
+        Group {
+            if feedTab == .following, let following {
+                FollowingFeedView(model: following)
+            } else {
+                HjemFeedView(feed: home.feed, state: home.state,
+                             pendingAnswer: kveld.pendingAnswer.map { SignupUndo.text($0.status) },
+                             answerError: kveld.answerError, actions: actions, onRetry: reload,
+                             isLoadingMore: home.isLoadingMore)
+            }
+        }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if following != nil { HjemFeedTabPicker(tab: $feedTab) }
+            }
+            .task {
+                guard following == nil, await FollowFeature.detect(client: context.client) else { return }
+                following = FollowingFeedModel(client: context.client, userID: context.user.id)
+            }
             .sheet(item: $comments) { CommentsSheet(model: $0) }
             .sheet(item: $emojiTarget) { target in
                 EmojiPickerSheet { emoji in Task { await home.toggle(emoji, on: target) } }

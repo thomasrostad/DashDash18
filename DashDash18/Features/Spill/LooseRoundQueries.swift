@@ -17,15 +17,17 @@ enum LooseRoundQueries {
     }
 
     /// Folk du kan legge til: profilene RLS lar deg se (felles klubb, runde eller konkurranse),
-    /// uten deg selv, i norsk navnerekkefølge. Det finnes ikke noe søk etter fremmede.
+    /// uten deg selv, i norsk navnerekkefølge. Etter sql/054 også dem du følger og dine følgere,
+    /// og dem du følger står øverst.
     static func friends(client: SupabaseClient, userID: UUID) async throws -> [ProfileRow] {
         let rows: [ProfileRow] = try await (SetQueriesFeature.isEnabled
             ? client.rpc("known_profiles").neq("id", value: userID).select(ProfileRow.columns)
             : client.from("profiles").select(ProfileRow.columns).neq("id", value: userID))
             .execute().value
-        return rows
-            .filter { !($0.displayName ?? "").trimmingCharacters(in: .whitespaces).isEmpty }
-            .sorted { NorwegianSort.areInIncreasingOrder($0.displayName ?? "", $1.displayName ?? "") }
+        let named = rows.filter { !($0.displayName ?? "").trimmingCharacters(in: .whitespaces).isEmpty }
+        let following = FollowFeature.isAvailable
+            ? await FollowService(client: client).followingIDs(userID: userID) : []
+        return FollowOrdering.followedFirst(named, following: following)
     }
 
     // MARK: Runden

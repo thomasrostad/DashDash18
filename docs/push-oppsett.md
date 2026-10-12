@@ -93,6 +93,7 @@ Det `push-send` gjør med 046 (krever ny deploy, se steg 5 over):
 - **«Kvelden er i gang».** `🏁 Kvelden er i gang: torsdag 8. oktober · Runde 1 – Pebble Beach`. Står ordet for dagen i svaret (`day_term`), brukes «Kvelden» eller «Spilledagen»; ellers «Runden er i gang».
 - **Logg.** Etter hver jobb kalles `push_log_result` med én rad per mottaker med innlogging: `sent` eller `failed` (med APNs-grunnen) etter sendingen, og `skipped` med grunn: `actor`, `not_recipient`, `too_old`, `club_off`, `muted`, `group_off`, `category_off` eller `blocked`. Ledige navn uten innlogging logges ikke. Feiler loggen (for eksempel uten 046), går pushen som før, og feilen står i svaret som `log_error`.
 - **Turneringer uten klubb** (`audience = 'competition'`): mottakerne er profiler, blokkering leses rett fra `user_blocks`, og varslene grupperes som `competition-<id>` på låseskjermen.
+- **Følge (sql/054, `audience = 'person'`).** Personlige linjer uten klubb og turnering: mottakerne er profil-id-ene i `recipients`, aktøren er `activity.actor_profile_id` (også for blokkering), tittelen er «Atten», og varslene grupperes som `follow` (kommentarer på et kort: `card-<kort>`). Tekstene: «👋 X vil følge deg», «✅ X godtok forespørselen din», «👋 X følger deg nå» og «💬 X kommenterte runden: …». `round_finished` går aldri som push. Krever ny deploy.
 - **E-post** (`email.ts`): se under.
 
 Testene: `deno test supabase/functions/push-send/`. Uten Deno går de med Node 22+ og en liten shim som gjør `Deno.test` om til `node:test`:

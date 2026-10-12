@@ -15,8 +15,8 @@ nonisolated enum UniversalLinksFeature {
 nonisolated enum UniversalLink {
     static let domain = "dashdash18.com"
     static let hosts: Set<String> = [domain, "www." + domain]
-    /// Stiene AASA-filen gir appen: klubb, løs runde og konkurranse.
-    static let paths: Set<String> = [ClubInvite.host, InviteCode.host, InviteTarget.competitionHost]
+    /// Stiene AASA-filen gir appen: klubb, løs runde, konkurranse og følgekoden (sql/054).
+    static let paths: Set<String> = [ClubInvite.host, InviteCode.host, InviteTarget.competitionHost, FollowLink.host]
 
     /// `https://dashdash18.com/runde/KODE` → `dashdash://runde/KODE`. nil for alt annet.
     static func appURL(_ url: URL) -> URL? {
