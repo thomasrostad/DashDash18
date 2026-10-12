@@ -1,6 +1,6 @@
-# Veddemål per turnering (forslag, 09.10.2026)
+# Veddemål per turnering (forslag 09.10.2026, bygget 12.10.2026)
 
-Thomas spurte: «Vedding på hull under turneringer, hva skjer der?» Dette er status og et forslag. Ingenting her er bygget eller kjørt ennå. Valgene nederst må tas før SQL skrives.
+Thomas spurte: «Vedding på hull under turneringer, hva skjer der?» Under står forslaget, svarene fra Thomas 11.10 og det som er bygget (steg 11, `sql/052_veddemaal.sql`, venter på godkjenning).
 
 ## Slik er det nå
 
@@ -54,3 +54,32 @@ Vilkårene (hullduell, birdie, par, pallen) regnes av regelmotoren i Swift. Å g
 3. **Løse runder:** veddemål der også, eller bare «spill i runden» (finnes) som nå?
 4. **Oppgjør:** holder C1 (arrangøren fra Hjem) en stund, eller skal C2 prioriteres?
 5. **Når:** sammen med trinn 033–035 (krever at alle har fase 23-bygg), eller før?
+
+## Bygget 12.10.2026 (steg 11, venter på godkjenning)
+
+`sql/052_veddemaal.sql` (detaljene i `sql/README.md`), motoren i TypeScript (`web/golfgutu-core/src/bets.ts`) og Edge Function `supabase/functions/bet-settle`. Ikke kjørt på test, ikke deployet.
+
+- **Nøkkelen:** `bets.competition_id` eller `bets.round_scope` (enkeltrundens bank), nøyaktig én. Veddemålene fra før har fått sesongens turnering. `season_id` fylles fortsatt for sesongturneringer, så gamle bygg ser nye veddemål i hovedturneringen.
+- **På/av:** `competitions.bets_enabled` og `rounds.bets_enabled`, standard av. Egne kolonner, ikke i `rules`: regelsettet skrives i sin helhet av «Tilpass reglene», web-admin og gamle bygg, og en løs runde har ikke regelsett. Tallene (startbeholdning, tak, forsprang, desimaler) står fortsatt i `rules->'bets'`. Sesongene som har veddemål i dag (og hovedturneringen i klubber med veddemål) er slått på, og en ny sesong arver det. Slås av og på med `bets_set_enabled(turnering, runde, på)`: turneringens admin eller `money`; runden: den som er arrangør av runden. Av betyr ingen nye veddemål; de som finnes står og gjøres opp.
+- **Personer (B):** profil-kolonner ved siden av medlemskolonnene, nøyaktig én når innsatsen lages. `bet_stakes.person_key` husker personen når en konto slettes, så de andres bank ikke endres. Deltakere: klubbens medlemmer (sesong) eller de påmeldte; påmeldte utenfor klubben og alle i turneringer uten klubb som profil; spillerne i en klubbrunde; deltakerne med profil i en løs runde.
+- **Banken:** `bet_bank(turnering, runde, medlem = null, profil = null)`: 1000 per turnering og person (eller turneringens `BetRules`), per runde for enkeltrunder.
+- **Oppgjøret (C3):** når en runde låses med åpne vilkår, havner den i `bet_settle_queue`. `bet-settle` henter jobbene (`bet_settle_jobs`), regner med motoren i TypeScript (alle sju vilkårene, samme svar som `BetsBoard.sweepPlan`) og skriver med `settle_round_bets`. Bare service_role. Det scorene ikke gir svar på (for eksempel nærmest pinnen uten innmelding), står åpent til arrangøren avgjør det for hånd. Arrangørens telefon (`settle_bet`) virker som før for gamle bygg.
+
+### Det appen må endre
+
+- **Vedd:** hente veddemål per turnering (`bets.competition_id`) og per runde (`bets.round_scope`), ikke per sesong. Velg turnering når runden teller i flere. Tekst «Veddemål er ikke slått på» når `bets_enabled` er av (vis ikke Vedd-knappen).
+- **Lage og satse:** `create_bet_v2(p_competition_id, p_round_id, p_question, p_condition, p_against_member, p_against_profile, p_side, p_points)` i stedet for `create_bet`. `place_bet_stake` er som før. Uten 052: den gamle veien.
+- **Banken:** `bet_bank(p_competition_id, p_round_id)` (din) og `bet_points_for` regnes ikke lenger i appen for andre banker enn sesongen; poengtabellen grupperer innsatsene på `person_key` (medlem eller profil) og viser navn fra troppen eller profilene.
+- **Personer:** `BetRow`/`BetStakeRow` får `creator_profile_id`, `against_profile_id`, `resolved_by_profile`, `profile_id` og `person_key`; `BetMapping.key` må bruke `person_key` (eller profil-id) for spillere uten medlemskap.
+- **Innstillinger og oppsett:** bryter «Veddemål» i turneringens innstillinger (`bets_set_enabled(turnering, null, på)`) og i runde-oppsettet for enkeltrunder (`bets_set_enabled(null, runde, på)` etter at runden er laget; steg 7 eier oppsettet, så bryteren legges der når det er ferdig).
+- **Oppgjøret:** feiingen fra Hjem kan stå for gamle bygg, men nye bygg trenger den bare som reserve. `bet_resolved` med `server: true` kan vises som «Avgjort av scorene».
+- **Web-admin:** samme bryter i turneringens innstillinger.
+
+### Oppsett av `bet-settle` (Thomas, etter godkjenning av 052)
+
+1. `supabase secrets set BET_SETTLE_SECRET=<lang tilfeldig streng>` på test.
+2. `supabase functions deploy bet-settle --no-verify-jwt` fra roten av repoet (funksjonen importerer motoren fra `web/golfgutu-core`; tar ikke pakkingen med filer utenfor `supabase/`, må importen peke på en generert kopi). Kjør `deno check supabase/functions/bet-settle/index.ts` først.
+3. Database → Webhooks: INSERT på `public.bet_settle_queue` → POST til `/functions/v1/bet-settle` med headeren `x-bet-secret`.
+4. Sikkerhetsnett med pg_cron hvert femte minutt (feilede jobber, runder som låses på nytt): `select cron.schedule('dd18-veddemaal', '*/5 * * * *', $$select net.http_post(url := '<prosjekt>/functions/v1/bet-settle', headers := jsonb_build_object('x-bet-secret', '<hemmelighet>'))$$);` (hemmeligheten helst fra Vault).
+
+Testene: `node --test 'web/golfgutu-core/test/*.test.ts'` og `node --import /tmp/deno-shim.mjs --test supabase/functions/bet-settle/logic_test.ts` (shimmen står i `docs/push-oppsett.md`).

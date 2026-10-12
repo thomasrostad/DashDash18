@@ -110,6 +110,7 @@ lag), `evaluateRoundCompetitions` (flere konkurranser på samme runde) og `freez
 | Season | `season.ts` |
 | Playoff (playoff og «skjul de siste hullene»), Draw (trekning og lag) | `playoff.ts`, `draw.ts` |
 | Competitions (liga, cup, SplitMix64) | `competitions.ts` |
+| Bets (veddemål, med `PointSplit.apportion` fra Games) | `bets.ts` |
 
 Fra appen (`DashDash18/`): radtypene (`Data/Rows.swift`, `FoundationRows.swift`) i `app/rows.ts`,
 `RoundSnapshot`/`RoundGame.makeRound` og scorekortet (`snapshotScorecard`, `snapshotTotal`, `holeNumber`) i
@@ -122,6 +123,10 @@ med `playoff_for`, og `TavlaStandings` gir vinneren (`playoffWinner`, `decidePla
 `hole_index` = posisjon og `playoff_holes[i]` = rundehullet) til `Season.standings`. Se `app/playoffround.ts`
 (også `hidesLastHoles` og `HIDDEN_HOLES_NOTE`) og `test/playoffround.test.ts`.
 
-Ikke portert ennå: `Bets` (veddemål), `Games`, `GameNassau`, `GameWolf` og oppgjøret i `GameSkins` (spill på runden),
+Steg 11 (sql/052): `settleJob` i `app/betsettle.ts` gjør opp en jobb fra `bet_settle_jobs` (rundens rådata i
+`tavla_data`-form og veddemålene med regelsett) som `BetsBoard.sweepPlan` i appen; Edge Function
+`supabase/functions/bet-settle` bruker den. Fixture: `veddemaal.json`, test: `test/bets.test.ts`.
+
+Ikke portert ennå: `Games`, `GameNassau`, `GameWolf` og oppgjøret i `GameSkins` (spill på runden),
 `Tips` (tippekupongen) og `PlayerStats` (profilstatistikk). Regelsettets felt for tips og veddemål leses og
 skrives likevel, så regelsett-JSON-en går fram og tilbake uten tap, og valideringen sjekker dem.
