@@ -115,7 +115,7 @@ nonisolated struct HomeFeedDrafts: Sendable {
             return HomeFeedDraft(id: id, date: row.createdAt, source: placement.source, filters: placement.filters,
                                  kind: .line(line), isUnread: unread, isOwn: own, signupKey: key)
 
-        case .sidePrize, .tipsKing, .announcement, .committeeDrawn:
+        case .sidePrize, .tipsKing, .announcement, .committeeDrawn, .eveningStarted:
             return HomeFeedDraft(id: id, date: row.createdAt, source: placement.source, filters: placement.filters,
                                  kind: .line(lineDraft(row, placement: placement)), isUnread: unread, isOwn: own)
 

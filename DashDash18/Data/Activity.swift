@@ -429,6 +429,9 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     case waitlistPromoted(member: UUID, guestName: String?, eventDate: String?)
     /// Meldte seg av fra «kommer» (sql/045, skrevet av serveren, til arrangørene).
     case signupDropped(member: UUID, eventDate: String?, late: Bool)
+    /// Kvelden er i gang (sql/046, skrevet av serveren når den første vanlige runden starter). Én per
+    /// kveld. Kategori `round`, gruppe Kvelden.
+    case eveningStarted(eventDate: String?, roundNo: Int?, courseName: String?, holeCount: Int?)
     case unknown(kind: String)
 
     /// Alle kjente nøkler, for tester og dokumentasjon.
@@ -436,7 +439,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         "round_started", "round_locked", "round_deleted", "big_score", "lead_changed", "side_prize",
         "score_corrected", "signup", "nudge", "reminder", "announcement", "committee_drawn",
         "member_joined", "tips_king", "bet_created", "bet_challenge", "bet_resolved", "table_changed",
-        "waitlist_promoted", "signup_dropped",
+        "waitlist_promoted", "signup_dropped", "evening_started",
     ]
 
     var kind: String {
@@ -461,13 +464,14 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .tableChanged: "table_changed"
         case .waitlistPromoted: "waitlist_promoted"
         case .signupDropped: "signup_dropped"
+        case .eveningStarted: "evening_started"
         case .unknown(let kind): kind
         }
     }
 
     var category: ActivityCategory {
         switch self {
-        case .roundStarted, .roundLocked, .roundDeleted, .tableChanged: .round
+        case .roundStarted, .roundLocked, .roundDeleted, .tableChanged, .eveningStarted: .round
         case .bigScore: .score
         case .leadChanged: .lead
         case .sidePrize: .sidePrize
@@ -526,6 +530,8 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             ActivityData(member: member, eventDate: eventDate, guestName: guestName)
         case let .signupDropped(member, eventDate, late):
             ActivityData(member: member, eventDate: eventDate, late: late)
+        case let .eveningStarted(eventDate, roundNo, courseName, holeCount):
+            ActivityData(eventDate: eventDate, roundNo: roundNo, courseName: courseName, holeCount: holeCount)
         case .unknown:
             ActivityData()
         }
@@ -599,6 +605,9 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case "signup_dropped":
             guard let member = d.member else { self = .unknown(kind: kind); return }
             self = .signupDropped(member: member, eventDate: d.eventDate, late: d.late ?? false)
+        case "evening_started":
+            self = .eveningStarted(eventDate: d.eventDate, roundNo: d.roundNo, courseName: d.courseName,
+                                   holeCount: d.holeCount)
         default:
             self = .unknown(kind: kind)
         }
@@ -633,11 +642,27 @@ nonisolated enum ActivityText {
     }
 
     /// Teksten for en rad. `name` slår opp visningsnavnet; ukjent gir «Noen» (som PWA-en).
-    static func display(_ row: ActivityRow, name: (UUID) -> String?) -> ActivityDisplay {
-        display(row.event, actor: row.actorMemberID, recipients: row.recipients, name: name)
+    /// `term`: hva en dag heter i klubben. nil (for eksempel i Hjem, som viser flere klubber) gir
+    /// nøytral tekst der ordet trengs («Runden er i gang»).
+    static func display(_ row: ActivityRow, term: DayTerm? = nil, name: (UUID) -> String?) -> ActivityDisplay {
+        display(row.event, actor: row.actorMemberID, recipients: row.recipients, term: term, name: name)
     }
 
-    static func display(_ event: ActivityEvent, actor: UUID?, recipients: [UUID]? = nil,
+    /// «Kvelden er i gang: torsdag 8. oktober · Runde 1 – Pebble Beach» (sql/046). Uten kjent ord
+    /// for dagen: «Runden er i gang». Samme tekst som push-send (`eveningStartedText`).
+    static func eveningStarted(eventDate: String?, roundNo: Int?, courseName: String?, term: DayTerm?) -> String {
+        let head = (term.map { DayTerm.capitalized($0.the) } ?? "Runden") + " er i gang"
+        var parts: [String] = []
+        if let eventDate { parts.append(EveningDates.longText(eventDate)) }
+        if let roundNo, roundNo > 0 {
+            parts.append(RoundListing.title(roundNo: roundNo, courseName: courseName))
+        } else if let courseName {
+            parts.append(courseName)
+        }
+        return parts.isEmpty ? head : head + ": " + parts.joined(separator: " · ")
+    }
+
+    static func display(_ event: ActivityEvent, actor: UUID?, recipients: [UUID]? = nil, term: DayTerm? = nil,
                         name lookup: (UUID) -> String?) -> ActivityDisplay {
         func who(_ id: UUID?) -> String { id.flatMap(lookup) ?? "Noen" }
         func list(_ ids: [UUID]) -> String { NorwegianList.join(ids.map { who($0) }) }
@@ -657,6 +682,11 @@ nonisolated enum ActivityText {
             if let bays, bays > 0 { extras.append(bays == 1 ? "1 bås" : "\(bays) båser") }
             if !extras.isEmpty { text += " — " + extras.joined(separator: ", ") }
             return ActivityDisplay(symbol: "flag.fill", emoji: "🏌️", text: text)
+
+        case let .eveningStarted(eventDate, roundNo, courseName, _):
+            return ActivityDisplay(symbol: "flag.checkered", emoji: "🏁",
+                                   text: eveningStarted(eventDate: eventDate, roundNo: roundNo, courseName: courseName,
+                                                        term: term))
 
         case let .roundLocked(roundNo, courseName):
             return ActivityDisplay(symbol: "lock.fill", emoji: "🔒",

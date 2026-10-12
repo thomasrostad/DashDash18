@@ -20,12 +20,19 @@ struct KveldView: View {
 private struct KveldContent: View {
     @Environment(\.dayTerm) private var dayTerm
     let model: KveldModel
+    /// «Demp denne kvelden» (sql/046). nil = skjult.
+    @State private var muted: Bool?
 
     var body: some View {
         content
             .task { await model.load() }
             .refreshable { await model.load() }
             .onChange(of: dayTerm, initial: true) { _, term in model.dayTerm = term }
+            .task(id: model.event?.id) {
+                muted = nil
+                guard let id = model.event?.id else { return }
+                muted = await EveningMuteToggle.load(client: model.clubContext.client, eventID: id)
+            }
     }
 
     @ViewBuilder
@@ -67,6 +74,8 @@ private struct KveldContent: View {
                         if let entry = model.calendarEntry {
                             AddToCalendarButton(entry: entry)
                         }
+                        // sql/046: ingen push om kvelden for deg. Skjult uten 046.
+                        EveningMuteToggle(client: model.clubContext.client, eventID: event.id, isMuted: $muted)
                         KveldExtrasCards(model: KveldExtrasModel(context: model.clubContext, eventID: event.id),
                                          refresh: model.loadCount)
                             .id(event.id)
