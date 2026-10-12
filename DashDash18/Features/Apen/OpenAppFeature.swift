@@ -36,7 +36,8 @@ nonisolated enum PurchaseFeature {
     static let isEnabled = false
 }
 
-/// «Del regningen» med Vipps (felles utgifter, aldri veddemål). Trenger ingenting på serveren.
+/// «Del regningen» med Vipps (felles utgifter, aldri veddemål). Lagring og «Mine oppgjør» krever
+/// sql/051; uten den deles regningen som før, uten lagring.
 nonisolated enum BillSplitFeature {
     static let isEnabled = true
 }

@@ -285,7 +285,10 @@ struct LooseRoundActions: View {
             }
         }
         .sheet(isPresented: $showsBill) {
-            BillSplitView(people: billNames)
+            BillSplitView(people: billNames, profiles: billProfiles,
+                          saveContext: model.looseContext.map {
+                              BillService.SaveContext(client: $0.client, userID: $0.userID, roundID: $0.roundID)
+                          })
         }
         .confirmationDialog("Avslutte runden?", isPresented: $confirmsFinish, titleVisibility: .visible) {
             Button("Avslutt runden") { finish() }
@@ -299,6 +302,18 @@ struct LooseRoundActions: View {
     private var billNames: [String] {
         guard let snapshot = model.game?.snapshot else { return [] }
         return BillSplit.names(players: snapshot.players.map(\.memberID), names: snapshot.names, me: model.viewer.memberID)
+    }
+
+    /// Navn → profil for spillerne med innlogging (lagres på delene, sql/051).
+    private var billProfiles: [String: UUID] {
+        guard let snapshot = model.game?.snapshot, let roster = snapshot.loose?.roster else { return [:] }
+        var out: [String: UUID] = [:]
+        for row in roster {
+            if let profile = row.profileID, let name = snapshot.names[row.playerID] {
+                out[name.trimmingCharacters(in: .whitespacesAndNewlines)] = profile
+            }
+        }
+        return out
     }
 
     private func finish() {

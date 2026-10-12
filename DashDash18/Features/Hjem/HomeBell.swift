@@ -31,6 +31,8 @@ nonisolated enum HomeBellReason: Equatable, Sendable {
     case promoted
     /// Noen meldte seg av fra «kommer» (til arrangørene, sql/045).
     case dropped
+    /// Del regningen: en del er sendt til deg, eller din del kom ikke frem (sql/051).
+    case bill
 }
 
 nonisolated enum HomeBell {
@@ -66,6 +68,8 @@ nonisolated enum HomeBell {
             return member == me ? .promoted : nil
         case .signupDropped:
             return row.recipients?.contains(me) == true ? .dropped : nil
+        case .billShareSent, .billShareDisputed:
+            return row.recipients?.contains(me) == true ? .bill : nil
         default:
             return nil
         }

@@ -17,6 +17,8 @@ import {
   dropoutLookup,
   eveningLongText,
   eveningStartedText,
+  billShareSentText,
+  billShareDisputedText,
   formatMeters,
   type JobPayload,
   type MemberPayload,
@@ -341,6 +343,8 @@ Deno.test("alle typene appen skriver har en norsk tekst (ActivityEvent.knownKind
     waitlist_promoted: ["signup", { member: ANDERS }],
     signup_dropped: ["signup", { member: ANDERS }],
     evening_started: ["round", {}],
+    bill_share_sent: ["social", { title: "Greenfee", name: "Anders" }],
+    bill_share_disputed: ["social", { title: "Greenfee", name: "Thomas" }],
   };
   for (const [kind, [category, data]] of Object.entries(minimal)) {
     const shown = text(activity(kind, category, data));
@@ -822,4 +826,26 @@ Deno.test("046: uten 046-feltene er alt som før", () => {
   const plan = planPush(job(EAGLE), NOW);
   is(plan.notifications[0].threadId, "club-club-1");
   eq(pushLogResults(job(EAGLE), plan), []);
+});
+
+// --- Del regningen (sql/051) ---------------------------------------------------
+
+Deno.test("051: «har sendt sin del» og «ikke kom» med tittel og navn", () => {
+  const sent = activity("bill_share_sent", "social", { split_id: "s1", share_id: "d1", title: "Simulatorleie", name: "Anders" },
+    { actor_member_id: ANDERS, recipients: [THOMAS] });
+  is(text(sent).emoji, "💸");
+  is(text(sent).text, "Anders har sendt sin del for Simulatorleie");
+  const disputed = activity("bill_share_disputed", "social", { title: "Simulatorleie", name: "Thomas" },
+    { actor_member_id: THOMAS, recipients: [ANDERS] });
+  is(text(disputed).text, "Thomas sier at din del for Simulatorleie ikke kom");
+  is(billShareSentText({}), "Noen har sendt sin del for regningen");
+  is(billShareDisputedText({ name: " ", title: null }), "Mottakeren sier at din del for regningen ikke kom");
+});
+
+Deno.test("051: regningslinjene går bare til mottakeren på linja", () => {
+  const sent = activity("bill_share_sent", "social", { title: "Greenfee", name: "Anders" },
+    { actor_member_id: ANDERS, recipients: [THOMAS] });
+  const plan = planPush(job(sent), NOW);
+  eq(plan.notifications.map((n) => n.memberId), [THOMAS]);
+  is(plan.notifications[0].body, "💸 Anders har sendt sin del for Greenfee");
 });
