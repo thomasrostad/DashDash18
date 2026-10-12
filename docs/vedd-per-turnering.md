@@ -75,7 +75,10 @@ Vilkårene (hullduell, birdie, par, pallen) regnes av regelmotoren i Swift. Å g
 - **Oppgjøret:** feiingen fra Hjem kan stå for gamle bygg, men nye bygg trenger den bare som reserve. `bet_resolved` med `server: true` kan vises som «Avgjort av scorene».
 - **Web-admin:** samme bryter i turneringens innstillinger.
 
-### Oppsett av `bet-settle` (Thomas, etter godkjenning av 052)
+### Oppsett av `bet-settle` (gjort på test 12.10.2026)
+
+Gjort: 052 kjørt, `bet-settle` deployet (motoren fra `web/golfgutu-core` ble med i pakkingen), `BET_SETTLE_SECRET` satt og lagt i Vault, trigger og cron i `sql/052b_bet_settle_utlosing.sql`. Prøvd: kall fra databasen ga 200. Oppskriften under gjelder prod.
+
 
 1. `supabase secrets set BET_SETTLE_SECRET=<lang tilfeldig streng>` på test.
 2. `supabase functions deploy bet-settle --no-verify-jwt` fra roten av repoet (funksjonen importerer motoren fra `web/golfgutu-core`; tar ikke pakkingen med filer utenfor `supabase/`, må importen peke på en generert kopi). Kjør `deno check supabase/functions/bet-settle/index.ts` først.
