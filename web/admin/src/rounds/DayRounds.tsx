@@ -48,9 +48,12 @@ export function DayRounds({ clubID, event, days, comps, onBack }: {
 
   const term = data?.dayTerm ?? "evening";
   const courseName = useCallback((id: string | null) => data?.courses.find((c) => c.course.id === id)?.course.name ?? null, [data]);
-  const titleOf = useCallback((r: { roundNo: number; courseID: string | null }) => roundTitle(r.roundNo, courseName(r.courseID)), [courseName]);
+  // En playoff (sql/047) heter «Playoff», ikke «Runde N».
+  const titleOf = useCallback((r: { roundNo: number; courseID: string | null; kind?: string }) =>
+    r.kind === "playoff" ? "Playoff" : roundTitle(r.roundNo, courseName(r.courseID)), [courseName]);
   const rounds = useMemo(() => (data?.allRounds ?? []).filter((r) => r.eventID === event.id).sort((a, b) => a.roundNo - b.roundNo), [data, event.id]);
-  const clubActive = data?.allRounds.find((r) => r.status === "active") ?? null;
+  // En playoff stopper ingen ny runde, så den regnes ikke som «runden som går».
+  const clubActive = data?.allRounds.find((r) => r.status === "active" && r.kind !== "playoff") ?? null;
   // Kveldens runder, med runden som går selv om den hører til en annen kveld.
   const toClose = clubActive && !rounds.some((r) => r.id === clubActive.id) ? [...rounds, clubActive] : rounds;
 
@@ -74,7 +77,7 @@ export function DayRounds({ clubID, event, days, comps, onBack }: {
     });
     d = { ...d, courseID: ready[0]?.course.id ?? null };
     const sameTournament = days.filter((e) => (event.season_id ? e.season_id === event.season_id : e.competition_id === event.competition_id && !e.season_id));
-    const tournamentRounds = data.allRounds.filter((r) => r.eventID !== null && sameTournament.some((e) => e.id === r.eventID));
+    const tournamentRounds = data.allRounds.filter((r) => r.eventID !== null && r.kind !== "playoff" && sameTournament.some((e) => e.id === r.eventID));
     d = applySuggestion(d, previousRound(tournamentRounds, sameTournament, event.event_date),
       ready.map((c) => ({ id: c.course.id, isReady: true, holeCount: c.holes.length, teeIDs: c.tees.map((t) => t.id) })), data.rules);
     if (d.teeID === null) {
@@ -160,6 +163,7 @@ export function DayRounds({ clubID, event, days, comps, onBack }: {
       <section>
         {header}
         <RoundView round={view.round} title={titleOf(view.round)} rules={data.rules} myMemberID={data.myMemberID} openCut={view.cut}
+          tableRules={data.tableRules}
           onLeft={async (text) => { setView({ kind: "list" }); setNotice(text); await load(); }} />
       </section>
     );
@@ -167,7 +171,7 @@ export function DayRounds({ clubID, event, days, comps, onBack }: {
 
   if (view.kind === "startlist") {
     const names = new Map(data.roster.map((m) => [m.id, m.name]));
-    const open = rounds.filter((r) => r.status !== "locked");
+    const open = rounds.filter((r) => r.status !== "locked" && r.kind !== "playoff");
     return (
       <section>
         {header}

@@ -294,8 +294,10 @@ final class CompetitionDetailModel {
         do {
             if competition.kind == .season {
                 let input = try await CompetitionQueries.season(client: client, competition: competition)
-                let me = access.memberships.first { $0.clubID == competition.clubID }?.memberID
-                content = .season(input.map { TavlaStandings($0, me: me) })
+                let mine = access.memberships.first { $0.clubID == competition.clubID }
+                let me = mine?.memberID
+                let viewer = Viewer(memberID: me ?? UUID(), isOrganizer: mine?.isOrganizer ?? false)
+                content = .season(input.map { TavlaStandings($0, me: me, viewer: viewer) })
             } else {
                 participants = try await CompetitionQueries.participants(client: client, competitionID: competition.id)
                 let detail = try await CompetitionQueries.detail(client: client, competition: competition,
@@ -319,7 +321,7 @@ final class CompetitionDetailModel {
             let mine = Set(d.participants.filter(access.isMine).map(\.id))
             return .cup(CupStandings(participants: d.participants, matches: d.matches, names: names, me: mine))
         }
-        return .league(LeagueStandings(d.input, me: access.myEntrants))
+        return .league(LeagueStandings(d.input, me: access.myEntrants, playoff: d.playoff))
     }
 
     // MARK: Cup

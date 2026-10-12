@@ -5,7 +5,7 @@
 import {
   CompetitionScope, CupStandings, decodeCompetitionMatch, decodeCompetitionParticipant, decodeCompetitionRound,
   decodeCompetitionRow, decodeProfile, decodeRoundParticipant, decodeTavlaData, LeagueStandings, makeSnapshot,
-  PersonDirectory, standingsFromTavlaData, type RoundsGrid, type UUID,
+  decodeRoundRow, HIDDEN_HOLES_NOTE, hidesLastHoles, isPlayoff, PersonDirectory, standingsFromTavlaData, type RoundsGrid, type UUID,
 } from "../../golfgutu-core/src/index.ts";
 
 export interface TVEnv {
@@ -20,6 +20,17 @@ export interface TVPayload {
   played: string;
   rows: { place: string; name: string; total: string; detail: string }[];
   latest: { title: string; ongoing: boolean; lines: { name: string; points: number }[] } | null;
+  /**
+   * «De siste hullene vises når runden er låst» (sql/047): en runde som går, skjuler de siste hullene, og
+   * serveren sender ikke scorene på dem til TV-en. null ellers.
+   */
+  note: string | null;
+}
+
+/** Notisen når en vanlig runde som går, skjuler de siste hullene. Playoffen teller ikke med. */
+export function hiddenHolesNote(board: Record<string, unknown>): string | null {
+  const rounds = list(board, "rounds").map((x) => decodeRoundRow(x));
+  return rounds.some((r) => r.status === "active" && !isPlayoff(r) && hidesLastHoles(r)) ? HIDDEN_HOLES_NOTE : null;
 }
 
 /** Koden slik serveren lagrer den: 10 tegn, store bokstaver, uten mellomrom. */
@@ -44,7 +55,9 @@ export function buildTVPayload(board: Record<string, unknown>): TVPayload {
     club: comp.club_name ?? null,
     played: `${t.eveningsPlayed} av ${total} ${unit} spilt`,
     rows: t.rows.map((r) => ({ place: r.placeText, name: r.name, total: r.totalText, detail: r.detail })),
+    // «Alle runder» har ikke playoffen (sql/047), så siste runde er alltid en vanlig runde.
     latest: latestRound(t.rounds),
+    note: hiddenHolesNote(board),
   };
 }
 
@@ -97,6 +110,7 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
         detail: g.walkover ? "W.O." : g.result ?? "",
       })),
       latest: null,
+      note: null,
     };
   }
 
@@ -134,6 +148,7 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
     played: `${l.roundCount} ${l.roundCount === 1 ? "runde" : "runder"} spilt · ${l.rulesSummary}`,
     rows: l.rows.map((r) => ({ place: l.placeText(r), name: r.name, total: LeagueStandings.points(r.total), detail: l.detail(r) })),
     latest: latestRound(l.roundGrid()),
+    note: hiddenHolesNote(board),
   };
 }
 
@@ -213,6 +228,7 @@ function render(){
   $("latest").innerHTML = l ? '<h2 class="'+(l.ongoing?"live":"")+'">'+(l.ongoing?"Pågår nå":"Siste runde")+'</h2><div class="dim">'+esc(l.title)+'</div>'
     + l.lines.map((x,i)=>'<div class="line"><span class="dim">'+(i+1)+'.</span><span>'+esc(x.name)+'</span><b>'+x.points+'</b></div>').join("") : "";
   $("latest").style.display = l ? "" : "none";
+  $("note").textContent = data.note || ""; $("note").style.display = data.note ? "" : "none";
 }
 async function load(){
   try { const r = await fetch(url, {cache:"no-store"});
@@ -224,5 +240,5 @@ clock(); setInterval(clock, 15000); load(); setInterval(load, 15000); setInterva
 window.addEventListener("resize", render);`;
   return shell("Atten · TV", `<main id="main"><header><div><h1 id="name">Atten</h1><div class="dim" id="played">Henter tabellen …</div></div>
 <div class="clock" id="clock"></div></header><div class="body"><div class="table"><div id="rows"></div><div class="dots" id="dots"></div></div>
-<aside id="latest" style="display:none"></aside></div></main>`, nonce, script);
+<aside id="latest" style="display:none"></aside></div><div class="dim" id="note" style="display:none"></div></main>`, nonce, script);
 }

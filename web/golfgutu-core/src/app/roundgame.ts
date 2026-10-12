@@ -144,10 +144,10 @@ export function makeRoundFromSnapshot(s: RoundSnapshot): Round {
     date: s.eventDate,
     locked: r.status === "locked",
     playingHandicaps: frozenHandicaps(s),
-    // Kolonnene for steg 6 (teller, poengtabell, skjul hull) finnes ikke i skjemaet ennå: standardverdiene.
-    counts: true,
-    pointsTable: null,
-    hideLastHoles: 0,
+    // sql/047. Uten kolonnene: teller, ingen poengtabell, ingen skjulte hull. En playoff teller aldri.
+    counts: r.counts && r.kind !== "playoff",
+    pointsTable: r.pointsTable,
+    hideLastHoles: r.hideLastHoles,
   };
 }
 

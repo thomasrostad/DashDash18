@@ -155,7 +155,7 @@ enum HomeFeedQueries {
     /// Klubbrundene du spilte, låst i vinduet, nyeste først, med alt under.
     private static func myClubRounds(client: SupabaseClient, viewer: HomeViewer, clubIDs: [String],
                                      since: Date) async throws -> [RoundSnapshot] {
-        let rounds: [RoundRow] = try await client.from("rounds")
+        let allRounds: [RoundRow] = try await client.from("rounds")
             .select(RoundRow.columns)
             .in("club_id", values: clubIDs)
             .eq("status", value: RoundStatus.locked.rawValue)
@@ -163,6 +163,7 @@ enum HomeFeedQueries {
             .order("locked_at", ascending: false)
             .limit(40)
             .execute().value
+        let rounds = allRounds.ordinary
         guard !rounds.isEmpty, !viewer.memberIDs.isEmpty else { return [] }
         struct Played: Decodable {
             let roundID: UUID
@@ -189,13 +190,14 @@ enum HomeFeedQueries {
     /// Nyest startet først.
     private static func activeClubRounds(client: SupabaseClient, viewer: HomeViewer,
                                          clubIDs: [String]) async throws -> [RoundSnapshot] {
-        let rounds: [RoundRow] = try await client.from("rounds")
+        let allRounds: [RoundRow] = try await client.from("rounds")
             .select(RoundRow.columns)
             .in("club_id", values: clubIDs)
             .eq("status", value: RoundStatus.active.rawValue)
             .order("started_at", ascending: false)
             .limit(40)
             .execute().value
+        let rounds = allRounds.ordinary
         guard !rounds.isEmpty, !viewer.memberIDs.isEmpty else { return [] }
         struct Played: Decodable {
             let roundID: UUID

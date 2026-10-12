@@ -14,8 +14,12 @@
 
 import { ApnsClient, sendAll } from "./apns.ts";
 import {
+  attachAlreadyNotified,
   attachBlocks,
   type BlockRow,
+  DROP_WINDOW_MS,
+  dropoutLookup,
+  type DroppedRow,
   type JobPayload,
   type MemberLink,
   planPush,
@@ -102,6 +106,31 @@ async function withBlocks(db: Db, payload: JobPayload): Promise<JobPayload> {
   return blocks.length ? attachBlocks(payload, links, blocks) : payload;
 }
 
+/**
+ * Forfall (se logic.ts): er jobben appens «meldte forfall», hentes serverens
+ * signup_dropped for samme kveld og medlem, og mottakerne der hoppes over.
+ * Feiler oppslaget, sendes linja som før.
+ */
+async function withDropouts(db: Db, payload: JobPayload): Promise<JobPayload> {
+  const lookup = dropoutLookup(payload);
+  if (!lookup) return payload;
+  const at = Date.parse(lookup.createdAt);
+  if (!Number.isFinite(at)) return payload;
+  const from = new Date(at - DROP_WINDOW_MS).toISOString();
+  const to = new Date(at + DROP_WINDOW_MS).toISOString();
+  try {
+    const rows = await db.select<DroppedRow>(
+      "activity",
+      `select=recipients,created_at&kind=eq.signup_dropped&event_id=eq.${encodeURIComponent(lookup.eventId)}` +
+        `&data->>member=eq.${encodeURIComponent(lookup.member)}` +
+        `&created_at=gte.${encodeURIComponent(from)}&created_at=lte.${encodeURIComponent(to)}`,
+    );
+    return attachAlreadyNotified(payload, rows);
+  } catch {
+    return payload;
+  }
+}
+
 interface QueueRow {
   id: number;
   attempts: number;
@@ -150,7 +179,7 @@ Deno.serve(async (request) => {
       // ingen mottakere), trengs ingen oppslag.
       const now = new Date();
       let plan = planPush(payload, now);
-      if (!plan.skipped) plan = planPush(await withBlocks(db, payload), now);
+      if (!plan.skipped) plan = planPush(await withBlocks(db, await withDropouts(db, payload)), now);
       if (plan.skipped) {
         await db.rpc("finish_push_job", { p_job_id: job.id, p_ok: true, p_result: { skipped: plan.skipped } });
         report.push({ job: job.id, skipped: plan.skipped });

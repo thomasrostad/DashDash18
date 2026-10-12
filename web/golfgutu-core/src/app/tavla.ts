@@ -11,7 +11,9 @@ import { rulesetDay, type CountingUnit, type Ruleset } from "../ruleset.ts";
 import { netStrokes } from "../scoring.ts";
 import { eveningCount, formatPoints, Season } from "../season.ts";
 import { makeRoundFromSnapshot, makeSnapshot, snapshotHandicap, snapshotRoster, type RoundSnapshot } from "./roundgame.ts";
+import { playoffWinner } from "./playoffround.ts";
 import {
+  isPlayoff,
   decodeSeasonRow,
   decodeTavlaData,
   sideClaimTimestamp,
@@ -28,8 +30,10 @@ export interface TavlaInput {
   season: SeasonRow;
   /** Hele troppen, alle statuser. */
   members: ClubMemberRow[];
-  /** Sesongens runder med alt under. */
+  /** Sesongens runder med alt under. Playoff-runder (sql/047) teller ikke og flyttes til `playoffs`. */
   rounds: RoundSnapshot[];
+  /** Playoff-rundene om førsteplassen (`rounds.kind = playoff`). Avgjør `playoffWinner`. */
+  playoffs?: RoundSnapshot[];
 }
 
 /** `TavlaData.input(season:)`: rundene som `RoundSnapshot`, med samme mapping som Kveld. */
@@ -50,7 +54,12 @@ export function tavlaInput(data: TavlaData, season: SeasonRow): TavlaInput {
     rules: season.rules,
     names,
   }));
-  return { season, members: data.members, rounds };
+  return {
+    season,
+    members: data.members,
+    rounds: rounds.filter((r) => !isPlayoff(r.round)),
+    playoffs: rounds.filter((r) => isPlayoff(r.round)),
+  };
 }
 
 /** En rad i tabellen. */
@@ -140,6 +149,10 @@ export class TavlaStandings {
   readonly snapshots: RoundSnapshot[];
   readonly season: Season;
   readonly claims: SideClaim[];
+  /** Vinneren av playoffen om førsteplassen (`Playoff.decide`), eller `null`. */
+  readonly playoffWinner: UUID | null;
+  /** Playoff-rundene (sql/047), startet eller låst. */
+  readonly playoffs: RoundSnapshot[];
 
   constructor(input: TavlaInput, me: UUID | null = null) {
     this.me = me?.toLowerCase() ?? null;
@@ -147,7 +160,8 @@ export class TavlaStandings {
     this.status = input.season.status;
     this.rules = input.season.rules;
 
-    const snapshots = sortSnapshots(input.rounds.filter((s) => s.round.status !== "draft"));
+    // En playoff (sql/047) er ingen vanlig runde: den teller aldri og står ikke i «Alle runder».
+    const snapshots = sortSnapshots(input.rounds.filter((s) => s.round.status !== "draft" && !isPlayoff(s.round)));
     this.snapshots = snapshots;
     const rounds = snapshots.map(makeRoundFromSnapshot);
     this.claims = snapshots.flatMap((s) => s.sideClaims).map(claimFromRow);
@@ -167,8 +181,12 @@ export class TavlaStandings {
     this.eveningsPlayed = eveningCount(withPoints);
 
     // Plassene fra motoren: delt plass (1, 1, 3), de uten nok kvelder nederst, og playoff om førsteplassen.
-    // Playoff-runder finnes ikke ennå (047), så playoffen står som ventende.
-    this.rows = season.standings().map((s, i) => {
+    // Er playoff-runden avgjort (`Playoff.decide`), står vinneren først; ellers står playoffen som ventende.
+    const playoffs = [...(input.playoffs ?? []), ...input.rounds.filter((s) => isPlayoff(s.round))].filter((s) => s.round.status !== "draft");
+    this.playoffs = playoffs;
+    const winner = playoffs.length > 0 ? playoffWinner(season.standings(), playoffs) : null;
+    this.playoffWinner = winner;
+    this.rows = season.standings(winner).map((s, i) => {
       const r = s.row;
       const played = rounds.filter((_, n) => season.roundPoints(n).has(r.player.id));
       return {

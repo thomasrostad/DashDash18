@@ -5,6 +5,7 @@
 import { supabase } from "../supabase.ts";
 import type { Competition, EventRow } from "../data.ts";
 import { eveningSignups } from "../signupsApi.ts";
+import { isMissing } from "../signups.ts";
 import {
   decodeCourseHoleRecord, decodeCourseRow, decodeHoleScoreRow, decodeRoundHoleRow, decodeRoundMatchRow, decodeRoundPlayerRow,
   decodeRoundRow, decodeRuleset, decodeSideClaimRow, GOLFGUTU, makeSnapshot, rulesetDay,
@@ -16,16 +17,40 @@ import {
 import { RoundGame, cutPatch, cutPatchMatches, type CutChoice } from "./game.ts";
 import {
   blockingRound, dataErrorText, drawPlan, type DrawPlan, deletedMessage, mainActiveSeason, mainSeasonIDs, roundTitle, saveErrorText, setupIssues, setupParams, startErrorText, issueMessage,
-  groupTerm, roundWrite, sortedByName, type DeleteSummary, type RosterMember, type RoundDraft, type SignupRow,
+  groupTerm, roundWrite, sortedByName, tableRulesPatch, type DeleteSummary, type RosterMember, type RoundDraft, type SignupRow,
 } from "./logic.ts";
 import { startListParams, type StartGroupDraft, type StartGroupRow } from "./startlist.ts";
 
 const ROUND_COLUMNS = "id, club_id, event_id, course_id, round_no, name, status, hole_count, first_hole, tee_time, format, "
   + "handicap_allowance, external_handicap, weight, ld_enabled, ld_hole_index, kp_enabled, kp_hole_index, cut_rule, cut_after, "
   + "started_at, locked_at, venue, tee_id, tee_name, course_rating, slope_rating, tee_par, wave_no";
+/** sql/047: tabellreglene og playoffen på runden. */
+export const TABLE_RULES_COLUMNS = "counts, points_table, hide_last_holes, kind, playoff_for, playoff_holes";
 const PLAYER_COLUMNS = "round_id, member_id, club_id, handicap_index, seed_group, playing_handicap, bay_no, is_marker, team_no";
 const COURSE_COLUMNS = "id, club_id, name, external_name, course_rating, slope_rating, in_use, kind";
 const TEE_COLUMNS = "id, course_id, name, gender, course_rating, slope_rating, par, sort_order";
+
+let tableRulesProbe: Promise<boolean> | null = null;
+
+/**
+ * Finnes kolonnene fra sql/047? Spørres én gang per økt. Uten dem hentes rundene med de gamle kolonnene
+ * (standardverdiene gjelder), og valgene for tabellreglene og playoffen vises ikke.
+ */
+export function hasTableRules(): Promise<boolean> {
+  tableRulesProbe ??= Promise.resolve(supabase.from("rounds").select("kind").limit(1)).then(
+    ({ error }) => {
+      if (error && !isMissing(error.code)) tableRulesProbe = null; // prøv igjen neste gang
+      return !error;
+    },
+    () => { tableRulesProbe = null; return false; },
+  );
+  return tableRulesProbe;
+}
+
+/** Kolonnene for `rounds`, med sql/047 når den er kjørt. */
+export async function roundColumns(): Promise<string> {
+  return (await hasTableRules()) ? `${ROUND_COLUMNS}, ${TABLE_RULES_COLUMNS}` : ROUND_COLUMNS;
+}
 
 /** En runde i lista, med det appens `RoundRow` har og tidspunktene. */
 export type ListRound = RoundRow & { startedAt: string | null; lockedAt: string | null; waveNo: number };
@@ -67,6 +92,8 @@ export interface DayData {
   seasonRoundIDs: string[];
   /** Matchene i turneringens runder. Hentes bare når trekningen er «uten gjentakelser» (steg 6). */
   seasonMatches: RoundMatchRow[];
+  /** sql/047 er kjørt: «Teller ikke», poengtabell og «Skjul de tre siste hullene» kan velges. */
+  tableRules: boolean;
 }
 
 /** Trekningen for en runde på dagen: regelsettets `formats.drawMethod`, med møtene i turneringens andre runder. */
@@ -176,11 +203,13 @@ export async function loadSourceCourses(ids: string[]): Promise<CourseItem[]> {
 export async function loadDay(clubID: string, event: EventRow, comps: readonly Competition[]): Promise<DayData> {
   try {
     const user = (await supabase.auth.getUser()).data.user;
+    const tableRules = await hasTableRules();
+    const columns = tableRules ? `${ROUND_COLUMNS}, ${TABLE_RULES_COLUMNS}` : ROUND_COLUMNS;
     const [rules, membersRes, coursesRes, roundsRes, signupsRes, meRes] = await Promise.all([
       rulesFor(clubID, event, comps),
       supabase.from("club_members").select("id, display_name, handicap_index, seed_group, user_id").eq("club_id", clubID).eq("status", "active"),
       supabase.from("courses").select(COURSE_COLUMNS).eq("club_id", clubID),
-      supabase.from("rounds").select(ROUND_COLUMNS).eq("club_id", clubID).order("round_no"),
+      supabase.from("rounds").select(columns).eq("club_id", clubID).order("round_no"),
       eveningSignups(event.id).then((data) => ({ data, error: null }), (error) => ({ data: null, error })),
       user ? supabase.from("club_members").select("id").eq("club_id", clubID).eq("user_id", user.id).limit(1) : Promise.resolve({ data: [], error: null }),
     ]);
@@ -207,11 +236,12 @@ export async function loadDay(clubID: string, event: EventRow, comps: readonly C
     const missing = [...new Set(allRounds.map((r) => r.courseID).filter((x): x is string => x !== null && !known.has(x)))];
     // Feiler hentingen av hentede baner, vises rundene uten banenavn, som i appen.
     courses = courses.concat(await loadSourceCourses(missing).catch(() => []));
-    const history = await loadSeasonHistory(event, rules, allRounds);
+    // En playoff (sql/047) er ingen runde i trekningen.
+    const history = await loadSeasonHistory(event, rules, allRounds.filter((r) => r.kind !== "playoff"));
     return {
       rules, dayTerm: rulesetDay(rules), roster, signups: (signupsRes.data ?? []) as SignupRow[], allRounds, players, courses,
       myMemberID: ((meRes.data ?? []) as { id: string }[])[0]?.id ?? null,
-      seasonRoundIDs: history.ids, seasonMatches: history.matches,
+      seasonRoundIDs: history.ids, seasonMatches: history.matches, tableRules,
     };
   } catch (e) {
     fail(e);
@@ -259,6 +289,8 @@ export interface SetupContext {
   rules: Ruleset;
   roster: RosterMember[];
   course: CourseItem | null;
+  /** sql/047 er kjørt: tabellreglene skrives med raden. */
+  tableRules?: boolean;
 }
 
 function courseCheck(ctx: SetupContext) {
@@ -271,7 +303,7 @@ function courseFor(ctx: SetupContext, d: RoundDraft) {
 
 /** Raden i `rounds`, upsert på id (et nytt forsøk etter en feil treffer samme rad). Status røres ikke. */
 async function writeRound(ctx: SetupContext, d: RoundDraft): Promise<void> {
-  const write = roundWrite({ ...d, teeID: ctx.course && findTee(ctx.course, d.teeID) ? d.teeID : null }, ctx.clubID, courseFor(ctx, d));
+  const write = roundWrite({ ...d, teeID: ctx.course && findTee(ctx.course, d.teeID) ? d.teeID : null }, ctx.clubID, courseFor(ctx, d), ctx.tableRules ?? false);
   const { data, error } = await supabase.from("rounds").upsert(write, { onConflict: "id" }).select("id");
   if (error) fail(error, saveErrorText);
   // RLS sa nei uten feilkode.
@@ -294,7 +326,7 @@ export async function saveDraft(ctx: SetupContext, d: RoundDraft): Promise<void>
 
 /** Rundene som går i klubben nå. Etter sql/034 kan flere gå samtidig (én per spilledag og pulje). */
 export async function activeRounds(clubID: string): Promise<ListRound[]> {
-  const { data, error } = await supabase.from("rounds").select(ROUND_COLUMNS).eq("club_id", clubID).eq("status", "active")
+  const { data, error } = await supabase.from("rounds").select(await roundColumns()).eq("club_id", clubID).eq("status", "active")
     .order("started_at", { ascending: false });
   if (error) fail(error);
   return ((data ?? []) as unknown as Record<string, unknown>[]).map(decodeListRound);
@@ -322,6 +354,20 @@ export async function startRound(ctx: SetupContext, d: RoundDraft, titleOf: (r: 
   const started = data as { players: number; matches: number; status: string };
   if (started.status !== "active" || started.players !== params.p_players.length || started.matches !== params.p_matches.length) {
     throw new RoundError("Runden startet ikke. Runden ble ikke startet slik oppsettet sto. Last inn på nytt og sjekk.");
+  }
+}
+
+/**
+ * «Teller ikke», poengtabell og «Skjul de tre siste hullene» på en startet eller låst runde: vanlig update på
+ * `rounds` (sql/047, rettigheten rounds). Sjekker raden tilbake.
+ */
+export async function saveTableRules(roundID: string, patch: { counts: boolean; pointsTable: string | null; hideLastHoles: number }): Promise<void> {
+  const write = tableRulesPatch(patch);
+  const { data, error } = await supabase.from("rounds").update(write).eq("id", roundID).select("counts, points_table, hide_last_holes");
+  if (error) fail(error, saveErrorText);
+  const row = ((data ?? []) as Record<string, unknown>[])[0];
+  if (!row || row.counts !== write.counts || (row.points_table ?? null) !== write.points_table || row.hide_last_holes !== write.hide_last_holes) {
+    throw new RoundError("Du har ikke tilgang til dette.");
   }
 }
 
@@ -363,7 +409,7 @@ export async function deleteRound(roundID: string): Promise<string> {
 /** Alt for én runde, som `RundeQueries.snapshot`. */
 export async function loadGame(roundID: string, rules: Ruleset): Promise<RoundGame> {
   try {
-    const { data: rows, error } = await supabase.from("rounds").select(ROUND_COLUMNS).eq("id", roundID).limit(1);
+    const { data: rows, error } = await supabase.from("rounds").select(await roundColumns()).eq("id", roundID).limit(1);
     if (error) throw error;
     const raw = ((rows ?? []) as unknown as Record<string, unknown>[])[0];
     if (!raw) throw new RoundError("Fant ikke runden. Den kan ha blitt slettet.");
