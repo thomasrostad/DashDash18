@@ -141,6 +141,39 @@ test("TV for cup viser runden som pågår", () => {
   assert.equal(tv.rows[0].total, d.members[0].display_name);
 });
 
+test("TV med flere konkurranser og lag mot lag (sql/048): små paneler ved siden av hovedtabellen", () => {
+  const season = fixture.sesonger[0];
+  const competition = { name: season.name, season_id: season.id, club_id: season.club_id, status: season.status, rules: season.rules, club_name: null };
+  const plain = buildTVPayload({ ...fixture.tavlaData, competition });
+  // Uten 048-feltene: som før.
+  assert.deepEqual(plain.extras, []);
+  assert.equal(plain.teams, null);
+
+  const round = "00000000-0000-0000-0000-000000000105"; // runden som går
+  const players = fixture.tavlaData.players.map((p: { round_id: string }, i: number) => (p.round_id === round ? { ...p, side: i % 2 === 0 ? 1 : 2 } : p));
+  const comp = (n: number, name: string, isMain: boolean, form: string) =>
+    ({ id: `66666666-6666-6666-6666-66666666666${n}`, round_id: round, name, is_main: isMain, format_version: 1, config: { form }, sort_order: n });
+  const board = {
+    ...fixture.tavlaData, competition, players,
+    round_competitions: [comp(0, "Stableford", true, "stableford"), comp(1, "Skins", false, "skins"), comp(2, "Foursome", false, "foursome")],
+  };
+  const tv = buildTVPayload(board);
+  // Hovedtabellen er den samme.
+  assert.deepEqual(tv.rows, plain.rows);
+  assert.deepEqual(tv.extras.map((e) => e.title), ["Skins", "Foursome"]);
+  assert.ok(tv.extras[0].lines.length > 0 && tv.extras[0].lines.length <= 5);
+  // Bare navn som alt er i svaret.
+  const names = new Set(fixture.tavlaData.members.map((m: { display_name: string }) => m.display_name));
+  for (const l of tv.extras[0].lines) {
+    assert.match(l.name, /^\d+\. /);
+    for (const n of l.name.replace(/^\d+\. /, "").split(" og ")) assert.ok(names.has(n), n);
+  }
+  assert.deepEqual(tv.extras[1].lines, [{ name: "Ikke støttet ennå", score: "" }]);
+  assert.equal(tv.teams?.title, "Lag mot lag");
+  assert.deepEqual(tv.teams?.lines.map((l) => l.name).sort(), ["Side 1", "Side 2"]);
+  assert.match(tvBoardPage("ABCDEFGHJK", "n"), /id="extras"/);
+});
+
 test("TV-sidene", async () => {
   const home = await handle(new Request("https://dashdash18.com/tv"));
   assert.equal(home.status, 200);

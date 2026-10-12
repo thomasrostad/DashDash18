@@ -361,10 +361,12 @@ final class RundeAdminModel {
                 .eq("round_id", value: round.id)
                 .order("match_no")
                 .execute().value
+            async let competitionRows = RoundFormatsQueries.competitions(client: client, roundID: round.id)
             let players = try await playerRows
             let matches = try await matchRows
             let (ids, source) = RoundParticipants.forDraft(roster: members, saved: players, signups: signups)
-            var draft = RoundDraft.saved(round, players: players, matches: matches, participants: ids, source: source)
+            var draft = RoundDraft.saved(round, players: players, matches: matches, participants: ids, source: source,
+                                         competitions: await competitionRows)
             if players.isEmpty {
                 // Ingen oppsett lagret ennå: forslag som for en ny runde.
                 draft.redrawMatches(roster: members, plan: drawPlan(for: draft))
@@ -395,6 +397,7 @@ final class RundeAdminModel {
         if let issue = issues(draft, forStart: false).first { throw .invalid(issue.message(draft.groupTerm)) }
         let id = try await writeRound(draft)
         try await writeSetup(draft, roundID: id, withPlayingHandicap: false)
+        try await writeCompetitions(draft, roundID: id)
         await reload()
         return id
     }
@@ -413,6 +416,8 @@ final class RundeAdminModel {
             throw .invalid("\(title(blocking)) går allerede. Lås den før du starter en ny, eller lagre denne som kladd.")
         }
         let id = try await writeRound(draft)
+        // Konkurransene før start, så de står klare når runden går (sql/048).
+        try await writeCompetitions(draft, roundID: id)
         let params = RoundSetupParams.make(roundID: id, draft: draft, roster: members,
                                            course: coreCourse(for: draft), rules: rules,
                                            withPlayingHandicap: true)
@@ -540,6 +545,28 @@ final class RundeAdminModel {
             await reload()
             throw .invalid("Runden er lagret, men ikke oppsettet. \(DataError.from(error).message)")
         }
+    }
+
+    /// «Konkurranser i runden» (`round_competitions_set`, sql/048). Uten 048 lagres ingenting, og
+    /// runden har formen som eneste konkurranse som før.
+    private func writeCompetitions(_ draft: RoundDraft, roundID: UUID) async throws(DataError) {
+        guard RoundFormatsFeature.isAvailable, let writes = CompetitionSetup.writes(draft) else { return }
+        do {
+            try await RoundFormatsQueries.save(client: client, roundID: roundID, competitions: writes)
+        } catch {
+            if RoundFormatsFeature.isMissing(error) {
+                RoundFormatsFeature.set(false)
+                return
+            }
+            await reload()
+            throw .invalid("Runden er lagret, men ikke konkurransene. \(DataError.from(error).message)")
+        }
+    }
+
+    /// «Oppdater øyeblikksbildet» (`round_snapshot_refresh`, sql/048): regelsettet og hullene leses på
+    /// nytt for en runde som går, f.eks. etter at par eller indeks er rettet.
+    func refreshSnapshot(_ round: RoundRow) async throws(DataError) {
+        try await RoundFormatsQueries.refreshSnapshot(client: client, roundID: round.id)
     }
 
     private func refreshActiveRound() async throws(DataError) {

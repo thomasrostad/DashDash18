@@ -24,7 +24,11 @@ struct RundeSetupStep: View {
         DDForm {
             formSection(form)
             if options.showsTeams { teamSection(form) }
+            if RoundFormatsFeature.isAvailable, options.showsMatches || draft.isTeamVsTeam {
+                RundeTeamVsTeamSection(model: model, draft: $draft, plan: plan)
+            }
             if options.showsMatches { matchSection(form) }
+            if RoundFormatsFeature.isAvailable { RundeCompetitionsSection(model: model, draft: $draft) }
             sidePrizeSection(holes)
             advancedSection(form, options: options)
             if RoundRulesFeature.isAvailable { tableSection }

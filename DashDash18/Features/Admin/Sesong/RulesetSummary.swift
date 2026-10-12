@@ -9,11 +9,18 @@ nonisolated enum RulesetSummary {
     /// teller det samme som `rules` (matcher eller stableford) først, så det vinner når de ligger like nær.
     static func candidates(for kind: CompetitionKind, rules: Ruleset) -> [RulesetTemplate] {
         switch kind {
-        case .season, .league, .game:
-            rules.table.pointsSource == .stableford ? [.stablefordSeries, .matchSeries] : [.matchSeries, .stablefordSeries]
+        case .season:
+            // Formene fra steg 7 lages bare som sesong i en klubb.
+            base(rules) + [.amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam]
+        case .league, .game:
+            base(rules)
         case .cup: [.cup]
         case .fun: [.fun]
         }
+    }
+
+    private static func base(_ rules: Ruleset) -> [RulesetTemplate] {
+        rules.table.pointsSource == .stableford ? [.stablefordSeries, .matchSeries] : [.matchSeries, .stablefordSeries]
     }
 
     /// Oppsettet regelsettet ligger nærmest, blant kandidatene for typen.

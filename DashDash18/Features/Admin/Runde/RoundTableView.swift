@@ -62,6 +62,9 @@ private struct RoundTableContent: View {
                         if model.game?.status == .active {
                             Button("Avkort runden …", systemImage: "scissors") { cutting = true }
                             if admin != nil {
+                                if RoundFormatsFeature.isAvailable {
+                                    Button("Oppdater øyeblikksbildet", systemImage: "camera.rotate") { refreshSnapshot() }
+                                }
                                 Button("Lås runden …", systemImage: "lock") { confirmsLock = true }
                                 Button("Slett runden …", systemImage: "trash", role: .destructive) { askDelete() }
                             }
@@ -140,6 +143,7 @@ private struct RoundTableContent: View {
                         Text(footer(table))
                             .font(.dd(.sans, size: 13, relativeTo: .footnote))
                             .foregroundStyle(Color.ddInkSecondary)
+                        CompetitionBoardsSection(game: game)
                     }
                     .padding()
                 }
@@ -155,6 +159,16 @@ private struct RoundTableContent: View {
             try await admin.lock(round)
             onLeft?("\(model.title) er låst og teller i turneringen.")
             dismiss()
+        }
+    }
+
+    /// Regelsettet og hullene leses på nytt for runden (sql/048), f.eks. etter at par eller indeks er rettet.
+    private func refreshSnapshot() {
+        guard let admin else { return }
+        run {
+            try await admin.refreshSnapshot(round)
+            await model.load()
+            message = "Øyeblikksbildet er oppdatert med dagens regelsett og hull."
         }
     }
 

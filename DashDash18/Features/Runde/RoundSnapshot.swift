@@ -20,6 +20,10 @@ nonisolated struct RoundSnapshot: Equatable, Sendable {
     var names: [UUID: String] = [:]
     /// Eieren og deltakerne i en løs runde (sql/017). Tom for klubbrunder.
     var loose: LooseRoundInfo?
+    /// Konkurransene på runden (sql/048). Tom: formen er eneste konkurranse.
+    var competitions: [RoundCompetitionRow] = []
+    /// Øyeblikksbildet ved start (sql/048). nil: kladd, eller 048 mangler.
+    var freeze: RoundFreeze?
 
     /// En runde uten klubb og kveld.
     var isLoose: Bool { round.clubID == nil }

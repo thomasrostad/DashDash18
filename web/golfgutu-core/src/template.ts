@@ -11,8 +11,25 @@ import {
   type Ruleset,
 } from "./ruleset.ts";
 
-export type RulesetTemplate = "stablefordSeries" | "matchSeries" | "cup" | "fun";
-export const RULESET_TEMPLATES: readonly RulesetTemplate[] = ["stablefordSeries", "matchSeries", "cup", "fun"];
+export type RulesetTemplate =
+  | "stablefordSeries"
+  | "matchSeries"
+  | "cup"
+  | "fun"
+  | "amerikanerSeries"
+  | "kobenhavnerSeries"
+  | "skinsSeries"
+  | "teamVsTeam";
+export const RULESET_TEMPLATES: readonly RulesetTemplate[] = [
+  "stablefordSeries",
+  "matchSeries",
+  "cup",
+  "fun",
+  "amerikanerSeries",
+  "kobenhavnerSeries",
+  "skinsSeries",
+  "teamVsTeam",
+];
 
 /** Navnet i «Ny turnering». */
 export function templateTitle(t: RulesetTemplate): string {
@@ -25,6 +42,14 @@ export function templateTitle(t: RulesetTemplate): string {
       return "Cup";
     case "fun":
       return "Morroturnering";
+    case "amerikanerSeries":
+      return "Amerikaner";
+    case "kobenhavnerSeries":
+      return "Københavner";
+    case "skinsSeries":
+      return "Skins";
+    case "teamVsTeam":
+      return "Lag mot lag";
   }
 }
 
@@ -39,6 +64,14 @@ export function templateSummary(t: RulesetTemplate): string {
       return "Utslag i matchspill. Den som vinner, går videre.";
     case "fun":
       return "Stableford-poengene teller rett fram, runde for runde.";
+    case "amerikanerSeries":
+      return "Fire i gruppa deler 12 poeng per hull. Poengene går i tabellen.";
+    case "kobenhavnerSeries":
+      return "Tre i gruppa deler 6 poeng per hull. Poengene går i tabellen.";
+    case "skinsSeries":
+      return "Hvert hull er et skin. Skinsene går i tabellen.";
+    case "teamVsTeam":
+      return "To sider spiller fourball lag mot lag og samler poeng.";
   }
 }
 
@@ -60,6 +93,22 @@ function stablefordSeriesRules(): Ruleset {
   return r;
 }
 
+/** Amerikaner, Københavner og skins: stableford-serien med formens poeng i tabellen (`table.formPoints`). */
+function formPointsRules(form: string): Ruleset {
+  const r = stablefordSeriesRules();
+  r.table.formPoints = true;
+  r.formats.defaultFormID = form;
+  if (!r.formats.allowedFormIDs.includes(form)) r.formats.allowedFormIDs.push(form);
+  return r;
+}
+
+/** Lag mot lag: Golfgutu-oppsettet med fourball som standardform (sidene settes per runde). */
+function teamVsTeamRules(): Ruleset {
+  const r = golfgutuRules();
+  r.formats.defaultFormID = "fourball";
+  return r;
+}
+
 /** Cup og morroturnering: Golfgutu-oppsettet med konkurransemalene under `competition`. */
 function competitionTemplateRules(): Ruleset {
   const r = golfgutuRules();
@@ -77,6 +126,14 @@ export function templateRules(t: RulesetTemplate): Ruleset {
     case "cup":
     case "fun":
       return competitionTemplateRules();
+    case "amerikanerSeries":
+      return formPointsRules("amerikaner");
+    case "kobenhavnerSeries":
+      return formPointsRules("kobenhavner");
+    case "skinsSeries":
+      return formPointsRules("skins");
+    case "teamVsTeam":
+      return teamVsTeamRules();
   }
 }
 

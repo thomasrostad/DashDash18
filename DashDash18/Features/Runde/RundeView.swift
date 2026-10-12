@@ -34,6 +34,7 @@ struct RundeView: View {
                     if !game.isDecidedHoleByHole, let matches {
                         MatchkortSection(card: matches)
                     }
+                    CompetitionBoardsSection(game: game)
                     if let context = model.clubContext, let eventID = game.snapshot.round.eventID {
                         KveldExtrasButtons(model: KveldExtrasModel(context: context, eventID: eventID))
                             .id(eventID)

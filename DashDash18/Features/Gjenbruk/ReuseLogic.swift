@@ -335,6 +335,9 @@ nonisolated struct RoundTemplatePayload: Codable, Equatable, Sendable {
     var pointsTable: String?
     var hideLastHoles = 0
     var games: [TemplateGame] = []
+    /// De ekstra konkurransene (sql/048), uten id. Kopieres som nye rader. Spiller-id-ene i lag og
+    /// grupper er fra runden de kom fra; de som ikke er med nå, tas ut ved lagring.
+    var competitions: [CompetitionCopy] = []
 
     enum CodingKeys: String, CodingKey {
         case version
@@ -355,6 +358,7 @@ nonisolated struct RoundTemplatePayload: Codable, Equatable, Sendable {
         case pointsTable = "points_table"
         case hideLastHoles = "hide_last_holes"
         case games
+        case competitions
     }
 
     init() {}
@@ -377,6 +381,9 @@ nonisolated struct RoundTemplatePayload: Codable, Equatable, Sendable {
         counts = draft.counts
         pointsTable = draft.pointsTable
         hideLastHoles = draft.hidesLastHoles ? RoundDraft.hiddenHoleCount : 0
+        competitions = draft.competitions.enumerated().map { i, c in
+            CompetitionCopy(name: c.name, isMain: false, config: c.config, sortOrder: i + 1)
+        }
     }
 
     init(from decoder: any Decoder) throws {
@@ -400,6 +407,7 @@ nonisolated struct RoundTemplatePayload: Codable, Equatable, Sendable {
         pointsTable = value(.pointsTable)
         hideLastHoles = value(.hideLastHoles) ?? 0
         games = value(.games) ?? []
+        competitions = value(.competitions) ?? []
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -422,6 +430,8 @@ nonisolated struct RoundTemplatePayload: Codable, Equatable, Sendable {
         try c.encode(pointsTable, forKey: .pointsTable)
         try c.encode(hideLastHoles, forKey: .hideLastHoles)
         try c.encode(games, forKey: .games)
+        // Bare når det er noe, så maler uten konkurranser er som før.
+        if !competitions.isEmpty { try c.encode(competitions, forKey: .competitions) }
     }
 
     /// Fyller inn oppsettet i kladden: sted, form og andel, vekt, tabellreglene, sidepremiene og banen.
@@ -442,6 +452,9 @@ nonisolated struct RoundTemplatePayload: Codable, Equatable, Sendable {
         draft.hidesLastHoles = hideLastHoles > 0
         if let ldEnabled { draft.ldEnabled = ldEnabled }
         if let kpEnabled { draft.kpEnabled = kpEnabled }
+        // Konkurransene som nye rader (sql/048; uten 048 er lista tom). Radene som står på kladden fra
+        // før, slettes ved lagring.
+        draft.competitions = CompetitionSetup.drafts(from: competitions)
         guard let course = courses.first(where: { $0.id == courseID && $0.isReady }) else { return }
         draft.courseID = course.id
         draft.teeID = course.tee(teeID)?.id
@@ -461,12 +474,15 @@ nonisolated struct PreviousRoundSetup: Decodable, Equatable, Sendable {
         let bayNo: Int?
         let isMarker: Bool
         let teamNo: Int?
+        /// Lag mot lag (sql/048). nil før 048.
+        var side: Int? = nil
 
         enum CodingKeys: String, CodingKey {
             case memberID = "member_id"
             case bayNo = "bay_no"
             case isMarker = "is_marker"
             case teamNo = "team_no"
+            case side
         }
     }
 
@@ -545,6 +561,10 @@ nonisolated struct PreviousRoundSetup: Decodable, Equatable, Sendable {
             for p in own { if let team = p.teamNo { teams[p.memberID] = team } }
         }
         draft.teams = teams
+        // Sidene (lag mot lag, sql/048) for dem som er med.
+        var sides: [UUID: Int] = [:]
+        for p in own { if let side = p.side, side == 1 || side == 2 { sides[p.memberID] = side } }
+        draft.sides = sides
         draft.matches = matches.sorted { $0.matchNo < $1.matchNo }.compactMap { m in
             let isTeam = m.teamA != nil && m.teamB != nil
             if isTeam { return draft.form.isTeamForm ? MatchDraft(teamA: m.teamA, teamB: m.teamB) : nil }

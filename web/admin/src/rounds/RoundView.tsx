@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { capitalized, formById, norwegianCompare, scoreNameLabel, TRUNCATION_RULES, truncationRuleName, type Ruleset, type TruncationRule } from "../../../golfgutu-core/src/index.ts";
 import { longDate } from "../text.ts";
-import { deleteRound, deleteSummary, loadGame, lockRound, saveCut, saveHole, saveTableRules, type ListRound } from "./api.ts";
+import { deleteRound, deleteSummary, loadGame, loadRoundFormats, lockRound, refreshSnapshot, saveCut, saveHole, saveTableRules, type ListRound } from "./api.ts";
+import { roundResults, type RoundFormats } from "./competitions.ts";
+import { CompetitionsView } from "./CompetitionsView.tsx";
 import { TableRulesFields, type TableRulesValue } from "./RoundSetup.tsx";
 import {
   correctionButtonTitle, correctionChanged, correctionCurrentText, correctionDoneText, correctionNotice, correctionOutcome,
@@ -27,11 +29,14 @@ export function RoundView({ round, title, rules, myMemberID, openCut, onLeft, ta
   const [correction, setCorrection] = useState<ScoreCorrection | null>(null);
   const [cut, setCut] = useState<CutChoice | null>(null);
   const [pendingDelete, setPendingDelete] = useState<DeleteSummary | null>(null);
+  // sql/048: konkurransene, øyeblikksbildet og sidene. null uten 048.
+  const [formats, setFormats] = useState<RoundFormats | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const g = await loadGame(round.id, rules);
+      const [g, f] = await Promise.all([loadGame(round.id, rules), loadRoundFormats(round.id).catch(() => null)]);
       setGame(g);
+      setFormats(f);
       return g;
     } catch (e) { setError((e as Error).message); return null; }
   }, [round.id, rules]);
@@ -73,6 +78,8 @@ export function RoundView({ round, title, rules, myMemberID, openCut, onLeft, ta
             run(async () => { await lockRound(round.id); onLeft(`${title} er låst og teller i turneringen.`); });
           }}>Lås runden …</button>
           <button className="link" disabled={busy} onClick={() => run(async () => setPendingDelete(await deleteSummary(round)))}>Slett runden …</button>
+          {formats && <button className="link" disabled={busy} title="Henter regelsettet og hullene på nytt, for eksempel etter at par eller indeks er rettet."
+            onClick={() => run(async () => { await refreshSnapshot(round.id); await load(); setNotice("Øyeblikksbildet er oppdatert."); })}>Oppdater øyeblikksbildet</button>}
         </>}
         <button className="link" disabled={busy} onClick={() => run(async () => { await load(); })}>Oppdater</button>
       </div>
@@ -89,6 +96,11 @@ export function RoundView({ round, title, rules, myMemberID, openCut, onLeft, ta
             })}>Lagre</button>
         </details>
       )}
+
+      {formats && (() => {
+        const r = roundResults(game, formats);
+        return r ? <CompetitionsView boards={r.boards} team={r.team} name={(id) => game.name(id)} reconstructed={r.reconstructed} /> : null;
+      })()}
 
       {pendingDelete && (
         <div className="card confirm">
