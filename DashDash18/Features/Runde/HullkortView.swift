@@ -7,6 +7,8 @@ struct HullkortView: View {
     let isPending: Bool
     let isSaving: Bool
     let error: String?
+    /// «Hull 1–6 er synket» eller «Lagret på telefonen …» (K6).
+    var sync: SyncStatus? = nil
     let onStep: (Int, UUID) -> Void
     let onConfirm: (UUID) -> Void
     let onSave: () -> Void
@@ -41,14 +43,25 @@ struct HullkortView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
             }
-            if isPending {
-                Label("Hullet er ikke lagret ennå. Det sendes når du har dekning.", systemImage: "icloud.and.arrow.up")
-                    .font(.ddCaption)
-                    .ddWarningStyle()
-            }
             if let error {
-                Label(error, systemImage: "exclamationmark.triangle")
-                    .ddErrorStyle()
+                VStack(alignment: .leading, spacing: DDSpacing.s) {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .ddErrorStyle()
+                    Button("Prøv igjen", action: onSave)
+                        .buttonStyle(.dd(.secondary, compact: true))
+                        .disabled(isSaving)
+                }
+            } else if let sync {
+                Label {
+                    Text(sync.text)
+                } icon: {
+                    Image(systemName: sync.isPending ? "icloud.and.arrow.up" : "checkmark.icloud")
+                        .foregroundStyle(sync.isPending ? Color.ddRust : Color.ddForestInk)
+                }
+                .font(.ddStatus)
+                .foregroundStyle(sync.isPending ? Color.ddRustText : Color.ddInkSecondary)
+                .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .combine)
             }
             actionView
                 .padding(.top, 4)

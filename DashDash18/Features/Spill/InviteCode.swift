@@ -75,7 +75,7 @@ nonisolated struct InviteCode: Equatable, Hashable, Sendable {
     func shareText(courseName: String?, universal: Bool = UniversalLinksFeature.isEnabled) -> String {
         let what = courseName.map { "Bli med på runden på \($0) i Atten." } ?? "Bli med på runden i Atten."
         let link = shareURL(host: Self.host, universal: universal)
-        return "\(what)\n\(link.absoluteString)\nEller skriv inn koden \(display) under Spill → Bli med."
+        return "\(what)\n\(link.absoluteString)\nEller skriv inn koden \(display) under Spill → «Har du en kode?»."
     }
 }
 
@@ -104,7 +104,7 @@ nonisolated enum InviteTarget: Equatable, Sendable {
             return code.shareText(courseName: courseName, universal: universal)
         case .competition(let name):
             return "Bli med i \(name) i Atten.\n\(code.shareURL(host: host, universal: universal).absoluteString)\n"
-                + "Eller skriv inn koden \(code.display) under Turneringer → Bli med med kode."
+                + "Eller skriv inn koden \(code.display) under Turneringer → «Har du en kode?»."
         }
     }
 
@@ -119,10 +119,10 @@ nonisolated enum InviteTarget: Equatable, Sendable {
         switch self {
         case .round:
             "Skann QR-koden med kameraet, eller trykk på lenken i meldingen. Uten lenke: skriv inn koden under "
-                + "Spill → Bli med med kode. Koden virker i 7 dager, og til runden avsluttes."
+                + "Spill → «Har du en kode?». Koden virker i 7 dager, og til runden avsluttes."
         case .competition:
             "Skann QR-koden med kameraet, eller trykk på lenken i meldingen. Uten lenke: skriv inn koden under "
-                + "Turneringer → Bli med med kode. Den som blir med, meldes på. Koden virker i 7 dager, og til "
+                + "Turneringer → «Har du en kode?». Den som blir med, meldes på. Koden virker i 7 dager, og til "
                 + "turneringen er ferdig."
         }
     }

@@ -72,6 +72,25 @@ nonisolated extension RoundGame {
         !players.isEmpty && players.allSatisfy { scores($0)[hole] != nil }
     }
 
+    /// Synkstatus over «Lagre» (utbedringsplanen K6). Nil når ingenting er ført ennå.
+    /// `pending`: hull som ligger i køen på telefonen.
+    func syncStatus(viewer: Viewer, pending: Set<Int>) -> SyncStatus? {
+        let players = cardPlayers(for: viewer).filter { cardRowEditable($0, for: viewer) }
+        guard !players.isEmpty else { return nil }
+        if !pending.isEmpty {
+            return SyncStatus(text: "Lagret på telefonen · sendes når du får dekning", isPending: true)
+        }
+        let synced = (0..<holeCount).filter { isComplete(hole: $0, for: players) }
+        guard let last = synced.last else { return nil }
+        if synced.count == 1 {
+            return SyncStatus(text: "Hull \(holeNumber(last)) er synket", isPending: false)
+        }
+        if synced == Array(synced.first!...last) {
+            return SyncStatus(text: "Hull \(holeNumber(synced.first!))–\(holeNumber(last)) er synket", isPending: false)
+        }
+        return SyncStatus(text: "\(synced.count) hull er synket", isPending: false)
+    }
+
     /// `baasensHull`: første hull der ikke alle på kortet er ført. Alle ført: siste hull.
     func bayHole(for viewer: Viewer) -> Int {
         let players = cardPlayers(for: viewer)
@@ -147,6 +166,13 @@ nonisolated extension QueuedHole {
     init(_ submission: HoleSubmission) {
         self.init(hole: submission.holeIndex, entries: submission.entries)
     }
+}
+
+/// Linja som sier om førte hull er sendt (K6).
+nonisolated struct SyncStatus: Equatable, Sendable {
+    let text: String
+    /// Ligger i køen på telefonen (rust-ikon).
+    let isPending: Bool
 }
 
 /// Tallene markøren har trykket fram, før de er lagret. En verdi som finnes ER bekreftelsen

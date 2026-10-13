@@ -84,10 +84,10 @@ struct UniversalLinkSharingTests {
         let code = try #require(InviteCode("ABCDEFGH23"))
         #expect(code.shareText(courseName: "Losby", universal: true)
             == "Bli med på runden på Losby i Atten.\nhttps://dashdash18.com/runde/ABCDEFGH23\n"
-            + "Eller skriv inn koden ABCDE-FGH23 under Spill → Bli med.")
+            + "Eller skriv inn koden ABCDE-FGH23 under Spill → «Har du en kode?».")
         #expect(code.shareText(courseName: "Losby", universal: false)
             == "Bli med på runden på Losby i Atten.\ndashdash://runde/ABCDEFGH23\n"
-            + "Eller skriv inn koden ABCDE-FGH23 under Spill → Bli med.")
+            + "Eller skriv inn koden ABCDE-FGH23 under Spill → «Har du en kode?».")
         #expect(InviteTarget.round(courseName: nil).shareText(code, universal: true)
             == code.shareText(courseName: nil, universal: true))
     }
@@ -97,7 +97,7 @@ struct UniversalLinkSharingTests {
         let target = InviteTarget.competition(name: "Vårcupen")
         #expect(target.shareText(code, universal: true)
             == "Bli med i Vårcupen i Atten.\nhttps://dashdash18.com/konkurranse/ABCDEFGH23\n"
-            + "Eller skriv inn koden ABCDE-FGH23 under Turneringer → Bli med med kode.")
+            + "Eller skriv inn koden ABCDE-FGH23 under Turneringer → «Har du en kode?».")
         #expect(target.shareText(code, universal: false).contains("dashdash://konkurranse/ABCDEFGH23"))
         #expect(target.shareText(code) == target.shareText(code, universal: true))
     }

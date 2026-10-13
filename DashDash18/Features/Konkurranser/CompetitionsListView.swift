@@ -18,7 +18,7 @@ struct CompetitionsListView: View {
             .toolbar {
                 if model.client != nil {
                     ToolbarItem(placement: .secondaryAction) {
-                        Button("Bli med med kode", systemImage: "qrcode") { showsJoin = true }
+                        Button("Har du en kode?", systemImage: "qrcode") { showsJoin = true }
                     }
                 }
                 if model.canCreate {
@@ -67,7 +67,7 @@ struct CompetitionsListView: View {
                         Button("Ny turnering") { showsNew = true }
                             .buttonStyle(.dd(.primary))
                     }
-                    Button("Bli med med kode") { showsJoin = true }
+                    Button("Har du en kode?") { showsJoin = true }
                         .buttonStyle(.dd(.text))
                 }
                 .ddCard(.empty)

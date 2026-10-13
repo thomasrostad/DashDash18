@@ -110,6 +110,21 @@ struct ForingHullkortTests {
         #expect(card.action == .save(title: "Lagre hull 18", enabled: true, status: "0 av 4 endret fra par"))
     }
 
+    @Test("K6: synkstatus for hullene på kortet")
+    func synkstatus() {
+        let viewer = F.viewer(F.anders)
+        #expect(game.syncStatus(viewer: viewer, pending: []) == nil)
+        let fire = [F.anders, F.bjorn, F.cato, F.dag]
+        let seks = RoundGame(F.snapshot(F.markorPlayers(), scores: (0..<6).flatMap { h in fire.map { ($0, h, 4) } }))
+        #expect(seks.syncStatus(viewer: viewer, pending: []) == SyncStatus(text: "Hull 1–6 er synket", isPending: false))
+        #expect(seks.syncStatus(viewer: viewer, pending: [6])
+            == SyncStatus(text: "Lagret på telefonen · sendes når du får dekning", isPending: true))
+        let ett = RoundGame(F.snapshot(F.markorPlayers(), scores: fire.map { ($0, 0, 4) }))
+        #expect(ett.syncStatus(viewer: viewer, pending: []) == SyncStatus(text: "Hull 1 er synket", isPending: false))
+        // Seeren fører ikke og får ingen linje.
+        #expect(seks.syncStatus(viewer: F.viewer(F.bjorn), pending: []) == nil)
+    }
+
     @Test func seerModus() {
         let viewer = F.viewer(F.bjorn)
         let card = game.card(hole: 0, drafts: HoleDrafts(), viewer: viewer)

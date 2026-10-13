@@ -175,6 +175,7 @@ struct DesignScreenSamples: View {
                         }
                         HullprikkerView(dots: Self.dots) { _ in }
                         HullkortView(card: Self.card, isPending: false, isSaving: false, error: nil,
+                                     sync: SyncStatus(text: "Hull 1–6 er synket", isPending: false),
                                      onStep: { _, _ in }, onConfirm: { _ in }, onSave: {}, onGoTo: { _ in },
                                      onScorecard: { _ in })
                     }

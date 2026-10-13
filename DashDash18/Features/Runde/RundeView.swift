@@ -130,6 +130,7 @@ struct RundeView: View {
                 isPending: model.pendingHoles.contains(card.holeIndex),
                 isSaving: model.isSaving,
                 error: model.saveError,
+                sync: game.syncStatus(viewer: model.viewer, pending: model.pendingHoles),
                 onStep: { model.step($0, member: $1) },
                 onConfirm: { model.confirm(member: $0) },
                 onSave: { Task { await model.saveCurrentHole() } },
