@@ -26,8 +26,8 @@ struct DDSegmentedControl<Value: Hashable>: View {
                         .font(.dd(.sans, size: 15, weight: selected ? .semibold : .regular, relativeTo: .subheadline))
                         .foregroundStyle(selected ? Color.ddSelectedInk : Color.ddInk)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .padding(.horizontal, 16)
+                        .minimumScaleFactor(0.6)
+                        .padding(.horizontal, 10)
                         .frame(maxWidth: .infinity, minHeight: 44)
                         .background {
                             if selected {
@@ -44,6 +44,8 @@ struct DDSegmentedControl<Value: Hashable>: View {
         }
         .padding(4)
         .glassEffect(.regular, in: .capsule)
+        // Kontrollen må holde seg innenfor skjermen: i AX3 dyttet den Tavla ut på sidene.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 }
 

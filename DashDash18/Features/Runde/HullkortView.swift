@@ -236,10 +236,11 @@ struct HullRadView: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
             : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
         layout {
-            info
+            // Navnet går foran stepperen når plassen er trang (iPhone SE ga «Th…»).
+            info.layoutPriority(1)
             if !typeSize.isAccessibilitySize { Spacer(minLength: 4) }
             if row.editable {
-                stepper
+                stepper.fixedSize()
             } else {
                 Text(row.saved.map(String.init) ?? "—")
                     .font(.ddStrokes)
@@ -258,13 +259,15 @@ struct HullRadView: View {
     private var info: some View {
         VStack(alignment: .leading, spacing: 4) {
             Button(action: onName) {
-                HStack(alignment: .firstTextBaseline, spacing: 7) {
-                    Text(row.name)
-                        .font(.ddName)
-                        .foregroundStyle(Color.ddForestInk)
-                        .lineLimit(1)
-                    if row.isMe {
-                        DDYouBadge()
+                // Smal skjerm: «Deg» under navnet heller enn å kutte eller bryte navnet.
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline, spacing: 7) {
+                        name
+                        if row.isMe { DDYouBadge() }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        name
+                        if row.isMe { DDYouBadge() }
                     }
                 }
             }
@@ -284,6 +287,14 @@ struct HullRadView: View {
                     .foregroundStyle(Color.ddInkSecondary)
             }
         }
+    }
+
+    private var name: some View {
+        Text(row.name)
+            .font(.ddName)
+            .foregroundStyle(Color.ddForestInk)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
     }
 
     @ViewBuilder

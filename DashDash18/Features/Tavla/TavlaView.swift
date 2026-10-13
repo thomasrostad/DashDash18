@@ -288,9 +288,14 @@ private struct LeadTieCard: View {
 /// Kolonneoverskriftene: # · SPILLER · (±) · POENG.
 private struct TavlaColumnHeader: View {
     let showsMovement: Bool
-    @ScaledMetric(relativeTo: .body) private var placeWidth: CGFloat = 34
-    @ScaledMetric(relativeTo: .title) private var pointsWidth: CGFloat = 52
-    @ScaledMetric(relativeTo: .footnote) private var movementWidth: CGFloat = 34
+    @ScaledMetric(relativeTo: .body) private var placeMetric: CGFloat = 34
+    @ScaledMetric(relativeTo: .title) private var pointsMetric: CGFloat = 52
+    @ScaledMetric(relativeTo: .footnote) private var movementMetric: CGFloat = 34
+    // Faste kolonner vokser med teksten, men med tak, så navnet får plass i AX3 (ellers ble tabellen
+    // bredere enn skjermen). Tallene i dem er låst til xxxL.
+    private var placeWidth: CGFloat { min(placeMetric, 52) }
+    private var pointsWidth: CGFloat { min(pointsMetric, 84) }
+    private var movementWidth: CGFloat { min(movementMetric, 48) }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -345,9 +350,14 @@ struct RulesExplanationSheet: View {
 struct TavlaRowView: View {
     let row: TavlaStandings.Row
     let standings: TavlaStandings
-    @ScaledMetric(relativeTo: .body) private var placeWidth: CGFloat = 34
-    @ScaledMetric(relativeTo: .title) private var pointsWidth: CGFloat = 52
-    @ScaledMetric(relativeTo: .footnote) private var movementWidth: CGFloat = 34
+    @ScaledMetric(relativeTo: .body) private var placeMetric: CGFloat = 34
+    @ScaledMetric(relativeTo: .title) private var pointsMetric: CGFloat = 52
+    @ScaledMetric(relativeTo: .footnote) private var movementMetric: CGFloat = 34
+    // Faste kolonner vokser med teksten, men med tak, så navnet får plass i AX3 (ellers ble tabellen
+    // bredere enn skjermen). Tallene i dem er låst til xxxL.
+    private var placeWidth: CGFloat { min(placeMetric, 52) }
+    private var pointsWidth: CGFloat { min(pointsMetric, 84) }
+    private var movementWidth: CGFloat { min(movementMetric, 48) }
 
     var body: some View {
         let movement = standings.movement(row)
@@ -358,6 +368,7 @@ struct TavlaRowView: View {
                 .foregroundStyle(Color.ddInkSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .frame(width: placeWidth, alignment: .leading)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 8) {
@@ -377,6 +388,7 @@ struct TavlaRowView: View {
                     .font(.ddStatus)
                     .monospacedDigit()
                     .foregroundStyle(color(movement))
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .frame(width: movementWidth, alignment: .center)
             }
             Text(standings.points(row.total))
@@ -385,6 +397,7 @@ struct TavlaRowView: View {
                 .foregroundStyle(Color.ddInk)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .frame(width: pointsWidth, alignment: .trailing)
         }
         .frame(minHeight: 60)
