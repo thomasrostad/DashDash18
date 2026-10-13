@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Brikkene og «Reager»-knappen under et innlegg, en melding eller en kommentar (sql/050).
+/// Brikkene og «Legg til reaksjon» (44 pt) under et innlegg, en melding eller en kommentar (sql/050).
 /// Trykk på en brikke setter eller fjerner din. Knappen gir de fem faste, «Annen emoji …» (når
 /// serveren har 050) og «Hvem har reagert». Langt trykk på en brikke viser hvem.
 struct ReactionBar: View {
@@ -38,14 +38,9 @@ struct ReactionBar: View {
                     ReactionMenuItems(isMine: { e in chips.contains { $0.emoji == e && $0.isMine } }, toggle: toggle,
                                       pickOther: pickOther, showWho: chips.isEmpty ? nil : showWho)
                 } label: {
-                    Image(systemName: "face.smiling")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(Color.ddInkSecondary)
-                        .frame(width: 32, height: 32)
-                        .background(Circle().strokeBorder(Color.ddHairline, lineWidth: 1))
-                        .contentShape(Circle())
+                    DDAddReactionLabel()
                 }
-                .accessibilityLabel("Reager")
+                .accessibilityLabel("Legg til reaksjon")
             }
             if let comments {
                 Button(action: comments.open) {
@@ -56,11 +51,12 @@ struct ReactionBar: View {
                         }
                     }
                     .font(.ddChip)
-                    .foregroundStyle(Color.ddInkSecondary)
-                    .padding(.horizontal, 10)
-                    .frame(minHeight: 32)
-                    .background(Capsule().strokeBorder(Color.ddHairline, lineWidth: 1))
-                    .contentShape(Capsule())
+                    .foregroundStyle(Color.ddForestInk)
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 36)
+                    .background(Capsule().fill(Color.ddChipFill))
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(ReactionText.commentsLabel(comments.count))
