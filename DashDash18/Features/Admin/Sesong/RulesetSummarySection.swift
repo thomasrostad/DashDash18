@@ -38,33 +38,7 @@ struct RulesetSummarySection: View {
     }
 }
 
-/// «Slik telles det»: hele forklaringen av regelsettet i et ark (P3). Erstatter den store
-/// utfoldbare teksten i lista.
-struct RulesExplanationSheet: View {
-    let rules: Ruleset
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                Text(RulesetExplanation.text(for: rules))
-                    .font(.ddBody)
-                    .foregroundStyle(Color.ddInk)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(DDSpacing.gutter)
-            }
-            .background(Color.ddBackground)
-            .navigationTitle("Slik telles det")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                DDConfirmToolbarItem {
-                    Button("Ferdig") { dismiss() }
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
-    }
-}
+// «Slik telles det»-arket er `RulesExplanationSheet` i `Features/Tavla/TavlaView.swift`, delt med Tavla.
 
 extension View {
     /// ⓘ i verktøylinja som åpner «Slik telles det» for regelsettet (P3).
