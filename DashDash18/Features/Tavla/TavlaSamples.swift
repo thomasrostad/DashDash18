@@ -1,6 +1,7 @@
 #if DEBUG
 import Foundation
 import GolfgutuCore
+import SwiftUI
 
 /// Oppdiktet sesong for forhåndsvisning og skjermbilder av Tavla (`-DDDesignScreen tavla`).
 enum TavlaSamples {
@@ -68,7 +69,23 @@ enum TavlaSamples {
         let rounds = stableford
             ? (1...6).map { round($0, date: "2026-\(String(format: "%02d", $0 + 3))-14") }
             : (1...5).map { round($0, date: "2026-0\($0 + 4)-14") }
-        return TavlaStandings(TavlaInput(season: season, members: members, rounds: rounds), me: me)
+        // Neste kveld: onsdag 21. oktober (ingen når sesongen er ferdig).
+        let nextEvent: String? = finished ? nil : "2026-10-21"
+        return TavlaStandings(TavlaInput(season: season, members: members, rounds: rounds, nextEventDate: nextEvent),
+                              me: me, comparesPrevious: true)
+    }
+}
+#endif
+
+#if DEBUG
+/// Skjermprøven `tavlastatistikk`: Tavla med segmentet «Statistikk» valgt.
+struct TavlaStatsSample: View {
+    var body: some View {
+        NavigationStack {
+            TavlaList(standings: TavlaSamples.standings(), section: .stats)
+                .navigationTitle("Tavla")
+                .ddNavigationChrome()
+        }
     }
 }
 #endif
