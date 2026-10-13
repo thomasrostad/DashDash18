@@ -68,6 +68,8 @@ private struct TavlaContent: View {
                     }
                 }
             }
+            // Tavla på en TV via AirPlay (V5): den ytre skjermen viser denne tabellen mens appen er åpen.
+            .onAppear { TavlaExternalDisplay.shared.model = model }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
                     Task { await model.load() }
