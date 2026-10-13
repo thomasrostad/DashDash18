@@ -1,10 +1,12 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Arrangørsiden (fase 21), egen fane for arrangører siden 09.10.2026. Fra topp til bunn: oppsettet
-/// (turneringen, troppen og banene, alltid åpent), «nå» (kvelden som står for tur med stegrekka og
-/// én knapp for neste steg, eller «Kom i gang» før sesongen er klar), kommende kvelder, tidligere
-/// kvelder, og til slutt varsler og rapporter og rundearkivet.
+/// Arrangørsiden (fase 21), egen fane for arrangører siden 09.10.2026. Fra topp til bunn: «nå»
+/// (når kvelden er i dag: «I kveld» med stegstripene, rundekortet med båsene, påmeldingen,
+/// sidepremiene og det som gjenstår; ellers kvelden som står for tur, eller «Kom i gang» før sesongen
+/// er klar), kommende kvelder, tidligere kvelder, og til slutt varsler og rapporter og rundearkivet.
+/// Oppsettet (turneringen, troppen, banene, klubben, reglene, rollene) ligger i ⋯-menyen og
+/// «Inviter spillere» som egen knapp i verktøylinja (V12).
 /// Viser én turnering: den valgte, ellers hovedturneringen. Vises bare for arrangører.
 struct AdminHubView: View {
     /// nil: hovedturneringen. Klar for en turneringsvelger.
@@ -86,6 +88,7 @@ enum AdminHubScroll: Hashable {
 struct AdminHubSample: View {
     @State private var model: RundeAdminModel
     @State private var terminliste: TerminlisteModel
+    @State private var live: TonightLiveModel
     let scroll: AdminHubScroll
 
     /// Turneringsvelgeren (fase 23, `turneringvelger`).
@@ -96,12 +99,13 @@ struct AdminHubSample: View {
         let model = RundeAdminModel.sample(variant)
         _model = State(initialValue: model)
         _terminliste = State(initialValue: .sample(from: model))
+        _live = State(initialValue: .sample(from: model))
         self.scroll = scroll
         self.picker = picker
     }
 
     var body: some View {
-        AdminHubContent(model: model, terminliste: terminliste, loads: false, scroll: scroll,
+        AdminHubContent(model: model, terminliste: terminliste, live: live, loads: false, scroll: scroll,
                         header: picker.map { picker in
                             TournamentHeader(options: picker.options, selectedID: picker.options.first?.id,
                                              competition: picker.rows.first { $0.id == picker.options.first?.id },
@@ -115,6 +119,10 @@ private struct AdminHubContent: View {
     @State private var model: RundeAdminModel
     @State private var terminliste: TerminlisteModel
     @State private var actions: RoundAdminActions
+    /// Scorene med tid, startlista og sidepremiene til «I kveld» (V12).
+    @State private var live: TonightLiveModel
+    @State private var showsTV = false
+    @State private var setup: SetupDestination?
     /// Av i skjermprøven, som ikke har nett.
     private let loads: Bool
     private let scroll: AdminHubScroll
@@ -139,11 +147,12 @@ private struct AdminHubContent: View {
     /// Turneringsvelgeren og turneringens påmelding og stab (fase 23). nil: som før.
     private let header: TournamentHeader?
 
-    init(model: RundeAdminModel, terminliste: TerminlisteModel, loads: Bool = true, scroll: AdminHubScroll = .now,
-         header: TournamentHeader? = nil) {
+    init(model: RundeAdminModel, terminliste: TerminlisteModel, live: TonightLiveModel? = nil, loads: Bool = true,
+         scroll: AdminHubScroll = .now, header: TournamentHeader? = nil) {
         _model = State(initialValue: model)
         _terminliste = State(initialValue: terminliste)
         _actions = State(initialValue: RoundAdminActions(model: model))
+        _live = State(initialValue: live ?? TonightLiveModel(client: model.clubContext.client))
         self.loads = loads
         self.scroll = scroll
         self.header = header
@@ -155,14 +164,6 @@ private struct AdminHubContent: View {
                 if let header {
                     TournamentPickerSection(header: header)
                 }
-                // Før sesongen er klar, står invitasjonen i «Kom i gang» (under Troppen) i stedet.
-                if let invite, shows(.roster), !(model.state == .loaded && showsGettingStarted) {
-                    Section {
-                        InvitePlayersRow(clubName: clubName, invite: invite,
-                                         subtitle: ClubInvite.organizerSubtitle(
-                                            activeMembers: model.state == .loaded ? model.members.count : nil))
-                    }
-                }
                 switch model.state {
                 case .loading:
                     ProgressView("Henter \(term.theMany) …")
@@ -171,8 +172,8 @@ private struct AdminHubContent: View {
                 case .failed(let text):
                     failed(text)
                 case .loaded:
-                    setupSection
                     if shows(.timeline) { timeline }
+                    setupSection
                     rareSections
                 }
             }
@@ -183,7 +184,8 @@ private struct AdminHubContent: View {
                 scrollToStart(proxy)
             }
         }
-        .navigationTitle("Arrangørsiden")
+        .navigationTitle(tonightEvent == nil ? "Arrangørsiden" : DayTerm.capitalized(term.today))
+        .navigationSubtitle(tonightEvent.map(Self.tonightSubtitle) ?? "")
         .ddNavigationChrome()
         .toolbar {
             // Alltid synlig, også når siden åpnes rullet ned til kvelden.
@@ -194,21 +196,16 @@ private struct AdminHubContent: View {
                     }
                 }
             }
-            if shows(.tournaments) {
+            // ⋯: ny kveld, serie og turnering, og oppsettet (V12).
             ToolbarItem(placement: .primaryAction) {
-                // «+»: ny kveld/spilledag eller ny turnering (09.10.2026: «Lag turnering» var gjemt).
-                Menu {
-                    Button("Ny \(term.one)", systemImage: "calendar.badge.plus") { newEvening() }
-                        .disabled(terminliste.state != .loaded)
-                    if terminliste.supportsSeries {
-                        Button("Lag serie", systemImage: "calendar.day.timeline.left") { newSeries() }
-                    }
-                    Button("Ny turnering", systemImage: "trophy") { showsNewTournament = true }
-                } label: {
-                    Label("Ny", systemImage: "plus")
-                }
+                setupMenu
             }
-            }
+        }
+        .navigationDestination(item: $setup) { destination in
+            setupView(destination)
+        }
+        .fullScreenCover(isPresented: $showsTV) {
+            TonightTVCover(model: TavlaModel(context: model.clubContext))
         }
         // Også tilbake fra Kvelden: svar, runder og komité kan være endret.
         .task { if loads { await terminliste.load() } }
@@ -340,6 +337,8 @@ private struct AdminHubContent: View {
         let year = EveningDates.year(of: today)
         if showsGettingStarted {
             gettingStartedSection
+        } else if let event = parts.focus, event.eventDate == today {
+            tonightSections(event)
         } else if let event = parts.focus {
             nowSection(event)
         }
@@ -489,6 +488,174 @@ private struct AdminHubContent: View {
         }
     }
 
+    // MARK: I kveld (V12)
+
+    /// Kvelden i dag, når «Kom i gang» ikke står der. nil: ingen kveld i dag.
+    private var tonightEvent: EventRow? {
+        guard model.state == .loaded, shows(.timeline), !showsGettingStarted,
+              let event = parts.focus, event.eventDate == today else { return nil }
+        return event
+    }
+
+    private static func isGoToRound(_ action: TonightAction) -> Bool {
+        if case .goToRound = action { return true }
+        return false
+    }
+
+    /// «Tirsdag 13. oktober · 18:00 · Golfstudio Bryn».
+    static func tonightSubtitle(_ event: EventRow) -> String {
+         [EveningDates.longText(event.eventDate, capitalized: true), EveningDates.timeText(event.startTime), event.venue]
+            .compactMap { $0 }
+            .joined(separator: " · ")
+    }
+
+    /// Rundene som går i kveld.
+    private func liveRounds(_ event: EventRow) -> [RoundRow] {
+        model.rounds(on: event.id).filter { $0.status == .active }
+    }
+
+    private func bays(_ round: RoundRow, event: EventRow) -> [BayLive] {
+        TonightLive.bays(round: round, eventDate: event.eventDate, players: model.playersByRound[round.id] ?? [],
+                         scores: live.hasLoaded ? live.scores : [], groups: live.groups[round.id] ?? [],
+                         name: model.memberName, scorerName: { live.scorerNames[$0] }, now: live.now)
+            .map { live.hasLoaded ? $0 : $0.withoutSync }
+    }
+
+    @ViewBuilder
+    private func tonightSections(_ event: EventRow) -> some View {
+        let progress = progress(event)
+        let rounds = liveRounds(event)
+        tonightSteps(event, progress: progress, rounds: rounds)
+        ForEach(rounds) { round in
+            tonightRound(round, event: event, single: rounds.count == 1)
+        }
+        tonightSignup(event, progress: progress)
+        tonightRest(event, progress: progress, rounds: rounds)
+    }
+
+    private func tonightSteps(_ event: EventRow, progress: EveningProgress, rounds: [RoundRow]) -> some View {
+        let own = model.rounds(on: event.id)
+        let status = Tonight.statusText(action: progress.action, rounds: own,
+                                        activeTitle: model.activeRound.map(model.title), term: term)
+        let showsNext = rounds.isEmpty || !Self.isGoToRound(progress.action)
+        return Section {
+            VStack(alignment: .leading, spacing: DDSpacing.l) {
+                EveningStepsBar(progress: progress)
+                if rounds.isEmpty {
+                    DDPill(status, tone: EveningStatusTone.tone(progress.action))
+                }
+                // Mens runden går, er TV-en hovedknappen (i rundekortet). Ellers neste steg som før.
+                if showsNext {
+                    nextStepButton(event, progress: progress)
+                }
+            }
+            .padding(.vertical, DDSpacing.s)
+        }
+        .task(id: rounds.map(\.id)) { await followLive(rounds) }
+    }
+
+    private func tonightRound(_ round: RoundRow, event: EventRow, single: Bool) -> some View {
+        let roundBays = bays(round, event: event)
+        let shape = TonightLive.shapeText(formatName: CompetitionForm.form(id: round.format).name,
+                                          venue: round.venue, bays: roundBays)
+        return Section {
+            TonightRoundCard(title: model.title(round), shape: shape, bays: roundBays,
+                             showTV: { showsTV = true }, openRound: { showRound(round.id) })
+        } header: {
+            DDHeader(single ? "Runden" : "Runde \(round.roundNo)")
+        }
+    }
+
+    private func tonightSignup(_ event: EventRow, progress: EveningProgress) -> some View {
+        let summary = terminliste.signupSummary(for: event.id)
+        let canNudge = shows(.tournaments) && progress.stage != .done
+        var nudge: (() async throws(DataError) -> String)?
+        if canNudge {
+            let terminliste = terminliste
+            nudge = { () async throws(DataError) -> String in try await terminliste.nudge(event) }
+        }
+        let followUp = TonightLive.signupFollowUp(notAnswered: summary.notAnswered.map(\.name),
+                                                  maybe: summary.maybe.map(\.name))
+        return Section {
+            TonightSignupCard(coming: TonightLive.comingText(coming: summary.yes.count, roster: terminliste.members.count),
+                              followUp: followUp, nudgeNames: Nudge.targets(summary).map(\.name), nudge: nudge,
+                              openEvening: { openEvent = event.id })
+        } header: {
+            DDHeader("Påmelding")
+        }
+    }
+
+    @ViewBuilder
+    private func tonightRest(_ event: EventRow, progress: EveningProgress, rounds: [RoundRow]) -> some View {
+        let prizes: [TonightLive.SidePrize] = rounds.flatMap { TonightLive.sidePrizes($0, claims: live.claims) }
+        if !prizes.isEmpty {
+            Section {
+                ForEach(prizes) { prize in
+                    TonightSidePrizeRow(prize: prize) { showRound(prize.roundID) }
+                }
+            } header: {
+                DDHeader("Sidepremier")
+            }
+        }
+        if !rounds.isEmpty {
+            tonightRemaining(rounds: rounds, prizes: prizes, event: event, closesAbove: Self.isClose(progress.action))
+        }
+        Section {
+            Button { openEvent = event.id } label: {
+                Label("Alt om \(term.the)", systemImage: "calendar")
+                    .labelStyle(DDIconLabelStyle())
+                    .foregroundStyle(Color.ddInk)
+            }
+        }
+    }
+
+    private func tonightRemaining(rounds: [RoundRow], prizes: [TonightLive.SidePrize], event: EventRow,
+                                  closesAbove: Bool) -> some View {
+        let allBays: [BayLive] = rounds.flatMap { bays($0, event: event) }
+        let items = TonightLive.remaining(bays: allBays, prizes: prizes, term: term,
+                                          groupTerm: GroupTerm.for(stored: rounds.first?.venue))
+        return Section {
+            ForEach(items) { item in
+                TonightRemainingRow(item: item)
+            }
+            // Når alle hull er ført, er «Avslutt kvelden» hovedknappen øverst.
+            if !closesAbove {
+                AvsluttKveldenButton(rounds: rounds, title: model.title, prominent: false) { text in
+                    await reload()
+                    actions.message = text
+                }
+            }
+        } header: {
+            DDHeader("Før Ferdig")
+        }
+    }
+
+    private static func isClose(_ action: TonightAction) -> Bool {
+        if case .closeEvening = action { return true }
+        return false
+    }
+
+    private func nextStepButton(_ event: EventRow, progress: EveningProgress) -> some View {
+        EveningNextStepButton(
+            action: progress.action, rounds: model.rounds(on: event.id), title: model.title,
+            nudgeNames: Nudge.targets(terminliste.signupSummary(for: event.id)).map(\.name), isBusy: actions.isBusy,
+            nudge: { () async throws(DataError) -> String in try await terminliste.nudge(event) },
+            perform: { perform($0, event: event) },
+            onMessage: { text in
+                await reload()
+                actions.message = text
+            })
+    }
+
+    /// Henter scorene på nytt hvert halve minutt mens «I kveld» vises.
+    private func followLive(_ rounds: [RoundRow]) async {
+        guard loads, !rounds.isEmpty else { return }
+        while !Task.isCancelled {
+            await live.load(rounds: rounds, players: model.playersByRound)
+            try? await Task.sleep(for: .seconds(30))
+        }
+    }
+
     // MARK: Kom i gang
 
     private var gettingStartedSection: some View {
@@ -580,49 +747,66 @@ private struct AdminHubContent: View {
         }
     }
 
-    /// Oppsettet øverst og alltid åpent. Før sesongen er klar, dekker «Kom i gang» det.
+    /// Turneringens påmelding, stab og veddemål (fase 23). Resten av oppsettet ligger i ⋯-menyen (V12);
+    /// disse blir i lista fordi veddemålsbryteren ikke kan stå i en meny.
     @ViewBuilder
     private var setupSection: some View {
-        if !showsGettingStarted {
+        if shows(.tournaments), let header, let competition = header.competition {
             Section {
-                setupRows
+                TournamentSetupRows(competition: competition, context: header.context)
             } header: {
-                DDHeader("Oppsett")
+                DDHeader("Turneringen")
             }
         }
     }
 
-    @ViewBuilder
-    private var setupRows: some View {
-        if shows(.tournaments) {
-            NavigationLink { SesongAdminView() } label: {
-                AdminHubRow("Turneringen", "Hovedturneringen, reglene, alle turneringer og ny turnering.", systemImage: "trophy")
-            }
-        }
-        if shows(.roster) {
-            NavigationLink { TroppAdminView() } label: {
-                AdminHubRow("Troppen", "Spillerne, handicap, roller og nye som venter på godkjenning.",
-                            systemImage: "person.3")
-            }
-        }
-        if shows(.rounds) {
-            NavigationLink { BanerAdminView() } label: {
-                AdminHubRow("Banene", "Par, indeks og lengde for banene dere spiller.", systemImage: "map")
-            }
-        }
-        if shows(.club) {
-            NavigationLink { KlubbView() } label: {
-                AdminHubRow("Klubben", "Navn og organisasjonsnummer.", systemImage: "building.2")
-            }
-        }
+    /// Oppsettet i ⋯-menyen: hver del bare når du har rettighet til den (sql/044).
+    private var setupDestinations: [SetupDestination] {
+        var out: [SetupDestination] = []
+        if shows(.tournaments) { out.append(.tournament) }
+        if shows(.roster) { out.append(.roster) }
+        if shows(.rounds) { out.append(.courses) }
+        if shows(.club) { out.append(.club) }
+        if shows(.tournaments), model.competition == nil, model.tournament != nil { out.append(.rules) }
         // Bare når klubben har roller (sql/044) og du er eier.
-        if shows(.roles), (liveContext ?? model.clubContext).roleAccess != nil {
-            NavigationLink { RollerView() } label: {
-                AdminHubRow("Roller", "Hvem som kan hva i klubben.", systemImage: "person.badge.key")
+        if shows(.roles), (liveContext ?? model.clubContext).roleAccess != nil { out.append(.roles) }
+        return out
+    }
+
+    private var setupMenu: some View {
+        Menu {
+            if shows(.tournaments) {
+                Section {
+                    Button("Ny \(term.one)", systemImage: "calendar.badge.plus") { newEvening() }
+                        .disabled(terminliste.state != .loaded)
+                    if terminliste.supportsSeries {
+                        Button("Lag serie", systemImage: "calendar.day.timeline.left") { newSeries() }
+                    }
+                    Button("Ny turnering", systemImage: "trophy") { showsNewTournament = true }
+                }
             }
+            Section("Oppsett") {
+                ForEach(setupDestinations) { destination in
+                    Button(destination.title, systemImage: destination.systemImage) { setup = destination }
+                }
+            }
+        } label: {
+            Label("Oppsett og mer", systemImage: "ellipsis")
         }
-        if shows(.tournaments), let header, let competition = header.competition {
-            TournamentSetupRows(competition: competition, context: header.context)
+    }
+
+    @ViewBuilder
+    private func setupView(_ destination: SetupDestination) -> some View {
+        switch destination {
+        case .tournament: SesongAdminView()
+        case .roster: TroppAdminView()
+        case .courses: BanerAdminView()
+        case .club: KlubbView()
+        case .roles: RollerView()
+        case .rules:
+            if let season = model.tournament {
+                AdminRulesScreen(context: model.clubContext, season: season)
+            }
         }
     }
 
@@ -725,5 +909,49 @@ struct AdminHubRow: View {
             Image(systemName: systemImage)
         }
         .labelStyle(DDIconLabelStyle())
+    }
+}
+
+/// Oppsettet i ⋯-menyen på arrangørsiden (V12).
+enum SetupDestination: String, Identifiable, Hashable, CaseIterable {
+    case tournament, roster, courses, club, rules, roles
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .tournament: "Turneringen"
+        case .roster: "Troppen"
+        case .courses: "Banene"
+        case .club: "Klubben"
+        case .rules: "Regler"
+        case .roles: "Roller"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .tournament: "trophy"
+        case .roster: "person.3"
+        case .courses: "map"
+        case .club: "building.2"
+        case .rules: "slider.horizontal.3"
+        case .roles: "person.badge.key"
+        }
+    }
+}
+
+/// «Regler» fra ⋯-menyen: reglene for turneringen siden viser, med egen modell for lagringen.
+private struct AdminRulesScreen: View {
+    let season: SeasonRow
+    @State private var model: SesongAdminModel
+
+    init(context: ClubContext, season: SeasonRow) {
+        self.season = season
+        _model = State(initialValue: SesongAdminModel(context: context))
+    }
+
+    var body: some View {
+        RulesetEditorView(model: model, season: season)
     }
 }

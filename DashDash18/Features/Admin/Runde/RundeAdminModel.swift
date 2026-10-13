@@ -676,12 +676,13 @@ extension RundeAdminModel {
                                 round(2, on: tonight, course: 2, status: .locked)]
         }
         if variant == .liveEvening {
+            // Fire båser à tre (skissen i 4.4): to i gang, to som starter senere.
             let live = round(1, on: tonight, course: 1, status: .active)
             model.allRounds += [live, round(2, on: tonight, course: 2, status: .draft)]
             model.activeRound = live
             model.playersByRound[live.id] = model.members.prefix(12).enumerated().map { index, member in
                 RoundPlayerRow(roundID: live.id, memberID: member.id, clubID: club, handicapIndex: 12, seedGroup: nil,
-                               playingHandicap: 12, bayNo: index / 4 + 1, isMarker: index % 4 == 0, teamNo: nil)
+                               playingHandicap: 12, bayNo: index / 3 + 1, isMarker: index % 3 == 0, teamNo: nil)
             }
         }
         model.rounds = model.allRounds.filter { $0.eventID == model.selectedEventID }
