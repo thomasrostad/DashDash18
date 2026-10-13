@@ -146,7 +146,7 @@ private struct TroppRowLabel: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(row.displayName)
-                if isMe { Text("(deg)").foregroundStyle(Color.ddInkSecondary) }
+                if isMe { DDYouBadge() }
             }
             let details = TroppDisplay.details(for: row, groups: groups, roleNames: roleNames)
             if !details.isEmpty {
