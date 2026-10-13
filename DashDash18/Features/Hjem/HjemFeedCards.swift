@@ -1,36 +1,32 @@
+import GolfgutuCore
 import SwiftUI
 
 // Feed-kortene på Hjem (fase 19, docs/hjem-feed.md): din runde, bragd, tabell og kompakte linjer.
 // Hvert kort har en kilde-pille og, når det har en aktivitetsrad, reaksjoner.
 
-/// Kilde-pillen: «Jakkeracet» (lime), «Morrocupen» (sol), «Løs runde» (earth).
+/// Kilde-pillen: «Jakkeracet», «Morrocupen», «Løs runde». Nøytral chip (utbedringsplanen 4.1):
+/// lime er bare for live.
 struct HjemSourcePill: View {
     let source: HomeFeedSource
 
     var body: some View {
-        DDPill(source.title, tone: source.tone.ddTone)
+        DDPill(source.title, tone: .chip)
             .lineLimit(1)
             .fixedSize()
     }
 }
 
-/// Tid og ulest-prikk øverst til høyre på kortene.
+/// Tiden øverst til høyre på kortene. Uten rust-prikk: den betyr bare ulest i Varsler (P2).
 struct HjemTimeLabel: View {
     let time: String
-    var isUnread = false
 
     var body: some View {
-        HStack(spacing: 6) {
-            if isUnread {
-                DDUnreadDot().accessibilityLabel("Ulest")
-            }
-            Text(time)
-                .font(.ddCaption)
-                .monospacedDigit()
-                .foregroundStyle(Color.ddInkSecondary)
-                .lineLimit(1)
-                .fixedSize()
-        }
+        Text(time)
+            .font(.ddCaption)
+            .monospacedDigit()
+            .foregroundStyle(Color.ddInkSecondary)
+            .lineLimit(1)
+            .fixedSize()
     }
 }
 
@@ -107,7 +103,7 @@ struct HjemPhotoPromptCardView: View {
                 }
                 .padding(.top, 7)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                HjemTimeLabel(time: feedCard.time, isUnread: feedCard.isUnread)
+                HjemTimeLabel(time: feedCard.time)
                     .padding(.top, 9)
             }
             .accessibilityElement(children: .combine)
@@ -145,7 +141,6 @@ struct HjemMyRoundCardView: View {
                 Text("Din runde · \(feedCard.time)")
                     .ddEyebrow()
                     .lineLimit(1)
-                if feedCard.isUnread { DDUnreadDot().accessibilityLabel("Ulest") }
                 Spacer(minLength: 8)
                 HjemSourcePill(source: feedCard.source)
             }
@@ -228,35 +223,24 @@ struct HjemFeatCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                DDAvatar(name: card.name, size: 36)
+            // Slagtallet med form (dobbel sirkel for eagle og bedre), som på scorekortet (planen 1.2, 4.1).
+            HStack(alignment: .top, spacing: 12) {
+                // Fargen er eagle (bragdene er eagle og bedre); formen regnes fra brutto mot par.
+                ScoreBadge(strokes: card.strokes, par: card.par, name: .eagle, size: 44)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(card.isMe ? "\(card.name) (deg)" : card.name)
+                    Text(HjemDisplay.featTitle(card))
                         .font(.ddBodyEmphasis)
                         .foregroundStyle(Color.ddInk)
-                    Text(card.place)
+                    Text(HjemDisplay.featLine(card))
                         .font(.ddCaption)
                         .foregroundStyle(Color.ddInkSecondary)
-                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .padding(.top, 2)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                HjemTimeLabel(time: feedCard.time, isUnread: feedCard.isUnread)
+                HjemTimeLabel(time: feedCard.time)
+                    .padding(.top, 4)
             }
-            HStack(spacing: 14) {
-                Text("\(card.strokes)")
-                    .font(.dd(.sans, size: 44, weight: .light, relativeTo: .largeTitle))
-                    .monospacedDigit()
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(card.headline)
-                        .font(.dd(.sans, size: 17, weight: .semibold, relativeTo: .headline))
-                    Text(card.detail)
-                        .font(.ddCallout)
-                }
-                Spacer(minLength: 0)
-            }
-            .foregroundStyle(Color.ddSunInk)
-            .padding(14)
-            .background(Color.ddSunBackground, in: .rect(cornerRadius: DDRadius.input))
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(HjemDisplay.featLabel(card, time: feedCard.time))
             HStack(spacing: 8) {
@@ -288,7 +272,7 @@ struct HjemTableCardView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 7)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                HjemTimeLabel(time: feedCard.time, isUnread: feedCard.isUnread)
+                HjemTimeLabel(time: feedCard.time)
                     .padding(.top, 9)
             }
             VStack(spacing: 0) {
@@ -319,7 +303,7 @@ struct HjemTableCardView: View {
     }
 }
 
-/// En rad i minitabellen: plass, navn, ↑/↓ og poeng. Du er uthevet (`youRow`).
+/// En rad i minitabellen: plass, navn, ▲/▼ og poeng. Du har «Deg»-merket og er uthevet (`youRow`).
 struct HjemMiniTableRow: View {
     let row: HomeTableRow
 
@@ -330,21 +314,22 @@ struct HjemMiniTableRow: View {
                 .monospacedDigit()
                 .foregroundStyle(Color.ddInkSecondary)
                 .frame(width: 22, alignment: .leading)
-            Text(row.name)
-                .font(row.isMe ? .dd(.sans, size: 16, weight: .semibold, relativeTo: .body) : .ddBody)
-                .foregroundStyle(Color.ddForestInk)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            if let move = row.move, let text = row.moveText {
-                let up = HjemDisplay.isUp(move)
-                Text(text)
-                    .font(.dd(.sans, size: 12, weight: .semibold, relativeTo: .caption))
-                    .foregroundStyle(up ? Color.ddLimeInk : Color.ddBlushInk)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(Capsule().fill(up ? Color.ddLimeBackground : Color.ddBlushBackground))
-                    .accessibilityLabel(up ? "opp \(move)" : "ned \(-move)")
+            HStack(spacing: 6) {
+                Text(row.name)
+                    .font(row.isMe ? .dd(.sans, size: 16, weight: .semibold, relativeTo: .body) : .ddBody)
+                    .foregroundStyle(Color.ddForestInk)
+                    .lineLimit(1)
+                if row.isMe { DDYouBadge() }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // ▲1 i skog, ▼1 i rust, – når du står stille (planen V4 og 4.1).
+            let move = row.move ?? 0
+            Text(row.moveText ?? "–")
+                .font(.dd(.sans, size: 13, weight: .semibold, relativeTo: .footnote))
+                .monospacedDigit()
+                .foregroundStyle(move > 0 ? Color.ddForestInk : move < 0 ? Color.ddRustText : Color.ddInkSecondary)
+                .frame(minWidth: 28, alignment: .trailing)
+                .accessibilityLabel(move > 0 ? "opp \(move)" : move < 0 ? "ned \(-move)" : "ingen endring")
             if let points = row.points {
                 Text(points)
                     .font(.ddBodyEmphasis)
@@ -402,7 +387,7 @@ struct HjemLinesCardView: View {
                     }
                     .padding(.top, 7)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    HjemTimeLabel(time: line.time, isUnread: feedCard.isUnread && line.id == lines.first?.id)
+                    HjemTimeLabel(time: line.time)
                         .padding(.top, 9)
                 }
                 .padding(.vertical, 12)
