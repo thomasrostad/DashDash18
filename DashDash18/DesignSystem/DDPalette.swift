@@ -92,11 +92,23 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
     case statCard            // svarte statistikk-kort
     case statText
     case statSecondary
-    case statRust            // rust på svart kort (tapt hull, «ned»)
+    case statRust            // rust på hero-kort (tapt hull, «ned»)
+    // Utbedringsplanen 13.10.2026 (1.1): chips, sekundærtekst på hero og scoreskalaen.
+    case chip                // uvalgte chips og piller
+    case selected, selectedInk // valgt chip, segment og svar: skog fylt med krem tekst
+    case heroSecondary       // sekundærtekst på hero
+    case scoreEagleBackground, scoreEagleInk
+    case scoreBirdieBackground, scoreBirdieInk
+    case scoreParBackground, scoreParInk
+    case scoreBogeyBackground, scoreBogeyInk
+    case scoreDoubleBackground, scoreDoubleInk
+    case scoreZeroBackground, scoreZeroInk
     // Knapper (handoff «knappelogikken», 01.10.2026, men hovedknappen er gul etter golfee)
     case buttonPrimary, buttonPrimaryText, buttonPrimaryPressed
     case buttonMoney, buttonMoneyText, buttonMoneyPressed
     case buttonLine
+    /// Sekundærknapp: lys skogflate med skogtekst (utbedringsplanen 1.3).
+    case buttonSecondary, buttonSecondaryPressed
     case buttonDanger, buttonDangerText, buttonDangerPressed
     case buttonGold, buttonGoldText, buttonGoldPressed
     case buttonDisabled, buttonDisabledText
@@ -106,29 +118,29 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
     var values: (light: DDRGBA, dark: DDRGBA) {
         switch self {
         case .background: (DDRGBA(0xFFF9DF), DDRGBA(0x0C1F18))
-        case .card: (DDRGBA(0xFFFFFF), DDRGBA(0x132B23))
-        case .heroCard: (DDRGBA(0x1C483A), DDRGBA(0x16332A))
+        case .card: (DDRGBA(0xFFFFFF), DDRGBA(0x17332A))
+        case .heroCard: (DDRGBA(0x1C483A), DDRGBA(0x1F4D3E))
         case .earth: (DDRGBA(0xF3E9DD), DDRGBA(0xF3E9DD, alpha: 0.08))
         case .earthDeep: (DDRGBA(0xEADBCA), DDRGBA(0xF3E9DD, alpha: 0.16))
         case .forest: (DDRGBA(0x1C483A), DDRGBA(0x123026))
         case .forestDeep: (DDRGBA(0x123026), DDRGBA(0x0B1F18))
         case .driveBox: (DDRGBA(0xFBF5DF), DDRGBA(0xE4C767, alpha: 0.08))
-        case .youRow: (DDRGBA(0xE4C767, alpha: 0.13), DDRGBA(0xE4C767, alpha: 0.13))
-        case .forestInk: (DDRGBA(0x1C483A), DDRGBA(0xCFE3D6))
+        case .youRow: (DDRGBA(0xFBF1C9), DDRGBA(0xE4C767, alpha: 0.14))
+        case .forestInk: (DDRGBA(0x1C483A), DDRGBA(0xA8D8B4))
         case .ink: (DDRGBA(0x21292B), DDRGBA(0xE8EFE7))
-        case .inkSecondary: (DDRGBA(0x727065), DDRGBA(0x8FA398))
-        case .onDark: (DDRGBA(0xFFF9DF), DDRGBA(0xFFF9DF))
+        case .inkSecondary: (DDRGBA(0x5F5D53), DDRGBA(0xA3B5AB))
+        case .onDark: (DDRGBA(0xFFF9DF), DDRGBA(0xF3F0E2))
         case .hairline: (DDRGBA(0xD5D5D5), DDRGBA(0x24443A))
         case .rule: (DDRGBA(0xF0EADB), DDRGBA(0x1F3B31))
         case .ruleCream: (DDRGBA(0xE4DBBB), DDRGBA(0x24443A))
-        case .cardBorder: (DDRGBA(0x1C483A, alpha: 0.07), DDRGBA(0x24443A))
+        case .cardBorder: (DDRGBA(0xECE4C8), DDRGBA(0xFFFFFF, alpha: 0.08))
         case .rust: (DDRGBA(0xBF5412), DDRGBA(0xE4762F))
         // #BF5412 gir 4,46:1 på krem, under kravet på 4,5:1. Som tekst bruker vi
         // --knapp-penger (#A84A10), som gir 5,5:1 på krem og 5,9:1 på hvitt.
-        case .rustText: (DDRGBA(0xA84A10), DDRGBA(0xE4762F))
+        case .rustText: (DDRGBA(0xA84A10), DDRGBA(0xF08A4B))
         case .rustDark: (DDRGBA(0x612807), DDRGBA(0xF0B48F))
         case .gold: (DDRGBA(0xE4C767), DDRGBA(0xE4C767))
-        case .goldInk: (DDRGBA(0x4B3A0B), DDRGBA(0x4B3A0B))
+        case .goldInk: (DDRGBA(0x21292B), DDRGBA(0x21292B))
         case .limeBackground: (DDRGBA(0xD9EBD0), DDRGBA(0xD9EBD0, alpha: 0.16))
         case .limeInk: (DDRGBA(0x21451F), DDRGBA(0xD9EBD0))
         case .sunBackground: (DDRGBA(0xEFE3B0), DDRGBA(0xEFE3B0, alpha: 0.16))
@@ -137,24 +149,42 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
         case .blushDeep: (DDRGBA(0xF7D4C6), DDRGBA(0xFCE5DB, alpha: 0.24))
         case .blushInk: (DDRGBA(0x612807), DDRGBA(0xFCE5DB))
         case .accentLime: (DDRGBA(0x6BE07A), DDRGBA(0x6BE07A))
-        case .accentLimeInk: (DDRGBA(0x0F2E17), DDRGBA(0x0F2E17))
+        case .accentLimeInk: (DDRGBA(0x123026), DDRGBA(0x123026))
         case .accentYellow: (DDRGBA(0xF5C842), DDRGBA(0xF5C842))
-        case .accentYellowInk: (DDRGBA(0x1E1A05), DDRGBA(0x1E1A05))
+        case .accentYellowInk: (DDRGBA(0x21292B), DDRGBA(0x21292B))
         // #F5C842 gir 1,5:1 på krem. Som tekst (aktiv fane) bruker vi en mørk oker i lys modus.
         case .yellowText: (DDRGBA(0x7A5C00), DDRGBA(0xF5C842))
-        case .statCard: (DDRGBA(0x000000), DDRGBA(0x000000))
-        case .statText: (DDRGBA(0xFFFFFF), DDRGBA(0xFFFFFF))
-        case .statSecondary: (DDRGBA(0x9A9A9A), DDRGBA(0x9A9A9A))
-        case .statRust: (DDRGBA(0xE4762F), DDRGBA(0xE4762F))
+        case .statCard: (DDRGBA(0x1C483A), DDRGBA(0x1F4D3E))
+        case .statText: (DDRGBA(0xFFF9DF), DDRGBA(0xF3F0E2))
+        case .statSecondary: (DDRGBA(0xCFE0D5), DDRGBA(0xBFD3C7))
+        case .statRust: (DDRGBA(0xF6B48C), DDRGBA(0xF6B48C))
+        case .chip: (DDRGBA(0xF3EDD6), DDRGBA(0x1F3B33))
+        case .selected: (DDRGBA(0x1C483A), DDRGBA(0xA8D8B4))
+        case .selectedInk: (DDRGBA(0xFFF9DF), DDRGBA(0x0C1F18))
+        case .heroSecondary: (DDRGBA(0xCFE0D5), DDRGBA(0xBFD3C7))
+        case .scoreEagleBackground: (DDRGBA(0xEFE3B0), DDRGBA(0x4E431A))
+        case .scoreEagleInk: (DDRGBA(0x5A4A0E), DDRGBA(0xF2E3A6))
+        case .scoreBirdieBackground: (DDRGBA(0xD9EBD0), DDRGBA(0x284E2A))
+        case .scoreBirdieInk: (DDRGBA(0x21451F), DDRGBA(0xCFEAC4))
+        case .scoreParBackground: (DDRGBA(0xF3E9DD), DDRGBA(0x22382F))
+        case .scoreParInk: (DDRGBA(0x4A4438), DDRGBA(0xD9DCD2))
+        case .scoreBogeyBackground: (DDRGBA(0xFCE5DB), DDRGBA(0x4D2A1F))
+        case .scoreBogeyInk: (DDRGBA(0x8A2F0E), DDRGBA(0xF6C9B5))
+        case .scoreDoubleBackground: (DDRGBA(0xF7D4C6), DDRGBA(0x5E2618))
+        case .scoreDoubleInk: (DDRGBA(0x7A2408), DDRGBA(0xFBD3C2))
+        case .scoreZeroBackground: (DDRGBA(0xEEEBE3), DDRGBA(0x2A2F2C))
+        case .scoreZeroInk: (DDRGBA(0x5F5D53), DDRGBA(0xC9CEC9))
         case .buttonPrimary: (DDRGBA(0xF5C842), DDRGBA(0xF5C842))
-        case .buttonPrimaryText: (DDRGBA(0x1E1A05), DDRGBA(0x1E1A05))
+        case .buttonPrimaryText: (DDRGBA(0x21292B), DDRGBA(0x21292B))
         case .buttonPrimaryPressed: (DDRGBA(0xE0B32E), DDRGBA(0xE0B32E))
         case .buttonMoney: (DDRGBA(0xA84A10), DDRGBA(0xB4501A))
         case .buttonMoneyText: (DDRGBA(0xFFF9DF), DDRGBA(0xFFF9DF))
         case .buttonMoneyPressed: (DDRGBA(0x8E3E0D), DDRGBA(0x9A4416))
         case .buttonLine: (DDRGBA(0x1C483A), DDRGBA(0xD9EBD0))
-        case .buttonDanger: (DDRGBA(0xFCE5DB), DDRGBA(0x3A2219))
-        case .buttonDangerText: (DDRGBA(0x612807), DDRGBA(0xF2B39A))
+        case .buttonSecondary: (DDRGBA(0xEFF3EA), DDRGBA(0x22413A))
+        case .buttonSecondaryPressed: (DDRGBA(0xDDE7D6), DDRGBA(0x2C5047))
+        case .buttonDanger: (DDRGBA(0xFCE5DB), DDRGBA(0x4D2A1F))
+        case .buttonDangerText: (DDRGBA(0x8A2F0E), DDRGBA(0xF6C9B5))
         case .buttonDangerPressed: (DDRGBA(0xF7D4C6), DDRGBA(0x4A2B1F))
         case .buttonGold: (DDRGBA(0xE2C76A), DDRGBA(0xE2C76A))
         case .buttonGoldText: (DDRGBA(0x2E2A12), DDRGBA(0x2E2A12))
@@ -163,6 +193,21 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
         case .buttonDisabledText: (DDRGBA(0x8A8470), DDRGBA(0x7E8F86))
         case .buttonOK: (DDRGBA(0xD9EBD0), DDRGBA(0x2C4A3A))
         case .buttonOKText: (DDRGBA(0x21451F), DDRGBA(0xCFE6C3))
+        }
+    }
+}
+
+extension DDToken {
+    /// Varianten for «Øk kontrast»: tekst og strek trekkes mot full styrke. Nil = som vanlig.
+    nonisolated var highContrastValues: (light: DDRGBA, dark: DDRGBA)? {
+        switch self {
+        case .inkSecondary: (DDRGBA(0x3F3E37), DDRGBA(0xD3DED7))
+        case .forestInk: (DDRGBA(0x123026), DDRGBA(0xCFEFD7))
+        case .rustText: (DDRGBA(0x8A3A0A), DDRGBA(0xFFB083))
+        case .cardBorder: (DDRGBA(0xB9AE86), DDRGBA(0xFFFFFF, alpha: 0.28))
+        case .hairline: (DDRGBA(0x9E9E9E), DDRGBA(0x4F7466))
+        case .heroSecondary, .statSecondary: (DDRGBA(0xE8F1EB), DDRGBA(0xE1ECE5))
+        default: nil
         }
     }
 }
@@ -216,6 +261,31 @@ nonisolated enum DDContrastPairs {
         // Verktøylinja (`DDConfirmToolbarItem`, `DDCancelToolbarItem`).
         Pair(name: "Bekreft i verktøylinja", foreground: .accentYellowInk, background: .accentYellow, base: nil),
         Pair(name: "Avbryt i verktøylinja", foreground: .onDark, background: .forest, base: nil),
+        // Utbedringsplanen (1.1–1.3).
+        Pair(name: "Sekundær på hero", foreground: .heroSecondary, background: .heroCard, base: nil),
+        Pair(name: "Valgt chip", foreground: .selectedInk, background: .selected, base: nil),
+        Pair(name: "Tekst på chip", foreground: .ink, background: .chip, base: nil),
+        Pair(name: "Sekundær på chip", foreground: .inkSecondary, background: .chip, base: nil),
+        Pair(name: "Grønn tekst på chip", foreground: .forestInk, background: .chip, base: nil),
+        Pair(name: "Sekundærknapp, ny", foreground: .buttonLine, background: .buttonSecondary, base: nil),
+        Pair(name: "Tekst på din rad", foreground: .ink, background: .youRow, base: .card),
+        Pair(name: "Score eagle", foreground: .scoreEagleInk, background: .scoreEagleBackground, base: .card),
+        Pair(name: "Score birdie", foreground: .scoreBirdieInk, background: .scoreBirdieBackground, base: .card),
+        Pair(name: "Score par", foreground: .scoreParInk, background: .scoreParBackground, base: .card),
+        Pair(name: "Score bogey", foreground: .scoreBogeyInk, background: .scoreBogeyBackground, base: .card),
+        Pair(name: "Score dobbel", foreground: .scoreDoubleInk, background: .scoreDoubleBackground, base: .card),
+        Pair(name: "Score null", foreground: .scoreZeroInk, background: .scoreZeroBackground, base: .card),
+    ]
+
+    /// Ikoner, kanter og kontroller: minst 3:1 (WCAG 1.4.11).
+    static let controls: [Pair] = [
+        Pair(name: "Stepper minus-kant på kort", foreground: .forestInk, background: .card, base: nil),
+        Pair(name: "Pluss-stepper mot kort", foreground: .buttonLine, background: .card, base: nil),
+        Pair(name: "Ikon i verktøylinja", foreground: .forestInk, background: .background, base: nil),
+        Pair(name: "Rust-prikk på kort", foreground: .rust, background: .card, base: nil),
+        Pair(name: "Live-prikk på hero", foreground: .accentLime, background: .heroCard, base: nil),
+        Pair(name: "Gul hovedknapp mot hero", foreground: .buttonPrimary, background: .heroCard, base: nil),
+        Pair(name: "Valgt chip mot bakgrunn", foreground: .selected, background: .background, base: nil),
     ]
 
     /// Kontrast for paret i lys (`dark == false`) eller mørk modus.

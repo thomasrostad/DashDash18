@@ -31,7 +31,7 @@ struct FriendsRootView: View {
                 }
             }
         }
-        .tint(Color.ddYellowText)
+        .tint(Color.ddForestInk)
         .environment(\.selectTab) { selectedTab = $0 }
     }
 

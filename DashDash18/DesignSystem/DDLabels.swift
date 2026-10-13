@@ -42,6 +42,10 @@ extension DDSectionLabel where Trailing == EmptyView {
 /// Toner for piller og merker.
 enum DDTone {
     case lime, sun, earth, blush, blushDeep, gold, live, outlineRust, onDark, earthDeep
+    /// Scoreskalaen (planen 1.2): egne verdier i mørk modus, ikke gjennomsiktige.
+    case scoreEagle, scoreBirdie, scorePar, scoreBogey, scoreDouble, scoreZero
+    /// Uvalgt chip.
+    case chip
 
     var background: Color {
         switch self {
@@ -49,11 +53,19 @@ enum DDTone {
         case .sun: .ddSunBackground
         case .earth: .ddEarth
         case .earthDeep: .ddEarthDeep
-        case .blush, .live: .ddBlushBackground
+        case .blush: .ddBlushBackground
+        case .live: .ddLime
         case .blushDeep: .ddBlushDeep
         case .gold: .ddGold
         case .outlineRust: .clear
         case .onDark: Color.ddOnDark.opacity(0.12)
+        case .scoreEagle: DDToken.scoreEagleBackground.color
+        case .scoreBirdie: DDToken.scoreBirdieBackground.color
+        case .scorePar: DDToken.scoreParBackground.color
+        case .scoreBogey: DDToken.scoreBogeyBackground.color
+        case .scoreDouble: DDToken.scoreDoubleBackground.color
+        case .scoreZero: DDToken.scoreZeroBackground.color
+        case .chip: .ddChipFill
         }
     }
 
@@ -61,12 +73,20 @@ enum DDTone {
         switch self {
         case .lime: .ddLimeInk
         case .sun: .ddSunInk
-        case .earth, .live: .ddRustDark
+        case .earth: .ddRustDark
+        case .live: .ddLimeOnAccent
         case .blush, .blushDeep: .ddBlushInk
         case .earthDeep: .ddInk
         case .gold: .ddGoldInk
         case .outlineRust: .ddRustText
         case .onDark: .ddOnDark
+        case .scoreEagle: DDToken.scoreEagleInk.color
+        case .scoreBirdie: DDToken.scoreBirdieInk.color
+        case .scorePar: DDToken.scoreParInk.color
+        case .scoreBogey: DDToken.scoreBogeyInk.color
+        case .scoreDouble: DDToken.scoreDoubleInk.color
+        case .scoreZero: DDToken.scoreZeroInk.color
+        case .chip: .ddInk
         }
     }
 
@@ -79,7 +99,8 @@ enum DDTone {
     }
 }
 
-/// Liten pille i mono versaler (`.gg-pill`): ÅPENT, LIVE, TEST, LONGEST DRIVE …
+/// Statuspille (`.gg-pill`): «Åpent», «Pågår», «Test», «Nærmest pinnen». Sans 13 medium på én linje
+/// (planen 1.4: mono bare i seksjonsetiketter).
 struct DDPill: View {
     let text: String
     var tone: DDTone = .earth
@@ -101,8 +122,7 @@ struct DDPill: View {
             Text(text)
         }
         .font(.ddPill)
-        .tracking(1.1)
-        .textCase(.uppercase)
+        .lineLimit(1)
         .foregroundStyle(tone.foreground)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
@@ -141,12 +161,108 @@ extension ScoreName {
     /// Fargen på score-merket (style.css `.gg-chip.eagle` osv.).
     var tone: DDTone {
         switch self {
-        case .eagle: .sun
-        case .birdie: .lime
-        case .par: .earth
-        case .bogey: .blush
-        case .dobbel, .blowup: .blushDeep
+        case .eagle: .scoreEagle
+        case .birdie: .scoreBirdie
+        case .par: .scorePar
+        case .bogey: .scoreBogey
+        case .dobbel: .scoreDouble
+        case .blowup: .scoreZero
         }
+    }
+}
+
+/// Formen rundt et slagtall (planen 1.2), regnet fra brutto mot par, så skalaen kan leses
+/// uten farge (fargeblinde, sol på skjermen). Fargen kommer fra netto (`ScoreName`).
+nonisolated enum ScoreShape: Equatable, Sendable {
+    case doubleCircle, circle, plain, square, doubleSquare
+
+    static func forGross(_ gross: Int, par: Int) -> ScoreShape {
+        switch gross - par {
+        case ...(-2): .doubleCircle
+        case -1: .circle
+        case 0: .plain
+        case 1: .square
+        default: .doubleSquare
+        }
+    }
+}
+
+/// Slagtallet med form og scorefarge. Brukes overalt der et resultat vises: scorekort, feed,
+/// feiring, «Alle runder» og spillerprofil.
+struct ScoreBadge: View {
+    let strokes: Int
+    let par: Int
+    /// Netto-resultatet som gir fargen. Nil: formen alene, uten fyll.
+    let name: ScoreName?
+    var size: CGFloat = 34
+
+    @ScaledMetric(relativeTo: .body) private var scale: CGFloat = 1
+
+    private var shape: ScoreShape { .forGross(strokes, par: par) }
+
+    var body: some View {
+        let side = size * scale
+        let tone = name?.tone
+        Text("\(strokes)")
+            .font(.dd(.sans, size: size * 0.5, weight: .semibold, relativeTo: .body))
+            .monospacedDigit()
+            .foregroundStyle(tone?.foreground ?? Color.ddInk)
+            .frame(width: side, height: side)
+            .background {
+                outline(fill: tone?.background ?? .clear, stroke: tone?.foreground ?? Color.ddInk, side: side)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilityText)
+    }
+
+    @ViewBuilder
+    private func outline(fill: Color, stroke: Color, side: CGFloat) -> some View {
+        let inset = max(3, side * 0.1)
+        switch shape {
+        case .doubleCircle:
+            ZStack {
+                Circle().fill(fill)
+                Circle().strokeBorder(stroke, lineWidth: 1.5)
+                Circle().strokeBorder(stroke, lineWidth: 1.5).padding(inset)
+            }
+        case .circle:
+            ZStack {
+                Circle().fill(fill)
+                Circle().strokeBorder(stroke, lineWidth: 1.5)
+            }
+        case .plain:
+            RoundedRectangle(cornerRadius: side * 0.22, style: .continuous).fill(fill)
+        case .square:
+            ZStack {
+                RoundedRectangle(cornerRadius: 4).fill(fill)
+                RoundedRectangle(cornerRadius: 4).strokeBorder(stroke, lineWidth: 1.5)
+            }
+        case .doubleSquare:
+            ZStack {
+                RoundedRectangle(cornerRadius: 4).fill(fill)
+                RoundedRectangle(cornerRadius: 4).strokeBorder(stroke, lineWidth: 1.5)
+                RoundedRectangle(cornerRadius: 2).strokeBorder(stroke, lineWidth: 1.5).padding(inset)
+            }
+        }
+    }
+
+    private var accessibilityText: String {
+        let base = "\(strokes) slag"
+        guard let name else { return base }
+        return "\(base), \(name.label.lowercased())"
+    }
+}
+
+/// «Deg»-merket: én form overalt (planen P6), gull-pille ved navnet.
+struct DDYouBadge: View {
+    var body: some View {
+        Text("Deg")
+            .font(.ddStatus)
+            .foregroundStyle(Color.ddGoldInk)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
+            .background(Capsule().fill(Color.ddGold))
+            .accessibilityLabel("deg")
     }
 }
 
@@ -157,11 +273,12 @@ struct DDPointsBadge: View {
 
     var body: some View {
         Text(points.map(String.init) ?? "–")
-            .font(.dd(.mono, size: 15, weight: .semibold, relativeTo: .body))
+            .font(.dd(.sans, size: 15, weight: .semibold, relativeTo: .body))
+            .monospacedDigit()
             .foregroundStyle(name?.tone.foreground ?? .ddInkSecondary)
             .frame(minWidth: 34, minHeight: 28)
             .padding(.horizontal, 4)
-            .background(Capsule().fill(name?.tone.background ?? Color.ddEarth.opacity(0.6)))
+            .background(Capsule().fill(name?.tone.background ?? Color.ddChipFill))
     }
 }
 

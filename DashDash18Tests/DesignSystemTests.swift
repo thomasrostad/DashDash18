@@ -92,6 +92,34 @@ struct DesignColorTests {
         #expect(ratio >= 4.5, "\(name): \(ratio)")
     }
 
+    @Test("Ikoner og kontroller holder 3:1 i begge moduser", arguments: DDContrastPairs.controls.map(\.name))
+    func controlContrast(_ name: String) throws {
+        let pair = try #require(DDContrastPairs.controls.first { $0.name == name })
+        for dark in [false, true] {
+            let ratio = DDContrastPairs.ratio(pair, dark: dark)
+            #expect(ratio >= 3, "\(name) \(dark ? "mørk" : "lys"): \(ratio)")
+        }
+    }
+
+    @Test("Kortet skiller seg fra bakgrunnen i mørk modus (var 1,14:1)")
+    func darkCardLift() {
+        let ratio = DDContrast.ratio(DDToken.card.values.dark, on: DDToken.background.values.dark)
+        #expect(ratio > 1.2)
+    }
+
+    @Test("Øk kontrast gir mørkere sekundærtekst i lys modus og lysere i mørk")
+    func highContrast() {
+        let color = DDToken.inkSecondary.uiColor
+        let normal = color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
+        let high = color.resolvedColor(with: UITraitCollection(traitsFrom: [
+            UITraitCollection(userInterfaceStyle: .light), UITraitCollection(accessibilityContrast: .high),
+        ]))
+        var r1: CGFloat = 0, r2: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        normal.getRed(&r1, green: &g, blue: &b, alpha: &a)
+        high.getRed(&r2, green: &g, blue: &b, alpha: &a)
+        #expect(r2 < r1)
+    }
+
     @Test("Dynamiske farger bytter med mørk modus")
     func dynamicColors() {
         let color = DDToken.background.uiColor

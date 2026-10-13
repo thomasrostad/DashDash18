@@ -8,13 +8,18 @@ extension DDRGBA {
 }
 
 extension DDToken {
-    /// Følger lys og mørk modus.
+    /// Følger lys og mørk modus, og «Øk kontrast» der tokenet har en egen variant.
     nonisolated var uiColor: UIColor {
         let (light, dark) = values
         let lightColor = light.uiColor
         let darkColor = dark.uiColor
+        let high = highContrastValues.map { ($0.light.uiColor, $0.dark.uiColor) }
         return UIColor { traits in
-            traits.userInterfaceStyle == .dark ? darkColor : lightColor
+            let isDark = traits.userInterfaceStyle == .dark
+            if traits.accessibilityContrast == .high, let high {
+                return isDark ? high.1 : high.0
+            }
+            return isDark ? darkColor : lightColor
         }
     }
 
@@ -66,6 +71,11 @@ extension Color {
     static let ddStatText = DDToken.statText.color
     static let ddStatSecondary = DDToken.statSecondary.color
     static let ddStatRust = DDToken.statRust.color
+    // Utbedringsplanen (1.1)
+    static let ddChipFill = DDToken.chip.color
+    static let ddSelected = DDToken.selected.color
+    static let ddSelectedInk = DDToken.selectedInk.color
+    static let ddHeroSecondary = DDToken.heroSecondary.color
     /// Feilmeldinger: mørk rust på lys flate, lys rust i mørk modus.
     static let ddError = DDToken.rustDark.color
 }

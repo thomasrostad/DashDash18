@@ -312,8 +312,8 @@ private struct TradBubble: View {
             var part = AttributedString(segment.text)
             if let id = segment.mention {
                 part.font = Font.ddBodyEmphasis
-                // Ditt eget navn i gult på grønn boble, rust på hvit (begge over 4,5:1).
-                if id == model.viewerID { part.foregroundColor = item.isMine ? Color.ddYellow : Color.ddRustText }
+                // Ditt eget navn i gull på grønn boble, rust på hvit (begge over 4,5:1).
+                if id == model.viewerID { part.foregroundColor = item.isMine ? Color.ddGold : Color.ddRustText }
             }
             result += part
         }

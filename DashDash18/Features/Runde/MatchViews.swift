@@ -194,7 +194,7 @@ struct BayenNaaListe: View {
                             // Ditt tall i gult, de andre hvite (golfee).
                             Text(row.value)
                                 .font(.dd(.sans, size: 20, weight: .medium, relativeTo: .title3)).monospacedDigit()
-                                .foregroundStyle(row.isMe && row.tone == .neutral ? Color.ddYellow : row.tone.statColor)
+                                .foregroundStyle(row.isMe && row.tone == .neutral ? Color.ddGold : row.tone.statColor)
                         }
                         .padding(.vertical, 8)
                         .contentShape(.rect)

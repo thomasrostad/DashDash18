@@ -115,7 +115,7 @@ struct ScorekortSheet: View {
             } else if let sum {
                 Text("\(sum)")
                     .font(.ddNumberLarge)
-                    .foregroundStyle(Color.ddYellow)
+                    .foregroundStyle(Color.ddGold)
             } else if let line, let name = line.scoreName, let points = line.points {
                 DDPointsBadge(points: points, name: name)
             } else {

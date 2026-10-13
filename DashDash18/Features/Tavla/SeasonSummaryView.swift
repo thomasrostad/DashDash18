@@ -86,7 +86,7 @@ struct SeasonSummaryView: View {
             Text(h.value)
                 .font(.dd(.sans, size: 15, weight: .medium, relativeTo: .callout))
                 .monospacedDigit()
-                .foregroundStyle(Color.ddYellow)
+                .foregroundStyle(Color.ddGold)
         }
         .accessibilityElement(children: .combine)
     }

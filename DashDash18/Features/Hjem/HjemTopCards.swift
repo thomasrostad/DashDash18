@@ -29,12 +29,10 @@ struct HjemFilterBar: View {
                         Text(pill.title)
                             .font(.dd(.sans, size: 14.5, weight: pill.isSelected ? .semibold : .medium,
                                       relativeTo: .subheadline))
-                            .foregroundStyle(pill.isSelected ? Color.ddLimeOnAccent : Color.ddInkSecondary)
+                            .foregroundStyle(pill.isSelected ? Color.ddSelectedInk : Color.ddInk)
                             .padding(.horizontal, 14)
-                            .frame(minHeight: 36)
-                            .background(Capsule().fill(pill.isSelected ? Color.ddLime : Color.ddCard))
-                            .overlay(Capsule().strokeBorder(pill.isSelected ? Color.clear : Color.ddHairline,
-                                                            lineWidth: 1))
+                            .frame(minHeight: 44)
+                            .background(Capsule().fill(pill.isSelected ? Color.ddSelected : Color.ddChipFill))
                             .contentShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -136,7 +134,7 @@ struct HjemLiveCard: View {
                             .font(.ddNumber)
                             .monospacedDigit()
                     }
-                    .foregroundStyle(row.isMe ? Color.ddYellow : Color.ddStatText)
+                    .foregroundStyle(row.isMe ? Color.ddGold : Color.ddStatText)
                     .padding(.vertical, 9)
                     .overlay(alignment: .top) {
                         Rectangle().fill(Color.white.opacity(0.12)).frame(height: 1)

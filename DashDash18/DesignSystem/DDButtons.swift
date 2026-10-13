@@ -1,23 +1,38 @@
 import SwiftUI
 
-/// Knappeklassene fra PWA-en (handoff «knappelogikken», 01.10.2026), med golfee-føringen:
-/// gul pille = hovedhandling, skoggrønn omriss = sekundær, rust = kroner flytter seg,
-/// gull = LD/KP, bark på blush = noe forsvinner. Rust er ikke lenkefarge.
+/// Fire knappestiler (utbedringsplanen 1.3, 13.10.2026):
+/// 1. hoved: gul kapsel, 56 pt, maks én per skjerm, nederst i tommelsonen,
+/// 2. sekundær: lys skogflate med skogtekst,
+/// 3. tekst: skogfarget tekst uten flate,
+/// 4. destruktiv: rust-tekst på blush, alltid bak en bekreftelse.
+/// De eldre klassene (penger, gull, endelig fare) tegnes som en av de fire, så hver farge har én betydning.
 enum DDButtonKind {
-    /// `.hoved` (56): skjermens hovedhandling, gul pille.
+    /// Skjermens hovedhandling, gul kapsel.
     case primary
-    /// `.penger` (56): kroner flytter seg.
+    /// Kroner flytter seg. Tegnes som hovedknapp.
     case money
-    /// `.sekundaer` (48): omriss.
+    /// Lys skogflate.
     case secondary
-    /// `.tekst` (44 trykkflate): lenke-aktig.
+    /// Lenke-aktig, 44 pt trykkflate.
     case text
-    /// `.fare` (48): noe forsvinner.
+    /// Noe forsvinner: rust-tekst på blush.
     case danger
-    /// `.fare.endelig` (56): siste trinn i en bekreftelse.
+    /// Siste trinn i en bekreftelse. Som `danger`, men 56 pt.
     case dangerFinal
-    /// `.gull` (48): longest drive og nærmest pinnen.
+    /// Longest drive og nærmest pinnen. Tegnes som sekundær (gull er bare for «Deg», jakka og leder).
     case gold
+
+    /// Stilen knappen faktisk tegnes med.
+    var look: Look {
+        switch self {
+        case .primary, .money: .primary
+        case .secondary, .gold: .secondary
+        case .text: .text
+        case .danger, .dangerFinal: .destructive
+        }
+    }
+
+    enum Look { case primary, secondary, text, destructive }
 }
 
 struct DDButtonStyle: ButtonStyle {
@@ -40,33 +55,36 @@ private struct DDButtonBody: View {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private var look: DDButtonKind.Look { style.kind.look }
+
     var body: some View {
         let pressed = configuration.isPressed
         configuration.label
             .font(font)
             .multilineTextAlignment(.center)
-            .foregroundStyle(foreground(pressed: pressed))
-            .padding(.horizontal, style.kind == .text ? 10 : (style.compact ? 14 : 22))
+            .foregroundStyle(foreground)
+            .padding(.horizontal, look == .text ? 10 : (style.compact ? 14 : 22))
             .padding(.vertical, style.compact ? 6 : 10)
             .frame(minHeight: minHeight)
             .frame(maxWidth: style.fullWidth ? .infinity : nil)
             .background {
                 Capsule().fill(background(pressed: pressed))
-                if let border = border {
-                    Capsule().strokeBorder(border, style: borderStroke)
+                if look == .secondary && style.onDark {
+                    Capsule().strokeBorder(Color.ddOnDark.opacity(0.45), lineWidth: 1)
                 }
             }
-            .shadow(color: shadow, radius: 10, y: 8)
             .contentShape(Capsule())
+            // Deaktivert: samme knapp, dempet. Aldri stiplet (planen 1.3).
+            .opacity(isEnabled ? 1 : 0.4)
             .scaleEffect(pressed && !reduceMotion ? 0.97 : 1)
             .animation(.easeOut(duration: 0.12), value: pressed)
     }
 
     private var font: Font {
-        switch style.kind {
-        case .primary, .money, .dangerFinal: style.compact ? .ddButton : .ddButtonLarge
-        case .text: .dd(.sans, size: 15, weight: .semibold, relativeTo: .body)
-        default: style.compact ? .dd(.sans, size: 14, weight: .semibold, relativeTo: .subheadline) : .ddButton
+        switch look {
+        case .primary: style.compact ? .ddButton : .ddButtonLarge
+        case .text: .dd(.sans, size: 16, weight: .semibold, relativeTo: .body)
+        default: style.compact ? .dd(.sans, size: 15, weight: .semibold, relativeTo: .subheadline) : .ddButtonLarge
         }
     }
 
@@ -74,79 +92,35 @@ private struct DDButtonBody: View {
         if style.compact { return 44 }
         switch style.kind {
         case .primary, .money, .dangerFinal: return 56
-        case .secondary, .danger, .gold: return 48
+        case .secondary, .danger, .gold: return 50
         case .text: return 44
         }
     }
 
-    private func token(_ token: DDToken) -> Color { token.color }
-
-    private func foreground(pressed: Bool) -> Color {
-        if !isEnabled { return token(.buttonDisabledText) }
-        if style.onDark {
-            switch style.kind {
-            case .secondary, .text: return .ddOnDark
-            default: break
-            }
-        }
-        switch style.kind {
-        case .primary: return token(.buttonPrimaryText)
-        case .money: return token(.buttonMoneyText)
-        case .secondary: return pressed ? token(.buttonOKText) : token(.buttonLine)
-        case .text: return token(.buttonLine)
-        case .danger: return token(.buttonDangerText)
-        case .dangerFinal: return Color(uiColor: DDRGBA(0xFCE5DB).uiColor)
-        case .gold: return token(.buttonGoldText)
+    private var foreground: Color {
+        if style.onDark, look == .secondary || look == .text { return .ddOnDark }
+        switch look {
+        case .primary: return DDToken.buttonPrimaryText.color
+        case .secondary, .text: return DDToken.buttonLine.color
+        case .destructive: return DDToken.buttonDangerText.color
         }
     }
 
     private func background(pressed: Bool) -> Color {
-        if !isEnabled { return style.kind == .text ? .clear : token(.buttonDisabled) }
-        if style.onDark {
-            switch style.kind {
-            case .secondary: return pressed ? Color.ddOnDark.opacity(0.12) : .clear
-            case .text: return pressed ? Color.ddOnDark.opacity(0.12) : .clear
-            default: break
-            }
+        if style.onDark, look == .secondary || look == .text {
+            return pressed ? Color.ddOnDark.opacity(0.2) : (look == .secondary ? Color.ddOnDark.opacity(0.1) : .clear)
         }
-        switch style.kind {
-        case .primary: return pressed ? token(.buttonPrimaryPressed) : token(.buttonPrimary)
-        case .money: return pressed ? token(.buttonMoneyPressed) : token(.buttonMoney)
-        case .secondary: return pressed ? token(.buttonOK) : .ddCard
-        case .text: return pressed ? token(.buttonOK) : .clear
-        case .danger: return pressed ? token(.buttonDangerPressed) : token(.buttonDanger)
-        case .dangerFinal: return Color(uiColor: DDRGBA(pressed ? 0x4A1E05 : 0x612807).uiColor)
-        case .gold: return pressed ? token(.buttonGoldPressed) : token(.buttonGold)
-        }
-    }
-
-    private var border: Color? {
-        if !isEnabled {
-            // Sperret hovedknapp får stiplet kant, aldri gjennomsiktighet (style.css «tilstander»).
-            return style.kind == .primary ? token(.buttonDisabledText) : nil
-        }
-        switch style.kind {
-        case .secondary: return style.onDark ? Color.ddOnDark.opacity(0.55) : token(.buttonLine)
-        default: return nil
-        }
-    }
-
-    private var borderStroke: StrokeStyle {
-        isEnabled ? StrokeStyle(lineWidth: 1.5) : StrokeStyle(lineWidth: 1, dash: [3, 3])
-    }
-
-    private var shadow: Color {
-        guard isEnabled, !style.compact else { return .clear }
-        switch style.kind {
-        case .primary: return Color(red: 160 / 255, green: 120 / 255, blue: 0).opacity(0.30)
-        case .money: return Color(red: 191 / 255, green: 84 / 255, blue: 18 / 255).opacity(0.35)
-        default: return .clear
+        switch look {
+        case .primary: return pressed ? DDToken.buttonPrimaryPressed.color : DDToken.buttonPrimary.color
+        case .secondary: return pressed ? DDToken.buttonSecondaryPressed.color : DDToken.buttonSecondary.color
+        case .text: return pressed ? DDToken.buttonSecondary.color : .clear
+        case .destructive: return pressed ? DDToken.buttonDangerPressed.color : DDToken.buttonDanger.color
         }
     }
 }
 
 extension ButtonStyle where Self == DDButtonStyle {
-    /// Skoggrønn hovedknapp over hele bredden.
+    /// Gul hovedknapp over hele bredden.
     static var ddPrimary: DDButtonStyle { DDButtonStyle(kind: .primary, fullWidth: true) }
     static var ddMoney: DDButtonStyle { DDButtonStyle(kind: .money, fullWidth: true) }
     static var ddSecondary: DDButtonStyle { DDButtonStyle(kind: .secondary) }
@@ -160,10 +134,11 @@ extension ButtonStyle where Self == DDButtonStyle {
     }
 }
 
-/// Valgknapp i en gruppe (`.gg-seg` / `.gg-segment`): pille som er fylt når den er valgt.
+/// Valgknapp i en gruppe (`.gg-seg` / `.gg-segment`): skog fylt med krem tekst og hake når den er valgt
+/// (planen 1.3: valgt er aldri lime).
 struct DDChoiceButtonStyle: ButtonStyle {
     let selected: Bool
-    /// Fargen når valgt. Standard er skoggrønn.
+    /// Fra før valgte knappen farge. Nå tegnes alle valgte likt; verdien beholdes for kallene.
     var tint: DDChoiceTint = .forest
 
     func makeBody(configuration: Configuration) -> some View {
@@ -183,38 +158,32 @@ private struct DDChoiceBody: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        configuration.label
-            .font(.dd(.sans, size: 14.5, weight: selected ? .semibold : .medium, relativeTo: .subheadline))
+        HStack(spacing: 6) {
+            if selected {
+                Image(systemName: "checkmark")
+                    .font(.system(.footnote, weight: .bold))
+                    .accessibilityHidden(true)
+            }
+            configuration.label
+        }
+            .font(.dd(.sans, size: 15, weight: selected ? .semibold : .medium, relativeTo: .subheadline))
             .foregroundStyle(foreground)
             .padding(.horizontal, 12)
             .frame(minHeight: 48)
             .frame(maxWidth: .infinity)
             .background(Capsule().fill(background))
-            .overlay(Capsule().strokeBorder(selected ? Color.clear : Color.ddHairline, lineWidth: 1))
             .contentShape(Capsule())
             .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
-            .opacity(isEnabled ? 1 : 0.6)
+            .opacity(isEnabled ? 1 : 0.4)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 
     private var background: Color {
-        guard selected else { return .ddCard }
-        switch tint {
-        case .forest: return .ddLime
-        case .lime: return .ddLimeBackground
-        case .sun: return .ddSunBackground
-        case .blush: return .ddBlushBackground
-        }
+        selected ? .ddSelected : .ddChipFill
     }
 
     private var foreground: Color {
-        guard selected else { return .ddInkSecondary }
-        switch tint {
-        case .forest: return .ddLimeOnAccent
-        case .lime: return .ddLimeInk
-        case .sun: return .ddSunInk
-        case .blush: return .ddRustDark
-        }
+        selected ? .ddSelectedInk : .ddInk
     }
 }
 

@@ -24,7 +24,7 @@ struct DDStatTile: View {
             Text(value)
                 .font(.dd(.sans, size: 30, weight: .light, relativeTo: .title))
                 .monospacedDigit()
-                .foregroundStyle(highlight ? Color.ddYellow : Color.ddStatText)
+                .foregroundStyle(highlight ? Color.ddGold : Color.ddStatText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             if let detail {

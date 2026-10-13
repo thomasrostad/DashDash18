@@ -51,7 +51,7 @@ struct RootView: View {
             }
         }
         // Aktiv fane i gult (golfee), mørk oker i lys modus så etiketten holder 4,5:1.
-        .tint(Color.ddYellowText)
+        .tint(Color.ddForestInk)
         .environment(\.selectTab) { selectedTab = $0 }
         .environment(\.showRound) { roundID in
             selectedTab = .hjem
