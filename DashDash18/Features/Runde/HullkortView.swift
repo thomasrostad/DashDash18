@@ -35,6 +35,8 @@ struct HullHeroView: View {
             arrow("chevron.right", label: "Neste hull", enabled: card.hasNext) { onGoTo(card.holeIndex + 1) }
         }
         .ddCard(.hero, padding: DDSpacing.l)
+        // Hullnummeret er alt 60 pt; resten vokser til xxxL så hero-kortet ikke fyller skjermen.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     @ViewBuilder
@@ -143,6 +145,9 @@ struct FoeringBunnlinje: View {
         .glassEffect(.regular, in: .rect(cornerRadius: DDRadius.cardLarge))
         .padding(.horizontal, DDSpacing.s)
         .padding(.bottom, 4)
+        // Linja ligger over lista hele tiden: den vokser med teksten, men ikke så mye at den
+        // tar halve skjermen ved de største tilgjengelighetsstørrelsene.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     @ViewBuilder
@@ -153,25 +158,35 @@ struct FoeringBunnlinje: View {
                 .ddErrorStyle()
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            HStack(spacing: DDSpacing.s) {
-                if let sync {
-                    Label {
-                        Text(sync.text)
-                    } icon: {
-                        Image(systemName: sync.isPending ? "icloud.and.arrow.up" : "checkmark.icloud")
-                            .foregroundStyle(sync.isPending ? Color.ddRust : Color.ddForestInk)
-                    }
-                    .foregroundStyle(sync.isPending ? Color.ddRustText : Color.ddInkSecondary)
-                    .accessibilityElement(children: .combine)
-                }
-                Spacer(minLength: 0)
-                if case .save(_, _, let status?) = card.action {
-                    Text(status)
-                        .foregroundStyle(Color.ddInkSecondary)
-                }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: DDSpacing.s) { syncLabel; Spacer(minLength: 0); changedLabel }
+                VStack(alignment: .leading, spacing: 2) { syncLabel; changedLabel }
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .font(.ddStatus)
             .monospacedDigit()
+        }
+    }
+
+    @ViewBuilder
+    private var syncLabel: some View {
+        if let sync {
+            Label {
+                Text(sync.text)
+            } icon: {
+                Image(systemName: sync.isPending ? "icloud.and.arrow.up" : "checkmark.icloud")
+                    .foregroundStyle(sync.isPending ? Color.ddRust : Color.ddForestInk)
+            }
+            .foregroundStyle(sync.isPending ? Color.ddRustText : Color.ddInkSecondary)
+            .accessibilityElement(children: .combine)
+        }
+    }
+
+    @ViewBuilder
+    private var changedLabel: some View {
+        if case .save(_, _, let status?) = card.action {
+            Text(status)
+                .foregroundStyle(Color.ddInkSecondary)
         }
     }
 

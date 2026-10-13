@@ -31,6 +31,7 @@ struct RundeView: View {
                         (RundeSegment.standing, "Stilling"),
                         (RundeSegment.extras, RundeSegment.extrasTitle(count: extrasCount(game))),
                     ], selection: segmentBinding(game))
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .accessibilityLabel("Visning")
                     switch segment(game) {
                     case .scoring: scoring(game)

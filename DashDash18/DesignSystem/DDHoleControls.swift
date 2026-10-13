@@ -134,7 +134,7 @@ struct DDHoleChip: View {
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .foregroundStyle(foreground)
-            .frame(width: max(44, side), height: max(44, side))
+            .frame(width: min(max(44, side), 64), height: min(max(44, side), 64))
             .background {
                 switch style {
                 case .current: shape.fill(Color.ddSelected)
