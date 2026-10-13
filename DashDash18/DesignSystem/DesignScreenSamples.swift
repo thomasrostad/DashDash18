@@ -170,25 +170,9 @@ struct DesignScreenSamples: View {
             NavigationStack { DDListSample() }
                 .tint(Color.ddForestInk)
         case .hullkort:
-            NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 14) {
-                        DDInfoStripe(tone: .earth) {
-                            Text("**Du er markør i bås 1** · Kåre, Ola, Per og deg")
-                        }
-                        HullprikkerView(dots: Self.dots) { _ in }
-                        HullkortView(card: Self.card, isPending: false, isSaving: false, error: nil,
-                                     sync: SyncStatus(text: "Hull 1–6 er synket", isPending: false),
-                                     onStep: { _, _ in }, onConfirm: { _ in }, onSave: {}, onGoTo: { _ in },
-                                     onScorecard: { _ in })
-                    }
-                    .padding(.horizontal, DDSpacing.gutter)
-                    .padding(.vertical, DDSpacing.l)
-                }
-                .navigationTitle("Runde 6")
-                .navigationBarTitleDisplayMode(.inline)
-                .ddNavigationChrome()
-            }
+            // Føringen som i skissen (4.2): Losby hull 7, par 3, nærmest pinnen, fire i båsen.
+            NavigationStack { RundeView(model: SpillSamples.foeringModel()) }
+                .tint(Color.ddForestInk)
         case .turneringvelger:
             NavigationStack { AdminHubSample(.tonight, scroll: .top, picker: TournamentCoreSamples.picker()) }
                 .tint(Color.ddForestInk)
@@ -257,7 +241,7 @@ struct DesignScreenSamples: View {
     }
 
     static let card = HoleCard(
-        holeIndex: 6, title: "Hull 7 av 18", detail: "Par 3 · 155 m · indeks 17",
+        holeIndex: 6, number: 7, par: 3, meters: "155", strokeIndex: 17, holeCount: 18, title: "Hull 7 av 18", detail: "Par 3 · 155 m · indeks 17",
         isLongestDrive: false, isClosestToPin: true, header: "Båsen", strokesLabel: "Slag · brutto",
         rows: [
             .init(memberID: ids[0], name: "Thomas", isMe: true, editable: true, confirmed: false, saved: nil,

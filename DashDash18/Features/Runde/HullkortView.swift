@@ -1,31 +1,101 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Hullkortet for hele båsen: én rad per spiller, og «Lagre hull» for markøren.
+/// Hero for hullet (planen 4.2): stort hullnummer, par og meter, indeks, sidepremie og ‹ › på 44 pt.
+struct HullHeroView: View {
+    let card: HoleCard
+    let onGoTo: (Int) -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: DDSpacing.s) {
+            arrow("chevron.left", label: "Forrige hull", enabled: card.hasPrevious) { onGoTo(card.holeIndex - 1) }
+            VStack(spacing: 4) {
+                Text(card.title)
+                    .font(.ddStatus)
+                    .foregroundStyle(Color.ddHeroSecondary)
+                Text("\(card.number)")
+                    .font(.dd(.sans, size: 60, weight: .light, relativeTo: .largeTitle))
+                    .monospacedDigit()
+                    .contentTransition(.numericText(value: Double(card.number)))
+                    .foregroundStyle(Color.ddOnDark)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                Text(card.parLine)
+                    .font(.dd(.sans, size: 19, weight: .medium, relativeTo: .headline))
+                    .monospacedDigit()
+                    .foregroundStyle(Color.ddOnDark)
+                ViewThatFits {
+                    HStack(spacing: DDSpacing.s) { meta }
+                    VStack(spacing: 6) { meta }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityText)
+            arrow("chevron.right", label: "Neste hull", enabled: card.hasNext) { onGoTo(card.holeIndex + 1) }
+        }
+        .ddCard(.hero, padding: DDSpacing.l)
+        // Hullnummeret er alt 60 pt; resten vokser til xxxL så hero-kortet ikke fyller skjermen.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+
+    @ViewBuilder
+    private var meta: some View {
+        if let index = card.indexLine {
+            Text(index)
+                .font(.ddStatus)
+                .monospacedDigit()
+                .foregroundStyle(Color.ddHeroSecondary)
+        }
+        if card.isLongestDrive {
+            DDSidePrizeTag(kind: .longestDrive)
+        }
+        if card.isClosestToPin {
+            DDSidePrizeTag(kind: .closestToPin)
+        }
+    }
+
+    private var accessibilityText: String {
+        var parts = ["Hull \(card.number)", card.parLine.replacingOccurrences(of: " · ", with: ", ")]
+        if let index = card.indexLine { parts.append(index) }
+        if card.isLongestDrive { parts.append("longest drive") }
+        if card.isClosestToPin { parts.append("nærmest pinnen") }
+        return parts.joined(separator: ", ")
+    }
+
+    private func arrow(_ image: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: image)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Color.ddOnDark)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(Color.ddOnDark.opacity(0.12)))
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.3)
+        .accessibilityLabel(label)
+    }
+}
+
+/// Hullkortet for hele båsen: én rad per spiller. «Lagre hull» står i bunnlinja (`FoeringBunnlinje`).
 struct HullkortView: View {
     let card: HoleCard
     let isPending: Bool
-    let isSaving: Bool
-    let error: String?
-    /// «Hull 1–6 er synket» eller «Lagret på telefonen …» (K6).
-    var sync: SyncStatus? = nil
     let onStep: (Int, UUID) -> Void
     let onConfirm: (UUID) -> Void
-    let onSave: () -> Void
-    let onGoTo: (Int) -> Void
     /// Åpner scorekortet til spilleren (nil: ditt eget).
     let onScorecard: (UUID?) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            header
             HStack {
                 Text(card.header)
                 Spacer()
                 Text(card.strokesLabel)
             }
             .ddEyebrow()
-            .padding(.top, 6)
 
             VStack(spacing: 0) {
                 DDDivider()
@@ -43,79 +113,97 @@ struct HullkortView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
             }
-            if let error {
-                VStack(alignment: .leading, spacing: DDSpacing.s) {
-                    Label(error, systemImage: "exclamationmark.triangle")
-                        .ddErrorStyle()
-                    Button("Prøv igjen", action: onSave)
-                        .buttonStyle(.dd(.secondary, compact: true))
-                        .disabled(isSaving)
-                }
-            } else if let sync {
-                Label {
-                    Text(sync.text)
-                } icon: {
-                    Image(systemName: sync.isPending ? "icloud.and.arrow.up" : "checkmark.icloud")
-                        .foregroundStyle(sync.isPending ? Color.ddRust : Color.ddForestInk)
-                }
-                .font(.ddStatus)
-                .foregroundStyle(sync.isPending ? Color.ddRustText : Color.ddInkSecondary)
-                .frame(maxWidth: .infinity)
-                .accessibilityElement(children: .combine)
-            }
-            actionView
-                .padding(.top, 4)
             if let hint = card.viewerHint {
                 Text(hint)
                     .font(.ddCaption)
                     .foregroundStyle(Color.ddInkSecondary)
             }
-            if card.holeIndex > 0 {
-                Button("‹ Forrige hull") { onGoTo(card.holeIndex - 1) }
-                    .buttonStyle(.ddText)
-                    .frame(maxWidth: .infinity)
-            }
         }
         .ddCard(.large)
     }
+}
 
-    private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(card.title)
-                    .ddEyebrow()
-                Text(card.detail)
-                    .font(.dd(.sans, size: 15, relativeTo: .subheadline))
-                    .monospacedDigit()
-                    .foregroundStyle(Color.ddInkSecondary)
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 6) {
-                if card.isLongestDrive {
-                    DDSidePrizeTag(kind: .longestDrive)
-                }
-                if card.isClosestToPin {
-                    DDSidePrizeTag(kind: .closestToPin)
-                }
-            }
+/// Bunnlinja i glass (planen 4.2): synkstatus og hovedknappen «Lagre hull 7 og gå videre →».
+struct FoeringBunnlinje: View {
+    let card: HoleCard
+    let isSaving: Bool
+    let error: String?
+    /// «Hull 1–6 er synket» eller «Lagret på telefonen …» (K6).
+    var sync: SyncStatus?
+    let onSave: () -> Void
+    let onGoTo: (Int) -> Void
+    let onScorecard: () -> Void
+
+    var body: some View {
+        VStack(spacing: DDSpacing.s) {
+            statusLine
+            actionView
         }
-        .accessibilityElement(children: .combine)
+        .padding(.horizontal, DDSpacing.l)
+        .padding(.vertical, DDSpacing.m)
+        .frame(maxWidth: .infinity)
+        .glassEffect(.regular, in: .rect(cornerRadius: DDRadius.cardLarge))
+        .padding(.horizontal, DDSpacing.s)
+        .padding(.bottom, 4)
+        // Linja ligger over lista hele tiden: den vokser med teksten, men ikke så mye at den
+        // tar halve skjermen ved de største tilgjengelighetsstørrelsene.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+
+    @ViewBuilder
+    private var statusLine: some View {
+        if let error {
+            Label(error, systemImage: "exclamationmark.triangle")
+                .font(.ddStatus)
+                .ddErrorStyle()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: DDSpacing.s) { syncLabel; Spacer(minLength: 0); changedLabel }
+                VStack(alignment: .leading, spacing: 2) { syncLabel; changedLabel }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .font(.ddStatus)
+            .monospacedDigit()
+        }
+    }
+
+    @ViewBuilder
+    private var syncLabel: some View {
+        if let sync {
+            Label {
+                Text(sync.text)
+            } icon: {
+                Image(systemName: sync.isPending ? "icloud.and.arrow.up" : "checkmark.icloud")
+                    .foregroundStyle(sync.isPending ? Color.ddRust : Color.ddForestInk)
+            }
+            .foregroundStyle(sync.isPending ? Color.ddRustText : Color.ddInkSecondary)
+            .accessibilityElement(children: .combine)
+        }
+    }
+
+    @ViewBuilder
+    private var changedLabel: some View {
+        if case .save(_, _, let status?) = card.action {
+            Text(status)
+                .foregroundStyle(Color.ddInkSecondary)
+        }
     }
 
     @ViewBuilder
     private var actionView: some View {
         switch card.action {
-        case .save(let title, let enabled, let status):
-            if let status {
-                Text(status)
-                    .font(.ddStatus)
-                    .foregroundStyle(Color.ddInkSecondary)
-                    .frame(maxWidth: .infinity)
-            }
+        case .save(let title, let enabled, _):
             Button(action: onSave) {
                 ZStack {
                     // Samme bredde mens den lagrer (planen 1.3).
-                    Text(title).opacity(isSaving ? 0 : 1)
+                    HStack(spacing: 6) {
+                        Text(error == nil ? title : "Prøv igjen · \(title.lowercased())")
+                        if card.actionAdvances && error == nil {
+                            Image(systemName: "arrow.right").accessibilityHidden(true)
+                        }
+                    }
+                    .opacity(isSaving ? 0 : 1)
                     if isSaving { ProgressView().tint(DDToken.buttonPrimaryText.color) }
                 }
             }
@@ -125,7 +213,7 @@ struct HullkortView: View {
             Button(title) { onGoTo(hole) }
                 .buttonStyle(.dd(.secondary, fullWidth: true))
         case .scorecard:
-            Button("Alle hull er lagret · se scorekortet →") { onScorecard(nil) }
+            Button("Alle hull er lagret · se scorekortet →", action: onScorecard)
                 .buttonStyle(.dd(.secondary, fullWidth: true))
         case .none:
             EmptyView()
@@ -140,38 +228,16 @@ struct HullRadView: View {
     let onStep: (Int, UUID) -> Void
     let onConfirm: (UUID) -> Void
     let onName: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Button(action: onName) {
-                    HStack(alignment: .firstTextBaseline, spacing: 7) {
-                        Text(row.name)
-                            .font(.ddName)
-                            .foregroundStyle(Color.ddForestInk)
-                            .lineLimit(1)
-                        if row.isMe {
-                            DDYouBadge()
-                        }
-                    }
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Scorekortet til \(row.name)")
-
-                if row.editable || row.saved != nil {
-                    Text(row.isDefault ? "\(row.strokesReceived) slag fått · forvalgt par" : "\(row.strokesReceived) slag fått")
-                        .font(.ddMonoSmall)
-                        .foregroundStyle(Color.ddInkSecondary)
-                }
-                result
-                if let calculation = row.calculation {
-                    Text(calculation)
-                        .font(.ddMonoSmall)
-                        .monospacedDigit()
-                        .foregroundStyle(Color.ddInkSecondary)
-                }
-            }
-            Spacer(minLength: 4)
+        // Store tekststørrelser (V7): navnet over, stepperen under.
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+        layout {
+            info
+            if !typeSize.isAccessibilitySize { Spacer(minLength: 4) }
             if row.editable {
                 stepper
             } else {
@@ -187,6 +253,37 @@ struct HullRadView: View {
         // Din rad har en svak gulltone, som i PWA-en.
         .background(row.isMe ? Color.ddYouRow : Color.clear, in: .rect(cornerRadius: 16))
         .padding(.horizontal, row.isMe ? -10 : 0)
+    }
+
+    private var info: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Button(action: onName) {
+                HStack(alignment: .firstTextBaseline, spacing: 7) {
+                    Text(row.name)
+                        .font(.ddName)
+                        .foregroundStyle(Color.ddForestInk)
+                        .lineLimit(1)
+                    if row.isMe {
+                        DDYouBadge()
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Scorekortet til \(row.name)")
+
+            if row.editable || row.saved != nil {
+                Text(row.isDefault ? "\(row.strokesReceived) slag fått · forvalgt par" : "\(row.strokesReceived) slag fått")
+                    .font(.ddMonoSmall)
+                    .foregroundStyle(Color.ddInkSecondary)
+            }
+            result
+            if let calculation = row.calculation {
+                Text(calculation)
+                    .font(.ddMonoSmall)
+                    .monospacedDigit()
+                    .foregroundStyle(Color.ddInkSecondary)
+            }
+        }
     }
 
     @ViewBuilder
@@ -218,7 +315,6 @@ struct HullRadView: View {
                 Image(systemName: "minus")
             }
             .buttonStyle(DDStepperButtonStyle(kind: .minus))
-            .accessibilityLabel("Ett slag mindre for \(row.name)")
 
             Button {
                 onConfirm(row.memberID)
@@ -226,17 +322,6 @@ struct HullRadView: View {
                 DDStrokeValue(value: "\(row.value)", confirmed: row.confirmed)
             }
             .buttonStyle(.plain)
-            // VoiceOver: navnet, tallet, og sveip opp/ned som − og +.
-            .accessibilityLabel(row.name)
-            .accessibilityValue(accessibilityValue)
-            .accessibilityHint("Sveip opp eller ned for å endre.")
-            .accessibilityAdjustableAction { direction in
-                switch direction {
-                case .increment: onStep(1, row.memberID)
-                case .decrement: onStep(-1, row.memberID)
-                @unknown default: break
-                }
-            }
 
             Button {
                 onStep(1, row.memberID)
@@ -244,13 +329,34 @@ struct HullRadView: View {
                 Image(systemName: "plus")
             }
             .buttonStyle(DDStepperButtonStyle(kind: .plus))
-            .accessibilityLabel("Ett slag mer for \(row.name)")
         }
         .sensoryFeedback(trigger: row.value) { old, new in new > old ? .increase : .decrease }
+        // VoiceOver (V7): «Kåre, 4 slag», «2 poeng», og sveip opp/ned som + og −.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(StrokeAccessibility.label(row))
+        .accessibilityValue(StrokeAccessibility.value(row))
+        .accessibilityHint("Sveip opp eller ned for å endre.")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: onStep(1, row.memberID)
+            case .decrement: onStep(-1, row.memberID)
+            @unknown default: break
+            }
+        }
+        .accessibilityAction { onConfirm(row.memberID) }
+    }
+}
+
+/// Det VoiceOver leser på stepperen (planen V7).
+nonisolated enum StrokeAccessibility {
+    /// «Kåre, 4 slag».
+    static func label(_ row: HoleCard.Row) -> String {
+        "\(row.name), \(row.value) slag"
     }
 
-    private var accessibilityValue: String {
-        var parts = ["\(row.value) slag"]
+    /// «2 poeng», «forvalgt par, 2 poeng» eller tomt i en match.
+    static func value(_ row: HoleCard.Row) -> String {
+        var parts: [String] = []
         if row.isDefault { parts.append("forvalgt par") }
         if let points = row.points { parts.append("\(points) poeng") }
         return parts.joined(separator: ", ")
@@ -264,5 +370,14 @@ struct ScoreChip: View {
 
     var body: some View {
         DDChip(text ?? name.label, tone: name.tone, compact: true)
+    }
+}
+
+extension HullkortView {
+    /// Signaturen fra før bunnlinja (skjermprøver utenfor føringen). Lagringen står nå i `FoeringBunnlinje`.
+    init(card: HoleCard, isPending: Bool, isSaving: Bool, error: String?, sync: SyncStatus? = nil,
+         onStep: @escaping (Int, UUID) -> Void, onConfirm: @escaping (UUID) -> Void, onSave: @escaping () -> Void,
+         onGoTo: @escaping (Int) -> Void, onScorecard: @escaping (UUID?) -> Void) {
+        self.init(card: card, isPending: isPending, onStep: onStep, onConfirm: onConfirm, onScorecard: onScorecard)
     }
 }

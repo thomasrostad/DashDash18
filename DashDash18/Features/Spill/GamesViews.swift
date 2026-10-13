@@ -2,52 +2,9 @@ import GolfgutuCore
 import Supabase
 import SwiftUI
 
-// Spill på runden (fase 14): inngangen på runde-skjermen, ett lite kort per spill med stillingen,
+// Spill på runden (fase 14): segmentet «Spill» i føringen (`RundeView` henter spillene), ett lite kort per spill med stillingen,
 // markeringene (Wolf-valg på tee, bingo-bango-bongo) og oppgjøret i poeng. Vises bare med
 // `GamesFeature.isEnabled`.
-
-/// Inngangen under føringen: «Spill i runden». Henter spillene for runden og viser kortene.
-struct SpillIRunden: View {
-    let game: RoundGame
-    let hole: Int
-    let viewer: Viewer
-    let client: SupabaseClient
-    let userID: UUID
-
-    var body: some View {
-        if GamesFeature.isEnabled {
-            SpillIRundenLoader(game: game, hole: hole, viewer: viewer, client: client, userID: userID)
-        }
-    }
-}
-
-private struct SpillIRundenLoader: View {
-    let game: RoundGame
-    let hole: Int
-    let viewer: Viewer
-    let client: SupabaseClient
-    let userID: UUID
-    @State private var model: GamesModel?
-
-    var body: some View {
-        Group {
-            if let model, model.roundID == game.roundID {
-                SpillSeksjon(model: model, game: game, hole: hole, viewer: viewer, me: userID)
-            }
-        }
-        .task(id: game.roundID) {
-            let fresh = GamesModel(client: client, roundID: game.roundID)
-            model = fresh
-            await fresh.load()
-        }
-        // Nye scorer og låsing: hent markeringene og oppgjøret på nytt.
-        .task(id: reloadKey) { await model?.load() }
-    }
-
-    private var reloadKey: String {
-        "\(game.snapshot.scores.count)-\(game.status.rawValue)-\(hole)"
-    }
-}
 
 /// Kortene for spillene i runden, og «Legg til spill».
 struct SpillSeksjon: View {
@@ -225,17 +182,20 @@ struct SpillKort: View {
                     .font(.ddCaption)
                     .foregroundStyle(Color.ddInkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
+                // Status under teksten, så pillen aldri kuttes (V6).
+                DDPill(card.status, tone: card.isSettled ? .lime : (card.canSettle ? .sun : .earth))
+                    .padding(.top, 4)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 6) {
-                DDPill(card.status, tone: card.isSettled ? .lime : (card.canSettle ? .sun : .earth))
                 if card.canDelete {
                     Menu {
                         Button("Fjern spillet", systemImage: "trash", role: .destructive) { confirmsDelete = true }
                     } label: {
                         Image(systemName: "ellipsis")
                             .foregroundStyle(Color.ddInkSecondary)
-                            .frame(width: 32, height: 24)
+                            .frame(width: 44, height: 44)
+                            .contentShape(.rect)
                     }
                     .accessibilityLabel("Mer for \(card.title)")
                 }
@@ -260,7 +220,7 @@ private struct SpillRad: View {
             }
             Spacer(minLength: 8)
             Text(GameTexts.signed(row.points))
-                .font(.dd(.mono, size: 15, weight: .semibold, relativeTo: .body))
+                .font(.dd(.sans, size: 15, weight: .semibold, relativeTo: .body))
                 .foregroundStyle(row.points > 0 ? Color.ddForestInk : (row.points < 0 ? Color.ddRustText : Color.ddInkSecondary))
                 .monospacedDigit()
         }
@@ -289,6 +249,7 @@ private struct SpillMarkering: View {
         VStack(alignment: .leading, spacing: DDSpacing.s) {
             switch action {
             case .wolf(let hole, let wolf, let partners, let blindAllowed, let current):
+                // Wolf-valget står i segmentet «Spill» (planen 4.2), med knapper på 48 pt.
                 Text("Velg for \(name(wolf)) etter utslagene:")
                     .font(.ddCaption)
                     .foregroundStyle(Color.ddInkSecondary)

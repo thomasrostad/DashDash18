@@ -8,6 +8,8 @@ extension View {
             .tracking(1.4)
             .textCase(.uppercase)
             .foregroundStyle(color)
+            // Etiketter er stillas, ikke innhold: de vokser til xxxL, men ikke videre (AX3 ga «BÅSEN» i 40 pt).
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 }
 

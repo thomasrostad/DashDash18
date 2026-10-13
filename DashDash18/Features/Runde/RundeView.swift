@@ -2,11 +2,21 @@ import GolfgutuCore
 import Supabase
 import SwiftUI
 
-/// Kveld under spill: markørlinja, sol-stripa, hullprikkene, hullkortet og «Bayen nå».
+/// Føringen under runden (utbedringsplanen 4.2): fullskjerm uten fanelinje, med «Lukk føringen»,
+/// tittel og bås i verktøylinja, og segmentene «Føring | Stilling | Spill».
+/// Føring: hero for hullet, hullvelgeren og hullkortet, med «Lagre hull» i bunnlinja.
+/// Stilling: «Bayen nå» (eller matchene når runden avgjøres hull for hull).
+/// Spill: matcher, konkurranser og spill på runden (skins, wolf og de andre).
 struct RundeView: View {
     @Environment(\.dayTerm) private var dayTerm
+    @Environment(\.dismiss) private var dismiss
     @Bindable var model: RundeModel
     @State private var scorecardFor: ScorecardTarget?
+    /// Valgt segment. nil: det skjermen åpner på (`RundeSegment.initial`).
+    @State private var chosenSegment: RundeSegment?
+    /// Spillene i runden, hentet her så segmentet kan vise hvor mange det er.
+    @State private var games: GamesModel?
+    @State private var showsRules = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -15,49 +25,18 @@ struct RundeView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     if game.status == .locked, model.looseContext != nil {
                         DDInfoStripe("Runden er avsluttet. Resultatet står under, og du kan dele det.")
-                    } else if model.needsParConfirmation {
-                        ParBekreftelseCard(game: game, canConfirm: model.canConfirmPar) {
-                            try await model.confirmPar()
-                        }
-                    } else {
-                        playing(game)
                     }
-                    let matches = game.matchCard(viewer: model.viewer)
-                    if game.isDecidedHoleByHole, let matches {
-                        MatchkortSection(card: matches)
-                    }
-                    BayenNaaListe(rows: game.bayenNaa(viewer: model.viewer), term: game.groupTerm) { member in
-                        scorecardFor = ScorecardTarget(memberID: member)
-                    }
-                    if model.hidesLastHoles {
-                        DDInfoStripe(HiddenHoles.note + ".")
-                    }
-                    if !game.isDecidedHoleByHole, let matches {
-                        MatchkortSection(card: matches)
-                    }
-                    CompetitionBoardsSection(game: game)
-                    if let context = model.clubContext, let eventID = game.snapshot.round.eventID {
-                        KveldExtrasButtons(model: KveldExtrasModel(context: context, eventID: eventID))
-                            .id(eventID)
-                    }
-                    // Veddemål i turneringen runden teller i, eller i rundens egen bank (sql/052).
-                    if let bets = betsAccess {
-                        // Eieren av en løs runde slår veddemål på for runden (egen bank).
-                        VeddKnapp(game: game, me: model.viewer.memberID, client: bets.client, viewer: bets.viewer,
-                                  ownsRound: model.looseContext.map { game.snapshot.loose?.ownerID == $0.userID } ?? false)
-                            .id(game.snapshot.round.id)
-                    }
-                    if model.looseContext != nil {
-                        LooseRoundActions(model: model)
-                    }
-                    // «Følg medspillerne» når runden er ferdig (sql/054).
-                    if game.status == .locked, let follow = followAccess {
-                        FollowCoPlayersSection(client: follow.client, userID: follow.userID, snapshot: game.snapshot)
-                            .id(game.snapshot.round.id)
-                    }
-                    if let access = model.statsAccess {
-                        SpillIRunden(game: game, hole: model.currentHole, viewer: model.viewer,
-                                     client: access.client, userID: access.userID)
+                    DDSegmentedControl([
+                        (RundeSegment.scoring, "Føring"),
+                        (RundeSegment.standing, "Stilling"),
+                        (RundeSegment.extras, RundeSegment.extrasTitle(count: extrasCount(game))),
+                    ], selection: segmentBinding(game))
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                    .accessibilityLabel("Visning")
+                    switch segment(game) {
+                    case .scoring: scoring(game)
+                    case .standing: standing(game)
+                    case .extras: extras(game)
                     }
                 }
                 .padding(.horizontal, DDSpacing.gutter)
@@ -66,19 +45,34 @@ struct RundeView: View {
             }
         }
         .refreshable { await model.load() }
-        .navigationTitle(model.game?.snapshot.course?.name ?? (model.looseContext == nil ? DayTerm.capitalized(dayTerm.the) : "Runden"))
-        .ddNavigationChrome()
-        .toolbar {
-            if let game = model.game, !game.snapshot.players.isEmpty {
-                ToolbarItem(placement: .topBarTrailing) {
-                    ResultShareButton(share: game.share(viewer: model.viewer))
-                        .tint(Color.ddForestInk)
-                }
+        .safeAreaInset(edge: .bottom) {
+            if let game = model.game, segment(game) == .scoring, !model.needsParConfirmation,
+               let card = model.card, card.action != .none {
+                FoeringBunnlinje(
+                    card: card,
+                    isSaving: model.isSaving,
+                    error: model.saveError,
+                    sync: game.syncStatus(viewer: model.viewer, pending: model.pendingHoles),
+                    onSave: { Task { await model.saveCurrentHole() } },
+                    onGoTo: { model.goTo(hole: $0) },
+                    onScorecard: { scorecardFor = ScorecardTarget(memberID: model.viewer.memberID) }
+                )
             }
         }
+        .navigationTitle(scoringTitle.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .tabBar)
+        .ddNavigationChrome()
+        .toolbar { toolbar }
         .sheet(item: $scorecardFor) { target in
             if let game = model.game {
                 ScorekortSheet(game: game, memberID: target.memberID)
+            }
+        }
+        .sheet(isPresented: $showsRules) {
+            if let game = model.game {
+                RundeReglerArk(rules: game.rules)
             }
         }
         .overlay {
@@ -89,6 +83,158 @@ struct RundeView: View {
             }
         }
         .animation(reduceMotion ? nil : .smooth(duration: 0.32), value: model.celebration?.id)
+        .task(id: model.game?.roundID) { await loadGames() }
+        // Nye scorer og låsing: hent markeringene og oppgjøret på nytt.
+        .task(id: gamesReloadKey) { await games?.load() }
+    }
+
+    // MARK: Verktøylinja
+
+    private var scoringTitle: ScoringTitle {
+        model.game?.scoringTitle(viewer: model.viewer)
+            ?? ScoringTitle(title: model.looseContext == nil ? DayTerm.capitalized(dayTerm.the) : "Runden", subtitle: nil)
+    }
+
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button { dismiss() } label: {
+                Image(systemName: "chevron.down")
+            }
+            .tint(Color.ddForestInk)
+            .accessibilityLabel("Lukk føringen")
+        }
+        ToolbarItem(placement: .principal) {
+            VStack(spacing: 1) {
+                Text(scoringTitle.title)
+                    .font(.dd(.sans, size: 17, weight: .semibold, relativeTo: .headline))
+                    .foregroundStyle(Color.ddInk)
+                if let subtitle = scoringTitle.subtitle {
+                    Text(subtitle)
+                        .font(.ddStatus)
+                        .foregroundStyle(Color.ddInkSecondary)
+                }
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu {
+                if let game = model.game {
+                    if game.isPlaying(model.viewer.memberID) {
+                        Button("Scorekortet ditt", systemImage: "list.number") {
+                            scorecardFor = ScorecardTarget(memberID: model.viewer.memberID)
+                        }
+                    }
+                    Button("Reglene i runden", systemImage: "info.circle") { showsRules = true }
+                    if !game.snapshot.players.isEmpty {
+                        ResultShareButton(share: game.share(viewer: model.viewer))
+                    }
+                }
+                Button("Hent på nytt", systemImage: "arrow.clockwise") { Task { await model.load() } }
+            } label: {
+                Image(systemName: "ellipsis")
+            }
+            .tint(Color.ddForestInk)
+            .accessibilityLabel("Mer")
+        }
+    }
+
+    // MARK: Segmentene
+
+    private func segment(_ game: RoundGame) -> RundeSegment {
+        chosenSegment ?? RundeSegment.initial(isLocked: game.status == .locked, hasCard: model.card != nil)
+    }
+
+    private func segmentBinding(_ game: RoundGame) -> Binding<RundeSegment> {
+        Binding(get: { segment(game) }, set: { chosenSegment = $0 })
+    }
+
+    /// Matcher (når de ikke er stillingen), konkurranser og spill på runden.
+    private func extrasCount(_ game: RoundGame) -> Int {
+        let matches = (!game.isDecidedHoleByHole && game.matchCard(viewer: model.viewer) != nil) ? 1 : 0
+        let boards = RoundCompetitionBoard.boards(game).count + (TeamVsTeam.result(game) == nil ? 0 : 1)
+        let spill = games?.roundID == game.roundID ? (games?.input.games.count ?? 0) : 0
+        return matches + boards + spill
+    }
+
+    @ViewBuilder
+    private func scoring(_ game: RoundGame) -> some View {
+        if game.status == .locked, model.looseContext != nil {
+            if let card = model.card {
+                HullprikkerView(dots: game.dots(currentHole: model.currentHole, viewer: model.viewer,
+                                                pending: model.pendingHoles)) { model.goTo(hole: $0) }
+                HullHeroView(card: card) { model.goTo(hole: $0) }
+                hullkort(card)
+            }
+        } else if model.needsParConfirmation {
+            ParBekreftelseCard(game: game, canConfirm: model.canConfirmPar) {
+                try await model.confirmPar()
+            }
+        } else {
+            playing(game)
+        }
+    }
+
+    @ViewBuilder
+    private func standing(_ game: RoundGame) -> some View {
+        if game.isDecidedHoleByHole, let matches = game.matchCard(viewer: model.viewer) {
+            MatchkortSection(card: matches)
+        }
+        BayenNaaListe(rows: game.bayenNaa(viewer: model.viewer), term: game.groupTerm) { member in
+            scorecardFor = ScorecardTarget(memberID: member)
+        }
+        if model.hidesLastHoles {
+            DDInfoStripe(HiddenHoles.note + ".")
+        }
+        if model.looseContext != nil {
+            LooseRoundActions(model: model)
+        }
+        // «Følg medspillerne» når runden er ferdig (sql/054).
+        if game.status == .locked, let follow = followAccess {
+            FollowCoPlayersSection(client: follow.client, userID: follow.userID, snapshot: game.snapshot)
+                .id(game.snapshot.round.id)
+        }
+    }
+
+    @ViewBuilder
+    private func extras(_ game: RoundGame) -> some View {
+        if !game.isDecidedHoleByHole, let matches = game.matchCard(viewer: model.viewer) {
+            MatchkortSection(card: matches)
+        }
+        CompetitionBoardsSection(game: game)
+        if GamesFeature.isEnabled, let games, games.roundID == game.roundID {
+            SpillSeksjon(model: games, game: game, hole: model.currentHole, viewer: model.viewer,
+                         me: model.statsAccess?.userID)
+        }
+        if let context = model.clubContext, let eventID = game.snapshot.round.eventID {
+            KveldExtrasButtons(model: KveldExtrasModel(context: context, eventID: eventID))
+                .id(eventID)
+        }
+        // Veddemål i turneringen runden teller i, eller i rundens egen bank (sql/052).
+        if let bets = betsAccess {
+            // Eieren av en løs runde slår veddemål på for runden (egen bank).
+            VeddKnapp(game: game, me: model.viewer.memberID, client: bets.client, viewer: bets.viewer,
+                      ownsRound: model.looseContext.map { game.snapshot.loose?.ownerID == $0.userID } ?? false)
+                .id(game.snapshot.round.id)
+        }
+    }
+
+    // MARK: Spillene
+
+    private func loadGames() async {
+        guard GamesFeature.isEnabled, let game = model.game, let access = model.statsAccess else { return }
+        if games?.roundID == game.roundID { return }
+        let fresh = GamesModel(client: access.client, roundID: game.roundID)
+        games = fresh
+        await fresh.load()
+    }
+
+    private var gamesReloadKey: String {
+        guard let game = model.game else { return "" }
+        return "\(game.snapshot.scores.count)-\(game.status.rawValue)-\(model.currentHole)"
     }
 
     /// Klienten og deg for veddemålene: klubben som er valgt, eller profilen i en løs runde.
@@ -105,10 +251,22 @@ struct RundeView: View {
         return nil
     }
 
+    // MARK: Føringen
+
+    private func hullkort(_ card: HoleCard) -> some View {
+        HullkortView(
+            card: card,
+            isPending: model.pendingHoles.contains(card.holeIndex),
+            onStep: { model.step($0, member: $1) },
+            onConfirm: { model.confirm(member: $0) },
+            onScorecard: { scorecardFor = ScorecardTarget(memberID: $0 ?? model.viewer.memberID) }
+        )
+    }
+
     @ViewBuilder
     private func playing(_ game: RoundGame) -> some View {
-        if let line = game.markerLine(for: model.viewer) {
-            // Beige info-stripe, som «Du er markør i bås 1 · …» i PWA-en.
+        if game.hasBays, game.bay(of: model.viewer.memberID) == nil, let line = game.markerLine(for: model.viewer) {
+            // «Du står ikke i noen bås …»: resten av markørlinja står i verktøylinja.
             DDInfoStripe(line)
         }
         if let stripe = game.bayStripe(currentHole: model.currentHole, viewer: model.viewer) {
@@ -122,28 +280,20 @@ struct RundeView: View {
             }
             .accessibilityElement(children: .contain)
         }
+        if let card = model.card {
+            HullHeroView(card: card) { model.goTo(hole: $0) }
+        }
         HullprikkerView(dots: game.dots(currentHole: model.currentHole, viewer: model.viewer,
                                         pending: model.pendingHoles)) { model.goTo(hole: $0) }
         if let card = model.card {
-            HullkortView(
-                card: card,
-                isPending: model.pendingHoles.contains(card.holeIndex),
-                isSaving: model.isSaving,
-                error: model.saveError,
-                sync: game.syncStatus(viewer: model.viewer, pending: model.pendingHoles),
-                onStep: { model.step($0, member: $1) },
-                onConfirm: { model.confirm(member: $0) },
-                onSave: { Task { await model.saveCurrentHole() } },
-                onGoTo: { model.goTo(hole: $0) },
-                onScorecard: { scorecardFor = ScorecardTarget(memberID: $0 ?? model.viewer.memberID) }
-            )
+            hullkort(card)
             if StatsFeature.isEnabled, game.isPlaying(model.viewer.memberID), let par = game.statsPar(card.holeIndex),
                let access = model.statsAccess {
                 HoleStatsSlot(client: access.client, userID: access.userID, roundID: game.roundID,
                               memberID: model.viewer.memberID, holeIndex: card.holeIndex, par: par)
             }
         } else {
-            DDInfoStripe("Du er ikke med i denne runden. Du ser stillingen under.")
+            DDInfoStripe("Du er ikke med i denne runden. Du ser stillingen under «Stilling».")
         }
         let lines = game.holeMatchLines(hole: model.currentHole, viewer: model.viewer)
         if !lines.isEmpty {
@@ -161,6 +311,28 @@ struct RundeView: View {
                 )
             }
         }
+    }
+}
+
+/// Reglene i runden, fra ⋯-menyen i føringen.
+private struct RundeReglerArk: View {
+    let rules: Ruleset
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            DDForm {
+                RulesetSummarySection(rules: rules, title: "Reglene i runden")
+            }
+            .navigationTitle("Reglene")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                DDConfirmToolbarItem {
+                    Button("Ferdig") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 

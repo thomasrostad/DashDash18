@@ -74,14 +74,29 @@ struct BillSplitView: View {
                 }
 
                 Section {
-                    TextField("Beløp i kroner", text: $amountText)
-                        .keyboardType(.decimalPad)
-                        .focused($focused, equals: .amount)
-                        .font(.ddNumberLarge)
-                        .ddField()
+                    HStack(alignment: .firstTextBaseline, spacing: DDSpacing.s) {
+                        TextField("0", text: $amountText)
+                            .keyboardType(.decimalPad)
+                            .focused($focused, equals: .amount)
+                            .font(.ddNumberLarge)
+                            .monospacedDigit()
+                            .accessibilityLabel("Beløp i kroner")
+                        Text("kr")
+                            .font(.ddNumberLarge)
+                            .foregroundStyle(Color.ddInkSecondary)
+                            .accessibilityHidden(true)
+                    }
+                    .ddField()
                     if !amountText.isEmpty, total == nil {
                         Label("Skriv beløpet i kroner, for eksempel 1 250 eller 249,50.", systemImage: "exclamationmark.triangle")
                             .ddErrorStyle()
+                    } else if let total, let line = BillSplitSummary.perPerson(total: total, count: sharing.count) {
+                        // Live under feltet (V14): «312,50 kr hver (4 personer)».
+                        Text(line)
+                            .font(.ddStatus)
+                            .monospacedDigit()
+                            .foregroundStyle(Color.ddForestInk)
+                            .contentTransition(.numericText())
                     }
                 } header: {
                     DDHeader("Totalt")
@@ -95,15 +110,25 @@ struct BillSplitView: View {
                             } label: {
                                 Label(name, systemImage: included.contains(name) ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(included.contains(name) ? Color.ddForestInk : Color.ddInkSecondary)
+                                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                    .contentShape(.rect)
                             }
                             .buttonStyle(.plain)
-                            Spacer()
-                            if payer == name {
-                                DDPill("La ut", tone: .gold)
-                            } else {
-                                Button("La ut") { payer = name }
-                                    .buttonStyle(.dd(.text, compact: true))
+                            .accessibilityAddTraits(included.contains(name) ? .isSelected : [])
+                            .accessibilityHint("Deler regningen")
+                            // Samme valg på hver rad (V14): radioknapp for den som la ut.
+                            Button {
+                                payer = name
+                            } label: {
+                                Label("La ut", systemImage: payer == name ? "largecircle.fill.circle" : "circle")
+                                    .font(.ddStatus)
+                                    .foregroundStyle(payer == name ? Color.ddForestInk : Color.ddInkSecondary)
+                                    .frame(minWidth: 44, minHeight: 44)
+                                    .contentShape(.rect)
                             }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("\(name) la ut")
+                            .accessibilityAddTraits(payer == name ? .isSelected : [])
                         }
                     }
                     HStack {
@@ -150,13 +175,6 @@ struct BillSplitView: View {
                                 .accessibilityLabel("Kopier beløpet til \(share.name)")
                             }
                         }
-                        Button {
-                            focused = nil
-                            openVipps()
-                        } label: {
-                            Label("Åpne Vipps", systemImage: "arrow.up.forward.app")
-                        }
-                        .buttonStyle(.dd(.money, fullWidth: true))
                         ShareLink(item: VippsLink.summary(shares: shares, total: total, recipientName: payer ?? "",
                                                           phone: phone, purpose: purpose, note: note)) {
                             Label("Del oppgjøret", systemImage: "square.and.arrow.up")
@@ -173,6 +191,22 @@ struct BillSplitView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
+            // Hovedknappen i bunnen (V8), så den aldri dekker lista. Skjules mens tastaturet er oppe.
+            .safeAreaInset(edge: .bottom) {
+                if total != nil, !shares.isEmpty, focused == nil {
+                    Button {
+                        openVipps()
+                    } label: {
+                        Label("Åpne Vipps", systemImage: "arrow.up.forward.app")
+                    }
+                    .buttonStyle(.dd(.money, fullWidth: true))
+                    .modifier(BottomActionBar())
+                }
+            }
+            .onChange(of: focused) { old, _ in
+                // «1250» blir «1 250» når feltet forlates.
+                if old == .amount, let total { amountText = BillSplitSummary.fieldText(total) }
+            }
             .navigationTitle("Del regningen")
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
@@ -237,7 +271,7 @@ struct BillSplitView: View {
                         if isSaving { ProgressView() }
                     }
                 }
-                .buttonStyle(.dd(.primary, fullWidth: true))
+                .buttonStyle(.dd(.secondary, fullWidth: true))
                 .disabled(isSaving || payeePerson == nil)
                 if let saveError {
                     Label(saveError, systemImage: "exclamationmark.triangle").ddErrorStyle()
@@ -290,5 +324,24 @@ struct BillSplitView: View {
         focused = nil
         UIPasteboard.general.string = share.amount.plain
         copied = share.name
+    }
+}
+
+/// Tekstene under beløpet i «Del regningen» (V14).
+nonisolated enum BillSplitSummary {
+    /// «312,50 kr hver (4 personer)». Går det ikke opp i øre, får noen ett øre mer:
+    /// «333,33–333,34 kr hver (3 personer)». nil uten noen å dele på.
+    static func perPerson(total: NOK, count: Int) -> String? {
+        guard count > 0 else { return nil }
+        let people = count == 1 ? "1 person" : "\(count) personer"
+        let low = NOK(ore: total.ore / count)
+        guard total.ore % count != 0 else { return "\(low.text) hver (\(people))" }
+        let high = NOK(ore: low.ore + 1)
+        return "\(fieldText(low))–\(high.text) hver (\(people))"
+    }
+
+    /// Beløpet i feltet, med tusenskille og uten «kr»: «1 250» eller «249,50».
+    static func fieldText(_ amount: NOK) -> String {
+        String(amount.text.dropLast(" kr".count))
     }
 }

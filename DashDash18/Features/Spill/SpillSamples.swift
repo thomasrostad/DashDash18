@@ -98,6 +98,52 @@ enum SpillSamples {
                    context: LooseRoundContext(client: client, userID: me, roundID: roundID))
     }
 
+    // MARK: Føringen (skissen i 4.2)
+
+    /// Losby hull 7, par 3, 155 m, indeks 17, nærmest pinnen. Thomas er markør i bås 2 og har
+    /// trykket fram Kåre 4, Ola 2 og Per 5; hans eget tall står på forvalgt par.
+    static func foeringModel() -> RundeModel {
+        let roundID = UUID()
+        let courseID = UUID()
+        let pars = [4, 4, 5, 3, 4, 4, 3, 4, 5, 4, 3, 4, 5, 4, 4, 3, 4, 5]
+        let indexes = [7, 11, 3, 15, 1, 9, 17, 5, 13, 8, 16, 2, 12, 4, 10, 18, 6, 14]
+        let started = Date.now.addingTimeInterval(-90 * 60)
+        let round = RoundRow(id: roundID, clubID: nil, eventID: nil, courseID: courseID, roundNo: 4, name: nil,
+                             status: .active, holeCount: 18, firstHole: 1, teeTime: nil, format: "stableford",
+                             handicapAllowance: 0.95, externalHandicap: false, weight: 1, ldEnabled: true,
+                             ldHoleIndex: 17, kpEnabled: true, kpHoleIndex: 6, cutRule: nil, cutAfter: nil,
+                             parConfirmedBy: nil, parConfirmedAt: started, startedAt: started, lockedAt: nil,
+                             venue: "simulator")
+        let seats: [(String, UUID, Double)] = [("Thomas", me, 14.2), ("Kåre", ids[1], 18.4),
+                                                ("Ola", ids[2], 9.1), ("Per", ids[3], 22.6)]
+        var s = RoundSnapshot(round: round)
+        s.players = seats.enumerated().map { i, seat in
+            RoundPlayerRow(roundID: roundID, memberID: seat.1, clubID: nil, handicapIndex: seat.2, seedGroup: nil,
+                           playingHandicap: nil, bayNo: 2, isMarker: i == 0, teamNo: nil)
+        }
+        s.names = Dictionary(uniqueKeysWithValues: seats.map { ($0.1, $0.0) })
+        s.eventDate = LooseRoundInfo.day(started)
+        s.rules = LooseRoundRules.template
+        s.course = CourseRow(id: courseID, clubID: nil, name: "Losby Golfklubb", externalName: nil, courseRating: 71.2,
+                             slopeRating: 128, inUse: true, confirmedBy: nil, confirmedAt: nil, createdByProfile: me)
+        s.courseHoles = pars.indices.map { i in
+            CourseHoleRecord(courseID: courseID, holeNumber: i + 1, par: pars[i], strokeIndex: indexes[i],
+                             lengthM: i == 6 ? 155 : 110 + 45 * pars[i] + 7 * i)
+        }
+        let strokes = [[4, 5, 6, 3, 4, 5], [5, 4, 6, 4, 5, 5], [4, 4, 5, 3, 4, 4], [6, 5, 7, 4, 5, 6]]
+        for (p, seat) in seats.enumerated() {
+            for hole in 0..<6 {
+                s.scores.append(HoleScoreRow(roundID: roundID, memberID: seat.1, holeIndex: hole,
+                                             strokes: strokes[p][hole], recordedAt: nil, updatedBy: nil, updatedAt: nil))
+            }
+        }
+        let model = RundeModel(previewLoose: s, context: LooseRoundContext(client: client, userID: me, roundID: roundID))
+        model.step(1, member: ids[1])
+        model.step(-1, member: ids[2])
+        model.step(2, member: ids[3])
+        return model
+    }
+
     // MARK: Lister
 
     static var spill: SpillModel {
