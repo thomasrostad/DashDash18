@@ -185,6 +185,20 @@ import Testing
         #expect(cup.bracket.isEliminated(Self.p(1).uuidString))
     }
 
+    @Test("V9: treet åpner på runden med din neste kamp, ellers første som ikke er ferdig")
+    func treetsStartrunde() {
+        let mine = CupStandings(participants: Self.participants, matches: Self.drawn, names: Self.names, me: [Self.p(1)])
+        #expect(CupTreePaging.startRound(mine) == 1)          // semifinalen («2:0»)
+        let ingen = CupStandings(participants: Self.participants, matches: Self.drawn, names: Self.names, me: [])
+        #expect(CupTreePaging.startRound(ingen) == 0)         // 4 mot 5 i kvartfinalen er ikke spilt
+        var rows = Self.drawn
+        rows[1] = Self.match(1, 1, 4, 5, winner: 4, result: "1 opp")
+        rows += [Self.match(2, 0, 1, 4, winner: 4, walkover: true), Self.match(2, 1, 2, 3, winner: 2, result: "3&2"),
+                 Self.match(3, 0, 4, 2, winner: 2, result: "19. hull")]
+        let ferdig = CupStandings(participants: Self.participants, matches: rows, names: Self.names, me: [])
+        #expect(CupTreePaging.startRound(ferdig) == 2)        // alt avgjort: finalen
+    }
+
     @Test func ikkeTrukket() {
         let cup = CupStandings(participants: Self.participants, matches: [], names: Self.names, me: [])
         #expect(!cup.isDrawn)

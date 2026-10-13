@@ -331,41 +331,51 @@ struct LeagueTableSection: View {
     }
 }
 
-/// Cuptreet: én kolonne per runde, kampene sentrert mot kampen de leder til.
+/// Cuptreet: én runde om gangen (utbedringsplanen V9), så kortene aldri kuttes på smal skjerm.
+/// Velgeren over viser rundene («Kvartfinale · Semifinale · Finale»), og treet åpner på runden
+/// som spilles nå (din neste kamp, ellers den første som ikke er ferdig).
 struct CupTreeView: View {
     let cup: CupStandings
     /// Hvem kan føre hva (`CupRecording`): spillerne sin egen kamp, arrangøren alle.
     let right: (CupStandings.Game) -> CupRecording.Right
     let onRecord: (CupStandings.Game) -> Void
-
-    private let cardHeight: CGFloat = 126
-    private let gap: CGFloat = 10
+    @State private var selected: Int?
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(alignment: .top, spacing: 14) {
-                ForEach(Array(cup.rounds.enumerated()), id: \.offset) { index, games in
-                    let unit = cardHeight + gap
-                    let step = unit * CGFloat(1 << index)
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(cup.roundTitles[index])
-                            .ddEyebrow()
-                            .padding(.bottom, 8)
-                        VStack(spacing: step - cardHeight) {
-                            ForEach(games) { game in
-                                CupGameCard(game: game, right: right(game), onRecord: { onRecord(game) })
-                                    .frame(height: cardHeight)
-                            }
+        let round = selected ?? CupTreePaging.startRound(cup)
+        VStack(alignment: .leading, spacing: DDSpacing.m) {
+            if cup.rounds.count > 1 {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: DDSpacing.s) {
+                        ForEach(cup.rounds.indices, id: \.self) { index in
+                            Button(cup.roundTitles[index]) { selected = index }
+                                .buttonStyle(DDChoiceButtonStyle(selected: index == round))
+                                .fixedSize()
                         }
-                        .padding(.top, (step - unit) / 2)
                     }
-                    .frame(width: 190)
+                }
+                .scrollClipDisabled()
+            }
+            if cup.rounds.indices.contains(round) {
+                ForEach(cup.rounds[round]) { game in
+                    CupGameCard(game: game, right: right(game), onRecord: { onRecord(game) })
                 }
             }
-            .padding(.vertical, 4)
         }
-        .scrollClipDisabled()
     }
+}
+
+/// Hvilken runde cuptreet åpner på.
+nonisolated enum CupTreePaging {
+    static func startRound(_ cup: CupStandings) -> Int {
+        if let mine = cup.myNext { return mine.round - cup.rounds.firstRoundNumber }
+        return cup.rounds.firstIndex { round in round.contains { $0.winner == nil && !$0.isBye } } ?? max(cup.rounds.count - 1, 0)
+    }
+}
+
+nonisolated private extension Array where Element == [CupStandings.Game] {
+    /// Rundenummeret til første runde (1 i appen; leses fra dataene for sikkerhets skyld).
+    var firstRoundNumber: Int { first?.first?.round ?? 1 }
 }
 
 struct CupGameCard: View {
@@ -396,8 +406,8 @@ struct CupGameCard: View {
                 }
             }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(DDSpacing.m + 2)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(Color.ddCard, in: .rect(cornerRadius: 18))
         .clipShape(.rect(cornerRadius: 18))
         .overlay {
@@ -435,7 +445,7 @@ struct CupGameCard: View {
                 .lineLimit(1)
             if won {
                 Image(systemName: "checkmark")
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(.caption, weight: .bold))
                     .foregroundStyle(Color.ddForestInk)
                     .accessibilityLabel("vant")
             }
