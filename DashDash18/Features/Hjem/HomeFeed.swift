@@ -28,9 +28,8 @@ nonisolated extension HomeFeed {
         return HomeFeed(
             pills: pills(drafts, context: context, selected: input.filter),
             filter: input.filter,
-            summary: HomeSummaryBuilder.summary(drafts, context: context),
             live: input.live.map { live($0, context: context) },
-            evening: input.evening.map(evening),
+            evening: input.evening.map { evening($0, context: context) },
             sections: sections(filtered, now: input.now)
         )
     }
@@ -177,26 +176,42 @@ nonisolated extension HomeFeed {
             HomeLive.Row(id: r.id, place: r.place.map { "\($0)." } ?? "–", name: r.name, value: r.value, isMe: r.isMe)
         }
         let top = rows.prefix(3).map(row)
+        let bay = game.bay(of: input.viewer.memberID).map { HomeLiveBar.capitalized("\(game.groupTerm.singular) \($0.number)") }
         return HomeLive(roundID: s.round.id, isLoose: s.isLoose, clubID: s.round.clubID, progress: "Hull \(hole) av \(game.holeCount)",
                         title: title, detail: detail.isEmpty ? nil : detail.joined(separator: " · "),
                         top: top, me: top.contains(where: \.isMe) ? nil : mine.map(row),
-                        actionTitle: "Fortsett føringen")
+                        actionTitle: "Fortsett føringen",
+                        barTitle: "\(course) · hull \(hole) av \(game.holeCount)",
+                        barDetail: HomeLiveBar.detail(bay: bay, mine: mine, leader: rows.first),
+                        barAction: mine == nil ? "Følg" : "Fortsett")
     }
 
     // MARK: Neste kveld
 
-    static func evening(_ e: HomeEveningInput) -> HomeNextEvening {
+    static func evening(_ e: HomeEveningInput, context: HomeFeedContext) -> HomeNextEvening {
         let referenceYear = EveningDates.year(of: e.today)
         let days = EveningDates.daysBetween(e.today, e.event.eventDate) ?? 0
+        let countdown = EveningDates.countdownText(days: days)
         var detail: [String] = []
         if let time = EveningDates.timeText(e.event.startTime) { detail.append("Kl. \(time)") }
         if let venue = e.event.venue?.trimmingCharacters(in: .whitespaces), !venue.isEmpty { detail.append(venue) }
-        detail.append("\(e.coming) kommer")
-        return HomeNextEvening(clubID: e.clubID, eventID: e.event.id, eyebrow: "\(e.clubName) · neste \(e.term.one)",
+        // Turneringen kvelden hører til (sesongen), ellers klubbens hovedturnering.
+        let competition = context.competitionsByID.values
+            .first { $0.seasonID != nil && $0.seasonID == e.event.seasonID } ?? context.mainCompetition(club: e.clubID)
+        if let name = competition?.name { detail.append(name) }
+        var coming = "\(e.coming) kommer"
+        if e.waitlistCount > 0 { coming += " · \(e.waitlistCount) på venteliste" }
+        return HomeNextEvening(clubID: e.clubID, eventID: e.event.id,
+                               eyebrow: "Neste \(e.term.one) · " + countdown.prefix(1).lowercased() + countdown.dropFirst(),
                                title: EveningDates.longText(e.event.eventDate, referenceYear: referenceYear,
                                                             capitalized: true),
-                               countdown: EveningDates.countdownText(days: days),
-                               detail: detail.joined(separator: " · "), answer: e.answer, isOrganizer: e.isOrganizer,
+                               countdown: countdown,
+                               detail: detail.joined(separator: " · "),
+                               comingText: coming, comingNames: e.comingNames,
+                               answerNote: HomeAnswerNote.text(answer: e.answer, signupDeadline: e.signupDeadline,
+                                                               withdrawDeadline: e.withdrawDeadline,
+                                                               now: context.input.now),
+                               answer: e.answer, isOrganizer: e.isOrganizer,
                                previousEventID: e.previous?.id,
                                previousTitle: e.previous.map { EveningDates.longText($0.eventDate, referenceYear: referenceYear,
                                                                                       capitalized: true) },

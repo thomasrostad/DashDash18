@@ -112,19 +112,6 @@ struct HjemTabellTekstTests {
         #expect(personal(climb) == "Cato klatret til 3. plass i Jakkeracet etter runde 3")
         #expect(personal([spot(thomas, 1, from: 1), spot(cato, 2, from: 4)]) == "Cato klatret til 2. plass i Jakkeracet etter runde 3")
     }
-
-    @Test func oppsummeringenSierBareDetSomAngårDeg() {
-        let me: Set<UUID> = [thomas]
-        func phrase(_ table: [ActivityTableSpot]) -> String? {
-            TableChangeText.summaryPhrase(table: table, competitionName: "Jakkeracet", me: me, name: name)
-        }
-        #expect(phrase([spot(thomas, 3, from: 5)]) == "du klatret til 3. plass i Jakkeracet")
-        #expect(phrase([spot(thomas, 1, from: 2)]) == "du tok ledelsen i Jakkeracet")
-        #expect(phrase([spot(anders, 2, from: 4), spot(thomas, 3, from: 2)]) == "Anders gikk forbi deg i Jakkeracet")
-        #expect(phrase([spot(thomas, 4, from: 3)]) == "du falt til 4. plass i Jakkeracet")
-        #expect(phrase([spot(thomas, 2, from: 2)]) == nil)
-        #expect(phrase(climb) == nil)
-    }
 }
 
 struct HjemTabellHendelseTests {

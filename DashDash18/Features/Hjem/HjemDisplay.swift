@@ -10,9 +10,14 @@ nonisolated enum HjemTableLink: Equatable, Sendable {
 /// Det lille Hjem-viewene trenger utover feeden: tekster og valg som ikke hører hjemme i
 /// `HomeFeed`. Ren, med tester (HjemVisningTests).
 nonisolated enum HjemDisplay {
-    static let emptyTitle = "Ingenting her ennå."
+    static let emptyTitle = "Ingenting her ennå"
 
-    /// Den vennlige linja under «Ingenting her ennå.», etter filteret.
+    /// Symbolet i tomtilstanden.
+    static func emptySymbol(_ filter: HomeFeedFilter) -> String {
+        filter == .loose ? "figure.golf" : "sparkles"
+    }
+
+    /// Den vennlige linja under «Ingenting her ennå», etter filteret.
     static func emptyLine(_ filter: HomeFeedFilter) -> String {
         switch filter {
         case .all:
@@ -26,8 +31,8 @@ nonisolated enum HjemDisplay {
         }
     }
 
-    /// «Pågår nå» står under Alt og turneringene, men ikke under «Løse runder» når det er en
-    /// klubbrunde (og omvendt).
+    /// Runden som pågår (i feeden på iOS 26.0) står under Alt og turneringene, men ikke under
+    /// «Løse runder» når det er en klubbrunde (og omvendt).
     static func showsLive(_ live: HomeLive, filter: HomeFeedFilter) -> Bool {
         switch filter {
         case .all: true
@@ -39,16 +44,6 @@ nonisolated enum HjemDisplay {
     /// «Neste kveld» hører til klubben: ikke under «Løse runder».
     static func showsEvening(filter: HomeFeedFilter) -> Bool {
         filter != .loose
-    }
-
-    /// Radene i «Pågår nå»: topp 3, og deg under når du er lenger ned.
-    static func liveRows(_ live: HomeLive) -> [HomeLive.Row] {
-        live.top + (live.me.map { [$0] } ?? [])
-    }
-
-    /// Navnet i «Pågår nå»: «Thomas (deg)» for deg, som i designet.
-    static func liveName(_ row: HomeLive.Row) -> String {
-        row.isMe ? "\(row.name) (deg)" : row.name
     }
 
     /// Hvor tabellkortet går. Klubbens hovedturnering står på Tavla i klubben du har valgt.
@@ -74,8 +69,36 @@ nonisolated enum HjemDisplay {
         return parts.joined(separator: ". ")
     }
 
+    /// «Anders Berg slo eagle», «Du fikk hole in one» (planen 4.1).
+    static func featTitle(_ card: HomeFeatCard) -> String {
+        (card.isMe ? "Du" : card.name) + " " + HomeFeedText.featVerb(card.kind)
+    }
+
+    /// «Hull 5, par 5 · Losby · runde 4».
+    static func featLine(_ card: HomeFeatCard) -> String {
+        ["Hull \(card.hole), par \(card.par)", card.roundPlace].compactMap { $0 }.joined(separator: " · ")
+    }
+
     /// Det VoiceOver leser for en bragd.
     static func featLabel(_ card: HomeFeatCard, time: String) -> String {
-        "\(card.name): \(card.headline). \(card.detail). \(time)"
+        "\(featTitle(card)). \(card.strokes) slag. \(featLine(card)). \(time)"
+    }
+}
+
+/// Linja under svaret på «Neste kveld» (utbedringsplanen V2): fristen for å endre svaret i stedet
+/// for «Angre». Fristene følger `SignupDeadline`: avmeldingsfristen når du kommer, ellers
+/// påmeldingsfristen.
+nonisolated enum HomeAnswerNote {
+    static func text(answer: SignupStatus?, signupDeadline: Date?, withdrawDeadline: Date?, now: Date) -> String {
+        let deadline = answer == .yes ? withdrawDeadline : signupDeadline
+        guard let deadline else {
+            return answer == nil ? "Svar, så vet arrangøren hvem som kommer." : "Du kan endre svaret når som helst."
+        }
+        guard now < deadline else {
+            return answer == .yes ? "Fristen for å melde av er ute." : "Påmeldingen er stengt."
+        }
+        let when = EveningDates.longText(EveningDates.dateString(from: deadline)) + " kl. "
+            + EveningDates.timeString(from: deadline).prefix(5)
+        return answer == nil ? "Svar innen \(when)." : "Du kan endre svaret fram til \(when)."
     }
 }

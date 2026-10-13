@@ -301,7 +301,7 @@ struct HjemFeedKortTests {
         #expect(t.text == "Cato gikk forbi deg i Jakkeracet etter runde 3")
         #expect(t.rows.map(\.name) == ["Anders Berg", "Bjørn", "Cato", "Thomas"])
         #expect(t.rows.map(\.points) == ["58", "55", "50", "49,5"])
-        #expect(t.rows.map(\.moveText) == [nil, nil, "↑1", "↓1"])
+        #expect(t.rows.map(\.moveText) == [nil, nil, "▲1", "▼1"])
         #expect(t.rows.map(\.isMe) == [false, false, false, true])
         #expect(t.myPlace == 4)
         #expect(t.myMove == -1)
@@ -437,9 +437,9 @@ struct HjemFeedPrivatTurneringTests {
     }
 }
 
-// MARK: - Oppsummeringen (1b)
+// MARK: - Ulest (oppsummeringen er fjernet, utbedringsplanen V1)
 
-struct HjemOppsummeringTests {
+struct HjemUlestTests {
     private let rows = [
         H.row(1, .tableChanged(competition: H.jakke.id, competitionName: "Jakkeracet", roundNo: 3,
                                table: [ActivityTableSpot(member: H.anders, place: 1, from: 1),
@@ -451,28 +451,13 @@ struct HjemOppsummeringTests {
         H.row(4, .announcement(text: "Min egen"), actor: H.me, at: H.ago(minutes: 5)),
     ]
 
-    @Test func aldriSettGirIngenOppsummering() {
-        #expect(HomeFeed.build(H.input(rows)).summary == nil)
+    @Test func aldriSettGirIngentingUlest() {
         #expect(HomeFeed.build(H.input(rows)).sections.flatMap(\.cards).allSatisfy { !$0.isUnread })
-    }
-
-    @Test func detViktigsteFørstOgTreTall() throws {
-        // Sist sett søndag 4. oktober.
-        let summary = try #require(HomeFeed.build(H.input(rows, lastSeen: H.ago(days: 4))).summary)
-        #expect(summary.eyebrow == "Siden sist · søndag")
-        #expect(summary.sentence == "Du klatret til 3. plass i Jakkeracet, og Anders Berg slo eagle.")
-        #expect(summary.stats == [.init(value: "1", label: "ny runde"), .init(value: "1", label: "bragd"),
-                                  .init(value: "+2", label: "plasser")])
     }
 
     @Test func detDuGjordeSelvTellerIkke() {
         let feed = HomeFeed.build(H.input([rows[3]], lastSeen: H.ago(minutes: 20)))
-        #expect(feed.summary == nil)
         #expect(feed.sections.first?.cards.first?.isUnread == false)
-    }
-
-    @Test func ingentingNyttSidenSist() {
-        #expect(HomeFeed.build(H.input(rows, lastSeen: H.ago(minutes: 1))).summary == nil)
     }
 
     @Test func ulestPåKortene() {
@@ -480,25 +465,6 @@ struct HjemOppsummeringTests {
         let unread = Dictionary(uniqueKeysWithValues: cards.map { ($0.id, $0.isUnread) })
         #expect(unread["a-" + H.id(10_001).uuidString] == true)
         #expect(unread["a-" + H.id(10_002).uuidString] == false)
-    }
-
-    @Test func dinRundeOgBragdenDinUtenTabell() throws {
-        var input = H.input([H.row(1, .bigScore(member: H.me, hole: 1, holeIndex: 0, name: .eagle, strokes: 2, par: 4),
-                                   actor: H.anders, round: H.clubRound, at: H.ago(minutes: 100))],
-                            lastSeen: H.ago(days: 1.2))
-        input.rounds = [H.myClubRound()]
-        let summary = try #require(HomeFeed.build(input).summary)
-        #expect(summary.eyebrow == "Siden sist · i går")
-        #expect(summary.sentence == "Du slo eagle, og du fikk 5 poeng på Losby.")
-        #expect(summary.stats.map(\.value) == ["1", "1", "0"])
-        #expect(summary.stats.last?.label == "plasser")
-    }
-
-    @Test func dagteksten() {
-        #expect(HomeSummaryBuilder.dayText(H.ago(minutes: 30), now: H.now) == "i dag")
-        #expect(HomeSummaryBuilder.dayText(H.ago(days: 1), now: H.now) == "i går")
-        #expect(HomeSummaryBuilder.dayText(H.ago(days: 3), now: H.now) == "mandag")
-        #expect(HomeSummaryBuilder.dayText(H.ago(days: 10), now: H.now) == "28. sep.")
     }
 }
 
@@ -523,6 +489,11 @@ struct HjemTilstandTests {
         #expect(live.me?.isMe == true)
         #expect(live.actionTitle == "Fortsett føringen")
         #expect(!live.isLoose)
+        // Baren over fanelinja (V1).
+        #expect(live.barTitle == "Losby · hull 2 av 18")
+        #expect(live.barDetail?.hasPrefix("Bås 2 · du er ") == true)
+        #expect(live.barDetail?.hasSuffix(" p") == true)
+        #expect(live.barAction == "Fortsett")
     }
 
     @Test func løsRundeSomPågår() throws {
@@ -588,16 +559,21 @@ struct HjemTilstandTests {
         input.evening = HomeEveningInput(clubID: H.clubA, clubName: "Golfgutu Invitational", event: event,
                                          today: "2026-10-08", answer: .yes, coming: 6, isOrganizer: true)
         let e = try #require(HomeFeed.build(input).evening)
-        #expect(e.eyebrow == "Golfgutu Invitational · neste kveld")
+        #expect(e.eyebrow == "Neste kveld · om 7 dager")
         #expect(e.title == "Torsdag 15. oktober")
         #expect(e.countdown == "Om 7 dager")
-        #expect(e.detail == "Kl. 18:00 · Golfstudio Bryn · 6 kommer")
+        #expect(e.detail == "Kl. 18:00 · Golfstudio Bryn · Jakkeracet")
+        #expect(e.comingText == "6 kommer")
+        #expect(e.answerNote == "Du kan endre svaret når som helst.")
         #expect(e.answer == .yes)
         #expect(e.isOrganizer)
         var bare = input
         bare.evening?.event.startTime = nil
         bare.evening?.event.venue = " "
-        #expect(HomeFeed.build(bare).evening?.detail == "6 kommer")
+        #expect(HomeFeed.build(bare).evening?.detail == "Jakkeracet")
+        var waiting = input
+        waiting.evening?.waitlistCount = 2
+        #expect(HomeFeed.build(waiting).evening?.comingText == "6 kommer · 2 på venteliste")
         #expect(e.previousEventID == nil)
         // Forrige kveld gir «Forrige kupong · Torsdag 8. oktober».
         var withPrevious = input
@@ -622,7 +598,6 @@ struct HjemModellTests {
         let model = HomeFeedModel(preview: raw, viewer: H.viewer, clubs: H.clubs, lastSeen: H.ago(minutes: 10),
                                   now: { H.now })
         #expect(model.feed.sections.flatMap(\.cards).count == 2)
-        #expect(model.feed.summary != nil)
         #expect(model.bellCount == 2)  // to meldinger til alle
         model.filter = .club(H.clubB)
         #expect(model.feed.sections.flatMap(\.cards).count == 1)
