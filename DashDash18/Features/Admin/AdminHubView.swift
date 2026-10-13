@@ -344,14 +344,28 @@ private struct AdminHubContent: View {
         }
 
         Section {
-            if parts.upcoming.isEmpty {
+            if model.events.isEmpty {
+                // V13: tom tilstand med én handling.
+                ContentUnavailableView {
+                    Label("Ingen \(term.many) ennå", systemImage: "calendar")
+                } description: {
+                    Text(shows(.tournaments) ? "Legg inn den første, så kan gjengen melde seg på."
+                                             : "Arrangøren legger inn \(term.theMany).")
+                } actions: {
+                    if shows(.tournaments) {
+                        Button("Ny \(term.one)") { newEvening() }
+                            .buttonStyle(.dd(.primary))
+                            .disabled(terminliste.state != .loaded)
+                    }
+                }
+            } else if parts.upcoming.isEmpty {
                 Text(parts.focus == nil ? "Ingen kommende \(term.many)." : "Ingen flere \(term.many) etter denne.")
                     .foregroundStyle(Color.ddInkSecondary)
             }
             ForEach(parts.upcoming) { event in
                 eveningRow(event, referenceYear: year, isPast: false)
             }
-            if shows(.tournaments) {
+            if shows(.tournaments), !model.events.isEmpty {
                 Button { newEvening() } label: {
                     Label("Ny \(term.one)", systemImage: "plus")
                         .foregroundStyle(Color.ddForestInk)
