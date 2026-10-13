@@ -64,7 +64,6 @@ struct DDCountBadge: View {
             .padding(.horizontal, 5)
             .frame(minWidth: 18, minHeight: 18)
             .background(Capsule().fill(DDToken.buttonMoney.color))
-            .overlay(Capsule().strokeBorder(Color.ddForest, lineWidth: 1.5))
     }
 }
 

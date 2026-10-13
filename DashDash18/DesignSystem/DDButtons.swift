@@ -189,11 +189,9 @@ private struct DDChoiceBody: View {
 
 // MARK: - Verktøylinja
 
-/// Bekreftelsen i den grønne verktøylinja («Lagre», «Lag», «Ferdig», «Send»): gul pille med
-/// mørk tekst i lys og mørk modus. Bruk i stedet for `ToolbarItem(placement: .confirmationAction)`.
-///
-/// Uten dette ble knappen lys tekst på lys glasspille: linja står i mørk modus (`ddNavigationChrome`),
-/// så `ddForestInk` blir mint, mens glasset bak knappen er lyst (skjermsjekken 09.10.2026, gul besluttet 11.10).
+/// Bekreftelsen i verktøylinja («Lagre», «Lag», «Ferdig», «Send»): systemets fremhevede glass
+/// tonet skog, med krem tekst (lys skog med mørk tekst i mørk modus). Gul er bare for skjermens
+/// hovedknapp nederst (utbedringsplanen K3, 13.10.2026).
 struct DDConfirmToolbarItem<Content: View>: ToolbarContent {
     private let content: Content
 
@@ -205,14 +203,13 @@ struct DDConfirmToolbarItem<Content: View>: ToolbarContent {
         ToolbarItem(placement: .confirmationAction) {
             content
                 .buttonStyle(.glassProminent)
-                .tint(Color.ddYellow)
-                .foregroundStyle(Color.ddYellowInk)
+                .tint(Color.ddSelected)
+                .foregroundStyle(Color.ddSelectedInk)
         }
     }
 }
 
-/// «Avbryt» og «Lukk» i den grønne verktøylinja: krem tekst rett på linja, uten den lyse glasspillen.
-/// Bruk i stedet for `ToolbarItem(placement: .cancellationAction)`.
+/// «Avbryt» og «Lukk» i verktøylinja: skogfarget tekst i systemets glass.
 struct DDCancelToolbarItem<Content: View>: ToolbarContent {
     private let content: Content
 
@@ -222,8 +219,7 @@ struct DDCancelToolbarItem<Content: View>: ToolbarContent {
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            content.foregroundStyle(Color.ddOnDark)
+            content.foregroundStyle(Color.ddForestInk)
         }
-        .sharedBackgroundVisibility(.hidden)
     }
 }

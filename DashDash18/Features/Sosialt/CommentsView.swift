@@ -21,7 +21,7 @@ struct CommentsSheet: View {
                 .toolbar {
                     DDConfirmToolbarItem {
                         Button("Ferdig") { dismiss() }
-                            .tint(Color.ddOnDark)
+                            .tint(Color.ddForestInk)
                     }
                     ToolbarItem(placement: .primaryAction) {
                         Button {

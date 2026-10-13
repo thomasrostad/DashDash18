@@ -72,7 +72,7 @@ struct RundeView: View {
             if let game = model.game, !game.snapshot.players.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
                     ResultShareButton(share: game.share(viewer: model.viewer))
-                        .tint(Color.ddOnDark)
+                        .tint(Color.ddForestInk)
                 }
             }
         }

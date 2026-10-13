@@ -169,7 +169,7 @@ struct TavlaCompetitions<Main: View>: View {
                     Label("Turneringer", systemImage: "trophy")
                         .labelStyle(.titleAndIcon)
                 }
-                .tint(Color.ddOnDark)
+                .tint(Color.ddForestInk)
             }
         }
         .task { await model.load() }

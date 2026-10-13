@@ -30,15 +30,14 @@ struct RootView: View {
                                 if config.environment != .prod {
                                     ToolbarItem(placement: .topBarTrailing) {
                                         EnvironmentBadge(environment: config.environment)
-                                            .tint(Color.ddOnDark)
+                                            .tint(Color.ddForestInk)
                                     }
                                 }
                                 if let home {
                                     ToolbarItem(placement: .topBarTrailing) {
-                                        // Lys på den grønne linja. Uten egen tint arver bjella
-                                        // skoggrønn, som i lys modus gir en svak mint-kapsel.
+                                        // Skog i systemets glass (utbedringsplanen K3).
                                         HjemBell(model: home)
-                                            .tint(Color.ddOnDark)
+                                            .tint(Color.ddForestInk)
                                     }
                                 }
                             }
@@ -50,7 +49,7 @@ struct RootView: View {
                 }
             }
         }
-        // Aktiv fane i gult (golfee), mørk oker i lys modus så etiketten holder 4,5:1.
+        // Aktiv fane i skog: gult er bare hovedknappen (utbedringsplanen 1.1).
         .tint(Color.ddForestInk)
         .environment(\.selectTab) { selectedTab = $0 }
         .environment(\.showRound) { roundID in

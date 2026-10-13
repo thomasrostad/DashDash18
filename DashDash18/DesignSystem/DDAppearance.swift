@@ -10,10 +10,10 @@ enum DDAppearance {
         let large = UIFont.dd(.sans, size: 34, weight: .medium, relativeTo: .largeTitle)
         let inline = UIFont.dd(.sans, size: 20, weight: .medium, relativeTo: .headline)
         let appearance = UINavigationBar.appearance()
-        // Alle skjermer har grønn linje (`ddNavigationChrome()`), så titlene er krem.
-        let cream = DDToken.onDark.uiColor
-        appearance.largeTitleTextAttributes = [.font: large, .foregroundColor: cream]
-        appearance.titleTextAttributes = [.font: inline, .foregroundColor: cream]
+        // Linja er systemets glass over krem (`ddNavigationChrome()`), så titlene er skog.
+        let title = DDToken.forestInk.uiColor
+        appearance.largeTitleTextAttributes = [.font: large, .foregroundColor: title]
+        appearance.titleTextAttributes = [.font: inline, .foregroundColor: title]
     }
 }
 

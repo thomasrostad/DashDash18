@@ -176,7 +176,7 @@ struct EmojiPickerSheet: View {
             .toolbar {
                 DDCancelToolbarItem {
                     Button("Avbryt") { dismiss() }
-                        .tint(Color.ddOnDark)
+                        .tint(Color.ddForestInk)
                 }
             }
             .ddScreenBackground()
@@ -285,7 +285,7 @@ struct ReactionWhoSheet: View {
             .toolbar {
                 DDConfirmToolbarItem {
                     Button("Ferdig") { dismiss() }
-                        .tint(Color.ddOnDark)
+                        .tint(Color.ddForestInk)
                 }
             }
             .ddScreenBackground()

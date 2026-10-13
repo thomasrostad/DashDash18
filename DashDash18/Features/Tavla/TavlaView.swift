@@ -38,7 +38,7 @@ private struct TavlaContent: View {
                 if let standings = model.standings, standings.hasResults {
                     ToolbarItem(placement: .topBarTrailing) {
                         ResultShareButton(share: standings.share)
-                            .tint(Color.ddOnDark)
+                            .tint(Color.ddForestInk)
                     }
                 }
                 if model.standings != nil {
@@ -51,10 +51,10 @@ private struct TavlaContent: View {
                             } label: {
                                 Label("TV-visning", systemImage: "tv")
                             }
-                            .tint(Color.ddOnDark)
+                            .tint(Color.ddForestInk)
                         } else {
                             Button("TV-visning", systemImage: "tv") { showsTV = true }
-                                .tint(Color.ddOnDark)
+                                .tint(Color.ddForestInk)
                         }
                     }
                 }

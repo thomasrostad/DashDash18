@@ -21,7 +21,7 @@ struct FriendsRootView: View {
                                 if config.environment != .prod {
                                     ToolbarItem(placement: .topBarTrailing) {
                                         EnvironmentBadge(environment: config.environment)
-                                            .tint(Color.ddOnDark)
+                                            .tint(Color.ddForestInk)
                                     }
                                 }
                             }

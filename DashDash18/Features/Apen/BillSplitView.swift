@@ -179,7 +179,7 @@ struct BillSplitView: View {
             .toolbar {
                 DDCancelToolbarItem {
                     Button("Lukk") { dismiss() }
-                        .tint(Color.ddOnDark)
+                        .tint(Color.ddForestInk)
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()

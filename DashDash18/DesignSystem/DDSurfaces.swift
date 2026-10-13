@@ -104,14 +104,12 @@ extension View {
             .background(Color.ddBackground.ignoresSafeArea())
     }
 
-    /// Grønn navigasjonslinje med krem tittel, som headeren i PWA-en. Tittelen står inline:
-    /// stor tittel ble ikke tegnet på grønn linje i iOS 26 (prøvd i simulatoren 06.10).
+    /// Systemets navigasjonslinje med glass over krem bakgrunn (utbedringsplanen P1, K3, 7.3):
+    /// ingen egen grønn flate bak linja, så tilbakeknapp, glass, «Reduser gjennomsiktighet» og
+    /// «Øk kontrast» virker som i resten av iOS. Skogen brukes i hero-kortene i stedet.
+    /// Store titler på fanenes rot, og de krymper ved rulling (`automatic`).
     func ddNavigationChrome() -> some View {
         containerBackground(Color.ddBackground, for: .navigation)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.ddForest, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
     }
 }
 

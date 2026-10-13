@@ -243,7 +243,7 @@ struct HjemSampleScreen: View {
             .toolbar {
                 if variant != .bell {
                     ToolbarItem(placement: .topBarTrailing) {
-                        HjemBell(model: model).tint(Color.ddOnDark)
+                        HjemBell(model: model).tint(Color.ddForestInk)
                     }
                 }
             }

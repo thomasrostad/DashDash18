@@ -259,8 +259,8 @@ nonisolated enum DDContrastPairs {
         Pair(name: "Gullknapp", foreground: .buttonGoldText, background: .buttonGold, base: nil),
         Pair(name: "Ferdig-knapp", foreground: .buttonOKText, background: .buttonOK, base: nil),
         // Verktøylinja (`DDConfirmToolbarItem`, `DDCancelToolbarItem`).
-        Pair(name: "Bekreft i verktøylinja", foreground: .accentYellowInk, background: .accentYellow, base: nil),
-        Pair(name: "Avbryt i verktøylinja", foreground: .onDark, background: .forest, base: nil),
+        Pair(name: "Bekreft i verktøylinja", foreground: .selectedInk, background: .selected, base: nil),
+        Pair(name: "Avbryt i verktøylinja", foreground: .forestInk, background: .background, base: nil),
         // Utbedringsplanen (1.1–1.3).
         Pair(name: "Sekundær på hero", foreground: .heroSecondary, background: .heroCard, base: nil),
         Pair(name: "Valgt chip", foreground: .selectedInk, background: .selected, base: nil),
