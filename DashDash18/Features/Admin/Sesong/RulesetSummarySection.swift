@@ -2,12 +2,12 @@ import GolfgutuCore
 import SwiftUI
 
 /// Sammendraget øverst i «Turneringen»: merket med oppsettet («Stableford-serie», eller hvor mye som
-/// er endret) og det viktigste i regelsettet i klart språk. Hele forklaringen kan foldes ut under.
+/// er endret) og det viktigste i regelsettet i klart språk. Hele forklaringen («Slik telles det») står
+/// i et ark bak ⓘ-knappen i verktøylinja (P3, `rulesExplanationButton`).
 struct RulesetSummarySection: View {
     let rules: Ruleset
     var title = "Reglene"
     var kind: CompetitionKind = .season
-    @State private var showsAll = false
 
     var body: some View {
         Section {
@@ -32,13 +32,58 @@ struct RulesetSummarySection: View {
             }
             .padding(.vertical, 4)
             .accessibilityElement(children: .combine)
-            DisclosureGroup("Alle reglene i detalj", isExpanded: $showsAll) {
-                Text(RulesetExplanation.text(for: rules))
-                    .font(.dd(.sans, size: 14, relativeTo: .callout))
-                    .foregroundStyle(Color.ddInkSecondary)
-            }
         } header: {
             DDHeader(title)
         }
+    }
+}
+
+/// «Slik telles det»: hele forklaringen av regelsettet i et ark (P3). Erstatter den store
+/// utfoldbare teksten i lista.
+struct RulesExplanationSheet: View {
+    let rules: Ruleset
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Text(RulesetExplanation.text(for: rules))
+                    .font(.ddBody)
+                    .foregroundStyle(Color.ddInk)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(DDSpacing.gutter)
+            }
+            .background(Color.ddBackground)
+            .navigationTitle("Slik telles det")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                DDConfirmToolbarItem {
+                    Button("Ferdig") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+}
+
+extension View {
+    /// ⓘ i verktøylinja som åpner «Slik telles det» for regelsettet (P3).
+    func rulesExplanationButton(_ rules: Ruleset) -> some View {
+        modifier(RulesExplanationButton(rules: rules))
+    }
+}
+
+private struct RulesExplanationButton: ViewModifier {
+    let rules: Ruleset
+    @State private var shows = false
+
+    func body(content: Content) -> some View {
+        content
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Slik telles det", systemImage: "info.circle") { shows = true }
+                }
+            }
+            .sheet(isPresented: $shows) { RulesExplanationSheet(rules: rules) }
     }
 }
