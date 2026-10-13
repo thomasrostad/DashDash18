@@ -23,6 +23,18 @@ struct StatsTrendChart: View {
     }
 
     var body: some View {
+        // Forklaringen står over grafen (V10), så den ikke kolliderer med øverste tall på aksen.
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 16) {
+                legend("Runde", color: Color.ddInkSecondary.opacity(0.55), line: false)
+                legend("Snitt siste \(window)", color: Color.ddForestInk, line: true)
+            }
+            .accessibilityHidden(true)
+            chart
+        }
+    }
+
+    private var chart: some View {
         Chart {
             ForEach(points) { p in
                 PointMark(x: .value("Dato", p.date), y: .value("Mot par", p.toPar))
@@ -41,9 +53,9 @@ struct StatsTrendChart: View {
         }
         .chartForegroundStyleScale([
             "Runde": Color.ddInkSecondary.opacity(0.55),
-            "Snitt siste \(window)": Color.ddForest,
+            "Snitt siste \(window)": Color.ddForestInk,
         ])
-        .chartLegend(position: .top, alignment: .leading)
+        .chartLegend(.hidden)
         .chartYAxis {
             AxisMarks(position: .leading) { value in
                 AxisGridLine().foregroundStyle(Color.ddRule)
@@ -54,12 +66,27 @@ struct StatsTrendChart: View {
         }
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                AxisValueLabel(format: .dateTime.month(.abbreviated).year(.twoDigits)).font(.ddCaption)
+                AxisValueLabel(format: StatsFormat.monthAxis).font(.ddCaption)
             }
         }
+        // Luft i endene, så første og siste etikett på datoaksen ikke kuttes.
+        .chartXScale(range: .plotDimension(startPadding: 12, endPadding: 24))
         .frame(height: 190)
         .environment(\.locale, StatsFormat.locale)
         .accessibilityLabel("Brutto mot par per runde over tid")
+    }
+
+    private func legend(_ title: String, color: Color, line: Bool) -> some View {
+        HStack(spacing: 6) {
+            if line {
+                Capsule().fill(color).frame(width: 14, height: 3)
+            } else {
+                Circle().fill(color).frame(width: 7, height: 7)
+            }
+            Text(title)
+                .font(.ddCaption)
+                .foregroundStyle(Color.ddInkSecondary)
+        }
     }
 }
 
@@ -71,7 +98,7 @@ struct StatsDistributionChart: View {
         Chart(ScoreBucket.allCases, id: \.self) { bucket in
             BarMark(x: .value("Resultat", bucket.label), y: .value("Andel", distribution.share(bucket) ?? 0))
                 .cornerRadius(4)
-                .foregroundStyle(Color.ddForest)
+                .foregroundStyle(Color.ddForestInk)
                 .annotation(position: .top, spacing: 4) {
                     Text(StatsFormat.percent(distribution.share(bucket) ?? 0))
                         .font(.ddCaption)
@@ -111,10 +138,10 @@ struct StatsHandicapChart: View {
         Chart(points) { p in
             LineMark(x: .value("Dato", p.date), y: .value("Indeks", p.index))
                 .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
-                .foregroundStyle(Color.ddForest)
+                .foregroundStyle(Color.ddForestInk)
             PointMark(x: .value("Dato", p.date), y: .value("Indeks", p.index))
                 .symbolSize(36)
-                .foregroundStyle(Color.ddForest)
+                .foregroundStyle(Color.ddForestInk)
         }
         .chartYScale(domain: .automatic(includesZero: false))
         .chartYAxis {
@@ -127,9 +154,10 @@ struct StatsHandicapChart: View {
         }
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                AxisValueLabel(format: .dateTime.month(.abbreviated).year(.twoDigits)).font(.ddCaption)
+                AxisValueLabel(format: StatsFormat.monthAxis).font(.ddCaption)
             }
         }
+        .chartXScale(range: .plotDimension(startPadding: 12, endPadding: 24))
         .frame(height: 170)
         .environment(\.locale, StatsFormat.locale)
         .accessibilityLabel("Handicapindeks over tid")
