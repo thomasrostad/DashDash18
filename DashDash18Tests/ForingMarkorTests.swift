@@ -158,7 +158,7 @@ struct ForingHullkortTests {
         #expect(!card.mustConfirm && card.rows[0].confirmed)
         #expect(card.action == .save(title: "Lagre hull 1 og gå videre", enabled: true, status: nil))
         #expect(uten.markerLine(for: F.viewer(F.bjorn)) == nil)
-        #expect(card.header == "Deg")
+        #expect(card.header == "Ditt kort")
     }
 
     @Test func ikkeMedIRundenIngenRader() {

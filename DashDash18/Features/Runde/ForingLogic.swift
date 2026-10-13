@@ -344,7 +344,7 @@ nonisolated extension RoundGame {
 
         let header: String
         if players.count > 1 { header = groupTerm.definiteTitle }
-        else if let only = players.first { header = only == viewer.memberID ? "Deg" : name(only) }
+        else if let only = players.first { header = only == viewer.memberID ? "Ditt kort" : name(only) }
         else { header = "" }
 
         let outside = index >= Truncation.countingHoles(round)
