@@ -30,7 +30,7 @@ struct EveningStepsBar: View {
 
     private func stripe(_ state: EveningStepMark.State) -> some View {
         Capsule()
-            .fill(state == .done ? Color.ddForest : state == .current ? Color.ddLime : Color.ddHairline)
+            .fill(state == .done ? Color.ddForestInk : state == .current ? Color.ddLime : Color.ddHairline)
             .frame(height: state == .upcoming ? 4 : 6)
             .frame(height: 6, alignment: .center)
     }

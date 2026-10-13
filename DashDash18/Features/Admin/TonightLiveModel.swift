@@ -87,7 +87,9 @@ final class TonightLiveModel {
 extension TonightLiveModel {
     /// «I kveld» i skjermprøvene (`arrangorpagar`): bås 1 på hull 14 og synket for 2 min siden, bås 2 på
     /// hull 11 uten data på 18 min (med funksjonær), bås 3 og 4 starter om 25 og 35 min.
-    static func sample(from admin: RundeAdminModel, now: Date = .now) -> TonightLiveModel {
+    static func sample(from admin: RundeAdminModel, now fixedNow: Date? = nil) -> TonightLiveModel {
+        // Kl. 19:35 i dag, så tidene blir som i skissen (18:00, 18:10, om 25 og 35 min).
+        let now = fixedNow ?? EveningDates.time(from: "19:35", on: .now) ?? .now
         guard let round = admin.activeRound, let players = admin.playersByRound[round.id] else {
             return TonightLiveModel(preview: [], now: now)
         }
@@ -105,15 +107,8 @@ extension TonightLiveModel {
         }
         play(1, holes: 13, lastMinutesAgo: 2)
         play(2, holes: 10, lastMinutesAgo: 18)
-        func clock(_ minutesFromNow: Double) -> String {
-            let date = now.addingTimeInterval(minutesFromNow * 60)
-            let parts = EveningDates.osloCalendar.dateComponents([.hour, .minute], from: date)
-            // Hele ti-minutter, som en ekte startliste.
-            return StartList.clock((parts.hour ?? 0) * 60 + (parts.minute ?? 0) / 10 * 10)
-        }
         let scorer = UUID()
-        let starts: [Int: (String, UUID?)] = [1: (clock(-125), nil), 2: (clock(-110), scorer),
-                                              3: (clock(30), nil), 4: (clock(40), nil)]
+        let starts: [Int: (String, UUID?)] = [1: ("18:00", nil), 2: ("18:10", scorer), 3: ("20:00", nil), 4: ("20:10", nil)]
         let groups = byBay.keys.sorted().map { no in
             StartGroupDraft(groupNo: no, startsAt: starts[no]?.0, startHole: 1, resourceLabel: "Bås \(no)",
                             scorerID: starts[no]?.1, memberIDs: (byBay[no] ?? []).map(\.memberID))
