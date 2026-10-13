@@ -269,6 +269,11 @@ nonisolated enum DDContrastPairs {
         Pair(name: "Grønn tekst på chip", foreground: .forestInk, background: .chip, base: nil),
         Pair(name: "Sekundærknapp, ny", foreground: .buttonLine, background: .buttonSecondary, base: nil),
         Pair(name: "Tekst på din rad", foreground: .ink, background: .youRow, base: .card),
+        // Tavla (V4): navn, linja under og bevegelsen (▲ grønn, ▼ rust) på din rad. Rust-tekst gir
+        // bare 4,0:1 på din rad i mørk modus, så ▼ bruker den mørke rusten der.
+        Pair(name: "Grønn tekst på din rad", foreground: .forestInk, background: .youRow, base: .card),
+        Pair(name: "Sekundær på din rad", foreground: .inkSecondary, background: .youRow, base: .card),
+        Pair(name: "Mørk rust på din rad", foreground: .rustDark, background: .youRow, base: .card),
         Pair(name: "Score eagle", foreground: .scoreEagleInk, background: .scoreEagleBackground, base: .card),
         Pair(name: "Score birdie", foreground: .scoreBirdieInk, background: .scoreBirdieBackground, base: .card),
         Pair(name: "Score par", foreground: .scoreParInk, background: .scoreParBackground, base: .card),

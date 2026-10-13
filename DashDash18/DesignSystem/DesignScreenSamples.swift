@@ -59,6 +59,8 @@ struct DesignScreenSamples: View {
         case finn, inviterqr
         // Alle runder i turneringen (leaderboard).
         case allerunder, allerunderliga, tavlatv
+        // Tavla-segmentet «Statistikk» og trendgrafen alene (V4, V10).
+        case tavlastatistikk, stattrend
     }
     @State var screen: Screen = .hullkort
 
@@ -190,6 +192,8 @@ struct DesignScreenSamples: View {
         case .turneringvelger:
             NavigationStack { AdminHubSample(.tonight, scroll: .top, picker: TournamentCoreSamples.picker()) }
                 .tint(Color.ddForestInk)
+        case .tavlastatistikk: TavlaStatsSample()
+        case .stattrend: StatsTrendSample()
         case .tavlatv:
             TavlaTVView(preview: TavlaSamples.standings())
         case .allerunderliga:

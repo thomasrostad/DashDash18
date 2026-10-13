@@ -32,14 +32,24 @@ struct PlayerProfileView: View {
                     .padding(.bottom, DDSpacing.s)
 
                 DDSectionLabel("Turneringen")
-                DDTileGrid([
-                    DDStatTile("Stableford", value: "\(p.stablefordTotal)", highlight: true),
-                    DDStatTile("Runder", value: "\(p.roundsPlayed)"),
-                    DDStatTile("Snitt / runde", value: p.average.map { RuleFormat.number($0) } ?? "—"),
-                    DDStatTile("Beste runde", value: p.best.map(String.init) ?? "—"),
-                    DDStatTile("Birdies", value: "\(p.birdies)"),
-                    DDStatTile("Lengste drive", value: p.longestDrive.map(SidePrizes.formatMeters) ?? "—"),
-                ])
+                if p.roundsPlayed == 0 {
+                    Text("Tallene kommer etter første runde.")
+                        .font(.ddCallout)
+                        .foregroundStyle(Color.ddInkSecondary)
+                        .frame(maxWidth: .infinity)
+                        .ddCard(.empty)
+                } else {
+                    // P5: ett hovedtall og resten som liste. Tall uten data vises ikke (V13).
+                    DDStatSummary(featured: DDStatItem("Snitt stableford per runde",
+                                                       value: p.average.map { RuleFormat.number($0) },
+                                                       detail: p.roundsPlayed == 1 ? "1 runde"
+                                                           : "\(p.roundsPlayed) runder"), [
+                        DDStatItem("Stableford totalt", value: "\(p.stablefordTotal)"),
+                        DDStatItem("Beste runde", value: p.best.map { "\($0) p" }),
+                        DDStatItem("Birdies", value: "\(p.birdies)", detail: "netto"),
+                        DDStatItem("Longest drive", value: p.longestDrive.map(SidePrizes.formatMeters)),
+                    ])
+                }
                 if StatsFeature.isEnabled {
                     StatsProfileLink(memberID: memberID, name: p.row.name)
                 }
@@ -63,7 +73,9 @@ struct PlayerProfileView: View {
                 }
 
                 DDSectionLabel("Runde for runde") {
-                    Text(standings.roundColumns).ddEyebrow()
+                    Text(standings.roundColumns)
+                        .font(.ddStatus)
+                        .foregroundStyle(Color.ddInkSecondary)
                 }
                 .padding(.top, DDSpacing.l)
                 if p.rounds.isEmpty {
@@ -143,7 +155,7 @@ private struct RoundLineView: View {
             }
             Spacer(minLength: 8)
             Text("\(line.place).")
-                .font(.ddMonoSmall)
+                .font(.ddStatus)
                 .monospacedDigit()
                 .foregroundStyle(Color.ddInkSecondary)
             if !standings.countsStableford {

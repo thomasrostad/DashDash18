@@ -27,14 +27,21 @@ nonisolated enum TavlaTV {
 }
 
 /// Fullskjerm for TV. Følger samme `TavlaModel` som Tavla, så nye scorer kommer inn av seg selv.
+/// Liggende: tabellen og siste runde i to kolonner. Tabellen blar side for side av seg selv.
+///
+/// Størrelsene er faste og skaleres med skjermen (`scale`), ikke med Dynamic Type: TV-en leses på
+/// avstand, og telefonens tekststørrelse gjelder ikke der.
 struct TavlaTVView: View {
     private let model: TavlaModel?
     private let fixed: TavlaStandings?
+    /// På den eksterne skjermen (AirPlay): ingen lukkeknapp, ingen kan trykke der.
+    private let external: Bool
     @Environment(\.dismiss) private var dismiss
 
-    init(model: TavlaModel) {
+    init(model: TavlaModel, external: Bool = false) {
         self.model = model
         fixed = nil
+        self.external = external
     }
 
     #if DEBUG
@@ -42,6 +49,7 @@ struct TavlaTVView: View {
     init(preview standings: TavlaStandings) {
         model = nil
         fixed = standings
+        external = false
     }
     #endif
 
@@ -59,14 +67,16 @@ struct TavlaTVView: View {
                         .foregroundStyle(Color.ddOnDark)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Color.ddOnDark.opacity(0.7))
-                        .padding(12)
-                        .contentShape(.rect)
+                if !external {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(Color.ddOnDark.opacity(0.85))
+                            .padding(12)
+                            .contentShape(.rect)
+                    }
+                    .accessibilityLabel("Lukk TV-visningen")
                 }
-                .accessibilityLabel("Lukk TV-visningen")
             }
         }
         .preferredColorScheme(.dark)
@@ -74,7 +84,7 @@ struct TavlaTVView: View {
         .persistentSystemOverlays(.hidden)
         // Skjermen skal ikke slukke mens Tavla står på veggen.
         .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
-        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .onDisappear { UIApplication.shared.isIdleTimerDisabled = TavlaExternalDisplay.shared.isConnected }
     }
 
     private func content(_ standings: TavlaStandings, size: CGSize) -> some View {
@@ -133,11 +143,13 @@ struct TavlaTVView: View {
             VStack(alignment: .leading, spacing: 4 * scale) {
                 Text(standings.countsStableford ? standings.seasonName : "Jakkeracet · \(standings.seasonName)")
                     .font(.system(size: 34 * scale, weight: .semibold))
-                Text("\(standings.eveningsPlayed) av \(standings.rules.day.count(standings.eveningsTotal)) spilt")
+                Text(standings.progressText)
                     .font(.system(size: 18 * scale))
-                    .opacity(0.7)
+                    .opacity(0.85)
             }
             Spacer()
+            TVLiveBadge(scale: scale)
+                .padding(.trailing, 16 * scale)
             TimelineView(.periodic(from: .now, by: 30)) { context in
                 Text(context.date, format: .dateTime.hour().minute())
                     .font(.system(size: 30 * scale, weight: .light).monospacedDigit())
@@ -151,9 +163,9 @@ struct TavlaTVView: View {
     private func tableRow(_ row: TavlaStandings.Row, standings: TavlaStandings, scale: CGFloat,
                           showsDetail: Bool) -> some View {
         HStack(spacing: 18 * scale) {
-            Text(standings.placeText(row))
+            Text(standings.boardPlace(row))
                 .font(.system(size: 22 * scale, weight: .medium).monospacedDigit())
-                .opacity(0.6)
+                .opacity(0.8)
                 .frame(width: 44 * scale, alignment: .trailing)
             Text(row.name)
                 .font(.system(size: 26 * scale, weight: standings.isOnPodium(row) ? .semibold : .regular))
@@ -162,7 +174,7 @@ struct TavlaTVView: View {
             if showsDetail {
                 Text(standings.detail(row))
                     .font(.system(size: 15 * scale))
-                    .opacity(0.55)
+                    .opacity(0.8)
                     .lineLimit(1)
             }
             Text(standings.points(row.total))
@@ -181,17 +193,17 @@ struct TavlaTVView: View {
                 Text(latest.isOngoing ? "Pågår nå" : "Siste runde")
                     .font(.system(size: 16 * scale, weight: .semibold))
                     .textCase(.uppercase)
-                    .foregroundStyle(latest.isOngoing ? Color.ddGold : Color.ddOnDark.opacity(0.7))
+                    .foregroundStyle(latest.isOngoing ? Color.ddGold : Color.ddOnDark.opacity(0.85))
                 if latest.isOngoing {
                     Circle().fill(Color.ddGold).frame(width: 8 * scale, height: 8 * scale)
                 }
             }
             Text(latest.title)
                 .font(.system(size: 20 * scale))
-                .foregroundStyle(Color.ddOnDark.opacity(0.8))
+                .foregroundStyle(Color.ddOnDark.opacity(0.85))
             ForEach(Array(latest.lines.enumerated()), id: \.offset) { i, line in
                 HStack {
-                    Text("\(i + 1).").opacity(0.5).frame(width: 30 * scale, alignment: .trailing)
+                    Text("\(i + 1).").opacity(0.75).frame(width: 30 * scale, alignment: .trailing)
                     Text(line.name).lineLimit(1)
                     Spacer()
                     Text("\(line.points)").monospacedDigit().fontWeight(.semibold)
@@ -202,5 +214,26 @@ struct TavlaTVView: View {
         }
         .padding(20 * scale)
         .background(Color.ddOnDark.opacity(0.06), in: .rect(cornerRadius: 18 * scale))
+    }
+}
+
+/// «Live»: tabellen på TV-en oppdateres mens rundene føres. Lime er fargen for live.
+private struct TVLiveBadge: View {
+    let scale: CGFloat
+
+    var body: some View {
+        HStack(spacing: 8 * scale) {
+            Circle()
+                .fill(Color.ddLimeOnAccent)
+                .frame(width: 9 * scale, height: 9 * scale)
+            Text("Live")
+                .font(.system(size: 18 * scale, weight: .semibold))
+                .foregroundStyle(Color.ddLimeOnAccent)
+        }
+        .padding(.horizontal, 14 * scale)
+        .padding(.vertical, 6 * scale)
+        .background(Capsule().fill(Color.ddLime))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Live")
     }
 }

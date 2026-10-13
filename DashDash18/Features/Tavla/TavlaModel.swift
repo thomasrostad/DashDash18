@@ -30,7 +30,7 @@ final class TavlaModel {
         do {
             let input = try await TavlaQueries.load(client: context.client, clubID: context.clubID)
             let viewer = Viewer(memberID: context.memberID, isOrganizer: context.can(.rounds))
-            standings = input.map { TavlaStandings($0, me: context.memberID, viewer: viewer) }
+            standings = input.map { TavlaStandings($0, me: context.memberID, viewer: viewer, comparesPrevious: true) }
             state = .loaded
             WidgetSnapshotPublisher.publish(standings: standings)
         } catch is CancellationError {

@@ -36,7 +36,8 @@ nonisolated struct TavlaData: Decodable, Equatable, Sendable {
     }
 
     /// Rundene som `RoundSnapshot`, med samme mapping som Kveld (`RoundGame.makeRound`).
-    func input(season: SeasonRow) -> TavlaInput {
+    /// - Parameter today: `YYYY-MM-DD` (norsk tid), for neste kveld.
+    func input(season: SeasonRow, today: String = TavlaData.today()) -> TavlaInput {
         let names = Dictionary(members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { a, _ in a })
         let dates = Dictionary(events.map { ($0.id, $0.eventDate) }, uniquingKeysWith: { a, _ in a })
         let scoresByRound = Dictionary(grouping: scores, by: \.roundID)
@@ -54,6 +55,20 @@ nonisolated struct TavlaData: Decodable, Equatable, Sendable {
             s.names = names
             return s
         }
-        return TavlaInput(season: season, members: members, rounds: snapshots)
+        return TavlaInput(season: season, members: members, rounds: snapshots,
+                          nextEventDate: TavlaData.nextEventDate(events: events, rounds: rounds, today: today))
+    }
+
+    /// Neste kveld som ikke er spilt: den første fra i dag uten en runde som går eller er låst.
+    static func nextEventDate(events: [EventRow], rounds: [RoundRow], today: String) -> String? {
+        let played = Set(rounds.filter { $0.status == .active || $0.status == .locked }.compactMap(\.eventID))
+        return events.filter { $0.eventDate >= today && !played.contains($0.id) }.map(\.eventDate).min()
+    }
+
+    static func today(_ date: Date = .now) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Oslo") ?? .current
+        let c = calendar.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
     }
 }
