@@ -14,7 +14,7 @@ struct StatsHistoryView: View {
                     StatsEmptyCard(text: "Ingen runder i dette utvalget.",
                                    resetAction: model.isFiltered ? { model.resetFilter() } : nil)
                 } else {
-                    DDSectionLabel("\(rounds.count) runder") { Text("brutto · stableford").ddEyebrow() }
+                    DDSectionLabel("\(rounds.count) runder") { Text("brutto · stableford").font(.ddStatus).foregroundStyle(Color.ddInkSecondary) }
                         .padding(.top, DDSpacing.s)
                     VStack(spacing: 0) {
                         ForEach(rounds) { line in
@@ -119,7 +119,9 @@ struct StatsRecordCard: View {
                     .font(.ddNameSmall)
                     .foregroundStyle(Color.ddForestInk)
                 Spacer(minLength: 8)
-                Text(record.rounds == 1 ? "1 runde" : "\(record.rounds) runder").ddEyebrow()
+                Text(record.rounds == 1 ? "1 runde" : "\(record.rounds) runder")
+                    .font(.ddStatus)
+                    .foregroundStyle(Color.ddInkSecondary)
             }
             HStack(spacing: DDSpacing.cardGap) {
                 cell("Brutto", value: "\(record.bestGross.gross)",

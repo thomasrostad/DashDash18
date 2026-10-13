@@ -59,23 +59,19 @@ struct StatsView: View {
         let s = model.summary
         let holes = model.primaryHoleCount
         let avg = holes.flatMap { s.averages[$0] }
-        var tiles = [
-            DDStatTile("Runder", value: "\(s.rounds.count)", detail: "\(s.completeRounds.count) fullført"),
-            DDStatTile("Snitt slag", value: avg.map { StatsFormat.decimal($0.gross) } ?? "—",
-                       detail: holes.map { "\($0) hull" }, highlight: true),
-            DDStatTile("Snitt mot par", value: avg.map { StatsFormat.toPar($0.toPar, digits: 1) } ?? "—"),
-            DDStatTile("Snitt stableford", value: avg.map { StatsFormat.decimal($0.stableford) } ?? "—"),
-        ]
-        if let best = s.bestByStableford(1, holes: holes).first {
-            tiles.append(DDStatTile("Beste runde", value: "\(best.stableford) p",
-                                    detail: "\(best.gross) slag · \(StatsFormat.shortDate(best.date))"))
-        }
-        if let index = s.currentIndex {
-            tiles.append(DDStatTile("Indeks (WHS)", value: StatsFormat.index(index), detail: "uoffisiell"))
-        }
+        let best = s.bestByStableford(1, holes: holes).first
+        // P5: ett hovedtall (snitt stableford) og resten som liste. Tall uten data vises ikke (V13).
         return VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
             DDSectionLabel("Oversikt")
-            DDTileGrid(tiles)
+            DDStatSummary(featured: DDStatItem("Snitt stableford", value: avg.map { StatsFormat.decimal($0.stableford) },
+                                               detail: holes.map { "per runde · \($0) hull" }), [
+                DDStatItem("Snitt slag", value: avg.map { StatsFormat.decimal($0.gross) }),
+                DDStatItem("Snitt mot par", value: avg.map { StatsFormat.toPar($0.toPar, digits: 1) }),
+                DDStatItem("Runder", value: "\(s.rounds.count)", detail: "\(s.completeRounds.count) fullført"),
+                DDStatItem("Beste runde", value: best.map { "\($0.stableford) p" },
+                           detail: best.map { "\($0.gross) slag · \(StatsFormat.shortDate($0.date))" }),
+                DDStatItem("Indeks (WHS)", value: s.currentIndex.map(StatsFormat.index), detail: "uoffisiell"),
+            ])
         }
     }
 
@@ -84,7 +80,7 @@ struct StatsView: View {
         let holes = model.primaryHoleCount
         let lines = model.summary.trend.filter { $0.holeCount == holes }
         if lines.count >= 2 {
-            DDSectionLabel("Trend") { Text("mot par · \(holes ?? 18) hull").ddEyebrow() }
+            DDSectionLabel("Trend") { Text("mot par · \(holes ?? 18) hull").font(.ddStatus).foregroundStyle(Color.ddInkSecondary) }
                 .padding(.top, DDSpacing.m)
             StatsTrendChart(lines: lines, window: StatsModel.trendWindow)
                 .ddCard()
@@ -93,7 +89,7 @@ struct StatsView: View {
 
     private var distribution: some View {
         VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
-            DDSectionLabel("Fordeling") { Text("\(model.summary.distribution.total) hull · brutto").ddEyebrow() }
+            DDSectionLabel("Fordeling") { Text("\(model.summary.distribution.total) hull · brutto").font(.ddStatus).foregroundStyle(Color.ddInkSecondary) }
                 .padding(.top, DDSpacing.m)
             StatsDistributionChart(distribution: model.summary.distribution)
                 .ddCard()
@@ -103,8 +99,8 @@ struct StatsView: View {
     private var parTypes: some View {
         VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
             DDSectionLabel("Per par-type").padding(.top, DDSpacing.m)
-            DDTileGrid(model.summary.parTypes.map { p in
-                DDStatTile("Par \(p.par)", value: StatsFormat.decimal(p.averageGross),
+            DDStatSummary(model.summary.parTypes.map { p in
+                DDStatItem("Par \(p.par)", value: StatsFormat.decimal(p.averageGross),
                            detail: "\(StatsFormat.toPar(p.averageToPar, digits: 2)) · \(p.holes) hull")
             })
         }
@@ -115,16 +111,16 @@ struct StatsView: View {
         let s = model.summary.shots
         DDSectionLabel("Fairway, green og putter").padding(.top, DDSpacing.m)
         if s.hasAny {
-            DDTileGrid([
-                DDStatTile("Fairway", value: s.fairwayShare.map(StatsFormat.percent) ?? "—",
+            DDStatSummary([
+                DDStatItem("Fairway", value: s.fairwayShare.map(StatsFormat.percent),
                            detail: s.fairwayHoles > 0 ? "\(s.fairwayLeft) venstre · \(s.fairwayRight) høyre" : nil),
-                DDStatTile("Green i regulering", value: s.girShare.map(StatsFormat.percent) ?? "—",
+                DDStatItem("Green i regulering", value: s.girShare.map(StatsFormat.percent),
                            detail: s.girHoles > 0 ? "\(s.girHit) av \(s.girHoles) hull" : nil),
-                DDStatTile("Putter / runde", value: s.puttsPerRound.map { StatsFormat.decimal($0) } ?? "—",
+                DDStatItem("Putter per runde", value: s.puttsPerRound.map { StatsFormat.decimal($0) },
                            detail: s.puttsPerHole.map { "\(StatsFormat.decimal($0, digits: 2)) per hull" }),
-                DDStatTile("Sand save", value: s.sandSaveShare.map(StatsFormat.percent) ?? "—",
+                DDStatItem("Sand save", value: s.sandSaveShare.map(StatsFormat.percent),
                            detail: s.bunkerVisits > 0 ? "\(s.bunkerVisits) bunkerhull" : nil),
-                DDStatTile("Straffeslag", value: "\(s.penaltyTotal)",
+                DDStatItem("Straffeslag", value: "\(s.penaltyTotal)",
                            detail: s.penaltyHoles > 0 ? "på \(s.penaltyHoles) førte hull" : nil),
             ])
         } else {
@@ -140,7 +136,7 @@ struct StatsView: View {
     private var handicap: some View {
         let revisions = model.summary.handicap
         if !revisions.isEmpty {
-            DDSectionLabel("Handicaputvikling") { Text("WHS · uoffisiell").ddEyebrow() }
+            DDSectionLabel("Handicaputvikling") { Text("WHS · uoffisiell").font(.ddStatus).foregroundStyle(Color.ddInkSecondary) }
                 .padding(.top, DDSpacing.m)
             VStack(alignment: .leading, spacing: DDSpacing.m) {
                 if revisions.filter({ $0.index != nil }).count >= 2 {
@@ -165,7 +161,7 @@ struct StatsView: View {
     private var best: some View {
         let rounds = model.summary.bestByStableford(3, holes: model.primaryHoleCount)
         if !rounds.isEmpty {
-            DDSectionLabel("Beste runder") { Text("stableford").ddEyebrow() }
+            DDSectionLabel("Beste runder") { Text("stableford").font(.ddStatus).foregroundStyle(Color.ddInkSecondary) }
                 .padding(.top, DDSpacing.m)
             VStack(spacing: 0) {
                 ForEach(Array(rounds.enumerated()), id: \.element.id) { i, line in

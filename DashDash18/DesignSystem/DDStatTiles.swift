@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Svart statistikk-flis (golfee): etikett i mono versaler, stort lett tall, valgfri linje under.
-/// Brukes i rutenett, f.eks. «Snitt / runde» og «Beste runde» på spillerprofilen.
+/// Statistikk-flis: etikett i mono versaler, stort lett tall, valgfri linje under. Profilen og
+/// statistikken bruker nå `DDStatSummary` (P5); flisa står igjen for designkatalogen.
 struct DDStatTile: View {
     let label: String
     let value: String
@@ -64,6 +64,99 @@ struct DDTileGrid: View {
                 }
             }
         }
+    }
+}
+
+/// Ett tall i `DDStatSummary`. `value` nil: ingen data, og raden vises ikke (V13).
+struct DDStatItem: Identifiable {
+    let label: String
+    let value: String?
+    var detail: String?
+
+    init(_ label: String, value: String?, detail: String? = nil) {
+        self.label = label
+        self.value = value
+        self.detail = detail
+    }
+
+    var id: String { label }
+}
+
+/// Statistikk som ett fremhevet hovedtall og resten som liste med verdier (P5), i ett kort.
+/// Tall uten data vises ikke. Uten noe å vise blir det ingenting.
+struct DDStatSummary: View {
+    var featured: DDStatItem?
+    let items: [DDStatItem]
+
+    init(featured: DDStatItem? = nil, _ items: [DDStatItem]) {
+        self.featured = featured
+        self.items = items
+    }
+
+    private var main: DDStatItem? { featured?.value == nil ? nil : featured }
+    private var rows: [DDStatItem] { items.filter { $0.value != nil } }
+
+    var body: some View {
+        if main != nil || !rows.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                if let main, let value = main.value {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(main.label)
+                            .font(.ddStatus)
+                            .foregroundStyle(Color.ddInkSecondary)
+                        Text(value)
+                            .font(.dd(.sans, size: 44, weight: .light, relativeTo: .largeTitle))
+                            .monospacedDigit()
+                            .foregroundStyle(Color.ddForestInk)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                        if let detail = main.detail {
+                            Text(detail)
+                                .font(.ddCaption)
+                                .monospacedDigit()
+                                .foregroundStyle(Color.ddInkSecondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, rows.isEmpty ? 0 : 12)
+                    .accessibilityElement(children: .combine)
+                    if !rows.isEmpty { DDDivider() }
+                }
+                ForEach(rows) { item in
+                    DDStatSummaryRow(item: item)
+                    if item.id != rows.last?.id { DDDivider() }
+                }
+            }
+            .ddCard(padding: DDSpacing.l)
+        }
+    }
+}
+
+/// En linje i `DDStatSummary`: etikett (og linja under) til venstre, verdien til høyre.
+private struct DDStatSummaryRow: View {
+    let item: DDStatItem
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.label)
+                    .font(.ddBody)
+                    .foregroundStyle(Color.ddInk)
+                if let detail = item.detail {
+                    Text(detail)
+                        .font(.ddCaption)
+                        .monospacedDigit()
+                        .foregroundStyle(Color.ddInkSecondary)
+                }
+            }
+            Spacer(minLength: 8)
+            Text(item.value ?? "")
+                .font(.ddNumberLarge)
+                .monospacedDigit()
+                .foregroundStyle(Color.ddInk)
+        }
+        .padding(.vertical, 11)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -202,10 +295,10 @@ struct DDRankValue: View {
         VStack(alignment: .leading, spacing: 14) {
             DDJacketHero(eyebrow: "Høst 2026 · mester", title: "Bjørn",
                          subtitle: "42 poeng · 30 fra 7 dueller")
-            DDTileGrid([
-                DDStatTile("Snitt / runde", value: "30"),
-                DDStatTile("Beste runde", value: "36", highlight: true),
-                DDStatTile("Birdies", value: "7"),
+            DDStatSummary(featured: DDStatItem("Snitt stableford", value: "41,2", detail: "5 runder"), [
+                DDStatItem("Beste runde", value: "36"),
+                DDStatItem("Birdies", value: "7"),
+                DDStatItem("Longest drive", value: nil),
             ])
             VStack(spacing: 0) {
                 DDRankRow(place: "1.", name: "Bjørn", detail: "+12 hull · 150 stableford") { DDRankValue("42") }
