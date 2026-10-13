@@ -34,11 +34,6 @@ struct HullkortView: View {
                 }
             }
 
-            if card.showsParHint {
-                Text("Stiplet tall er par. Trykk tallet for å bekrefte det.")
-                    .font(.ddCaption)
-                    .foregroundStyle(Color.ddInkSecondary)
-            }
             if let outside = card.outsideTruncation {
                 Text(outside)
                     .font(.ddCaption)
@@ -97,20 +92,22 @@ struct HullkortView: View {
     @ViewBuilder
     private var actionView: some View {
         switch card.action {
-        case .save(let title, let enabled, let blocker):
+        case .save(let title, let enabled, let status):
+            if let status {
+                Text(status)
+                    .font(.ddStatus)
+                    .foregroundStyle(Color.ddInkSecondary)
+                    .frame(maxWidth: .infinity)
+            }
             Button(action: onSave) {
-                Group {
-                    if isSaving { ProgressView().tint(DDToken.buttonPrimaryText.color) } else { Text(title) }
+                ZStack {
+                    // Samme bredde mens den lagrer (planen 1.3).
+                    Text(title).opacity(isSaving ? 0 : 1)
+                    if isSaving { ProgressView().tint(DDToken.buttonPrimaryText.color) }
                 }
             }
             .buttonStyle(.ddPrimary)
             .disabled(!enabled || isSaving)
-            if let blocker {
-                Text(blocker)
-                    .font(.ddCaption)
-                    .foregroundStyle(Color.ddInkSecondary)
-                    .frame(maxWidth: .infinity)
-            }
         case .next(let title, let hole):
             Button(title) { onGoTo(hole) }
                 .buttonStyle(.dd(.secondary, fullWidth: true))
@@ -141,7 +138,7 @@ struct HullRadView: View {
                             .foregroundStyle(Color.ddForestInk)
                             .lineLimit(1)
                         if row.isMe {
-                            Text("deg").ddEyebrow()
+                            DDYouBadge()
                         }
                     }
                 }
@@ -149,7 +146,7 @@ struct HullRadView: View {
                 .accessibilityLabel("Scorekortet til \(row.name)")
 
                 if row.editable || row.saved != nil {
-                    Text("\(row.strokesReceived) slag fått")
+                    Text(row.isDefault ? "\(row.strokesReceived) slag fått · forvalgt par" : "\(row.strokesReceived) slag fått")
                         .font(.ddMonoSmall)
                         .foregroundStyle(Color.ddInkSecondary)
                 }
@@ -183,21 +180,16 @@ struct HullRadView: View {
     private var result: some View {
         if let name = row.scoreName {
             HStack(spacing: 8) {
-                ScoreChip(name: name)
                 if let points = row.points {
-                    Text("\(points) p")
-                        .font(.ddCallout)
-                        .monospacedDigit()
-                        .foregroundStyle(Color.ddInkSecondary)
+                    // «2 p · netto par» i scorefargen (planen K1).
+                    ScoreChip(name: name, text: "\(points) p · netto \(name.label.lowercased())")
+                } else {
+                    ScoreChip(name: name)
                 }
                 if isPending && !row.editable {
                     Text("ikke lagret ennå").font(.ddCaption).ddWarningStyle()
                 }
             }
-        } else if row.editable && !row.confirmed {
-            DDChip("Par? trykk tallet", tone: .earth, compact: true)
-                .foregroundStyle(Color.ddInkSecondary)
-                .accessibilityHidden(true)
         } else if !row.editable {
             Text("ikke lagret ennå")
                 .font(.ddCaption)
@@ -223,8 +215,8 @@ struct HullRadView: View {
             .buttonStyle(.plain)
             // VoiceOver: navnet, tallet, og sveip opp/ned som − og +.
             .accessibilityLabel(row.name)
-            .accessibilityValue(row.confirmed ? "\(row.value) slag" : "par \(row.value), ikke bekreftet")
-            .accessibilityHint(row.confirmed ? "Sveip opp eller ned for å endre." : "Dobbelttrykk for å bekrefte par.")
+            .accessibilityValue(accessibilityValue)
+            .accessibilityHint("Sveip opp eller ned for å endre.")
             .accessibilityAdjustableAction { direction in
                 switch direction {
                 case .increment: onStep(1, row.memberID)
@@ -241,7 +233,14 @@ struct HullRadView: View {
             .buttonStyle(DDStepperButtonStyle(kind: .plus))
             .accessibilityLabel("Ett slag mer for \(row.name)")
         }
-        .sensoryFeedback(.selection, trigger: row.value)
+        .sensoryFeedback(trigger: row.value) { old, new in new > old ? .increase : .decrease }
+    }
+
+    private var accessibilityValue: String {
+        var parts = ["\(row.value) slag"]
+        if row.isDefault { parts.append("forvalgt par") }
+        if let points = row.points { parts.append("\(points) poeng") }
+        return parts.joined(separator: ", ")
     }
 }
 

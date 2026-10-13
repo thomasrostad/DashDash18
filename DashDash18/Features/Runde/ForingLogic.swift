@@ -210,25 +210,29 @@ nonisolated struct HoleCard: Equatable, Sendable {
         let isMe: Bool
         /// Raden har stepper.
         let editable: Bool
-        /// Bekreftet (eller trenger ikke bekreftelse). Ubekreftet vises stiplet.
+        /// Rørt av markøren, lagret, eller alene på kortet. Urørt forvalg (par) vises dempet
+        /// med «forvalgt par» (utbedringsplanen K1).
         let confirmed: Bool
         /// Lagret på serveren (eller i kø).
         let saved: Int?
         /// Tallet som står: utkastet, ellers det lagrede, ellers par.
         let value: Int
         let strokesReceived: Int
-        /// «5 brutto − 1 = 4 netto». Nil med eksternt handicap eller ubekreftet rad.
+        /// «5 brutto − 1 = 4 netto». Nil med eksternt handicap.
         let calculation: String?
-        /// Nil når det ikke er noe å vise (ubekreftet, eller ikke ført i seer-modus).
+        /// Nil når det ikke er noe å vise (ikke ført i seer-modus).
         let scoreName: ScoreName?
         /// Nil i en match (der er det hullet som vinnes, ikke poengene).
         let points: Int?
         var id: UUID { memberID }
+        /// Står på forvalget (par) uten at markøren har rørt det.
+        var isDefault: Bool { editable && !confirmed }
     }
 
     enum Action: Equatable, Sendable {
-        /// «Lagre hull N → hull N+1». Låst til alle er bekreftet.
-        case save(title: String, enabled: Bool, blocker: String?)
+        /// «Lagre hull N og gå videre». Alltid aktiv: urørte rader lagres som par (K1).
+        /// `status` er linja over knappen, f.eks. «1 av 4 endret fra par».
+        case save(title: String, enabled: Bool, status: String?)
         /// Lagret og urørt: videre uten å lagre.
         case next(title: String, hole: Int)
         /// Alt er lagret på siste hull.
@@ -245,8 +249,8 @@ nonisolated struct HoleCard: Equatable, Sendable {
     let header: String
     let strokesLabel: String
     let rows: [Row]
+    /// Flere rader å føre (båsen). Da viser kortet hvor mange som er endret fra par.
     let mustConfirm: Bool
-    let showsParHint: Bool
     let outsideTruncation: String?
     let action: Action
     /// Seer-modus: «Feil tall? Si det til Anders.»
@@ -275,7 +279,7 @@ nonisolated extension RoundGame {
             let hcp = handicap(member)
             let received = round.hcpExtern ? 0
                 : Scoring.handicapStrokes(handicap: hcp, strokeIndex: hole.strokeIndex, holes: count)
-            let show = isEditable ? confirmed : saved != nil
+            let show = isEditable || saved != nil
             let inMatch = MatchPlay.holeMatch(for: member.uuidString, in: round) != nil
             return HoleCard.Row(
                 memberID: member,
@@ -286,7 +290,7 @@ nonisolated extension RoundGame {
                 saved: saved,
                 value: value,
                 strokesReceived: received,
-                calculation: (isEditable && confirmed && !round.hcpExtern)
+                calculation: (isEditable && !round.hcpExtern)
                     ? HoleMath.calculation(gross: value, received: received) : nil,
                 scoreName: show ? Scoring.scoreName(par: hole.par, gross: value, handicap: hcp,
                                                     strokeIndex: hole.strokeIndex, holes: count) : nil,
@@ -315,8 +319,6 @@ nonisolated extension RoundGame {
         let action: HoleCard.Action
         var viewerHint: String?
         if canEdit {
-            let confirmed = editable.filter(isConfirmed)
-            let all = confirmed.count == editable.count
             let allSaved = editable.allSatisfy { scores($0)[index] != nil }
             let changed = editable.contains { m in
                 guard let d = drafts[index, m] else { return false }
@@ -326,12 +328,15 @@ nonisolated extension RoundGame {
             if allSaved && !changed {
                 action = next.map { .next(title: "Neste hull → hull \(holeNumber($0))", hole: $0) } ?? .scorecard
             } else {
-                var text = allSaved ? "Lagre endringen · hull \(holeNumber(index))" : "Lagre hull \(holeNumber(index))"
-                if all, let next { text += " → hull \(holeNumber(next))" }
-                let missing = editable.filter { !confirmed.contains($0) }.map(name)
-                let blocker = all ? nil
-                    : "Bekreft \(HoleMath.list(missing)) først · \(confirmed.count) av \(editable.count) klare"
-                action = .save(title: text, enabled: all, blocker: blocker)
+                let text = allSaved
+                    ? "Lagre endringen · hull \(holeNumber(index))"
+                    : (next == nil ? "Lagre hull \(holeNumber(index))" : "Lagre hull \(holeNumber(index)) og gå videre")
+                // Ett trykk per hull når alle går par: urørte rader lagres som par (K1).
+                let changedFromPar = editable.filter { m in
+                    (drafts[index, m] ?? scores(m)[index]).map { $0 != hole.par } ?? false
+                }.count
+                let status = mustConfirm ? "\(changedFromPar) av \(editable.count) endret fra par" : nil
+                action = .save(title: text, enabled: true, status: status)
             }
         } else {
             action = .none
@@ -350,7 +355,6 @@ nonisolated extension RoundGame {
             strokesLabel: round.hcpExtern ? "Slag · netto" : "Slag · brutto",
             rows: rows,
             mustConfirm: mustConfirm,
-            showsParHint: mustConfirm && editable.contains { !isConfirmed($0) },
             outsideTruncation: outside,
             action: action,
             viewerHint: viewerHint

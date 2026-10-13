@@ -224,9 +224,10 @@ struct DesignScreenSamples: View {
         case .oppdater:
             UpdateRequiredView(current: 41, required: 57)
         case .feiring:
-            FeiringOverlay(celebration: Celebration(level: .eagle, eyebrow: "Hull 7 · par 4",
+            // Samme kilde som i appen: «HULL n · PAR p» fra hullet som ble lagret (K2).
+            FeiringOverlay(celebration: Celebration(level: .eagle, eyebrow: "HULL 5 · PAR 5",
                                                     text: "To under par. Ikke for å bruse med fjæra, men det var pent.",
-                                                    points: 4, place: 2, nextHole: 8)) {}
+                                                    points: 4, place: 2, nextHole: 6)) {}
         }
     }
 
@@ -254,7 +255,7 @@ struct DesignScreenSamples: View {
         isLongestDrive: false, isClosestToPin: true, header: "Båsen", strokesLabel: "Slag · brutto",
         rows: [
             .init(memberID: ids[0], name: "Thomas", isMe: true, editable: true, confirmed: false, saved: nil,
-                  value: 3, strokesReceived: 0, calculation: nil, scoreName: nil, points: nil),
+                  value: 3, strokesReceived: 0, calculation: "3 brutto − 0 = 3 netto", scoreName: .par, points: 2),
             .init(memberID: ids[1], name: "Kåre", isMe: false, editable: true, confirmed: true, saved: nil,
                   value: 4, strokesReceived: 1, calculation: "4 brutto − 1 = 3 netto", scoreName: .par, points: 2),
             .init(memberID: ids[2], name: "Ola", isMe: false, editable: true, confirmed: true, saved: nil,
@@ -262,8 +263,8 @@ struct DesignScreenSamples: View {
             .init(memberID: ids[3], name: "Per", isMe: false, editable: true, confirmed: true, saved: nil,
                   value: 5, strokesReceived: 1, calculation: "5 brutto − 1 = 4 netto", scoreName: .bogey, points: 1),
         ],
-        mustConfirm: true, showsParHint: true, outsideTruncation: nil,
-        action: .save(title: "Lagre hull 7 · 3 av 4 ført", enabled: false, blocker: "Bekreft Thomas først."),
+        mustConfirm: true, outsideTruncation: nil,
+        action: .save(title: "Lagre hull 7 og gå videre", enabled: true, status: "3 av 4 endret fra par"),
         viewerHint: nil
     )
 }
