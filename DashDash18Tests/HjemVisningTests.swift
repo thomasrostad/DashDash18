@@ -22,14 +22,6 @@ struct HjemVisningTests {
         #expect(!HjemDisplay.showsEvening(filter: .loose))
     }
 
-    @Test func degUnderTopp3() {
-        let me = HomeLive.Row(id: H.id(9), place: "5.", name: "Thomas", value: "18", isMe: true)
-        let rows = HjemDisplay.liveRows(live(loose: false, me: me))
-        #expect(rows.map(\.name) == ["Bjørn", "Thomas"])
-        #expect(HjemDisplay.liveName(me) == "Thomas (deg)")
-        #expect(HjemDisplay.liveName(rows[0]) == "Bjørn")
-    }
-
     @Test func tabellenGårTilTavlaForHovedturneringenIKlubben() {
         #expect(HjemDisplay.tableLink(competitionID: H.jakke.id, competition: H.jakke, currentClub: H.clubA) == .tavla)
         // Hovedturneringen i en annen klubb, en liga og en ukjent turnering har egen side.
@@ -42,7 +34,7 @@ struct HjemVisningTests {
     }
 
     @Test func tomTilstandSierHvaSomKommer() {
-        #expect(HjemDisplay.emptyTitle == "Ingenting her ennå.")
+        #expect(HjemDisplay.emptyTitle == "Ingenting her ennå")
         #expect(HjemDisplay.emptyLine(.all).contains("eagle"))
         #expect(HjemDisplay.emptyLine(.loose).contains("Løse runder"))
         #expect(HjemDisplay.emptyLine(.competition(H.jakke.id)) != HjemDisplay.emptyLine(.all))

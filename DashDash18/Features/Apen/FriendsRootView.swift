@@ -8,6 +8,18 @@ struct FriendsRootView: View {
     let client: SupabaseClient?
     let user: AuthUser
     @State private var selectedTab: AppTab = .spill
+    /// Rundene som pågår, for baren over fanelinja (utbedringsplanen V1).
+    @State private var liveRounds: LiveRoundsModel
+    /// Runden baren åpnet, i Spill-fanen.
+    @State private var openRound: UUID?
+    @Environment(\.scenePhase) private var scenePhase
+
+    init(config: AppConfig, client: SupabaseClient?, user: AuthUser) {
+        self.config = config
+        self.client = client
+        self.user = user
+        _liveRounds = State(initialValue: LiveRoundsModel(client: client, userID: user.id))
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -25,14 +37,41 @@ struct FriendsRootView: View {
                                     }
                                 }
                             }
+                            .navigationDestination(item: roundBinding(for: tab)) { roundID in
+                                if let client {
+                                    LooseRoundScreen(context: LooseRoundContext(client: client, userID: user.id,
+                                                                                roundID: roundID))
+                                        .toolbar(.hidden, for: .tabBar)
+                                }
+                            }
                     }
                     .tint(Color.ddForestInk)
                     .ddScreenBackground()
                 }
             }
         }
+        .hjemLiveAccessory(liveRounds.live) { live in
+            selectedTab = .spill
+            openRound = live.roundID
+        }
         .tint(Color.ddForestInk)
         .environment(\.selectTab) { selectedTab = $0 }
+        // Hentes jevnlig mens appen står framme, så en runde startet i Spill dukker opp i baren.
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            while !Task.isCancelled {
+                await liveRounds.load()
+                try? await Task.sleep(for: .seconds(60))
+            }
+        }
+        .onChange(of: openRound) { _, round in
+            if round == nil { Task { await liveRounds.load() } }
+        }
+    }
+
+    /// Runden fra baren åpnes i Spill-fanen.
+    private func roundBinding(for tab: AppTab) -> Binding<UUID?> {
+        tab == .spill ? $openRound : .constant(nil)
     }
 
     @ViewBuilder

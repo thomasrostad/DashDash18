@@ -46,7 +46,7 @@ struct DesignScreenSamples: View {
         // Låst konkurranse: betalingsknappen for eieren, teksten for deltakerne (fase 17).
         case konklast, konklastdeltaker
         // Hjem-fanen med feeden (fase 19).
-        case hjem, hjemmidt, hjembunn, hjemlos, hjemtom, hjemarrangor, hjembjelle
+        case hjem, hjemmidt, hjembunn, hjemlos, hjemtom, hjemarrangor, hjembjelle, hjemflere
         // Baner og tees fra slope.no (fase 20).
         case slopesok, slopebane, teevalg, losnytee, hurtigstarttee
         // Hentede baner med hull valgt direkte (fase 20b).
@@ -157,6 +157,7 @@ struct DesignScreenSamples: View {
         case .hjemtom: HjemSampleScreen(variant: .empty)
         case .hjemarrangor: HjemSampleScreen(variant: .organizer)
         case .hjembjelle: HjemSampleScreen(variant: .bell)
+        case .hjemflere: HjemSampleScreen(variant: .several)
         case .hjeminviter: HjemSampleScreen(variant: .invite)
         case .velkommen, .blimedlenke, .blimedbekreft, .logininvitasjon:
             ClubInviteSampleScreen(screen: screen)

@@ -144,21 +144,4 @@ nonisolated enum TableChangeText {
         }
         return headline(table: table, competitionName: competitionName, roundNo: roundNo, name: name)
     }
-
-    /// Kort til oppsummeringen på Hjem, uten konkurransen sist: «du klatret til 3. plass i Jakkeracet»
-    /// med liten forbokstav. Nil når du ikke flyttet deg.
-    static func summaryPhrase(table: [ActivityTableSpot], competitionName: String, me: Set<UUID>,
-                              name: (UUID) -> String) -> String? {
-        guard let mine = table.first(where: { me.contains($0.member) }), let move = mine.move, move != 0,
-              let from = mine.from else { return nil }
-        if move > 0 {
-            return mine.place == 1 ? "du tok ledelsen i \(competitionName)"
-                : "du klatret til \(mine.place). plass i \(competitionName)"
-        }
-        let passers = table.filter { s in s.place < mine.place && (s.from.map { $0 > from } ?? false) }
-        if !passers.isEmpty {
-            return NorwegianList.join(passers.map { name($0.member) }) + " gikk forbi deg i \(competitionName)"
-        }
-        return "du falt til \(mine.place). plass i \(competitionName)"
-    }
 }

@@ -13,11 +13,10 @@ struct HjemOrganizerStep {
 /// skjermprøvene lar dem stå tomme.
 struct HjemActions {
     var select: (HomeFeedFilter) -> Void = { _ in }
-    /// «Fortsett føringen» på et kort i «Pågår nå».
+    /// Runden som pågår (baren i feeden på iOS 26.0; ellers står den over fanelinja).
     var openRound: (HomeLive) -> Void = { _ in }
     var openEvening: () -> Void = {}
     var answer: (SignupStatus) -> Void = { _ in }
-    var undoAnswer: () -> Void = {}
     var toggle: (String, HomeReactions) -> Void = { _, _ in }
     var hasReacted: (String, HomeReactions) -> Bool = { e, t in t.chips.contains { $0.emoji == e && $0.isMine } }
     /// «Annen emoji …» (sql/050).
@@ -36,21 +35,22 @@ struct HjemActions {
     var organizer: HjemOrganizerStep?
     /// «Inviter spillere» for arrangøren mens troppen er liten. nil: ikke noe kort.
     var invite: HjemInvite?
+    /// «Start en runde» i den tomme feeden (Spill-fanen). nil: ingen Spill-fane.
+    var startRound: (() -> Void)?
 }
 
-/// Hjem fra topp til bunn (retning 1a med 1b-oppsummeringen): filterpillene, «Siden sist» når noe
-/// har skjedd, «Pågår nå», «Neste kveld» og feeden i I dag · I går · Tidligere.
+/// Hjem fra topp til bunn (utbedringsplanen V1 og 4.1): filterpillene, «Neste kveld» som hero og
+/// feeden i I dag · I går · Tidligere. Runden som pågår står i baren over fanelinja.
 struct HjemFeedView: View {
     let feed: HomeFeed
     var state: HomeFeedModel.LoadState = .loaded
-    /// «Svaret ditt: Kommer» mens svaret kan angres.
-    var pendingAnswer: String?
     var answerError: String?
     var actions = HjemActions()
     var onRetry: () -> Void = {}
     /// Skjermprøven av nedre del (`hjembunn`) starter nederst.
     var scrollAnchor: UnitPoint?
     var isLoadingMore = false
+    @Environment(\.liveBarInFeed) private var liveBarInFeed
 
     var body: some View {
         ScrollView {
@@ -77,22 +77,16 @@ struct HjemFeedView: View {
         if let invite = actions.invite, HjemDisplay.showsEvening(filter: feed.filter) {
             HjemInviteCard(invite: invite)
         }
-        if let summary = feed.summary {
-            HjemSummaryCard(summary: summary)
-        }
+        // iOS 26.0 har ikke tilbehør som kan skrus av: der står baren her (`HjemLiveAccessory`).
         let live = feed.live.filter { HjemDisplay.showsLive($0, filter: feed.filter) }
-        if !live.isEmpty {
-            DDSectionLabel("Pågår nå")
-                .padding(.top, 6)
-            // Flere runder kan gå samtidig (sql/034): ett kort per runde.
-            ForEach(live, id: \.roundID) { round in
-                HjemLiveCard(live: round) { actions.openRound(round) }
-            }
+        if liveBarInFeed, !live.isEmpty {
+            HjemLiveRoundBar(live: live, open: actions.openRound)
+                .padding(.vertical, 4)
+                .glassEffect(.regular, in: .capsule)
         }
         if let evening = feed.evening, HjemDisplay.showsEvening(filter: feed.filter) {
-            HjemEveningCard(evening: evening, pendingText: pendingAnswer, error: answerError,
-                            onOpen: actions.openEvening, onAnswer: actions.answer, onUndo: actions.undoAnswer,
-                            organizer: actions.organizer)
+            HjemEveningCard(evening: evening, error: answerError, onOpen: actions.openEvening,
+                            onAnswer: actions.answer, organizer: actions.organizer)
         }
     }
 
@@ -104,23 +98,18 @@ struct HjemFeedView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 40)
         case .failed(let message) where feed.isEmpty:
-            VStack(spacing: 12) {
+            ContentUnavailableView {
                 Label("Fikk ikke hentet det som har skjedd", systemImage: "wifi.exclamationmark")
-                    .font(.ddBodyEmphasis)
-                    .foregroundStyle(Color.ddInk)
+            } description: {
                 Text(message)
-                    .font(.ddCallout)
-                    .foregroundStyle(Color.ddInkSecondary)
-                    .multilineTextAlignment(.center)
+            } actions: {
                 Button("Prøv igjen", action: onRetry)
                     .buttonStyle(.dd(.secondary, compact: true))
             }
-            .frame(maxWidth: .infinity)
-            .ddCard(.empty)
             .padding(.top, DDSpacing.l)
         default:
             if feed.isEmpty {
-                HjemEmptyCard(filter: feed.filter)
+                HjemEmptyView(filter: feed.filter, startRound: actions.startRound)
                     .padding(.top, DDSpacing.l)
             }
             ForEach(feed.sections) { section in
@@ -201,24 +190,21 @@ struct HjemLoadMore: View {
     }
 }
 
-/// «Ingenting her ennå.» med en vennlig linje om hva som kommer.
-struct HjemEmptyCard: View {
+/// Tom feed (utbedringsplanen V13): systemets tomtilstand med én handling, «Start en runde».
+struct HjemEmptyView: View {
     let filter: HomeFeedFilter
+    var startRound: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 6) {
-            Text(HjemDisplay.emptyTitle)
-                .font(.ddBodyEmphasis)
-                .foregroundStyle(Color.ddInk)
+        ContentUnavailableView {
+            Label(HjemDisplay.emptyTitle, systemImage: HjemDisplay.emptySymbol(filter))
+        } description: {
             Text(HjemDisplay.emptyLine(filter))
-                .font(.ddCallout)
-                .foregroundStyle(Color.ddInkSecondary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
+        } actions: {
+            if let startRound {
+                Button("Start en runde", action: startRound)
+                    .buttonStyle(.dd(.primary, compact: true))
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .ddCard(.empty)
-        .accessibilityElement(children: .combine)
     }
 }
