@@ -275,6 +275,8 @@ nonisolated enum DDContrastPairs {
         Pair(name: "Score bogey", foreground: .scoreBogeyInk, background: .scoreBogeyBackground, base: .card),
         Pair(name: "Score dobbel", foreground: .scoreDoubleInk, background: .scoreDoubleBackground, base: .card),
         Pair(name: "Score null", foreground: .scoreZeroInk, background: .scoreZeroBackground, base: .card),
+        // Hjem (V2): valgt svar på «Neste kveld» er krem med skogtekst på hero-kortet.
+        Pair(name: "Valgt svar på hero", foreground: .heroCard, background: .onDark, base: nil),
     ]
 
     /// Ikoner, kanter og kontroller: minst 3:1 (WCAG 1.4.11).
