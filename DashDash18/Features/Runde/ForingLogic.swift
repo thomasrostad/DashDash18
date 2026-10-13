@@ -268,6 +268,15 @@ nonisolated struct HoleCard: Equatable, Sendable {
     }
 
     let holeIndex: Int
+    /// Banens nummer på hullet (hero-kortet).
+    let number: Int
+    let par: Int
+    /// «155», eller nil uten lengde.
+    let meters: String?
+    /// Indeksen på scorekortet, eller nil med eksternt handicap.
+    let strokeIndex: Int?
+    /// Hull i runden, så ‹ › vet hvor langt de kan gå.
+    let holeCount: Int
     let title: String
     let detail: String
     let isLongestDrive: Bool
@@ -373,6 +382,11 @@ nonisolated extension RoundGame {
 
         return HoleCard(
             holeIndex: index,
+            number: holeNumber(index),
+            par: hole.par,
+            meters: hole.meters.map(HoleMath.meters),
+            strokeIndex: round.hcpExtern ? nil : hole.cardIndex,
+            holeCount: count,
             title: title,
             detail: detail.joined(separator: " · "),
             isLongestDrive: index == longestDriveHole,
@@ -416,6 +430,78 @@ nonisolated extension RoundGame {
     }
 }
 
+nonisolated extension HoleCard {
+    /// «Par 3 · 155 m» under hullnummeret.
+    var parLine: String {
+        meters.map { "Par \(par) · \($0) m" } ?? "Par \(par)"
+    }
+
+    /// «Indeks 17», eller nil med eksternt handicap.
+    var indexLine: String? { strokeIndex.map { "Indeks \($0)" } }
+
+    var hasPrevious: Bool { holeIndex > 0 }
+    var hasNext: Bool { holeIndex < holeCount - 1 }
+
+    /// «Lagre hull 7 og gå videre» får en pil (planen 4.2).
+    var actionAdvances: Bool {
+        if case .save(let title, _, _) = action { return title.hasSuffix("og gå videre") }
+        return false
+    }
+}
+
+// MARK: - Føringen som egen skjerm (planen 4.2)
+
+/// Tittelen i verktøylinja: «Losby · runde 4» og «Du fører for bås 2» under.
+nonisolated struct ScoringTitle: Equatable, Sendable {
+    let title: String
+    let subtitle: String?
+}
+
+/// Segmentene i føringen: «Føring | Stilling | Spill i runden».
+nonisolated enum RundeSegment: Hashable, Sendable {
+    case scoring, standing, extras
+
+    /// Segmentet skjermen åpner på: føringen når det er noe å føre, ellers stillingen.
+    static func initial(isLocked: Bool, hasCard: Bool) -> RundeSegment {
+        (isLocked || !hasCard) ? .standing : .scoring
+    }
+
+    /// «Spill · 2». Kort nok til tre like brede segmenter på 375 pt.
+    static func extrasTitle(count: Int) -> String {
+        count > 0 ? "Spill · \(count)" : "Spill"
+    }
+}
+
+nonisolated extension RoundGame {
+    /// Banen (uten «Golfklubb») og runden i klubben. En løs runde har ikke rundenummer.
+    func scoringTitle(viewer: Viewer) -> ScoringTitle {
+        let course = snapshot.course.map { Self.shortCourseName($0.name) } ?? "Runden"
+        let title = snapshot.loose == nil ? "\(course) · runde \(snapshot.round.roundNo)" : course
+        return ScoringTitle(title: title, subtitle: scoringSubtitle(viewer: viewer))
+    }
+
+    /// «Du fører for bås 2», «Bås 2 · Kåre fører», «Du fører ditt eget kort» eller «Runden er ferdig».
+    private func scoringSubtitle(viewer: Viewer) -> String? {
+        if status == .locked { return "Runden er ferdig" }
+        let me = viewer.memberID
+        guard isPlaying(me) else { return viewer.isOrganizer ? "Du ser på som arrangør" : "Du ser på" }
+        if hasBays, let bay = bay(of: me) {
+            if bay.marker == me { return "Du fører for \(groupTerm.numberedLower(bay.number))" }
+            if let marker = bay.marker { return "\(groupTerm.numbered(bay.number)) · \(name(marker)) fører" }
+        }
+        return cardRowEditable(me, for: viewer) ? "Du fører ditt eget kort" : nil
+    }
+
+    /// «Losby Golfklubb» → «Losby». Andre navn står som de er.
+    static func shortCourseName(_ name: String) -> String {
+        for suffix in [" Golfklubb", " golfklubb", " GK", " Golfbane", " golfbane"] where name.hasSuffix(suffix) {
+            let short = String(name.dropLast(suffix.count)).trimmingCharacters(in: .whitespaces)
+            return short.isEmpty ? name : short
+        }
+        return name
+    }
+}
+
 /// Tekst og tall til hullkortet.
 nonisolated enum HoleMath {
     /// Regnestykket: «5 brutto − 1 = 4 netto».
@@ -450,12 +536,29 @@ nonisolated struct HoleDot: Equatable, Identifiable, Sendable {
     let isBayHole: Bool
     var id: Int { index }
 
+    /// Hullbrikken (V15): nåværende er fylt, førte har chip-bakgrunn, kommende har strek.
+    enum ChipStyle: Equatable, Sendable { case current, saved, partial, upcoming }
+
+    var chipStyle: ChipStyle {
+        if isCurrent { return .current }
+        switch state {
+        case .done: return .saved
+        case .partial: return .partial
+        case .upcoming: return .upcoming
+        }
+    }
+
+    /// Longest drive eller nærmest pinnen: liten gull-prikk på brikken.
+    var hasSidePrize: Bool { isLongestDrive || isClosestToPin }
+
+    /// «Hull 7, nåværende, nærmest pinnen».
     var accessibilityLabel: String {
         var parts = ["Hull \(number)"]
+        if isCurrent { parts.append("nåværende") }
         switch state {
         case .done: parts.append("lagret")
         case .partial: parts.append("delvis lagret")
-        case .upcoming: parts.append("ikke lagret")
+        case .upcoming: if !isCurrent { parts.append("ikke lagret") }
         }
         if isPending { parts.append("ikke sendt ennå") }
         if isLongestDrive { parts.append("longest drive") }

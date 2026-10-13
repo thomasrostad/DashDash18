@@ -113,6 +113,71 @@ struct DDHoleTick: View {
     }
 }
 
+/// Hullbrikke på 44 × 44 pt i hullvelgeren (utbedringsplanen V15). Nåværende er fylt som valgt,
+/// førte har chip-bakgrunn, kommende har strek, og hull i køen har rust stiplet kant.
+/// Gull-prikk: sidepremie. Strek under: båsens hull.
+struct DDHoleChip: View {
+    enum Style: Equatable { case current, saved, partial, upcoming }
+
+    let number: Int
+    let style: Style
+    var isPending = false
+    var hasSidePrize = false
+    var isBayHole = false
+    @ScaledMetric(relativeTo: .body) private var side: CGFloat = 44
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+        Text("\(number)")
+            .font(.dd(.sans, size: 17, weight: style == .current ? .semibold : .medium, relativeTo: .body))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .foregroundStyle(foreground)
+            .frame(width: max(44, side), height: max(44, side))
+            .background {
+                switch style {
+                case .current: shape.fill(Color.ddSelected)
+                case .saved: shape.fill(Color.ddChipFill)
+                case .partial:
+                    shape.fill(Color.ddChipFill)
+                    shape.strokeBorder(Color.ddForestInk, lineWidth: 1.5)
+                case .upcoming: shape.strokeBorder(Color.ddInkSecondary.opacity(0.6), lineWidth: 1)
+                }
+            }
+            .overlay {
+                if isPending {
+                    shape.strokeBorder(Color.ddRust, style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if hasSidePrize {
+                    Circle()
+                        .fill(Color.ddGold)
+                        .frame(width: 8, height: 8)
+                        .padding(5)
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if isBayHole {
+                    Capsule()
+                        .fill(Color.ddForestInk)
+                        .frame(width: 18, height: 3)
+                        .offset(y: 7)
+                }
+            }
+            .contentShape(shape)
+    }
+
+    private var foreground: Color {
+        switch style {
+        case .current: .ddSelectedInk
+        case .saved, .partial: .ddInk
+        case .upcoming: .ddInkSecondary
+        }
+    }
+}
+
 /// Merket «LONGEST DRIVE» / «NÆRMEST PINNEN» øverst på hullkortet (`.gg-ldtag`).
 struct DDSidePrizeTag: View {
     enum Kind { case longestDrive, closestToPin }
@@ -123,7 +188,7 @@ struct DDSidePrizeTag: View {
         case .longestDrive:
             DDPill("Longest drive", tone: .gold, systemImage: "ruler")
         case .closestToPin:
-            DDPill("Nærmest pinnen", tone: .earthDeep, systemImage: "scope")
+            DDPill("Nærmest pinnen", tone: .gold, systemImage: "scope")
         }
     }
 }
