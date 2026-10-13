@@ -42,7 +42,7 @@ Designsystemet ligger i `DashDash18/DesignSystem/`. Farger er `DDToken` i `DDPal
 - **K5:** fanelinja med `Tab`-API og én `NavigationStack` per fane fantes allerede. Den manglet bare i skjermprøvene.
 - **K6:** køen for føring uten nett fantes allerede (SwiftData, overlever omstart, nyeste vinner). Statuslinja er lagt til. Konfliktarket for to markører er ikke laget: serveren lagrer bare siste verdi (`updated_by`, `updated_at`), så appen ser ikke den andre markørens tall. Det krever en endring i skjemaet, og den må godkjennes først.
 
-### Arrangør (agent C, branch `ui/arrangor`)
+### Arrangør (V12, 4.4, P3, V13, V8, V6)
 - **V12 og 4.4** er gjort i `AdminHubView` med nye `TonightLive.swift` (logikk), `TonightLiveModel.swift` (henting) og `TonightViews.swift`. Når kvelden er i dag, heter siden «I kveld», med dato, tid og sted som undertittel. Øverst står stegstripene, så rundekortet, påmeldingen, sidepremiene og «Før Ferdig». Kommende og tidligere kvelder står under. «Inviter spillere» er en egen knapp i verktøylinja. ⋯-menyen har «Ny kveld», «Lag serie» og «Ny turnering», og under dem oppsettet: Turneringen, Troppen, Banene, Klubben, Regler og Roller, hver bare med rettighet. «Kom i gang» er uendret.
   - Synkstatus regnes fra `hole_scores.updated_at`, ellers `recorded_at`, for den siste scoren i båsen. Kommer det ikke noe nytt på 15 minutter (`TonightLive.staleMinutes`), står linja i rust. Uten scorer regnes tiden fra starttiden. Uten noe tidspunkt står det ingen linje. Scorene hentes hvert 30. sekund mens siden vises; ingen realtime-kanal.
   - Starttid og funksjonær kommer fra startlista (sql/032) når den finnes. Ellers brukes rundens tee-tid, og ingen funksjonær vises. «Pulje 2» fra skissen vises ikke: puljen hører til runden, ikke båsen.
@@ -66,7 +66,7 @@ Designsystemet ligger i `DashDash18/DesignSystem/`. Farger er `DDToken` i `DDPal
 - **V13:** den tomme feeden er `ContentUnavailableView` med «Start en runde» (Spill-fanen). Feiltilstanden bruker også `ContentUnavailableView` med «Prøv igjen». Varsler hadde allerede lasting, feil og tom tilstand. Avvik: «Har du en kode?» er ikke med, fordi Hjem bare finnes med klubb.
 - Skjermprøve: `hjemflere` (to runder samtidig). Alle Hjem-prøvene står nå i fanelinja med baren over.
 
-### Tavla og statistikk (agent B, `ui/tavla`)
+### Tavla og statistikk (V4, V5, 4.3, P3, P5, V10, V6)
 - **V4** er gjort. Tabellen har kolonnene plass (34 pt), spiller, bevegelse og poeng (28 pt, fast kolonne). Delt plass vises som «1=». Bevegelsen regnes med samme regelmotor på rundene før siste kveld (to runder samme dato er én kveld). Den vises fra andre kveld og bare på Tavla, fordi det koster en ekstra utregning av sesongen (`comparesPrevious`). Konkurransene under `CompetitionDetailView` og `TableChangeLogger` regner den ikke. Hero-kortet vises når de øverste står likt på poeng. Teksten kommer fra regelsettet: playoff, skilletegn («skiller hulldifferanse, så stablefordsummen») eller delt seier. Golfgutu skiller på hulldifferanse, så der får de to ulik plass, men kortet vises likevel. Fremdriften er «Kveld 5 av 7 spilt · Neste: onsdag 21. oktober», med neste kveld fra `events`. Segmentet «Tabell | Alle runder | Statistikk» erstatter knappen «Alle runder». Statistikk-segmentet viser turneringens tall (beste runde, flest birdies, Longest drive) og lenker til din egen `StatsView`. Avvik: konkurransevalget ble en nedtrekkspille rett under tittelen, ikke `toolbarTitleMenu`. Den viser ingen pil ved stor tittel, så valget ble usynlig.
 - **V5** er gjort uten endringer i prosjektfilen. `PushAppDelegate` (appens `UIApplicationDelegateAdaptor`) gir rollen `windowExternalDisplayNonInteractive` en egen scene (`TavlaExternalSceneDelegate`) med TV-tavla. Den viser tabellen Tavla sist viste, henter den på nytt hvert 30. sekund og holder telefonen våken mens TV-en er koblet til. TV-visningen har fått «Live»-merke (lime), sterkere kontrast og «1=». Knappen «TV» (AirPlay-ikon) gir de samme valgene som før. Den eksterne scenen er ikke prøvd på en ekte TV. Det kan bare testes i Simulator-menyen (I/O → External Displays) eller med AirPlay.
 - **P3** er gjort. «Slik telles det» er et ark fra ⓘ i verktøylinja.
@@ -75,7 +75,7 @@ Designsystemet ligger i `DashDash18/DesignSystem/`. Farger er `DDToken` i `DDPal
 - **V6** for disse skjermene er gjort: verdier og status ved seksjonsetikettene er sans 13 (`.ddStatus`). Mono brukes bare i etiketter og kolonneoverskrifter.
 - Nye skjermprøver: `tavlastatistikk` og `stattrend`.
 
-### Runden, spill og regningen (agent D, `ui/runde`)
+### Runden, spill og regningen (4.2, V15, V7, V8, V14, P6, V6)
 - **4.2 Føringen** er gjort i `RundeView`. Verktøylinja har «Lukk føringen» (pil ned), tittelen («Losby · runde 4», eller bare banen i en løs runde) og en undertittel som «Du fører for bås 2». ⋯-menyen har scorekortet ditt, reglene i runden (`RulesetSummarySection` i et ark), del og hent på nytt. Bytte markør og avbryt finnes ikke som handlinger i appen, så de er ikke med. Fanelinja skjules mens føringen står åpen, og systemets tilbakeknapp er byttet med pil ned. Segmentene er «Føring | Stilling | Spill · N». «Spill i runden · N» fikk ikke plass i tre like segmenter på 375 pt, så teksten er forkortet. N teller matcher, konkurranser og spill på runden. Stilling viser «Bayen nå». Når runden avgjøres hull for hull, vises matchene der. Inviter, Del regningen, Avslutt og «Følg medspillerne» ligger nederst under Stilling. Hero-kortet viser hullnummeret i 60 pt, par og meter, indeksen, en gull-pille for nærmest pinnen eller longest drive, og ‹ › på 44 pt. Lagringen er flyttet fra kortet til bunnlinja i glass, med synkstatus og «Lagre hull 7 og gå videre →». Det som sendes, er uendret. Spillene hentes nå i `RundeView`, så segmentet vet hvor mange de er. Wolf-valget står i «Spill» med knapper på 48 pt. Hullkort-prøven er nå den ekte `RundeView` med skissens data (`SpillSamples.foeringModel`).
 - **V15** er gjort. Hullbrikkene (`DDHoleChip`) er 44 × 44 pt i en rullbar rad som ruller til hullet du står på. `DDHoleTick` er beholdt fordi `DesignCatalogView` bruker den. Hull med delvis føring har chip-bakgrunn og en skog-kant. Båsens hull har en strek under brikken.
 - **V7** er gjort i føringen. Radene stables ved tilgjengelighetsstørrelser. Stepperen er ett element med label «Kåre, 4 slag», value «2 poeng» og adjustable action, og dobbelttrykk bekrefter tallet. Bunnlinja, segmentene og hero-kortet vokser bare til xxxL, og brikkene stopper på 64 pt, ellers tok de halve skjermen i AX3.
@@ -83,3 +83,27 @@ Designsystemet ligger i `DashDash18/DesignSystem/`. Farger er `DDToken` i `DDPal
 - **V14** er gjort, med ett avvik: knappen heter fortsatt «Åpne Vipps». Den åpner Vipps-appen, men sender ingen forespørsel, fordi private betalingsforespørsler krever bedriftsavtale. Kategori-chipsene brukte allerede `DDChoiceButtonStyle`. «Lagre og følg opp» er gjort sekundær, så gult bare står på hovedknappen.
 - **P6:** «(deg)» i «Bayen nå», i sidepremien og i velgeren er byttet med `DDYouBadge`. I systemmenyen, der et merke ikke kan vises, er det et person-ikon. Kortet med bare deg heter «Ditt kort», ikke «DEG». I skjermbilde 15 fant jeg ikke «Thomas (deg)» i dagens kode.
 - **V6:** spillpoengene er flyttet fra mono til sans, og statuspillen på spillkortene står under teksten så den ikke kuttes. Mono brukes fortsatt i invitasjonskodene og i seksjonsetikettene.
+
+### Resten (V9, V13, 0.3, 6, 7)
+- **V9:** cup-treet viser én runde om gangen. Velgeren står over treet, og treet åpner på runden med din neste kamp.
+- **V13:** `DDCardStyle.empty` har ikke lenger stiplet ramme; det gjelder 16 tomtilstander. Turneringer har tilstander for lasting og feil.
+- **V3:**
+  - «Har du en kode?» brukes overalt.
+  - Startlista sier «bås» eller «flight», aldri begge.
+  - «Longest drive» beholdes i stedet for planens «Lengste drive», fordi PWA-en bruker det og CLAUDE.md sier at terminologien følger PWA-en. Statistikken er rettet til «Longest drive».
+  - «E-postkode» betyr innlogging med kode og beholdes.
+  - «Tirsdagsligaen» og «Torsdagsligaen» finnes bare i skjermprøvene.
+  - `Localizable.xcstrings` er ikke laget. Tekstene ligger inline og trekkes ut av Xcode (`SWIFT_EMIT_LOC_STRINGS`); en katalog bør lages i Xcode.
+- **0.3:**
+  - `RenderMatrixTests` dekker lys og mørk, L, xxxL og AX3, og 375, 402 og 440 pt.
+  - Uten et bibliotek for snapshot-tester (nye avhengigheter krever godkjenning) sammenligner den ikke bilder.
+  - Den visuelle kontrollen gjøres med skjermprøvene og `xcrun simctl`.
+- **6.1:** Live Activity fantes allerede. Widgetfargene følger de nye tokenene.
+- **6.3:** konfliktløsning mellom markører krever skjemaendring (se K6). Ikke gjort.
+- **7.1–7.3:** `UIDesignRequiresCompatibility` finnes ikke. Ingen egne materialer, og ingen ugjennomsiktige flater bak systemlinjene.
+- **7.7:** iOS 27 SDK er ikke installert (Xcode 26.6, iOS 26.5).
+- **Seksjonsetiketter** (`ddEyebrow`) vokser til xxxL, men ikke videre, så de ikke tar over skjermen i AX3.
+
+### Kjente ting
+- `SignupUndoTimerTests/nyttSvarOgAngreStopperVentingen` bruker tidtakere på 30 ms og kan feile når maskinen er tungt belastet. Den består når den kjøres alene, og er ikke endret her.
+- TV på ekstern skjerm (V5) er ikke prøvd med en ekte skjerm. Prøv med Simulator → I/O → External Displays, eller AirPlay mens Tavla er åpen.
