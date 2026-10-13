@@ -30,6 +30,7 @@ struct RundeAdminSample: View {
 private struct RundeAdminContent: View {
     @State private var model: RundeAdminModel
     @State private var actions: RoundAdminActions
+    @Environment(\.dismiss) private var dismiss
 
     init(model: RundeAdminModel) {
         _model = State(initialValue: model)
@@ -50,6 +51,7 @@ private struct RundeAdminContent: View {
         switch model.state {
         case .loading:
             ProgressView("Henter rundene …")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .failed(let text):
             ContentUnavailableView {
                 Label("Fikk ikke hentet rundene", systemImage: "wifi.exclamationmark")
@@ -65,6 +67,10 @@ private struct RundeAdminContent: View {
                     Label("Ingen runder ennå", systemImage: "flag.2.crossed")
                 } description: {
                     Text("Rundene settes opp fra kvelden på arrangørsiden.")
+                } actions: {
+                    // V13: én handling. Kveldene står på arrangørsiden, ett steg tilbake.
+                    Button("Til kveldene") { dismiss() }
+                        .buttonStyle(.dd(.primary))
                 }
             } else {
                 list

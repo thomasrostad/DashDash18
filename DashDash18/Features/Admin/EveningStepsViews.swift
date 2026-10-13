@@ -7,64 +7,47 @@ extension EnvironmentValues {
     @Entry var dayTerm: DayTerm = .evening
 }
 
-/// Stegrekka for kvelden: Påmelding → Oppsett → Spilles → Ferdig, med ✓ for det som er gjort og
-/// steget kvelden står på markert. Øverst på arrangørsiden og på Kvelden.
+/// Stegrekka for kvelden som segmentstriper (V12): Påmelding ✓ · Oppsett ✓ · Spilles nå · Ferdig.
+/// Ferdige steg er skog med hake, steget kvelden står på er lime med «nå», resten er tynne streker.
+/// Øverst på arrangørsiden og på Kvelden.
 struct EveningStepsBar: View {
     let progress: EveningProgress
     @Environment(\.dayTerm) private var dayTerm
 
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            ForEach(Array(progress.steps.enumerated()), id: \.element.id) { index, step in
-                VStack(spacing: 6) {
-                    HStack(spacing: 0) {
-                        line(visible: index > 0, done: step.state != .upcoming)
-                        marker(step, number: index + 1)
-                        line(visible: index < progress.steps.count - 1,
-                             done: index + 1 < progress.steps.count && progress.steps[index + 1].state != .upcoming)
-                    }
-                    Text(step.stage.title)
-                        .font(.dd(.sans, size: 12, weight: step.state == .current ? .semibold : .regular,
-                                  relativeTo: .caption))
-                        .foregroundStyle(step.state == .upcoming ? Color.ddInkSecondary : Color.ddInk)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+        HStack(alignment: .top, spacing: 6) {
+            ForEach(progress.steps) { step in
+                VStack(alignment: .leading, spacing: 6) {
+                    stripe(step.state)
+                    label(step)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
     }
 
-    private func marker(_ step: EveningStepMark, number: Int) -> some View {
-        ZStack {
-            switch step.state {
-            case .done:
-                Circle().fill(Color.ddForest)
-                Image(systemName: "checkmark")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color.ddOnDark)
-            case .current:
-                Circle().fill(Color.ddLime)
-                Text("\(number)")
-                    .font(.dd(.sans, size: 12, weight: .semibold, relativeTo: .caption))
-                    .foregroundStyle(Color.ddLimeOnAccent)
-            case .upcoming:
-                Circle().strokeBorder(Color.ddHairline, lineWidth: 1.5)
-                Text("\(number)")
-                    .font(.dd(.sans, size: 12, relativeTo: .caption))
-                    .foregroundStyle(Color.ddInkSecondary)
-            }
-        }
-        .frame(width: 24, height: 24)
+    private func stripe(_ state: EveningStepMark.State) -> some View {
+        Capsule()
+            .fill(state == .done ? Color.ddForestInk : state == .current ? Color.ddLime : Color.ddHairline)
+            .frame(height: state == .upcoming ? 4 : 6)
+            .frame(height: 6, alignment: .center)
     }
 
-    private func line(visible: Bool, done: Bool) -> some View {
-        Rectangle()
-            .fill(visible ? (done ? Color.ddForest : Color.ddHairline) : Color.clear)
-            .frame(height: 2)
-            .frame(maxWidth: .infinity)
+    private func label(_ step: EveningStepMark) -> some View {
+        HStack(spacing: 3) {
+            Text(EveningStepsText.title(step))
+            if step.state == .done {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Color.ddForestInk)
+            }
+        }
+        .font(.dd(.sans, size: 13, weight: step.state == .current ? .semibold : .medium, relativeTo: .footnote))
+        .foregroundStyle(step.state == .upcoming ? Color.ddInkSecondary : Color.ddInk)
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
     }
 
     private var accessibilityText: String {
@@ -76,6 +59,13 @@ struct EveningStepsBar: View {
             }
         }
         return DayTerm.capitalized(dayTerm.the) + ": " + parts.joined(separator: ", ")
+    }
+}
+
+/// Teksten under stripa: «Spilles nå» på steget kvelden står på.
+nonisolated enum EveningStepsText {
+    static func title(_ step: EveningStepMark) -> String {
+        step.state == .current && step.stage == .playing ? "Spilles nå" : step.stage.title
     }
 }
 
