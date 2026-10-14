@@ -230,9 +230,7 @@ struct NyRundeView: View {
                 .disabled(!issues.isEmpty || model.isStarting)
             if model.isStarting { ProgressView() }
         }
-        .padding()
-        .glassEffect(.regular, in: .rect(cornerRadius: DDRadius.cardLarge))
-        .padding(.horizontal, DDSpacing.s)
+        .modifier(BottomActionBar())
     }
 
     private var startTitle: String {
@@ -289,5 +287,23 @@ struct FriendsPickerView: View {
         .navigationTitle("Venner")
         .ddNavigationChrome()
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Bunnlinje for hovedknappen i skjemaer (V8): hel bredde og tett bakgrunn med en strek over,
+/// lagt i `safeAreaInset(edge: .bottom)`. Lista slutter over linja, så knappen dekker aldri en rad
+/// halvveis, slik et flytende glasskort gjorde.
+struct BottomActionBar: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding(.horizontal, DDSpacing.gutter)
+            .padding(.top, DDSpacing.m)
+            .padding(.bottom, DDSpacing.s)
+            .frame(maxWidth: .infinity)
+            .background {
+                Color.ddBackground
+                    .overlay(alignment: .top) { Rectangle().fill(Color.ddRuleCream).frame(height: 1) }
+                    .ignoresSafeArea(edges: .bottom)
+            }
     }
 }

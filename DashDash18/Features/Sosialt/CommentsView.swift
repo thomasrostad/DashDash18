@@ -21,7 +21,7 @@ struct CommentsSheet: View {
                 .toolbar {
                     DDConfirmToolbarItem {
                         Button("Ferdig") { dismiss() }
-                            .tint(Color.ddOnDark)
+                            .tint(Color.ddForestInk)
                     }
                     ToolbarItem(placement: .primaryAction) {
                         Button {
@@ -225,9 +225,11 @@ private struct CommentRowView: View {
             DDAvatar(name: item.author, size: 30)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    Text(item.isMine ? "\(item.author) (deg)" : item.author)
+                    Text(item.author)
                         .font(.dd(.sans, size: 13, weight: .semibold, relativeTo: .caption))
                         .foregroundStyle(Color.ddForestInk)
+                    // Én form for «Deg» (planen P6): gull-pillen ved navnet.
+                    if item.isMine { DDYouBadge() }
                     Text(ActivityFeed.relativeTime(item.comment.createdAt) + (item.isEdited ? " · endret" : ""))
                         .font(.dd(.sans, size: 12, relativeTo: .caption2))
                         .foregroundStyle(Color.ddInkSecondary)

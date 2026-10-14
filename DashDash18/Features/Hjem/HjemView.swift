@@ -23,14 +23,23 @@ final class HjemRouter {
     /// Runden som er bedt om, når flere går samtidig (sql/034). nil: standardvalget.
     private(set) var requestedRoundID: UUID?
 
+    /// En løs runde fra baren over fanelinja.
+    private(set) var looseRequest = 0
+    private(set) var requestedLooseRoundID: UUID?
+
     func showRound(_ roundID: UUID? = nil) {
         requestedRoundID = roundID
         roundRequest += 1
     }
+
+    func showLooseRound(_ roundID: UUID) {
+        requestedLooseRoundID = roundID
+        looseRequest += 1
+    }
 }
 
-/// Hjem-fanen (fase 19): feeden, med «Pågår nå» og «Neste kveld» øverst. Eier modellene for runden
-/// og kvelden i klubben, så Hjem gjør alt Kveld-fanen gjorde.
+/// Hjem-fanen (fase 19): feeden, med «Neste kveld» øverst. Runden som pågår står i baren over
+/// fanelinja (`RootView`). Eier modellene for runden og kvelden i klubben, så Hjem gjør alt Kveld-fanen gjorde.
 struct HjemView: View {
     let home: HomeFeedModel?
     var router: HjemRouter?
@@ -90,7 +99,6 @@ private struct HjemClubContent: View {
                 FollowingFeedView(model: following)
             } else {
                 HjemFeedView(feed: home.feed, state: home.state,
-                             pendingAnswer: kveld.pendingAnswer.map { SignupUndo.text($0.status) },
                              answerError: kveld.answerError, actions: actions, onRetry: reload,
                              isLoadingMore: home.isLoadingMore)
             }
@@ -134,6 +142,9 @@ private struct HjemClubContent: View {
             .onChange(of: liveInput, initial: true) { _, live in home.live = live }
             .onChange(of: context.clubID, initial: true) { _, club in home.liveClubID = club }
             .onChange(of: round.hasRound) { _, has in if has { consumeRoundRequest() } }
+            .onChange(of: router?.looseRequest) { _, _ in
+                if let id = router?.requestedLooseRoundID { route = .looseRound(id) }
+            }
             .onChange(of: router?.roundRequest) { _, _ in
                 wantsRound = true
                 let requested = router?.requestedRoundID
@@ -190,6 +201,11 @@ private struct HjemClubContent: View {
         input.term = dayTerm
         input.waitlistText = kveld.waitlistText
         input.previous = kveld.previousEvent
+        let summary = kveld.summary
+        input.comingNames = (summary.yes + summary.guests).map(\.name)
+        input.waitlistCount = summary.waitlist.count
+        input.signupDeadline = kveld.settings?.signupDeadline
+        input.withdrawDeadline = kveld.settings?.withdrawDeadline
         return input
     }
 
@@ -201,7 +217,6 @@ private struct HjemClubContent: View {
             openRound: openLive,
             openEvening: { route = .evening },
             answer: { kveld.answer($0) },
-            undoAnswer: { kveld.undoAnswer() },
             toggle: { emoji, target in Task { await home.toggle(emoji, on: target) } },
             hasReacted: { home.hasReacted($0, on: $1) },
             pickEmoji: { emojiTarget = $0 },
@@ -216,7 +231,8 @@ private struct HjemClubContent: View {
             openTable: openTable,
             share: { home.share(round: $0) },
             organizer: organizerStep,
-            invite: invite
+            invite: invite,
+            startRound: AppTab.tabs().contains(.spill) ? { selectTab(.spill) } : nil
         )
     }
 
@@ -290,7 +306,7 @@ private struct HjemClubContent: View {
         }
     }
 
-    /// «Fortsett føringen» i «Pågår nå»: en løs runde åpnes for seg, en klubbrunde i Kveld-modellen.
+    /// Runden som pågår: en løs runde åpnes for seg, en klubbrunde i Kveld-modellen.
     private func openLive(_ live: HomeLive) {
         if live.isLoose {
             route = .looseRound(live.roundID)
@@ -322,8 +338,10 @@ private struct HjemClubContent: View {
         switch route {
         case .round:
             // Følges også her, så hentingen hvert 30. sekund går mens runden står framme.
+            // Føringen i fullskjerm, uten fanelinja og baren over den (planen 4.2).
             RundeView(model: round)
                 .followsRound(round)
+                .toolbar(.hidden, for: .tabBar)
         case .evening:
             KveldView(model: kveld)
         case .kvelden(let id):
@@ -334,6 +352,7 @@ private struct HjemClubContent: View {
             TradView(eventID: eventID, startsWithCamera: camera)
         case .looseRound(let id):
             LooseRoundScreen(context: LooseRoundContext(client: context.client, userID: context.user.id, roundID: id))
+                .toolbar(.hidden, for: .tabBar)
                 .onDisappear { Task { await home.load() } }
         }
     }

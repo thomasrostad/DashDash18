@@ -88,7 +88,7 @@ struct ReportSheet: View {
             .toolbar {
                 DDCancelToolbarItem {
                     Button(sent ? "Ferdig" : "Avbryt") { dismiss() }
-                        .tint(Color.ddOnDark)
+                        .tint(Color.ddForestInk)
                 }
             }
         }

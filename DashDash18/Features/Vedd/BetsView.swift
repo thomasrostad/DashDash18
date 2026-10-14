@@ -126,7 +126,7 @@ private struct NewBetMenu: View {
         } label: {
             Label("Nytt veddemål", systemImage: "plus")
         }
-        .tint(Color.ddOnDark)
+        .tint(Color.ddForestInk)
     }
 }
 

@@ -1,34 +1,56 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Hullprikkene: ferdig, delvis, kommende, nåværende, LD/KP og båsens hull.
+/// Hullvelgeren (V15): en vannrett rad med hullbrikker på 44 × 44 pt. Ruller selv til hullet
+/// du står på, og et trykk hopper til hullet.
 struct HullprikkerView: View {
     let dots: [HoleDot]
     let onSelect: (Int) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var current: Int? { dots.first(where: \.isCurrent)?.index }
 
     var body: some View {
-        // Loddrette streker som i PWA-en (`.gg-holedots`), én per hull.
-        HStack(spacing: 3) {
-            ForEach(dots) { dot in
-                Button { onSelect(dot.index) } label: {
-                    DDHoleTick(
-                        state: progress(dot),
-                        isCurrent: dot.isCurrent,
-                        marker: dot.isLongestDrive ? .longestDrive : (dot.isClosestToPin ? .closestToPin : .none),
-                        isPending: dot.isPending,
-                        isBayHole: dot.isBayHole
-                    )
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal) {
+                HStack(spacing: 6) {
+                    ForEach(dots) { dot in
+                        Button { onSelect(dot.index) } label: {
+                            DDHoleChip(number: dot.number, style: style(dot), isPending: dot.isPending,
+                                       hasSidePrize: dot.hasSidePrize, isBayHole: dot.isBayHole)
+                        }
+                        .buttonStyle(.plain)
+                        .id(dot.index)
+                        .accessibilityLabel(dot.accessibilityLabel)
+                        .accessibilityAddTraits(dot.isCurrent ? .isSelected : [])
+                    }
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(dot.accessibilityLabel)
-                .accessibilityAddTraits(dot.isCurrent ? .isSelected : [])
+                .padding(.horizontal, DDSpacing.gutter)
+                .padding(.top, 2)
+                .padding(.bottom, 10)
             }
+            .scrollIndicators(.hidden)
+            .padding(.horizontal, -DDSpacing.gutter)
+            .onAppear { scroll(proxy, animated: false) }
+            .onChange(of: current) { scroll(proxy, animated: !reduceMotion) }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Hullene")
+    }
+
+    private func scroll(_ proxy: ScrollViewProxy, animated: Bool) {
+        guard let current else { return }
+        if animated {
+            withAnimation(.smooth(duration: 0.3)) { proxy.scrollTo(current, anchor: .center) }
+        } else {
+            proxy.scrollTo(current, anchor: .center)
         }
     }
 
-    private func progress(_ dot: HoleDot) -> DDHoleTick.Progress {
-        switch dot.state {
-        case .done: .played
+    private func style(_ dot: HoleDot) -> DDHoleChip.Style {
+        switch dot.chipStyle {
+        case .current: .current
+        case .saved: .saved
         case .partial: .partial
         case .upcoming: .upcoming
         }
@@ -115,7 +137,7 @@ struct ScorekortSheet: View {
             } else if let sum {
                 Text("\(sum)")
                     .font(.ddNumberLarge)
-                    .foregroundStyle(Color.ddYellow)
+                    .foregroundStyle(Color.ddGold)
             } else if let line, let name = line.scoreName, let points = line.points {
                 DDPointsBadge(points: points, name: name)
             } else {

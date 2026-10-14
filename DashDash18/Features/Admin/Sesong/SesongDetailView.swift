@@ -45,6 +45,7 @@ struct SesongContentView<Bottom: View>: View {
     var body: some View {
         dialogs(list(season), season)
             .disabled(isBusy)
+            .rulesExplanationButton(season.rules)
     }
 
     private func list(_ season: SeasonRow) -> some View {

@@ -134,7 +134,7 @@ struct AccountDeletionSheet: View {
             .toolbar {
                 DDCancelToolbarItem {
                     Button("Avbryt") { dismiss() }
-                        .tint(Color.ddOnDark)
+                        .tint(Color.ddForestInk)
                 }
             }
             .task {

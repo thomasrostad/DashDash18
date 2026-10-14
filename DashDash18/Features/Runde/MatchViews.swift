@@ -183,9 +183,12 @@ struct BayenNaaListe: View {
                                 .foregroundStyle(Color.ddStatSecondary)
                                 .frame(width: 28, alignment: .leading)
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(row.name + (row.isMe ? " (deg)" : ""))
-                                    .font(row.isMe ? .ddBodyEmphasis : .ddBody)
-                                    .foregroundStyle(Color.ddStatText)
+                                HStack(spacing: 6) {
+                                    Text(row.name)
+                                        .font(row.isMe ? .ddBodyEmphasis : .ddBody)
+                                        .foregroundStyle(Color.ddStatText)
+                                    if row.isMe { DDYouBadge() }
+                                }
                                 Text("etter \(row.thru) hull" + (row.bay.map { " · \(term.numberedLower($0))" } ?? ""))
                                     .font(.dd(.sans, size: 12, relativeTo: .caption))
                                     .foregroundStyle(Color.ddStatSecondary)
@@ -194,7 +197,7 @@ struct BayenNaaListe: View {
                             // Ditt tall i gult, de andre hvite (golfee).
                             Text(row.value)
                                 .font(.dd(.sans, size: 20, weight: .medium, relativeTo: .title3)).monospacedDigit()
-                                .foregroundStyle(row.isMe && row.tone == .neutral ? Color.ddYellow : row.tone.statColor)
+                                .foregroundStyle(row.isMe && row.tone == .neutral ? Color.ddGold : row.tone.statColor)
                         }
                         .padding(.vertical, 8)
                         .contentShape(.rect)
@@ -261,8 +264,9 @@ struct SidepremieBoks: View {
                                 .font(.dd(.sans, size: 14, relativeTo: .subheadline)).monospacedDigit()
                                 .foregroundStyle(Color.ddInkSecondary)
                                 .frame(width: 24, alignment: .leading)
-                            Text(line.name + (line.isMe ? " (deg)" : ""))
+                            Text(line.name)
                                 .font(line.isLeader ? .ddBodyEmphasis : .ddBody)
+                            if line.isMe { DDYouBadge() }
                             Spacer()
                             Text(line.meters)
                                 .font(.ddNumber).monospacedDigit()
@@ -291,11 +295,18 @@ struct SidepremieBoks: View {
                     Menu {
                         Picker("For hvem", selection: Binding(get: { selected }, set: { member = $0 })) {
                             ForEach(box.claimants, id: \.self) { id in
-                                Text(name(id) + (id == viewer ? " (deg)" : "")).tag(id)
+                                if id == viewer {
+                                    Label(name(id), systemImage: "person.fill").tag(id)
+                                } else {
+                                    Text(name(id)).tag(id)
+                                }
                             }
                         }
                     } label: {
-                        DDDropdownPill(name(selected) + (selected == viewer ? " (deg)" : ""))
+                        HStack(spacing: 6) {
+                            DDDropdownPill(name(selected))
+                            if selected == viewer { DDYouBadge() }
+                        }
                     }
                     .accessibilityLabel("For hvem: \(name(selected))")
                 }

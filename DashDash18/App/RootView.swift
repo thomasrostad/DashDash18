@@ -25,20 +25,27 @@ struct RootView: View {
                             .navigationTitle(tab.title)
                             .ddNavigationChrome()
                             .toolbar {
+                                // Klubbvalget på Hjem når du er med i flere klubber (planen 4.1).
+                                if tab == .hjem, let club, memberships.count > 1 {
+                                    ToolbarItem(placement: .topBarLeading) {
+                                        HjemClubMenu(memberships: memberships, current: membership.clubID) {
+                                            club.select($0)
+                                        }
+                                    }
+                                }
                                 // Høyst to: miljømerket (ikke prod)
                                 // og bjella.
                                 if config.environment != .prod {
                                     ToolbarItem(placement: .topBarTrailing) {
                                         EnvironmentBadge(environment: config.environment)
-                                            .tint(Color.ddOnDark)
+                                            .tint(Color.ddForestInk)
                                     }
                                 }
                                 if let home {
                                     ToolbarItem(placement: .topBarTrailing) {
-                                        // Lys på den grønne linja. Uten egen tint arver bjella
-                                        // skoggrønn, som i lys modus gir en svak mint-kapsel.
+                                        // Skog i systemets glass (utbedringsplanen K3).
                                         HjemBell(model: home)
-                                            .tint(Color.ddOnDark)
+                                            .tint(Color.ddForestInk)
                                     }
                                 }
                             }
@@ -50,8 +57,10 @@ struct RootView: View {
                 }
             }
         }
-        // Aktiv fane i gult (golfee), mørk oker i lys modus så etiketten holder 4,5:1.
-        .tint(Color.ddYellowText)
+        // Runden som pågår over fanelinja, på alle fanene (utbedringsplanen V1).
+        .hjemLiveAccessory(home?.feed.live ?? [], open: openLive)
+        // Aktiv fane i skog: gult er bare hovedknappen (utbedringsplanen 1.1).
+        .tint(Color.ddForestInk)
         .environment(\.selectTab) { selectedTab = $0 }
         .environment(\.showRound) { roundID in
             selectedTab = .hjem
@@ -62,6 +71,16 @@ struct RootView: View {
         .task(id: context?.clubID) {
             guard let context else { return }
             dayTerm = await DayTermQueries.main(client: context.client, clubID: context.clubID)
+        }
+    }
+
+    /// Baren over fanelinja: føringen åpnes på Hjem, som før fra «Pågår nå».
+    private func openLive(_ live: HomeLive) {
+        selectedTab = .hjem
+        if live.isLoose {
+            router.showLooseRound(live.roundID)
+        } else {
+            router.showRound(live.roundID)
         }
     }
 

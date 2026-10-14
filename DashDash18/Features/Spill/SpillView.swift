@@ -24,7 +24,7 @@ struct SpillView: View {
                     Button("Ny runde", systemImage: "plus") { showsNew = true }
                         .buttonStyle(.dd(.primary, fullWidth: true))
                         .disabled(model.client == nil)
-                    Button("Bli med med kode", systemImage: "qrcode.viewfinder") { showsJoin = true }
+                    Button("Har du en kode?", systemImage: "qrcode.viewfinder") { showsJoin = true }
                         .buttonStyle(.dd(.secondary, fullWidth: true))
                         .disabled(model.client == nil)
                 }

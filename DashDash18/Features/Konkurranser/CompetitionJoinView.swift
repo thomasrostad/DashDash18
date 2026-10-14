@@ -2,7 +2,7 @@ import Observation
 import Supabase
 import SwiftUI
 
-/// «Bli med med kode» i en privat konkurranse (sql/022): koden fra lenken, QR eller skrevet inn,
+/// «Har du en kode?» i en privat konkurranse (sql/022): koden fra lenken, QR eller skrevet inn,
 /// hva konkurransen er (navn, type, eier og antall påmeldte), og «Bli med», som melder deg på.
 @Observable
 final class JoinCompetitionModel {

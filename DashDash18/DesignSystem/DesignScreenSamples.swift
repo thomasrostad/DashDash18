@@ -46,7 +46,7 @@ struct DesignScreenSamples: View {
         // Låst konkurranse: betalingsknappen for eieren, teksten for deltakerne (fase 17).
         case konklast, konklastdeltaker
         // Hjem-fanen med feeden (fase 19).
-        case hjem, hjemmidt, hjembunn, hjemlos, hjemtom, hjemarrangor, hjembjelle
+        case hjem, hjemmidt, hjembunn, hjemlos, hjemtom, hjemarrangor, hjembjelle, hjemflere
         // Baner og tees fra slope.no (fase 20).
         case slopesok, slopebane, teevalg, losnytee, hurtigstarttee
         // Hentede baner med hull valgt direkte (fase 20b).
@@ -59,6 +59,8 @@ struct DesignScreenSamples: View {
         case finn, inviterqr
         // Alle runder i turneringen (leaderboard).
         case allerunder, allerunderliga, tavlatv
+        // Tavla-segmentet «Statistikk» og trendgrafen alene (V4, V10).
+        case tavlastatistikk, stattrend
     }
     @State var screen: Screen = .hullkort
 
@@ -157,6 +159,7 @@ struct DesignScreenSamples: View {
         case .hjemtom: HjemSampleScreen(variant: .empty)
         case .hjemarrangor: HjemSampleScreen(variant: .organizer)
         case .hjembjelle: HjemSampleScreen(variant: .bell)
+        case .hjemflere: HjemSampleScreen(variant: .several)
         case .hjeminviter: HjemSampleScreen(variant: .invite)
         case .velkommen, .blimedlenke, .blimedbekreft, .logininvitasjon:
             ClubInviteSampleScreen(screen: screen)
@@ -167,27 +170,14 @@ struct DesignScreenSamples: View {
             NavigationStack { DDListSample() }
                 .tint(Color.ddForestInk)
         case .hullkort:
-            NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 14) {
-                        DDInfoStripe(tone: .earth) {
-                            Text("**Du er markør i bås 1** · Kåre, Ola, Per og deg")
-                        }
-                        HullprikkerView(dots: Self.dots) { _ in }
-                        HullkortView(card: Self.card, isPending: false, isSaving: false, error: nil,
-                                     onStep: { _, _ in }, onConfirm: { _ in }, onSave: {}, onGoTo: { _ in },
-                                     onScorecard: { _ in })
-                    }
-                    .padding(.horizontal, DDSpacing.gutter)
-                    .padding(.vertical, DDSpacing.l)
-                }
-                .navigationTitle("Runde 6")
-                .navigationBarTitleDisplayMode(.inline)
-                .ddNavigationChrome()
-            }
+            // Føringen som i skissen (4.2): Losby hull 7, par 3, nærmest pinnen, fire i båsen.
+            NavigationStack { RundeView(model: SpillSamples.foeringModel()) }
+                .tint(Color.ddForestInk)
         case .turneringvelger:
             NavigationStack { AdminHubSample(.tonight, scroll: .top, picker: TournamentCoreSamples.picker()) }
                 .tint(Color.ddForestInk)
+        case .tavlastatistikk: TavlaStatsSample()
+        case .stattrend: StatsTrendSample()
         case .tavlatv:
             TavlaTVView(preview: TavlaSamples.standings())
         case .allerunderliga:
@@ -224,9 +214,10 @@ struct DesignScreenSamples: View {
         case .oppdater:
             UpdateRequiredView(current: 41, required: 57)
         case .feiring:
-            FeiringOverlay(celebration: Celebration(level: .eagle, eyebrow: "Hull 7 · par 4",
+            // Samme kilde som i appen: «HULL n · PAR p» fra hullet som ble lagret (K2).
+            FeiringOverlay(celebration: Celebration(level: .eagle, eyebrow: "HULL 5 · PAR 5",
                                                     text: "To under par. Ikke for å bruse med fjæra, men det var pent.",
-                                                    points: 4, place: 2, nextHole: 8)) {}
+                                                    points: 4, place: 2, nextHole: 6)) {}
         }
     }
 
@@ -250,11 +241,11 @@ struct DesignScreenSamples: View {
     }
 
     static let card = HoleCard(
-        holeIndex: 6, title: "Hull 7 av 18", detail: "Par 3 · 155 m · indeks 17",
+        holeIndex: 6, number: 7, par: 3, meters: "155", strokeIndex: 17, holeCount: 18, title: "Hull 7 av 18", detail: "Par 3 · 155 m · indeks 17",
         isLongestDrive: false, isClosestToPin: true, header: "Båsen", strokesLabel: "Slag · brutto",
         rows: [
             .init(memberID: ids[0], name: "Thomas", isMe: true, editable: true, confirmed: false, saved: nil,
-                  value: 3, strokesReceived: 0, calculation: nil, scoreName: nil, points: nil),
+                  value: 3, strokesReceived: 0, calculation: "3 brutto − 0 = 3 netto", scoreName: .par, points: 2),
             .init(memberID: ids[1], name: "Kåre", isMe: false, editable: true, confirmed: true, saved: nil,
                   value: 4, strokesReceived: 1, calculation: "4 brutto − 1 = 3 netto", scoreName: .par, points: 2),
             .init(memberID: ids[2], name: "Ola", isMe: false, editable: true, confirmed: true, saved: nil,
@@ -262,8 +253,8 @@ struct DesignScreenSamples: View {
             .init(memberID: ids[3], name: "Per", isMe: false, editable: true, confirmed: true, saved: nil,
                   value: 5, strokesReceived: 1, calculation: "5 brutto − 1 = 4 netto", scoreName: .bogey, points: 1),
         ],
-        mustConfirm: true, showsParHint: true, outsideTruncation: nil,
-        action: .save(title: "Lagre hull 7 · 3 av 4 ført", enabled: false, blocker: "Bekreft Thomas først."),
+        mustConfirm: true, outsideTruncation: nil,
+        action: .save(title: "Lagre hull 7 og gå videre", enabled: true, status: "3 av 4 endret fra par"),
         viewerHint: nil
     )
 }

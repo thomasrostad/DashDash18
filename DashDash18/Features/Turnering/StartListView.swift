@@ -1,3 +1,4 @@
+import GolfgutuCore
 import Observation
 import Supabase
 import SwiftUI
@@ -149,6 +150,7 @@ struct StartListView: View {
         let roundID: UUID
         let group: StartGroupDraft
         let holeCount: Int
+        let term: GroupTerm
         var id: String { "\(roundID)-\(group.groupNo)" }
     }
 
@@ -168,7 +170,7 @@ struct StartListView: View {
             .task { if loads { await model.load() } }
             .sheet(item: $editing) { item in
                 NavigationStack {
-                    StartGroupSheet(group: item.group, holeCount: item.holeCount, scorers: model.scorers,
+                    StartGroupSheet(group: item.group, holeCount: item.holeCount, term: item.term, scorers: model.scorers,
                                     names: model.names(item.group)) { group in
                         model.update(item.roundID, group)
                         editing = nil
@@ -178,7 +180,7 @@ struct StartListView: View {
             }
             .sheet(item: Binding(get: { timing.map(TimingItem.init) }, set: { timing = $0?.id })) { item in
                 NavigationStack {
-                    TeeTimesSheet { first, interval in
+                    TeeTimesSheet(term: screenTerm) { first, interval in
                         model.fillTimes(item.id, first: first, interval: interval)
                         timing = nil
                     }
@@ -210,11 +212,16 @@ struct StartListView: View {
         case .loaded:
             if model.rounds.isEmpty {
                 ContentUnavailableView("Ingen runder å sette opp", systemImage: "list.number",
-                                       description: Text("Sett opp en runde først. Startlista bygger på båsene eller flightene i oppsettet."))
+                                       description: Text("Sett opp en runde først. Startlista bygger på fordelingen i oppsettet."))
             } else {
                 list
             }
         }
+    }
+
+    /// Ett ord per skjerm (V3): flight når rundene spilles på bane, ellers bås.
+    private var screenTerm: GroupTerm {
+        GroupTerm.for(stored: model.rounds.first?.round.venue)
     }
 
     private var list: some View {
@@ -225,12 +232,13 @@ struct StartListView: View {
                         LabeledContent("Pulje", value: "\(round.wave)")
                     }
                     if round.groups.isEmpty {
-                        Text("Ingen båser eller flighter i oppsettet. Fordel spillerne i runde-oppsettet først.")
+                        Text("Ingen \(GroupTerm.for(stored: round.round.venue).plural) i oppsettet. Fordel spillerne i runde-oppsettet først.")
                             .foregroundStyle(Color.ddInkSecondary)
                     }
                     ForEach(round.groups) { group in
                         Button {
-                            editing = EditItem(roundID: round.id, group: group, holeCount: round.round.holeCount)
+                            editing = EditItem(roundID: round.id, group: group, holeCount: round.round.holeCount,
+                                              term: GroupTerm.for(stored: round.round.venue))
                         } label: {
                             StartGroupRowView(group: group, venue: round.round.venue, names: model.names(group),
                                               scorer: group.scorerID.map { model.staffNames[$0] ?? "Funksjonær" })
@@ -247,8 +255,7 @@ struct StartListView: View {
             }
             Section {
             } footer: {
-                DDFooter("Gruppene er båsene eller flightene fra runde-oppsettet. Spillerne ser gruppa si på Kveld. "
-                         + "En funksjonær fører for gruppa si mens runden pågår.")
+                DDFooter(StartListText.footer(screenTerm))
             }
         }
         .disabled(model.isSaving)
@@ -302,6 +309,7 @@ struct StartGroupRowView: View {
 private struct StartGroupSheet: View {
     @State var group: StartGroupDraft
     let holeCount: Int
+    let term: GroupTerm
     let scorers: [(id: UUID, name: String)]
     let names: String
     let onDone: (StartGroupDraft) -> Void
@@ -309,10 +317,11 @@ private struct StartGroupSheet: View {
     @State private var time: Date
     @Environment(\.dismiss) private var dismiss
 
-    init(group: StartGroupDraft, holeCount: Int, scorers: [(id: UUID, name: String)], names: String,
+    init(group: StartGroupDraft, holeCount: Int, term: GroupTerm, scorers: [(id: UUID, name: String)], names: String,
          onDone: @escaping (StartGroupDraft) -> Void) {
         _group = State(initialValue: group)
         self.holeCount = holeCount
+        self.term = term
         self.scorers = scorers
         self.names = names
         self.onDone = onDone
@@ -323,7 +332,7 @@ private struct StartGroupSheet: View {
     var body: some View {
         DDList {
             Section {
-                TextField("Bås, simulator eller tee", text: $group.resourceLabel)
+                TextField(term == .flight ? "Tee eller startsted" : "Bås eller simulator", text: $group.resourceLabel)
                 Toggle("Starttid", isOn: $hasTime)
                 if hasTime {
                     DatePicker("Tid", selection: $time, displayedComponents: .hourAndMinute)
@@ -332,7 +341,7 @@ private struct StartGroupSheet: View {
                     ForEach(1...max(holeCount, 1), id: \.self) { Text("Hull \($0)").tag($0) }
                 }
             } header: {
-                DDHeader("Gruppe \(group.groupNo)")
+                DDHeader(term.numbered(group.groupNo))
             } footer: {
                 DDFooter(names)
             }
@@ -344,10 +353,10 @@ private struct StartGroupSheet: View {
             } footer: {
                 DDFooter(scorers.isEmpty
                          ? "Legg til funksjonærer under «Stab» for turneringen."
-                         : "Funksjonæren fører for spillerne i gruppa mens runden pågår.")
+                         : "Funksjonæren fører for spillerne i \(term.definite) mens runden pågår.")
             }
         }
-        .navigationTitle("Gruppe \(group.groupNo)")
+        .navigationTitle(term.numbered(group.groupNo))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DDCancelToolbarItem {
@@ -367,6 +376,7 @@ private struct StartGroupSheet: View {
 
 /// Tee-tider med fast mellomrom.
 private struct TeeTimesSheet: View {
+    let term: GroupTerm
     let onApply: (String, Int) -> Void
     @State private var first = StartGroupSheetTime.date("18:00")
     @State private var interval = 10
@@ -380,7 +390,7 @@ private struct TeeTimesSheet: View {
                     LabeledContent("Mellomrom", value: "\(interval) min")
                 }
             } footer: {
-                DDFooter("Gruppene får tider i rekkefølge fra første start.")
+                DDFooter("\(DayTerm.capitalized(term.definitePlural)) får tider i rekkefølge fra første start.")
             }
         }
         .navigationTitle("Tee-tider")
@@ -415,6 +425,8 @@ private enum StartGroupSheetTime {
 @Observable
 final class MyStartGroupModel {
     struct Mine: Equatable {
+        /// «Din bås» eller «Din flight».
+        var title = "Din bås"
         let summary: String
         let mates: String?
     }
@@ -469,7 +481,8 @@ final class MyStartGroupModel {
                 return
             }
             let names = Dictionary(try await roster.map { ($0.id, $0.displayName) }, uniquingKeysWith: { first, _ in first })
-            mine = Mine(summary: StartList.summary(groupNo: group.groupNo, saved: group.saved,
+            mine = Mine(title: "Din \(GroupTerm.for(stored: round.venue).singular)",
+                        summary: StartList.summary(groupNo: group.groupNo, saved: group.saved,
                                                    wave: try await waves[round.id] ?? 1, venue: round.venue),
                         mates: StartList.matesText(group.mates.map { names[$0] ?? "Ukjent" }))
         } catch {
@@ -486,7 +499,7 @@ struct MyStartGroupCard: View {
             if let mine = model.mine {
                 DDInfoStripe(tone: .lime) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Din gruppe")
+                        Text(mine.title)
                             .ddEyebrow()
                         Text(mine.summary)
                             .font(.ddBodyEmphasis)
@@ -499,5 +512,13 @@ struct MyStartGroupCard: View {
             }
         }
         .task { await model.load() }
+    }
+}
+
+/// Tekstene i startlista med ett ord for gruppa: «bås» i simulatoren, «flight» på bane (V3).
+nonisolated enum StartListText {
+    static func footer(_ term: GroupTerm) -> String {
+        "\(DayTerm.capitalized(term.definitePlural)) kommer fra runde-oppsettet. Spillerne ser \(term.definite) sin på Kveld. "
+            + "En funksjonær fører for \(term.definite) sin mens runden pågår."
     }
 }

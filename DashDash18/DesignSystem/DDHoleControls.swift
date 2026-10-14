@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// Rund stepper på hullkortet (`.gg-stepper`): minus i omriss, pluss fylt grønn.
+/// Rund stepper på hullkortet (`HoleStepper` i planen 1.5): minus i omriss, pluss fylt skog
+/// (lys skog i mørk modus). 52 pt som standard, og vokser med Dynamic Type.
 struct DDStepperButtonStyle: ButtonStyle {
     enum Kind { case minus, plus }
     let kind: Kind
-    /// 56 på enkelt hullkort, 48 i båsrader (`.gg-stepper.sm`).
-    var size: CGFloat = 48
+    var size: CGFloat = 52
 
     func makeBody(configuration: Configuration) -> some View {
         DDStepperBody(configuration: configuration, kind: kind, size: size)
@@ -18,22 +18,22 @@ private struct DDStepperBody: View {
     let size: CGFloat
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.colorScheme) private var colorScheme
+    @ScaledMetric(relativeTo: .title) private var scale: CGFloat = 1
 
     var body: some View {
         let pressed = configuration.isPressed
+        let side = max(44, size * min(scale, 1.4))
         configuration.label
-            .font(.system(size: size * 0.4, weight: .regular))
-            .foregroundStyle(kind == .plus ? Color.ddOnDark : Color.ddForestInk)
-            .frame(width: size, height: size)
+            .font(.system(size: side * 0.4, weight: .medium))
+            .foregroundStyle(kind == .plus ? Color.ddCard : Color.ddForestInk)
+            .frame(width: side, height: side)
             .background {
                 switch kind {
                 case .minus:
-                    Circle().fill(pressed ? DDToken.buttonOK.color : Color.ddCard)
+                    Circle().fill(pressed ? DDToken.buttonSecondary.color : Color.ddCard)
                     Circle().strokeBorder(Color.ddForestInk, lineWidth: 1.5)
                 case .plus:
-                    // Mørk modus: fortsatt skoggrønn flate (style.css `:root.mork .gg-stepper.plus`).
-                    Circle().fill(pressed ? Color.ddForestDeep : plusFill)
+                    Circle().fill(DDToken.buttonLine.color.opacity(pressed ? 0.8 : 1))
                 }
             }
             .contentShape(Circle())
@@ -41,34 +41,26 @@ private struct DDStepperBody: View {
             .scaleEffect(pressed && !reduceMotion ? 0.94 : 1)
             .animation(.easeOut(duration: 0.12), value: pressed)
     }
-
-    private var plusFill: Color {
-        colorScheme == .dark ? Color(uiColor: DDRGBA(0x1C483A).uiColor) : .ddForest
-    }
 }
 
-/// Slagtallet på hullkortet. Før bekreftelse står det dempet i en stiplet rust-boks (par-forslag).
+/// Slagtallet på hullkortet. Forvalgt par som ikke er rørt, står dempet (planen K1);
+/// et tall markøren har satt, står i full styrke med scoreformen.
 struct DDStrokeValue: View {
     let value: String
+    /// Rørt eller lagret. Urørt forvalg vises dempet.
     let confirmed: Bool
-    var size: CGFloat = 32
+    var size: CGFloat = 40
 
     var body: some View {
         Text(value)
-            .font(.dd(.mono, size: size, weight: .medium, relativeTo: .title))
+            .font(.dd(.sans, size: size, weight: .medium, relativeTo: .title))
             .monospacedDigit()
-            .tracking(-0.5)
             .foregroundStyle(confirmed ? Color.ddForestInk : Color.ddInkSecondary)
+            .contentTransition(.numericText())
             .lineLimit(1)
             .minimumScaleFactor(0.6)
-            .frame(minWidth: 46, minHeight: size + 16)
+            .frame(minWidth: 46, minHeight: 52)
             .padding(.horizontal, 2)
-            .overlay {
-                if !confirmed {
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(Color.ddRust, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-                }
-            }
     }
 }
 
@@ -121,6 +113,71 @@ struct DDHoleTick: View {
     }
 }
 
+/// Hullbrikke på 44 × 44 pt i hullvelgeren (utbedringsplanen V15). Nåværende er fylt som valgt,
+/// førte har chip-bakgrunn, kommende har strek, og hull i køen har rust stiplet kant.
+/// Gull-prikk: sidepremie. Strek under: båsens hull.
+struct DDHoleChip: View {
+    enum Style: Equatable { case current, saved, partial, upcoming }
+
+    let number: Int
+    let style: Style
+    var isPending = false
+    var hasSidePrize = false
+    var isBayHole = false
+    @ScaledMetric(relativeTo: .body) private var side: CGFloat = 44
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+        Text("\(number)")
+            .font(.dd(.sans, size: 17, weight: style == .current ? .semibold : .medium, relativeTo: .body))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .foregroundStyle(foreground)
+            .frame(width: min(max(44, side), 64), height: min(max(44, side), 64))
+            .background {
+                switch style {
+                case .current: shape.fill(Color.ddSelected)
+                case .saved: shape.fill(Color.ddChipFill)
+                case .partial:
+                    shape.fill(Color.ddChipFill)
+                    shape.strokeBorder(Color.ddForestInk, lineWidth: 1.5)
+                case .upcoming: shape.strokeBorder(Color.ddInkSecondary.opacity(0.6), lineWidth: 1)
+                }
+            }
+            .overlay {
+                if isPending {
+                    shape.strokeBorder(Color.ddRust, style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if hasSidePrize {
+                    Circle()
+                        .fill(Color.ddGold)
+                        .frame(width: 8, height: 8)
+                        .padding(5)
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if isBayHole {
+                    Capsule()
+                        .fill(Color.ddForestInk)
+                        .frame(width: 18, height: 3)
+                        .offset(y: 7)
+                }
+            }
+            .contentShape(shape)
+    }
+
+    private var foreground: Color {
+        switch style {
+        case .current: .ddSelectedInk
+        case .saved, .partial: .ddInk
+        case .upcoming: .ddInkSecondary
+        }
+    }
+}
+
 /// Merket «LONGEST DRIVE» / «NÆRMEST PINNEN» øverst på hullkortet (`.gg-ldtag`).
 struct DDSidePrizeTag: View {
     enum Kind { case longestDrive, closestToPin }
@@ -131,7 +188,7 @@ struct DDSidePrizeTag: View {
         case .longestDrive:
             DDPill("Longest drive", tone: .gold, systemImage: "ruler")
         case .closestToPin:
-            DDPill("Nærmest pinnen", tone: .earthDeep, systemImage: "scope")
+            DDPill("Nærmest pinnen", tone: .gold, systemImage: "scope")
         }
     }
 }

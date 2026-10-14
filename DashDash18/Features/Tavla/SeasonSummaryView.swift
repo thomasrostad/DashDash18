@@ -45,7 +45,7 @@ struct SeasonSummaryView: View {
                     DDStatRow(label: DayTerm.capitalized(standings.rules.day.many) + " spilt", value: "\(s.eveningsPlayed) / \(s.eveningsTotal)")
                     if let h = s.bestRound { highlight("Turneringens runde", h) }
                     if let h = s.mostBirdies { highlight("Flest birdies", h) }
-                    if let h = s.longestDrive { highlight("Lengste drive", h) }
+                    if let h = s.longestDrive { highlight("Longest drive", h) }
                 }
                 .ddCard(.stat)
 
@@ -86,7 +86,7 @@ struct SeasonSummaryView: View {
             Text(h.value)
                 .font(.dd(.sans, size: 15, weight: .medium, relativeTo: .callout))
                 .monospacedDigit()
-                .foregroundStyle(Color.ddYellow)
+                .foregroundStyle(Color.ddGold)
         }
         .accessibilityElement(children: .combine)
     }

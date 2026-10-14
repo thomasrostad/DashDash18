@@ -4,7 +4,7 @@ import GolfgutuCore
 import SwiftUI
 
 /// Oppdiktet Hjem for skjermprøver (`-DDDesignScreen hjem`, `hjemmidt`, `hjembunn`, `hjemlos`, `hjemtom`, `hjemarrangor`,
-/// `hjembjelle`, `hjeminviter`): Golfgutu Invitational med jakkeracet, Morrocupen og en løs runde, som i designet.
+/// `hjembjelle`, `hjeminviter`, `hjemflere`): Golfgutu Invitational med jakkeracet, Morrocupen og en løs runde, som i designet.
 enum HjemSamples {
     static func id(_ n: Int) -> UUID { UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", n))! }
 
@@ -31,9 +31,11 @@ enum HjemSamples {
     // MARK: Modellen
 
     /// Hele feeden: oppsummering, «Pågår nå», «Neste kveld» og alle korttypene.
-    static func model(now: Date = .now, live: Bool = true, organizer: Bool = false, empty: Bool = false)
-        -> HomeFeedModel {
-        let model = HomeFeedModel(preview: empty ? HomeFeedQueries.Raw() : raw(now: now), viewer: viewer,
+    static func model(now: Date = .now, live: Bool = true, organizer: Bool = false, empty: Bool = false,
+                      several: Bool = false) -> HomeFeedModel {
+        var raw = empty ? HomeFeedQueries.Raw() : raw(now: now)
+        if several { raw.rounds.append(looseLiveSnapshot(now: now)) }
+        let model = HomeFeedModel(preview: raw, viewer: viewer,
                                   clubs: clubs, lastSeen: empty ? nil : now.addingTimeInterval(-2 * 86_400),
                                   now: { now })
         if live, !empty {
@@ -48,10 +50,15 @@ enum HjemSamples {
     static func evening(now: Date, organizer: Bool) -> HomeEveningInput {
         let today = EveningDates.dateString(from: now)
         let date = EveningDates.dateString(from: now.addingTimeInterval(8 * 86_400))
-        return HomeEveningInput(clubID: club, clubName: "Golfgutu Invitational",
-                                event: EventRow(id: id(950), clubID: club, seasonID: id(7001), eventDate: date,
-                                                startTime: "18:00:00", venue: "Golfstudio Bryn", note: nil),
-                                today: today, answer: .yes, coming: 6, isOrganizer: organizer)
+        var input = HomeEveningInput(clubID: club, clubName: "Golfgutu Invitational",
+                                     event: EventRow(id: id(950), clubID: club, seasonID: id(7001), eventDate: date,
+                                                     startTime: "18:00:00", venue: "Golfstudio Bryn", note: nil),
+                                     today: today, answer: .yes, coming: 6, isOrganizer: organizer)
+        input.comingNames = ["Anders Berg", "Bjørn Dahl", "Kari", "Thomas", "Even Lie", "Ola"]
+        input.waitlistCount = 2
+        // Avmeldingsfristen dagen før kl. 18:00.
+        input.withdrawDeadline = EveningDates.time(from: "18:00", on: now.addingTimeInterval(7 * 86_400))
+        return input
     }
 
     static func raw(now: Date) -> HomeFeedQueries.Raw {
@@ -169,6 +176,26 @@ enum HjemSamples {
         ])
     }
 
+    /// En løs runde som går samtidig (`hjemflere`): Oslo GK, fire hull spilt.
+    static func looseLiveSnapshot(now: Date) -> RoundSnapshot {
+        let myPart = id(990), per = id(991)
+        let row = roundRow(id(804), club: nil, status: .active, roundNo: 0, started: now.addingTimeInterval(-3600),
+                           locked: nil)
+        var s = snapshot(row, course: "Oslo GK", players: [
+            (myPart, "Thomas", 1, strokes([0, -1, 0, 1])),
+            (per, "Per", 1, strokes([0, 0, 0, 0])),
+        ])
+        s.loose = LooseRoundInfo(ownerID: profile, roster: [
+            RoundRosterRow(roundID: row.id, playerID: myPart, clubID: nil, displayName: "Thomas", profileID: profile,
+                           isGuest: false),
+            RoundRosterRow(roundID: row.id, playerID: per, clubID: nil, displayName: "Per", profileID: nil,
+                           isGuest: true),
+        ])
+        s.rules = LooseRoundRules.template
+        s.eventDate = LooseRoundInfo.day(row.startedAt ?? now)
+        return s
+    }
+
     /// Din løse runde i går: Oslo GK med Per og Even. Per 36, Thomas 33 (2. plass), Even 31.
     static func looseSnapshot(lockedAt: Date) -> RoundSnapshot {
         let myPart = id(980), per = id(981), evenSeat = id(982)
@@ -193,7 +220,7 @@ enum HjemSamples {
     }
 }
 
-/// Hjem som skjermprøve: feeden i fanens ramme med bjella.
+/// Hjem som skjermprøve: feeden i fanens ramme med bjella, i fanelinja med runden som pågår over den.
 struct HjemSampleScreen: View {
     enum Variant {
         case full, middle, bottom, empty, organizer, bell
@@ -201,6 +228,8 @@ struct HjemSampleScreen: View {
         case invite
         /// Filteret «Løse runder»: «Din runde» øverst.
         case loose
+        /// To runder pågår samtidig: baren viser den første og «+1 runde til» (`hjemflere`).
+        case several
     }
 
     let variant: Variant
@@ -210,18 +239,34 @@ struct HjemSampleScreen: View {
         self.variant = variant
         let organizer = variant == .organizer || variant == .invite
         let model = HjemSamples.model(live: !organizer, organizer: organizer,
-                                      empty: variant == .empty)
+                                      empty: variant == .empty, several: variant == .several)
         if variant == .loose { model.filter = .loose }
         _model = State(initialValue: model)
     }
 
     var body: some View {
+        TabView {
+            ForEach(AppTab.tabs(looseRounds: true, isOrganizer: variant == .organizer || variant == .invite)) { tab in
+                Tab(tab.title, systemImage: tab.systemImage) {
+                    if tab == .hjem {
+                        hjem
+                    } else {
+                        Color.clear.ddScreenBackground()
+                    }
+                }
+            }
+        }
+        .hjemLiveAccessory(model.feed.live, open: { _ in })
+        .tint(Color.ddForestInk)
+    }
+
+    private var hjem: some View {
         NavigationStack {
             Group {
                 if variant == .bell {
                     HjemVarslerView(model: model)
                 } else {
-                    HjemFeedView(feed: model.feed, pendingAnswer: variant == .organizer ? "Svaret ditt: Kommer" : nil,
+                    HjemFeedView(feed: model.feed,
                                  actions: HjemActions(select: { model.filter = $0 },
                                                       toggle: { r, t in Task { await model.toggle(r, on: t) } },
                                                       hasReacted: { model.hasReacted($0, on: $1) },
@@ -234,7 +279,8 @@ struct HjemSampleScreen: View {
                                                         ? HjemInvite(clubName: "Golfgutu Invitational",
                                                                      invite: ClubInvite(code: "A1B2C3D4E5")!,
                                                                      activeMembers: 2)
-                                                        : nil),
+                                                        : nil,
+                                                      startRound: {}),
                                  scrollAnchor: variant == .bottom ? .bottom : variant == .middle ? .center : nil)
                         .navigationTitle("Hjem")
                         .ddNavigationChrome()
@@ -243,7 +289,7 @@ struct HjemSampleScreen: View {
             .toolbar {
                 if variant != .bell {
                     ToolbarItem(placement: .topBarTrailing) {
-                        HjemBell(model: model).tint(Color.ddOnDark)
+                        HjemBell(model: model).tint(Color.ddForestInk)
                     }
                 }
             }

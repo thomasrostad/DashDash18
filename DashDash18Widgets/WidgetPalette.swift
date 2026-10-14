@@ -7,30 +7,30 @@ nonisolated enum WidgetPalette {
     /// --sun-pale / mørk: `DDToken.background`.
     static let background = dynamic(light: 0xFFF9DF, dark: 0x0C1F18)
     /// `DDToken.card`.
-    static let card = dynamic(light: 0xFFFFFF, dark: 0x132B23)
+    static let card = dynamic(light: 0xFFFFFF, dark: 0x17332A)
     /// --forest: `DDToken.forest`.
     static let forest = dynamic(light: 0x1C483A, dark: 0x123026)
     /// `DDToken.forestInk`: grønt som tekst.
-    static let forestInk = dynamic(light: 0x1C483A, dark: 0xCFE3D6)
+    static let forestInk = dynamic(light: 0x1C483A, dark: 0xA8D8B4)
     /// `DDToken.ink`.
     static let ink = dynamic(light: 0x21292B, dark: 0xE8EFE7)
     /// `DDToken.inkSecondary`.
-    static let inkSecondary = dynamic(light: 0x727065, dark: 0x8FA398)
+    static let inkSecondary = dynamic(light: 0x5F5D53, dark: 0xA3B5AB)
     /// `DDToken.onDark`: tekst på grønn flate.
     static let onDark = fixed(0xFFF9DF)
-    /// `DDToken.onDark` dempet, for sekundærtekst på grønn flate.
-    static let onDarkSecondary = fixed(0xFFF9DF, alpha: 0.72)
+    /// `DDToken.heroSecondary`: sekundærtekst på grønn flate.
+    static let onDarkSecondary = fixed(0xCFE0D5)
     /// `DDToken.gold`.
     static let gold = fixed(0xE4C767)
     /// `DDToken.accentYellow` og `accentYellowInk`.
     static let yellow = fixed(0xF5C842)
-    static let yellowInk = fixed(0x1E1A05)
+    static let yellowInk = fixed(0x21292B)
     /// `DDToken.accentLime`: «opp» i matchen på mørk flate.
     static let lime = fixed(0x6BE07A)
     /// `DDToken.statRust`: «ned» i matchen på mørk flate.
     static let rustOnDark = fixed(0xE4762F)
     /// `DDToken.youRow`: raden min.
-    static let youRow = fixed(0xE4C767, alpha: 0.13)
+    static let youRow = dynamic(light: 0xFBF1C9, dark: 0x2C3A24)
     /// `DDToken.hairline`.
     static let hairline = dynamic(light: 0xD5D5D5, dark: 0x24443A)
 

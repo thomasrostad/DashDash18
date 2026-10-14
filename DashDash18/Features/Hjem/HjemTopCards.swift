@@ -1,22 +1,10 @@
 import GolfgutuCore
 import SwiftUI
 
-// Toppen av Hjem (fase 19, docs/hjem-feed.md 1a + 1b): filterpillene, oppsummeringen,
-// «Pågår nå» og «Neste kveld».
+// Toppen av Hjem (fase 19, utbedringsplanen V1, V2 og 4.1): filterpillene og «Neste kveld».
+// Runden som pågår står i baren over fanelinja (`HjemLiveBar.swift`).
 
-extension HomeFeedTone {
-    var ddTone: DDTone {
-        switch self {
-        case .lime: .lime
-        case .sun: .sun
-        case .earth: .earth
-        case .blush: .blush
-        case .gold: .gold
-        }
-    }
-}
-
-/// Filterpillene: vannrett rull, valgt i aksent-lime (`DDChoiceButtonStyle`-logikken).
+/// Filterpillene: vannrett rull, valgt i skog (planen 1.3).
 struct HjemFilterBar: View {
     let pills: [HomeFeedPill]
     let select: (HomeFeedFilter) -> Void
@@ -29,12 +17,10 @@ struct HjemFilterBar: View {
                         Text(pill.title)
                             .font(.dd(.sans, size: 14.5, weight: pill.isSelected ? .semibold : .medium,
                                       relativeTo: .subheadline))
-                            .foregroundStyle(pill.isSelected ? Color.ddLimeOnAccent : Color.ddInkSecondary)
+                            .foregroundStyle(pill.isSelected ? Color.ddSelectedInk : Color.ddInk)
                             .padding(.horizontal, 14)
-                            .frame(minHeight: 36)
-                            .background(Capsule().fill(pill.isSelected ? Color.ddLime : Color.ddCard))
-                            .overlay(Capsule().strokeBorder(pill.isSelected ? Color.clear : Color.ddHairline,
-                                                            lineWidth: 1))
+                            .frame(minHeight: 44)
+                            .background(Capsule().fill(pill.isSelected ? Color.ddSelected : Color.ddChipFill))
                             .contentShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -49,162 +35,27 @@ struct HjemFilterBar: View {
     }
 }
 
-/// 1b: «Siden sist» i grønt hero-kort, med én setning og tre tall.
-struct HjemSummaryCard: View {
-    let summary: HomeSummary
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(summary.eyebrow)
-                    .ddEyebrow(color: .ddGold)
-                Text(summary.sentence)
-                    .font(.dd(.sans, size: 24, weight: .light, relativeTo: .title2))
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            HStack(spacing: 8) {
-                ForEach(summary.stats, id: \.label) { stat in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(stat.value)
-                            .font(.dd(.sans, size: 26, weight: .light, relativeTo: .title))
-                            .monospacedDigit()
-                        Text(stat.label)
-                            .font(.dd(.sans, size: 12, relativeTo: .caption))
-                            .foregroundStyle(Color.ddOnDark.opacity(0.8))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.ddOnDark.opacity(0.12), in: .rect(cornerRadius: DDRadius.input))
-                    .accessibilityElement(children: .combine)
-                }
-            }
-        }
-        .ddCard(.hero)
-    }
-}
-
-/// «Pågår nå»: svart stat-kort med live-pillen, bayen topp 3 og «Fortsett føringen».
-struct HjemLiveCard: View {
-    let live: HomeLive
-    let onContinue: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 8) {
-                HStack(spacing: 8) {
-                    Circle().fill(Color(uiColor: DDToken.rust.values.light.uiColor)).frame(width: 8, height: 8)
-                    Text("Runden pågår")
-                }
-                .font(.ddPill)
-                .tracking(1.1)
-                .textCase(.uppercase)
-                // Det svarte kortet er likt i lys og mørk modus, så pillen har faste farger.
-                .foregroundStyle(Color(uiColor: DDToken.blushInk.values.light.uiColor))
-                .padding(.leading, 10)
-                .padding(.trailing, 12)
-                .padding(.vertical, 6)
-                .background(Capsule().fill(Color(uiColor: DDToken.blushBackground.values.light.uiColor)))
-                Spacer(minLength: 8)
-                Text(live.progress)
-                    .ddEyebrow(color: .ddStatSecondary)
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(live.title)
-                    .font(.ddTitle)
-                if let detail = live.detail {
-                    Text(detail)
-                        .font(.ddCallout)
-                        .foregroundStyle(Color.ddStatSecondary)
-                }
-            }
-            VStack(spacing: 0) {
-                ForEach(HjemDisplay.liveRows(live)) { row in
-                    HStack(spacing: 12) {
-                        Text(row.place)
-                            .font(.ddCaption)
-                            .foregroundStyle(Color.ddStatSecondary)
-                            .frame(width: 22, alignment: .leading)
-                        Text(HjemDisplay.liveName(row))
-                            .font(.ddNumber)
-                            .lineLimit(1)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(row.value)
-                            .font(.ddNumber)
-                            .monospacedDigit()
-                    }
-                    .foregroundStyle(row.isMe ? Color.ddYellow : Color.ddStatText)
-                    .padding(.vertical, 9)
-                    .overlay(alignment: .top) {
-                        Rectangle().fill(Color.white.opacity(0.12)).frame(height: 1)
-                    }
-                    .accessibilityElement(children: .combine)
-                }
-            }
-            Button(live.actionTitle, action: onContinue)
-                .buttonStyle(.dd(.primary, fullWidth: true))
-        }
-        .ddCard(.stat)
-    }
-}
-
-/// «Neste kveld»: dato, nedtelling, tid og sted, svarknappene og arrangørens knapp for neste steg.
-/// Trykk på toppen åpner Kveld-skjermen.
+/// «Neste kveld» som hero-kort øverst på Hjem (utbedringsplanen 4.1 og V2): etiketten med nedtellingen,
+/// datoen, tid og sted, hvem som kommer og svaret ditt som segmentert kontroll. Under kortet står
+/// arrangørens rad («Du arrangerer · Sett opp runden ›»), tråden og tipsen. Trykk på toppen åpner
+/// Kveld-skjermen.
 struct HjemEveningCard: View {
     @Environment(\.dayTerm) private var dayTerm
     @Environment(\.clubContext) private var context
     let evening: HomeNextEvening
-    /// «Svaret ditt: Kommer» mens svaret kan angres.
-    var pendingText: String?
     var error: String?
     let onOpen: () -> Void
     let onAnswer: (SignupStatus) -> Void
-    let onUndo: () -> Void
-    /// Arrangørens knapp for neste steg.
+    /// Arrangørens neste steg.
     var organizer: HjemOrganizerStep?
-    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button(action: onOpen) { header }
-                .buttonStyle(.plain)
-                .accessibilityHint("Åpner \(dayTerm.the): hvem som kommer, tråden og tipsen.")
-            let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8))
-                : AnyLayout(HStackLayout(spacing: 8))
-            layout {
-                ForEach(SignupStatus.allCases, id: \.self) { status in
-                    let selected = evening.answer == status
-                    Button { onAnswer(status) } label: {
-                        Text(status.title).lineLimit(1).minimumScaleFactor(0.8)
-                    }
-                    .buttonStyle(DDChoiceButtonStyle(selected: selected, tint: status.tint))
-                    .accessibilityAddTraits(selected ? .isSelected : [])
-                }
+        VStack(alignment: .leading, spacing: DDSpacing.s) {
+            hero
+            if evening.isOrganizer, let organizer {
+                HjemOrganizerRow(step: organizer)
             }
-            if let waitlist = evening.waitlistText, pendingText == nil {
-                Label(waitlist, systemImage: "hourglass")
-                    .font(.ddCallout)
-                    .foregroundStyle(Color.ddInkSecondary)
-            }
-            if let pendingText {
-                HStack {
-                    Text(pendingText)
-                        .font(.ddCallout)
-                        .foregroundStyle(Color.ddInkSecondary)
-                    Spacer()
-                    Button("Angre", action: onUndo)
-                        .buttonStyle(.ddText)
-                }
-                .accessibilityElement(children: .combine)
-            }
-            if let error {
-                Label(error, systemImage: "exclamationmark.triangle")
-                    .ddErrorStyle()
-            }
-            // Tråden og tippekupongen rett fra kortet (09.10.2026: kupongen var gjemt bak Kveld-skjermen).
+            // Tråden og tippekupongen rett fra Hjem (09.10.2026: kupongen var gjemt bak Kveld-skjermen).
             if let context, context.clubID == evening.clubID {
                 KveldExtrasButtons(model: KveldExtrasModel(context: context, eventID: evening.eventID))
                     .id(evening.eventID)
@@ -218,47 +69,199 @@ struct HjemEveningCard: View {
                     .buttonStyle(.ddText)
                 }
             }
-            if evening.isOrganizer, let organizer {
-                Button(action: organizer.perform) {
-                    HStack(spacing: 8) {
-                        Text(organizer.title)
-                        if organizer.isBusy { ProgressView() }
-                    }
+        }
+    }
+
+    private var hero: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Button(action: onOpen) { header }
+                .buttonStyle(.plain)
+                .accessibilityHint("Åpner \(dayTerm.the): hvem som kommer, tråden og tipsen.")
+            HjemAnswerControl(answer: evening.answer, onAnswer: onAnswer)
+            VStack(alignment: .leading, spacing: 6) {
+                if let waitlist = evening.waitlistText {
+                    Label(waitlist, systemImage: "hourglass")
+                } else if let note = evening.answerNote {
+                    Text(note)
                 }
-                .buttonStyle(.dd(.primary, fullWidth: true))
-                .disabled(organizer.isBusy)
-                .accessibilityHint(organizer.hint)
+            }
+            .font(.ddCallout)
+            .foregroundStyle(Color.ddHeroSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+            if let error {
+                Label(error, systemImage: "exclamationmark.triangle")
+                    .font(.ddCallout)
+                    .foregroundStyle(Color.ddOnDark)
             }
         }
-        .animation(.default, value: pendingText)
-        .ddCard()
+        .ddCard(.hero)
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(evening.eyebrow)
-                        .ddEyebrow()
-                    Text(evening.title)
-                        .font(.ddTitleSmall)
-                        .foregroundStyle(Color.ddForestInk)
-                }
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Text(evening.eyebrow)
+                    .ddEyebrow(color: .ddHeroSecondary)
                 Spacer(minLength: 8)
-                DDPill(evening.countdown, tone: .sun)
-                    .fixedSize()
-            }
-            HStack(spacing: 6) {
-                Text(evening.detail)
-                    .font(.ddCallout)
-                    .foregroundStyle(Color.ddInkSecondary)
-                Spacer(minLength: 4)
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.ddInkSecondary)
+                    .foregroundStyle(Color.ddHeroSecondary)
                     .accessibilityHidden(true)
             }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(evening.title)
+                    .font(.dd(.sans, size: 26, weight: .medium, relativeTo: .title))
+                    .foregroundStyle(Color.ddOnDark)
+                Text(evening.detail)
+                    .font(.ddCallout)
+                    .foregroundStyle(Color.ddHeroSecondary)
+            }
+            if !evening.comingText.isEmpty {
+                HStack(spacing: 10) {
+                    HjemAvatarStack(names: evening.comingNames)
+                    Text(evening.comingText)
+                        .font(.ddCallout)
+                        .foregroundStyle(Color.ddOnDark)
+                }
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
+    }
+}
+
+/// Svaret ditt på hero-kortet: «Kommer» · «Usikker» · «Kommer ikke» som segmenter på 44 pt (V2).
+/// Valgt er krem med skogtekst og hake, siden skog på skog ikke synes.
+struct HjemAnswerControl: View {
+    let answer: SignupStatus?
+    let onAnswer: (SignupStatus) -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 4))
+            : AnyLayout(HStackLayout(spacing: 4))
+        layout {
+            ForEach(SignupStatus.allCases, id: \.self) { status in
+                let selected = answer == status
+                Button { onAnswer(status) } label: {
+                    HStack(spacing: 4) {
+                        if selected {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 12, weight: .bold))
+                                .accessibilityHidden(true)
+                        }
+                        Text(status.title)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .font(.dd(.sans, size: 15, weight: selected ? .semibold : .regular, relativeTo: .subheadline))
+                    .foregroundStyle(selected ? Color.ddHeroCard : Color.ddOnDark)
+                    .padding(.horizontal, 8)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background {
+                        if selected { Capsule().fill(Color.ddOnDark) }
+                    }
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(status.title)
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .padding(4)
+        .background(Capsule().fill(Color.ddOnDark.opacity(0.12)))
+        .animation(.easeOut(duration: 0.15), value: answer)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Svaret ditt")
+    }
+}
+
+/// Avatarene til de første som kommer, litt over hverandre.
+struct HjemAvatarStack: View {
+    let names: [String]
+    var limit = 4
+
+    var body: some View {
+        HStack(spacing: -8) {
+            ForEach(Array(names.prefix(limit).enumerated()), id: \.offset) { _, name in
+                DDAvatar(name: name, size: 28)
+                    .overlay(Circle().strokeBorder(Color.ddHeroCard, lineWidth: 2))
+            }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// Arrangørens rad under «Neste kveld» (V2): «Du arrangerer · Sett opp runden ›». Hovedknappen
+/// ligger ikke i spillerkortet.
+struct HjemOrganizerRow: View {
+    let step: HjemOrganizerStep
+
+    var body: some View {
+        Button(action: step.perform) {
+            HStack(spacing: 10) {
+                DDIconTile(systemImage: "slider.horizontal.3", size: 32)
+                Text("Du arrangerer · \(Text(step.title).foregroundStyle(Color.ddForestInk).fontWeight(.semibold))")
+                    .font(.ddCallout)
+                    .foregroundStyle(Color.ddInkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if step.isBusy {
+                    ProgressView()
+                } else {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color.ddInkSecondary)
+                        .accessibilityHidden(true)
+                }
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(step.isBusy)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
+        .background(Color.ddCard, in: .rect(cornerRadius: DDRadius.card, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: DDRadius.card, style: .continuous)
+            .strokeBorder(Color.ddCardBorder, lineWidth: 1))
+        .accessibilityLabel("Du arrangerer. \(step.title)")
+        .accessibilityHint(step.hint)
+    }
+}
+
+/// Klubbvalget i verktøylinja på Hjem (planen 4.1): «Golfgutu Invitational ⌄» i systemets glass.
+/// Vises bare når du er aktiv i flere klubber; samme valg som «Bytt klubb» på Deg.
+struct HjemClubMenu: View {
+    let memberships: [Membership]
+    let current: UUID
+    let select: (Membership) -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(memberships) { membership in
+                Button {
+                    select(membership)
+                } label: {
+                    if membership.clubID == current {
+                        Label(membership.club.name, systemImage: "checkmark")
+                    } else {
+                        Text(membership.club.name)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text(memberships.first { $0.clubID == current }?.club.name ?? "Klubb")
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.caption2.weight(.bold))
+                    .accessibilityHidden(true)
+            }
+            .font(.dd(.sans, size: 15, weight: .semibold, relativeTo: .subheadline))
+            .foregroundStyle(Color.ddForestInk)
+        }
+        .accessibilityLabel("Klubb")
+        .accessibilityValue(memberships.first { $0.clubID == current }?.club.name ?? "")
+        .accessibilityHint("Bytter klubb.")
     }
 }

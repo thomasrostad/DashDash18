@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Segmentvelger i glass med grønn aktiv pille (golfee «Statistics | Notes»).
+/// Segmentvelger i glass med skogfylt aktiv pille (planen 1.3: valgt er skog, ikke lime).
 /// Pillen glir mellom valgene; med Reduser bevegelse bytter den uten å gli.
 struct DDSegmentedControl<Value: Hashable>: View {
     let options: [(value: Value, title: String)]
@@ -24,15 +24,15 @@ struct DDSegmentedControl<Value: Hashable>: View {
                 } label: {
                     Text(option.title)
                         .font(.dd(.sans, size: 15, weight: selected ? .semibold : .regular, relativeTo: .subheadline))
-                        .foregroundStyle(selected ? Color.ddLimeOnAccent : Color.ddInk)
+                        .foregroundStyle(selected ? Color.ddSelectedInk : Color.ddInk)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .padding(.horizontal, 16)
-                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .minimumScaleFactor(0.6)
+                        .padding(.horizontal, 10)
+                        .frame(maxWidth: .infinity, minHeight: 44)
                         .background {
                             if selected {
                                 Capsule()
-                                    .fill(Color.ddLime)
+                                    .fill(Color.ddSelected)
                                     .matchedGeometryEffect(id: "pille", in: namespace)
                             }
                         }
@@ -44,10 +44,13 @@ struct DDSegmentedControl<Value: Hashable>: View {
         }
         .padding(4)
         .glassEffect(.regular, in: .capsule)
+        // Kontrollen må holde seg innenfor skjermen: i AX3 dyttet den Tavla ut på sidene.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 }
 
-/// Gul nedtrekkspille (golfee «Hole 10 ▾»). Bruk som label i en `Menu`.
+/// Nedtrekkspille («Hull 10 ▾»). Bruk som label i en `Menu`. Chip-flate med skogtekst:
+/// gul er bare for hovedhandlingen (planen 1.1).
 struct DDDropdownPill: View {
     let title: String
 
@@ -58,13 +61,13 @@ struct DDDropdownPill: View {
             Text(title)
                 .font(.dd(.sans, size: 15, weight: .semibold, relativeTo: .subheadline))
             Image(systemName: "chevron.down")
-                .font(.system(size: 11, weight: .bold))
+                .font(.system(.caption2, weight: .bold))
                 .accessibilityHidden(true)
         }
-        .foregroundStyle(Color.ddYellowInk)
+        .foregroundStyle(Color.ddForestInk)
         .padding(.horizontal, 18)
         .frame(minHeight: 44)
-        .background(Capsule().fill(Color.ddYellow))
+        .background(Capsule().fill(Color.ddChipFill))
         .contentShape(Capsule())
     }
 }
@@ -85,7 +88,7 @@ struct DDStatRow: View {
             Text(value)
                 .font(.dd(.sans, size: 15, weight: .medium, relativeTo: .callout))
                 .monospacedDigit()
-                .foregroundStyle(highlight ? Color.ddYellow : Color.ddStatText)
+                .foregroundStyle(highlight ? Color.ddGold : Color.ddStatText)
             if let secondary {
                 Text(secondary)
                     .font(.dd(.sans, size: 15, relativeTo: .callout))

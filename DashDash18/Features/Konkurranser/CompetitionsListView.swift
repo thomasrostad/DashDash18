@@ -18,7 +18,7 @@ struct CompetitionsListView: View {
             .toolbar {
                 if model.client != nil {
                     ToolbarItem(placement: .secondaryAction) {
-                        Button("Bli med med kode", systemImage: "qrcode") { showsJoin = true }
+                        Button("Har du en kode?", systemImage: "qrcode") { showsJoin = true }
                     }
                 }
                 if model.canCreate {
@@ -56,7 +56,19 @@ struct CompetitionsListView: View {
     @ViewBuilder
     private var content: some View {
         let all = model.all
-        if all.isEmpty {
+        if all.isEmpty, model.state == .loading {
+            ProgressView("Henter turneringene …")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if all.isEmpty, case .failed(let message) = model.state {
+            ContentUnavailableView {
+                Label("Fikk ikke hentet turneringene", systemImage: "wifi.exclamationmark")
+            } description: {
+                Text(message)
+            } actions: {
+                Button("Prøv igjen") { Task { await model.load() } }
+                    .buttonStyle(.dd(.primary))
+            }
+        } else if all.isEmpty {
             ScrollView {
                 ContentUnavailableView {
                     Label("Ingen turneringer ennå", systemImage: "trophy")
@@ -67,8 +79,8 @@ struct CompetitionsListView: View {
                         Button("Ny turnering") { showsNew = true }
                             .buttonStyle(.dd(.primary))
                     }
-                    Button("Bli med med kode") { showsJoin = true }
-                        .buttonStyle(.dd(.text))
+                    Button("Har du en kode?") { showsJoin = true }
+                        .buttonStyle(.dd(model.canCreate ? .text : .primary))
                 }
                 .ddCard(.empty)
                 .padding(.horizontal, DDSpacing.gutter)
@@ -109,7 +121,7 @@ struct CompetitionListRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             Image(systemName: Self.icon(competition.kind))
-                .font(.system(size: 17, weight: .semibold))
+                .font(.system(.body, weight: .semibold))
                 .foregroundStyle(Color.ddForestInk)
                 .frame(width: 28)
                 .accessibilityHidden(true)
@@ -132,8 +144,8 @@ struct CompetitionListRow: View {
 
     private var pill: (text: String, tone: DDTone)? {
         switch model.signup(competition) {
-        case .entered: return ("Påmeldt", .lime)
-        case .open: return ("Åpen", .sun)
+        case .entered: return ("Påmeldt", .live)
+        case .open: return ("Åpen", .chip)
         case .closed, .notNeeded: return model.isAdmin(competition) && competition.kind != .season ? ("Arrangør", .earth) : nil
         }
     }

@@ -325,6 +325,25 @@ struct ForingFeiringTests {
         #expect(g.celebration(hole: 1, saved: [(id(2), 5)]) == nil)
     }
 
+    @Test("K2: eagle på par 4 og par 5, albatross, og 1 slag på par 3 er hole in one")
+    func nivaaenePerPar() {
+        #expect(CelebrationLevel.level(gross: 2, net: 2, par: 4) == .eagle)
+        #expect(CelebrationLevel.level(gross: 3, net: 3, par: 5) == .eagle)
+        #expect(CelebrationLevel.level(gross: 2, net: 2, par: 5) == .albatross)
+        #expect(CelebrationLevel.level(gross: 1, net: 1, par: 4) == .ace)
+        #expect(CelebrationLevel.level(gross: 1, net: 0, par: 3) == .ace)   // ikke eagle, selv med slag fått
+    }
+
+    @Test("K2: feiringen viser hullet og paret fra hullet som ble lagret")
+    func feiringenFolgerHullet() {
+        // Hull 3 er par 3. Bjørn (hcp 0) slår 1: hole in one på «HULL 3 · PAR 3».
+        let g = RoundGame(F.snapshot(Self.players, si: F.bruttoSI, scores: [(2, 2, 1)]))
+        let c = g.celebration(hole: 2, saved: [(id(2), 1)])
+        #expect(c?.level == .ace)
+        #expect(c?.eyebrow == "HULL 3 · PAR \(g.holes[2].par)")
+        #expect(g.holes[2].par == 3)
+    }
+
     @Test func enFeiringPerHullHoeyesteVinner() {
         let g = RoundGame(F.snapshot(Self.players, si: F.bruttoSI, scores: [(1, 2, 1), (3, 2, 2)]))
         // Hull 3: par 3, indeks 15. Anders 1 brutto (hole in one), Cato 2 = birdie.

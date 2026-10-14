@@ -52,8 +52,8 @@ const AASA_PATHS = new Set(["/.well-known/apple-app-site-association", "/apple-a
 
 const KINDS: Record<InviteKind, { what: string; joinHint: string }> = {
   klubb: { what: "en klubb", joinHint: "Eller skriv inn koden i appen når du blir med i en klubb." },
-  runde: { what: "en runde", joinHint: "Eller skriv inn koden under Spill → Bli med med kode." },
-  konkurranse: { what: "en turnering", joinHint: "Eller skriv inn koden under Turneringer → Bli med med kode." },
+  runde: { what: "en runde", joinHint: "Eller skriv inn koden under Spill → «Har du en kode?»." },
+  konkurranse: { what: "en turnering", joinHint: "Eller skriv inn koden under Turneringer → «Har du en kode?»." },
 };
 
 /// Koden slik appen tolker den, eller null når den ikke kan være en kode av denne typen.

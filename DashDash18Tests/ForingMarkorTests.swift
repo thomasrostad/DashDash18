@@ -80,28 +80,49 @@ struct ForingHullkortTests {
         #expect(game.markerLine(for: F.viewer(F.anders)) == "Du er markør i bås 1 · Bjørn, Cato, Dag og deg")
     }
 
-    @Test func lagreErLaastTilAlleErBekreftet() {
+    @Test func parErForvalgtOgLagreErAlltidAktiv() {
+        // K1: ett trykk per hull når alle går par.
         var drafts = HoleDrafts()
         let start = game.card(hole: 0, drafts: drafts, viewer: F.viewer(F.anders))
-        #expect(start.rows.allSatisfy { !$0.confirmed })
-        #expect(start.rows.allSatisfy { $0.value == 4 })   // stiplet par
-        #expect(start.showsParHint)
-        #expect(start.action == .save(title: "Lagre hull 1", enabled: false,
-                                      blocker: "Bekreft Anders, Bjørn, Cato og Dag først · 0 av 4 klare"))
+        #expect(start.rows.allSatisfy { $0.isDefault && $0.value == 4 })
+        #expect(start.rows.allSatisfy { $0.scoreName == .par && $0.points != nil })   // poengene vises med en gang
+        #expect(start.action == .save(title: "Lagre hull 1 og gå videre", enabled: true, status: "0 av 4 endret fra par"))
+        let alleParLagres = game.submission(hole: 0, drafts: drafts, viewer: F.viewer(F.anders), recordedAt: .now)
+        #expect(alleParLagres?.entries.count == 4)
+        #expect(alleParLagres?.entries.allSatisfy { $0.strokes == 4 } == true)
 
-        // Trykk på tallet bekrefter par; pluss justerer og bekrefter samtidig.
-        drafts[0, id(F.anders)] = 4
-        drafts[0, id(F.bjorn)] = 4
+        // Pluss justerer; raden er ikke lenger forvalgt.
         drafts[0, id(F.cato)] = StrokeInput.clamp(4 + 1)
-        let treAv = game.card(hole: 0, drafts: drafts, viewer: F.viewer(F.anders))
-        #expect(treAv.action == .save(title: "Lagre hull 1", enabled: false, blocker: "Bekreft Dag først · 3 av 4 klare"))
-        #expect(treAv.rows[2].value == 5 && treAv.rows[2].confirmed)
-        #expect(treAv.rows.filter { !$0.confirmed }.count == 1)
+        let endret = game.card(hole: 0, drafts: drafts, viewer: F.viewer(F.anders))
+        #expect(endret.rows[2].value == 5 && !endret.rows[2].isDefault)
+        #expect(endret.rows.filter(\.isDefault).count == 3)
+        #expect(endret.action == .save(title: "Lagre hull 1 og gå videre", enabled: true, status: "1 av 4 endret fra par"))
 
+        // Et tall satt tilbake til par teller som rørt, men ikke som endret fra par.
         drafts[0, id(F.dag)] = 4
-        let alle = game.card(hole: 0, drafts: drafts, viewer: F.viewer(F.anders))
-        #expect(alle.action == .save(title: "Lagre hull 1 → hull 2", enabled: true, blocker: nil))
-        #expect(!alle.showsParHint)
+        let tilbake = game.card(hole: 0, drafts: drafts, viewer: F.viewer(F.anders))
+        #expect(!tilbake.rows[3].isDefault)
+        #expect(tilbake.action == .save(title: "Lagre hull 1 og gå videre", enabled: true, status: "1 av 4 endret fra par"))
+    }
+
+    @Test func sisteHullHarIkkeGaaVidere() {
+        let card = game.card(hole: 17, drafts: HoleDrafts(), viewer: F.viewer(F.anders))
+        #expect(card.action == .save(title: "Lagre hull 18", enabled: true, status: "0 av 4 endret fra par"))
+    }
+
+    @Test("K6: synkstatus for hullene på kortet")
+    func synkstatus() {
+        let viewer = F.viewer(F.anders)
+        #expect(game.syncStatus(viewer: viewer, pending: []) == nil)
+        let fire = [F.anders, F.bjorn, F.cato, F.dag]
+        let seks = RoundGame(F.snapshot(F.markorPlayers(), scores: (0..<6).flatMap { h in fire.map { ($0, h, 4) } }))
+        #expect(seks.syncStatus(viewer: viewer, pending: []) == SyncStatus(text: "Hull 1–6 er synket", isPending: false))
+        #expect(seks.syncStatus(viewer: viewer, pending: [6])
+            == SyncStatus(text: "Lagret på telefonen · sendes når du får dekning", isPending: true))
+        let ett = RoundGame(F.snapshot(F.markorPlayers(), scores: fire.map { ($0, 0, 4) }))
+        #expect(ett.syncStatus(viewer: viewer, pending: []) == SyncStatus(text: "Hull 1 er synket", isPending: false))
+        // Seeren fører ikke og får ingen linje.
+        #expect(seks.syncStatus(viewer: F.viewer(F.bjorn), pending: []) == nil)
     }
 
     @Test func seerModus() {
@@ -135,9 +156,9 @@ struct ForingHullkortTests {
         let card = uten.card(hole: 0, drafts: HoleDrafts(), viewer: F.viewer(F.bjorn))
         #expect(card.rows.map(\.name) == ["Bjørn"])
         #expect(!card.mustConfirm && card.rows[0].confirmed)
-        #expect(card.action == .save(title: "Lagre hull 1 → hull 2", enabled: true, blocker: nil))
+        #expect(card.action == .save(title: "Lagre hull 1 og gå videre", enabled: true, status: nil))
         #expect(uten.markerLine(for: F.viewer(F.bjorn)) == nil)
-        #expect(card.header == "Deg")
+        #expect(card.header == "Ditt kort")
     }
 
     @Test func ikkeMedIRundenIngenRader() {
@@ -160,7 +181,7 @@ struct ForingHullkortTests {
         var drafts = HoleDrafts()
         drafts[0, id(F.cato)] = 5
         #expect(g.card(hole: 0, drafts: drafts, viewer: F.viewer(F.anders)).action
-            == .save(title: "Lagre endringen · hull 1 → hull 2", enabled: true, blocker: nil))
+            == .save(title: "Lagre endringen · hull 1", enabled: true, status: "1 av 4 endret fra par"))
     }
 
     @Test func solStripa() {

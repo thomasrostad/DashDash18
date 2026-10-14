@@ -8,6 +8,8 @@ nonisolated struct TavlaInput: Equatable, Sendable {
     var members: [ClubMemberRow]
     /// Sesongens runder med alt under. Kladder tas ikke med i tabellen.
     var rounds: [RoundSnapshot]
+    /// Neste kveld i sesongen som ikke er spilt (`YYYY-MM-DD`), fra `events`. Nil uten en.
+    var nextEventDate: String? = nil
 }
 
 /// Tavla for én sesong: tabellen, spillerprofilene og oppsummeringen. Alle tall regnes av
@@ -68,12 +70,20 @@ nonisolated struct TavlaStandings: Sendable {
     let tiedForFirst: [UUID]
     /// En runde som går, skjuler de siste hullene for deg (sql/047).
     let hidesLastHoles: Bool
+    /// Plassene før siste kveld (samme regelmotor, uten den kvelden), for bevegelsen i tabellen.
+    /// Nil før andre kveld, og når tabellen før den ikke hadde plasser.
+    let previousPlaces: [UUID: Int]?
+    /// Neste kveld som ikke er spilt (`YYYY-MM-DD`).
+    let nextEventDate: String?
 
     /// - Parameter viewer: den som ser på. Med «skjul de tre siste hullene» ser andre enn båsen din og
     ///   arrangøren (`isOrganizer`: rettigheten `rounds`) rundene uten de siste hullene til de er låst.
     ///   nil: alt vises (tabellen regnes for et varsel etter låsing).
-    init(_ input: TavlaInput, me: UUID?, viewer: Viewer? = nil) {
+    /// - Parameter comparesPrevious: regn også tabellen før siste kveld (`previousPlaces`). Av som standard:
+    ///   det er en ekstra utregning av sesongen, og bare Tavla viser bevegelsen.
+    init(_ input: TavlaInput, me: UUID?, viewer: Viewer? = nil, comparesPrevious: Bool = false) {
         self.me = me
+        nextEventDate = input.nextEventDate
         seasonName = input.season.name
         seasonID = input.season.id
         status = input.season.status
@@ -104,8 +114,22 @@ nonisolated struct TavlaStandings: Sendable {
                             playingHandicaps: TavlaStandings.playingHandicaps(snapshots))
         self.season = season
 
-        let withPoints = rounds.indices.filter { !season.roundPoints($0).isEmpty }.map { rounds[$0] }
+        let withPointsIndices = rounds.indices.filter { !season.roundPoints($0).isEmpty }
+        let withPoints = withPointsIndices.map { rounds[$0] }
         eveningsPlayed = Season.eveningCount(withPoints)
+
+        // Tabellen før siste kveld: de samme rundene uten den kvelden (og uten playoff), regnet likt.
+        if comparesPrevious, eveningsPlayed >= 2,
+           let last = withPointsIndices.compactMap({ snapshots[$0].eventDate }).max() {
+            var before = input
+            before.rounds = input.rounds.ordinary.filter { ($0.eventDate ?? "") < last }
+            let earlier = TavlaStandings(before, me: me, viewer: viewer, comparesPrevious: false)
+            previousPlaces = earlier.hasResults
+                ? Dictionary(earlier.rows.filter(\.qualified).map { ($0.memberID, $0.place) }, uniquingKeysWith: { a, _ in a })
+                : nil
+        } else {
+            previousPlaces = nil
+        }
 
         // Plassene fra motoren: delt plass (1, 1, 3), de uten nok kvelder nederst, og playoff om
         // førsteplassen. Vinneren av playoff-runden (`Playoff.decide`) går inn i tabellen.

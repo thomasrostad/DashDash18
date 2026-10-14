@@ -30,13 +30,10 @@ nonisolated struct HomeFeedDraft: Sendable {
     let filters: Set<HomeFeedFilter>
     var kind: Kind
     var isUnread: Bool
-    /// Noe du gjorde selv (telles ikke i oppsummeringen).
+    /// Noe du gjorde selv (aldri ulest).
     var isOwn = false
     /// Påmeldinger med samme nøkkel etter hverandre blir én linje.
     var signupKey: String?
-    /// Det oppsummeringen sier om kortet («du klatret til 3. plass i Jakkeracet»), og hvor viktig det er.
-    var phrase: String?
-    var weight = 0
 
     var lineDraft: LineDraft? {
         if case .line(let line) = kind { return line }
@@ -94,8 +91,7 @@ nonisolated struct HomeFeedDrafts: Sendable {
                             kind: name, hole: hole, strokes: strokes, par: par, label: label, roundID: row.roundID,
                             reactions: context.reactions(row))
             return HomeFeedDraft(id: id, date: row.createdAt, source: placement.source, filters: placement.filters,
-                                 kind: .feat(card), isUnread: unread, isOwn: own,
-                                 phrase: featPhrase(card), weight: 5)
+                                 kind: .feat(card), isUnread: unread, isOwn: own)
 
         case let .tableChanged(competition, competitionName, roundNo, table):
             let source = context.competitionsByID[competition].map(context.source)
@@ -103,10 +99,7 @@ nonisolated struct HomeFeedDrafts: Sendable {
             let card = tableCard(table: table, competitionID: competition, competitionName: competitionName,
                                  roundNo: roundNo, name: context.name, reactions: context.reactions(row))
             return HomeFeedDraft(id: id, date: row.createdAt, source: source, filters: [source.filter],
-                                 kind: .table(card), isUnread: unread, isOwn: false,
-                                 phrase: TableChangeText.summaryPhrase(table: table, competitionName: competitionName,
-                                                                       me: context.me, name: context.name),
-                                 weight: tableWeight(card.myMove))
+                                 kind: .table(card), isUnread: unread, isOwn: false)
 
         case let .signup(member, status, eventDate):
             var line = lineDraft(row, placement: placement)
@@ -181,10 +174,9 @@ nonisolated struct HomeFeedDrafts: Sendable {
             let card = myRound(s, me: me, reactions: context.reactions(lockedRows[s.round.id]))
             let placement = context.placement(round: s.round.id, club: s.round.clubID)
             let date = s.round.lockedAt ?? s.round.startedAt ?? .distantPast
-            let phrase = card.points.map { "du fikk \($0) poeng på \(card.title)" } ?? "du spilte \(card.title)"
             return HomeFeedDraft(id: "r-" + s.round.id.uuidString, date: date, source: placement.source,
                                  filters: placement.filters, kind: .myRound(card),
-                                 isUnread: context.isUnread(date, own: false), phrase: phrase, weight: 1)
+                                 isUnread: context.isUnread(date, own: false))
         }
     }
 
@@ -245,8 +237,7 @@ nonisolated struct HomeFeedDrafts: Sendable {
                 let date = score.recordedAt ?? s.round.startedAt ?? .distantPast
                 return HomeFeedDraft(id: "f-\(s.round.id.uuidString)-\(score.memberID.uuidString)-\(score.holeIndex)",
                                      date: date, source: placement.source, filters: placement.filters,
-                                     kind: .feat(card), isUnread: context.isUnread(date, own: false),
-                                     phrase: featPhrase(card), weight: 5)
+                                     kind: .feat(card), isUnread: context.isUnread(date, own: false))
             }
         }
     }
@@ -257,11 +248,8 @@ nonisolated struct HomeFeedDrafts: Sendable {
         let detail = ["\(strokes) slag på par \(par)", label?.courseName].compactMap { $0 }.joined(separator: " · ")
         return HomeFeatCard(memberID: member, name: name, initials: HomeFeedText.initials(name), isMe: isMe, kind: kind,
                             strokes: strokes, par: par, hole: hole, headline: HomeFeedText.featHeadline(kind, hole: hole),
-                            detail: detail, place: place, roundID: roundID, reactions: reactions)
-    }
-
-    private func featPhrase(_ card: HomeFeatCard) -> String {
-        (card.isMe ? "du" : card.name) + " " + HomeFeedText.featVerb(card.kind)
+                            detail: detail, place: place, roundID: roundID, reactions: reactions,
+                            roundPlace: HomeFeedText.roundPlace(label))
     }
 
     // MARK: Tabellen
@@ -282,11 +270,6 @@ nonisolated struct HomeFeedDrafts: Sendable {
                              move: s.move, isMe: me.contains(s.member))
             },
             myPlace: mine?.place, myMove: mine?.move, reactions: reactions)
-    }
-
-    private func tableWeight(_ move: Int?) -> Int {
-        guard let move, move != 0 else { return 0 }
-        return 10 + abs(move) * 2 + (move > 0 ? 1 : 0)
     }
 
     /// Plassbyttet etter siste låste runde i private turneringer (liga og morro), regnet her fordi
@@ -311,10 +294,7 @@ nonisolated struct HomeFeedDrafts: Sendable {
             let source = context.source(c)
             return HomeFeedDraft(id: "t-\(c.id.uuidString)-\(latest.round.id.uuidString)", date: date, source: source,
                                  filters: [source.filter], kind: .table(card),
-                                 isUnread: context.isUnread(date, own: false),
-                                 phrase: TableChangeText.summaryPhrase(table: table, competitionName: c.name,
-                                                                       me: context.me, name: lookup),
-                                 weight: tableWeight(card.myMove))
+                                 isUnread: context.isUnread(date, own: false))
         }
     }
 }

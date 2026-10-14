@@ -83,3 +83,26 @@ struct StatsEntrySample: View {
 #Preview("Statistikk tom") { NavigationStack { StatsView(model: StatsSamples.model(empty: true)) } }
 #Preview("Føring") { StatsEntrySample() }
 #endif
+
+#if DEBUG
+/// Skjermprøven `stattrend`: trendgrafen alene, så hele datoaksen synes (V10).
+struct StatsTrendSample: View {
+    var body: some View {
+        let model = StatsSamples.model()
+        let lines = model.summary.trend.filter { $0.holeCount == model.primaryHoleCount }
+        ScrollView {
+            VStack(alignment: .leading, spacing: DDSpacing.cardGap) {
+                DDSectionLabel("Trend")
+                StatsTrendChart(lines: lines, window: StatsModel.trendWindow)
+                    .ddCard()
+                DDSectionLabel("Handicaputvikling")
+                StatsHandicapChart(revisions: model.summary.handicap)
+                    .ddCard()
+            }
+            .padding(.horizontal, DDSpacing.gutter)
+            .padding(.vertical, DDSpacing.l)
+        }
+        .ddScreenBackground()
+    }
+}
+#endif

@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Reaksjonsbrikke: emoji og antall. Din egen er grønn (lime), de andres jordfarget.
+/// Reaksjonsbrikke: emoji og antall. Din egen er valgt (skog med krem tekst, planen 1.3: lime er
+/// bare live), de andres jordfarget. Brikken er 36 pt høy, trykkflaten 44 pt (planen P4).
 struct DDReactionChip: View {
     let emoji: String
     let count: Int
@@ -13,16 +14,30 @@ struct DDReactionChip: View {
                 .font(.ddChip)
                 .monospacedDigit()
         }
-        .foregroundStyle(isMine ? Color.ddLimeInk : Color.ddInk)
-        .padding(.horizontal, 10)
-        .frame(minHeight: 32)
-        .background(Capsule().fill(isMine ? Color.ddLimeBackground : Color.ddEarth))
-        .overlay {
-            if isMine {
-                Capsule().strokeBorder(Color.ddLimeInk.opacity(0.35), lineWidth: 1)
+        .foregroundStyle(isMine ? Color.ddSelectedInk : Color.ddInk)
+        .padding(.horizontal, 12)
+        .frame(minHeight: 36)
+        .background(Capsule().fill(isMine ? Color.ddSelected : Color.ddEarth))
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+    }
+}
+
+/// «Legg til reaksjon»: rund knapp på 44 pt med smilefjes og pluss (planen P4).
+struct DDAddReactionLabel: View {
+    var body: some View {
+        Image(systemName: "face.smiling")
+            .font(.system(size: 17, weight: .medium))
+            .foregroundStyle(Color.ddForestInk)
+            .overlay(alignment: .topTrailing) {
+                Image(systemName: "plus")
+                    .font(.system(size: 8, weight: .heavy))
+                    .foregroundStyle(Color.ddForestInk)
+                    .offset(x: 5, y: -3)
             }
-        }
-        .contentShape(Capsule())
+            .frame(width: 44, height: 44)
+            .background(Circle().fill(Color.ddChipFill))
+            .contentShape(Circle())
     }
 }
 
@@ -64,7 +79,6 @@ struct DDCountBadge: View {
             .padding(.horizontal, 5)
             .frame(minWidth: 18, minHeight: 18)
             .background(Capsule().fill(DDToken.buttonMoney.color))
-            .overlay(Capsule().strokeBorder(Color.ddForest, lineWidth: 1.5))
     }
 }
 
@@ -133,6 +147,7 @@ private struct DDSendBody: View {
         HStack(spacing: 6) {
             DDReactionChip(emoji: "🔥", count: 2, isMine: true)
             DDReactionChip(emoji: "👍", count: 1)
+            DDAddReactionLabel()
             DDUnreadDot()
             DDCountBadge("3")
             DDIconTile(systemImage: "flag.fill")

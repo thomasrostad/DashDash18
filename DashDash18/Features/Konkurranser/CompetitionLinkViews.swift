@@ -103,35 +103,23 @@ struct CountsAlsoInSection: View {
     }
 }
 
-/// Velgeren øverst på Tavla når det finnes flere konkurranser enn jakkeracet.
-struct CompetitionSwitcherBar: View {
+/// Konkurransevalget ved tittelen på Tavla (V4): en meny med jakkeracet og de andre konkurransene,
+/// der den valgte har en hake. Erstatter chip-raden, som ble kuttet på smale skjermer.
+struct CompetitionTitleMenu: View {
     let competitions: [CompetitionRow]
     @Binding var selected: UUID?
     let mainID: UUID?
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(competitions) { c in
-                    let isOn = (selected ?? mainID) == c.id
-                    Button {
-                        selected = c.id == mainID ? nil : c.id
-                    } label: {
-                        Label(c.name, systemImage: CompetitionListRow.icon(c.kind))
-                            .font(.ddCallout.weight(.semibold))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .foregroundStyle(isOn ? Color.ddOnDark : Color.ddInk)
-                            .background(isOn ? Color.ddForestInk : Color.ddCard, in: .capsule)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(isOn ? .isSelected : [])
-                }
+        ForEach(competitions) { c in
+            let isOn = (selected ?? mainID) == c.id
+            Button {
+                selected = c.id == mainID ? nil : c.id
+            } label: {
+                Label(c.name, systemImage: isOn ? "checkmark" : CompetitionListRow.icon(c.kind))
             }
-            .padding(.horizontal, DDSpacing.gutter)
-            .padding(.vertical, 8)
+            .accessibilityAddTraits(isOn ? .isSelected : [])
         }
-        .background(.bar)
     }
 }
 
@@ -156,11 +144,10 @@ struct TavlaCompetitions<Main: View>: View {
                 main()
             }
         }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            if switcher.count > 1 || (switcher.count == 1 && switcher.first?.id != model.main?.id) {
-                CompetitionSwitcherBar(competitions: switcher, selected: $selected, mainID: model.main?.id)
-            }
-        }
+        .modifier(CompetitionTitle(name: current?.name,
+                                   showsMenu: switcher.count > 1 || (switcher.count == 1 && switcher.first?.id != model.main?.id)) {
+            CompetitionTitleMenu(competitions: switcher, selected: $selected, mainID: model.main?.id)
+        })
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 NavigationLink {
@@ -169,9 +156,39 @@ struct TavlaCompetitions<Main: View>: View {
                     Label("Turneringer", systemImage: "trophy")
                         .labelStyle(.titleAndIcon)
                 }
-                .tint(Color.ddOnDark)
+                .tint(Color.ddForestInk)
             }
         }
         .task { await model.load() }
+    }
+
+    /// Konkurransen som vises: den valgte, ellers jakkeracet.
+    private var current: CompetitionRow? {
+        selected.flatMap { id in model.all.first { $0.id == id } } ?? model.main
+    }
+}
+
+/// Konkurransevalget som nedtrekkspille rett under tittelen, bare når det er noe å velge.
+/// (`toolbarTitleMenu` viser ingen pil ved en stor tittel, så valget ble usynlig.)
+private struct CompetitionTitle<Items: View>: ViewModifier {
+    let name: String?
+    let showsMenu: Bool
+    @ViewBuilder let menu: () -> Items
+
+    func body(content: Content) -> some View {
+        content.safeAreaInset(edge: .top, spacing: 0) {
+            if showsMenu {
+                Menu {
+                    menu()
+                } label: {
+                    DDDropdownPill(name ?? "Velg turnering")
+                }
+                .accessibilityLabel("Turnering: \(name ?? "ingen valgt")")
+                .accessibilityHint("Velger hvilken turnering Tavla viser")
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, DDSpacing.gutter)
+                .padding(.top, DDSpacing.s)
+            }
+        }
     }
 }

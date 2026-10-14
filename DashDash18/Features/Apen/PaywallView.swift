@@ -46,7 +46,7 @@ struct PaywallView: View {
             .toolbar {
                 DDCancelToolbarItem {
                     Button("Lukk") { dismiss() }
-                        .tint(Color.ddOnDark)
+                        .tint(Color.ddForestInk)
                 }
             }
             .task { await service?.loadProducts() }

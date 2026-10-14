@@ -33,6 +33,10 @@ nonisolated enum StatsPeriod: String, CaseIterable, Identifiable, Sendable {
 nonisolated enum StatsFormat {
     static let locale = Locale(identifier: "nb_NO")
 
+    /// Datoaksen i grafene: «mai», «jun.» (V10). Språket står i formatet, ikke bare i miljøet, så
+    /// aksen er norsk også der grafen tegnes uten appens `ddAppStyle()`.
+    static let monthAxis = Date.FormatStyle.dateTime.month(.abbreviated).locale(locale)
+
     static let calendar: Calendar = {
         var c = Calendar(identifier: .gregorian)
         c.timeZone = TimeZone(identifier: "Europe/Oslo") ?? .current

@@ -129,6 +129,8 @@ struct RoundsLeaderboardView: View {
 
     let grid: RoundsGrid
     let game: (UUID) -> RoundGame?
+    /// Som segment på Tavla: uten egen tittel.
+    var embedded = false
     @State private var mode: Mode = .points
     @State private var scorecard: RoundScorecardTarget?
 
@@ -155,8 +157,7 @@ struct RoundsLeaderboardView: View {
             .padding(.horizontal, DDSpacing.gutter)
             .padding(.vertical, DDSpacing.l)
         }
-        .navigationTitle("Alle runder")
-        .ddNavigationChrome()
+        .modifier(RoundsTitle(embedded: embedded))
         .sheet(item: $scorecard) { target in
             if let game = game(target.roundID) {
                 ScorekortSheet(game: game, memberID: target.memberID)
@@ -293,6 +294,21 @@ struct RoundsLeaderboardView: View {
                 .foregroundStyle(Color.ddInkSecondary)
                 .frame(width: cellWidth, height: rowHeight)
                 .accessibilityLabel("\(row.name), \(column.title): ikke med")
+        }
+    }
+}
+
+/// Tittelen «Alle runder», men ikke som segment på Tavla (der står «Tavla»).
+private struct RoundsTitle: ViewModifier {
+    let embedded: Bool
+
+    func body(content: Content) -> some View {
+        if embedded {
+            content
+        } else {
+            content
+                .navigationTitle("Alle runder")
+                .ddNavigationChrome()
         }
     }
 }

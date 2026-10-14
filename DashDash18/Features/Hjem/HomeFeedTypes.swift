@@ -90,6 +90,13 @@ nonisolated struct HomeEveningInput: Equatable, Sendable {
     var previous: EventRow?
     /// «På venteliste (nr. 2)» når mitt «Kommer» står på ventelista (sql/045).
     var waitlistText: String?
+    /// Navnene på dem som kommer, for avatarstabelen.
+    var comingNames: [String] = []
+    /// Hvor mange som står på ventelista (sql/045).
+    var waitlistCount = 0
+    /// Påmeldings- og avmeldingsfristen (sql/045). nil: ingen frist.
+    var signupDeadline: Date?
+    var withdrawDeadline: Date?
 
     init(clubID: UUID, clubName: String, event: EventRow, today: String, answer: SignupStatus?, coming: Int,
          isOrganizer: Bool) {
@@ -262,6 +269,8 @@ nonisolated struct HomeFeatCard: Equatable, Sendable {
     let place: String
     let roundID: UUID?
     let reactions: HomeReactions?
+    /// «Losby · runde 4», uten hullet.
+    var roundPlace: String? = nil
 }
 
 /// En rad i minitabellen.
@@ -274,10 +283,10 @@ nonisolated struct HomeTableRow: Equatable, Identifiable, Sendable {
     let move: Int?
     let isMe: Bool
 
-    /// «↑1», «↓2», eller nil.
+    /// «▲1», «▼2», eller nil.
     var moveText: String? {
         guard let move, move != 0 else { return nil }
-        return move > 0 ? "↑\(move)" : "↓\(-move)"
+        return move > 0 ? "▲\(move)" : "▼\(-move)"
     }
 }
 
@@ -336,21 +345,6 @@ nonisolated struct HomeFeedSection: Identifiable, Equatable, Sendable {
     var id: String { title }
 }
 
-/// 1b-oppsummeringen: én setning og tre tall.
-nonisolated struct HomeSummary: Equatable, Sendable {
-    struct Stat: Equatable, Sendable {
-        let value: String
-        let label: String
-    }
-
-    /// «Siden sist · søndag».
-    let eyebrow: String
-    /// «Du klatret til 3. plass i Jakkeracet, og Anders slo eagle.»
-    let sentence: String
-    /// Nye runder, bragder og plasser (med fortegn).
-    let stats: [Stat]
-}
-
 /// «Pågår nå».
 nonisolated struct HomeLive: Equatable, Sendable {
     struct Row: Equatable, Identifiable, Sendable {
@@ -377,20 +371,32 @@ nonisolated struct HomeLive: Equatable, Sendable {
     /// Deg, når du er lenger ned enn topp 3.
     let me: Row?
     let actionTitle: String
+    /// Baren over fanelinja (`LiveRoundBar`): «Losby · hull 10 av 18».
+    var barTitle: String = ""
+    /// «Bås 2 · du er 3. med 21 p».
+    var barDetail: String? = nil
+    /// «Fortsett» når du spiller, ellers «Følg» (arrangøren som ikke spiller).
+    var barAction: String = "Fortsett"
 }
 
-/// «Neste kveld», med svarknappene.
+/// «Neste kveld» som hero-kort øverst på Hjem (planen 4.1), med svaret ditt.
 nonisolated struct HomeNextEvening: Equatable, Sendable {
     let clubID: UUID
     let eventID: UUID
-    /// «Golfgutu Invitational · neste kveld».
+    /// «Neste kveld · om 8 dager».
     let eyebrow: String
     /// «Torsdag 15. oktober».
     let title: String
     /// «I dag», «I morgen», «Om 8 dager».
     let countdown: String
-    /// «Kl. 18:00 · Golfstudio Bryn · 6 kommer».
+    /// «Kl. 18:00 · Golfstudio Bryn · Jakkeracet».
     let detail: String
+    /// «6 kommer · 2 på venteliste».
+    var comingText: String = ""
+    /// De første som kommer, for avatarstabelen.
+    var comingNames: [String] = []
+    /// «Du kan endre svaret fram til tirsdag 20. oktober kl. 18:00.» (V2).
+    var answerNote: String? = nil
     let answer: SignupStatus?
     /// Arrangøren får hovedknappen (sett opp runden) og lenken til arrangørsiden.
     let isOrganizer: Bool
@@ -406,7 +412,6 @@ nonisolated struct HomeNextEvening: Equatable, Sendable {
 nonisolated struct HomeFeed: Equatable, Sendable {
     let pills: [HomeFeedPill]
     let filter: HomeFeedFilter
-    let summary: HomeSummary?
     /// «Pågår nå»: ett kort per runde du spiller i eller arrangerer.
     let live: [HomeLive]
     let evening: HomeNextEvening?

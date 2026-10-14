@@ -27,7 +27,7 @@ enum DDCardStyle {
     case standard
     case large
     case hero
-    /// Stiplet ramme uten fyll (`.gg-empty`), for tomtilstander.
+    /// Uten fyll og ramme, for tomtilstander (`ContentUnavailableView`).
     case empty
     /// Liquid Glass over bakgrunnen (flytende kort og kontroller).
     case glass
@@ -54,7 +54,8 @@ struct DDCardModifier: ViewModifier {
                     shape.fill(Color.ddStatCard)
                         .shadow(color: .black.opacity(colorScheme == .dark ? 0.5 : 0.22), radius: 18, y: 12)
                 case .empty:
-                    shape.strokeBorder(Color.ddRuleCream, style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+                    // Tomtilstand uten ramme (planen V13): stiplet kant er bare for tomme plasser man kan fylle.
+                    Color.clear
                 case .hero:
                     shape.fill(Color.ddHeroCard)
                         .shadow(color: shadowColor.opacity(colorScheme == .dark ? 0.7 : 0.6), radius: 15, y: 14)
@@ -104,14 +105,12 @@ extension View {
             .background(Color.ddBackground.ignoresSafeArea())
     }
 
-    /// Grønn navigasjonslinje med krem tittel, som headeren i PWA-en. Tittelen står inline:
-    /// stor tittel ble ikke tegnet på grønn linje i iOS 26 (prøvd i simulatoren 06.10).
+    /// Systemets navigasjonslinje med glass over krem bakgrunn (utbedringsplanen P1, K3, 7.3):
+    /// ingen egen grønn flate bak linja, så tilbakeknapp, glass, «Reduser gjennomsiktighet» og
+    /// «Øk kontrast» virker som i resten av iOS. Skogen brukes i hero-kortene i stedet.
+    /// Store titler på fanenes rot, og de krymper ved rulling (`automatic`).
     func ddNavigationChrome() -> some View {
         containerBackground(Color.ddBackground, for: .navigation)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.ddForest, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
     }
 }
 

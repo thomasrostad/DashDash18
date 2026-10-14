@@ -33,6 +33,7 @@ struct RulesetEditorView: View {
         }
         .navigationTitle("Regler")
         .ddNavigationChrome()
+        .rulesExplanationButton(draft.rules)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if !isReadOnly {
@@ -42,7 +43,8 @@ struct RulesetEditorView: View {
                 }
             }
         }
-        .overlay(alignment: .bottom) {
+        // V8: kvitteringen legges i bunnmargen, så den ikke dekker den nederste raden.
+        .safeAreaInset(edge: .bottom) {
             if let savedMessage {
                 Text(savedMessage)
                     .font(.dd(.sans, size: 13, relativeTo: .footnote))

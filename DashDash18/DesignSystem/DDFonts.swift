@@ -103,21 +103,23 @@ extension Font {
     // Typografiskala. Store tall og navn i 42dot Sans (lett/medium), som i golfee;
     // størrelsene følger PWA-en på en 402 pt bred iPhone.
 
-    /// Stor tittel på innlogging (lett 44).
-    static let ddDisplay = dd(.sans, size: 44, weight: .light, relativeTo: .largeTitle)
+    /// Stor tittel (medium 34). Lett 44 er bare for feiring og hero (`ddHeroDisplay`).
+    static let ddDisplay = dd(.sans, size: 34, weight: .medium, relativeTo: .largeTitle)
+    /// Display i feiring og hero (lett 44).
+    static let ddHeroDisplay = dd(.sans, size: 44, weight: .light, relativeTo: .largeTitle)
     /// Overskrift på skjerm og ark (medium 24).
     static let ddTitle = dd(.sans, size: 24, weight: .medium, relativeTo: .title2)
     /// Kortoverskrift (medium 20), f.eks. «Ingen runde på gang» og datoen for kvelden.
     static let ddTitleSmall = dd(.sans, size: 20, weight: .medium, relativeTo: .title3)
-    /// Spillernavn (regular 21 på hullkortet).
-    static let ddName = dd(.sans, size: 21, weight: .regular, relativeTo: .title3)
+    /// Spillernavn (medium 21 på hullkortet).
+    static let ddName = dd(.sans, size: 21, weight: .medium, relativeTo: .title3)
     /// Navn i lister (medium 17).
     static let ddNameSmall = dd(.sans, size: 17, weight: .medium, relativeTo: .headline)
 
-    /// Brødtekst (regular 16, «Body 16px» i golfee).
-    static let ddBody = dd(.sans, size: 16, relativeTo: .body)
-    /// Uthevet brødtekst og radtitler (medium 16).
-    static let ddBodyEmphasis = dd(.sans, size: 16, weight: .medium, relativeTo: .body)
+    /// Brødtekst (regular 17, som iOS-standarden).
+    static let ddBody = dd(.sans, size: 17, relativeTo: .body)
+    /// Uthevet brødtekst og radtitler (medium 17).
+    static let ddBodyEmphasis = dd(.sans, size: 17, weight: .medium, relativeTo: .body)
     /// Knappetekst (semibold 16).
     static let ddButton = dd(.sans, size: 16, weight: .semibold, relativeTo: .body)
     /// Stor knapp (semibold 17).
@@ -129,18 +131,20 @@ extension Font {
     /// Score-merke (semibold 13).
     static let ddChip = dd(.sans, size: 13, weight: .semibold, relativeTo: .footnote)
 
-    /// Seksjonsetikett og «eyebrow» (mono 10, versaler med sporing).
-    static let ddEyebrow = dd(.mono, size: 10, relativeTo: .caption2)
-    /// Pille i versaler (mono 9.5).
-    static let ddPill = dd(.mono, size: 9.5, relativeTo: .caption2)
+    /// Seksjonsetikett og «eyebrow» (mono 11, versaler med sporing). Mono brukes bare her.
+    static let ddEyebrow = dd(.mono, size: 11, relativeTo: .caption2)
+    /// Status i piller og linjer («Pågår», «Hull 7 av 18»): sans medium 13 (planen 1.4).
+    static let ddStatus = dd(.sans, size: 13, weight: .medium, relativeTo: .footnote)
+    /// Pille: samme som status.
+    static let ddPill = ddStatus
     /// Små tall og linjer (sans 13, tabelltall).
     static let ddMonoSmall = dd(.sans, size: 13, relativeTo: .caption)
     /// Tall i rader (medium 17).
     static let ddNumber = dd(.sans, size: 17, weight: .medium, relativeTo: .body)
     /// Totalsum (medium 20).
     static let ddNumberLarge = dd(.sans, size: 20, weight: .medium, relativeTo: .title3)
-    /// Slag på hullkortet (medium 32).
-    static let ddStrokes = dd(.sans, size: 32, weight: .medium, relativeTo: .title)
+    /// Slag på hullkortet (medium 40, bruk `monospacedDigit()`).
+    static let ddStrokes = dd(.sans, size: 40, weight: .medium, relativeTo: .title)
 }
 
 extension UIFont {

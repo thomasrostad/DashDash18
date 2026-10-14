@@ -72,6 +72,25 @@ nonisolated extension RoundGame {
         !players.isEmpty && players.allSatisfy { scores($0)[hole] != nil }
     }
 
+    /// Synkstatus over «Lagre» (utbedringsplanen K6). Nil når ingenting er ført ennå.
+    /// `pending`: hull som ligger i køen på telefonen.
+    func syncStatus(viewer: Viewer, pending: Set<Int>) -> SyncStatus? {
+        let players = cardPlayers(for: viewer).filter { cardRowEditable($0, for: viewer) }
+        guard !players.isEmpty else { return nil }
+        if !pending.isEmpty {
+            return SyncStatus(text: "Lagret på telefonen · sendes når du får dekning", isPending: true)
+        }
+        let synced = (0..<holeCount).filter { isComplete(hole: $0, for: players) }
+        guard let last = synced.last else { return nil }
+        if synced.count == 1 {
+            return SyncStatus(text: "Hull \(holeNumber(last)) er synket", isPending: false)
+        }
+        if synced == Array(synced.first!...last) {
+            return SyncStatus(text: "Hull \(holeNumber(synced.first!))–\(holeNumber(last)) er synket", isPending: false)
+        }
+        return SyncStatus(text: "\(synced.count) hull er synket", isPending: false)
+    }
+
     /// `baasensHull`: første hull der ikke alle på kortet er ført. Alle ført: siste hull.
     func bayHole(for viewer: Viewer) -> Int {
         let players = cardPlayers(for: viewer)
@@ -149,6 +168,13 @@ nonisolated extension QueuedHole {
     }
 }
 
+/// Linja som sier om førte hull er sendt (K6).
+nonisolated struct SyncStatus: Equatable, Sendable {
+    let text: String
+    /// Ligger i køen på telefonen (rust-ikon).
+    let isPending: Bool
+}
+
 /// Tallene markøren har trykket fram, før de er lagret. En verdi som finnes ER bekreftelsen
 /// (PWA-ens `scoreUtkast`). Overlever realtime-hentinger.
 nonisolated struct HoleDrafts: Equatable, Sendable {
@@ -210,25 +236,29 @@ nonisolated struct HoleCard: Equatable, Sendable {
         let isMe: Bool
         /// Raden har stepper.
         let editable: Bool
-        /// Bekreftet (eller trenger ikke bekreftelse). Ubekreftet vises stiplet.
+        /// Rørt av markøren, lagret, eller alene på kortet. Urørt forvalg (par) vises dempet
+        /// med «forvalgt par» (utbedringsplanen K1).
         let confirmed: Bool
         /// Lagret på serveren (eller i kø).
         let saved: Int?
         /// Tallet som står: utkastet, ellers det lagrede, ellers par.
         let value: Int
         let strokesReceived: Int
-        /// «5 brutto − 1 = 4 netto». Nil med eksternt handicap eller ubekreftet rad.
+        /// «5 brutto − 1 = 4 netto». Nil med eksternt handicap.
         let calculation: String?
-        /// Nil når det ikke er noe å vise (ubekreftet, eller ikke ført i seer-modus).
+        /// Nil når det ikke er noe å vise (ikke ført i seer-modus).
         let scoreName: ScoreName?
         /// Nil i en match (der er det hullet som vinnes, ikke poengene).
         let points: Int?
         var id: UUID { memberID }
+        /// Står på forvalget (par) uten at markøren har rørt det.
+        var isDefault: Bool { editable && !confirmed }
     }
 
     enum Action: Equatable, Sendable {
-        /// «Lagre hull N → hull N+1». Låst til alle er bekreftet.
-        case save(title: String, enabled: Bool, blocker: String?)
+        /// «Lagre hull N og gå videre». Alltid aktiv: urørte rader lagres som par (K1).
+        /// `status` er linja over knappen, f.eks. «1 av 4 endret fra par».
+        case save(title: String, enabled: Bool, status: String?)
         /// Lagret og urørt: videre uten å lagre.
         case next(title: String, hole: Int)
         /// Alt er lagret på siste hull.
@@ -238,6 +268,15 @@ nonisolated struct HoleCard: Equatable, Sendable {
     }
 
     let holeIndex: Int
+    /// Banens nummer på hullet (hero-kortet).
+    let number: Int
+    let par: Int
+    /// «155», eller nil uten lengde.
+    let meters: String?
+    /// Indeksen på scorekortet, eller nil med eksternt handicap.
+    let strokeIndex: Int?
+    /// Hull i runden, så ‹ › vet hvor langt de kan gå.
+    let holeCount: Int
     let title: String
     let detail: String
     let isLongestDrive: Bool
@@ -245,8 +284,8 @@ nonisolated struct HoleCard: Equatable, Sendable {
     let header: String
     let strokesLabel: String
     let rows: [Row]
+    /// Flere rader å føre (båsen). Da viser kortet hvor mange som er endret fra par.
     let mustConfirm: Bool
-    let showsParHint: Bool
     let outsideTruncation: String?
     let action: Action
     /// Seer-modus: «Feil tall? Si det til Anders.»
@@ -275,7 +314,7 @@ nonisolated extension RoundGame {
             let hcp = handicap(member)
             let received = round.hcpExtern ? 0
                 : Scoring.handicapStrokes(handicap: hcp, strokeIndex: hole.strokeIndex, holes: count)
-            let show = isEditable ? confirmed : saved != nil
+            let show = isEditable || saved != nil
             let inMatch = MatchPlay.holeMatch(for: member.uuidString, in: round) != nil
             return HoleCard.Row(
                 memberID: member,
@@ -286,7 +325,7 @@ nonisolated extension RoundGame {
                 saved: saved,
                 value: value,
                 strokesReceived: received,
-                calculation: (isEditable && confirmed && !round.hcpExtern)
+                calculation: (isEditable && !round.hcpExtern)
                     ? HoleMath.calculation(gross: value, received: received) : nil,
                 scoreName: show ? Scoring.scoreName(par: hole.par, gross: value, handicap: hcp,
                                                     strokeIndex: hole.strokeIndex, holes: count) : nil,
@@ -305,7 +344,7 @@ nonisolated extension RoundGame {
 
         let header: String
         if players.count > 1 { header = groupTerm.definiteTitle }
-        else if let only = players.first { header = only == viewer.memberID ? "Deg" : name(only) }
+        else if let only = players.first { header = only == viewer.memberID ? "Ditt kort" : name(only) }
         else { header = "" }
 
         let outside = index >= Truncation.countingHoles(round)
@@ -315,8 +354,6 @@ nonisolated extension RoundGame {
         let action: HoleCard.Action
         var viewerHint: String?
         if canEdit {
-            let confirmed = editable.filter(isConfirmed)
-            let all = confirmed.count == editable.count
             let allSaved = editable.allSatisfy { scores($0)[index] != nil }
             let changed = editable.contains { m in
                 guard let d = drafts[index, m] else { return false }
@@ -326,12 +363,15 @@ nonisolated extension RoundGame {
             if allSaved && !changed {
                 action = next.map { .next(title: "Neste hull → hull \(holeNumber($0))", hole: $0) } ?? .scorecard
             } else {
-                var text = allSaved ? "Lagre endringen · hull \(holeNumber(index))" : "Lagre hull \(holeNumber(index))"
-                if all, let next { text += " → hull \(holeNumber(next))" }
-                let missing = editable.filter { !confirmed.contains($0) }.map(name)
-                let blocker = all ? nil
-                    : "Bekreft \(HoleMath.list(missing)) først · \(confirmed.count) av \(editable.count) klare"
-                action = .save(title: text, enabled: all, blocker: blocker)
+                let text = allSaved
+                    ? "Lagre endringen · hull \(holeNumber(index))"
+                    : (next == nil ? "Lagre hull \(holeNumber(index))" : "Lagre hull \(holeNumber(index)) og gå videre")
+                // Ett trykk per hull når alle går par: urørte rader lagres som par (K1).
+                let changedFromPar = editable.filter { m in
+                    (drafts[index, m] ?? scores(m)[index]).map { $0 != hole.par } ?? false
+                }.count
+                let status = mustConfirm ? "\(changedFromPar) av \(editable.count) endret fra par" : nil
+                action = .save(title: text, enabled: true, status: status)
             }
         } else {
             action = .none
@@ -342,6 +382,11 @@ nonisolated extension RoundGame {
 
         return HoleCard(
             holeIndex: index,
+            number: holeNumber(index),
+            par: hole.par,
+            meters: hole.meters.map(HoleMath.meters),
+            strokeIndex: round.hcpExtern ? nil : hole.cardIndex,
+            holeCount: count,
             title: title,
             detail: detail.joined(separator: " · "),
             isLongestDrive: index == longestDriveHole,
@@ -350,7 +395,6 @@ nonisolated extension RoundGame {
             strokesLabel: round.hcpExtern ? "Slag · netto" : "Slag · brutto",
             rows: rows,
             mustConfirm: mustConfirm,
-            showsParHint: mustConfirm && editable.contains { !isConfirmed($0) },
             outsideTruncation: outside,
             action: action,
             viewerHint: viewerHint
@@ -383,6 +427,78 @@ nonisolated extension RoundGame {
         guard currentHole != bh else { return nil }
         return ("Du ser på hull \(holeNumber(currentHole)). \(groupTerm.definiteTitle) er på hull \(holeNumber(bh)).",
                 "Til hull \(holeNumber(bh)) →", bh)
+    }
+}
+
+nonisolated extension HoleCard {
+    /// «Par 3 · 155 m» under hullnummeret.
+    var parLine: String {
+        meters.map { "Par \(par) · \($0) m" } ?? "Par \(par)"
+    }
+
+    /// «Indeks 17», eller nil med eksternt handicap.
+    var indexLine: String? { strokeIndex.map { "Indeks \($0)" } }
+
+    var hasPrevious: Bool { holeIndex > 0 }
+    var hasNext: Bool { holeIndex < holeCount - 1 }
+
+    /// «Lagre hull 7 og gå videre» får en pil (planen 4.2).
+    var actionAdvances: Bool {
+        if case .save(let title, _, _) = action { return title.hasSuffix("og gå videre") }
+        return false
+    }
+}
+
+// MARK: - Føringen som egen skjerm (planen 4.2)
+
+/// Tittelen i verktøylinja: «Losby · runde 4» og «Du fører for bås 2» under.
+nonisolated struct ScoringTitle: Equatable, Sendable {
+    let title: String
+    let subtitle: String?
+}
+
+/// Segmentene i føringen: «Føring | Stilling | Spill i runden».
+nonisolated enum RundeSegment: Hashable, Sendable {
+    case scoring, standing, extras
+
+    /// Segmentet skjermen åpner på: føringen når det er noe å føre, ellers stillingen.
+    static func initial(isLocked: Bool, hasCard: Bool) -> RundeSegment {
+        (isLocked || !hasCard) ? .standing : .scoring
+    }
+
+    /// «Spill · 2». Kort nok til tre like brede segmenter på 375 pt.
+    static func extrasTitle(count: Int) -> String {
+        count > 0 ? "Spill · \(count)" : "Spill"
+    }
+}
+
+nonisolated extension RoundGame {
+    /// Banen (uten «Golfklubb») og runden i klubben. En løs runde har ikke rundenummer.
+    func scoringTitle(viewer: Viewer) -> ScoringTitle {
+        let course = snapshot.course.map { Self.shortCourseName($0.name) } ?? "Runden"
+        let title = snapshot.loose == nil ? "\(course) · runde \(snapshot.round.roundNo)" : course
+        return ScoringTitle(title: title, subtitle: scoringSubtitle(viewer: viewer))
+    }
+
+    /// «Du fører for bås 2», «Bås 2 · Kåre fører», «Du fører ditt eget kort» eller «Runden er ferdig».
+    private func scoringSubtitle(viewer: Viewer) -> String? {
+        if status == .locked { return "Runden er ferdig" }
+        let me = viewer.memberID
+        guard isPlaying(me) else { return viewer.isOrganizer ? "Du ser på som arrangør" : "Du ser på" }
+        if hasBays, let bay = bay(of: me) {
+            if bay.marker == me { return "Du fører for \(groupTerm.numberedLower(bay.number))" }
+            if let marker = bay.marker { return "\(groupTerm.numbered(bay.number)) · \(name(marker)) fører" }
+        }
+        return cardRowEditable(me, for: viewer) ? "Du fører ditt eget kort" : nil
+    }
+
+    /// «Losby Golfklubb» → «Losby». Andre navn står som de er.
+    static func shortCourseName(_ name: String) -> String {
+        for suffix in [" Golfklubb", " golfklubb", " GK", " Golfbane", " golfbane"] where name.hasSuffix(suffix) {
+            let short = String(name.dropLast(suffix.count)).trimmingCharacters(in: .whitespaces)
+            return short.isEmpty ? name : short
+        }
+        return name
     }
 }
 
@@ -420,12 +536,29 @@ nonisolated struct HoleDot: Equatable, Identifiable, Sendable {
     let isBayHole: Bool
     var id: Int { index }
 
+    /// Hullbrikken (V15): nåværende er fylt, førte har chip-bakgrunn, kommende har strek.
+    enum ChipStyle: Equatable, Sendable { case current, saved, partial, upcoming }
+
+    var chipStyle: ChipStyle {
+        if isCurrent { return .current }
+        switch state {
+        case .done: return .saved
+        case .partial: return .partial
+        case .upcoming: return .upcoming
+        }
+    }
+
+    /// Longest drive eller nærmest pinnen: liten gull-prikk på brikken.
+    var hasSidePrize: Bool { isLongestDrive || isClosestToPin }
+
+    /// «Hull 7, nåværende, nærmest pinnen».
     var accessibilityLabel: String {
         var parts = ["Hull \(number)"]
+        if isCurrent { parts.append("nåværende") }
         switch state {
         case .done: parts.append("lagret")
         case .partial: parts.append("delvis lagret")
-        case .upcoming: parts.append("ikke lagret")
+        case .upcoming: if !isCurrent { parts.append("ikke lagret") }
         }
         if isPending { parts.append("ikke sendt ennå") }
         if isLongestDrive { parts.append("longest drive") }

@@ -34,7 +34,7 @@ struct CourseListView: View {
 
     var body: some View {
         DDList {
-            if let error = model.error {
+            if let error = model.error, model.hasLoaded {
                 Section {
                     Label(error.message, systemImage: "exclamationmark.triangle")
                         .foregroundStyle(Color.ddError)
@@ -66,11 +66,30 @@ struct CourseListView: View {
             }
         }
         .overlay {
+            // V13: tom, lasting og feil, hver med én handling.
             if model.hasLoaded, model.items.isEmpty, model.missingFromSet.isEmpty {
-                ContentUnavailableView("Ingen baner ennå", systemImage: "map",
-                                       description: Text("Legg til banen dere spiller med «+»."))
+                ContentUnavailableView {
+                    Label("Ingen baner ennå", systemImage: "map")
+                } description: {
+                    Text(isOrganizer ? "Legg inn banen dere spiller, med par og indeks per hull."
+                                     : "Arrangøren legger inn banene dere spiller.")
+                } actions: {
+                    if isOrganizer {
+                        Button("Ny bane") { isCreating = true }
+                            .buttonStyle(.dd(.primary))
+                    }
+                }
             } else if !model.hasLoaded, model.isLoading {
-                ProgressView()
+                ProgressView("Henter banene …")
+            } else if !model.hasLoaded, let error = model.error {
+                ContentUnavailableView {
+                    Label("Fikk ikke hentet banene", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(error.message)
+                } actions: {
+                    Button("Prøv igjen") { Task { await model.load() } }
+                        .buttonStyle(.dd(.primary))
+                }
             }
         }
         .refreshable { await model.load() }

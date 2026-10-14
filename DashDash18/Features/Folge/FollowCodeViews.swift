@@ -97,7 +97,7 @@ struct FollowScanSheet: View {
             .ddNavigationChrome()
             .toolbar {
                 DDCancelToolbarItem {
-                    Button("Lukk") { dismiss() }.tint(Color.ddOnDark)
+                    Button("Lukk") { dismiss() }.tint(Color.ddForestInk)
                 }
             }
         }
