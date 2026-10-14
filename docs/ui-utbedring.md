@@ -25,6 +25,12 @@ Skjermbildene tas med skjermprøvene i `DesignScreenSamples` (`-DDDesignScreen <
 
 Designsystemet ligger i `DashDash18/DesignSystem/`. Farger er `DDToken` i `DDPalette.swift`, og kontrasten testes i `DesignSystemTests`. Knapper ligger i `DDButtons.swift` og fonter i `DDFonts.swift`. Den grønne topplinja var `ddNavigationChrome()`, som brukes 127 steder.
 
+## Utrulling
+
+- **Appen:** merget til `main` 14.10.2026 (PR #108). Xcode Cloud bygger «TestFlight fra main» og sender bygget til TestFlight. Delene (#102–#107) er lukket, fordi de er med i #108.
+- **Lenkesiden** (`web/atten-lenker`, dashdash18.com): rullet ut med `wrangler deploy` 14.10.2026 (versjon `ad59b807`). Den viser «Har du en kode?» i stedet for «Bli med med kode».
+- Ingen SQL eller endringer i Supabase.
+
 ## Status per punkt
 
 ### Fase 1: designsystemet
