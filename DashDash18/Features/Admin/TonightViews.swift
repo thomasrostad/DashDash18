@@ -11,6 +11,8 @@ struct TonightRoundCard: View {
     let title: String
     let shape: String
     let bays: [BayLive]
+    /// «1 hull har ulike tall fra to markører» (K6/6.3). nil: ingen.
+    var conflictText: String?
     /// nil: ingen TV-knapp (skjer ikke i dag, men holder kortet enkelt å gjenbruke).
     var showTV: (() -> Void)?
     let openRound: () -> Void
@@ -39,6 +41,15 @@ struct TonightRoundCard: View {
             ForEach(bays) { bay in
                 Divider()
                 BayLiveRow(bay: bay)
+            }
+            if let conflictText {
+                // Arket ligger i føringen: «Gå til runden» under.
+                DDInfoStripe(tone: .sun) {
+                    Label(conflictText + ". Velg tallet i runden.", systemImage: "exclamationmark.2")
+                        .labelStyle(DDIconLabelStyle())
+                }
+                .onTapGesture(perform: openRound)
+                .accessibilityAddTraits(.isButton)
             }
             if let showTV {
                 Button(action: showTV) {

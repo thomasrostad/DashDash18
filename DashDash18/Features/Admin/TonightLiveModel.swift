@@ -11,6 +11,8 @@ final class TonightLiveModel {
     private(set) var groups: [UUID: [StartGroupDraft]] = [:]
     private(set) var claims: [SideClaimRow] = []
     private(set) var scorerNames: [UUID: String] = [:]
+    /// Åpne markørkonflikter i rundene (K6/6.3, sql/055): nyeste per spiller og hull.
+    private(set) var conflicts: [HoleConflictRow] = []
     /// Klokka båsene regnes mot. Oppdateres ved hver henting.
     private(set) var now: Date
     /// Har vi hentet minst én gang? Uten det står synklinja som ukjent.
@@ -26,8 +28,9 @@ final class TonightLiveModel {
     #if DEBUG
     /// Skjermprøvene, uten nett.
     init(preview scores: [HoleScoreRow], groups: [UUID: [StartGroupDraft]] = [:], claims: [SideClaimRow] = [],
-         scorerNames: [UUID: String] = [:], now: Date) {
+         scorerNames: [UUID: String] = [:], conflicts: [HoleConflictRow] = [], now: Date) {
         client = nil
+        self.conflicts = MarkerConflicts.open(conflicts)
         self.scores = scores
         self.groups = groups
         self.claims = claims
@@ -51,8 +54,11 @@ final class TonightLiveModel {
                 .select(SideClaimRow.columns)
                 .in("round_id", values: ids)
                 .execute().value
+            async let conflictRows = MarkerConflictQueries.conflicts(client: client, roundIDs: rounds.map(\.id))
             scores = try await scoreRows
             claims = (try? await claimRows) ?? claims
+            // Mangler tabellen (sql/055 ikke kjørt), står det som sist.
+            if let rows = try? await conflictRows { conflicts = MarkerConflicts.open(rows) }
             if TournamentCoreFeature.isActive {
                 await loadStartList(client: client, rounds: rounds, players: players)
             }
@@ -87,7 +93,7 @@ final class TonightLiveModel {
 extension TonightLiveModel {
     /// «I kveld» i skjermprøvene (`arrangorpagar`): bås 1 på hull 14 og synket for 2 min siden, bås 2 på
     /// hull 11 uten data på 18 min (med funksjonær), bås 3 og 4 starter om 25 og 35 min.
-    static func sample(from admin: RundeAdminModel, now fixedNow: Date? = nil) -> TonightLiveModel {
+    static func sample(from admin: RundeAdminModel, now fixedNow: Date? = nil, conflicts: Bool = false) -> TonightLiveModel {
         // Kl. 19:35 i dag, så tidene blir som i skissen (18:00, 18:10, om 25 og 35 min).
         let now = fixedNow ?? EveningDates.time(from: "19:35", on: .now) ?? .now
         guard let round = admin.activeRound, let players = admin.playersByRound[round.id] else {
@@ -115,8 +121,16 @@ extension TonightLiveModel {
         }
         let claim = SideClaimRow(id: UUID(), roundID: round.id, memberID: players[0].memberID, kind: .kp, meters: 2.4,
                                  holeIndex: round.kpHoleIndex)
+        // `arrangorkonflikt`: to markører førte ulikt for en i bås 1 på hull 12 (K6/6.3).
+        var conflictRows: [HoleConflictRow] = []
+        if conflicts, let member = byBay[1]?.first?.memberID {
+            let at = now.addingTimeInterval(-4 * 60)
+            conflictRows.append(HoleConflictRow(id: UUID(), roundID: round.id, memberID: member, holeIndex: 11,
+                                                keptStrokes: 4, keptBy: nil, keptAt: at, otherStrokes: 5, otherBy: nil,
+                                                otherAt: at.addingTimeInterval(-60), createdAt: at, resolvedAt: nil))
+        }
         return TonightLiveModel(preview: scores, groups: [round.id: groups], claims: [claim],
-                                scorerNames: [scorer: "Bjørn"], now: now)
+                                scorerNames: [scorer: "Bjørn"], conflicts: conflictRows, now: now)
     }
 }
 #endif
