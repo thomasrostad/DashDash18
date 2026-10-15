@@ -94,20 +94,19 @@ private struct HjemClubContent: View {
     }
 
     var body: some View {
+        // Velgeren står øverst i innholdet som ruller, ikke i safeAreaBar/safeAreaInset: en stripe
+        // under den store tittelen endret toppinnfelt mens tittelen krympet, og rullingen hakket
+        // fram og tilbake når den ble sluppet halvveis.
+        let tabPicker = following != nil ? $feedTab : nil
         Group {
             if feedTab == .following, let following {
-                FollowingFeedView(model: following)
+                FollowingFeedView(model: following, tabPicker: tabPicker)
             } else {
                 HjemFeedView(feed: home.feed, state: home.state,
                              answerError: kveld.answerError, actions: actions, onRetry: reload,
-                             isLoadingMore: home.isLoadingMore)
+                             isLoadingMore: home.isLoadingMore, tabPicker: tabPicker)
             }
         }
-            // Som en del av navigasjonslinja (iOS 26), ikke en fast stripe: ellers ble velgeren
-            // hengende igjen når feeden ble dratt ned.
-            .safeAreaBar(edge: .top, spacing: 0) {
-                if following != nil { HjemFeedTabPicker(tab: $feedTab) }
-            }
             .task {
                 guard following == nil, await FollowFeature.detect(client: context.client) else { return }
                 following = FollowingFeedModel(client: context.client, userID: context.user.id)

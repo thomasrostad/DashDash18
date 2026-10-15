@@ -50,11 +50,16 @@ struct HjemFeedView: View {
     /// Skjermprøven av nedre del (`hjembunn`) starter nederst.
     var scrollAnchor: UnitPoint?
     var isLoadingMore = false
+    /// «Klubben/Følger» (sql/054) øverst i innholdet. nil: ingen velger.
+    var tabPicker: Binding<HjemFeedTab>?
     @Environment(\.liveBarInFeed) private var liveBarInFeed
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                if let tabPicker {
+                    HjemFeedTabPicker(tab: tabPicker)
+                }
                 if feed.pills.count > 1 {
                     HjemFilterBar(pills: feed.pills, select: actions.select)
                 }
