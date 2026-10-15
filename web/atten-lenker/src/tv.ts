@@ -126,7 +126,7 @@ export function extraPanels(board: Record<string, unknown>, rules: Ruleset | nul
   }).filter((b) => !b.isMain).map((b) => ({
     title: b.name,
     lines: b.supported
-      ? b.rows.slice(0, 5).map((r) => ({ name: `${r.rank}. ${r.players.map(name).join(" og ")}`, score: competitionScoreText(r.score) }))
+      ? b.rows.slice(0, 5).map((r) => ({ name: `${r.rank}. ${r.players.map(name).join(" og ")}`, score: competitionScoreText(r.score, b.signed) }))
       : [{ name: "Ikke støttet ennå", score: "" }],
   }));
   const team = teamMatchResult(live, sidesIn(round.id), roster, frozen?.ruleset ?? rules);

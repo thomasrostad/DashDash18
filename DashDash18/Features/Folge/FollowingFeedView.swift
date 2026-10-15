@@ -32,6 +32,9 @@ struct HjemFeedTabPicker: View {
 /// «Følger»: ferdige runder fra dem du følger, og dine egne, nyeste først.
 struct FollowingFeedView: View {
     @State var model: FollowingFeedModel
+    /// Kortet «Legg til venner» øverst (Hjem). Av der lista åpnes fra Deg → Følger.
+    var showsAddFriends = true
+    @State private var addFriends: FollowAddFriendsModel?
     @State private var comments: CommentsModel?
     @State private var emojiTarget: FollowingCard?
 
@@ -54,10 +57,12 @@ struct FollowingFeedView: View {
                     .frame(maxWidth: .infinity)
                     .ddCard(.empty)
                 default:
-                    if model.cards.isEmpty {
+                    if let addFriends {
+                        FollowAddFriendsCard(model: addFriends, feedIsEmpty: model.cards.isEmpty)
+                    } else if model.cards.isEmpty {
                         VStack(spacing: 6) {
                             Text("Ingenting her ennå").font(.ddBodyEmphasis).foregroundStyle(Color.ddInk)
-                            Text("Følg andre spillere under Deg → Følger, så kommer de ferdige rundene deres her.")
+                            Text("Følg andre spillere, så kommer de ferdige rundene deres her.")
                                 .font(.ddCallout)
                                 .foregroundStyle(Color.ddInkSecondary)
                                 .multilineTextAlignment(.center)
@@ -81,8 +86,19 @@ struct FollowingFeedView: View {
             .padding(.top, 12)
             .padding(.bottom, DDSpacing.xxl)
         }
-        .task { await model.load() }
-        .refreshable { await model.load() }
+        .task {
+            if showsAddFriends, addFriends == nil, let client = model.client {
+                addFriends = FollowAddFriendsModel(client: client, userID: model.userID)
+            }
+            async let feed: Void = model.load()
+            async let friends: Void? = addFriends?.load()
+            _ = await (feed, friends)
+        }
+        .refreshable {
+            async let feed: Void = model.load()
+            async let friends: Void? = addFriends?.load()
+            _ = await (feed, friends)
+        }
         .sheet(item: $comments) { CommentsSheet(model: $0) }
         .sheet(item: $emojiTarget) { card in
             EmojiPickerSheet { emoji in Task { await model.toggle(emoji, on: card) } }

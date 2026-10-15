@@ -125,6 +125,29 @@ export interface TeamHandicapRule {
   weights?: number[];
 }
 
+/**
+ * WHS-anbefalingen for formene der laget spiller én ball (`TeamHandicapRule.whsRecommended`): WHS «Rules of
+ * Handicapping», Appendix C. Vektene lavest først: foursome 50 % av summen, greensome og chapman 60/40,
+ * scramble 2 35/15, scramble 4 25/20/15/10.
+ */
+export const WHS_TEAM_HANDICAP: Readonly<Record<string, TeamHandicapRule>> = deepFreeze({
+  "foursome": { method: "weighted", weights: [0.5, 0.5] },
+  "greensome": { method: "weighted", weights: [0.6, 0.4] },
+  "chapman": { method: "weighted", weights: [0.6, 0.4] },
+  "scramble-2": { method: "weighted", weights: [0.35, 0.15] },
+  "scramble-4": { method: "weighted", weights: [0.25, 0.2, 0.15, 0.1] },
+} as Record<string, TeamHandicapRule>);
+
+/** `HandicapRules.useWHSTeamHandicap()`: formene med én ball får WHS-anbefalingen, resten er som før. */
+export function useWHSTeamHandicap(h: HandicapRules): void {
+  for (const [k, v] of Object.entries(WHS_TEAM_HANDICAP)) h.teamHandicap[k] = deepCopy(v) as TeamHandicapRule;
+}
+
+/** `HandicapRules.usesWHSTeamHandicap`. */
+export function usesWHSTeamHandicap(h: HandicapRules): boolean {
+  return Object.entries(WHS_TEAM_HANDICAP).every(([k, v]) => deepEqual(h.teamHandicap[k], v));
+}
+
 /** En seedet gruppe med fast turneringshandicap (`SEEDING_GRUPPER`). */
 export interface SeedingGroup {
   number: number;
@@ -239,7 +262,19 @@ export interface FormPlayRules {
   skins: SkinsRules;
   skinPoints: number;
   teamMatch: MatchPoints;
+  /** Par/bogey (regel 21.3): verdien av et vunnet, delt og tapt hull. Standard +1 / 0 / −1. */
+  parBogey: ParBogeyRules;
 }
+
+/** `ParBogeyRules`. */
+export interface ParBogeyRules {
+  win: number;
+  halve: number;
+  loss: number;
+}
+
+/** Regel 21.3b: vunnet +1, delt 0, tapt −1. */
+export const STANDARD_PAR_BOGEY: Readonly<ParBogeyRules> = Object.freeze({ win: 1, halve: 0, loss: -1 });
 
 const FULL_HANDICAP: GameHandicap = { net: true, allowance: 1, fromLowest: false };
 
@@ -270,6 +305,7 @@ export const STANDARD_FORM_PLAY: Readonly<FormPlayRules> = deepFreeze({
   skins: deepCopy(STANDARD_SKINS) as SkinsRules,
   skinPoints: 1,
   teamMatch: { win: 1, draw: 0.5, loss: 0 },
+  parBogey: { ...STANDARD_PAR_BOGEY },
 } as FormPlayRules);
 
 /** Reglene for poengspillet, med standarden når det mangler. */
@@ -677,6 +713,17 @@ function decodeFormPlay(x: unknown, path: string): FormPlayRules {
     skins: sk ? decodeSkinsRules(sk, `${path}.skins`) : deepCopy(s.skins) as SkinsRules,
     skinPoints: optNumber(o, "skinPoints", path) ?? s.skinPoints,
     teamMatch: tm ? decodeMatchPoints(tm, `${path}.teamMatch`) : { ...s.teamMatch },
+    parBogey: decodeParBogey(optObject(o, "parBogey", path), `${path}.parBogey`),
+  };
+}
+
+function decodeParBogey(o: JSONObject | null, path: string): ParBogeyRules {
+  const s = STANDARD_PAR_BOGEY;
+  if (!o) return { ...s };
+  return {
+    win: optNumber(o, "win", path) ?? s.win,
+    halve: optNumber(o, "halve", path) ?? s.halve,
+    loss: optNumber(o, "loss", path) ?? s.loss,
   };
 }
 
@@ -919,5 +966,7 @@ export function encodeFormPlay(f: FormPlayRules): JSONObject {
     },
     skinPoints: f.skinPoints,
     teamMatch: { ...f.teamMatch },
+    // Skrives bare når den ikke er standard (som Swift).
+    ...(deepEqual(f.parBogey, STANDARD_PAR_BOGEY) ? {} : { parBogey: { ...f.parBogey } }),
   };
 }

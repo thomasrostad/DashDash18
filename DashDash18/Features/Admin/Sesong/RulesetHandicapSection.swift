@@ -11,7 +11,7 @@ struct RulesetHandicapSection: View {
             Toggle(isOn: $draft.rules.handicap.externalHandicap) {
                 RuleFieldLabel(title: "Ekstern handicap", changeNote: draft.changeNote(.externalHandicap))
             }
-            if draft.countsMatches {
+            if draft.showsTeamHandicap {
                 NavigationLink {
                     TeamHandicapView(draft: $draft)
                 } label: {
@@ -83,6 +83,17 @@ private struct TeamHandicapView: View {
 
     var body: some View {
         DDForm {
+            Section {
+                if draft.usesWHSTeamHandicap {
+                    Label("Følger WHS-anbefalingen", systemImage: "checkmark.circle")
+                        .foregroundStyle(Color.ddInkSecondary)
+                } else {
+                    Button("Bruk WHS-anbefalingen", systemImage: "wand.and.stars") { draft.useWHSTeamHandicap() }
+                }
+            } footer: {
+                RuleSectionFooter(text: "WHS (Appendix C): foursome 50 % av summen, greensome og chapman 60 % av laveste og 40 % av høyeste, scramble 2 35/15 % og scramble 4 25/20/15/10 %.",
+                                  issues: [])
+            }
             ForEach(RulesetDraft.teamForms) { form in
                 Section {
                     Picker("Metode", selection: Binding(get: { draft.teamMethod(form) },

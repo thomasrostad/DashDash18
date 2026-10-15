@@ -480,6 +480,14 @@ Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rett
 
 ---
 
+### Nye spillformer (15.10.2026)
+
+- [x] Par/bogey (regel 21.3) i motoren og TypeScript: konkurranse, hovedform (stilling «+3», tabell med `table.formPoints`), verdiene i `formPlay.parBogey`.
+- [x] Én ball per lag (foursome, greensome, chapman, scramble 2 og 4) i `RoundCompetitions` når runden spilles i lagformen; føringen gjenbruker «samme tall på hele laget». Ingen SQL.
+- [x] WHS-lagshandicap (Appendix C) som forhåndsvalg i reglene («Bruk WHS-anbefalingen»); Golfgutu uendret.
+- [ ] Maksimumscore og match som konkurranse.
+- [ ] Par/bogey-symbol (+/0/−) på hullkortet i føringen (i dag viser kortet birdie/par/bogey og stablefordpoeng).
+
 ### Fase 12–17 – Åpen app med flere bruksområder
 
 **Besluttet 07.10.2026 (deg):** appen skal være åpen for alle og dekke løse runder med venner, spill på runden, flere konkurranser samtidig og egen statistikk. Hele planen står i `docs/visjon-apen-app.md`. Kort fortalt:
