@@ -33,6 +33,9 @@ public struct Ruleset: Hashable, Sendable {
     /// Regelverdiene for formene fra steg 7: poengspillene (Amerikaner, Københavner), skins som form og
     /// lag mot lag (FormPlay.swift). Standard: `FormPlayRules.standard`, og da skrives gruppen ikke.
     public var formPlay: FormPlayRules
+    /// Føring og visning i runden: maks slag per hull, låst kort etter levering og antall skjulte hull
+    /// (PlayRules.swift). Standard: `PlayRules.standard`, og da skrives gruppen ikke.
+    public var play: PlayRules = .standard
 
     /// Ordet som gjelder: `dayTerm`, ellers «kveld».
     public var day: DayTerm { dayTerm ?? .evening }
@@ -422,7 +425,7 @@ public struct Ruleset: Hashable, Sendable {
 extension Ruleset: Codable {
     private enum CodingKeys: String, CodingKey {
         case version, evenings, scoring, table, sidePrizes, handicap, formats, tips, bets, leadCheckpoints, competition
-        case dayTerm, formPlay
+        case dayTerm, formPlay, play
     }
 
     /// Versjon 1: flat.
@@ -453,6 +456,7 @@ extension Ruleset: Codable {
             competition = try c.decodeIfPresent(CompetitionRules.self, forKey: .competition)
             dayTerm = try c.decodeIfPresent(DayTerm.self, forKey: .dayTerm)
             formPlay = try c.decodeIfPresent(FormPlayRules.self, forKey: .formPlay) ?? g.formPlay
+            play = try c.decodeIfPresent(PlayRules.self, forKey: .play) ?? g.play
             return
         }
         // Versjon 1. `countingEvenings` gjaldt matcher (`TELLENDE_MATCHER`), `stablefordCountingEvenings` runder.
@@ -497,6 +501,8 @@ extension Ruleset: Codable {
         try c.encodeIfPresent(dayTerm, forKey: .dayTerm)
         // Bare når formreglene ikke er standard, så JSON-en for regelsett fra før er som før.
         if formPlay != .standard { try c.encode(formPlay, forKey: .formPlay) }
+        // Bare når føringsreglene ikke er standard, av samme grunn.
+        if play != .standard { try c.encode(play, forKey: .play) }
     }
 }
 

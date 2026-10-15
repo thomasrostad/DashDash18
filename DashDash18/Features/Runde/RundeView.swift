@@ -189,6 +189,10 @@ struct RundeView: View {
         if model.hidesLastHoles {
             DDInfoStripe(HiddenHoles.note + ".")
         }
+        // Leverte kort (sql/058): arrangøren kan åpne dem igjen.
+        if model.viewer.isOrganizer, game.status == .active, case let cards = game.submittedCards(), !cards.isEmpty {
+            SubmittedCardsSection(model: model, cards: cards)
+        }
         if model.looseContext != nil {
             LooseRoundActions(model: model)
         }
@@ -287,6 +291,10 @@ struct RundeView: View {
                                         pending: model.pendingHoles)) { model.goTo(hole: $0) }
         if let card = model.card {
             hullkort(card)
+            // Låst kort etter levering (sql/058).
+            if let submission = model.cardSubmission {
+                CardSubmissionSection(model: model, submission: submission)
+            }
             if StatsFeature.isEnabled, game.isPlaying(model.viewer.memberID), let par = game.statsPar(card.holeIndex),
                let access = model.statsAccess {
                 HoleStatsSlot(client: access.client, userID: access.userID, roundID: game.roundID,

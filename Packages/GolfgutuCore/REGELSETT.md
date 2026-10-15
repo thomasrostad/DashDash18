@@ -48,8 +48,11 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `formPlay.skins` | `{handicap, valuePerSkin, carryOver, leftover}` | Skins som form, samme felt som rundespillet (`SkinsRules`). Standard: netto, fullt handicap, 10, carry-over, `lapse`. |
 | `formPlay.skinPoints` | tall | Tabellpoeng per skin vunnet (med `table.formPoints`). Standard 1. |
 | `formPlay.teamMatch` | `{win, draw, loss}` | Lag mot lag: poeng til siden per match. Standard 1 / 0,5 / 0. |
+| `play.maxStrokes` | `{"type":"off"}` / `{"type":"netDoubleBogey"}` / `{"type":"fixed","strokes":N}` | Maks slag per hull. Netto dobbel bogey = par + 2 + slagene spilleren får. Fast: 3–20. Standard av. |
+| `play.lockSubmittedCards` | sann/usann | Markøren leverer kortet, og bare arrangøren kan endre det eller åpne det igjen (sql/058). Standard usann. |
+| `play.hiddenHoles` | tall | Hvor mange av de siste hullene «Skjul de siste hullene» skjuler i en ny runde (1–9). Standard 3. |
 
-`formPlay` skrives bare når gruppen ikke er standard, så JSON-en for Golfgutu og eldre regelsett er som før.
+`formPlay` og `play` skrives bare når gruppen ikke er standard, så JSON-en for Golfgutu og eldre regelsett er som før.
 
 Felt som mangler i JSON-en, får Golfgutu-verdien. `null` er et valg der feltet tillater det
 (`best`, `roundingStep`, `allowanceOverride`). Skjemaets standard `{"version": 1}` blir Golfgutu-oppsettet.
@@ -423,6 +426,24 @@ hull først.
 `ruleset`, `holes`, `playingHandicaps`, `gameType`, `teams`. `RoundCompetitions.evaluate(frozen, scores:)`
 regner fra det, så endringer i regelsettet, banen eller handicapet etter start ikke endrer resultatet.
 Lagringen (sql 048) gjør appen.
+
+## Føring og visning (regelvern)
+
+Fixture: `maks-slag.json` (regnet for hånd). Tester: `PlayRulesTests.swift` og `web/golfgutu-core/test/play.test.ts`.
+Med Golfgutu-oppsettet er alt som før (`play` skrives ikke, PWA-en har ingen grense utover 1–12 på skjermen).
+
+| Verdi | Brukes i | Ruleset | Golfgutu |
+|---|---|---|---|
+| Maks slag per hull | `Round.strokeLimit`, `Round.cappingStrokes` (i `Season` og føringen), stepperen | `play.maxStrokes` | av |
+| Låst kort etter levering | appen og `can_score` (sql/058) | `play.lockSubmittedCards` | av |
+| Antall skjulte hull i en ny runde | runde-oppsettet (`Round.hideLastHoles` lagres per runde) | `play.hiddenHoles` | 3 |
+| Inndatagrensen 1–12 på stepperen | `StrokeInput` (appen) | bli (skjerm, som PWA-en) | – |
+
+- **Grensen i utregningen:** en score over grensen teller som grensen (også scorer ført før grensen kom, eller
+  fra et sted uten grense). Slagene fått regnes som i stableford (`Handicap.effective`, stroke index), så frosne
+  spillehandicap og andel gjelder. I lagformer med ett kort regnes grensen med spillerens eget handicap.
+- Netto dobbel bogey endrer aldri stablefordpoengene (0 poeng uansett), men slagspill og match kan endres
+  (fixturen: delt hull i stedet for tap).
 
 ## Veddemål
 

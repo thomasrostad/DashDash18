@@ -277,7 +277,8 @@ struct RundeSetupStep: View {
 // MARK: - Tabellen (sql/047)
 
 extension RundeSetupStep {
-    /// «Teller ikke i tabellen», poengtabellen og «Skjul de tre siste hullene».
+    /// «Teller ikke i tabellen», poengtabellen og «Skjul de siste hullene» (antallet fra regelsettet,
+    /// `play.hiddenHoles`, og kan endres for runden).
     var tableSection: some View {
         Section {
             Toggle("Teller ikke i tabellen", isOn: Binding(get: { !draft.counts }, set: { draft.counts = !$0 }))
@@ -291,11 +292,20 @@ extension RundeSetupStep {
                 }
                 .disabled(!draft.counts)
             }
-            Toggle("Skjul de tre siste hullene", isOn: $draft.hidesLastHoles)
+            Toggle("Skjul de siste hullene", isOn: $draft.hidesLastHoles)
+            if draft.hidesLastHoles {
+                Stepper(value: $draft.hiddenHoles,
+                        in: Ruleset.PlayRules.hiddenHolesRange.lowerBound...min(Ruleset.PlayRules.hiddenHolesRange.upperBound,
+                                                                                max(1, draft.holeCount))) {
+                    LabeledContent("Antall hull", value: "\(draft.storedHiddenHoles)")
+                }
+            }
         } header: {
             Text("Tabellen")
         } footer: {
-            Text("Skjulte hull vises for andre når runden er låst.")
+            Text(draft.hidesLastHoles
+                 ? "Stillingen på Tavla, i Hjem og i varslene regnes uten de \(draft.storedHiddenHoles) siste hullene til runden er låst. Arrangøren og båsen som fører, ser alt."
+                 : "Skjulte hull vises for andre når runden er låst.")
         }
     }
 }

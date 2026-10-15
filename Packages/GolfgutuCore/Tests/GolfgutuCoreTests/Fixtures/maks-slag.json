@@ -1,0 +1,69 @@
+{
+  "kilde": "Regnet for hånd. matchHull1: hvem som vinner hull 1 i matchen A mot B (laveste fra scratch: A får 18 slag, ett per hull). Banen: 18 hull par 4, stroke index 1–18, CR 72, slope 113 (banehandicap = indeks). Andel 1. A har handicap 18 (ett slag på hvert hull), B har 0. Netto dobbel bogey = par + 2 + slag fått.",
+  "spillere": [
+    { "id": "A", "name": "Anders", "handicap": 18 },
+    { "id": "B", "name": "Bjørn", "handicap": 0 }
+  ],
+  "slag": {
+    "A": [9, 7, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    "B": [9, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+  },
+  "grense": [
+    { "regel": { "type": "off" }, "par": 4, "slagFatt": 1, "grense": null },
+    { "regel": { "type": "netDoubleBogey" }, "par": 4, "slagFatt": 1, "grense": 7 },
+    { "regel": { "type": "netDoubleBogey" }, "par": 3, "slagFatt": 0, "grense": 5 },
+    { "regel": { "type": "netDoubleBogey" }, "par": 5, "slagFatt": 2, "grense": 9 },
+    { "regel": { "type": "fixed", "strokes": 8 }, "par": 5, "slagFatt": 2, "grense": 8 }
+  ],
+  "saker": [
+    {
+      "navn": "av (Golfgutu): uendret",
+      "regel": { "type": "off" },
+      "kappet": {
+        "A": [9, 7, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+        "B": [9, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+      },
+      "stableford": { "A": 31, "B": 32 },
+      "brutto": { "A": 97, "B": 79 },
+      "matchHull1": "A"
+    },
+    {
+      "navn": "netto dobbel bogey: A høyst 7, B høyst 6",
+      "regel": { "type": "netDoubleBogey" },
+      "kappet": {
+        "A": [7, 7, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+        "B": [6, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+      },
+      "stableford": { "A": 31, "B": 32 },
+      "brutto": { "A": 95, "B": 76 },
+      "matchHull1": "delt"
+    },
+    {
+      "navn": "fast 6 slag",
+      "regel": { "type": "fixed", "strokes": 6 },
+      "kappet": {
+        "A": [6, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+        "B": [6, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+      },
+      "stableford": { "A": 33, "B": 32 },
+      "brutto": { "A": 93, "B": 76 },
+      "matchHull1": "A"
+    }
+  ],
+  "json": [
+    { "inn": { "maxStrokes": { "type": "netDoubleBogey" } }, "maxStrokes": { "type": "netDoubleBogey" }, "lockSubmittedCards": false, "hiddenHoles": 3 },
+    { "inn": { "maxStrokes": { "type": "fixed", "strokes": 10 }, "lockSubmittedCards": true, "hiddenHoles": 5 }, "maxStrokes": { "type": "fixed", "strokes": 10 }, "lockSubmittedCards": true, "hiddenHoles": 5 },
+    { "inn": {}, "maxStrokes": { "type": "off" }, "lockSubmittedCards": false, "hiddenHoles": 3 }
+  ],
+  "ugyldig": [
+    { "play": { "maxStrokes": { "type": "fixed", "strokes": 2 } }, "felt": "play.maxStrokes.strokes" },
+    { "play": { "maxStrokes": { "type": "fixed", "strokes": 21 } }, "felt": "play.maxStrokes.strokes" },
+    { "play": { "hiddenHoles": 0 }, "felt": "play.hiddenHoles" },
+    { "play": { "hiddenHoles": 10 }, "felt": "play.hiddenHoles" }
+  ],
+  "skjul": [
+    { "navn": "5 av 18", "holeCount": 18, "holeStart": 0, "hideLastHoles": 5, "skjulte": [13, 14, 15, 16, 17] },
+    { "navn": "4 av 9 fra hull 10", "holeCount": 9, "holeStart": 9, "hideLastHoles": 4, "skjulte": [5, 6, 7, 8] },
+    { "navn": "12 av 9: alle", "holeCount": 9, "holeStart": 0, "hideLastHoles": 12, "skjulte": [0, 1, 2, 3, 4, 5, 6, 7, 8] }
+  ]
+}

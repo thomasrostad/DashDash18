@@ -56,7 +56,8 @@ nonisolated struct RoundGame: Sendable {
             Player(id: row.memberID.uuidString, name: snapshot.names[row.memberID] ?? "",
                    handicap: row.handicapIndex, seedGroup: row.seedGroup)
         }
-        round = RoundGame.makeRound(snapshot)
+        // Maks slag per hull (`play.maxStrokes`): en score over grensen teller som grensen. Av: uendret.
+        round = RoundGame.makeRound(snapshot).cappingStrokes(roster: roster, rules: snapshot.rules)
         holes = round.courseHoles()
     }
 

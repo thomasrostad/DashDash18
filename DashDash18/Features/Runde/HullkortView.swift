@@ -275,7 +275,7 @@ struct HullRadView: View {
             .accessibilityLabel("Scorekortet til \(row.name)")
 
             if row.editable || row.saved != nil {
-                Text(row.isDefault ? "\(row.strokesReceived) slag fått · forvalgt par" : "\(row.strokesReceived) slag fått")
+                Text(StrokeAccessibility.received(row))
                     .font(.ddMonoSmall)
                     .foregroundStyle(Color.ddInkSecondary)
             }
@@ -340,6 +340,8 @@ struct HullRadView: View {
                 Image(systemName: "plus")
             }
             .buttonStyle(DDStepperButtonStyle(kind: .plus))
+            // Maks slag per hull i regelsettet: + stopper på grensen.
+            .disabled(row.isAtMax)
         }
         .sensoryFeedback(trigger: row.value) { old, new in new > old ? .increase : .decrease }
         // VoiceOver (V7): «Kåre, 4 slag», «2 poeng», og sveip opp/ned som + og −.
@@ -360,6 +362,14 @@ struct HullRadView: View {
 
 /// Det VoiceOver leser på stepperen (planen V7).
 nonisolated enum StrokeAccessibility {
+    /// «1 slag fått», med «forvalgt par» og «maks 7» når de gjelder.
+    static func received(_ row: HoleCard.Row) -> String {
+        var parts = ["\(row.strokesReceived) slag fått"]
+        if row.isDefault { parts.append("forvalgt par") }
+        if row.editable, let max = row.maxStrokes { parts.append("maks \(max)") }
+        return parts.joined(separator: " · ")
+    }
+
     /// «Kåre, 4 slag».
     static func label(_ row: HoleCard.Row) -> String {
         "\(row.name), \(row.value) slag"

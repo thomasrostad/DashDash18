@@ -3,6 +3,7 @@
 // som PWA-en. Rundens poeng regnes fra scorene.
 
 import { formTablePoints } from "./formplay.ts";
+import { cappingStrokes } from "./play.ts";
 import { jsRound, norwegianLess, norwegianString, sortedStrings } from "./jsmath.ts";
 import { avoidingRepeats, meetings } from "./draw.ts";
 import { matchInvolves, matchSides, matchStanding, outcomeForA, pointsForOutcome } from "./match.ts";
@@ -206,10 +207,13 @@ export class Season {
     this.players = players;
     this.rounds = rounds.map((round) => {
       const frozen = round.id !== null ? playingHandicaps.get(round.id) : undefined;
-      if (frozen === undefined || frozen.size === 0) return round;
-      const r = copyRound(round);
-      for (const [k, v] of frozen) r.playingHandicaps.set(k, v);
-      return r;
+      let r = round;
+      if (frozen !== undefined && frozen.size > 0) {
+        r = copyRound(round);
+        for (const [k, v] of frozen) r.playingHandicaps.set(k, v);
+      }
+      // Maks slag per hull (`play.maxStrokes`): scorer over grensen teller som grensen. Av: uendret.
+      return cappingStrokes(r, players, ruleset);
     });
     this.claims = claims;
     this.ruleset = ruleset;

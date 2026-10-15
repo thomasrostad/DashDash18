@@ -36,6 +36,8 @@ struct AppRoot: View {
                 .task(id: user.id) { await RoundRulesFeature.detect(client: services.client) }
                 // Formene fra steg 7 (sql/048): finnes konkurransene, sidene og øyeblikksbildet?
                 .task(id: user.id) { await RoundFormatsFeature.detect(client: services.client) }
+                // Låst kort etter levering (sql/058): finnes kolonnen og funksjonene?
+                .task(id: user.id) { await CardLockFeature.detect(client: services.client) }
                 // Følge andre spillere (sql/054): finnes funksjonene?
                 .task(id: user.id) { await FollowFeature.detect(client: services.client) }
                 .task(id: user.id) { await services.club.load(userID: user.id) }

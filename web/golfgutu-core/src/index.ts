@@ -31,6 +31,7 @@ export * from "./sideprize.ts";
 export * from "./season.ts";
 export * from "./draw.ts";
 export * from "./playoff.ts";
+export * from "./play.ts";
 export * from "./competitions.ts";
 export * from "./bets.ts";
 export * from "./app/rows.ts";

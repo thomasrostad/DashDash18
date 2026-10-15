@@ -19,6 +19,7 @@ import {
   optObject,
   optString,
   reqBool,
+  reqInt,
   reqNumber,
   stringArray,
   type JSONObject,
@@ -296,6 +297,70 @@ export interface Ruleset {
   dayTerm: DayTerm | null;
   /** Formene fra steg 7. Standard: `STANDARD_FORM_PLAY`, og da skrives gruppen ikke. */
   formPlay: FormPlayRules;
+  /** Føring og visning (PlayRules.swift). Standard: `STANDARD_PLAY`, og da skrives gruppen ikke. */
+  play: PlayRules;
+}
+
+// MARK: Føring og visning (PlayRules.swift)
+
+/** Maks slag per hull: av (Golfgutu), netto dobbel bogey, eller et fast tall. */
+export type MaxStrokes = { type: "off" } | { type: "netDoubleBogey" } | { type: "fixed"; strokes: number };
+
+export interface PlayRules {
+  maxStrokes: MaxStrokes;
+  /** Markøren leverer kortet, og bare arrangøren kan åpne det igjen. */
+  lockSubmittedCards: boolean;
+  /** Hvor mange av de siste hullene «Skjul de siste hullene» skjuler i en ny runde (1–9). */
+  hiddenHoles: number;
+}
+
+export const MAX_STROKES_FIXED: readonly [number, number] = [3, 20];
+export const HIDDEN_HOLES_RANGE: readonly [number, number] = [1, 9];
+
+export const STANDARD_PLAY: Readonly<PlayRules> = deepFreeze({
+  maxStrokes: { type: "off" },
+  lockSubmittedCards: false,
+  hiddenHoles: 3,
+} as PlayRules);
+
+/** Det høyeste en spiller kan føre på et hull med `par` og `strokesReceived` slag. `null`: ingen grense. */
+export function maxStrokesLimit(m: MaxStrokes, par: number, strokesReceived: number): number | null {
+  switch (m.type) {
+    case "off": return null;
+    case "netDoubleBogey": return par + 2 + Math.max(0, strokesReceived);
+    case "fixed": return m.strokes;
+  }
+}
+
+const MAX_STROKES_TYPES = ["off", "netDoubleBogey", "fixed"] as const;
+
+export function decodeMaxStrokes(x: unknown, path = "$"): MaxStrokes {
+  const o = obj(x, path);
+  const type = enumValue(o.type, MAX_STROKES_TYPES, `${path}.type`);
+  if (type === "fixed") {
+    return { type, strokes: reqInt(o, "strokes", path) };
+  }
+  return { type };
+}
+
+export function decodePlay(x: unknown, path = "$"): PlayRules {
+  const o = obj(x, path);
+  const m = optObject(o, "maxStrokes", path);
+  return {
+    maxStrokes: m ? decodeMaxStrokes(m, `${path}.maxStrokes`) : { ...STANDARD_PLAY.maxStrokes },
+    lockSubmittedCards: optBool(o, "lockSubmittedCards", path) ?? STANDARD_PLAY.lockSubmittedCards,
+    hiddenHoles: optInt(o, "hiddenHoles", path) ?? STANDARD_PLAY.hiddenHoles,
+  };
+}
+
+/** Gruppen som JSON, med samme felt som Swift skriver. */
+export function encodePlay(p: PlayRules): JSONObject {
+  const m = p.maxStrokes;
+  return {
+    maxStrokes: m.type === "fixed" ? { type: m.type, strokes: m.strokes } : { type: m.type },
+    lockSubmittedCards: p.lockSubmittedCards,
+    hiddenHoles: p.hiddenHoles,
+  };
 }
 
 /** Versjonen som skrives. */
@@ -430,6 +495,7 @@ export const GOLFGUTU: Readonly<Ruleset> = deepFreeze({
   competition: null,
   dayTerm: null,
   formPlay: deepCopy(STANDARD_FORM_PLAY),
+  play: deepCopy(STANDARD_PLAY),
 } as Ruleset);
 
 /** En kopi av Golfgutu-oppsettet som kan endres. */
@@ -760,6 +826,7 @@ export function decodeRuleset(x: unknown, path = "$"): Ruleset {
     const c = optObject(o, "competition", path);
     const dt = optEnum(o, "dayTerm", DAY_TERMS, path);
     const fp = optObject(o, "formPlay", path);
+    const pl = optObject(o, "play", path);
     return {
       evenings: optInt(o, "evenings", path) ?? r.evenings,
       scoring: s ? decodeScoring(s, `${path}.scoring`) : r.scoring,
@@ -773,6 +840,7 @@ export function decodeRuleset(x: unknown, path = "$"): Ruleset {
       competition: c ? decodeCompetitionRules(c, `${path}.competition`) : null,
       dayTerm: dt,
       formPlay: fp ? decodeFormPlay(fp, `${path}.formPlay`) : r.formPlay,
+      play: pl ? decodePlay(pl, `${path}.play`) : r.play,
     };
   }
   // Versjon 1. `countingEvenings` gjaldt matcher (`TELLENDE_MATCHER`), `stablefordCountingEvenings` runder.
@@ -894,6 +962,8 @@ export function encodeRuleset(r: Ruleset): JSONObject {
   if (r.dayTerm !== null) out.dayTerm = r.dayTerm;
   // Bare når formreglene ikke er standard.
   if (r.formPlay !== undefined && !deepEqual(r.formPlay, STANDARD_FORM_PLAY)) out.formPlay = encodeFormPlay(r.formPlay);
+  // Bare når føringsreglene ikke er standard.
+  if (r.play !== undefined && !deepEqual(r.play, STANDARD_PLAY)) out.play = encodePlay(r.play);
   return out;
 }
 
