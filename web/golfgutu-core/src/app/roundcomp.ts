@@ -143,6 +143,8 @@ export interface CompetitionBoard {
   supported: boolean;
   /** Poeng (høyest best) eller slag (lavest best). */
   higherIsBetter: boolean;
+  /** Par/bogey: summen vises med fortegn («+3», «−2»). */
+  signed: boolean;
   rows: RoundCompetitionResult["rows"];
 }
 
@@ -172,6 +174,7 @@ export function competitionBoards(p: {
       key, name: c.name, isMain: c.isMain,
       supported: engine !== null && (r?.supported ?? false),
       higherIsBetter: engine ? !(engine.scoring.type === "strokePlay" || engine.scoring.type === "maximumScore") : true,
+      signed: engine?.scoring.type === "parBogey",
       rows: r?.rows ?? [],
     };
   });
@@ -193,7 +196,9 @@ export function teamMatchResult(round: Round, sides: ReadonlyMap<UUID, number>, 
   return evaluateRyderCup([round], sides, roster, rules);
 }
 
-/** Poeng eller slag som tekst: «12» eller «12,5». */
-export function competitionScoreText(score: number): string {
-  return Number.isInteger(score) ? String(score) : score.toFixed(1).replace(".", ",");
+/** Poeng eller slag som tekst: «12» eller «12,5». Med `signed` (par/bogey): «+3», «0», «−2». */
+export function competitionScoreText(score: number, signed = false): string {
+  const text = Number.isInteger(Math.abs(score)) ? String(Math.abs(score)) : Math.abs(score).toFixed(1).replace(".", ",");
+  if (score < 0) return (signed ? "−" : "-") + text;
+  return (signed && score > 0 ? "+" : "") + text;
 }

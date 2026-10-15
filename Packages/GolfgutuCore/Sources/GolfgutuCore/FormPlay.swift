@@ -78,13 +78,16 @@ public struct FormPlayRules: Hashable, Sendable {
     public var skinPoints: Double
     /// Lag mot lag (Ryder Cup): poeng til siden for seier, delt og tap i en match.
     public var teamMatch: Ruleset.MatchPoints
+    /// Par/bogey: verdien av et vunnet, delt og tapt hull mot banen. Standard +1 / 0 / −1 (regel 21.3).
+    public var parBogey: ParBogeyRules
 
     public init(pointsGames: [String: PointsGameRules], skins: SkinsRules, skinPoints: Double,
-                teamMatch: Ruleset.MatchPoints) {
+                teamMatch: Ruleset.MatchPoints, parBogey: ParBogeyRules = .standard) {
         self.pointsGames = pointsGames
         self.skins = skins
         self.skinPoints = skinPoints
         self.teamMatch = teamMatch
+        self.parBogey = parBogey
     }
 
     /// Standarden: NGF-poengene, skins som rundespillet med 1 tabellpoeng per skin, og 1 / ½ / 0 per
@@ -103,7 +106,7 @@ public struct FormPlayRules: Hashable, Sendable {
 }
 
 extension FormPlayRules: Codable {
-    private enum CodingKeys: String, CodingKey { case pointsGames, skins, skinPoints, teamMatch }
+    private enum CodingKeys: String, CodingKey { case pointsGames, skins, skinPoints, teamMatch, parBogey }
     private enum GameKeys: String, CodingKey { case players, handicap, points }
 
     public init(from decoder: Decoder) throws {
@@ -126,6 +129,7 @@ extension FormPlayRules: Codable {
         skins = try c.decodeIfPresent(SkinsRules.self, forKey: .skins) ?? s.skins
         skinPoints = try c.decodeIfPresent(Double.self, forKey: .skinPoints) ?? s.skinPoints
         teamMatch = try c.decodeIfPresent(Ruleset.MatchPoints.self, forKey: .teamMatch) ?? s.teamMatch
+        parBogey = try c.decodeIfPresent(ParBogeyRules.self, forKey: .parBogey) ?? s.parBogey
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -134,6 +138,50 @@ extension FormPlayRules: Codable {
         try c.encode(skins, forKey: .skins)
         try c.encode(skinPoints, forKey: .skinPoints)
         try c.encode(teamMatch, forKey: .teamMatch)
+        // Skrives bare når den ikke er standard, så JSON-en for eldre regelsett er som før.
+        if parBogey != .standard { try c.encode(parBogey, forKey: .parBogey) }
+    }
+}
+
+// MARK: - Par/bogey
+
+/// Par/bogey (Golfreglene 2019, regel 21.3): spilleren spiller match mot banen. Hvert hull er vunnet
+/// (netto under banens fastsatte score, par), delt (likt) eller tapt (over, eller ingen score).
+/// Verdiene ligger i regelsettet (`formPlay.parBogey`); standarden er +1, 0 og −1, så summen er
+/// «hull vunnet minus hull tapt» som regel 21.3b sier.
+public struct ParBogeyRules: Codable, Hashable, Sendable {
+    public var win: Double
+    public var halve: Double
+    public var loss: Double
+
+    public init(win: Double, halve: Double, loss: Double) {
+        self.win = win
+        self.halve = halve
+        self.loss = loss
+    }
+
+    /// Regel 21.3b: vunnet +1, delt 0, tapt −1.
+    public static let standard = ParBogeyRules(win: 1, halve: 0, loss: -1)
+
+    private enum CodingKeys: String, CodingKey { case win, halve, loss }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let s = ParBogeyRules.standard
+        win = try c.decodeIfPresent(Double.self, forKey: .win) ?? s.win
+        halve = try c.decodeIfPresent(Double.self, forKey: .halve) ?? s.halve
+        loss = try c.decodeIfPresent(Double.self, forKey: .loss) ?? s.loss
+    }
+}
+
+public enum ParBogey {
+    /// Resultatet på et hull: netto mot par. `nil` (ingen score) er tapt hullet (regel 21.3b),
+    /// men bare når runden er ferdig; ellers venter hullet (se `RoundCompetitions`).
+    public static func holeValue(net: Int?, par: Int, rules: ParBogeyRules) -> Double {
+        guard let net else { return rules.loss }
+        if net < par { return rules.win }
+        if net == par { return rules.halve }
+        return rules.loss
     }
 }
 
@@ -265,6 +313,7 @@ public enum FormPlay {
     /// - skins: skins vunnet · `formPlay.skinPoints` (alle med score spiller mot hverandre, med
     ///   `formPlay.skins` som i rundespillet);
     /// - Amerikaner og Københavner: poengene i gruppen (`groups(in:)`);
+    /// - par/bogey: summen av `formPlay.parBogey` per hull (regel 21.3);
     /// - ellers: stablefordpoengene (`Scoring.roundPoints`), som når tabellen teller stableford.
     /// Uvektet; tabellen legger på rundevekten.
     public static func tablePoints(_ round: Round, roster: [Player], rules: Ruleset) -> [String: Double] {
@@ -281,6 +330,14 @@ public enum FormPlay {
                 let r = PointsGame.evaluate(kind, players: group, round: round, roster: roster, rules: rules)
                 out.merge(r.totals) { _, new in new }
             }
+            return out
+        case .parBogey:
+            // Par/bogey-summen (regel 21.3) med fullt spillehandicap i runden, som hovedkonkurransen.
+            let axes = round.form.axes
+            let comp = RoundCompetition(id: "form", teamForm: axes.teamForm, scoring: .parBogey)
+            let result = RoundCompetitions.evaluate(round, roster: roster, competitions: [comp], rules: rules)[0]
+            var out: [String: Double] = [:]
+            for row in result.rows { for p in row.players { out[p] = row.score } }
             return out
         default:
             return Scoring.roundPoints(round, roster: roster, rules: rules).mapValues(Double.init)
