@@ -1,6 +1,4 @@
--- 058: Tavla i nettleseren for tilskuere («Del tavla»). IKKE KJØRT. Krever godkjenning.
---
--- (Nummeret: 056 og 057 er holdt av til regelinnstillingene og de nye spillformene, som lages samtidig.)
+-- 056: Tavla i nettleseren for tilskuere («Del tavla»). IKKE KJØRT. Krever godkjenning.
 --
 -- Arrangøren slår på deling av Tavla i appen. Da får turneringen en lenke, dashdash18.com/tavla/KODE,
 -- som kan legges i WhatsApp-gruppa. Siden viser tabellen, «Alle runder» og scorekortene, oppdatert
@@ -36,7 +34,7 @@ end;
 $$;
 create index if not exists tv_codes_competition_purpose_idx on public.tv_codes (competition_id, purpose);
 comment on column public.tv_codes.purpose is
-  'tv: TV-skjermen (041). tavla: delt lenke til Tavla i nettleseren (058). Begge leses med tv_board_data.';
+  'tv: TV-skjermen (041). tavla: delt lenke til Tavla i nettleseren (056). Begge leses med tv_board_data.';
 
 -- Felles: lager en ny kode for formålet. Bare for funksjonene under (ingen grant).
 create or replace function public.tv_code_new(p_competition_id uuid, p_purpose text)

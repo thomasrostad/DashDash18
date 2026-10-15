@@ -1,4 +1,4 @@
-// Tavla i nettleseren for tilskuere (sql/058). Kjøres med `npm test`, uten Cloudflare og Supabase.
+// Tavla i nettleseren for tilskuere (sql/056). Kjøres med `npm test`, uten Cloudflare og Supabase.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

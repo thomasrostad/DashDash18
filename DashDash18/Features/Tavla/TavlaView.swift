@@ -42,7 +42,7 @@ private struct TavlaContent: View {
                             .tint(Color.ddForestInk)
                     }
                 }
-                // «Del tavla» (sql/058): lenken til Tavla i nettleseren for dem uten appen.
+                // «Del tavla» (sql/056): lenken til Tavla i nettleseren for dem uten appen.
                 if TavlaShareFeature.isEnabled, model.standings != nil {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Del tavla", systemImage: "link") { showsShare = true }

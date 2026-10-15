@@ -122,7 +122,7 @@ private struct AdminHubContent: View {
     /// Scorene med tid, startlista og sidepremiene til «I kveld» (V12).
     @State private var live: TonightLiveModel
     @State private var showsTV = false
-    /// «Del tavla» fra «I kveld» (sql/058).
+    /// «Del tavla» fra «I kveld» (sql/056).
     @State private var showsShare = false
     @State private var setup: SetupDestination?
     /// Av i skjermprøven, som ikke har nett.

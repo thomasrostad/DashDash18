@@ -58,7 +58,7 @@ struct CompetitionDetailView: View {
                         Button("TV-kode for en skjerm", systemImage: "qrcode") { showsTVCode = true }
                     }
                 }
-                // «Del tavla» (sql/058). Sesongen har sin på Tavla.
+                // «Del tavla» (sql/056). Sesongen har sin på Tavla.
                 if TavlaShareFeature.isEnabled, !embedded, list != nil, model.competition.seasonID == nil {
                     ToolbarItem(placement: .secondaryAction) {
                         Button("Del tavla", systemImage: "link") { showsShare = true }

@@ -11,7 +11,7 @@ routes = [{ pattern = "dashdash18.com", custom_domain = true }]
 [vars]
 SUPABASE_URL = "https://tsekialrxuhrugscosgi.supabase.co"
 
-# Skriftene til Tavla-siden (sql/058): appens 42dot Sans og Sometype Mono, kuttet til latinske tegn.
+# Skriftene til Tavla-siden (sql/056): appens 42dot Sans og Sometype Mono, kuttet til latinske tegn.
 # Filer som finnes i public/, serveres direkte; alt annet går til workeren.
 [assets]
 directory = "./public"

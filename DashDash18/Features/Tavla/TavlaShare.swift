@@ -3,11 +3,11 @@ import Observation
 import Supabase
 import SwiftUI
 
-/// «Del tavla» (`sql/058_tavla_deling.sql`): en lenke til Tavla i nettleseren, dashdash18.com/tavla/KODE,
+/// «Del tavla» (`sql/056_tavla_deling.sql`): en lenke til Tavla i nettleseren, dashdash18.com/tavla/KODE,
 /// som tilskuere åpner fra WhatsApp uten app og uten konto. Arrangøren slår delingen på og av; da
 /// trekkes koden tilbake og lenken slutter å virke. Spillerne kan dele lenken videre når den er på.
 nonisolated enum TavlaShareFeature {
-    /// Av til 058 er kjørt på test og `/tavla` er ute i Workeren `atten-lenker`.
+    /// Av til 056 er kjørt på test og `/tavla` er ute i Workeren `atten-lenker`.
     static let isEnabled = false
 }
 

@@ -289,7 +289,7 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
     return htmlResponse(tvBoardPage(code, nonce), 200, nonce, "no-store", isHead, true);
   }
 
-  // Tavla i nettleseren for tilskuere (sql/058): lenken fra «Del tavla» i appen.
+  // Tavla i nettleseren for tilskuere (sql/056): lenken fra «Del tavla» i appen.
   const share = /^\/tavla\/([^/]+?)(\.json)?\/?$/.exec(pathname);
   if (share) {
     let raw = "";

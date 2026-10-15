@@ -2,9 +2,9 @@ import Foundation
 import Testing
 @testable import DashDash18
 
-/// «Del tavla» (sql/058): lenken og hva arket viser.
+/// «Del tavla» (sql/056): lenken og hva arket viser.
 struct TavlaShareTests {
-    @Test func flaggetErAvTil058ErKjørt() {
+    @Test func flaggetErAvTil056ErKjørt() {
         #expect(TavlaShareFeature.isEnabled == false)
     }
 

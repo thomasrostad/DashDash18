@@ -1,4 +1,4 @@
-// Tavla i nettleseren for tilskuere (sql/058): dashdash18.com/tavla/KODE, lenken arrangøren deler i
+// Tavla i nettleseren for tilskuere (sql/056): dashdash18.com/tavla/KODE, lenken arrangøren deler i
 // WhatsApp-gruppa med «Del tavla» i appen. Tabellen, «Alle runder» og scorekortene, oppdatert live,
 // uten app og uten konto. Samme lesevei og regelmotor som TV-siden (tv_board_data, web/golfgutu-core).
 
