@@ -236,6 +236,40 @@ nonisolated enum PushForeground {
     }
 }
 
+// MARK: - Svaret til iOS
+
+/// Kjører på hovedtråden: med en gang når vi alt er der (iOS kaller delegaten derfra), ellers i
+/// neste runde på hovedkøen. Ferdig-blokkene til `UNUserNotificationCenterDelegate` må kalles på
+/// hovedtråden; ellers krasjer UIKit når appen åpnes fra et varsel.
+nonisolated enum PushMainThread {
+    static func run(_ body: @escaping @MainActor @Sendable () -> Void) {
+        if Thread.isMainThread {
+            MainActor.assumeIsolated { body() }
+        } else {
+            DispatchQueue.main.async { body() }
+        }
+    }
+}
+
+/// Ferdig-blokka fra iOS, kalt høyst én gang. iOS sier ikke at blokka er `Sendable`, men den skal
+/// bare kalles på hovedtråden, og det gjør `PushMainThread`.
+nonisolated final class PushCompletion<Value>: @unchecked Sendable {
+    private var handler: ((Value) -> Void)?
+
+    init(_ handler: @escaping (Value) -> Void) {
+        self.handler = handler
+    }
+
+    /// Kaller blokka første gang. Senere kall gjør ingenting (iOS tåler ikke to svar).
+    @MainActor func call(_ value: Value) {
+        let handler = handler
+        self.handler = nil
+        handler?(value)
+    }
+
+    @MainActor var isDone: Bool { handler == nil }
+}
+
 /// Varseltillatelsen fra iOS, forenklet til det appen bryr seg om.
 nonisolated enum PushPermission: Equatable, Sendable {
     case notDetermined
