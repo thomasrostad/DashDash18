@@ -374,7 +374,7 @@ nonisolated struct RoundPlayerRow: Codable, Equatable, Sendable {
     var teamNo: Int?
     /// Lag mot lag (sql/048): side 1 eller 2. Hentes bare når kolonnen finnes (`RoundFormatsFeature`).
     var side: Int? = nil
-    /// Kortet er levert (sql/058): markøren kan ikke føre mer, bare arrangøren åpner det igjen.
+    /// Kortet er levert (sql/057): markøren kan ikke føre mer, bare arrangøren åpner det igjen.
     /// Hentes bare når kolonnen finnes (`CardLockFeature`).
     var cardSubmittedAt: Date? = nil
 
@@ -392,7 +392,7 @@ nonisolated struct RoundPlayerRow: Codable, Equatable, Sendable {
         case cardSubmittedAt = "card_submitted_at"
     }
 
-    /// `side` (sql/048) og `card_submitted_at` (sql/058) bare når kolonnene finnes.
+    /// `side` (sql/048) og `card_submitted_at` (sql/057) bare når kolonnene finnes.
     static var columns: String {
         baseColumns + (RoundFormatsFeature.isAvailable ? ", side" : "")
             + (CardLockFeature.isAvailable ? ", card_submitted_at" : "")

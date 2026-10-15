@@ -133,14 +133,23 @@ nonisolated enum RoundCompetitionBoard {
                           score: scoreText(row.score, scoring: scoring), holes: row.holes)
     }
 
-    /// «34 p», «72 slag», «3 skins».
+    /// «34 p», «72 slag», «3 skins», og par/bogey med fortegn: «+3», «0», «−2».
     static func scoreText(_ score: Double, scoring: ScoringMethod) -> String {
         let number = RuleFormat.number(score)
         switch scoring {
         case .strokePlay: return "\(number) slag"
         case .skins: return score == 1 ? "1 skin" : "\(number) skins"
+        case .parBogey: return signedText(score)
         default: return "\(number) p"
         }
+    }
+
+    /// Par/bogey-summen med fortegn (regel 21.3: hull vunnet minus hull tapt): «+3», «0», «−2».
+    static func signedText(_ score: Double) -> String {
+        let number = RuleFormat.number(abs(score))
+        if score > 0 { return "+" + number }
+        if score < 0 { return "−" + number }
+        return number
     }
 
     /// Formen, hullene og andelen i én linje.

@@ -18,7 +18,7 @@ struct RulesetPlaySection: View {
             }
             Toggle(isOn: $draft.rules.play.lockSubmittedCards) {
                 RuleFieldLabel(title: "Lås kortet når det er levert",
-                               help: CardLockFeature.isAvailable ? nil : "Virker når databasen er oppdatert (sql/058).",
+                               help: CardLockFeature.isAvailable ? nil : "Virker når databasen er oppdatert (sql/057).",
                                changeNote: draft.changeNote(.lockSubmittedCards))
             }
             RuleStepper("Skjul de siste hullene", value: $draft.rules.play.hiddenHoles,

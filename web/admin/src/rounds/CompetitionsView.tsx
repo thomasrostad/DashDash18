@@ -26,7 +26,7 @@ export function CompetitionsView({ boards, team, name, reconstructed }: {
             : b.rows.length === 0 ? <p className="muted small">Ingen resultater ennå</p> : (
               <ul className="plain">
                 {b.rows.slice(0, 10).map((r) => (
-                  <li key={r.players.join(",")}>{r.rank}. {r.players.map(name).join(" og ")} <strong>{competitionScoreText(r.score)}</strong>
+                  <li key={r.players.join(",")}>{r.rank}. {r.players.map(name).join(" og ")} <strong>{competitionScoreText(r.score, b.signed)}</strong>
                     {!b.higherIsBetter && <span className="muted small"> slag · {r.holes} hull</span>}</li>
                 ))}
               </ul>

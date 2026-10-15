@@ -273,6 +273,23 @@ public struct Ruleset: Hashable, Sendable {
 
         public static let average = TeamHandicapRule(method: .average)
         public static let lowest = TeamHandicapRule(method: .lowest)
+
+        /// WHS-anbefalingen for formene der laget spiller én ball (World Handicap System, «Rules of
+        /// Handicapping», Appendix C «Handicap Allowances», i bruk fra 2020 og uendret i 2024-utgaven; NGF
+        /// følger WHS). Vektene er lavest først:
+        /// - foursome: 50 % av summen av lagets banehandicap;
+        /// - greensome og chapman/pinehurst: 60 % av laveste + 40 % av høyeste;
+        /// - scramble 2: 35 % av laveste + 15 % av høyeste;
+        /// - scramble 4: 25 / 20 / 15 / 10 %, lavest først.
+        /// Golfgutu-oppsettet bruker PWA-ens regler (`Ruleset.golfgutu`): snitt for toerformene og
+        /// 25/20/15/10 for scramble 4. Arrangøren tar WHS-tallene i bruk med `HandicapRules.useWHSTeamHandicap()`.
+        public static let whsRecommended: [String: TeamHandicapRule] = [
+            "foursome": TeamHandicapRule(method: .weighted, weights: [0.5, 0.5]),
+            "greensome": TeamHandicapRule(method: .weighted, weights: [0.6, 0.4]),
+            "chapman": TeamHandicapRule(method: .weighted, weights: [0.6, 0.4]),
+            "scramble-2": TeamHandicapRule(method: .weighted, weights: [0.35, 0.15]),
+            "scramble-4": TeamHandicapRule(method: .weighted, weights: [0.25, 0.20, 0.15, 0.10]),
+        ]
     }
 
     /// Handicapmodellen.
@@ -300,6 +317,17 @@ public struct Ruleset: Hashable, Sendable {
         /// Lagshandicap-regelen for formen.
         public func teamHandicapRule(for formID: String) -> TeamHandicapRule {
             teamHandicap[formID] ?? .lowest
+        }
+
+        /// Lagshandicapet for formene med én ball etter WHS-anbefalingen (`TeamHandicapRule.whsRecommended`).
+        /// De andre formene er som før.
+        public mutating func useWHSTeamHandicap() {
+            teamHandicap.merge(TeamHandicapRule.whsRecommended) { _, whs in whs }
+        }
+
+        /// Lagshandicapet for formene med én ball er WHS-anbefalingen.
+        public var usesWHSTeamHandicap: Bool {
+            TeamHandicapRule.whsRecommended.allSatisfy { teamHandicap[$0.key] == $0.value }
         }
     }
 

@@ -1,7 +1,7 @@
 import GolfgutuCore
 import SwiftUI
 
-// «Lever kortet» i føringen og «Leverte kort» for arrangøren (sql/058, `play.lockSubmittedCards`).
+// «Lever kortet» i føringen og «Leverte kort» for arrangøren (sql/057, `play.lockSubmittedCards`).
 // Serveren håndhever låsen (can_score); føringen viser den.
 
 extension RundeModel {

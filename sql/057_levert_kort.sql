@@ -1,4 +1,4 @@
--- 058_levert_kort.sql — låst kort etter levering (regelvern, inspirert av Golfify).
+-- 057_levert_kort.sql — låst kort etter levering (regelvern, inspirert av Golfify).
 -- IKKE KJØRT. Venter på godkjenning fra Thomas. Kjøres på test først.
 --
 -- Når markøren (eller spilleren selv, uten markør) leverer kortet for båsen, kan bare arrangøren
@@ -28,9 +28,9 @@ begin;
 alter table public.round_players add column if not exists card_submitted_at timestamptz;
 alter table public.round_players add column if not exists card_submitted_by uuid;
 comment on column public.round_players.card_submitted_at is
-  'Kortet er levert (058). Da kan bare arrangøren føre for spilleren (can_score), til reopen_card.';
+  'Kortet er levert (057). Da kan bare arrangøren føre for spilleren (can_score), til reopen_card.';
 comment on column public.round_players.card_submitted_by is
-  'auth.uid() til den som leverte kortet (058).';
+  'auth.uid() til den som leverte kortet (057).';
 
 -- --- can_score: levert kort --------------------------------------------------------
 -- Fra 044. Ny: sjekken på card_submitted_at etter arrangørsjekken og statussjekken.
@@ -81,7 +81,7 @@ begin
   from public.round_players rp
   where rp.round_id = p_round_id and rp.member_id = p_member_id;
 
-  -- 058: levert kort. Bare arrangøren (over) fører på det.
+  -- 057: levert kort. Bare arrangøren (over) fører på det.
   if v_done is not null then
     return false;
   end if;

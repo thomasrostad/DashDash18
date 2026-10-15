@@ -87,6 +87,10 @@ struct HullkortView: View {
     let onConfirm: (UUID) -> Void
     /// Åpner scorekortet til spilleren (nil: ditt eget).
     let onScorecard: (UUID?) -> Void
+    /// Spillerne der to markører førte ulikt på hullet (K6/6.3, sql/055).
+    var conflicts: Set<UUID> = []
+    /// Åpner konfliktarket for spilleren.
+    var onConflict: (UUID) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -101,7 +105,9 @@ struct HullkortView: View {
                 DDDivider()
                 ForEach(card.rows) { row in
                     HullRadView(row: row, isPending: isPending, onStep: onStep, onConfirm: onConfirm,
-                                onName: { onScorecard(row.memberID) })
+                                onName: { onScorecard(row.memberID) },
+                                hasConflict: conflicts.contains(row.memberID),
+                                onConflict: { onConflict(row.memberID) })
                     if row.id != card.rows.last?.id { DDDivider() }
                 }
             }
@@ -228,6 +234,9 @@ struct HullRadView: View {
     let onStep: (Int, UUID) -> Void
     let onConfirm: (UUID) -> Void
     let onName: () -> Void
+    /// To markører førte ulikt for spilleren på hullet.
+    var hasConflict = false
+    var onConflict: () -> Void = {}
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -280,6 +289,9 @@ struct HullRadView: View {
                     .foregroundStyle(Color.ddInkSecondary)
             }
             result
+            if hasConflict {
+                MarkorKonfliktKnapp(action: onConflict)
+            }
             if let calculation = row.calculation {
                 Text(calculation)
                     .font(.ddMonoSmall)

@@ -3,16 +3,16 @@ import GolfgutuCore
 import Supabase
 import Synchronization
 
-/// Låst kort etter levering (sql/058, regelsettets `play.lockSubmittedCards`).
+/// Låst kort etter levering (sql/057, regelsettets `play.lockSubmittedCards`).
 ///
-/// Før 058 er kjørt finnes ikke `round_players.card_submitted_at`, og en `select` med den feiler. Appen
+/// Før 057 er kjørt finnes ikke `round_players.card_submitted_at`, og en `select` med den feiler. Appen
 /// spør derfor én gang per innlogging (`detect`) og husker svaret til neste oppstart. Uten kolonnen
 /// vises ikke «Lever kortet», og ingen kort er levert.
 nonisolated enum CardLockFeature {
-    private static let key = "cardLock058"
+    private static let key = "cardLock057"
     private static let state = Mutex<Bool>(UserDefaults.standard.bool(forKey: key))
 
-    /// Kolonnen og funksjonene fra 058 finnes (sist appen sjekket).
+    /// Kolonnen og funksjonene fra 057 finnes (sist appen sjekket).
     static var isAvailable: Bool { state.withLock { $0 } }
 
     /// For tester og for `detect`.
@@ -34,7 +34,7 @@ nonisolated enum CardLockFeature {
     }
 }
 
-/// `submit_card` og `reopen_card` (sql/058). Serveren sjekker hvem som kan (markøren for båsen,
+/// `submit_card` og `reopen_card` (sql/057). Serveren sjekker hvem som kan (markøren for båsen,
 /// arrangøren for å åpne) og at kortet er ferdig ført.
 nonisolated enum CardLockQueries {
     private struct Params: Encodable {
@@ -56,13 +56,13 @@ nonisolated enum CardLockQueries {
 // MARK: - Runden
 
 nonisolated extension RoundGame {
-    /// Kortet til spilleren er levert (sql/058). Da fører bare arrangøren for henne.
+    /// Kortet til spilleren er levert (sql/057). Da fører bare arrangøren for henne.
     func isCardSubmitted(_ member: UUID) -> Bool {
         snapshot.players.first { $0.memberID == member }?.cardSubmittedAt != nil
     }
 
     /// «Lever kortet» for `viewer`: hva båsen kan gjøre nå. `nil`: ingenting å vise (av i regelsettet,
-    /// 058 mangler, runden går ikke, eller du fører ikke noe kort).
+    /// 057 mangler, runden går ikke, eller du fører ikke noe kort).
     func cardSubmission(viewer: Viewer, pending: Set<Int>, available: Bool = CardLockFeature.isAvailable) -> CardSubmission? {
         guard available, rules.play.lockSubmittedCards, status == .active else { return nil }
         let card = cardPlayers(for: viewer)

@@ -48,8 +48,9 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `formPlay.skins` | `{handicap, valuePerSkin, carryOver, leftover}` | Skins som form, samme felt som rundespillet (`SkinsRules`). Standard: netto, fullt handicap, 10, carry-over, `lapse`. |
 | `formPlay.skinPoints` | tall | Tabellpoeng per skin vunnet (med `table.formPoints`). Standard 1. |
 | `formPlay.teamMatch` | `{win, draw, loss}` | Lag mot lag: poeng til siden per match. Standard 1 / 0,5 / 0. |
+| `formPlay.parBogey` | `{win, halve, loss}` | Par/bogey: verdien av et vunnet, delt og tapt hull mot banen. Standard +1 / 0 / −1 (regel 21.3). Skrives bare når den ikke er standard. |
 | `play.maxStrokes` | `{"type":"off"}` / `{"type":"netDoubleBogey"}` / `{"type":"fixed","strokes":N}` | Maks slag per hull. Netto dobbel bogey = par + 2 + slagene spilleren får. Fast: 3–20. Standard av. |
-| `play.lockSubmittedCards` | sann/usann | Markøren leverer kortet, og bare arrangøren kan endre det eller åpne det igjen (sql/058). Standard usann. |
+| `play.lockSubmittedCards` | sann/usann | Markøren leverer kortet, og bare arrangøren kan endre det eller åpne det igjen (sql/057). Standard usann. |
 | `play.hiddenHoles` | tall | Hvor mange av de siste hullene «Skjul de siste hullene» skjuler i en ny runde (1–9). Standard 3. |
 
 `formPlay` og `play` skrives bare når gruppen ikke er standard, så JSON-en for Golfgutu og eldre regelsett er som før.
@@ -222,6 +223,7 @@ maks per bås under 1; ingen tillatte former, ukjent form, og standardform som i
 | Seeding-grupper | `Handicap.groupHandicap` | `handicap.seedingGroups` | 1/2/3 = 0/5/10 |
 | Ekstern handicap (simulator) for nye runder | – | `handicap.externalHandicap` | av |
 | Lagshandicap per form | `Handicap.teamHandicap` | `handicap.teamHandicap` (`average`, `weighted` med `weights`, `lowest`; mangler = `lowest`) | toerformer snitt, scramble-4 25/20/15/10, ellers laveste · andel |
+| WHS-anbefalingen for lagformer med én ball | `HandicapRules.useWHSTeamHandicap()` | `TeamHandicapRule.whsRecommended` (verdier for `handicap.teamHandicap`) | ikke i bruk (Golfgutu er PWA-ens snitt) |
 | WHS: `indeks · slope/113 + (CR − par)` | `Handicap.courseHandicap` | bli (WHS) | – |
 | Lagsgrunnlag: banehandicap · hull/18 | `Handicap.teamBasis` | bli (matematikk) | – |
 | `effectiveHandicap`: `round(bane · andel · hull/18)` | `Handicap.effective` | bli (matematikk) | – |
@@ -413,11 +415,55 @@ første mot første.
 
 `RoundCompetitions.evaluate`: en liste `RoundCompetition` (`id`, `teamForm`, `scoring`, `entrants` (lag eller
 grupper; utelatt: hver for seg, eller alle i én gruppe), `holes` (`{first, last}`, 0-basert; utelatt: alle) og
-`allowance` (utelatt: 1)) regnet fra de samme hullscorene. Støttet: stableford og slagspill individuelt, i
-fourball/lag (beste ball per hull) og sammenlagt; skins; Amerikaner og Københavner. Ikke ennå
-(`supported: false`): én ball per lag (foursome, greensome, chapman, scramble), par/bogey, maksimumscore og
-matchspill (matchene regnes av `MatchPlay`). Plass: like deler plass (1, 1, 3). I slagspill står de med flest
+`allowance` (utelatt: 1)) regnet fra de samme hullscorene. Støttet: stableford, slagspill og par/bogey
+individuelt, i fourball/lag (beste ball per hull), sammenlagt og med én ball per lag (se neste avsnitt); skins; Amerikaner
+og Københavner. Ikke ennå (`supported: false`): maksimumscore og matchspill (matchene regnes av `MatchPlay`). Plass: like deler plass (1, 1, 3). I slagspill står de med flest
 hull først.
+
+### Scramble, foursome, greensome, chapman og par/bogey (oktober 2026)
+
+Fixture: `spillformer.json` (regnet uavhengig av motoren og kontrollert for hånd). Tester: `SpillformerTests.swift`
+og `web/golfgutu-core/test/spillformer.test.ts`. Golfgutu-oppsettet er uendret: ingen nye felt i JSON-en, de
+gamle fixturene og goldenfilene er de samme.
+
+**Kilder.**
+- Lagshandicap: World Handicap System, «Rules of Handicapping», Appendix C «Handicap Allowances» (fra 2020,
+  uendret i 2024-utgaven; NGF følger WHS): foursome 50 % av lagets samlede course handicap, greensome og
+  chapman/pinehurst 60 % av laveste + 40 % av høyeste, scramble 2 35 % + 15 %, scramble 4 25/20/15/10 %
+  (lavest først). Individuell par/bogey: 95 % (som `formAllowances.par-bogey` i Golfgutu).
+- Par/bogey: Golfreglene 2019, regel 21.3. Spilleren spiller match mot banens fastsatte score (par) per hull:
+  netto under par vinner hullet, likt er delt, over taper. Uten score (ikke hullet ut) er hullet tapt (21.3b).
+  Vinneren har flest hull vunnet minus hull tapt.
+- Formene: NGF «Spilleformer» (2023) for foursome, greensome, chapman og scramble.
+
+**Lagshandicapet** ligger i `handicap.teamHandicap` som før. `TeamHandicapRule.whsRecommended` er WHS-tallene som
+`weighted`-regler (foursome `[0.5, 0.5]`, greensome og chapman `[0.6, 0.4]`, scramble-2 `[0.35, 0.15]`,
+scramble-4 `[0.25, 0.20, 0.15, 0.10]`), og `useWHSTeamHandicap()` legger dem inn («Bruk WHS-anbefalingen» under
+Lagshandicap i reglene). Golfgutu beholder PWA-ens snitt (foursome gir samme tall: 50 % av summen er snittet;
+greensome, chapman og scramble 2 blir forskjellige), så svaret for Golfgutu er det samme som før.
+
+| Form | Golfgutu (PWA) | WHS | Eksempel 10 + 20 |
+|---|---|---|---|
+| foursome | snitt | 50 % av summen | 15 / 15 |
+| greensome, chapman | snitt | 60 / 40 | 15 / 14 |
+| scramble-2 | snitt | 35 / 15 | 15 / 7 (6,5 rundet som JS) |
+| scramble-4 | 25/20/15/10 | 25/20/15/10 | 4, 8, 12, 20 → 6 / 6 |
+
+**Én ball per lag i `RoundCompetitions`.** Laget fører ett tall per hull, skrevet på alle på laget
+(`ForingLogic.recipients` i appen, som før; ingen skjemaendring). Konkurransen regnes når runden spilles i den
+samme lagformen (rundens form); ellers er scorene spillernes egne, og konkurransen er `supported: false`. Lagene er
+rundens lag (et lag i `entrants` må være ett av dem). Hullet tar første spiller på laget (id-rekkefølge) med
+score, med spillehandicapet i runden (lagets handicap, frosset ved start), som `Scoring.teamPoints`, så
+hovedkonkurransen gir samme poeng som tabellen. Poengtellingene stableford, slagspill og par/bogey virker for
+alle lagformer.
+
+**Par/bogey** (`ParBogey.holeValue`, `formPlay.parBogey`): netto mot par med spillehandicapet i runden (slag
+etter indeks). Mens runden går, venter et hull uten score; når runden er ferdig (låst eller avkortet), er det
+tapt. Fourball tar beste resultat, sammenlagt summen. Høyest sum vinner; likt deler plass. Med
+`table.formPoints` gir en par/bogey-runde summen i tabellen (`FormPlay.tablePoints`); uten er tabellen stableford
+som i PWA-en. `RoundCompetitionResult.Row.holeValues` har verdien per hull (poeng, slag eller ±1).
+
+Ikke ennå: maksimumscore og matchspill som konkurranse.
 
 ### Øyeblikksbildet ved start
 
@@ -435,7 +481,7 @@ Med Golfgutu-oppsettet er alt som før (`play` skrives ikke, PWA-en har ingen gr
 | Verdi | Brukes i | Ruleset | Golfgutu |
 |---|---|---|---|
 | Maks slag per hull | `Round.strokeLimit`, `Round.cappingStrokes` (i `Season` og føringen), stepperen | `play.maxStrokes` | av |
-| Låst kort etter levering | appen og `can_score` (sql/058) | `play.lockSubmittedCards` | av |
+| Låst kort etter levering | appen og `can_score` (sql/057) | `play.lockSubmittedCards` | av |
 | Antall skjulte hull i en ny runde | runde-oppsettet (`Round.hideLastHoles` lagres per runde) | `play.hiddenHoles` | 3 |
 | Inndatagrensen 1–12 på stepperen | `StrokeInput` (appen) | bli (skjerm, som PWA-en) | – |
 

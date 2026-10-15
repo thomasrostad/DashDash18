@@ -45,7 +45,7 @@ nonisolated extension RoundGame {
     /// `kanFore`: kan `writer` føre for `target`? Samme regel som `can_score` i databasen:
     /// arrangøren alltid; runden går ikke (kladd eller låst): ingen andre; spillerens bås har
     /// markør: bare markøren; ellers spilleren selv.
-    /// Levert kort (sql/058): bare arrangøren. `ignoringSubmission`: som om kortet ikke var levert.
+    /// Levert kort (sql/057): bare arrangøren. `ignoringSubmission`: som om kortet ikke var levert.
     func canScore(_ viewer: Viewer, for target: UUID, ignoringSubmission: Bool = false) -> Bool {
         if viewer.isOrganizer { return true }
         guard status == .active else { return false }

@@ -340,3 +340,46 @@ struct FolgeRekkefolgeTests {
         #expect(candidates.map(\.status) == [.pending, .none])
     }
 }
+
+/// «Legg til venner» fra Hjem: folk du kjenner som du ikke følger ennå.
+struct FolgeForslagTests {
+    private let lists = FollowLists([
+        FollowRow(profileID: anders, displayName: "Anders", direction: .following, status: .accepted),
+        FollowRow(profileID: bjorn, displayName: "Bjørn", direction: .following, status: .pending),
+        FollowRow(profileID: dag, displayName: "Ådne", direction: .follower, status: .accepted),
+        FollowRow(profileID: anders, displayName: "Anders", direction: .follower, status: .accepted),
+    ])
+
+    @Test func ikkeMegIkkeFulgteIkkeUtenNavn() {
+        let known = [
+            ProfileRow(id: me, displayName: "Meg"),
+            ProfileRow(id: anders, displayName: "Anders"),
+            ProfileRow(id: bjorn, displayName: "Bjørn"),
+            ProfileRow(id: cato, displayName: "Cato"),
+            ProfileRow(id: cato, displayName: "Cato"),
+            ProfileRow(id: id(5), displayName: "  "),
+            ProfileRow(id: id(6), displayName: nil),
+            ProfileRow(id: dag, displayName: "Ådne"),
+        ]
+        let people = FollowSuggestions.people(known, me: me, lists: lists)
+        // Ådne følger meg og står først (følg tilbake), så Bjørn og Cato i norsk rekkefølge.
+        #expect(people.map(\.profileID) == [dag, bjorn, cato])
+        #expect(people.map(\.status) == [.none, .pending, .none])
+        #expect(people.map(\.subtitle) == ["Følger deg", "Venter på svar", nil])
+    }
+
+    @Test func kortetViserBareDemDuIkkeHarSpurt() {
+        let known = (10..<16).map { ProfileRow(id: id($0), displayName: "Spiller \($0)") }
+            + [ProfileRow(id: bjorn, displayName: "Bjørn")]
+        let preview = FollowSuggestions.preview(FollowSuggestions.people(known, me: me, lists: lists))
+        #expect(preview.count == FollowSuggestions.previewCount)
+        #expect(!preview.contains { $0.profileID == bjorn })
+        #expect(preview.allSatisfy { $0.status == .none })
+    }
+
+    @Test func venneneFølgerHverandre() {
+        // Anders: begge veier. Bjørn venter, Ådne følger bare meg.
+        #expect(lists.friendIDs == [anders])
+        #expect(FollowLists.empty.friendIDs.isEmpty)
+    }
+}

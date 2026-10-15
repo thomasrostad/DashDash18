@@ -3,7 +3,7 @@ import GolfgutuCore
 import Testing
 @testable import DashDash18
 
-/// Regelvern (`play` i regelsettet): maks slag per hull i føringen, låst kort etter levering (sql/058)
+/// Regelvern (`play` i regelsettet): maks slag per hull i føringen, låst kort etter levering (sql/057)
 /// og antall skjulte hull i runde-oppsettet. Med Golfgutu-oppsettet er alt som før.
 @MainActor
 struct RegelvernTests {
@@ -73,7 +73,7 @@ struct RegelvernTests {
         #expect(full.cardSubmission(viewer: F.viewer(F.anders), pending: [], available: true) == .ready(members: members))
         #expect(full.cardSubmission(viewer: F.viewer(F.anders), pending: [17], available: true)
                 == .notReady(missingHoles: 0, hasPending: true))
-        // Av i regelsettet (Golfgutu) eller uten 058: ingenting.
+        // Av i regelsettet (Golfgutu) eller uten 057: ingenting.
         #expect(Self.game(.golfgutu, scores: Self.bay1Full).cardSubmission(viewer: F.viewer(F.anders), pending: [], available: true) == nil)
         #expect(full.cardSubmission(viewer: F.viewer(F.anders), pending: [], available: false) == nil)
         // Bjørn fører ikke: ingen knapp.
@@ -100,7 +100,7 @@ struct RegelvernTests {
         #expect(game.canScore(F.viewer(F.erik), for: F.id(F.frode)))
     }
 
-    @Test func kolonnenHentesBareMed058() {
+    @Test func kolonnenHentesBareMed057() {
         CardLockFeature.set(false)
         #expect(!RoundPlayerRow.columns.contains("card_submitted_at"))
         CardLockFeature.set(true)

@@ -317,6 +317,20 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
     /// Formene der laget har ett handicap (mer enn én på laget).
     static var teamForms: [CompetitionForm] { CompetitionForm.all.filter { $0.teamSize > 1 } }
 
+    /// Lagshandicapet betyr noe: tabellen teller matcher (lagmatcher), eller en form med én ball per
+    /// lag (foursome, greensome, chapman, scramble) er tillatt.
+    var showsTeamHandicap: Bool {
+        countsMatches || rules.formats.allowedFormIDs.contains { CompetitionForm.form(id: $0).card == .perTeam }
+    }
+
+    /// Formene med én ball per lag følger WHS-anbefalingen (`TeamHandicapRule.whsRecommended`).
+    var usesWHSTeamHandicap: Bool { rules.handicap.usesWHSTeamHandicap }
+
+    /// «Bruk WHS-anbefalingen»: foursome 50 %, greensome og chapman 60/40, scramble 35/15 og 25/20/15/10.
+    mutating func useWHSTeamHandicap() {
+        rules.handicap.useWHSTeamHandicap()
+    }
+
     func teamMethod(_ form: CompetitionForm) -> Ruleset.TeamHandicapRule.Method {
         rules.handicap.teamHandicapRule(for: form.id).method
     }
