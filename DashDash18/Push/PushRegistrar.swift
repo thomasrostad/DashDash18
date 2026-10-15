@@ -202,21 +202,35 @@ final class PushAppDelegate: NSObject, UIApplicationDelegate {
 
 /// Push mens appen står åpen, og trykk på en push. Uten denne viser iOS ingenting når appen
 /// er framme, og bjella står stille til appen åpnes på nytt.
+///
+/// Versjonene med `completionHandler`, ikke `async`: Swift kjører en `async`-delegat fra iOS i en
+/// egen oppgave og kaller ferdig-blokka fra en bakgrunnstråd når den er ferdig. For et trykk på en
+/// push krever UIKit hovedtråden der, og appen krasjet (`Call must be made on main thread`) når
+/// den ble åpnet fra et varsel. Her kalles blokka alltid på hovedtråden (`PushMainThread`).
 extension PushAppDelegate: UNUserNotificationCenterDelegate {
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                            willPresent notification: UNNotification) async
-        -> UNNotificationPresentationOptions {
+                                            willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler:
+                                            @escaping (UNNotificationPresentationOptions) -> Void) {
         let target = PushTarget(userInfo: notification.request.content.userInfo)
-        let show = await MainActor.run {
+        let done = PushCompletion(completionHandler)
+        PushMainThread.run {
             PushInbox.didReceive()
-            return PushForeground.shouldShow(target, visibleThreadEventID: PushInbox.visibleThreadEventID)
+            let show = PushForeground.shouldShow(target, visibleThreadEventID: PushInbox.visibleThreadEventID)
+            done.call(show ? [.banner, .list, .sound] : [])
         }
-        return show ? [.banner, .list, .sound] : []
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                            didReceive response: UNNotificationResponse) async {
-        await MainActor.run { PushInbox.didReceive() }
+                                            didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping () -> Void) {
+        let done = PushCompletion(completionHandler)
+        PushMainThread.run {
+            // Ved kald oppstart finnes ingen innlogging eller klubb ennå. Det er greit: varselet
+            // går bare til bjella, som henter på nytt når den vises.
+            PushInbox.didReceive()
+            done.call(())
+        }
     }
 }
 
