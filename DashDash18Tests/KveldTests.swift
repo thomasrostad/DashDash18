@@ -201,17 +201,24 @@ struct SignupUndoTimerTests {
         #expect(!cancelled)
     }
 
-    @Test func nyttSvarOgAngreStopperVentingen() async throws {
+    /// Venter på hendelser, ikke på klokka: en fast pause på 200 ms holdt ikke når maskinen var
+    /// tungt belastet (testen feilet av og til).
+    @Test func nyttSvarOgAngreStopperVentingen() async {
         let timer = SignupUndoTimer()
         var fired: [String] = []
-        timer.schedule(after: .milliseconds(30)) { fired.append("første") }
-        timer.schedule(after: .milliseconds(30)) { fired.append("andre") }
-        try await Task.sleep(for: .milliseconds(200))
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            timer.schedule(after: .milliseconds(30)) { fired.append("første"); done.resume() }
+            timer.schedule(after: .milliseconds(30)) { fired.append("andre"); done.resume() }
+        }
         #expect(fired == ["andre"])
 
+        // Angret: en kontrolltimer med lengre vindu fyrer etter at «angret» skulle ha gått.
         timer.schedule(after: .milliseconds(30)) { fired.append("angret") }
         timer.cancel()
-        try await Task.sleep(for: .milliseconds(200))
+        let control = SignupUndoTimer()
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            control.schedule(after: .milliseconds(150)) { done.resume() }
+        }
         #expect(fired == ["andre"])
     }
 }

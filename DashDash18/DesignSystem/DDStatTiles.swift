@@ -238,9 +238,7 @@ struct DDRankRow<Trailing: View>: View {
                         .font(.ddName)
                         .foregroundStyle(Color.ddForestInk)
                     if isMe {
-                        DDPill("Deg", tone: .gold)
-                            .fixedSize()
-                            .accessibilityLabel("deg")
+                        DDYouBadge().fixedSize()
                     }
                 }
                 if let detail {
