@@ -235,7 +235,7 @@ nonisolated struct BayenRow: Equatable, Identifiable, Sendable {
     let bay: Int?
     /// Plassen. Nil når runden avgjøres hull for hull: «1 opp» i match 1 og 3 er ikke 1. og 2. plass.
     let place: Int?
-    /// Stablefordsummen (laget: lagets sum).
+    /// Stablefordsummen (laget: lagets sum). Par/bogey: hull vunnet minus hull tapt.
     let total: Int
     /// Stillingen i hullmatchen, eller nil når raden ikke står i en.
     let match: MatchStanding?
@@ -251,11 +251,13 @@ nonisolated extension RoundGame {
     /// «Bayen nå» som i PWA-en: avgjøres runden hull for hull, viser matchspillerne stillingen
     /// (flest hull opp først, så flest hull ført) og kommer før dem på poeng. Ellers flest
     /// poeng først. Likt: norsk navnesortering. Formene med ett kort per lag: én rad per lag
-    /// med lagets sum.
+    /// med lagets sum. Par/bogey: summen mot banen (regel 21.3), vist med fortegn.
     func bayenNaa(viewer: Viewer) -> [BayenRow] {
         let holeByHole = isDecidedHoleByHole
         let perTeam = round.form.card == .perTeam
         let teamPoints = perTeam ? Scoring.roundPoints(round, roster: roster, rules: rules) : [:]
+        let parBogey: [String: Double]? = round.form.axes.scoring == .parBogey
+            ? FormPlay.tablePoints(round, roster: roster, rules: rules) : nil
 
         var seen: Set<UUID> = []
         var groups: [[UUID]] = []
@@ -280,9 +282,13 @@ nonisolated extension RoundGame {
         }
         let entries = groups.map { members -> Entry in
             let first = members[0]
-            let total = members.count > 1
-                ? (members.lazy.compactMap { teamPoints[$0.uuidString] }.first ?? 0)
-                : self.total(first)
+            let total = if let parBogey {
+                Int((parBogey[first.uuidString] ?? 0).rounded())
+            } else if members.count > 1 {
+                members.lazy.compactMap { teamPoints[$0.uuidString] }.first ?? 0
+            } else {
+                self.total(first)
+            }
             let inMatch = holeByHole && MatchPlay.holeMatch(for: first.uuidString, in: round) != nil
             return Entry(members: members, name: members.map(name).joined(separator: " + "), total: total,
                          thru: members.map { scores($0).count }.max() ?? 0,
@@ -305,7 +311,9 @@ nonisolated extension RoundGame {
             BayenRow(members: e.members, name: e.name, isMe: e.members.contains(me), thru: e.thru,
                      bay: snapshot.players.first { $0.memberID == e.members[0] }?.bayNo,
                      place: holeByHole ? nil : i + 1, total: e.total, match: e.match,
-                     value: e.inMatch ? MatchPlay.shortText(e.match) : "\(e.total)" + (holeByHole ? " p" : ""),
+                     value: e.inMatch ? MatchPlay.shortText(e.match)
+                        : parBogey != nil ? RoundCompetitionBoard.signedText(Double(e.total))
+                        : "\(e.total)" + (holeByHole ? " p" : ""),
                      tone: e.inMatch ? MatchTone(e.match) : .neutral)
         }
     }

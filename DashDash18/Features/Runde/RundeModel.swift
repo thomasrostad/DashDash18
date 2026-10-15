@@ -46,6 +46,8 @@ final class RundeModel {
     var celebration: Celebration?
     /// Realtime-kanalen er oppe. Når den ikke er det, henter skjermen hvert 30. sekund.
     private(set) var isLive = false
+    /// To markører førte ulikt (sql/055, K6/6.3): de åpne konfliktene i runden, nyeste per spiller og hull.
+    private(set) var conflicts: [HoleConflictRow] = []
 
     var submitter: (any ScoreSubmitting)?
 
@@ -152,6 +154,7 @@ final class RundeModel {
             guard let fresh = try await fetchSnapshot() else {
                 snapshot = nil
                 game = nil
+                conflicts = []
                 state = .none
                 RoundActivityController.shared.sync(game: nil, viewer: viewer)
                 await stopRealtime()
@@ -162,6 +165,7 @@ final class RundeModel {
             rebuild()
             place(following: before)
             state = .loaded
+            await loadConflicts(roundID: fresh.round.id)
             await startRealtime(roundID: fresh.round.id)
         } catch {
             // Behold det som vises når en oppfrisking feiler.
@@ -338,6 +342,9 @@ final class RundeModel {
             switch outcome {
             case .saved(let rows):
                 snapshot?.apply(saved: rows, hole: hole, members: submission.entries.map(\.memberID))
+                // Lagringen kan ha overskrevet en annen markørs tall (sql/055): se etter med en gang.
+                let roundID = game.roundID
+                Task { await self.loadConflicts(roundID: roundID) }
             case .queued:
                 // Varsler bare for det serveren har: hullet logges når køen er sendt (rebuild).
                 if !fresh.isEmpty { queuedFresh[hole] = fresh }
@@ -405,6 +412,54 @@ final class RundeModel {
         guard let game else { return }
         currentHole = min(game.holeCount - 1, hole + 1)
     }
+
+    // MARK: Markørkonflikt (K6/6.3, sql/055)
+
+    /// Henter konfliktene i runden. Bare klubbrunder: i løse runder er `updated_by` tom, og serveren
+    /// lager ingen. Feiler hentingen (tabellen finnes ikke ennå, nettet er borte), står det som sist.
+    private func loadConflicts(roundID: UUID) async {
+        guard case .club = source else { conflicts = []; return }
+        guard let rows = try? await MarkerConflictQueries.conflicts(client: client, roundIDs: [roundID]) else { return }
+        guard snapshot?.round.id == roundID else { return }
+        conflicts = MarkerConflicts.open(rows, roundID: roundID)
+    }
+
+    /// Konflikten for spilleren på hullet.
+    func conflict(hole: Int, member: UUID) -> HoleConflictRow? {
+        conflicts.first { $0.holeIndex == hole && $0.memberID == member }
+    }
+
+    /// Tallet som står på serveren for spilleren på hullet.
+    func savedStrokes(_ conflict: HoleConflictRow) -> Int? {
+        snapshot?.scores.first { $0.memberID == conflict.memberID && $0.holeIndex == conflict.holeIndex }?.strokes
+    }
+
+    /// Begge tallene i arket.
+    func options(_ conflict: HoleConflictRow) -> [MarkerConflicts.Option] {
+        MarkerConflicts.options(conflict, current: savedStrokes(conflict), me: viewer.memberID,
+                                name: { self.snapshot?.names[$0] })
+    }
+
+    /// «Bruk 5 slag»: tallet gjelder (`resolve_hole_conflict`). Henter runden på nytt etterpå.
+    func resolve(_ conflict: HoleConflictRow, strokes: Int) async throws(DataError) {
+        guard MarkerConflicts.isValidChoice(strokes, for: conflict) else {
+            throw DataError.invalid("Velg ett av de to tallene.")
+        }
+        do {
+            try await MarkerConflictQueries.resolve(client: client, conflictID: conflict.id, strokes: strokes)
+        } catch {
+            throw DataError.from(error)
+        }
+        conflicts.removeAll { $0.id == conflict.id }
+        await load()
+    }
+
+    #if DEBUG
+    /// Skjermprøven `markorkonflikt`: konflikter uten henting.
+    func previewConflicts(_ rows: [HoleConflictRow]) {
+        conflicts = MarkerConflicts.open(rows)
+    }
+    #endif
 
     // MARK: Par
 

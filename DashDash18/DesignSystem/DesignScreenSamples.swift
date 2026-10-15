@@ -15,7 +15,8 @@ import SwiftUI
 /// og slope.no (fase 20): `slopesok`, `slopebane`, `teevalg`, `losnytee`, `hurtigstarttee`, med hull (fase 20b)
 /// `slopevelg` og `slopeklubb`), og turneringen som kjerne (fase 23): `turneringvelger`, `pamelding`,
 /// `pameldingvente`, `pameldinginnstillinger`, `startliste`, `stab`, `mingruppe`, `oppdater`,
-/// og invitasjon til klubb: `velkommen`, `blimedlenke`, `blimedbekreft`, `logininvitasjon`, `inviter`, `hjeminviter`.
+/// og invitasjon til klubb: `velkommen`, `blimedlenke`, `blimedbekreft`, `logininvitasjon`, `inviter`, `hjeminviter`,
+/// og markørkonflikten (K6/6.3): `markorkonflikt`, `markorkonfliktark`, `arrangorkonflikt`.
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
@@ -61,6 +62,8 @@ struct DesignScreenSamples: View {
         case allerunder, allerunderliga, tavlatv
         // Tavla-segmentet «Statistikk» og trendgrafen alene (V4, V10).
         case tavlastatistikk, stattrend
+        // To markører førte ulikt (K6/6.3, sql/055): føringen, arket og «I kveld».
+        case markorkonflikt, markorkonfliktark, arrangorkonflikt
     }
     @State var screen: Screen = .hullkort
 
@@ -75,7 +78,7 @@ struct DesignScreenSamples: View {
         case .flerevalg:
             FlereValgSample()
                 .tint(Color.ddForestInk)
-        case .arrangor, .arrangorstart, .arrangorpagar, .arrangorferdig, .arrangorbunn, .kveldene:
+        case .arrangor, .arrangorstart, .arrangorpagar, .arrangorkonflikt, .arrangorferdig, .arrangorbunn, .kveldene:
             NavigationStack { adminHub }
                 .tint(Color.ddForestInk)
         case .runder:
@@ -176,6 +179,11 @@ struct DesignScreenSamples: View {
         case .turneringvelger:
             NavigationStack { AdminHubSample(.tonight, scroll: .top, picker: TournamentCoreSamples.picker()) }
                 .tint(Color.ddForestInk)
+        case .markorkonflikt:
+            NavigationStack { RundeView(model: MarkerConflictSamples.model()) }
+                .tint(Color.ddForestInk)
+        case .markorkonfliktark:
+            MarkerConflictSheetSample()
         case .tavlastatistikk: TavlaStatsSample()
         case .stattrend: StatsTrendSample()
         case .tavlatv:
@@ -226,6 +234,7 @@ struct DesignScreenSamples: View {
         switch screen {
         case .arrangorstart: AdminHubSample(.gettingStarted)
         case .arrangorpagar: AdminHubSample(.liveEvening)
+        case .arrangorkonflikt: AdminHubSample(.liveEvening, conflicts: true)
         case .arrangorferdig: AdminHubSample(.finished)
         case .arrangorbunn: AdminHubSample(.liveEvening, scroll: .bottom)
         case .kveldene: AdminHubSample(.liveEvening, scroll: .top)

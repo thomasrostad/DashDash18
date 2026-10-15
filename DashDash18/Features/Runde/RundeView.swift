@@ -17,6 +17,8 @@ struct RundeView: View {
     /// Spillene i runden, hentet her så segmentet kan vise hvor mange det er.
     @State private var games: GamesModel?
     @State private var showsRules = false
+    /// Konflikten arket viser (K6/6.3).
+    @State private var conflictSheet: HoleConflictRow?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -68,6 +70,16 @@ struct RundeView: View {
         .sheet(item: $scorecardFor) { target in
             if let game = model.game {
                 ScorekortSheet(game: game, memberID: target.memberID)
+            }
+        }
+        .sheet(item: $conflictSheet) { conflict in
+            if let game = model.game {
+                MarkorKonfliktArk(
+                    title: "Hull \(game.holeNumber(conflict.holeIndex)) · \(game.name(conflict.memberID))",
+                    options: model.options(conflict)
+                ) { (strokes: Int) async throws(DataError) in
+                    try await model.resolve(conflict, strokes: strokes)
+                }
             }
         }
         .sheet(isPresented: $showsRules) {
@@ -259,7 +271,11 @@ struct RundeView: View {
             isPending: model.pendingHoles.contains(card.holeIndex),
             onStep: { model.step($0, member: $1) },
             onConfirm: { model.confirm(member: $0) },
-            onScorecard: { scorecardFor = ScorecardTarget(memberID: $0 ?? model.viewer.memberID) }
+            onScorecard: { scorecardFor = ScorecardTarget(memberID: $0 ?? model.viewer.memberID) },
+            conflicts: MarkerConflicts.members(onHole: card.holeIndex, in: model.conflicts),
+            onConflict: { member in
+                conflictSheet = model.conflict(hole: card.holeIndex, member: member)
+            }
         )
     }
 
@@ -268,6 +284,13 @@ struct RundeView: View {
         if game.hasBays, game.bay(of: model.viewer.memberID) == nil, let line = game.markerLine(for: model.viewer) {
             // «Du står ikke i noen bås …»: resten av markørlinja står i verktøylinja.
             DDInfoStripe(line)
+        }
+        if let text = MarkerConflicts.stripeText(model.conflicts, holeNumber: game.holeNumber, name: game.name) {
+            MarkorKonfliktStripe(text: text) {
+                guard let conflict = MarkerConflicts.first(model.conflicts, preferring: model.currentHole) else { return }
+                model.goTo(hole: conflict.holeIndex)
+                conflictSheet = conflict
+            }
         }
         if let stripe = game.bayStripe(currentHole: model.currentHole, viewer: model.viewer) {
             DDInfoStripe(tone: .sun) {

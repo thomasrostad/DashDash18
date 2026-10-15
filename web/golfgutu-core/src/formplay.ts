@@ -8,7 +8,7 @@ import { formAxes, roundForm, type PointsGameKind } from "./forms.ts";
 import { effectiveHandicap } from "./handicap.ts";
 import { jsRound, sortedStrings, stringLess } from "./jsmath.ts";
 import { makePlayer, type PlayedHole, type Player, type Round } from "./models.ts";
-import { pointsGameRules, type GameHandicap, type PointsGameRules, type Ruleset, type SkinsRules } from "./ruleset.ts";
+import { pointsGameRules, type GameHandicap, type ParBogeyRules, type PointsGameRules, type Ruleset, type SkinsRules } from "./ruleset.ts";
 import { handicapStrokes, roundPoints } from "./scoring.ts";
 import { isTruncated } from "./truncation.ts";
 
@@ -79,6 +79,19 @@ export class GameContext {
   isReady(hole: number): boolean {
     return this.isFinal || this.players.every((p) => this.gross(p, hole) !== null);
   }
+}
+
+// MARK: Par/bogey (FormPlay.swift)
+
+/**
+ * Par/bogey (Golfreglene 2019, regel 21.3): netto mot par på hullet. `null` (ingen score) er tapt (21.3b);
+ * kalleren bestemmer om hullet venter mens runden går.
+ */
+export function parBogeyHoleValue(net: number | null, par: number, rules: ParBogeyRules): number {
+  if (net === null) return rules.loss;
+  if (net < par) return rules.win;
+  if (net === par) return rules.halve;
+  return rules.loss;
 }
 
 // MARK: Skins (GameSkins.swift)
@@ -244,6 +257,23 @@ export function pointsGameGroups(round: Round): string[][] {
 /** Poengene runden gir i tabellen med `table.formPoints` (se `FormPlay.tablePoints`). Uvektet. */
 export function formTablePoints(round: Round, roster: readonly Player[], rules: Ruleset): Map<string, number> {
   const scoring = formAxes(roundForm(round)).scoring;
+  if (scoring.type === "parBogey") {
+    // Par/bogey-summen (regel 21.3) med fullt spillehandicap, hver spiller for seg (formen er individuell).
+    const players = scoredPlayers(round);
+    const ctx = new GameContext(players, round, roster, rules);
+    const hcp = ctx.handicaps({ net: true, allowance: 1, fromLowest: false });
+    const out = new Map<string, number>();
+    for (const p of players) {
+      let total = 0;
+      for (let h = 0; h < ctx.count; h++) {
+        const n = ctx.net(p, h, hcp);
+        if (n === null && !ctx.isFinal) continue;
+        total += parBogeyHoleValue(n, ctx.holes[h].par, rules.formPlay.parBogey);
+      }
+      out.set(p, total);
+    }
+    return out;
+  }
   if (scoring.type === "skins") {
     const players = scoredPlayers(round);
     if (players.length === 0) return new Map();

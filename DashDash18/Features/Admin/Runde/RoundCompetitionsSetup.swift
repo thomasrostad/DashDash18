@@ -20,8 +20,11 @@ nonisolated struct RoundCompetitionDraft: Equatable, Identifiable, Sendable {
 
     var axes: FormAxes { config.axes }
 
-    /// Konkurransen spilles i par (lagene er en del av oppsettet).
-    var isPairs: Bool { if case .pairs = axes.teamForm { true } else { false } }
+    /// Konkurransen spilles i par med hver sin ball (parene er en del av konkurransen). Former med én
+    /// ball per lag (foursome, greensome, chapman) bruker rundens lag.
+    var isPairs: Bool {
+        if case .pairs = axes.teamForm, !axes.teamForm.playsOneBall { true } else { false }
+    }
     var isPointsGame: Bool { if case .pointsGame = axes.scoring { true } else { false } }
 
     /// Spillerne som er valgt, når konkurransen ikke er for alle.
@@ -31,6 +34,7 @@ nonisolated struct RoundCompetitionDraft: Equatable, Identifiable, Sendable {
 /// Oppskriftene i «Legg til konkurranse». Detaljene (hvem, hull, andel) kan endres etterpå.
 nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable {
     case bestBallPairs
+    case parBogey
     case skins
     case frontNine
     case backNine
@@ -42,6 +46,7 @@ nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable
     var title: String {
         switch self {
         case .bestBallPairs: "Bestball i par"
+        case .parBogey: "Par/bogey"
         case .skins: "Skins"
         case .frontNine: "Første ni"
         case .backNine: "Siste ni"
@@ -53,6 +58,7 @@ nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable
     var symbol: String {
         switch self {
         case .bestBallPairs: "person.2"
+        case .parBogey: "plusminus"
         case .skins: "dollarsign.circle"
         case .frontNine: "1.circle"
         case .backNine: "10.circle"
@@ -75,6 +81,11 @@ nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable
         case .bestBallPairs:
             CompetitionConfig(teamForm: .pairs(.fourball), scoring: .stableford(net: true),
                               entrants: CompetitionSetup.suggestedPairs(draft))
+        case .parBogey:
+            // Spilles runden med én ball per lag, er det lagene som spiller mot banen.
+            draft.form.axes.teamForm.playsOneBall
+                ? CompetitionConfig(teamForm: draft.form.axes.teamForm, scoring: .parBogey)
+                : CompetitionConfig(form: "par-bogey")
         case .skins: CompetitionConfig(form: "skins")
         case .frontNine: CompetitionConfig(form: draft.formID, holes: HoleRange(first: 0, last: 8))
         case .backNine: CompetitionConfig(form: draft.formID, holes: HoleRange(first: 9, last: 17))

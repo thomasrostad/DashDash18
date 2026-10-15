@@ -141,6 +141,10 @@ extension Ruleset {
         notNegative(formPlay.teamMatch.win, "formPlay.teamMatch.win", "Lagpoeng for seier")
         notNegative(formPlay.teamMatch.draw, "formPlay.teamMatch.draw", "Lagpoeng for delt")
         notNegative(formPlay.teamMatch.loss, "formPlay.teamMatch.loss", "Lagpoeng for tap")
+        let pb = formPlay.parBogey
+        if ![pb.win, pb.halve, pb.loss].allSatisfy(\.isFinite) || pb.win < pb.halve || pb.halve < pb.loss {
+            add("formPlay.parBogey", "Par/bogey: vunnet hull må gi minst like mye som delt, og delt minst like mye som tapt.")
+        }
 
         // Tippekupongen. Grensene er databasens (events.tips_stake_points, events.tips_line).
         if Tips.startTime(tips.defaultStartTime, rules: .golfgutu) != tips.defaultStartTime
