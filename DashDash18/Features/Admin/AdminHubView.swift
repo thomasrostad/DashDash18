@@ -122,6 +122,8 @@ private struct AdminHubContent: View {
     /// Scorene med tid, startlista og sidepremiene til «I kveld» (V12).
     @State private var live: TonightLiveModel
     @State private var showsTV = false
+    /// «Del tavla» fra «I kveld» (sql/058).
+    @State private var showsShare = false
     @State private var setup: SetupDestination?
     /// Av i skjermprøven, som ikke har nett.
     private let loads: Bool
@@ -207,6 +209,7 @@ private struct AdminHubContent: View {
         .fullScreenCover(isPresented: $showsTV) {
             TonightTVCover(model: TavlaModel(context: model.clubContext))
         }
+        .sheet(isPresented: $showsShare) { shareSheet }
         // Også tilbake fra Kvelden: svar, runder og komité kan være endret.
         .task { if loads { await terminliste.load() } }
         .task { if loads { await model.load() } }
@@ -616,10 +619,33 @@ private struct AdminHubContent: View {
             tonightRemaining(rounds: rounds, prizes: prizes, event: event, closesAbove: Self.isClose(progress.action))
         }
         Section {
+            if TavlaShareFeature.isEnabled, model.tournament != nil {
+                Button { showsShare = true } label: {
+                    Label("Del tavla med tilskuerne", systemImage: "link")
+                        .labelStyle(DDIconLabelStyle())
+                        .foregroundStyle(Color.ddInk)
+                }
+            }
             Button { openEvent = event.id } label: {
                 Label("Alt om \(term.the)", systemImage: "calendar")
                     .labelStyle(DDIconLabelStyle())
                     .foregroundStyle(Color.ddInk)
+            }
+        }
+    }
+
+    /// «Del tavla»: turneringen arrangørsiden viser (sesongen, eller liga/cup/morro med egne spilledager).
+    @ViewBuilder
+    private var shareSheet: some View {
+        if let tournament = model.tournament {
+            NavigationStack {
+                if let competition = model.competition {
+                    TavlaShareSheet(model: TavlaShareModel(client: model.clubContext.client, competitionID: competition.id,
+                                                           competitionName: competition.name, isOrganizer: true))
+                } else {
+                    TavlaShareSheet(model: TavlaShareModel(client: model.clubContext.client, seasonID: tournament.id,
+                                                           competitionName: tournament.name, isOrganizer: true))
+                }
             }
         }
     }

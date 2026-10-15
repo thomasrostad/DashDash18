@@ -5,7 +5,8 @@
 import {
   CompetitionScope, CupStandings, decodeCompetitionMatch, decodeCompetitionParticipant, decodeCompetitionRound,
   decodeCompetitionRow, decodeProfile, decodeRoundParticipant, decodeTavlaData, LeagueStandings, makeSnapshot,
-  decodeRoundRow, HIDDEN_HOLES_NOTE, hidesLastHoles, isPlayoff, PersonDirectory, standingsFromTavlaData, type RoundsGrid, type UUID,
+  decodeRoundRow, HIDDEN_HOLES_NOTE, hidesLastHoles, isPlayoff, PersonDirectory, type RoundsGrid, type UUID,
+  decodeSeasonRow, tavlaInput, TavlaStandings, tavlaToJSON,
   competitionBoards, competitionScoreText, decodeRuleset, decodeStoredCompetition, frozenFromRows, makeRoundFromSnapshot,
   sidesFromRaw, snapshotFields, snapshotHandicap, snapshotRoster, teamMatchResult, type Ruleset, type StoredCompetition, type TavlaData,
 } from "../../golfgutu-core/src/index.ts";
@@ -54,8 +55,7 @@ export function buildTVPayload(board: Record<string, unknown>): TVPayload {
   const comp = board.competition as {
     name: string; season_id: string; club_id: string; status: string; rules: Record<string, unknown>; club_name?: string | null;
   };
-  const season = { id: comp.season_id, club_id: comp.club_id, name: comp.name, status: comp.status, rules: comp.rules };
-  const t = standingsFromTavlaData(board, season);
+  const t = tavlaToJSON(seasonStandings(board));
   const playingDay = (comp.rules as { dayTerm?: string })?.dayTerm === "playingDay";
   const total = t.eveningsTotal;
   const unit = playingDay ? (total === 1 ? "spilledag" : "spilledager") : (total === 1 ? "kveld" : "kvelder");
@@ -72,6 +72,13 @@ export function buildTVPayload(board: Record<string, unknown>): TVPayload {
       return m.id && m.display_name ? [[m.id.toLowerCase(), m.display_name] as [string, string]] : [];
     }))),
   };
+}
+
+/** Sesongen (turnering med kvelder): appens Tavla regnet fra svaret, med rundene bak («Alle runder», scorekortene). */
+export function seasonStandings(board: Record<string, unknown>): TavlaStandings {
+  const comp = board.competition as { season_id: string; club_id: string; name: string; status: string; rules: unknown };
+  const season = { id: comp.season_id, club_id: comp.club_id, name: comp.name, status: comp.status, rules: comp.rules };
+  return new TavlaStandings(tavlaInput(decodeTavlaData(board), decodeSeasonRow(season)));
 }
 
 function safeRules(raw: unknown): Ruleset | null {
@@ -151,13 +158,12 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
   const raw = board.competition as Record<string, unknown> & { club_name?: string | null };
   const comp = decodeCompetitionRow(raw);
   const club = raw.club_name ?? null;
-  const participants = list(board, "participants").map((x) => decodeCompetitionParticipant(x));
-  const profiles = list(board, "profiles").map((x) => decodeProfile(x));
-  const roundParticipants = list(board, "round_participants").map((x) => decodeRoundParticipant(x));
-  const data = decodeTavlaData({ ...board, events: [] });
-  const directory = new PersonDirectory(data.members, roundParticipants, profiles);
 
   if (comp.kind === "cup") {
+    const participants = list(board, "participants").map((x) => decodeCompetitionParticipant(x));
+    const profiles = list(board, "profiles").map((x) => decodeProfile(x));
+    const roundParticipants = list(board, "round_participants").map((x) => decodeRoundParticipant(x));
+    const directory = new PersonDirectory(decodeTavlaData({ ...board, events: [] }).members, roundParticipants, profiles);
     const names = new Map<UUID, string>();
     for (const p of participants) {
       const n = p.memberID !== null ? directory.members.get(p.memberID)?.displayName : p.profileID !== null ? directory.profiles.get(p.profileID)?.displayName : null;
@@ -183,6 +189,26 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
     };
   }
 
+  const { league: l, names } = leagueStandings(board);
+  return {
+    name: comp.name,
+    club,
+    played: `${l.roundCount} ${l.roundCount === 1 ? "runde" : "runder"} spilt · ${l.rulesSummary}`,
+    rows: l.rows.map((r) => ({ place: l.placeText(r), name: r.name, total: LeagueStandings.points(r.total), detail: l.detail(r) })),
+    latest: latestRound(l.roundGrid()),
+    note: hiddenHolesNote(board),
+    ...extraPanels(board, comp.rules, (id) => names.get(id) ?? new Map()),
+  };
+}
+
+/** Liga og morro: appens ligatabell regnet fra svaret, og navnene per runde. */
+export function leagueStandings(board: Record<string, unknown>): { league: LeagueStandings; names: Map<UUID, Map<UUID, string>> } {
+  const comp = decodeCompetitionRow(board.competition);
+  const participants = list(board, "participants").map((x) => decodeCompetitionParticipant(x));
+  const profiles = list(board, "profiles").map((x) => decodeProfile(x));
+  const roundParticipants = list(board, "round_participants").map((x) => decodeRoundParticipant(x));
+  const data = decodeTavlaData({ ...board, events: [] });
+  const directory = new PersonDirectory(data.members, roundParticipants, profiles);
   // Navn fra troppen i runden (klubbrunde) eller deltakerne (løs runde), dato fra kvelden/spilledagen.
   const names = new Map<UUID, Map<UUID, string>>();
   for (const x of list(board, "roster")) {
@@ -210,16 +236,7 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
   }));
   const links = list(board, "links").map((x) => decodeCompetitionRound(x));
   const input = new CompetitionScope(comp, links, participants).input(snapshots, directory);
-  const l = new LeagueStandings(input);
-  return {
-    name: comp.name,
-    club,
-    played: `${l.roundCount} ${l.roundCount === 1 ? "runde" : "runder"} spilt · ${l.rulesSummary}`,
-    rows: l.rows.map((r) => ({ place: l.placeText(r), name: r.name, total: LeagueStandings.points(r.total), detail: l.detail(r) })),
-    latest: latestRound(l.roundGrid()),
-    note: hiddenHolesNote(board),
-    ...extraPanels(board, comp.rules, (id) => names.get(id) ?? new Map()),
-  };
+  return { league: new LeagueStandings(input), names };
 }
 
 /** Henter med koden. null: ugyldig, utløpt eller tilbaketrukket kode (P0002). */
