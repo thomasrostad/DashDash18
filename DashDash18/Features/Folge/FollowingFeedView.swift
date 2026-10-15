@@ -26,7 +26,6 @@ struct HjemFeedTabPicker: View {
         .pickerStyle(.segmented)
         .padding(.horizontal, DDSpacing.gutter)
         .padding(.vertical, DDSpacing.s)
-        .background(Color.ddBackground)
     }
 }
 

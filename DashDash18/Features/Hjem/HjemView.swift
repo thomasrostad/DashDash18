@@ -103,7 +103,9 @@ private struct HjemClubContent: View {
                              isLoadingMore: home.isLoadingMore)
             }
         }
-            .safeAreaInset(edge: .top, spacing: 0) {
+            // Som en del av navigasjonslinja (iOS 26), ikke en fast stripe: ellers ble velgeren
+            // hengende igjen når feeden ble dratt ned.
+            .safeAreaBar(edge: .top, spacing: 0) {
                 if following != nil { HjemFeedTabPicker(tab: $feedTab) }
             }
             .task {
