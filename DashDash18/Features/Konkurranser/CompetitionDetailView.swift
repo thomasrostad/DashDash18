@@ -293,6 +293,15 @@ struct CompetitionHeaderCard: View {
 struct LeagueTableSection: View {
     let standings: LeagueStandings
 
+    /// Opp i skog, ned i rust (mørkere på din rad, som på Tavla).
+    static func color(_ movement: TavlaStandings.Movement, isMe: Bool) -> Color {
+        switch movement {
+        case .up: Color.ddForestInk
+        case .down: isMe ? Color.ddRustDark : Color.ddRustText
+        case .same: Color.ddInkSecondary
+        }
+    }
+
     var body: some View {
         DDSectionLabel("Tabellen") {
             Text(standings.roundCount == 1 ? "1 runde" : "\(standings.roundCount) runder")
@@ -307,7 +316,16 @@ struct LeagueTableSection: View {
                 ForEach(standings.rows) { row in
                     DDRankRow(place: standings.placeText(row), name: row.name, detail: standings.detail(row),
                               isMe: row.isMe) {
-                        DDRankValue(LeagueStandings.points(row.total))
+                        HStack(spacing: DDSpacing.m) {
+                            if let movement = standings.movement(row) {
+                                Text(movement.text)
+                                    .font(.ddStatus)
+                                    .monospacedDigit()
+                                    .foregroundStyle(Self.color(movement, isMe: row.isMe))
+                                    .accessibilityLabel(movement.spoken)
+                            }
+                            DDRankValue(LeagueStandings.points(row.total))
+                        }
                     }
                     if row.id != standings.rows.last?.id { DDDivider() }
                 }

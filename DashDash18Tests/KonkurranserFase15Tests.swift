@@ -107,6 +107,21 @@ import Testing
         #expect(league.detail(league.rows[0]).contains("beste 2 teller"))
     }
 
+    /// ▲/▼ i ligatabellen: plassen nå mot tabellen uten siste runde, som på Tavla.
+    @Test func bevegelseSidenForrigeRunde() {
+        let full = LeagueStandings(Self.input(kind: .league, rounds: Self.rounds), me: [])
+        let before = LeagueStandings(Self.input(kind: .league, rounds: Array(Self.rounds.prefix(2))), me: [])
+        let earlier = Dictionary(uniqueKeysWithValues: before.rows.map { ($0.entrant, $0.place) })
+        for row in full.rows {
+            let change = earlier[row.entrant]! - row.place
+            let expected: TavlaStandings.Movement = change > 0 ? .up(change) : change < 0 ? .down(-change) : .same
+            #expect(full.movement(row) == expected, "\(row.name)")
+        }
+        // Etter én runde finnes ingen forrige tabell.
+        let one = LeagueStandings(Self.input(kind: .league, rounds: Array(Self.rounds.prefix(1))), me: [])
+        #expect(one.rows.allSatisfy { one.movement($0) == nil })
+    }
+
     @Test func forForsteRunde() {
         let league = LeagueStandings(Self.input(kind: .league, rounds: []), me: [])
         #expect(!league.hasResults)

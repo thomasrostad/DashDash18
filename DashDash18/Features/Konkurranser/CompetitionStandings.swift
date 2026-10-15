@@ -31,6 +31,8 @@ nonisolated struct LeagueStandings: Sendable {
     /// Rundene og regelmotorens sesong, til «Alle runder» (poeng og slag per runde, scorekortet).
     let snapshots: [RoundSnapshot]
     let season: Season
+    /// Plassene før siste runde, til ▲/▼ (som på Tavla). Nil før to runder er spilt.
+    let previousPlaces: [Entrant: Int]?
 
     /// - Parameter playoff: playoff-runden om førsteplassen (sql/047), når den finnes.
     init(_ input: CompetitionInput, me: Set<Entrant>, playoff: RoundSnapshot? = nil) {
@@ -55,6 +57,17 @@ nonisolated struct LeagueStandings: Sendable {
         }
         // Vinneren av playoffen om førsteplassen står først (sql/047).
         let places = LeaguePlayoff.apply(places: table.map { ($0.entrant, $0.result.place) }, playoff: playoff)
+        // Tabellen uten siste runde (rundene står i tidsrekkefølge), med samme regler.
+        if rounds.count >= 2 {
+            let earlier = League.table(entrants: input.roster.map(\.id), rounds: Array(rounds.dropLast()), rules: rules)
+            let played = earlier.contains { $0.played > 0 }
+            previousPlaces = played
+                ? Dictionary(earlier.compactMap { r in byKey[r.playerID].map { ($0.0, r.place) } },
+                             uniquingKeysWith: { a, _ in a })
+                : nil
+        } else {
+            previousPlaces = nil
+        }
         rows = table.enumerated().map { i, t in
             (i, Row(entrant: t.entrant, name: t.player.name, place: places[t.entrant] ?? t.result.place,
                     total: t.result.total, played: t.result.played, wins: t.result.wins,
@@ -69,6 +82,13 @@ nonisolated struct LeagueStandings: Sendable {
     var hasResults: Bool { rows.contains { $0.played > 0 } }
 
     func placeText(_ row: Row) -> String { hasResults ? "\(row.place)." : "–" }
+
+    /// Bevegelsen siden forrige runde. Nil når den ikke kan regnes, eller raden ikke hadde plass før.
+    func movement(_ row: Row) -> TavlaStandings.Movement? {
+        guard hasResults, row.played > 0, let before = previousPlaces?[row.entrant] else { return nil }
+        let change = before - row.place
+        return change > 0 ? .up(change) : change < 0 ? .down(-change) : .same
+    }
 
     /// Poeng uten unødvendige desimaler: «11», «6,5», «6,33».
     static func points(_ x: Double) -> String {
