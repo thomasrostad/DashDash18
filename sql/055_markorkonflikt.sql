@@ -1,5 +1,5 @@
 -- 055_markorkonflikt.sql — to markører som fører ulikt for samme spiller og hull
--- (UI-utbedringen K6/6.3, docs/ui-utbedring.md). TIL GODKJENNING: ikke kjørt.
+-- (UI-utbedringen K6/6.3, docs/ui-utbedring.md). Godkjent og kjørt på test 15.10.2026. Ikke kjørt på prod.
 --
 -- I dag vinner den nyeste innsendingen (save_hole: recorded_at), og tallet som ble
 -- overskrevet, forsvinner. Denne migreringen tar vare på det når en ANNEN person fører et
