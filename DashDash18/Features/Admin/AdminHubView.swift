@@ -95,11 +95,11 @@ struct AdminHubSample: View {
     private let picker: TournamentPickerModel?
 
     init(_ variant: RundeAdminModel.SampleVariant = .tonight, scroll: AdminHubScroll = .now,
-         picker: TournamentPickerModel? = nil) {
+         picker: TournamentPickerModel? = nil, conflicts: Bool = false) {
         let model = RundeAdminModel.sample(variant)
         _model = State(initialValue: model)
         _terminliste = State(initialValue: .sample(from: model))
-        _live = State(initialValue: .sample(from: model))
+        _live = State(initialValue: .sample(from: model, conflicts: conflicts))
         self.scroll = scroll
         self.picker = picker
     }
@@ -574,6 +574,7 @@ private struct AdminHubContent: View {
                                           venue: round.venue, bays: roundBays)
         return Section {
             TonightRoundCard(title: model.title(round), shape: shape, bays: roundBays,
+                             conflictText: MarkerConflicts.organizerText(live.conflicts.filter { $0.roundID == round.id }),
                              showTV: { showsTV = true }, openRound: { showRound(round.id) })
         } header: {
             DDHeader(single ? "Runden" : "Runde \(round.roundNo)")
