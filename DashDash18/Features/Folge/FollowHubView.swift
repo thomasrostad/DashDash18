@@ -55,6 +55,11 @@ struct FollowHubView: View {
                     .foregroundStyle(Color.ddInkSecondary)
                     .monospacedDigit()
                 if let client = model.client {
+                    NavigationLink {
+                        FollowAddFriendsView(model: FollowAddFriendsModel(client: client, userID: model.userID))
+                    } label: {
+                        Label("Legg til venner", systemImage: "person.badge.plus").labelStyle(DDIconLabelStyle())
+                    }
                     NavigationLink { FollowSearchView(client: client, userID: model.userID) } label: {
                         Label("Finn spillere", systemImage: "magnifyingglass").labelStyle(DDIconLabelStyle())
                     }
@@ -62,7 +67,8 @@ struct FollowHubView: View {
                         Label("Min kode", systemImage: "qrcode").labelStyle(DDIconLabelStyle())
                     }
                     NavigationLink {
-                        FollowingFeedView(model: FollowingFeedModel(client: client, userID: model.userID))
+                        FollowingFeedView(model: FollowingFeedModel(client: client, userID: model.userID),
+                                          showsAddFriends: false)
                             .navigationTitle("Runder")
                             .ddNavigationChrome()
                     } label: {
