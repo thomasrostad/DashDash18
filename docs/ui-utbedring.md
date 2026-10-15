@@ -46,7 +46,7 @@ Designsystemet ligger i `DashDash18/DesignSystem/`. Farger er `DDToken` i `DDPal
 - **K3** er gjort: systemets glass, titler og ikoner i skog, og «Lagre» i tonet glass.
 - **K4** er gjort. Knappen heter nå «Har du en kode?», og «Bli med» er aktiv bare med gyldig kode. «Lim inn» er systemets `PasteButton`, som følger telefonens språk; en egen knapp ville spurt om tilgang til utklippstavla hver gang.
 - **K5:** fanelinja med `Tab`-API og én `NavigationStack` per fane fantes allerede. Den manglet bare i skjermprøvene.
-- **K6:** køen for føring uten nett fantes allerede (SwiftData, overlever omstart, nyeste vinner). Statuslinja er lagt til. Konfliktarket for to markører er ikke laget: serveren lagrer bare siste verdi (`updated_by`, `updated_at`), så appen ser ikke den andre markørens tall. Det krever en endring i skjemaet, og den må godkjennes først.
+- **K6:** køen for føring uten nett fantes allerede (SwiftData, overlever omstart, nyeste vinner). Statuslinja er lagt til. Konfliktarket for to markører er ikke laget: serveren lagrer bare siste verdi (`updated_by`, `updated_at`), så appen ser ikke den andre markørens tall. Forslaget til skjemaendring ligger i `sql/055_markorkonflikt.sql` og venter på godkjenning; arket i appen lages etterpå.
 
 ### Arrangør (V12, 4.4, P3, V13, V8, V6)
 - **V12 og 4.4** er gjort i `AdminHubView` med nye `TonightLive.swift` (logikk), `TonightLiveModel.swift` (henting) og `TonightViews.swift`. Når kvelden er i dag, heter siden «I kveld», med dato, tid og sted som undertittel. Øverst står stegstripene, så rundekortet, påmeldingen, sidepremiene og «Før Ferdig». Kommende og tidligere kvelder står under. «Inviter spillere» er en egen knapp i verktøylinja. ⋯-menyen har «Ny kveld», «Lag serie» og «Ny turnering», og under dem oppsettet: Turneringen, Troppen, Banene, Klubben, Regler og Roller, hver bare med rettighet. «Kom i gang» er uendret.
@@ -105,7 +105,7 @@ Designsystemet ligger i `DashDash18/DesignSystem/`. Farger er `DDToken` i `DDPal
   - Uten et bibliotek for snapshot-tester (nye avhengigheter krever godkjenning) sammenligner den ikke bilder.
   - Den visuelle kontrollen gjøres med skjermprøvene og `xcrun simctl`.
 - **6.1:** Live Activity fantes allerede. Widgetfargene følger de nye tokenene.
-- **6.3:** konfliktløsning mellom markører krever skjemaendring (se K6). Ikke gjort.
+- **6.3:** konfliktløsning mellom markører: SQL-forslaget `055_markorkonflikt.sql` venter på godkjenning (se K6).
 - **7.1–7.3:** `UIDesignRequiresCompatibility` finnes ikke. Ingen egne materialer, og ingen ugjennomsiktige flater bak systemlinjene.
 - **7.7:** iOS 27 SDK er ikke installert (Xcode 26.6, iOS 26.5).
 - **Seksjonsetiketter** (`ddEyebrow`) vokser til xxxL, men ikke videre, så de ikke tar over skjermen i AX3.
