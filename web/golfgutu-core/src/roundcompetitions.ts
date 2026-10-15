@@ -1,8 +1,8 @@
 // Flere konkurranser på samme runde, og øyeblikksbildet ved start (RoundCompetitions.swift).
 
 import { courseHoles } from "./course.ts";
-import { decodeScoringMethod, decodeTeamForm, playsOneBall, type ScoringMethod, type TeamForm } from "./forms.ts";
-import { evaluatePointsGame, evaluateSkins, GameContext, scoredPlayers } from "./formplay.ts";
+import { decodeScoringMethod, decodeTeamForm, formAxes, higherIsBetter, playsOneBall, roundForm, type FormAxes, type ScoringMethod, type TeamForm } from "./forms.ts";
+import { evaluatePointsGame, evaluateSkins, GameContext, parBogeyHoleValue, scoredPlayers } from "./formplay.ts";
 import { effectiveHandicap } from "./handicap.ts";
 import { deepCopy, stringLess } from "./jsmath.ts";
 import { makeRound, type HoleScores, type PlayedHole, type Player, type Round } from "./models.ts";
@@ -43,6 +43,8 @@ export interface RoundCompetitionRow {
   score: number;
   holes: number;
   rank: number;
+  /** Verdien per regnet hull (0-basert): poeng, slag eller par/bogey. Bare stableford, slagspill og par/bogey. */
+  holeValues: Map<number, number>;
 }
 
 export interface RoundCompetitionResult {
@@ -60,62 +62,117 @@ export function evaluateRoundCompetitions(round: Round, roster: readonly Player[
   return competitions.map((c) => evaluateCompetition(c, round, roster, rules));
 }
 
+/** Motoren regner kombinasjonen (`RoundCompetitions.supports`). Én ball krever i tillegg at runden spilles i lagformen. */
+export function competitionSupported(axes: FormAxes): boolean {
+  switch (axes.scoring.type) {
+    case "stableford":
+    case "strokePlay":
+    case "parBogey":
+      return true;
+    case "skins":
+    case "pointsGame":
+      return axes.teamForm.type === "individual";
+    default:
+      return false;
+  }
+}
+
+function sameTeamForm(a: TeamForm, b: TeamForm): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/** Rundens lag (lagnummer over 0) i nummerrekkefølge, spillerne sortert; bare lag der noen har score. */
+function roundTeams(round: Round): string[][] {
+  const numbers = [...new Set([...round.teams.values()].filter((n) => n !== 0))].sort((a, b) => a - b);
+  return numbers
+    .map((n) => [...round.teams].filter(([, t]) => t === n).map(([p]) => p).sort((x, y) => (stringLess(x, y) ? -1 : stringLess(y, x) ? 1 : 0)))
+    .filter((team) => team.some((p) => (round.holeScores.get(p)?.size ?? 0) > 0));
+}
+
+function sortedIDs(ids: readonly string[]): string[] {
+  return [...ids].sort((x, y) => (stringLess(x, y) ? -1 : stringLess(y, x) ? 1 : 0));
+}
+
 function evaluateCompetition(comp: RoundCompetition, round: Round, roster: readonly Player[], rules: Ruleset): RoundCompetitionResult {
   const unsupported: RoundCompetitionResult = { id: comp.id, supported: false, rows: [] };
-  if (playsOneBall(comp.teamForm)) return unsupported;
+  if (!competitionSupported({ teamForm: comp.teamForm, scoring: comp.scoring })) return unsupported;
   const scored = scoredPlayers(round);
   const s = comp.scoring;
   switch (s.type) {
     case "stableford":
-    case "strokePlay": {
-      const stableford = s.type === "stableford";
-      const entrants = comp.entrants ?? scored.map((p) => [p]);
-      const ctx = new GameContext(entrants.flat(), round, roster, rules);
-      const hcp = ctx.handicaps({ net: s.net, allowance: comp.allowance ?? 1, fromLowest: false });
-      const rows: RoundCompetitionRow[] = [];
-      for (const team of entrants) {
-        let total = 0;
-        let holes = 0;
-        for (let h = 0; h < ctx.count; h++) {
-          if (!inRange(h, comp.holes)) continue;
-          const values: number[] = [];
-          for (const p of team) {
-            const n = ctx.net(p, h, hcp);
-            if (n === null) continue;
-            values.push(stableford ? Math.max(rules.scoring.minimumPoints, ctx.holes[h].par - n + rules.scoring.netParPoints) : n);
-          }
-          if (values.length === 0) continue;
-          holes += 1;
-          if (comp.teamForm.type === "pairs" && comp.teamForm.pairs === "aggregate") total += values.reduce((a, b) => a + b, 0);
-          else total += stableford ? Math.max(...values) : Math.min(...values);
-        }
-        rows.push({ players: [...team], score: total, holes, rank: 0 });
-      }
-      return ranked(comp.id, rows, stableford, !stableford);
-    }
+    case "strokePlay":
+    case "parBogey":
+      return holeByHole(comp, round, roster, rules, scored) ?? unsupported;
     case "skins": {
-      if (comp.teamForm.type !== "individual" || comp.holes !== null) return unsupported;
+      if (comp.holes !== null) return unsupported;
       const players = comp.entrants?.flat() ?? scored;
       if (players.length === 0) return { id: comp.id, supported: true, rows: [] };
       const game = evaluateSkins(players, round, roster, rules, rules.formPlay.skins);
       const done = game.holes.filter((h) => h.state !== "pending").length;
-      return ranked(comp.id, players.map((p) => ({ players: [p], score: game.scores.get(p) ?? 0, holes: done, rank: 0 })), true, false);
+      return ranked(comp.id, players.map((p) => ({ players: [p], score: game.scores.get(p) ?? 0, holes: done, rank: 0, holeValues: new Map() })), true, false);
     }
     case "pointsGame": {
-      if (comp.teamForm.type !== "individual") return unsupported;
       const groups = comp.entrants ?? [scored];
       const rows: RoundCompetitionRow[] = [];
       for (const group of groups) {
         if (group.length === 0) continue;
         const r = evaluatePointsGame(s.game, group, round, roster, rules, comp.holes);
         const done = r.holes.filter((h) => h.state === "scored").length;
-        for (const p of group) rows.push({ players: [p], score: r.totals.get(p) ?? 0, holes: done, rank: 0 });
+        for (const p of group) rows.push({ players: [p], score: r.totals.get(p) ?? 0, holes: done, rank: 0, holeValues: new Map() });
       }
       return ranked(comp.id, rows, true, false);
     }
     default:
       return unsupported;
   }
+}
+
+/** Stableford, slagspill og par/bogey hull for hull (`RoundCompetitions.holeByHole`). */
+function holeByHole(comp: RoundCompetition, round: Round, roster: readonly Player[], rules: Ruleset, scored: string[]): RoundCompetitionResult | null {
+  const oneBall = playsOneBall(comp.teamForm);
+  let entrants: string[][];
+  if (oneBall) {
+    if (!sameTeamForm(formAxes(roundForm(round)).teamForm, comp.teamForm)) return null;
+    entrants = comp.entrants ?? roundTeams(round);
+    for (const team of entrants) {
+      const numbers = new Set(team.map((p) => round.teams.get(p) ?? 0));
+      if (numbers.size !== 1 || numbers.has(0)) return null;
+    }
+  } else {
+    entrants = comp.entrants ?? scored.map((p) => [p]);
+  }
+  const s = comp.scoring;
+  const net = s.type === "stableford" || s.type === "strokePlay" ? s.net : true;
+  const ctx = new GameContext(entrants.flat(), round, roster, rules);
+  const hcp = ctx.handicaps({ net, allowance: comp.allowance ?? 1, fromLowest: false });
+  const higher = higherIsBetter(s);
+  const aggregate = comp.teamForm.type === "pairs" && comp.teamForm.pairs === "aggregate";
+  const rows: RoundCompetitionRow[] = [];
+  for (const team of entrants) {
+    let total = 0;
+    let holes = 0;
+    const holeValues = new Map<number, number>();
+    const order = sortedIDs(team);
+    for (let h = 0; h < ctx.count; h++) {
+      if (!inRange(h, comp.holes)) continue;
+      const par = ctx.holes[h].par;
+      // Én ball: lagets score er den første på laget (id-rekkefølge) som har ført hullet.
+      const balls = oneBall ? [order.find((p) => ctx.gross(p, h) !== null) ?? order[0]] : team;
+      const nets = balls.map((p) => ctx.net(p, h, hcp));
+      const present = nets.filter((n): n is number => n !== null);
+      let values: number[];
+      if (s.type === "stableford") values = present.map((n) => Math.max(rules.scoring.minimumPoints, par - n + rules.scoring.netParPoints));
+      else if (s.type === "parBogey") values = (ctx.isFinal ? nets : present).map((n) => parBogeyHoleValue(n, par, rules.formPlay.parBogey));
+      else values = present;
+      if (values.length === 0) continue;
+      holes += 1;
+      const value = aggregate ? values.reduce((a, b) => a + b, 0) : higher ? Math.max(...values) : Math.min(...values);
+      total += value;
+      holeValues.set(h, value);
+    }
+    rows.push({ players: [...team], score: total, holes, rank: 0, holeValues });
+  }
+  return ranked(comp.id, rows, higher, !higher);
 }
 
 function ranked(id: string, rows: RoundCompetitionRow[], higherIsBetter: boolean, byHoles: boolean): RoundCompetitionResult {

@@ -167,6 +167,10 @@ export function validateRuleset(r: Ruleset): RulesetIssue[] {
   notNegative(r.formPlay.teamMatch.win, "formPlay.teamMatch.win", "Lagpoeng for seier");
   notNegative(r.formPlay.teamMatch.draw, "formPlay.teamMatch.draw", "Lagpoeng for delt");
   notNegative(r.formPlay.teamMatch.loss, "formPlay.teamMatch.loss", "Lagpoeng for tap");
+  const pb = r.formPlay.parBogey;
+  if (![pb.win, pb.halve, pb.loss].every(Number.isFinite) || pb.win < pb.halve || pb.halve < pb.loss) {
+    add("formPlay.parBogey", "Par/bogey: vunnet hull må gi minst like mye som delt, og delt minst like mye som tapt.");
+  }
 
   // Tippekupongen.
   const t = r.tips;

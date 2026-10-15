@@ -1,0 +1,2168 @@
+{
+ "kilde": "Spillformer: scramble, foursome, greensome, chapman og par/bogey. Bane: 18 hull, par 4, indeks 1–18, CR 72, slope 113 (banehandicap = indeks). Lagshandicap: golfgutu = Ruleset.golfgutu (PWA-en: toerformer snitt, scramble-4 25/20/15/10), whs = WHS Rules of Handicapping, Appendix C (foursome 50 % av summen, greensome og chapman 60/40, scramble 2 35/15, scramble 4 25/20/15/10), lavest først. Par/bogey: Golfreglene 2019, regel 21.3 (+1 vunnet, 0 delt, −1 tapt; uten score tapt når runden er ferdig). Tallene er regnet uavhengig av motoren og kontrollert for hånd.",
+ "indeks": {
+  "a": 10,
+  "b": 20,
+  "c": 4,
+  "d": 8,
+  "e": 12,
+  "f": 20,
+  "g": 0,
+  "h": 30
+ },
+ "lagshandicap": [
+  {
+   "form": "foursome",
+   "hull": 18,
+   "spillere": [
+    "a",
+    "b"
+   ],
+   "golfgutu": 15,
+   "whs": 15
+  },
+  {
+   "form": "greensome",
+   "hull": 18,
+   "spillere": [
+    "a",
+    "b"
+   ],
+   "golfgutu": 15,
+   "whs": 14
+  },
+  {
+   "form": "chapman",
+   "hull": 18,
+   "spillere": [
+    "a",
+    "b"
+   ],
+   "golfgutu": 15,
+   "whs": 14
+  },
+  {
+   "form": "scramble-2",
+   "hull": 18,
+   "spillere": [
+    "a",
+    "b"
+   ],
+   "golfgutu": 15,
+   "whs": 7
+  },
+  {
+   "form": "scramble-2",
+   "hull": 9,
+   "spillere": [
+    "a",
+    "b"
+   ],
+   "golfgutu": 8,
+   "whs": 3
+  },
+  {
+   "form": "greensome",
+   "hull": 18,
+   "spillere": [
+    "e",
+    "f"
+   ],
+   "golfgutu": 16,
+   "whs": 15
+  },
+  {
+   "form": "foursome",
+   "hull": 18,
+   "spillere": [
+    "e",
+    "f"
+   ],
+   "golfgutu": 16,
+   "whs": 16
+  },
+  {
+   "form": "scramble-2",
+   "hull": 18,
+   "spillere": [
+    "c",
+    "d"
+   ],
+   "golfgutu": 6,
+   "whs": 3
+  },
+  {
+   "form": "scramble-4",
+   "hull": 18,
+   "spillere": [
+    "c",
+    "d",
+    "e",
+    "f"
+   ],
+   "golfgutu": 6,
+   "whs": 6
+  },
+  {
+   "form": "scramble-4",
+   "hull": 18,
+   "spillere": [
+    "a",
+    "b",
+    "g",
+    "h"
+   ],
+   "golfgutu": 8,
+   "whs": 8
+  }
+ ],
+ "runder": [
+  {
+   "id": "scramble-2",
+   "gameType": "scramble-2",
+   "teamForm": {
+    "type": "scramble",
+    "size": 2
+   },
+   "regelsett": "whs",
+   "laast": true,
+   "lag": {
+    "a": 1,
+    "b": 1,
+    "c": 2,
+    "d": 2
+   },
+   "scorer": {
+    "a": [
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4
+    ],
+    "b": [
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4
+    ],
+    "c": [
+     3,
+     4,
+     4,
+     4,
+     4,
+     5,
+     4,
+     3,
+     4,
+     4,
+     5,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "hoved",
+     "teamForm": {
+      "type": "scramble",
+      "size": 2
+     },
+     "scoring": {
+      "type": "stableford",
+      "net": true
+     }
+    },
+    {
+     "id": "slag",
+     "teamForm": {
+      "type": "scramble",
+      "size": 2
+     },
+     "scoring": {
+      "type": "strokePlay",
+      "net": true
+     }
+    },
+    {
+     "id": "parbogey",
+     "teamForm": {
+      "type": "scramble",
+      "size": 2
+     },
+     "scoring": {
+      "type": "parBogey"
+     }
+    },
+    {
+     "id": "forste-ni",
+     "teamForm": {
+      "type": "scramble",
+      "size": 2
+     },
+     "scoring": {
+      "type": "stableford",
+      "net": true
+     },
+     "holes": {
+      "first": 0,
+      "last": 8
+     }
+    },
+    {
+     "id": "foursome",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "foursome"
+     },
+     "scoring": {
+      "type": "stableford",
+      "net": true
+     }
+    }
+   ],
+   "forventet": [
+    {
+     "id": "hoved",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 43,
+       "hull": 18,
+       "perHull": [
+        3,
+        4,
+        3,
+        2,
+        3,
+        3,
+        4,
+        2,
+        1,
+        2,
+        2,
+        3,
+        2,
+        1,
+        2,
+        2,
+        2,
+        2
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": 41,
+       "hull": 18,
+       "perHull": [
+        4,
+        3,
+        3,
+        2,
+        2,
+        1,
+        2,
+        3,
+        2,
+        2,
+        1,
+        2,
+        3,
+        2,
+        2,
+        2,
+        2,
+        3
+       ],
+       "plass": 2
+      }
+     ]
+    },
+    {
+     "id": "slag",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 65,
+       "hull": 18,
+       "perHull": [
+        3,
+        2,
+        3,
+        4,
+        3,
+        3,
+        2,
+        4,
+        5,
+        4,
+        4,
+        3,
+        4,
+        5,
+        4,
+        4,
+        4,
+        4
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": 67,
+       "hull": 18,
+       "perHull": [
+        2,
+        3,
+        3,
+        4,
+        4,
+        5,
+        4,
+        3,
+        4,
+        4,
+        5,
+        4,
+        3,
+        4,
+        4,
+        4,
+        4,
+        3
+       ],
+       "plass": 2
+      }
+     ]
+    },
+    {
+     "id": "parbogey",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 5,
+       "hull": 18,
+       "perHull": [
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": 4,
+       "hull": 18,
+       "perHull": [
+        1,
+        1,
+        1,
+        0,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+       ],
+       "plass": 2
+      }
+     ]
+    },
+    {
+     "id": "forste-ni",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 25,
+       "hull": 9,
+       "perHull": [
+        3,
+        4,
+        3,
+        2,
+        3,
+        3,
+        4,
+        2,
+        1,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": 22,
+       "hull": 9,
+       "perHull": [
+        4,
+        3,
+        3,
+        2,
+        2,
+        1,
+        2,
+        3,
+        2,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ],
+       "plass": 2
+      }
+     ]
+    },
+    {
+     "id": "foursome",
+     "stottet": false,
+     "rader": []
+    }
+   ],
+   "lagshandicap": {
+    "a": 7,
+    "b": 7,
+    "c": 3,
+    "d": 3
+   }
+  },
+  {
+   "id": "scramble-2-golfgutu",
+   "gameType": "scramble-2",
+   "teamForm": {
+    "type": "scramble",
+    "size": 2
+   },
+   "regelsett": "golfgutu",
+   "laast": true,
+   "lag": {
+    "a": 1,
+    "b": 1,
+    "c": 2,
+    "d": 2
+   },
+   "scorer": {
+    "a": [
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4
+    ],
+    "b": [
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     3,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4
+    ],
+    "c": [
+     3,
+     4,
+     4,
+     4,
+     4,
+     5,
+     4,
+     3,
+     4,
+     4,
+     5,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "hoved",
+     "teamForm": {
+      "type": "scramble",
+      "size": 2
+     },
+     "scoring": {
+      "type": "stableford",
+      "net": true
+     }
+    }
+   ],
+   "forventet": [
+    {
+     "id": "hoved",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 51,
+       "hull": 18,
+       "perHull": [
+        3,
+        4,
+        3,
+        2,
+        3,
+        3,
+        4,
+        3,
+        2,
+        3,
+        3,
+        4,
+        3,
+        2,
+        3,
+        2,
+        2,
+        2
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": 44,
+       "hull": 18,
+       "perHull": [
+        4,
+        3,
+        3,
+        3,
+        3,
+        2,
+        2,
+        3,
+        2,
+        2,
+        1,
+        2,
+        3,
+        2,
+        2,
+        2,
+        2,
+        3
+       ],
+       "plass": 2
+      }
+     ]
+    }
+   ],
+   "lagshandicap": {
+    "a": 15,
+    "b": 15,
+    "c": 6,
+    "d": 6
+   }
+  },
+  {
+   "id": "foursome",
+   "gameType": "foursome",
+   "teamForm": {
+    "type": "pairs",
+    "pairs": "foursome"
+   },
+   "regelsett": "whs",
+   "laast": true,
+   "lag": {
+    "a": 1,
+    "b": 1,
+    "e": 2,
+    "f": 2
+   },
+   "scorer": {
+    "a": [
+     5,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4
+    ],
+    "b": [
+     5,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4
+    ],
+    "e": [
+     4,
+     5,
+     4,
+     5,
+     5,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4,
+     5,
+     4
+    ],
+    "f": [
+     4,
+     5,
+     4,
+     5,
+     5,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4,
+     5,
+     4
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "hoved",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "foursome"
+     },
+     "scoring": {
+      "type": "stableford",
+      "net": true
+     }
+    },
+    {
+     "id": "parbogey",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "foursome"
+     },
+     "scoring": {
+      "type": "parBogey"
+     }
+    },
+    {
+     "id": "scramble",
+     "teamForm": {
+      "type": "scramble",
+      "size": 2
+     },
+     "scoring": {
+      "type": "stableford",
+      "net": true
+     }
+    }
+   ],
+   "forventet": [
+    {
+     "id": "hoved",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 45,
+       "hull": 18,
+       "perHull": [
+        2,
+        3,
+        2,
+        3,
+        3,
+        2,
+        3,
+        3,
+        2,
+        3,
+        2,
+        3,
+        3,
+        3,
+        2,
+        2,
+        2,
+        2
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "e",
+        "f"
+       ],
+       "score": 45,
+       "hull": 18,
+       "perHull": [
+        3,
+        2,
+        3,
+        2,
+        2,
+        3,
+        3,
+        2,
+        3,
+        2,
+        3,
+        3,
+        2,
+        3,
+        3,
+        3,
+        1,
+        2
+       ],
+       "plass": 1
+      }
+     ]
+    },
+    {
+     "id": "parbogey",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 9,
+       "hull": 18,
+       "perHull": [
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "e",
+        "f"
+       ],
+       "score": 9,
+       "hull": 18,
+       "perHull": [
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        -1,
+        0
+       ],
+       "plass": 1
+      }
+     ]
+    },
+    {
+     "id": "scramble",
+     "stottet": false,
+     "rader": []
+    }
+   ],
+   "lagshandicap": {
+    "a": 15,
+    "b": 15,
+    "e": 16,
+    "f": 16
+   }
+  },
+  {
+   "id": "greensome",
+   "gameType": "greensome",
+   "teamForm": {
+    "type": "pairs",
+    "pairs": "greensome"
+   },
+   "regelsett": "whs",
+   "laast": true,
+   "lag": {
+    "a": 1,
+    "b": 1,
+    "e": 2,
+    "f": 2
+   },
+   "scorer": {
+    "a": [
+     5,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4
+    ],
+    "b": [
+     5,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4
+    ],
+    "e": [
+     4,
+     5,
+     4,
+     5,
+     5,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4,
+     5,
+     4
+    ],
+    "f": [
+     4,
+     5,
+     4,
+     5,
+     5,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4,
+     5,
+     4
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "hoved",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "greensome"
+     },
+     "scoring": {
+      "type": "stableford",
+      "net": true
+     }
+    },
+    {
+     "id": "slag",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "greensome"
+     },
+     "scoring": {
+      "type": "strokePlay",
+      "net": true
+     }
+    }
+   ],
+   "forventet": [
+    {
+     "id": "hoved",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 44,
+       "hull": 18,
+       "perHull": [
+        2,
+        3,
+        2,
+        3,
+        3,
+        2,
+        3,
+        3,
+        2,
+        3,
+        2,
+        3,
+        3,
+        3,
+        1,
+        2,
+        2,
+        2
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "e",
+        "f"
+       ],
+       "score": 44,
+       "hull": 18,
+       "perHull": [
+        3,
+        2,
+        3,
+        2,
+        2,
+        3,
+        3,
+        2,
+        3,
+        2,
+        3,
+        3,
+        2,
+        3,
+        3,
+        2,
+        1,
+        2
+       ],
+       "plass": 1
+      }
+     ]
+    },
+    {
+     "id": "slag",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 64,
+       "hull": 18,
+       "perHull": [
+        4,
+        3,
+        4,
+        3,
+        3,
+        4,
+        3,
+        3,
+        4,
+        3,
+        4,
+        3,
+        3,
+        3,
+        5,
+        4,
+        4,
+        4
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "e",
+        "f"
+       ],
+       "score": 64,
+       "hull": 18,
+       "perHull": [
+        3,
+        4,
+        3,
+        4,
+        4,
+        3,
+        3,
+        4,
+        3,
+        4,
+        3,
+        3,
+        4,
+        3,
+        3,
+        4,
+        5,
+        4
+       ],
+       "plass": 1
+      }
+     ]
+    }
+   ],
+   "lagshandicap": {
+    "a": 14,
+    "b": 14,
+    "e": 15,
+    "f": 15
+   }
+  },
+  {
+   "id": "scramble-4",
+   "gameType": "scramble-4",
+   "teamForm": {
+    "type": "scramble",
+    "size": 4
+   },
+   "regelsett": "whs",
+   "laast": true,
+   "lag": {
+    "c": 1,
+    "d": 1,
+    "e": 1,
+    "f": 1,
+    "a": 2,
+    "b": 2,
+    "g": 2,
+    "h": 2
+   },
+   "scorer": {
+    "c": [
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "d": [
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "e": [
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "f": [
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "a": [
+     3,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4
+    ],
+    "b": [
+     3,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4
+    ],
+    "g": [
+     3,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4
+    ],
+    "h": [
+     3,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     4,
+     3,
+     4,
+     4
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "hoved",
+     "teamForm": {
+      "type": "scramble",
+      "size": 4
+     },
+     "scoring": {
+      "type": "stableford",
+      "net": true
+     }
+    },
+    {
+     "id": "parbogey",
+     "teamForm": {
+      "type": "scramble",
+      "size": 4
+     },
+     "scoring": {
+      "type": "parBogey"
+     }
+    }
+   ],
+   "forventet": [
+    {
+     "id": "hoved",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b",
+        "g",
+        "h"
+       ],
+       "score": 48,
+       "hull": 18,
+       "perHull": [
+        4,
+        3,
+        3,
+        3,
+        4,
+        3,
+        3,
+        3,
+        2,
+        2,
+        3,
+        2,
+        2,
+        2,
+        2,
+        3,
+        2,
+        2
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "c",
+        "d",
+        "e",
+        "f"
+       ],
+       "score": 45,
+       "hull": 18,
+       "perHull": [
+        3,
+        3,
+        4,
+        3,
+        3,
+        3,
+        2,
+        3,
+        2,
+        2,
+        2,
+        2,
+        3,
+        2,
+        2,
+        2,
+        2,
+        2
+       ],
+       "plass": 2
+      }
+     ]
+    },
+    {
+     "id": "parbogey",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b",
+        "g",
+        "h"
+       ],
+       "score": 10,
+       "hull": 18,
+       "perHull": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "c",
+        "d",
+        "e",
+        "f"
+       ],
+       "score": 8,
+       "hull": 18,
+       "perHull": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+       ],
+       "plass": 2
+      }
+     ]
+    }
+   ],
+   "lagshandicap": {
+    "c": 6,
+    "d": 6,
+    "e": 6,
+    "f": 6,
+    "a": 8,
+    "b": 8,
+    "g": 8,
+    "h": 8
+   }
+  },
+  {
+   "id": "par-bogey",
+   "gameType": "par-bogey",
+   "teamForm": {
+    "type": "individual"
+   },
+   "regelsett": "golfgutu",
+   "laast": true,
+   "lag": {},
+   "spillehandicap": {
+    "a": 0,
+    "b": 18,
+    "c": 9
+   },
+   "scorer": {
+    "a": [
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     4,
+     5,
+     3,
+     4,
+     4,
+     4,
+     5,
+     4,
+     3,
+     4,
+     4,
+     4
+    ],
+    "b": [
+     5,
+     5,
+     4,
+     6,
+     5,
+     4,
+     5,
+     5,
+     4,
+     5,
+     5,
+     5,
+     6,
+     5,
+     4,
+     5,
+     5,
+     5
+    ],
+    "c": [
+     5,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5,
+     null
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "hoved",
+     "teamForm": {
+      "type": "individual"
+     },
+     "scoring": {
+      "type": "parBogey"
+     }
+    },
+    {
+     "id": "halv",
+     "teamForm": {
+      "type": "individual"
+     },
+     "scoring": {
+      "type": "parBogey"
+     },
+     "allowance": 0.5
+    },
+    {
+     "id": "bestball",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "fourball"
+     },
+     "scoring": {
+      "type": "parBogey"
+     },
+     "entrants": [
+      [
+       "a",
+       "c"
+      ],
+      [
+       "b"
+      ]
+     ]
+    },
+    {
+     "id": "sammenlagt",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "aggregate"
+     },
+     "scoring": {
+      "type": "parBogey"
+     },
+     "entrants": [
+      [
+       "a",
+       "b"
+      ]
+     ]
+    }
+   ],
+   "forventet": [
+    {
+     "id": "hoved",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "c"
+       ],
+       "score": 3,
+       "hull": 18,
+       "perHull": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        -1
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "b"
+       ],
+       "score": 2,
+       "hull": 18,
+       "perHull": [
+        0,
+        0,
+        1,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        0
+       ],
+       "plass": 2
+      },
+      {
+       "spillere": [
+        "a"
+       ],
+       "score": 0,
+       "hull": 18,
+       "perHull": [
+        0,
+        0,
+        1,
+        -1,
+        0,
+        0,
+        0,
+        -1,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        0
+       ],
+       "plass": 3
+      }
+     ]
+    },
+    {
+     "id": "halv",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a"
+       ],
+       "score": 0,
+       "hull": 18,
+       "perHull": [
+        0,
+        0,
+        1,
+        -1,
+        0,
+        0,
+        0,
+        -1,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        0
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "c"
+       ],
+       "score": -1,
+       "hull": 18,
+       "perHull": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        -1
+       ],
+       "plass": 2
+      },
+      {
+       "spillere": [
+        "b"
+       ],
+       "score": -6,
+       "hull": 18,
+       "perHull": [
+        0,
+        0,
+        1,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        0,
+        -1,
+        -1,
+        -1
+       ],
+       "plass": 3
+      }
+     ]
+    },
+    {
+     "id": "bestball",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "c"
+       ],
+       "score": 7,
+       "hull": 18,
+       "perHull": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "b"
+       ],
+       "score": 2,
+       "hull": 18,
+       "perHull": [
+        0,
+        0,
+        1,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        0
+       ],
+       "plass": 2
+      }
+     ]
+    },
+    {
+     "id": "sammenlagt",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 2,
+       "hull": 18,
+       "perHull": [
+        0,
+        0,
+        2,
+        -2,
+        0,
+        1,
+        0,
+        -1,
+        2,
+        0,
+        0,
+        0,
+        -2,
+        0,
+        2,
+        0,
+        0,
+        0
+       ],
+       "plass": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "par-bogey-pagar",
+   "gameType": "par-bogey",
+   "teamForm": {
+    "type": "individual"
+   },
+   "regelsett": "golfgutu",
+   "laast": false,
+   "lag": {},
+   "spillehandicap": {
+    "a": 0,
+    "b": 18,
+    "c": 9
+   },
+   "scorer": {
+    "a": [
+     4,
+     4,
+     3,
+     5,
+     4,
+     4,
+     4,
+     5,
+     3,
+     4,
+     4,
+     4,
+     5,
+     4,
+     3,
+     4,
+     4,
+     4
+    ],
+    "b": [
+     5,
+     5,
+     4,
+     6,
+     5,
+     4,
+     5,
+     5,
+     4,
+     5,
+     5,
+     5,
+     6,
+     5,
+     4,
+     5,
+     5,
+     5
+    ],
+    "c": [
+     5,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5,
+     null
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "hoved",
+     "teamForm": {
+      "type": "individual"
+     },
+     "scoring": {
+      "type": "parBogey"
+     }
+    }
+   ],
+   "forventet": [
+    {
+     "id": "hoved",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "c"
+       ],
+       "score": 4,
+       "hull": 17,
+       "perHull": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        null
+       ],
+       "plass": 1
+      },
+      {
+       "spillere": [
+        "b"
+       ],
+       "score": 2,
+       "hull": 18,
+       "perHull": [
+        0,
+        0,
+        1,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        0
+       ],
+       "plass": 2
+      },
+      {
+       "spillere": [
+        "a"
+       ],
+       "score": 0,
+       "hull": 18,
+       "perHull": [
+        0,
+        0,
+        1,
+        -1,
+        0,
+        0,
+        0,
+        -1,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        0
+       ],
+       "plass": 3
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
