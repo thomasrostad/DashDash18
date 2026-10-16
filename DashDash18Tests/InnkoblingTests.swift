@@ -111,7 +111,7 @@ struct InnkoblingRundeLoggTests {
 
     @Test func rundeStartetOgLåst() {
         #expect(RoundGame(F.snapshot(F.markorPlayers(), round: F.round(status: .draft))).startedEventIfActive == nil)
-        guard case .roundStarted(roundNo: 1, courseName: "Testbanen", holeCount: 18, bays: 2, ldHole: 7, kpHole: _)?
+        guard case .roundStarted(roundNo: 1, courseName: "Testbanen", holeCount: 18, bays: 2, ldHole: 7, kpHole: _, venue: _)?
             = RoundGame(F.snapshot(F.markorPlayers())).startedEventIfActive else {
             Issue.record("Ny runde mangler"); return
         }

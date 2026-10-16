@@ -12,7 +12,7 @@ struct SesongForklaringTests {
         Tabellpoengene rundes til nærmeste 0,5. Ved likt poeng skiller hulldifferanse, så stablefordsummen. \
         Stablefordsummen er de 5 beste rundene. Netto par gir 2 stablefordpoeng. Handicapandelen følger formen. \
         Seeding: Gruppe 1 spiller på 0, Gruppe 2 på 5 og Gruppe 3 på 10. \
-        Stableford (netto) er standardformen, og alle 16 former er tillatt. Høyst 4 spillere per bås. \
+        Stableford (netto) er standardformen, og alle 16 former er tillatt. Høyst 4 spillere per bås eller flight. \
         I match spiller den laveste fra scratch.
         """)
     }
@@ -71,7 +71,7 @@ struct SesongForklaringTests {
         #expect(s.contains("Simulatoren deler ut slagene."))
         #expect(s.contains("Laveste poeng på et hull er 1."))
         #expect(s.contains("Stableford (netto) er standardformen og den eneste tillatte formen."))
-        #expect(s.contains("Høyst 1 spiller per bås."))
+        #expect(s.contains("Høyst 1 spiller per bås eller flight."))
         #expect(s.contains("I match spiller alle på fullt handicap."))
     }
 

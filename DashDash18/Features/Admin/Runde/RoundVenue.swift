@@ -61,6 +61,12 @@ nonisolated struct GroupTerm: Equatable, Sendable {
     /// «Båser» / «Flighter»
     var pluralTitle: String { plural.prefix(1).uppercased() + plural.dropFirst() }
 
+    /// «Båsene» / «Flightene»
+    var definitePluralTitle: String { definitePlural.prefix(1).uppercased() + definitePlural.dropFirst() }
+
+    /// «båsens» / «flightens»
+    var definiteGenitive: String { definite + "s" }
+
     /// «Bås 2» / «Flight 2»
     func numbered(_ number: Int) -> String { "\(title) \(number)" }
 

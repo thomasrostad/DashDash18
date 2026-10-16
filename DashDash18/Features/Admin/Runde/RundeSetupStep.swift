@@ -138,7 +138,7 @@ struct RundeSetupStep: View {
             DDHeader("Lag · \(form.teamSize) per lag")
         } footer: {
             if let problem = TeamPlanner.problem(teams: draft.teams, participants: draft.participants, form: form,
-                                                 maxPerBay: rules.formats.maxPerBay) {
+                                                 maxPerBay: rules.formats.maxPerBay, term: draft.groupTerm) {
                 Text(problem).foregroundStyle(Color.ddRustText)
             }
         }
@@ -308,7 +308,7 @@ extension RundeSetupStep {
             Text("Tabellen")
         } footer: {
             Text(draft.hidesLastHoles
-                 ? "Stillingen på Tavla, i Hjem og i varslene regnes uten de \(draft.storedHiddenHoles) siste hullene til runden er låst. Arrangøren og båsen som fører, ser alt."
+                 ? "Stillingen på Tavla, i Hjem og i varslene regnes uten de \(draft.storedHiddenHoles) siste hullene til runden er låst. Arrangøren og \(draft.groupTerm.definite) som fører, ser alt."
                  : "Skjulte hull vises for andre når runden er låst.")
         }
     }

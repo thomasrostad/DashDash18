@@ -270,7 +270,8 @@ nonisolated enum TeamPlanner {
     }
 
     /// `lesLagOppsett`: går lagene opp? `nil` = i orden. Bare deltakerne telles, og alle må ha lag.
-    static func problem(teams: [UUID: Int], participants: [UUID], form: CompetitionForm, maxPerBay: Int) -> String? {
+    static func problem(teams: [UUID: Int], participants: [UUID], form: CompetitionForm, maxPerBay: Int,
+                        term: GroupTerm = .bay) -> String? {
         let withoutTeam = participants.filter { teams[$0] == nil }.count
         var counts: [Int: Int] = [:]
         for id in participants {
@@ -285,7 +286,7 @@ nonisolated enum TeamPlanner {
         if form.allowsUnevenTeams {
             let tooBig = numbers.filter { counts[$0]! > maxPerBay }
             if !tooBig.isEmpty {
-                return "Lag \(tooBig.map(String.init).joined(separator: " og ")) har flere enn \(maxPerBay). Et lag får ikke plass i en bås da."
+                return "Lag \(tooBig.map(String.init).joined(separator: " og ")) har flere enn \(maxPerBay). Et lag får ikke plass i en \(term.singular) da."
             }
             return nil
         }
