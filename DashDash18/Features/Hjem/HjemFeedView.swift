@@ -71,7 +71,11 @@ struct HjemFeedView: View {
                 .padding(.top, 12)
                 .padding(.bottom, DDSpacing.xxl)
             }
+            // Aldri bredere enn skjermen: ble ett kort for bredt (sett etter en avsluttet runde 16.10),
+            // kunne hele feeden dras sideveis.
+            .containerRelativeFrame(.horizontal)
         }
+        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         .defaultScrollAnchor(scrollAnchor)
         .animation(.default, value: feed.filter)
     }
