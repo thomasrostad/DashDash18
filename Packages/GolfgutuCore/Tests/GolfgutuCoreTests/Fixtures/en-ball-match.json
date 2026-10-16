@@ -1,0 +1,1465 @@
+{
+ "kilde": "Match med én ball per lag (foursome, greensome, scramble 2) som konkurranse på runden. Bane: 18 hull, par 4, indeks 1–18, CR 72, slope 113, så banehandicapet er indeksen (a 10, b 20, c 4, d 8, e 12, f 20). Lagshandicap: whs = WHS «Rules of Handicapping» Appendix C (foursome 50 % av lagets samlede banehandicap, greensome 60 % av laveste + 40 % av høyeste, scramble 2 35/15), golfgutu = Ruleset.golfgutu (PWA-en: snittet for toerformene), avrundet floor(x+0.5): foursome a+b 15, c+d 6, e+f 16; greensome whs a+b 14 (6+8), c+d 6 (2,4+3,2=5,6), golfgutu 15 og 6; scramble 2 a+b 7 (3,5+3=6,5), c+d 3 (1,4+1,2=2,6). Matchslag (formats.matchStrokes): golfgutu og whs = laveste lag fra scratch, det andre får forskjellen (WHS Appendix C, match: «the player with the lowest Playing Handicap plays off zero»; foursome: «50% of the difference between each Team's combined Course Handicaps»); whsFulltHandicap = begge lag får sitt fulle. Konkurransens andel ganges på lagshandicapet og rundes (andel 50 %: 15 → 8, 6 → 3). Slag fått: h div 18 på hvert hull pluss ett på indeks ≤ h mod 18. Hullet: lagets ene score (første på laget i id-rekkefølge som har ført hullet; greensome hull 3: a uten score, b sin 5 teller; hull 5: a 4, b 6, a sin 4 teller), lavest netto vinner, likt er delt. Et hull der et lag mangler score, teller ikke. Matchen stopper når et lag er flere hull opp enn det er igjen (regel 3.2a(3)); score = hull opp sett fra laget, hull = spilte hull, tekst som MatchPlay.text. Sidene: entrants (to av rundens lag), uten entrants rundens to lag; tre lag uten entrants gir ingen rader; et lag som ikke er ett av rundens lag, eller en annen lagform enn runden, er ikke støttet. Kontrollregnet med et lite skript uten motoren og for hånd: foursome lag 1 (9 slag på indeks 1–9) mot lag 2 taper 3&2 etter 16 hull, med andel 50 % (5 slag) 5&4, første ni 1 ned; lag 3 (1 slag på indeks 1) mot lag 1 delt etter 18; greensome whs (8 slag) 1 opp, golfgutu (9 slag, hull 9 blir delt i stedet for tapt) 2 opp, fullt handicap (14 mot 6 slag, altså forskjellen på indeks 7–14) 1 opp; scramble 2 (4 slag) pågår: 2 opp etter 5 (hull 4 og 7 mangler for ett lag).",
+ "indeks": {
+  "a": 10,
+  "b": 20,
+  "c": 4,
+  "d": 8,
+  "e": 12,
+  "f": 20
+ },
+ "runder": [
+  {
+   "id": "foursome",
+   "gameType": "foursome",
+   "regelsett": "whs",
+   "laast": true,
+   "lag": {
+    "a": 1,
+    "b": 1,
+    "c": 2,
+    "d": 2,
+    "e": 3,
+    "f": 3
+   },
+   "scorer": {
+    "a": [
+     5,
+     5,
+     4,
+     6,
+     5,
+     5,
+     6,
+     5,
+     6,
+     5,
+     4,
+     4,
+     5,
+     5,
+     4,
+     4,
+     4,
+     4
+    ],
+    "b": [
+     5,
+     5,
+     4,
+     6,
+     5,
+     5,
+     6,
+     5,
+     6,
+     5,
+     4,
+     4,
+     5,
+     5,
+     4,
+     4,
+     4,
+     4
+    ],
+    "c": [
+     4,
+     3,
+     4,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "d": [
+     4,
+     3,
+     4,
+     4,
+     5,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "e": [
+     7,
+     4,
+     4,
+     6,
+     5,
+     5,
+     6,
+     5,
+     6,
+     5,
+     4,
+     4,
+     5,
+     5,
+     4,
+     4,
+     4,
+     4
+    ],
+    "f": [
+     7,
+     4,
+     4,
+     6,
+     5,
+     5,
+     6,
+     5,
+     6,
+     5,
+     4,
+     4,
+     5,
+     5,
+     4,
+     4,
+     4,
+     4
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "lag-1-mot-2",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "foursome"
+     },
+     "scoring": {
+      "type": "matchPlay"
+     },
+     "entrants": [
+      [
+       "a",
+       "b"
+      ],
+      [
+       "c",
+       "d"
+      ]
+     ]
+    },
+    {
+     "id": "lag-3-mot-1",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "foursome"
+     },
+     "scoring": {
+      "type": "matchPlay"
+     },
+     "entrants": [
+      [
+       "e",
+       "f"
+      ],
+      [
+       "a",
+       "b"
+      ]
+     ]
+    },
+    {
+     "id": "lag-1-mot-2-andel-50",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "foursome"
+     },
+     "scoring": {
+      "type": "matchPlay"
+     },
+     "entrants": [
+      [
+       "a",
+       "b"
+      ],
+      [
+       "c",
+       "d"
+      ]
+     ],
+     "allowance": 0.5
+    },
+    {
+     "id": "lag-1-mot-2-forste-ni",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "foursome"
+     },
+     "scoring": {
+      "type": "matchPlay"
+     },
+     "entrants": [
+      [
+       "a",
+       "b"
+      ],
+      [
+       "c",
+       "d"
+      ]
+     ],
+     "holes": {
+      "first": 0,
+      "last": 8
+     }
+    },
+    {
+     "id": "uten-lag",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "foursome"
+     },
+     "scoring": {
+      "type": "matchPlay"
+     }
+    },
+    {
+     "id": "blandet",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "foursome"
+     },
+     "scoring": {
+      "type": "matchPlay"
+     },
+     "entrants": [
+      [
+       "a",
+       "c"
+      ],
+      [
+       "b",
+       "d"
+      ]
+     ]
+    },
+    {
+     "id": "greensome-i-foursome",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "greensome"
+     },
+     "scoring": {
+      "type": "matchPlay"
+     },
+     "entrants": [
+      [
+       "a",
+       "b"
+      ],
+      [
+       "c",
+       "d"
+      ]
+     ]
+    }
+   ],
+   "forventet": [
+    {
+     "id": "lag-1-mot-2",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": 3,
+       "hull": 16,
+       "plass": 1,
+       "perHull": [
+        0,
+        1,
+        -1,
+        1,
+        -1,
+        0,
+        1,
+        -1,
+        1,
+        1,
+        0,
+        -1,
+        1,
+        1,
+        0,
+        0,
+        null,
+        null
+       ],
+       "stilling": {
+        "opp": 3,
+        "spilt": 16,
+        "igjen": 2,
+        "avgjort": true,
+        "motstandere": [
+         "a",
+         "b"
+        ]
+       },
+       "tekst": "Vunnet 3&2"
+      },
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": -3,
+       "hull": 16,
+       "plass": 2,
+       "perHull": [
+        0,
+        -1,
+        1,
+        -1,
+        1,
+        0,
+        -1,
+        1,
+        -1,
+        -1,
+        0,
+        1,
+        -1,
+        -1,
+        0,
+        0,
+        null,
+        null
+       ],
+       "stilling": {
+        "opp": -3,
+        "spilt": 16,
+        "igjen": 2,
+        "avgjort": true,
+        "motstandere": [
+         "c",
+         "d"
+        ]
+       },
+       "tekst": "Tapt 3&2"
+      }
+     ]
+    },
+    {
+     "id": "lag-3-mot-1",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 0,
+       "hull": 18,
+       "plass": 1,
+       "perHull": [
+        1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+       ],
+       "stilling": {
+        "opp": 0,
+        "spilt": 18,
+        "igjen": 0,
+        "avgjort": false,
+        "motstandere": [
+         "e",
+         "f"
+        ]
+       },
+       "tekst": "Delt"
+      },
+      {
+       "spillere": [
+        "e",
+        "f"
+       ],
+       "score": 0,
+       "hull": 18,
+       "plass": 1,
+       "perHull": [
+        -1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+       ],
+       "stilling": {
+        "opp": 0,
+        "spilt": 18,
+        "igjen": 0,
+        "avgjort": false,
+        "motstandere": [
+         "a",
+         "b"
+        ]
+       },
+       "tekst": "Delt"
+      }
+     ]
+    },
+    {
+     "id": "lag-1-mot-2-andel-50",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": 5,
+       "hull": 14,
+       "plass": 1,
+       "perHull": [
+        0,
+        1,
+        -1,
+        1,
+        -1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        -1,
+        1,
+        1,
+        null,
+        null,
+        null,
+        null
+       ],
+       "stilling": {
+        "opp": 5,
+        "spilt": 14,
+        "igjen": 4,
+        "avgjort": true,
+        "motstandere": [
+         "a",
+         "b"
+        ]
+       },
+       "tekst": "Vunnet 5&4"
+      },
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": -5,
+       "hull": 14,
+       "plass": 2,
+       "perHull": [
+        0,
+        -1,
+        1,
+        -1,
+        1,
+        -1,
+        -1,
+        0,
+        -1,
+        -1,
+        0,
+        1,
+        -1,
+        -1,
+        null,
+        null,
+        null,
+        null
+       ],
+       "stilling": {
+        "opp": -5,
+        "spilt": 14,
+        "igjen": 4,
+        "avgjort": true,
+        "motstandere": [
+         "c",
+         "d"
+        ]
+       },
+       "tekst": "Tapt 5&4"
+      }
+     ]
+    },
+    {
+     "id": "lag-1-mot-2-forste-ni",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": 1,
+       "hull": 9,
+       "plass": 1,
+       "perHull": [
+        0,
+        1,
+        -1,
+        1,
+        -1,
+        0,
+        1,
+        -1,
+        1,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ],
+       "stilling": {
+        "opp": 1,
+        "spilt": 9,
+        "igjen": 0,
+        "avgjort": true,
+        "motstandere": [
+         "a",
+         "b"
+        ]
+       },
+       "tekst": "Vunnet 1 opp"
+      },
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": -1,
+       "hull": 9,
+       "plass": 2,
+       "perHull": [
+        0,
+        -1,
+        1,
+        -1,
+        1,
+        0,
+        -1,
+        1,
+        -1,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ],
+       "stilling": {
+        "opp": -1,
+        "spilt": 9,
+        "igjen": 0,
+        "avgjort": true,
+        "motstandere": [
+         "c",
+         "d"
+        ]
+       },
+       "tekst": "Tapt 1 ned"
+      }
+     ]
+    },
+    {
+     "id": "uten-lag",
+     "stottet": true,
+     "rader": []
+    },
+    {
+     "id": "blandet",
+     "stottet": false,
+     "rader": []
+    },
+    {
+     "id": "greensome-i-foursome",
+     "stottet": false,
+     "rader": []
+    }
+   ],
+   "lagshandicap": {
+    "a": 15,
+    "b": 15,
+    "c": 6,
+    "d": 6,
+    "e": 16,
+    "f": 16
+   }
+  },
+  {
+   "id": "greensome-whs",
+   "gameType": "greensome",
+   "regelsett": "whs",
+   "laast": true,
+   "lag": {
+    "a": 1,
+    "b": 1,
+    "c": 2,
+    "d": 2
+   },
+   "scorer": {
+    "a": [
+     5,
+     5,
+     null,
+     5,
+     4,
+     6,
+     5,
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "b": [
+     5,
+     5,
+     5,
+     5,
+     6,
+     6,
+     5,
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "c": [
+     4,
+     4,
+     5,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5
+    ],
+    "d": [
+     4,
+     4,
+     5,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "rundens-to-lag",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "greensome"
+     },
+     "scoring": {
+      "type": "matchPlay"
+     }
+    }
+   ],
+   "forventet": [
+    {
+     "id": "rundens-to-lag",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 1,
+       "hull": 18,
+       "plass": 1,
+       "perHull": [
+        0,
+        0,
+        1,
+        -1,
+        1,
+        -1,
+        0,
+        -1,
+        -1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+       ],
+       "stilling": {
+        "opp": 1,
+        "spilt": 18,
+        "igjen": 0,
+        "avgjort": true,
+        "motstandere": [
+         "c",
+         "d"
+        ]
+       },
+       "tekst": "Vunnet 1 opp"
+      },
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": -1,
+       "hull": 18,
+       "plass": 2,
+       "perHull": [
+        0,
+        0,
+        -1,
+        1,
+        -1,
+        1,
+        0,
+        1,
+        1,
+        -1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+       ],
+       "stilling": {
+        "opp": -1,
+        "spilt": 18,
+        "igjen": 0,
+        "avgjort": true,
+        "motstandere": [
+         "a",
+         "b"
+        ]
+       },
+       "tekst": "Tapt 1 ned"
+      }
+     ]
+    }
+   ],
+   "lagshandicap": {
+    "a": 14,
+    "b": 14,
+    "c": 6,
+    "d": 6
+   }
+  },
+  {
+   "id": "greensome-golfgutu",
+   "gameType": "greensome",
+   "regelsett": "golfgutu",
+   "laast": true,
+   "lag": {
+    "a": 1,
+    "b": 1,
+    "c": 2,
+    "d": 2
+   },
+   "scorer": {
+    "a": [
+     5,
+     5,
+     null,
+     5,
+     4,
+     6,
+     5,
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "b": [
+     5,
+     5,
+     5,
+     5,
+     6,
+     6,
+     5,
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "c": [
+     4,
+     4,
+     5,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5
+    ],
+    "d": [
+     4,
+     4,
+     5,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "rundens-to-lag",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "greensome"
+     },
+     "scoring": {
+      "type": "matchPlay"
+     }
+    }
+   ],
+   "forventet": [
+    {
+     "id": "rundens-to-lag",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 2,
+       "hull": 18,
+       "plass": 1,
+       "perHull": [
+        0,
+        0,
+        1,
+        -1,
+        1,
+        -1,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+       ],
+       "stilling": {
+        "opp": 2,
+        "spilt": 18,
+        "igjen": 0,
+        "avgjort": true,
+        "motstandere": [
+         "c",
+         "d"
+        ]
+       },
+       "tekst": "Vunnet 2 opp"
+      },
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": -2,
+       "hull": 18,
+       "plass": 2,
+       "perHull": [
+        0,
+        0,
+        -1,
+        1,
+        -1,
+        1,
+        0,
+        1,
+        0,
+        -1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1
+       ],
+       "stilling": {
+        "opp": -2,
+        "spilt": 18,
+        "igjen": 0,
+        "avgjort": true,
+        "motstandere": [
+         "a",
+         "b"
+        ]
+       },
+       "tekst": "Tapt 2 ned"
+      }
+     ]
+    }
+   ],
+   "lagshandicap": {
+    "a": 15,
+    "b": 15,
+    "c": 6,
+    "d": 6
+   }
+  },
+  {
+   "id": "greensome-fullt-handicap",
+   "gameType": "greensome",
+   "regelsett": "whsFulltHandicap",
+   "laast": true,
+   "lag": {
+    "a": 1,
+    "b": 1,
+    "c": 2,
+    "d": 2
+   },
+   "scorer": {
+    "a": [
+     5,
+     5,
+     null,
+     5,
+     4,
+     6,
+     5,
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "b": [
+     5,
+     5,
+     5,
+     5,
+     6,
+     6,
+     5,
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4
+    ],
+    "c": [
+     4,
+     4,
+     5,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5
+    ],
+    "d": [
+     4,
+     4,
+     5,
+     3,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5,
+     4,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     5
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "rundens-to-lag",
+     "teamForm": {
+      "type": "pairs",
+      "pairs": "greensome"
+     },
+     "scoring": {
+      "type": "matchPlay"
+     }
+    }
+   ],
+   "forventet": [
+    {
+     "id": "rundens-to-lag",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 1,
+       "hull": 18,
+       "plass": 1,
+       "perHull": [
+        -1,
+        -1,
+        0,
+        -1,
+        0,
+        -1,
+        0,
+        -1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1
+       ],
+       "stilling": {
+        "opp": 1,
+        "spilt": 18,
+        "igjen": 0,
+        "avgjort": true,
+        "motstandere": [
+         "c",
+         "d"
+        ]
+       },
+       "tekst": "Vunnet 1 opp"
+      },
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": -1,
+       "hull": 18,
+       "plass": 2,
+       "perHull": [
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        0,
+        0,
+        0,
+        -1
+       ],
+       "stilling": {
+        "opp": -1,
+        "spilt": 18,
+        "igjen": 0,
+        "avgjort": true,
+        "motstandere": [
+         "a",
+         "b"
+        ]
+       },
+       "tekst": "Tapt 1 ned"
+      }
+     ]
+    }
+   ],
+   "lagshandicap": {
+    "a": 14,
+    "b": 14,
+    "c": 6,
+    "d": 6
+   }
+  },
+  {
+   "id": "scramble-2-pagar",
+   "gameType": "scramble-2",
+   "regelsett": "whs",
+   "laast": false,
+   "lag": {
+    "a": 1,
+    "b": 1,
+    "c": 2,
+    "d": 2
+   },
+   "scorer": {
+    "a": [
+     4,
+     4,
+     5,
+     null,
+     4,
+     3,
+     4,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "b": [
+     4,
+     4,
+     5,
+     null,
+     4,
+     3,
+     4,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "c": [
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "d": [
+     4,
+     4,
+     3,
+     4,
+     4,
+     4,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   "konkurranser": [
+    {
+     "id": "scramble-match",
+     "teamForm": {
+      "type": "scramble",
+      "size": 2
+     },
+     "scoring": {
+      "type": "matchPlay"
+     },
+     "entrants": [
+      [
+       "a",
+       "b"
+      ],
+      [
+       "c",
+       "d"
+      ]
+     ]
+    }
+   ],
+   "forventet": [
+    {
+     "id": "scramble-match",
+     "stottet": true,
+     "rader": [
+      {
+       "spillere": [
+        "a",
+        "b"
+       ],
+       "score": 2,
+       "hull": 5,
+       "plass": 1,
+       "perHull": [
+        1,
+        1,
+        -1,
+        null,
+        0,
+        1,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ],
+       "stilling": {
+        "opp": 2,
+        "spilt": 5,
+        "igjen": 13,
+        "avgjort": false,
+        "motstandere": [
+         "c",
+         "d"
+        ]
+       },
+       "tekst": "2 opp etter 5"
+      },
+      {
+       "spillere": [
+        "c",
+        "d"
+       ],
+       "score": -2,
+       "hull": 5,
+       "plass": 2,
+       "perHull": [
+        -1,
+        -1,
+        1,
+        null,
+        0,
+        -1,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ],
+       "stilling": {
+        "opp": -2,
+        "spilt": 5,
+        "igjen": 13,
+        "avgjort": false,
+        "motstandere": [
+         "a",
+         "b"
+        ]
+       },
+       "tekst": "2 ned etter 5"
+      }
+     ]
+    }
+   ],
+   "lagshandicap": {
+    "a": 7,
+    "b": 7,
+    "c": 3,
+    "d": 3
+   }
+  }
+ ]
+}

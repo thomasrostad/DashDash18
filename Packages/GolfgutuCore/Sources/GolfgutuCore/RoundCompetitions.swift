@@ -92,9 +92,13 @@ public enum RoundCompetitions {
     ///   som i slagspill: de teller ikke, og flest hull står først;
     /// - match (to sider, `entrants` med to lister): hull for hull med `MatchPlay` (slagene som rundens
     ///   matcher: `formats.matchStrokes`, beste netto på siden). Matchen er over når en side er flere hull
-    ///   opp enn det er igjen (regel 3.2a(3)); hullene etter teller ikke. Stillingen står i `Row.match`.
+    ///   opp enn det er igjen (regel 3.2a(3)); hullene etter teller ikke. Stillingen står i `Row.match`;
+    /// - match med én ball per lag (foursome, greensome, chapman, scramble) når runden spilles i lagformen:
+    ///   lag mot lag med lagets ene score, lagets handicap og slagene etter `formats.matchStrokes` (WHS
+    ///   Appendix C: foursome-match 50 % av lagets samlede banehandicap, laveste lag fra scratch). Uten
+    ///   `entrants`: rundens to lag.
     /// Ikke ennå (`supported == false`): én ball per lag når runden ikke spilles i den lagformen (scorene er
-    /// da hver spillers egne), match med én ball per lag eller sammenlagt, og skins og poengspill i lag.
+    /// da hver spillers egne), match sammenlagt, og skins og poengspill i lag.
     public static func evaluate(_ round: Round, roster: [Player], competitions: [RoundCompetition],
                                 rules: Ruleset) -> [RoundCompetitionResult] {
         competitions.map { evaluate($0, round: round, roster: roster, rules: rules) }
@@ -112,7 +116,7 @@ public enum RoundCompetitions {
         switch axes.scoring {
         case .stableford, .strokePlay, .parBogey, .maximumScore: true
         case .skins, .pointsGame: axes.teamForm == .individual
-        case .matchPlay: !axes.teamForm.playsOneBall && axes.teamForm != .pairs(.aggregate)
+        case .matchPlay: axes.teamForm != .pairs(.aggregate)
         }
     }
 
@@ -126,7 +130,7 @@ public enum RoundCompetitions {
             return holeByHole(comp, round: round, roster: roster, rules: rules, scored: scored) ?? unsupported
 
         case .matchPlay:
-            return matchPlay(comp, round: round, roster: roster, rules: rules)
+            return matchPlay(comp, round: round, roster: roster, rules: rules) ?? unsupported
 
         case .skins:
             guard comp.holes == nil else { return unsupported }
@@ -157,6 +161,14 @@ public enum RoundCompetitions {
         let numbers = Set(round.teams.values.filter { $0 != 0 }).sorted()
         return numbers.map { n in round.teams.filter { $0.value == n }.map(\.key).sorted() }
             .filter { team in team.contains { !(round.holeScores[$0] ?? [:]).isEmpty } }
+    }
+
+    /// Rundens lag (lagnummer over 0) når det er nøyaktig to, i lagnummerets rekkefølge, spillerne sortert
+    /// på id. Ellers ingen.
+    static func twoTeams(_ round: Round) -> [[String]] {
+        let numbers = Set(round.teams.values.filter { $0 != 0 }).sorted()
+        guard numbers.count == 2 else { return [] }
+        return numbers.map { n in round.teams.filter { $0.value == n }.map(\.key).sorted() }
     }
 
     /// Stableford, slagspill, par/bogey og maksimumscore hull for hull. `nil` når én ball per lag ikke kan regnes
@@ -239,10 +251,23 @@ public enum RoundCompetitions {
     /// `MatchPlay`: handicapet er spillehandicapet i runden, med konkurransens andel (rundet som JS) når den
     /// er satt, og slagene som i rundens matcher (`formats.matchStrokes`). Hullene tas i rundens rekkefølge,
     /// og matchen stopper når en side er flere hull opp enn det er igjen. Uten to sider: ingen rader.
-    static func matchPlay(_ comp: RoundCompetition, round: Round, roster: [Player], rules: Ruleset) -> RoundCompetitionResult {
-        let sides = (comp.entrants ?? []).filter { !$0.isEmpty }
+    ///
+    /// Én ball per lag: sidene er to av rundens lag (uten `entrants`: rundens to lag), og runden må spilles
+    /// i lagformen. Hullet tar lagets ene score (første på laget i id-rekkefølge som har ført, som
+    /// `holeByHole`), og handicapet er lagets (spillehandicapet i runden er lagshandicapet,
+    /// `handicap.teamHandicap`). `nil` når én ball ikke kan regnes.
+    static func matchPlay(_ comp: RoundCompetition, round: Round, roster: [Player], rules: Ruleset) -> RoundCompetitionResult? {
+        let oneBall = comp.teamForm.playsOneBall
+        if oneBall, round.form.axes.teamForm != comp.teamForm { return nil }
+        let sides = (comp.entrants ?? (oneBall ? twoTeams(round) : [])).filter { !$0.isEmpty }
         guard sides.count == 2, Set(sides[0]).isDisjoint(with: sides[1]) else {
             return RoundCompetitionResult(id: comp.id, supported: true, rows: [])
+        }
+        if oneBall {
+            for team in sides {
+                let numbers = Set(team.map { round.teams[$0] ?? 0 })
+                guard numbers.count == 1, numbers.first != 0 else { return nil }
+            }
         }
         let (a, b) = (sides[0], sides[1])
         var handicaps: [String: Double] = [:]
@@ -261,7 +286,14 @@ public enum RoundCompetitions {
         var perHole: [Int: Double] = [:]
         for h in holes {
             if played > 0, abs(up) > holes.count - played { break }
-            guard let v = MatchPlay.holeWinner(a: a, b: b, hole: h, offset: offset, in: round, handicap: handicap) else { continue }
+            // Én ball: lagets score er den første på laget (id-rekkefølge) som har ført hullet.
+            func ball(_ side: [String]) -> [String] {
+                guard oneBall else { return side }
+                let order = side.sorted()
+                return [order.first { round.holeScores[$0]?[h] != nil } ?? order[0]]
+            }
+            guard let v = MatchPlay.holeWinner(a: ball(a), b: ball(b), hole: h, offset: offset, in: round,
+                                               handicap: handicap) else { continue }
             played += 1
             up += v
             perHole[h] = Double(v)

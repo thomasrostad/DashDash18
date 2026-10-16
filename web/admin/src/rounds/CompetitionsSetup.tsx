@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { formById } from "../../../golfgutu-core/src/index.ts";
 import {
-  axesOf, competitionIssues, competitionSummary, MAX_COMPETITIONS, maxStrokesOf, recipeDraft, recipesFor, setSide, sideProblem, withMaxStrokes,
+  axesOf, chosenTeams, competitionIssues, competitionSummary, isOneBallMatch, MAX_COMPETITIONS, maxStrokesOf, recipeDraft, recipesFor, setSide,
+  sideProblem, teamNumbers, withMatchTeam, withMaxStrokes,
   type CompetitionContext, type CompetitionDraft, type EntrantMode, type HolesChoice, type RecipeID, type Side,
 } from "./competitions.ts";
 
@@ -48,7 +49,14 @@ function CompetitionDetails({ d, ctx, name, onChange }: {
   const scoring = axesOf(d).scoring;
   const isMatch = scoring.type === "matchPlay";
   const cap = maxStrokesOf(d);
-  const entrantChoices: { value: EntrantMode; title: string }[] = isMatch ? [
+  const oneBall = isOneBallMatch(d);
+  const teams = teamNumbers(ctx);
+  const chosen = chosenTeams(d, ctx);
+  const teamName = (t: number) => `Lag ${t}: ${ctx.participants.filter((id) => ctx.teams[id] === t).map(name).join(" og ")}`;
+  const entrantChoices: { value: EntrantMode; title: string }[] = oneBall ? [
+    { value: "sides", title: "Rundens to lag" },
+    { value: "twoTeams", title: "To valgte lag" },
+  ] : isMatch ? [
     { value: "selected", title: "To valgte spillere" },
     { value: "sides", title: "Side 1 mot side 2 (lag mot lag)" },
   ] : [
@@ -61,10 +69,28 @@ function CompetitionDetails({ d, ctx, name, onChange }: {
     <fieldset>
       <label>Navn<input value={d.name} maxLength={60} onChange={(e) => onChange({ ...d, name: e.target.value })} /></label>
       <label>Hvem er med
-        <select value={isMatch && d.entrants === "all" ? "sides" : d.entrants} onChange={(e) => onChange({ ...d, entrants: e.target.value as EntrantMode })}>
+        <select value={isMatch && d.entrants === "all" ? "sides" : d.entrants} onChange={(e) => {
+          const mode = e.target.value as EntrantMode;
+          // To valgte lag: de to første til å begynne med.
+          if (mode === "twoTeams" && chosen.length < 2 && teams.length >= 2) onChange(withMatchTeam(withMatchTeam({ ...d, selected: [] }, ctx, 0, teams[0]), ctx, 1, teams[1]));
+          else onChange({ ...d, entrants: mode });
+        }}>
           {entrantChoices.map((c) => <option key={c.value} value={c.value}>{c.title}</option>)}
         </select>
       </label>
+      {oneBall && d.entrants === "twoTeams" && (
+        <div className="inline">
+          {([0, 1] as const).map((i) => (
+            <label key={i}>Lag {i + 1}
+              <select value={chosen[i] ?? ""} onChange={(e) => { if (e.target.value) onChange(withMatchTeam(d, ctx, i, Number(e.target.value))); }}>
+                {chosen[i] === undefined && <option value="">Velg</option>}
+                {teams.map((t) => <option key={t} value={t}>{teamName(t)}</option>)}
+              </select>
+            </label>
+          ))}
+        </div>
+      )}
+      {oneBall && <p className="muted small">Lagets ene score teller på hullet, med lagets handicap etter reglene. Matchen er over når ett lag er flere hull opp enn det er igjen.</p>}
       {d.entrants === "selected" && (
         <div className="chips">
           {ctx.participants.map((id) => (

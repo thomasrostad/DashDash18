@@ -2,7 +2,7 @@
 // round_competitions_set, og side 1/2 per spiller i set_round_setup. Ren logikk; kallene ligger i api.ts.
 
 import {
-  competitionBoards, formAxes, formById, frozenFromRows, sidesFromRaw, teamMatchResult,
+  competitionBoards, formAxes, formById, frozenFromRows, playsOneBall, sidesFromRaw, teamMatchResult,
   type CompetitionBoard, type MaxStrokes, type RyderCupResult, type ScoringMethod, type SnapshotFields, type StoredCompetition, type TeamForm,
 } from "../../../golfgutu-core/src/index.ts";
 import type { RoundGame } from "./game.ts";
@@ -19,8 +19,42 @@ export type EntrantMode =
   | "teams"
   /** Grupper: rundens lag, ellers båsene (Amerikaner og Københavner). */
   | "groups"
-  /** Match: side 1 mot side 2 i lag mot lag (utelatt i config; sidene leses fra round_players.side). */
-  | "sides";
+  /**
+   * Match: side 1 mot side 2 i lag mot lag (utelatt i config; sidene leses fra round_players.side). Med én ball per lag:
+   * rundens to lag (motoren tar dem fra lagene).
+   */
+  | "sides"
+  /** Match med én ball per lag: to valgte lag (lagene til spillerne i `selected`). */
+  | "twoTeams";
+
+/** Match med én ball per lag (foursome, greensome, chapman, scramble): lag mot lag med lagets ene score. */
+export function isOneBallMatch(d: CompetitionDraft): boolean {
+  const a = axesOf(d);
+  return a.scoring.type === "matchPlay" && playsOneBall(a.teamForm);
+}
+
+/** Lagnumrene til spillerne som er med, sortert. */
+export function teamNumbers(ctx: CompetitionContext): number[] {
+  return [...new Set(ctx.participants.map((id) => ctx.teams[id]).filter((t): t is number => t !== undefined && t !== 0))].sort((a, b) => a - b);
+}
+
+/** Lagene de valgte spillerne er på (høyst to, i valgt rekkefølge). */
+export function chosenTeams(d: CompetitionDraft, ctx: CompetitionContext): number[] {
+  const out: number[] = [];
+  for (const id of d.selected) {
+    const t = ctx.teams[id];
+    if (t !== undefined && t !== 0 && !out.includes(t)) out.push(t);
+  }
+  return out;
+}
+
+/** Velger lag 1 eller 2 i en match med én ball: `selected` blir spillerne på de to lagene. */
+export function withMatchTeam(d: CompetitionDraft, ctx: CompetitionContext, index: 0 | 1, team: number): CompetitionDraft {
+  const picked: (number | undefined)[] = [...chosenTeams(d, ctx)];
+  picked[index] = team;
+  const members = (t: number | undefined) => (t === undefined ? [] : ctx.participants.filter((id) => ctx.teams[id] === t));
+  return { ...d, entrants: "twoTeams", selected: [...members(picked[0]), ...(picked[1] === picked[0] ? [] : members(picked[1]))] };
+}
 
 /** Maksimumscore: konkurransens eget tak, ellers `null` (regelsettets `formPlay.maximumScore`). */
 export function maxStrokesOf(d: CompetitionDraft): MaxStrokes | null {
@@ -67,7 +101,7 @@ export const MAX_COMPETITIONS = 10;
 export const RECIPES: readonly { id: RecipeID; name: string; help: string }[] = [
   { id: "bestball", name: "Bestball i par", help: "Beste netto på hullet teller for paret." },
   { id: "maks", name: "Maksimumscore", help: "Slagspill med tak per hull (netto dobbel bogey eller fast antall)." },
-  { id: "match", name: "Match", help: "To spillere, eller side 1 mot side 2, hull for hull." },
+  { id: "match", name: "Match", help: "To spillere, side 1 mot side 2, eller lag mot lag med én ball (foursome, greensome, chapman, scramble), hull for hull." },
   { id: "skins", name: "Skins", help: "Hvert hull er ett skin. Likt gjør at det går videre." },
   { id: "front", name: "Første ni", help: "Samme form, bare hull 1–9." },
   { id: "back", name: "Siste ni", help: "Samme form, bare hull 10–18." },
@@ -86,8 +120,13 @@ export function recipeDraft(id: RecipeID, mainForm: string): CompetitionDraft {
       return { ...base, teamForm: { type: "pairs", pairs: "fourball" }, scoring: { type: "strokePlay", net: true }, entrants: "teams" };
     case "maks":
       return { ...base, form: "maks-score" };
-    case "match":
-      return { ...base, teamForm: { type: "individual" }, scoring: { type: "matchPlay" }, entrants: "selected" };
+    case "match": {
+      // Spilles runden med én ball per lag, er matchen lag mot lag i den lagformen (rundens to lag til å begynne med).
+      const teamForm = formAxes(formById(mainForm)).teamForm;
+      return playsOneBall(teamForm)
+        ? { ...base, teamForm, scoring: { type: "matchPlay" }, entrants: "sides" }
+        : { ...base, teamForm: { type: "individual" }, scoring: { type: "matchPlay" }, entrants: "selected" };
+    }
     case "skins":
       return { ...base, form: "skins" };
     case "front":
@@ -180,6 +219,11 @@ export function competitionConfig(d: CompetitionDraft, ctx: CompetitionContext, 
     case "sides": entrants = null; break;
     case "teams": entrants = pairsFor(ctx); break;
     case "groups": entrants = groupsFor(ctx); break;
+    case "twoTeams": {
+      // Alle på de to valgte lagene, i lagnummerets rekkefølge som valgt.
+      entrants = chosenTeams(d, ctx).slice(0, 2).map((t) => ctx.participants.filter((id) => ctx.teams[id] === t));
+      break;
+    }
     case "selected": {
       const ids = d.selected.filter((id) => inRound.has(id));
       // Poengspill og skins: de valgte er én gruppe. Ellers hver for seg.
@@ -217,7 +261,13 @@ export function competitionIssues(list: readonly CompetitionDraft[], ctx: Compet
     if (d.entrants === "selected" && d.selected.filter((id) => ctx.participants.includes(id)).length === 0) out.push(`${label}: velg minst én spiller.`);
     if (d.entrants === "teams" && pairsFor(ctx).every((p) => p.length < 2)) out.push(`${label}: sett lag først.`);
     if (d.allowance !== null && (d.allowance < 0 || d.allowance > 1)) out.push(`${label}: andelen må være 0–100 %.`);
-    if (axesOf(d).scoring.type === "matchPlay") {
+    if (isOneBallMatch(d)) {
+      const form = formAxes(formById(ctx.mainForm)).teamForm;
+      if (JSON.stringify(form) !== JSON.stringify(axesOf(d).teamForm)) out.push(`${label}: runden må spilles i samme lagform (én ball per lag).`);
+      if (d.entrants === "twoTeams") {
+        if (chosenTeams(d, ctx).length !== 2) out.push(`${label}: velg to lag.`);
+      } else if (teamNumbers(ctx).length !== 2) out.push(`${label}: rundens to lag krever nøyaktig to lag, ellers velg to lag.`);
+    } else if (axesOf(d).scoring.type === "matchPlay") {
       if (d.entrants === "selected" && new Set(d.selected.filter((id) => ctx.participants.includes(id))).size !== 2) out.push(`${label}: velg to spillere.`);
       if (d.entrants !== "selected") {
         const sides = Object.entries(ctx.sides ?? {}).filter(([id]) => ctx.participants.includes(id)).map(([, s]) => s);
@@ -252,6 +302,7 @@ export function draftFromStored(c: StoredCompetition): CompetitionDraft {
   const axes = form ? formAxes(formById(form)) : { teamForm: teamForm ?? { type: "individual" } as TeamForm, scoring: scoring ?? { type: "stableford", net: true } as ScoringMethod };
   const raw = Array.isArray(cfg.entrants) ? (cfg.entrants as unknown[]).filter(Array.isArray).map((g) => (g as unknown[]).map(String)) : null;
   const entrants: EntrantMode = raw === null ? (axes.scoring.type === "matchPlay" ? "sides" : "all")
+    : axes.scoring.type === "matchPlay" && playsOneBall(axes.teamForm) ? "twoTeams"
     : axes.scoring.type === "matchPlay" && axes.teamForm.type === "individual" ? "selected"
     : isSideForm(axes.teamForm) ? "teams"
       : axes.scoring.type === "pointsGame" ? "groups" : "selected";
@@ -281,7 +332,8 @@ export function copiedCompetitions(rows: readonly StoredCompetition[]): Competit
 /** Kort linje under konkurransen: hvem, hull og andel. */
 export function competitionSummary(d: CompetitionDraft, holeCount: number): string {
   const who = d.entrants === "all" ? "Alle" : d.entrants === "teams" ? "Parene" : d.entrants === "groups" ? "Gruppene"
-    : d.entrants === "sides" ? "Side 1 mot side 2" : `${d.selected.length} valgt`;
+    : d.entrants === "sides" ? (isOneBallMatch(d) ? "Rundens to lag" : "Side 1 mot side 2")
+      : d.entrants === "twoTeams" ? "To lag" : `${d.selected.length} valgt`;
   const holes = d.holes === "all" || holeCount !== 18 ? "alle hull" : d.holes === "front" ? "hull 1–9" : "hull 10–18";
   const parts = [who, holes];
   const cap = maxStrokesOf(d);

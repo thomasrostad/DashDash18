@@ -198,6 +198,36 @@ test("TV med maksimumscore og match som konkurranser: slag og stillingen, side 1
   for (const l of tv.extras[1].lines) assert.match(l.score, /opp|ned|Delt|Vunnet|Tapt|Ikke startet/);
 });
 
+test("TV med match med én ball per lag: foursome-runden, rundens to lag", () => {
+  const season = fixture.sesonger[0];
+  const competition = { name: season.name, season_id: season.id, club_id: season.club_id, status: season.status, rules: season.rules, club_name: null };
+  const round = "00000000-0000-0000-0000-000000000105";
+  const rounds = fixture.tavlaData.rounds.map((r: { id: string }) => (r.id === round ? { ...r, format: "foursome" } : r));
+  let n = 0;
+  const players = fixture.tavlaData.players.map((p: { round_id: string }) => {
+    if (p.round_id !== round || n >= 4) return p;
+    n += 1;
+    return { ...p, team_no: n <= 2 ? 1 : 2 };
+  });
+  const comp = (i: number, name: string, isMain: boolean, config: Record<string, unknown>) =>
+    ({ id: `77777777-7777-7777-7777-77777777778${i}`, round_id: round, name, is_main: isMain, format_version: 1, config, sort_order: i });
+  const board = {
+    ...fixture.tavlaData, competition, rounds, players,
+    round_competitions: [
+      comp(0, "Foursome", true, { form: "foursome" }),
+      comp(1, "Foursome-match", false, { teamForm: { type: "pairs", pairs: "foursome" }, scoring: { type: "matchPlay" } }),
+    ],
+  };
+  const tv = buildTVPayload(board);
+  assert.deepEqual(tv.extras.map((e) => e.title), ["Foursome-match"]);
+  // To rader, ett per lag (to navn), med stillingen som tekst.
+  assert.equal(tv.extras[0].lines.length, 2);
+  for (const l of tv.extras[0].lines) {
+    assert.match(l.name, / og /);
+    assert.match(l.score, /opp|ned|Delt|Vunnet|Tapt|Ikke startet/);
+  }
+});
+
 test("TV-sidene", async () => {
   const home = await handle(new Request("https://dashdash18.com/tv"));
   assert.equal(home.status, 200);

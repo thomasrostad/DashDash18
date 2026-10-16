@@ -489,8 +489,33 @@ Matchen er over når en side er flere hull opp enn det er igjen (regel 3.2a(3));
 stillingen blir «Vunnet 3&2». Rundens matcher (PWA-en) teller fortsatt alle hull. Hullene tas i rundens
 rekkefølge. Radene: `score` er hull opp sett fra siden, `holes` spilte hull, `holeValues` ±1/0 per hull og
 `match` stillingen (`MatchStanding`, tekst med `MatchPlay.text`: «2 opp etter 6», «Delt etter 5», «Vunnet 3&2»).
-Uten to sider (eller med samme spiller på begge): ingen rader. Ikke støttet: match med én ball per lag eller
-sammenlagt.
+Uten to sider (eller med samme spiller på begge): ingen rader. Ikke støttet: sammenlagt match.
+
+### Match med én ball per lag (oktober 2026)
+
+Fixture: `en-ball-match.json` (regnet uavhengig av motoren med et lite skript og kontrollert for hånd). Tester:
+`EnBallMatchTests.swift`, `web/golfgutu-core/test/enballmatch.test.ts` og `EnBallMatchAppTests.swift`. Ingen ny
+regelverdi; Golfgutu-oppsettet er uendret.
+
+`scoring: matchPlay` med en lagform som spiller én ball (`pairs` foursome/greensome/chapman, `scramble`), når runden
+spilles i den lagformen (ellers `supported: false`, som én ball i #114). Sidene er to av rundens lag (`entrants`
+med lagenes spillere; hvert lag må være ett av rundens lag), og uten `entrants` rundens to lag
+(`RoundCompetitions.twoTeams`; med flere eller færre lag enn to: ingen rader). Hullet tar lagets ene score (første
+på laget i id-rekkefølge som har ført hullet, som `holeByHole`), og et hull der et lag mangler score, teller ikke.
+
+Handicap: spillehandicapet i runden er lagshandicapet (`Handicap.teamHandicap` med `handicap.teamHandicap` for
+formen, frosset ved start), med konkurransens andel (rundet som JS). Slagene etter `formats.matchStrokes`:
+`lowestFromScratch` gir laget med lavest lagshandicap scratch og det andre forskjellen, `fullHandicap` begge sitt.
+Det er WHS «Rules of Handicapping» Appendix C: foursome-match er 50 % av lagets samlede banehandicap (vektene
+0,5/0,5 i `whsRecommended`, Golfgutu-snittet gir det samme for to), greensome og chapman 60/40, og i match spiller
+den med lavest spillehandicap fra null og de andre får forskjellen. WHS bruker andelen på det uavrundede
+banehandicapet og runder spillehandicapet (lagets), så forskjellen tas av to hele tall; Appendix C sine eksempler
+(«50% of the difference between each Team's combined Course Handicaps») er regnet med avrundede tall og gir det
+samme. Derfor trengs ingen ny regelverdi. Eksempel: lag 10 + 20 mot 4 + 8 i foursome: 15 mot 6, laget med 15 får 9
+slag på indeks 1–9.
+
+Stopp, stilling og tekster som match over (regel 3.2a(3), `MatchPlay.text`: «2 opp etter 5», «Delt», «Vunnet 3&2»,
+«Tapt 1 ned»).
 
 ### Øyeblikksbildet ved start
 

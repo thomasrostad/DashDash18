@@ -110,7 +110,8 @@ test("én ball krever at runden spilles i lagformen", () => {
   const mixed = decodeRoundCompetition({ id: "m", teamForm: { type: "scramble", size: 2 }, scoring: { type: "stableford", net: true }, entrants: [["a", "c"]] });
   assert.equal(evaluateRoundCompetitions(round(r), roster, [mixed], whs())[0].supported, false);
   assert.ok(competitionSupported({ teamForm: { type: "scramble", size: 2 }, scoring: { type: "parBogey" } }));
-  assert.ok(!competitionSupported({ teamForm: { type: "pairs", pairs: "foursome" }, scoring: { type: "matchPlay" } }));
+  // Match med én ball (enballmatch.test.ts): støttet når runden spilles i lagformen.
+  assert.ok(competitionSupported({ teamForm: { type: "pairs", pairs: "foursome" }, scoring: { type: "matchPlay" } }));
 });
 
 test("par/bogey: hull, tabell og verdier fra regelsettet", () => {

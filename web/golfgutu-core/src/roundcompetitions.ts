@@ -75,7 +75,7 @@ export function competitionSupported(axes: FormAxes): boolean {
     case "maximumScore":
       return true;
     case "matchPlay":
-      return !playsOneBall(axes.teamForm) && !(axes.teamForm.type === "pairs" && axes.teamForm.pairs === "aggregate");
+      return !(axes.teamForm.type === "pairs" && axes.teamForm.pairs === "aggregate");
     case "skins":
     case "pointsGame":
       return axes.teamForm.type === "individual";
@@ -96,6 +96,13 @@ function roundTeams(round: Round): string[][] {
     .filter((team) => team.some((p) => (round.holeScores.get(p)?.size ?? 0) > 0));
 }
 
+/** Rundens lag (lagnummer over 0) når det er nøyaktig to, i nummerrekkefølge, spillerne sortert (`RoundCompetitions.twoTeams`). */
+function twoTeams(round: Round): string[][] {
+  const numbers = [...new Set([...round.teams.values()].filter((n) => n !== 0))].sort((a, b) => a - b);
+  if (numbers.length !== 2) return [];
+  return numbers.map((n) => sortedIDs([...round.teams].filter(([, t]) => t === n).map(([p]) => p)));
+}
+
 function sortedIDs(ids: readonly string[]): string[] {
   return [...ids].sort((x, y) => (stringLess(x, y) ? -1 : stringLess(y, x) ? 1 : 0));
 }
@@ -112,7 +119,7 @@ function evaluateCompetition(comp: RoundCompetition, round: Round, roster: reado
     case "maximumScore":
       return holeByHole(comp, round, roster, rules, scored) ?? unsupported;
     case "matchPlay":
-      return matchPlay(comp, round, roster, rules);
+      return matchPlay(comp, round, roster, rules) ?? unsupported;
     case "skins": {
       if (comp.holes !== null) return unsupported;
       const players = comp.entrants?.flat() ?? scored;
@@ -204,10 +211,22 @@ function holeByHole(comp: RoundCompetition, round: Round, roster: readonly Playe
  * Match mellom to sider (`RoundCompetitions.matchPlay`): `MatchPlay`s hullvinner med spillehandicapet i runden og
  * konkurransens andel (rundet som JS), slagene som i rundens matcher. Stopper når en side er flere hull opp enn det er
  * igjen (regel 3.2a(3)). Uten to sider: ingen rader.
+ *
+ * Én ball per lag: sidene er to av rundens lag (uten `entrants`: rundens to lag), og runden må spilles i lagformen.
+ * Hullet tar lagets ene score (første på laget i id-rekkefølge med score) og lagets handicap. `null` når én ball ikke
+ * kan regnes.
  */
-function matchPlay(comp: RoundCompetition, round: Round, roster: readonly Player[], rules: Ruleset): RoundCompetitionResult {
-  const sides = (comp.entrants ?? []).filter((e) => e.length > 0);
+function matchPlay(comp: RoundCompetition, round: Round, roster: readonly Player[], rules: Ruleset): RoundCompetitionResult | null {
+  const oneBall = playsOneBall(comp.teamForm);
+  if (oneBall && !sameTeamForm(formAxes(roundForm(round)).teamForm, comp.teamForm)) return null;
+  const sides = (comp.entrants ?? (oneBall ? twoTeams(round) : [])).filter((e) => e.length > 0);
   if (sides.length !== 2 || sides[0].some((p) => sides[1].includes(p))) return { id: comp.id, supported: true, rows: [] };
+  if (oneBall) {
+    for (const team of sides) {
+      const numbers = new Set(team.map((p) => round.teams.get(p) ?? 0));
+      if (numbers.size !== 1 || numbers.has(0)) return null;
+    }
+  }
   const [a, b] = sides;
   const hcp = new Map<string, number>();
   for (const p of [...a, ...b]) {
@@ -224,7 +243,13 @@ function matchPlay(comp: RoundCompetition, round: Round, roster: readonly Player
   const perHole = new Map<number, number>();
   for (const h of holes) {
     if (played > 0 && Math.abs(up) > holes.length - played) break;
-    const v = holeWinnerFor(a, b, h, offset, round, handicap);
+    // Én ball: lagets score er den første på laget (id-rekkefølge) som har ført hullet.
+    const ball = (side: string[]): string[] => {
+      if (!oneBall) return side;
+      const order = sortedIDs(side);
+      return [order.find((p) => (round.holeScores.get(p)?.get(h) ?? null) !== null) ?? order[0]];
+    };
+    const v = holeWinnerFor(ball(a), ball(b), h, offset, round, handicap);
     if (v === null) continue;
     played += 1;
     up += v;

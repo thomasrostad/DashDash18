@@ -137,12 +137,13 @@ struct MaksOgMatchTests {
 
     // MARK: Match
 
-    @Test func matchStottesMedEgneBaller() {
+    @Test func matchStottesMedEgneBallerOgEnBall() {
         #expect(RoundCompetitions.supports(FormAxes(teamForm: .individual, scoring: .matchPlay)))
         #expect(RoundCompetitions.supports(FormAxes(teamForm: .pairs(.fourball), scoring: .matchPlay)))
-        #expect(!RoundCompetitions.supports(FormAxes(teamForm: .pairs(.foursome), scoring: .matchPlay)))
+        // Én ball per lag: se EnBallMatchTests (runden må spilles i lagformen; her er den stableford).
+        #expect(RoundCompetitions.supports(FormAxes(teamForm: .pairs(.foursome), scoring: .matchPlay)))
+        #expect(RoundCompetitions.supports(FormAxes(teamForm: .scramble(size: 2), scoring: .matchPlay)))
         #expect(!RoundCompetitions.supports(FormAxes(teamForm: .pairs(.aggregate), scoring: .matchPlay)))
-        #expect(!RoundCompetitions.supports(FormAxes(teamForm: .scramble(size: 2), scoring: .matchPlay)))
     }
 
     /// Matchen som konkurranse bruker de samme hullvinnerne som rundens matcher (`MatchPlay`), men stopper

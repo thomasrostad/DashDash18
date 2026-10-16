@@ -81,10 +81,11 @@ test("maksimumscore: støttet, JSON og taket i regelsettet", () => {
   assert.ok(validateRuleset(big).some((x) => x.field === "formPlay.maximumScore"));
 });
 
-test("match: egne baller, ikke én ball eller sammenlagt", () => {
+test("match: egne baller og én ball, ikke sammenlagt", () => {
   assert.ok(competitionSupported({ teamForm: { type: "individual" }, scoring: { type: "matchPlay" } }));
   assert.ok(competitionSupported({ teamForm: { type: "pairs", pairs: "fourball" }, scoring: { type: "matchPlay" } }));
-  assert.ok(!competitionSupported({ teamForm: { type: "pairs", pairs: "foursome" }, scoring: { type: "matchPlay" } }));
+  // Én ball per lag: enballmatch.test.ts (runden må spilles i lagformen).
+  assert.ok(competitionSupported({ teamForm: { type: "pairs", pairs: "foursome" }, scoring: { type: "matchPlay" } }));
   assert.ok(!competitionSupported({ teamForm: { type: "pairs", pairs: "aggregate" }, scoring: { type: "matchPlay" } }));
 });
 

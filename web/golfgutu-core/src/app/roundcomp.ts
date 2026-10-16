@@ -3,7 +3,7 @@
 // RoundCompetition og FrozenRound, og resultatene. Rent, uten nett.
 
 import { DEFAULT_PAR } from "../course.ts";
-import { decodeScoringMethod, decodeTeamForm, formAxes, formById, type FormAxes } from "../forms.ts";
+import { decodeScoringMethod, decodeTeamForm, formAxes, formById, playsOneBall, type FormAxes } from "../forms.ts";
 import type { HoleScores, PlayedHole, Player, Round } from "../models.ts";
 import {
   evaluateFrozenCompetitions, evaluateRoundCompetitions, type FrozenRound, type RoundCompetition, type RoundCompetitionResult,
@@ -70,7 +70,7 @@ export function sidesAsEntrants(sides: ReadonlyMap<string, number>): string[][] 
 
 /**
  * Regelmotorens konkurranse. null: ukjent versjon eller form. En match uten egne sider er side 1 mot side 2 i lag mot
- * lag (`sides`), som appen.
+ * lag (`sides`), som appen; med én ball per lag er den rundens to lag (motoren, `RoundCompetitions.twoTeams`).
  */
 export function engineCompetition(c: StoredCompetition, roundFormat: string, key: string,
   sides: ReadonlyMap<string, number> = new Map()): RoundCompetition | null {
@@ -84,7 +84,8 @@ export function engineCompetition(c: StoredCompetition, roundFormat: string, key
   const holes = isObj(cfg.holes) && typeof cfg.holes.first === "number" && typeof cfg.holes.last === "number"
     ? { first: cfg.holes.first, last: cfg.holes.last } : null;
   const allowance = !c.isMain && typeof cfg.allowance === "number" ? cfg.allowance : null;
-  const resolved = entrants ?? (axes.scoring.type === "matchPlay" ? sidesAsEntrants(sides) : null);
+  // Én ball per lag: motoren tar rundens to lag (sidene i lag mot lag kan ha flere lag hver).
+  const resolved = entrants ?? (axes.scoring.type === "matchPlay" && !playsOneBall(axes.teamForm) ? sidesAsEntrants(sides) : null);
   return { id: key, teamForm: axes.teamForm, scoring: axes.scoring, entrants: resolved, holes, allowance };
 }
 
