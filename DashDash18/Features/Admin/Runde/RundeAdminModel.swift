@@ -494,7 +494,8 @@ final class RundeAdminModel {
             let scores = try await scoreRows
             let claims = try await claimRows
             return RoundDeleteSummary(holeScores: scores.count, playersWithScores: Set(scores.map(\.member_id)).count,
-                                      sideClaims: claims.count, isDraft: round.status == .draft)
+                                      sideClaims: claims.count, isDraft: round.status == .draft,
+                                      groupTerm: GroupTerm.for(stored: round.venue))
         } catch {
             throw DataError.from(error)
         }

@@ -118,7 +118,8 @@ nonisolated extension RoundGame {
     var startedEvent: ActivityEvent {
         .roundStarted(roundNo: snapshot.round.roundNo, courseName: snapshot.course?.name, holeCount: holeCount,
                       bays: hasBays ? bays.count : nil,
-                      ldHole: longestDriveHole.map(holeNumber), kpHole: closestToPinHole.map(holeNumber))
+                      ldHole: longestDriveHole.map(holeNumber), kpHole: closestToPinHole.map(holeNumber),
+                      venue: snapshot.round.venue)
     }
 
     /// Store scorer blant hullene som nettopp ble lagret for første gang (ikke rettinger).

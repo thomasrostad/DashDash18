@@ -146,7 +146,7 @@ struct BanetypeTests {
 struct RegelsettSammendragTests {
     @Test func golfgutuIKlartSprak() {
         #expect(RulesetSummary.lines(for: .golfgutu) == [
-            "Stableford (netto), høyst 4 per bås",
+            "Stableford (netto), høyst 4 per bås eller flight",
             "7 kvelder, alle matcher teller",
             "Seier 1 poeng, uavgjort 0,5, tap 0",
             "95 % handicap i stableford (netto), egen andel per form",

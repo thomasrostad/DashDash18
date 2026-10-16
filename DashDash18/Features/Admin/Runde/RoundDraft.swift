@@ -307,7 +307,7 @@ nonisolated enum RoundSetupCheck {
 
         if form.isTeamForm,
            let problem = TeamPlanner.problem(teams: draft.teams, participants: draft.participants, form: form,
-                                             maxPerBay: rules.formats.maxPerBay) {
+                                             maxPerBay: rules.formats.maxPerBay, term: draft.groupTerm) {
             issues.append(.teams(problem))
         }
         let names = Dictionary(uniqueKeysWithValues: roster.map { ($0.id, $0.displayName) })
@@ -598,6 +598,8 @@ nonisolated struct RoundDeleteSummary: Equatable, Sendable {
     var playersWithScores: Int
     var sideClaims: Int
     var isDraft: Bool
+    /// «Båsene» / «Flightene» i teksten for kladden.
+    var groupTerm: GroupTerm = .bay
 
     var noun: String { isDraft ? "kladden" : "runden" }
 
@@ -617,7 +619,7 @@ nonisolated struct RoundDeleteSummary: Equatable, Sendable {
         var text: [String] = []
         let items = lines
         if items.isEmpty {
-            text.append(isDraft ? "Ingen har sett den. Båsene og oppsettet forsvinner med den."
+            text.append(isDraft ? "Ingen har sett den. \(groupTerm.definitePluralTitle) og oppsettet forsvinner med den."
                                 : "Ingen har ført et hull. Runden er tom.")
         } else {
             text.append("Dette følger med ut, og kan ikke angres:")

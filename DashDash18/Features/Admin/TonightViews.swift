@@ -11,6 +11,8 @@ struct TonightRoundCard: View {
     let title: String
     let shape: String
     let bays: [BayLive]
+    /// «bås» i simulatoren, «flight» på ekte bane.
+    let groupTerm: GroupTerm
     /// «1 hull har ulike tall fra to markører» (K6/6.3). nil: ingen.
     var conflictText: String?
     /// nil: ingen TV-knapp (skjer ikke i dag, men holder kortet enkelt å gjenbruke).
@@ -34,7 +36,7 @@ struct TonightRoundCard: View {
             }
             .accessibilityElement(children: .combine)
             if bays.isEmpty {
-                Text("Ingen båser er fordelt i oppsettet.")
+                Text(TonightLive.noGroupsText(groupTerm))
                     .font(.ddCallout)
                     .foregroundStyle(Color.ddInkSecondary)
             }

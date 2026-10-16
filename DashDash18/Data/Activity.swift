@@ -107,6 +107,8 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
     var bays: Int?
     var ldHole: Int?
     var kpHole: Int?
+    /// `round_started`: `simulator` eller `course` (`rounds.venue`). Uten: simulator (bås).
+    var venue: String? = nil
     /// «Melding til alle».
     var text: String?
     var from: Int?
@@ -208,6 +210,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         case bays
         case ldHole = "ld_hole"
         case kpHole = "kp_hole"
+        case venue
         case text, from, to, coming, unsure, correct, possible
         case question, against, side, resolution, title
         case competition
@@ -252,6 +255,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         bays = get(.bays)
         ldHole = get(.ldHole)
         kpHole = get(.kpHole)
+        venue = get(.venue)
         text = get(.text)
         from = get(.from)
         to = get(.to)
@@ -426,7 +430,8 @@ nonisolated enum LeadOutcome: String, Codable, Sendable {
 /// Alle hendelsestypene appen skriver og leser. `kind` er nøkkelen i databasen.
 /// En ukjent `kind` (en nyere klient) blir `.unknown` og vises med en nøytral tekst.
 nonisolated enum ActivityEvent: Equatable, Sendable {
-    case roundStarted(roundNo: Int, courseName: String?, holeCount: Int?, bays: Int?, ldHole: Int?, kpHole: Int?)
+    case roundStarted(roundNo: Int, courseName: String?, holeCount: Int?, bays: Int?, ldHole: Int?, kpHole: Int?,
+                      venue: String? = nil)
     case roundLocked(roundNo: Int, courseName: String?)
     case roundDeleted(roundNo: Int, courseName: String?)
     /// `hole` er hullnummeret på kortet, `holeIndex` rundens 0-baserte hull.
@@ -536,9 +541,13 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
 
     var data: ActivityData {
         switch self {
-        case let .roundStarted(roundNo, courseName, holeCount, bays, ldHole, kpHole):
-            ActivityData(roundNo: roundNo, courseName: courseName, holeCount: holeCount, bays: bays,
-                         ldHole: ldHole, kpHole: kpHole)
+        case let .roundStarted(roundNo, courseName, holeCount, bays, ldHole, kpHole, venue):
+            {
+                var d = ActivityData(roundNo: roundNo, courseName: courseName, holeCount: holeCount, bays: bays,
+                                     ldHole: ldHole, kpHole: kpHole)
+                d.venue = venue
+                return d
+            }()
         case let .roundLocked(roundNo, courseName), let .roundDeleted(roundNo, courseName):
             ActivityData(roundNo: roundNo, courseName: courseName)
         case let .bigScore(member, hole, holeIndex, name, strokes, par):
@@ -598,7 +607,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         switch kind {
         case "round_started":
             self = .roundStarted(roundNo: d.roundNo ?? 0, courseName: d.courseName, holeCount: d.holeCount,
-                                 bays: d.bays, ldHole: d.ldHole, kpHole: d.kpHole)
+                                 bays: d.bays, ldHole: d.ldHole, kpHole: d.kpHole, venue: d.venue)
         case "round_locked":
             self = .roundLocked(roundNo: d.roundNo ?? 0, courseName: d.courseName)
         case "round_deleted":
@@ -754,13 +763,13 @@ nonisolated enum ActivityText {
         }
 
         switch event {
-        case let .roundStarted(roundNo, courseName, holeCount, bays, ldHole, kpHole):
+        case let .roundStarted(roundNo, courseName, holeCount, bays, ldHole, kpHole, venue):
             var text = "Ny runde: " + round(roundNo, courseName)
             if let holeCount { text += " · \(holeCount) hull" }
             var extras: [String] = []
             if let ldHole { extras.append("longest drive på hull \(ldHole)") }
             if let kpHole { extras.append("nærmest pinnen på hull \(kpHole)") }
-            if let bays, bays > 0 { extras.append(bays == 1 ? "1 bås" : "\(bays) båser") }
+            if let bays, bays > 0 { extras.append(GroupTerm.for(stored: venue).count(bays)) }
             if !extras.isEmpty { text += " — " + extras.joined(separator: ", ") }
             return ActivityDisplay(symbol: "flag.fill", emoji: "🏌️", text: text)
 
