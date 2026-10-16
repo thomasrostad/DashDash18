@@ -32,6 +32,7 @@ struct CompetitionDetailView: View {
     @State private var unlockCheck = 0
     @State private var confirmsDelete = false
     @State private var showsTVCode = false
+    @State private var showsShare = false
     @Environment(\.dismiss) private var dismiss
     @Environment(PurchaseService.self) private var purchases: PurchaseService?
 
@@ -55,6 +56,12 @@ struct CompetitionDetailView: View {
                 if TVCodeFeature.competitionsEnabled, !embedded, model.isAdmin, model.competition.seasonID == nil {
                     ToolbarItem(placement: .secondaryAction) {
                         Button("TV-kode for en skjerm", systemImage: "qrcode") { showsTVCode = true }
+                    }
+                }
+                // «Del tavla» (sql/056). Sesongen har sin på Tavla.
+                if TavlaShareFeature.isEnabled, !embedded, list != nil, model.competition.seasonID == nil {
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button("Del tavla", systemImage: "link") { showsShare = true }
                     }
                 }
                 // sql/038. En sesong slettes fra Oppsett → Turneringen, der kveldene står.
@@ -89,6 +96,15 @@ struct CompetitionDetailView: View {
                     NavigationStack {
                         TVCodeSheet(model: TVCodeModel(client: client, competitionID: model.competition.id,
                                                        competitionName: model.competition.name))
+                    }
+                }
+            }
+            .sheet(isPresented: $showsShare) {
+                if let client = list?.client {
+                    NavigationStack {
+                        TavlaShareSheet(model: TavlaShareModel(client: client, competitionID: model.competition.id,
+                                                               competitionName: model.competition.name,
+                                                               isOrganizer: model.isAdmin))
                     }
                 }
             }

@@ -25,6 +25,7 @@ private struct TavlaContent: View {
     @State var model: TavlaModel
     @State private var showsTV = false
     @State private var showsTVCode = false
+    @State private var showsShare = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -38,6 +39,13 @@ private struct TavlaContent: View {
                 if let standings = model.standings, standings.hasResults {
                     ToolbarItem(placement: .topBarTrailing) {
                         ResultShareButton(share: standings.share)
+                            .tint(Color.ddForestInk)
+                    }
+                }
+                // «Del tavla» (sql/056): lenken til Tavla i nettleseren for dem uten appen.
+                if TavlaShareFeature.isEnabled, model.standings != nil {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Del tavla", systemImage: "link") { showsShare = true }
                             .tint(Color.ddForestInk)
                     }
                 }
@@ -65,6 +73,15 @@ private struct TavlaContent: View {
                     NavigationStack {
                         TVCodeSheet(model: TVCodeModel(client: model.clubContext.client, seasonID: standings.seasonID,
                                                        competitionName: standings.seasonName))
+                    }
+                }
+            }
+            .sheet(isPresented: $showsShare) {
+                if let standings = model.standings {
+                    NavigationStack {
+                        TavlaShareSheet(model: TavlaShareModel(client: model.clubContext.client, seasonID: standings.seasonID,
+                                                               competitionName: standings.seasonName,
+                                                               isOrganizer: model.clubContext.can(.tournaments)))
                     }
                 }
             }

@@ -1,5 +1,6 @@
 import { fetchTVPayload, normalizeTVCode, tvBoardPage, tvCodePage, type TVEnv } from "./tv.ts";
 import { calendarResponse } from "./kalender.ts";
+import { fetchSharePayload, REFRESH_SECONDS, shareInvalidPage, sharePage, type SharePayload } from "./tavla.ts";
 // Atten på https://dashdash18.com: filen som kobler domenet til appen (universelle lenker),
 // og en enkel side for invitasjonslenker når appen ikke er installert.
 //
@@ -85,7 +86,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 };
 
 function htmlResponse(body: string, status: number, nonce: string, cache: string, isHead: boolean,
-                      connectSelf = false): Response {
+                      connectSelf = false, fontSelf = false): Response {
   return new Response(isHead ? null : body, {
     status,
     headers: {
@@ -95,6 +96,7 @@ function htmlResponse(body: string, status: number, nonce: string, cache: string
       "Content-Security-Policy":
         `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; ` +
         (connectSelf ? "connect-src 'self'; " : "") +
+        (fontSelf ? "font-src 'self'; " : "") +
         "base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     },
   });
@@ -287,6 +289,18 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
     return htmlResponse(tvBoardPage(code, nonce), 200, nonce, "no-store", isHead, true);
   }
 
+  // Tavla i nettleseren for tilskuere (sql/056): lenken fra «Del tavla» i appen.
+  const share = /^\/tavla\/([^/]+?)(\.json)?\/?$/.exec(pathname);
+  if (share) {
+    let raw = "";
+    try { raw = decodeURIComponent(share[1]); } catch { raw = ""; }
+    const code = normalizeTVCode(raw);
+    if (share[2]) return shareJSON(code, env, isHead);
+    if (!code) return htmlResponse(shareInvalidPage(), 404, nonce, "public, max-age=300", isHead, false, true);
+    if (code !== share[1]) return Response.redirect(new URL(`/tavla/${code}`, request.url).toString(), 302);
+    return htmlResponse(sharePage(code, nonce), 200, nonce, "no-store", isHead, true, true);
+  }
+
   const follow = /^\/folg\/([^/]*)\/?$/.exec(pathname);
   if (follow) {
     let raw = "";
@@ -308,6 +322,36 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
   }
 
   return htmlResponse(notFoundPage(nonce), 404, nonce, "public, max-age=300", isHead);
+}
+
+const JSON_HEADERS = { ...SECURITY_HEADERS, "Content-Type": "application/json", "Cache-Control": "no-store" };
+
+/**
+ * /tavla/KODE.json. Mange tilskuere på samme lenke spør like ofte: svaret holdes i Cloudflares hurtigbuffer
+ * (i datasenteret) i halve oppdateringstiden, så Supabase får høyst ett kall per kode per datasenter.
+ */
+async function shareJSON(code: string | null, env: TVEnv, isHead: boolean): Promise<Response> {
+  if (!code) return new Response(isHead ? null : JSON.stringify({ error: "Ukjent kode" }), { status: 404, headers: JSON_HEADERS });
+  const cache = (globalThis as { caches?: { default?: Cache } }).caches?.default;
+  const key = new Request(`https://dashdash18.com/tavla/${code}.json`);
+  const hit = cache ? await cache.match(key).catch(() => undefined) : undefined;
+  let body: string | null = hit ? await hit.text() : null;
+  let status = hit ? hit.status : 200;
+  if (body === null) {
+    let payload: SharePayload | null | undefined;
+    try { payload = await fetchSharePayload(code, env); } catch { payload = undefined; }
+    if (payload === undefined) {
+      return new Response(JSON.stringify({ error: "Fikk ikke hentet tabellen" }), { status: 502, headers: JSON_HEADERS });
+    }
+    status = payload ? 200 : 404;
+    body = JSON.stringify(payload ?? { error: "Ukjent kode" });
+    if (cache) {
+      const ttl = Math.floor(REFRESH_SECONDS / 2);
+      await cache.put(key, new Response(body, { status, headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${ttl}` } }))
+        .catch(() => undefined);
+    }
+  }
+  return new Response(isHead ? null : body, { status, headers: JSON_HEADERS });
 }
 
 export default {
