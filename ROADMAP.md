@@ -480,6 +480,14 @@ Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rett
 
 ---
 
+### Regelvern (15.10.2026, inspirert av Golfify)
+
+Tre regelinnstillinger under «Føring og visning» i reglene (`play` i regelsettet, se `Packages/GolfgutuCore/REGELSETT.md`). Standarden er som PWA-en, så Golfgutu-oppsettet er uendret.
+
+- [x] **Maks slag per hull:** av, netto dobbel bogey eller fast antall (3–20). Stepperen i føringen stopper på grensen («maks N» under navnet), og motoren kapper scorer over grensen (Swift og TypeScript, `Round.cappingStrokes` i `Season` og føringen). Arrangørens retting (Avslutt kvelden) har ikke grensen ennå.
+- [x] **Låst kort etter levering:** «Lever kortet» under hullkortet når alle hullene er ført og sendt; etterpå kan bare arrangøren endre det, og «Åpne igjen» står for arrangøren under kortet og i «Leverte kort» under Stilling. **Krever sql/057 (ikke kjørt, venter på godkjenning).** Serveren håndhever låsen i `can_score` når 057 er kjørt; uten 057 vises ingenting.
+- [x] **Skjul de siste N hullene:** runde-oppsettet har «Skjul de siste hullene» med antall (1–9, standard fra regelsettet, Golfgutu 3). Tavla, Hjem og varslene regnes uten dem til runden er låst (fra sql/047). Web-admin skriver fortsatt 3 når valget slås på der.
+
 ### Nye spillformer (15.10.2026)
 
 - [x] Par/bogey (regel 21.3) i motoren og TypeScript: konkurranse, hovedform (stilling «+3», tabell med `table.formPoints`), verdiene i `formPlay.parBogey`.

@@ -380,7 +380,7 @@ nonisolated struct RoundTemplatePayload: Codable, Equatable, Sendable {
         weight = draft.weight
         counts = draft.counts
         pointsTable = draft.pointsTable
-        hideLastHoles = draft.hidesLastHoles ? RoundDraft.hiddenHoleCount : 0
+        hideLastHoles = draft.storedHiddenHoles
         competitions = draft.competitions.enumerated().map { i, c in
             CompetitionCopy(name: c.name, isMain: false, config: c.config, sortOrder: i + 1)
         }
@@ -450,6 +450,7 @@ nonisolated struct RoundTemplatePayload: Codable, Equatable, Sendable {
         draft.counts = counts
         draft.pointsTable = pointsTable.flatMap { rules.table.pointsTables[$0] == nil ? nil : $0 }
         draft.hidesLastHoles = hideLastHoles > 0
+        if hideLastHoles > 0 { draft.hiddenHoles = hideLastHoles }
         if let ldEnabled { draft.ldEnabled = ldEnabled }
         if let kpEnabled { draft.kpEnabled = kpEnabled }
         // Konkurransene som nye rader (sql/048; uten 048 er lista tom). Radene som står på kladden fra

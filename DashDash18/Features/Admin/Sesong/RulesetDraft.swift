@@ -4,7 +4,7 @@ import GolfgutuCore
 /// Delene av regelsett-skjermen. Hver melding fra `Ruleset.validate()` hører til én del,
 /// etter feltstien (`table.counting.best` → `.table`).
 nonisolated enum RulesetSection: CaseIterable, Sendable {
-    case season, scoring, table, sidePrizes, handicap, formats
+    case season, scoring, table, sidePrizes, handicap, formats, play
 
     var title: String {
         switch self {
@@ -14,6 +14,7 @@ nonisolated enum RulesetSection: CaseIterable, Sendable {
         case .sidePrizes: "Sidepremier"
         case .handicap: "Handicap"
         case .formats: "Former"
+        case .play: "Føring og visning"
         }
     }
 
@@ -25,6 +26,7 @@ nonisolated enum RulesetSection: CaseIterable, Sendable {
         case "sidePrizes": return .sidePrizes
         case "handicap": return .handicap
         case "formats": return .formats
+        case "play": return .play
         default: return .season
         }
     }
@@ -81,6 +83,11 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
 
     /// «Endret · standard 1» ved et felt som ikke er som i oppsettet.
     func changeNote(_ field: RulesetField) -> String? {
+        field.changeNote(rules, from: base.rules)
+    }
+
+    /// «Endret · standard …» ved et valg under «Føring og visning».
+    func changeNote(_ field: PlayField) -> String? {
         field.changeNote(rules, from: base.rules)
     }
 
@@ -380,6 +387,50 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
         let known = CompetitionForm.all.map(\.id)
         let unknown = rules.formats.allowedFormIDs.filter { !known.contains($0) }
         rules.formats.allowedFormIDs = known.filter(set.contains) + unknown
+    }
+
+    // MARK: Føring og visning (regelvern)
+
+    /// Valget for maks slag per hull, uten tallet.
+    enum MaxStrokesKind: String, CaseIterable, Hashable, Sendable {
+        case off, netDoubleBogey, fixed
+
+        var title: String {
+            switch self {
+            case .off: "Ingen grense"
+            case .netDoubleBogey: "Netto dobbel bogey"
+            case .fixed: "Fast antall"
+            }
+        }
+    }
+
+    /// Standard når «Fast antall» velges første gang (som Golfify).
+    static let defaultFixedMaxStrokes = 10
+
+    var maxStrokesKind: MaxStrokesKind {
+        get {
+            switch rules.play.maxStrokes {
+            case .off: .off
+            case .netDoubleBogey: .netDoubleBogey
+            case .fixed: .fixed
+            }
+        }
+        set {
+            switch newValue {
+            case .off: rules.play.maxStrokes = .off
+            case .netDoubleBogey: rules.play.maxStrokes = .netDoubleBogey
+            case .fixed: rules.play.maxStrokes = .fixed(fixedMaxStrokes)
+            }
+        }
+    }
+
+    /// Tallet ved «Fast antall». Står valget på noe annet, er det standardtallet.
+    var fixedMaxStrokes: Int {
+        get {
+            if case .fixed(let n) = rules.play.maxStrokes { return n }
+            return Self.defaultFixedMaxStrokes
+        }
+        set { rules.play.maxStrokes = .fixed(newValue) }
     }
 
     // MARK: JSON
