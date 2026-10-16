@@ -167,7 +167,8 @@ struct SpillformerTests {
                                      entrants: [["a", "c"]])
         #expect(!RoundCompetitions.evaluate(round(r), roster: roster, competitions: [mixed], rules: Self.whs)[0].supported)
         #expect(RoundCompetitions.supports(FormAxes(teamForm: .scramble(size: 2), scoring: .parBogey)))
-        #expect(!RoundCompetitions.supports(FormAxes(teamForm: .pairs(.foursome), scoring: .matchPlay)))
+        // Match med én ball (EnBallMatchTests): støttet når runden spilles i lagformen.
+        #expect(RoundCompetitions.supports(FormAxes(teamForm: .pairs(.foursome), scoring: .matchPlay)))
     }
 
     // MARK: Par/bogey

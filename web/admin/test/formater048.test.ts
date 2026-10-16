@@ -9,8 +9,8 @@ import {
   type StoredCompetition,
 } from "../../golfgutu-core/src/index.ts";
 import {
-  competitionConfig, competitionIssues, competitionsPayload, competitionSummary, copiedCompetitions, draftFromStored, groupsFor, holeRange, maxStrokesOf, pairsFor,
-  recipeDraft, recipesFor, roundResults, setSide, sideProblem, sidesFromRows, withMaxStrokes, withSides, type CompetitionContext,
+  chosenTeams, competitionConfig, competitionIssues, competitionsPayload, competitionSummary, copiedCompetitions, draftFromStored, groupsFor, holeRange,
+  isOneBallMatch, maxStrokesOf, pairsFor, recipeDraft, recipesFor, teamNumbers, withMatchTeam, roundResults, setSide, sideProblem, sidesFromRows, withMaxStrokes, withSides, type CompetitionContext,
 } from "../src/rounds/competitions.ts";
 import { RoundGame } from "../src/rounds/game.ts";
 import { newDraft } from "../src/rounds/logic.ts";
@@ -262,6 +262,38 @@ test("oppskriftene maksimumscore og match: config, hvem og problemene", () => {
   const stored = (config: Record<string, unknown>): StoredCompetition => ({ id: null, roundID: null, name: "M", isMain: false, formatVersion: 1, config, sortOrder: 1 });
   assert.equal(draftFromStored(stored(competitionConfig(sides, ctx()))).entrants, "sides");
   assert.equal(draftFromStored(stored(competitionConfig(match, ctx()))).entrants, "selected");
+});
+
+test("match med én ball per lag: rundens to lag eller to valgte lag", () => {
+  const E = "00000000-0000-0000-0000-00000000000e";
+  const F = "00000000-0000-0000-0000-00000000000f";
+  const two = ctx({ mainForm: "foursome", teams: { [A]: 1, [B]: 1, [C]: 2, [D]: 2 } });
+  const m = recipeDraft("match", "foursome");
+  assert.ok(isOneBallMatch(m));
+  assert.equal(m.entrants, "sides");
+  // Rundens to lag: ingen entrants i config (motoren tar lagene).
+  assert.deepEqual(competitionConfig(m, two), { teamForm: { type: "pairs", pairs: "foursome" }, scoring: { type: "matchPlay" } });
+  assert.deepEqual(competitionIssues([m], two), []);
+  assert.equal(competitionSummary(m, 18).startsWith("Rundens to lag"), true);
+  // Stableford-runde: matchen er som før (to spillere).
+  assert.ok(!isOneBallMatch(recipeDraft("match", "stableford")));
+  // Tre lag: velg to.
+  const three = ctx({ mainForm: "foursome", participants: [A, B, C, D, E, F], teams: { [A]: 1, [B]: 1, [C]: 2, [D]: 2, [E]: 3, [F]: 3 } });
+  assert.deepEqual(teamNumbers(three), [1, 2, 3]);
+  assert.ok(competitionIssues([m], three)[0].includes("nøyaktig to lag"));
+  const picked = withMatchTeam(withMatchTeam(m, three, 0, 1), three, 1, 3);
+  assert.deepEqual(chosenTeams(picked, three), [1, 3]);
+  assert.deepEqual(competitionConfig(picked, three).entrants, [[A, B], [E, F]]);
+  assert.deepEqual(competitionIssues([picked], three), []);
+  assert.ok(competitionIssues([withMatchTeam(picked, three, 1, 1)], three)[0].includes("velg to lag"));
+  // Runden spilles ikke i foursome.
+  assert.ok(competitionIssues([picked], { ...three, mainForm: "stableford" }).some((x) => x.includes("samme lagform")));
+  // Tilbake fra lagringen.
+  const stored = (config: Record<string, unknown>): StoredCompetition => ({ id: null, roundID: null, name: "M", isMain: false, formatVersion: 1, config, sortOrder: 1 });
+  const back = draftFromStored(stored(competitionConfig(picked, three)));
+  assert.equal(back.entrants, "twoTeams");
+  assert.deepEqual(chosenTeams(back, three), [1, 3]);
+  assert.equal(draftFromStored(stored(competitionConfig(m, two))).entrants, "sides");
 });
 
 test("lag mot lag: matchene gir poeng til sidene", () => {

@@ -494,6 +494,7 @@ Tre regelinnstillinger under «Føring og visning» i reglene (`play` i regelset
 - [x] Én ball per lag (foursome, greensome, chapman, scramble 2 og 4) i `RoundCompetitions` når runden spilles i lagformen; føringen gjenbruker «samme tall på hele laget». Ingen SQL.
 - [x] WHS-lagshandicap (Appendix C) som forhåndsvalg i reglene («Bruk WHS-anbefalingen»); Golfgutu uendret.
 - [x] Maksimumscore (regel 21.2, tak netto dobbel bogey eller fast, `formPlay.maximumScore` som standard) og match (to spillere eller side 1 mot side 2, `MatchPlay`-hullene, stopper når avgjort) som konkurranser i runden, appen, web-admin og TV. Ingen SQL (innstillingene ligger i `scoring` i config).
+- [x] Match med én ball per lag (foursome, greensome, chapman, scramble) som konkurranse: rundens to lag eller to valgte lag, lagets ene score, lagshandicapet fra `handicap.teamHandicap` og slagene etter `formats.matchStrokes` (WHS Appendix C), stopper når avgjort. Appen, web-admin og TV. Ingen SQL og ingen ny regelverdi. Sammenlagt match står fortsatt som ikke støttet.
 - [ ] Par/bogey-symbol (+/0/−) på hullkortet i føringen (i dag viser kortet birdie/par/bogey og stablefordpoeng).
 
 ### Fase 12–17 – Åpen app med flere bruksområder

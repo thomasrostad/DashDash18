@@ -139,7 +139,9 @@ struct CompetitionEditor: View {
 
     private var matchSection: some View {
         Section {
-            if draft.isTeamVsTeam || competition.matchIsSides {
+            if competition.isOneBallMatch {
+                oneBallMatchRows
+            } else if draft.isTeamVsTeam || competition.matchIsSides {
                 Picker("Hvem", selection: Binding(
                     get: { competition.matchIsSides },
                     set: { competition.setMatchSides($0, participants: draft.participants) }
@@ -149,7 +151,7 @@ struct CompetitionEditor: View {
                 }
                 .pickerStyle(.segmented)
             }
-            if !competition.matchIsSides {
+            if !competition.isOneBallMatch, !competition.matchIsSides {
                 ForEach([0, 1], id: \.self) { i in
                     Picker("Spiller \(i + 1)", selection: Binding(
                         get: { competition.matchPlayer(i) },
@@ -166,11 +168,57 @@ struct CompetitionEditor: View {
             if let problem = CompetitionSetup.matchProblem(competition, draft: draft) {
                 Text(problem.prefix(1).uppercased() + problem.dropFirst()).foregroundStyle(Color.ddRustText)
             } else {
-                DDFooter(competition.matchIsSides
+                DDFooter(competition.isOneBallMatch ? oneBallFooter
+                         : competition.matchIsSides
                          ? "Beste netto på hver side teller på hullet. Matchen er over når én side er flere hull opp enn det er igjen."
                          : "Hull for hull med handicapslag. Matchen er over når én er flere hull opp enn det er igjen.")
             }
         }
+    }
+
+    /// Én ball per lag: rundens to lag, eller to valgte lag.
+    @ViewBuilder
+    private var oneBallMatchRows: some View {
+        let numbers = CompetitionSetup.teamNumbers(participants: draft.participants, teams: draft.teams)
+        if numbers.count == 2 || competition.matchIsSides {
+            Picker("Hvem", selection: Binding(
+                get: { competition.matchIsSides },
+                set: { competition.setMatchSides($0, participants: draft.participants, teams: draft.teams) }
+            )) {
+                Text("Rundens to lag").tag(true)
+                Text("Velg lag").tag(false)
+            }
+            .pickerStyle(.segmented)
+        }
+        if competition.matchIsSides {
+            if numbers.count == 2 {
+                LabeledContent(teamName(numbers[0]), value: "mot \(teamName(numbers[1]))")
+            }
+        } else {
+            ForEach([0, 1], id: \.self) { i in
+                Picker("Lag \(i + 1)", selection: Binding(
+                    get: { competition.matchTeam(i, teams: draft.teams) },
+                    set: { if let n = $0 { competition.setMatchTeam(i, to: n, participants: draft.participants, teams: draft.teams) } }
+                )) {
+                    if competition.matchTeam(i, teams: draft.teams) == nil { Text("Velg").tag(Int?.none) }
+                    ForEach(numbers, id: \.self) { Text(teamName($0)).tag(Int?.some($0)) }
+                }
+            }
+        }
+    }
+
+    /// «Anders og Thomas»: spillerne på laget.
+    private func teamName(_ number: Int) -> String {
+        let ids = draft.participants.filter { draft.teams[$0] == number }
+        return ids.isEmpty ? "Lag \(number)" : ids.map(model.memberName).joined(separator: " og ")
+    }
+
+    /// Slagene i matchen følger reglene: forskjellen fra laget med lavest handicap, eller fullt.
+    private var oneBallFooter: String {
+        let strokes = model.rules.formats.matchStrokes == .fullHandicap
+            ? "Begge lag får slag etter lagshandicapet."
+            : "Laget med høyest lagshandicap får forskjellen i slag."
+        return "Lagets ene score teller på hullet. \(strokes) Matchen er over når ett lag er flere hull opp enn det er igjen."
     }
 
     // MARK: Maksimumscore

@@ -117,6 +117,8 @@ nonisolated enum RoundCompetitionBoard {
         let teams = groups(game.round.teams)
         switch axes.scoring {
         case .matchPlay:
+            // Én ball per lag: motoren tar rundens to lag (sidene kan ha flere lag hver).
+            if axes.teamForm.playsOneBall { return nil }
             let sides = TeamVsTeam.sides(game.snapshot.players)
             let one = sides.filter { $0.value == 1 }.map(\.key).sorted()
             let two = sides.filter { $0.value == 2 }.map(\.key).sorted()
@@ -143,8 +145,9 @@ nonisolated enum RoundCompetitionBoard {
         return Board.Line(rank: row.rank, players: row.players, names: names, score: score, holes: row.holes)
     }
 
-    /// Uten rader: en match mangler sidene, ellers er det ingen scorer ennå.
+    /// Uten rader: en match mangler sidene (med én ball: to lag), ellers er det ingen scorer ennå.
     static func emptyText(_ comp: RoundCompetition, isMain: Bool) -> String {
+        if comp.scoring == .matchPlay, comp.teamForm.playsOneBall, !isMain { return "Mangler to lag." }
         guard comp.scoring == .matchPlay, (comp.entrants?.count ?? 0) != 2 else { return "Ingen scorer ennå" }
         return isMain ? "Matchene i runden står i «Bayen nå»." : "Mangler to spillere eller lag mot lag."
     }
@@ -203,7 +206,12 @@ nonisolated enum RoundCompetitionBoard {
         case .pointsGame(let g): g == .amerikaner ? "Amerikaner" : "Københavner"
         case .skins: "Skins"
         }
-        let team: String? = switch axes.teamForm {
+        return [teamFormName(axes.teamForm), scoring].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    /// Lagformen som tekst: «Foursome», «Scramble 2», «Bestball i par». nil: individuelt.
+    static func teamFormName(_ teamForm: TeamForm) -> String? {
+        switch teamForm {
         case .individual: nil
         case .pairs(.fourball): "Bestball i par"
         case .pairs(.aggregate): "Sammenlagt i par"
@@ -211,7 +219,6 @@ nonisolated enum RoundCompetitionBoard {
         case .team(let n): "Bestball \(n) per lag"
         case .scramble(let n): "Scramble \(n)"
         }
-        return [team, scoring].compactMap { $0 }.joined(separator: " · ")
     }
 }
 

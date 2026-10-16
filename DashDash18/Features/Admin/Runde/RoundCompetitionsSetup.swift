@@ -27,7 +27,10 @@ nonisolated struct RoundCompetitionDraft: Equatable, Identifiable, Sendable {
     }
     var isPointsGame: Bool { if case .pointsGame = axes.scoring { true } else { false } }
     /// Match: to spillere (`entrants` [[a], [b]]), eller side 1 mot side 2 i lag mot lag (uten `entrants`).
+    /// Med én ball per lag: to av rundens lag (`entrants` med lagenes spillere), eller rundens to lag (uten).
     var isMatch: Bool { axes.scoring == .matchPlay }
+    /// Match med én ball per lag (foursome, greensome, chapman, scramble): lag mot lag med lagets ene score.
+    var isOneBallMatch: Bool { isMatch && axes.teamForm.playsOneBall }
 
     /// Spillerne som er valgt, når konkurransen ikke er for alle.
     var selectedPlayers: Set<String>? { config.entrants.map { Set($0.flatMap { $0 }) } }
@@ -50,12 +53,30 @@ nonisolated struct RoundCompetitionDraft: Equatable, Identifiable, Sendable {
         config.entrants = players.map { $0.map { [$0.uuidString] } ?? [] }
     }
 
-    /// Side 1 mot side 2 (nil), eller to spillere (de to første i lista når ingen er valgt).
-    mutating func setMatchSides(_ sides: Bool, participants: [UUID]) {
+    /// Side 1 mot side 2 (nil), eller to spillere (de to første i lista når ingen er valgt). Med én ball
+    /// per lag: rundens to lag (nil), eller to valgte lag (de to første når ingen er valgt).
+    mutating func setMatchSides(_ sides: Bool, participants: [UUID], teams: [UUID: Int] = [:]) {
         if sides {
             config.entrants = nil
         } else if config.entrants == nil {
-            config.entrants = participants.prefix(2).map { [$0.uuidString] }
+            config.entrants = isOneBallMatch
+                ? CompetitionSetup.teamNumbers(participants: participants, teams: teams).prefix(2)
+                    .map { CompetitionSetup.members(of: $0, participants: participants, teams: teams) }
+                : participants.prefix(2).map { [$0.uuidString] }
+        }
+    }
+
+    /// Lag 1 og 2 i en match med én ball: lagnummeret til den første på siden.
+    func matchTeam(_ index: Int, teams: [UUID: Int]) -> Int? {
+        matchPlayer(index).flatMap { teams[$0] }
+    }
+
+    /// Setter lag 1 eller 2 (alle på laget som er med). Det andre beholdes (eller blir tomt).
+    mutating func setMatchTeam(_ index: Int, to number: Int, participants: [UUID], teams: [UUID: Int]) {
+        var picked = [matchTeam(0, teams: teams), matchTeam(1, teams: teams)]
+        picked[index] = number
+        config.entrants = picked.map { n in
+            n.map { CompetitionSetup.members(of: $0, participants: participants, teams: teams) } ?? []
         }
     }
 
@@ -126,7 +147,8 @@ nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable
     }
 
     /// Konkurransen oppskriften gir for kladden. Maksimumscore tar taket fra regelsettet
-    /// (`formPlay.maximumScore`), og match er side 1 mot side 2 i lag mot lag, ellers de to første.
+    /// (`formPlay.maximumScore`), og match er side 1 mot side 2 i lag mot lag, ellers de to første. Spilles
+    /// runden med én ball per lag, er matchen lag mot lag i den lagformen (se `CompetitionSetup.matchConfig`).
     func make(for draft: RoundDraft, rules: Ruleset = .golfgutu) -> RoundCompetitionDraft {
         let config: CompetitionConfig = switch self {
         case .bestBallPairs:
@@ -140,9 +162,7 @@ nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable
         case .maximumScore:
             CompetitionConfig(teamForm: draft.form.axes.teamForm.playsOneBall ? draft.form.axes.teamForm : .individual,
                               scoring: .maximumScore(net: true, maxStrokes: rules.formPlay.maximumScore))
-        case .matchPlay:
-            CompetitionConfig(teamForm: .individual, scoring: .matchPlay,
-                              entrants: draft.isTeamVsTeam ? nil : draft.participants.prefix(2).map { [$0.uuidString] })
+        case .matchPlay: CompetitionSetup.matchConfig(draft)
         case .skins: CompetitionConfig(form: "skins")
         case .frontNine: CompetitionConfig(form: draft.formID, holes: HoleRange(first: 0, last: 8))
         case .backNine: CompetitionConfig(form: draft.formID, holes: HoleRange(first: 9, last: 17))
@@ -245,8 +265,50 @@ nonisolated enum CompetitionSetup {
         return nil
     }
 
-    /// Matchen trenger to forskjellige spillere som er med, eller lag mot lag med to sider.
+    /// Matchen oppskriften gir: med én ball per lag rundens to lag (nil) eller de to første lagene, ellers side
+    /// 1 mot side 2 i lag mot lag eller de to første spillerne.
+    static func matchConfig(_ draft: RoundDraft) -> CompetitionConfig {
+        let teamForm = draft.form.axes.teamForm
+        guard teamForm.playsOneBall else {
+            return CompetitionConfig(teamForm: .individual, scoring: .matchPlay,
+                                     entrants: draft.isTeamVsTeam ? nil : draft.participants.prefix(2).map { [$0.uuidString] })
+        }
+        let numbers = teamNumbers(participants: draft.participants, teams: draft.teams)
+        return CompetitionConfig(
+            teamForm: teamForm, scoring: .matchPlay,
+            entrants: numbers.count == 2 ? nil
+                : numbers.prefix(2).map { members(of: $0, participants: draft.participants, teams: draft.teams) })
+    }
+
+    /// Lagnumrene (over 0) til spillerne som er med, sortert.
+    static func teamNumbers(participants: [UUID], teams: [UUID: Int]) -> [Int] {
+        Set(participants.compactMap { teams[$0] }.filter { $0 != 0 }).sorted()
+    }
+
+    /// Spillerne på laget som er med, som id-tekster sortert (som rundens lag i motoren).
+    static func members(of team: Int, participants: [UUID], teams: [UUID: Int]) -> [String] {
+        participants.filter { teams[$0] == team }.map(\.uuidString).sorted()
+    }
+
+    /// Matchen trenger to forskjellige spillere som er med, eller lag mot lag med to sider. Med én ball per
+    /// lag: runden spilles i lagformen, og to av rundens lag (uten valg: runden har nøyaktig to lag).
     static func matchProblem(_ c: RoundCompetitionDraft, draft: RoundDraft) -> String? {
+        if c.isOneBallMatch {
+            guard draft.form.axes.teamForm == c.axes.teamForm else {
+                return "runden må spilles i \(RoundCompetitionBoard.teamFormName(c.axes.teamForm) ?? "lagformen") (én ball per lag)."
+            }
+            let numbers = teamNumbers(participants: draft.participants, teams: draft.teams)
+            if c.matchIsSides { return numbers.count == 2 ? nil : "velg to lag." }
+            let picked = [c.matchTeam(0, teams: draft.teams), c.matchTeam(1, teams: draft.teams)]
+            guard let a = picked[0], let b = picked[1], a != b, numbers.contains(a), numbers.contains(b) else {
+                return "velg to forskjellige lag."
+            }
+            for (i, n) in [a, b].enumerated()
+            where Set(c.config.entrants?[i] ?? []) != Set(members(of: n, participants: draft.participants, teams: draft.teams)) {
+                return "lagene er endret, velg lagene på nytt."
+            }
+            return nil
+        }
         if c.matchIsSides {
             let sides = Set(draft.participants.compactMap { draft.sides[$0] })
             return sides.isSuperset(of: [1, 2]) ? nil : "slå på lag mot lag, eller velg to spillere."
@@ -300,7 +362,9 @@ nonisolated enum CompetitionSetup {
             let offset = firstHole == 10 ? 10 : 1
             parts.append("hull \(h.first + offset)–\(h.last + offset)")
         }
-        if c.isMatch {
+        if c.isOneBallMatch {
+            parts.append(c.matchIsSides ? "rundens to lag" : "to lag")
+        } else if c.isMatch {
             // Katalogens navn er «Matchspill (individuelt)»; side mot side er ikke individuelt.
             if c.matchIsSides {
                 parts[0] = "Matchspill"
