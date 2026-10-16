@@ -32,6 +32,8 @@ struct HjemFeedTabPicker: View {
 /// «Følger»: ferdige runder fra dem du følger, og dine egne, nyeste først.
 struct FollowingFeedView: View {
     @State var model: FollowingFeedModel
+    /// «Klubben/Følger» øverst i innholdet, som på Hjem. nil: ingen velger.
+    var tabPicker: Binding<HjemFeedTab>?
     /// Kortet «Legg til venner» øverst (Hjem). Av der lista åpnes fra Deg → Følger.
     var showsAddFriends = true
     @State private var addFriends: FollowAddFriendsModel?
@@ -40,6 +42,9 @@ struct FollowingFeedView: View {
 
     var body: some View {
         ScrollView {
+            if let tabPicker {
+                HjemFeedTabPicker(tab: tabPicker)
+            }
             LazyVStack(alignment: .leading, spacing: DDSpacing.cardGap) {
                 switch model.state {
                 case .loading where model.cards.isEmpty:
