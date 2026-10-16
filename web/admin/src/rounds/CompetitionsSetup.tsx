@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { formById } from "../../../golfgutu-core/src/index.ts";
 import {
-  competitionIssues, competitionSummary, MAX_COMPETITIONS, recipeDraft, recipesFor, setSide, sideProblem,
+  axesOf, competitionIssues, competitionSummary, MAX_COMPETITIONS, maxStrokesOf, recipeDraft, recipesFor, setSide, sideProblem, withMaxStrokes,
   type CompetitionContext, type CompetitionDraft, type EntrantMode, type HolesChoice, type RecipeID, type Side,
 } from "./competitions.ts";
 
@@ -45,7 +45,13 @@ export function CompetitionsCard({ list, ctx, name, onChange }: {
 function CompetitionDetails({ d, ctx, name, onChange }: {
   d: CompetitionDraft; ctx: CompetitionContext; name: (id: string) => string; onChange: (d: CompetitionDraft) => void;
 }) {
-  const entrantChoices: { value: EntrantMode; title: string }[] = [
+  const scoring = axesOf(d).scoring;
+  const isMatch = scoring.type === "matchPlay";
+  const cap = maxStrokesOf(d);
+  const entrantChoices: { value: EntrantMode; title: string }[] = isMatch ? [
+    { value: "selected", title: "To valgte spillere" },
+    { value: "sides", title: "Side 1 mot side 2 (lag mot lag)" },
+  ] : [
     { value: "all", title: "Alle" },
     { value: "selected", title: "Valgte spillere" },
     { value: "teams", title: "Parene (lagene, ellers to og to i båsen)" },
@@ -55,7 +61,7 @@ function CompetitionDetails({ d, ctx, name, onChange }: {
     <fieldset>
       <label>Navn<input value={d.name} maxLength={60} onChange={(e) => onChange({ ...d, name: e.target.value })} /></label>
       <label>Hvem er med
-        <select value={d.entrants} onChange={(e) => onChange({ ...d, entrants: e.target.value as EntrantMode })}>
+        <select value={isMatch && d.entrants === "all" ? "sides" : d.entrants} onChange={(e) => onChange({ ...d, entrants: e.target.value as EntrantMode })}>
           {entrantChoices.map((c) => <option key={c.value} value={c.value}>{c.title}</option>)}
         </select>
       </label>
@@ -65,6 +71,23 @@ function CompetitionDetails({ d, ctx, name, onChange }: {
             <label key={id} className="check"><input type="checkbox" checked={d.selected.includes(id)}
               onChange={(e) => onChange({ ...d, selected: e.target.checked ? [...d.selected, id] : d.selected.filter((x) => x !== id) })} />{name(id)}</label>
           ))}
+        </div>
+      )}
+      {scoring.type === "maximumScore" && (
+        <div className="inline">
+          <label>Tak per hull
+            <select value={cap?.type === "fixed" ? "fixed" : "rules"}
+              onChange={(e) => onChange(withMaxStrokes(d, e.target.value === "fixed" ? { type: "fixed", strokes: 8 } : null))}>
+              <option value="rules">Som regelsettet (standard netto dobbel bogey)</option>
+              <option value="fixed">Fast antall slag</option>
+            </select>
+          </label>
+          {cap?.type === "fixed" && (
+            <label className="check">Slag
+              <input type="number" min={3} max={20} step={1} value={cap.strokes}
+                onChange={(e) => onChange(withMaxStrokes(d, { type: "fixed", strokes: Math.max(3, Math.min(20, Math.round(Number(e.target.value) || 3))) }))} />
+            </label>
+          )}
         </div>
       )}
       <label>Hull

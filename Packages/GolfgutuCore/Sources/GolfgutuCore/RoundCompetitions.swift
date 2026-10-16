@@ -56,8 +56,10 @@ public struct RoundCompetitionResult: Hashable, Sendable {
         /// Plassen. Like deler plass (1, 1, 3).
         public var rank: Int
         /// Verdien per regnet hull (rundens 0-baserte hull): poeng, slag eller par/bogey (+1, 0, −1).
-        /// Bare for stableford, slagspill og par/bogey.
+        /// Bare for stableford, slagspill, par/bogey, maksimumscore og match (+1 vunnet, 0 delt, −1 tapt).
         public var holeValues: [Int: Double] = [:]
+        /// Match: stillingen sett fra raden (siden). `score` er hull opp (negativt = ned).
+        public var match: MatchStanding? = nil
     }
 
     public var id: String
@@ -84,8 +86,15 @@ public enum RoundCompetitions {
     ///   delt og tapt. Når runden er ferdig, er et hull uten score tapt (21.3b);
     /// - skins (individuelt, alle hull): rundespillet med `formPlay.skins`;
     /// - Amerikaner og Københavner (individuelt): `PointsGame` per gruppe.
-    /// Ikke ennå (`supported == false`): maksimumscore og matchspill (matchene regnes av `MatchPlay`), og
-    /// én ball per lag når runden ikke spilles i den lagformen (scorene er da hver spillers egne).
+    /// - maksimumscore (regel 21.2): slagspill der hvert hull kappes til taket (`play.maxStrokes`-typen:
+    ///   netto dobbel bogey eller et fast tall; konkurransens eget, ellers `formPlay.maximumScore`).
+    ///   Netto dobbel bogey regnes med slagene fra konkurransens andel, også i brutto. Hull uten score
+    ///   som i slagspill: de teller ikke, og flest hull står først;
+    /// - match (to sider, `entrants` med to lister): hull for hull med `MatchPlay` (slagene som rundens
+    ///   matcher: `formats.matchStrokes`, beste netto på siden). Matchen er over når en side er flere hull
+    ///   opp enn det er igjen (regel 3.2a(3)); hullene etter teller ikke. Stillingen står i `Row.match`.
+    /// Ikke ennå (`supported == false`): én ball per lag når runden ikke spilles i den lagformen (scorene er
+    /// da hver spillers egne), match med én ball per lag eller sammenlagt, og skins og poengspill i lag.
     public static func evaluate(_ round: Round, roster: [Player], competitions: [RoundCompetition],
                                 rules: Ruleset) -> [RoundCompetitionResult] {
         competitions.map { evaluate($0, round: round, roster: roster, rules: rules) }
@@ -101,9 +110,9 @@ public enum RoundCompetitions {
     /// spilles i lagformen (se `evaluate`).
     public static func supports(_ axes: FormAxes) -> Bool {
         switch axes.scoring {
-        case .stableford, .strokePlay, .parBogey: true
+        case .stableford, .strokePlay, .parBogey, .maximumScore: true
         case .skins, .pointsGame: axes.teamForm == .individual
-        case .maximumScore, .matchPlay: false
+        case .matchPlay: !axes.teamForm.playsOneBall && axes.teamForm != .pairs(.aggregate)
         }
     }
 
@@ -113,8 +122,11 @@ public enum RoundCompetitions {
         let scored = FormPlay.scoredPlayers(round)
 
         switch comp.scoring {
-        case .stableford, .strokePlay, .parBogey:
+        case .stableford, .strokePlay, .parBogey, .maximumScore:
             return holeByHole(comp, round: round, roster: roster, rules: rules, scored: scored) ?? unsupported
+
+        case .matchPlay:
+            return matchPlay(comp, round: round, roster: roster, rules: rules)
 
         case .skins:
             guard comp.holes == nil else { return unsupported }
@@ -136,9 +148,6 @@ public enum RoundCompetitions {
                 rows += group.map { .init(players: [$0], score: r.totals[$0] ?? 0, holes: done, rank: 0) }
             }
             return ranked(comp.id, rows, higherIsBetter: true, byHoles: false)
-
-        case .maximumScore, .matchPlay:
-            return unsupported
         }
     }
 
@@ -150,7 +159,7 @@ public enum RoundCompetitions {
             .filter { team in team.contains { !(round.holeScores[$0] ?? [:]).isEmpty } }
     }
 
-    /// Stableford, slagspill og par/bogey hull for hull. `nil` når én ball per lag ikke kan regnes
+    /// Stableford, slagspill, par/bogey og maksimumscore hull for hull. `nil` når én ball per lag ikke kan regnes
     /// (runden spilles ikke i lagformen, eller et lag er ikke ett av rundens lag).
     static func holeByHole(_ comp: RoundCompetition, round: Round, roster: [Player], rules: Ruleset,
                            scored: [String]) -> RoundCompetitionResult? {
@@ -169,13 +178,20 @@ public enum RoundCompetitions {
 
         let net: Bool
         switch comp.scoring {
-        case .stableford(let n), .strokePlay(let n): net = n
+        case .stableford(let n), .strokePlay(let n), .maximumScore(let n, _): net = n
         default: net = true
         }
         let ctx = GameContext(setup: GameSetup(settings: .skins(.standard), players: entrants.flatMap { $0 }), round: round,
                               roster: roster, rules: rules)
         let hcp = ctx.handicaps(GameHandicap(net: net, allowance: comp.allowance ?? 1, fromLowest: false))
         let parBogey = rules.formPlay.parBogey
+        // Maksimumscore: taket, og slagene fått som taket regnes med (konkurransens andel, også i brutto).
+        var cap: Ruleset.MaxStrokes?
+        var capHandicaps: [String: Int] = [:]
+        if case .maximumScore(_, let own) = comp.scoring {
+            cap = own ?? rules.formPlay.maximumScore
+            capHandicaps = ctx.handicaps(GameHandicap(net: true, allowance: comp.allowance ?? 1, fromLowest: false))
+        }
 
         var rows: [RoundCompetitionResult.Row] = []
         for team in entrants {
@@ -195,6 +211,12 @@ public enum RoundCompetitions {
                     values = ctx.isFinal
                         ? nets.map { ParBogey.holeValue(net: $0, par: par, rules: parBogey) }
                         : nets.compactMap { $0 }.map { ParBogey.holeValue(net: $0, par: par, rules: parBogey) }
+                case .maximumScore:
+                    values = balls.compactMap { p in
+                        guard let gross = ctx.gross(p, h) else { return nil }
+                        let limit = cap?.limit(par: par, strokesReceived: ctx.strokes(p, h, handicaps: capHandicaps))
+                        return Double(min(gross, limit ?? gross) - ctx.strokes(p, h, handicaps: hcp))
+                    }
                 default:
                     values = nets.compactMap { $0 }.map(Double.init)
                 }
@@ -211,6 +233,51 @@ public enum RoundCompetitions {
         }
         let higher = comp.scoring.higherIsBetter
         return ranked(comp.id, rows, higherIsBetter: higher, byHoles: !higher)
+    }
+
+    /// Match mellom to sider (`entrants`: to lister, én spiller eller flere med beste ball) med
+    /// `MatchPlay`: handicapet er spillehandicapet i runden, med konkurransens andel (rundet som JS) når den
+    /// er satt, og slagene som i rundens matcher (`formats.matchStrokes`). Hullene tas i rundens rekkefølge,
+    /// og matchen stopper når en side er flere hull opp enn det er igjen. Uten to sider: ingen rader.
+    static func matchPlay(_ comp: RoundCompetition, round: Round, roster: [Player], rules: Ruleset) -> RoundCompetitionResult {
+        let sides = (comp.entrants ?? []).filter { !$0.isEmpty }
+        guard sides.count == 2, Set(sides[0]).isDisjoint(with: sides[1]) else {
+            return RoundCompetitionResult(id: comp.id, supported: true, rows: [])
+        }
+        let (a, b) = (sides[0], sides[1])
+        var handicaps: [String: Double] = [:]
+        for p in a + b {
+            // Som `GameContext.handicaps`: uten troppen (øyeblikksbildet) er det frosne handicapet spillerens.
+            let own = Handicap.effective(for: roster.first { $0.id == p } ?? Player(id: p), in: round,
+                                         roster: roster, rules: rules)
+            handicaps[p] = comp.allowance.map { JS.round(own * $0) } ?? own
+        }
+        let handicap: (String) -> Double = { handicaps[$0] ?? 0 }
+        let offset = MatchPlay.strokeOffset(a: a, b: b, rules: rules, handicap: handicap)
+        let count = min(Truncation.countingHoles(round), round.courseHoles().count)
+        let holes = (0..<count).filter { comp.holes?.range.contains($0) ?? true }
+
+        var up = 0, played = 0
+        var perHole: [Int: Double] = [:]
+        for h in holes {
+            if played > 0, abs(up) > holes.count - played { break }
+            guard let v = MatchPlay.holeWinner(a: a, b: b, hole: h, offset: offset, in: round, handicap: handicap) else { continue }
+            played += 1
+            up += v
+            perHole[h] = Double(v)
+        }
+        let remaining = holes.count - played
+        func standing(_ mine: Int, _ opponents: [String]) -> MatchStanding {
+            MatchStanding(up: mine, played: played, remaining: remaining,
+                          decided: abs(mine) > remaining && played > 0, opponents: opponents)
+        }
+        let rows = [
+            RoundCompetitionResult.Row(players: a, score: Double(up), holes: played, rank: 0, holeValues: perHole,
+                                       match: standing(up, b)),
+            RoundCompetitionResult.Row(players: b, score: Double(-up), holes: played, rank: 0,
+                                       holeValues: perHole.mapValues { 0 - $0 }, match: standing(-up, a)),
+        ]
+        return ranked(comp.id, rows, higherIsBetter: true, byHoles: false)
     }
 
     /// Sorterer og gir plass. Med `byHoles` står de med flest hull først (slagspill).

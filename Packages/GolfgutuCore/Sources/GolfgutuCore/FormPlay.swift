@@ -80,15 +80,23 @@ public struct FormPlayRules: Hashable, Sendable {
     public var teamMatch: Ruleset.MatchPoints
     /// Par/bogey: verdien av et vunnet, delt og tapt hull mot banen. Standard +1 / 0 / −1 (regel 21.3).
     public var parBogey: ParBogeyRules
+    /// Maksimumscore: taket per hull når konkurransen ikke har sitt eget. Standard netto dobbel bogey
+    /// (par + 2 + slagene fått på hullet), som WHS bruker (regel 21.2 lar komiteen velge).
+    public var maximumScore: Ruleset.MaxStrokes
 
     public init(pointsGames: [String: PointsGameRules], skins: SkinsRules, skinPoints: Double,
-                teamMatch: Ruleset.MatchPoints, parBogey: ParBogeyRules = .standard) {
+                teamMatch: Ruleset.MatchPoints, parBogey: ParBogeyRules = .standard,
+                maximumScore: Ruleset.MaxStrokes = FormPlayRules.standardMaximumScore) {
         self.pointsGames = pointsGames
         self.skins = skins
         self.skinPoints = skinPoints
         self.teamMatch = teamMatch
         self.parBogey = parBogey
+        self.maximumScore = maximumScore
     }
+
+    /// Taket i maksimumscore når regelsettet ikke sier noe: netto dobbel bogey.
+    public static let standardMaximumScore = Ruleset.MaxStrokes.netDoubleBogey
 
     /// Standarden: NGF-poengene, skins som rundespillet med 1 tabellpoeng per skin, og 1 / ½ / 0 per
     /// match i lag mot lag (som Ryder Cup).
@@ -106,7 +114,7 @@ public struct FormPlayRules: Hashable, Sendable {
 }
 
 extension FormPlayRules: Codable {
-    private enum CodingKeys: String, CodingKey { case pointsGames, skins, skinPoints, teamMatch, parBogey }
+    private enum CodingKeys: String, CodingKey { case pointsGames, skins, skinPoints, teamMatch, parBogey, maximumScore }
     private enum GameKeys: String, CodingKey { case players, handicap, points }
 
     public init(from decoder: Decoder) throws {
@@ -130,6 +138,7 @@ extension FormPlayRules: Codable {
         skinPoints = try c.decodeIfPresent(Double.self, forKey: .skinPoints) ?? s.skinPoints
         teamMatch = try c.decodeIfPresent(Ruleset.MatchPoints.self, forKey: .teamMatch) ?? s.teamMatch
         parBogey = try c.decodeIfPresent(ParBogeyRules.self, forKey: .parBogey) ?? s.parBogey
+        maximumScore = try c.decodeIfPresent(Ruleset.MaxStrokes.self, forKey: .maximumScore) ?? s.maximumScore
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -140,6 +149,7 @@ extension FormPlayRules: Codable {
         try c.encode(teamMatch, forKey: .teamMatch)
         // Skrives bare når den ikke er standard, så JSON-en for eldre regelsett er som før.
         if parBogey != .standard { try c.encode(parBogey, forKey: .parBogey) }
+        if maximumScore != Self.standardMaximumScore { try c.encode(maximumScore, forKey: .maximumScore) }
     }
 }
 

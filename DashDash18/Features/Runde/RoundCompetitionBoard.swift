@@ -51,6 +51,8 @@ nonisolated enum RoundCompetitionBoard {
         /// `false`: «Ikke støttet ennå».
         var supported: Bool
         var lines: [Line]
+        /// Teksten når det ikke er noen rader.
+        var emptyText = "Ingen scorer ennå"
     }
 
     static let unsupportedText = "Ikke støttet ennå"
@@ -72,9 +74,10 @@ nonisolated enum RoundCompetitionBoard {
             let supported = comp != nil && (result?.supported ?? false)
             return Board(
                 id: row.id.uuidString, name: row.name, isMain: row.isMain,
-                detail: comp.map { detail($0, holeCount: game.holeCount, firstHole: s.round.firstHole) } ?? "",
+                detail: comp.map { detail($0, holeCount: game.holeCount, firstHole: s.round.firstHole, rules: frozen.ruleset) } ?? "",
                 supported: supported,
-                lines: supported ? (result?.rows ?? []).map { line($0, scoring: comp!.scoring, game: game) } : []
+                lines: supported ? (result?.rows ?? []).map { line($0, scoring: comp!.scoring, game: game) } : [],
+                emptyText: comp.map { emptyText($0, isMain: row.isMain) } ?? "Ingen scorer ennå"
             )
         }
     }
@@ -108,10 +111,16 @@ nonisolated enum RoundCompetitionBoard {
     }
 
     /// Lagene eller gruppene når konkurransen ikke har egne: rundens lag i lagformer; i Amerikaner og
-    /// Københavner rundens lag (lagnummeret er flighten, som `FormPlay.groups`), ellers båsene.
+    /// Københavner rundens lag (lagnummeret er flighten, som `FormPlay.groups`), ellers båsene. Match:
+    /// side 1 mot side 2 i lag mot lag (`round_players.side`).
     static func defaultEntrants(_ axes: FormAxes, game: RoundGame) -> [[String]]? {
         let teams = groups(game.round.teams)
         switch axes.scoring {
+        case .matchPlay:
+            let sides = TeamVsTeam.sides(game.snapshot.players)
+            let one = sides.filter { $0.value == 1 }.map(\.key).sorted()
+            let two = sides.filter { $0.value == 2 }.map(\.key).sorted()
+            return one.isEmpty || two.isEmpty ? nil : [one, two]
         case .pointsGame:
             if !teams.isEmpty { return teams }
             let bays = game.bays.keys.sorted().compactMap { game.bays[$0]?.players.map(\.uuidString) }
@@ -129,15 +138,31 @@ nonisolated enum RoundCompetitionBoard {
 
     static func line(_ row: RoundCompetitionResult.Row, scoring: ScoringMethod, game: RoundGame) -> Board.Line {
         let names = row.players.map { UUID(uuidString: $0).map(game.name) ?? "Ukjent" }.joined(separator: " og ")
-        return Board.Line(rank: row.rank, players: row.players, names: names,
-                          score: scoreText(row.score, scoring: scoring), holes: row.holes)
+        // Match: stillingen sett fra raden («2 opp etter 6», «Delt etter 5», «Vunnet 3&2»).
+        let score = row.match.map { MatchPlay.text($0) } ?? scoreText(row.score, scoring: scoring)
+        return Board.Line(rank: row.rank, players: row.players, names: names, score: score, holes: row.holes)
+    }
+
+    /// Uten rader: en match mangler sidene, ellers er det ingen scorer ennå.
+    static func emptyText(_ comp: RoundCompetition, isMain: Bool) -> String {
+        guard comp.scoring == .matchPlay, (comp.entrants?.count ?? 0) != 2 else { return "Ingen scorer ennå" }
+        return isMain ? "Matchene i runden står i «Bayen nå»." : "Mangler to spillere eller lag mot lag."
+    }
+
+    /// Taket i maksimumscore: «tak netto dobbel bogey» eller «tak 8 slag».
+    static func capText(_ cap: Ruleset.MaxStrokes) -> String {
+        switch cap {
+        case .off: "uten tak"
+        case .netDoubleBogey: "tak netto dobbel bogey"
+        case .fixed(let n): "tak \(n) slag"
+        }
     }
 
     /// «34 p», «72 slag», «3 skins», og par/bogey med fortegn: «+3», «0», «−2».
     static func scoreText(_ score: Double, scoring: ScoringMethod) -> String {
         let number = RuleFormat.number(score)
         switch scoring {
-        case .strokePlay: return "\(number) slag"
+        case .strokePlay, .maximumScore: return "\(number) slag"
         case .skins: return score == 1 ? "1 skin" : "\(number) skins"
         case .parBogey: return signedText(score)
         default: return "\(number) p"
@@ -152,9 +177,12 @@ nonisolated enum RoundCompetitionBoard {
         return number
     }
 
-    /// Formen, hullene og andelen i én linje.
-    static func detail(_ comp: RoundCompetition, holeCount: Int, firstHole: Int) -> String {
+    /// Formen, taket (maksimumscore), hullene og andelen i én linje.
+    static func detail(_ comp: RoundCompetition, holeCount: Int, firstHole: Int, rules: Ruleset? = nil) -> String {
         var parts = [formName(FormAxes(teamForm: comp.teamForm, scoring: comp.scoring))]
+        if case .maximumScore(_, let own) = comp.scoring, let cap = own ?? rules?.formPlay.maximumScore {
+            parts.append(capText(cap))
+        }
         if let h = comp.holes, h.first > 0 || h.last < holeCount - 1 {
             let offset = firstHole == 10 ? 10 : 1
             parts.append("hull \(h.first + offset)–\(h.last + offset)")
@@ -170,7 +198,7 @@ nonisolated enum RoundCompetitionBoard {
         case .stableford(let net): net ? "Stableford" : "Stableford brutto"
         case .strokePlay(let net): net ? "Slag netto" : "Slag brutto"
         case .parBogey: "Par/bogey"
-        case .maximumScore: "Maksimumscore"
+        case .maximumScore(let net, _): net ? "Maksimumscore" : "Maksimumscore brutto"
         case .matchPlay: "Match"
         case .pointsGame(let g): g == .amerikaner ? "Amerikaner" : "Københavner"
         case .skins: "Skins"

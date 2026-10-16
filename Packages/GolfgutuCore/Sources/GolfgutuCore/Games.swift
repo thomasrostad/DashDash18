@@ -748,11 +748,16 @@ struct GameContext {
         round.holeScores[p]?[hole]
     }
 
+    /// Slagene spilleren får på hullet.
+    func strokes(_ p: String, _ hole: Int, handicaps: [String: Int]) -> Int {
+        Scoring.handicapStrokes(handicap: Double(handicaps[p] ?? 0), strokeIndex: holes[hole].strokeIndex,
+                                holes: round.numberOfHoles)
+    }
+
     /// Netto på hullet, eller `nil` uten score.
     func net(_ p: String, _ hole: Int, handicaps: [String: Int]) -> Int? {
         guard let g = gross(p, hole) else { return nil }
-        return g - Scoring.handicapStrokes(handicap: Double(handicaps[p] ?? 0), strokeIndex: holes[hole].strokeIndex,
-                                            holes: round.numberOfHoles)
+        return g - strokes(p, hole, handicaps: handicaps)
     }
 
     /// Stablefordpoeng på hullet med rundens regelsett, eller `nil` uten score.

@@ -1,4 +1,4 @@
-import { competitionScoreText, type CompetitionBoard, type RyderCupResult } from "../../../golfgutu-core/src/index.ts";
+import { competitionRowText, competitionScoreText, type CompetitionBoard, type RyderCupResult } from "../../../golfgutu-core/src/index.ts";
 
 /** «Konkurranser» på rundens side (sql/048): hver konkurranse med resultatlista, og lag mot lag. */
 export function CompetitionsView({ boards, team, name, reconstructed }: {
@@ -26,7 +26,7 @@ export function CompetitionsView({ boards, team, name, reconstructed }: {
             : b.rows.length === 0 ? <p className="muted small">Ingen resultater ennå</p> : (
               <ul className="plain">
                 {b.rows.slice(0, 10).map((r) => (
-                  <li key={r.players.join(",")}>{r.rank}. {r.players.map(name).join(" og ")} <strong>{competitionScoreText(r.score, b.signed)}</strong>
+                  <li key={r.players.join(",")}>{r.rank}. {r.players.map(name).join(" og ")} <strong>{competitionRowText(b, r)}</strong>
                     {!b.higherIsBetter && <span className="muted small"> slag · {r.holes} hull</span>}</li>
                 ))}
               </ul>

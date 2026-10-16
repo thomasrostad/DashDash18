@@ -172,6 +172,11 @@ export function validateRuleset(r: Ruleset): RulesetIssue[] {
   if (![pb.win, pb.halve, pb.loss].every(Number.isFinite) || pb.win < pb.halve || pb.halve < pb.loss) {
     add("formPlay.parBogey", "Par/bogey: vunnet hull må gi minst like mye som delt, og delt minst like mye som tapt.");
   }
+  const ms = r.formPlay.maximumScore;
+  if (ms.type === "off") add("formPlay.maximumScore", "Maksimumscore må ha et tak per hull.");
+  else if (ms.type === "fixed" && !(Number.isInteger(ms.strokes) && ms.strokes >= MAX_STROKES_FIXED[0] && ms.strokes <= MAX_STROKES_FIXED[1])) {
+    add("formPlay.maximumScore", `Taket i maksimumscore må være fra ${MAX_STROKES_FIXED[0]} til ${MAX_STROKES_FIXED[1]} slag.`);
+  }
 
   // Tippekupongen.
   const t = r.tips;

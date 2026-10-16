@@ -68,11 +68,16 @@ export class GameContext {
     return this.round.holeScores.get(p)?.get(hole) ?? null;
   }
 
+  /** Slagene spilleren får på hullet. */
+  strokes(p: string, hole: number, hcp: ReadonlyMap<string, number>): number {
+    return handicapStrokes(hcp.get(p) ?? 0, this.holes[hole].strokeIndex, numberOfHoles(this.round));
+  }
+
   /** Netto på hullet, eller `null` uten score. */
   net(p: string, hole: number, hcp: ReadonlyMap<string, number>): number | null {
     const g = this.gross(p, hole);
     if (g === null) return null;
-    return g - handicapStrokes(hcp.get(p) ?? 0, this.holes[hole].strokeIndex, numberOfHoles(this.round));
+    return g - this.strokes(p, hole, hcp);
   }
 
   /** Hullet kan regnes: alle har ført det, eller runden er ferdig. */

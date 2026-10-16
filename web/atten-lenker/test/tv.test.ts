@@ -174,6 +174,30 @@ test("TV med flere konkurranser og lag mot lag (sql/048): små paneler ved siden
   assert.match(tvBoardPage("ABCDEFGHJK", "n"), /id="extras"/);
 });
 
+test("TV med maksimumscore og match som konkurranser: slag og stillingen, side 1 mot side 2 fra lag mot lag", () => {
+  const season = fixture.sesonger[0];
+  const competition = { name: season.name, season_id: season.id, club_id: season.club_id, status: season.status, rules: season.rules, club_name: null };
+  const round = "00000000-0000-0000-0000-000000000105";
+  const players = fixture.tavlaData.players.map((p: { round_id: string }, i: number) => (p.round_id === round ? { ...p, side: i % 2 === 0 ? 1 : 2 } : p));
+  const comp = (n: number, name: string, isMain: boolean, config: Record<string, unknown>) =>
+    ({ id: `77777777-7777-7777-7777-77777777777${n}`, round_id: round, name, is_main: isMain, format_version: 1, config, sort_order: n });
+  const board = {
+    ...fixture.tavlaData, competition, players,
+    round_competitions: [
+      comp(0, "Stableford", true, { form: "stableford" }),
+      comp(1, "Maks", false, { form: "maks-score" }),
+      comp(2, "Lagmatch", false, { teamForm: { type: "individual" }, scoring: { type: "matchPlay" } }),
+    ],
+  };
+  const tv = buildTVPayload(board);
+  assert.deepEqual(tv.extras.map((e) => e.title), ["Maks", "Lagmatch"]);
+  assert.ok(tv.extras[0].lines.length > 0);
+  for (const l of tv.extras[0].lines) assert.match(l.score, /^\d+$/);
+  // To rader, én per side, med stillingen som tekst.
+  assert.equal(tv.extras[1].lines.length, 2);
+  for (const l of tv.extras[1].lines) assert.match(l.score, /opp|ned|Delt|Vunnet|Tapt|Ikke startet/);
+});
+
 test("TV-sidene", async () => {
   const home = await handle(new Request("https://dashdash18.com/tv"));
   assert.equal(home.status, 200);

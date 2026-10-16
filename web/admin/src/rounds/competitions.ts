@@ -3,7 +3,7 @@
 
 import {
   competitionBoards, formAxes, formById, frozenFromRows, sidesFromRaw, teamMatchResult,
-  type CompetitionBoard, type RyderCupResult, type ScoringMethod, type SnapshotFields, type StoredCompetition, type TeamForm,
+  type CompetitionBoard, type MaxStrokes, type RyderCupResult, type ScoringMethod, type SnapshotFields, type StoredCompetition, type TeamForm,
 } from "../../../golfgutu-core/src/index.ts";
 import type { RoundGame } from "./game.ts";
 
@@ -18,12 +18,33 @@ export type EntrantMode =
   /** Rundens lag (par), eller par i båsene når runden ikke har lag. */
   | "teams"
   /** Grupper: rundens lag, ellers båsene (Amerikaner og Københavner). */
-  | "groups";
+  | "groups"
+  /** Match: side 1 mot side 2 i lag mot lag (utelatt i config; sidene leses fra round_players.side). */
+  | "sides";
+
+/** Maksimumscore: konkurransens eget tak, ellers `null` (regelsettets `formPlay.maximumScore`). */
+export function maxStrokesOf(d: CompetitionDraft): MaxStrokes | null {
+  const s = axesOf(d).scoring;
+  return s.type === "maximumScore" ? s.maxStrokes ?? null : null;
+}
+
+/** Maksimumscore med eget tak (eller regelsettets, `null`). Formen blir aksene. */
+export function withMaxStrokes(d: CompetitionDraft, cap: MaxStrokes | null): CompetitionDraft {
+  const a = axesOf(d);
+  if (a.scoring.type !== "maximumScore") return d;
+  if (cap === null) return { ...d, form: "maks-score", teamForm: null, scoring: null };
+  return { ...d, form: null, teamForm: a.teamForm, scoring: { type: "maximumScore", net: a.scoring.net, maxStrokes: cap } };
+}
+
+/** «tak netto dobbel bogey» eller «tak 8 slag». */
+export function capText(cap: MaxStrokes): string {
+  return cap.type === "fixed" ? `tak ${cap.strokes} slag` : cap.type === "netDoubleBogey" ? "tak netto dobbel bogey" : "uten tak";
+}
 
 /** Hullene som teller. `back` bare på 18 hull. */
 export type HolesChoice = "all" | "front" | "back";
 
-export type RecipeID = "bestball" | "skins" | "front" | "back" | "amerikaner" | "kobenhavner";
+export type RecipeID = "bestball" | "maks" | "match" | "skins" | "front" | "back" | "amerikaner" | "kobenhavner";
 
 export interface CompetitionDraft {
   /** Raden i round_competitions, eller null for en ny. */
@@ -45,6 +66,8 @@ export const MAX_COMPETITIONS = 10;
 /** Oppskriftene i «Legg til». */
 export const RECIPES: readonly { id: RecipeID; name: string; help: string }[] = [
   { id: "bestball", name: "Bestball i par", help: "Beste netto på hullet teller for paret." },
+  { id: "maks", name: "Maksimumscore", help: "Slagspill med tak per hull (netto dobbel bogey eller fast antall)." },
+  { id: "match", name: "Match", help: "To spillere, eller side 1 mot side 2, hull for hull." },
   { id: "skins", name: "Skins", help: "Hvert hull er ett skin. Likt gjør at det går videre." },
   { id: "front", name: "Første ni", help: "Samme form, bare hull 1–9." },
   { id: "back", name: "Siste ni", help: "Samme form, bare hull 10–18." },
@@ -61,6 +84,10 @@ export function recipeDraft(id: RecipeID, mainForm: string): CompetitionDraft {
   switch (id) {
     case "bestball":
       return { ...base, teamForm: { type: "pairs", pairs: "fourball" }, scoring: { type: "strokePlay", net: true }, entrants: "teams" };
+    case "maks":
+      return { ...base, form: "maks-score" };
+    case "match":
+      return { ...base, teamForm: { type: "individual" }, scoring: { type: "matchPlay" }, entrants: "selected" };
     case "skins":
       return { ...base, form: "skins" };
     case "front":
@@ -85,6 +112,8 @@ export interface CompetitionContext {
   bays: readonly { memberID: UUID; bay: number; isMarker: boolean }[];
   holeCount: number;
   mainForm: string;
+  /** Lag mot lag: side 1 eller 2 per spiller. */
+  sides?: Readonly<Record<UUID, number>>;
 }
 
 function grouped(ids: readonly UUID[], key: (id: UUID) => number | undefined): UUID[][] {
@@ -120,7 +149,7 @@ export function groupsFor(ctx: CompetitionContext): UUID[][] {
   return grouped(ctx.participants, (id) => ctx.bays.find((s) => s.memberID === id)?.bay);
 }
 
-function axesOf(d: CompetitionDraft): { teamForm: TeamForm; scoring: ScoringMethod } {
+export function axesOf(d: CompetitionDraft): { teamForm: TeamForm; scoring: ScoringMethod } {
   if (d.form) return formAxes(formById(d.form));
   return { teamForm: d.teamForm ?? { type: "individual" }, scoring: d.scoring ?? { type: "stableford", net: true } };
 }
@@ -147,7 +176,8 @@ export function competitionConfig(d: CompetitionDraft, ctx: CompetitionContext, 
   const { teamForm, scoring } = axesOf(d);
   let entrants: UUID[][] | null = null;
   switch (d.entrants) {
-    case "all": entrants = null; break;
+    case "all":
+    case "sides": entrants = null; break;
     case "teams": entrants = pairsFor(ctx); break;
     case "groups": entrants = groupsFor(ctx); break;
     case "selected": {
@@ -187,6 +217,15 @@ export function competitionIssues(list: readonly CompetitionDraft[], ctx: Compet
     if (d.entrants === "selected" && d.selected.filter((id) => ctx.participants.includes(id)).length === 0) out.push(`${label}: velg minst én spiller.`);
     if (d.entrants === "teams" && pairsFor(ctx).every((p) => p.length < 2)) out.push(`${label}: sett lag først.`);
     if (d.allowance !== null && (d.allowance < 0 || d.allowance > 1)) out.push(`${label}: andelen må være 0–100 %.`);
+    if (axesOf(d).scoring.type === "matchPlay") {
+      if (d.entrants === "selected" && new Set(d.selected.filter((id) => ctx.participants.includes(id))).size !== 2) out.push(`${label}: velg to spillere.`);
+      if (d.entrants !== "selected") {
+        const sides = Object.entries(ctx.sides ?? {}).filter(([id]) => ctx.participants.includes(id)).map(([, s]) => s);
+        if (!sides.includes(1) || !sides.includes(2)) out.push(`${label}: side 1 mot side 2 krever lag mot lag med to sider.`);
+      }
+    }
+    const cap = maxStrokesOf(d);
+    if (cap?.type === "fixed" && !(Number.isInteger(cap.strokes) && cap.strokes >= 3 && cap.strokes <= 20)) out.push(`${label}: taket må være 3–20 slag.`);
   }
   return [...new Set(out)];
 }
@@ -212,7 +251,8 @@ export function draftFromStored(c: StoredCompetition): CompetitionDraft {
   const scoring = (cfg.scoring ?? null) as ScoringMethod | null;
   const axes = form ? formAxes(formById(form)) : { teamForm: teamForm ?? { type: "individual" } as TeamForm, scoring: scoring ?? { type: "stableford", net: true } as ScoringMethod };
   const raw = Array.isArray(cfg.entrants) ? (cfg.entrants as unknown[]).filter(Array.isArray).map((g) => (g as unknown[]).map(String)) : null;
-  const entrants: EntrantMode = raw === null ? "all"
+  const entrants: EntrantMode = raw === null ? (axes.scoring.type === "matchPlay" ? "sides" : "all")
+    : axes.scoring.type === "matchPlay" && axes.teamForm.type === "individual" ? "selected"
     : isSideForm(axes.teamForm) ? "teams"
       : axes.scoring.type === "pointsGame" ? "groups" : "selected";
   const h = cfg.holes as { first?: number; last?: number } | undefined;
@@ -240,9 +280,12 @@ export function copiedCompetitions(rows: readonly StoredCompetition[]): Competit
 
 /** Kort linje under konkurransen: hvem, hull og andel. */
 export function competitionSummary(d: CompetitionDraft, holeCount: number): string {
-  const who = d.entrants === "all" ? "Alle" : d.entrants === "teams" ? "Parene" : d.entrants === "groups" ? "Gruppene" : `${d.selected.length} valgt`;
+  const who = d.entrants === "all" ? "Alle" : d.entrants === "teams" ? "Parene" : d.entrants === "groups" ? "Gruppene"
+    : d.entrants === "sides" ? "Side 1 mot side 2" : `${d.selected.length} valgt`;
   const holes = d.holes === "all" || holeCount !== 18 ? "alle hull" : d.holes === "front" ? "hull 1–9" : "hull 10–18";
   const parts = [who, holes];
+  const cap = maxStrokesOf(d);
+  if (cap) parts.push(capText(cap));
   if (d.allowance !== null) parts.push(`${Math.round(d.allowance * 100)} % handicap`);
   return parts.join(" · ");
 }
@@ -309,7 +352,7 @@ export function roundResults(game: RoundGame, f: RoundFormats): { boards: Compet
   const frozen = frozenFromRows(f.snapshot, game.snapshot.players, game.rules, (m) => game.handicap(m));
   const boards = competitionBoards({
     competitions: f.competitions, roundFormat: game.snapshot.round.format, frozen,
-    live: { round: game.round, roster: game.roster, rules: game.rules },
+    live: { round: game.round, roster: game.roster, rules: game.rules }, sides,
   });
   return {
     boards,

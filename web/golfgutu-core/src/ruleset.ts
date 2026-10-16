@@ -265,7 +265,12 @@ export interface FormPlayRules {
   teamMatch: MatchPoints;
   /** Par/bogey (regel 21.3): verdien av et vunnet, delt og tapt hull. Standard +1 / 0 / −1. */
   parBogey: ParBogeyRules;
+  /** Maksimumscore (regel 21.2): taket når konkurransen ikke har sitt eget. Standard netto dobbel bogey. */
+  maximumScore: MaxStrokes;
 }
+
+/** Taket i maksimumscore når regelsettet ikke sier noe (`FormPlayRules.standardMaximumScore`). */
+export const STANDARD_MAXIMUM_SCORE: Readonly<MaxStrokes> = Object.freeze({ type: "netDoubleBogey" });
 
 /** `ParBogeyRules`. */
 export interface ParBogeyRules {
@@ -307,6 +312,7 @@ export const STANDARD_FORM_PLAY: Readonly<FormPlayRules> = deepFreeze({
   skinPoints: 1,
   teamMatch: { win: 1, draw: 0.5, loss: 0 },
   parBogey: { ...STANDARD_PAR_BOGEY },
+  maximumScore: { ...STANDARD_MAXIMUM_SCORE },
 } as FormPlayRules);
 
 /** Reglene for poengspillet, med standarden når det mangler. */
@@ -780,6 +786,8 @@ function decodeFormPlay(x: unknown, path: string): FormPlayRules {
     skinPoints: optNumber(o, "skinPoints", path) ?? s.skinPoints,
     teamMatch: tm ? decodeMatchPoints(tm, `${path}.teamMatch`) : { ...s.teamMatch },
     parBogey: decodeParBogey(optObject(o, "parBogey", path), `${path}.parBogey`),
+    maximumScore: o.maximumScore !== undefined && o.maximumScore !== null
+      ? decodeMaxStrokes(o.maximumScore, `${path}.maximumScore`) : { ...STANDARD_MAXIMUM_SCORE },
   };
 }
 
@@ -1038,5 +1046,6 @@ export function encodeFormPlay(f: FormPlayRules): JSONObject {
     teamMatch: { ...f.teamMatch },
     // Skrives bare når den ikke er standard (som Swift).
     ...(deepEqual(f.parBogey, STANDARD_PAR_BOGEY) ? {} : { parBogey: { ...f.parBogey } }),
+    ...(deepEqual(f.maximumScore, STANDARD_MAXIMUM_SCORE) ? {} : { maximumScore: { ...f.maximumScore } }),
   };
 }

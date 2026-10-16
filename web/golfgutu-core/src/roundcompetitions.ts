@@ -4,9 +4,11 @@ import { courseHoles } from "./course.ts";
 import { decodeScoringMethod, decodeTeamForm, formAxes, higherIsBetter, playsOneBall, roundForm, type FormAxes, type ScoringMethod, type TeamForm } from "./forms.ts";
 import { evaluatePointsGame, evaluateSkins, GameContext, parBogeyHoleValue, scoredPlayers } from "./formplay.ts";
 import { effectiveHandicap } from "./handicap.ts";
-import { deepCopy, stringLess } from "./jsmath.ts";
-import { makeRound, type HoleScores, type PlayedHole, type Player, type Round } from "./models.ts";
-import type { Ruleset } from "./ruleset.ts";
+import { deepCopy, jsRound, stringLess } from "./jsmath.ts";
+import { holeWinnerFor, strokeOffsetFor, type MatchStanding } from "./match.ts";
+import { makePlayer, makeRound, type HoleScores, type PlayedHole, type Player, type Round } from "./models.ts";
+import { maxStrokesLimit, type MaxStrokes, type Ruleset } from "./ruleset.ts";
+import { countingHoles } from "./truncation.ts";
 
 export interface HoleRange {
   first: number;
@@ -43,8 +45,10 @@ export interface RoundCompetitionRow {
   score: number;
   holes: number;
   rank: number;
-  /** Verdien per regnet hull (0-basert): poeng, slag eller par/bogey. Bare stableford, slagspill og par/bogey. */
+  /** Verdien per regnet hull (0-basert): poeng, slag, par/bogey eller match (+1/0/−1). */
   holeValues: Map<number, number>;
+  /** Match: stillingen sett fra raden (siden). `score` er hull opp. */
+  match?: MatchStanding;
 }
 
 export interface RoundCompetitionResult {
@@ -68,7 +72,10 @@ export function competitionSupported(axes: FormAxes): boolean {
     case "stableford":
     case "strokePlay":
     case "parBogey":
+    case "maximumScore":
       return true;
+    case "matchPlay":
+      return !playsOneBall(axes.teamForm) && !(axes.teamForm.type === "pairs" && axes.teamForm.pairs === "aggregate");
     case "skins":
     case "pointsGame":
       return axes.teamForm.type === "individual";
@@ -102,7 +109,10 @@ function evaluateCompetition(comp: RoundCompetition, round: Round, roster: reado
     case "stableford":
     case "strokePlay":
     case "parBogey":
+    case "maximumScore":
       return holeByHole(comp, round, roster, rules, scored) ?? unsupported;
+    case "matchPlay":
+      return matchPlay(comp, round, roster, rules);
     case "skins": {
       if (comp.holes !== null) return unsupported;
       const players = comp.entrants?.flat() ?? scored;
@@ -127,7 +137,7 @@ function evaluateCompetition(comp: RoundCompetition, round: Round, roster: reado
   }
 }
 
-/** Stableford, slagspill og par/bogey hull for hull (`RoundCompetitions.holeByHole`). */
+/** Stableford, slagspill, par/bogey og maksimumscore hull for hull (`RoundCompetitions.holeByHole`). */
 function holeByHole(comp: RoundCompetition, round: Round, roster: readonly Player[], rules: Ruleset, scored: string[]): RoundCompetitionResult | null {
   const oneBall = playsOneBall(comp.teamForm);
   let entrants: string[][];
@@ -142,9 +152,16 @@ function holeByHole(comp: RoundCompetition, round: Round, roster: readonly Playe
     entrants = comp.entrants ?? scored.map((p) => [p]);
   }
   const s = comp.scoring;
-  const net = s.type === "stableford" || s.type === "strokePlay" ? s.net : true;
+  const net = s.type === "stableford" || s.type === "strokePlay" || s.type === "maximumScore" ? s.net : true;
   const ctx = new GameContext(entrants.flat(), round, roster, rules);
   const hcp = ctx.handicaps({ net, allowance: comp.allowance ?? 1, fromLowest: false });
+  // Maksimumscore: taket, og slagene fått som taket regnes med (konkurransens andel, også i brutto).
+  let cap: MaxStrokes | null = null;
+  let capHcp = new Map<string, number>();
+  if (s.type === "maximumScore") {
+    cap = s.maxStrokes ?? rules.formPlay.maximumScore;
+    capHcp = ctx.handicaps({ net: true, allowance: comp.allowance ?? 1, fromLowest: false });
+  }
   const higher = higherIsBetter(s);
   const aggregate = comp.teamForm.type === "pairs" && comp.teamForm.pairs === "aggregate";
   const rows: RoundCompetitionRow[] = [];
@@ -163,7 +180,15 @@ function holeByHole(comp: RoundCompetition, round: Round, roster: readonly Playe
       let values: number[];
       if (s.type === "stableford") values = present.map((n) => Math.max(rules.scoring.minimumPoints, par - n + rules.scoring.netParPoints));
       else if (s.type === "parBogey") values = (ctx.isFinal ? nets : present).map((n) => parBogeyHoleValue(n, par, rules.formPlay.parBogey));
-      else values = present;
+      else if (s.type === "maximumScore") {
+        values = [];
+        for (const p of balls) {
+          const gross = ctx.gross(p, h);
+          if (gross === null) continue;
+          const limit = maxStrokesLimit(cap!, par, ctx.strokes(p, h, capHcp));
+          values.push(Math.min(gross, limit ?? gross) - ctx.strokes(p, h, hcp));
+        }
+      } else values = present;
       if (values.length === 0) continue;
       holes += 1;
       const value = aggregate ? values.reduce((a, b) => a + b, 0) : higher ? Math.max(...values) : Math.min(...values);
@@ -173,6 +198,46 @@ function holeByHole(comp: RoundCompetition, round: Round, roster: readonly Playe
     rows.push({ players: [...team], score: total, holes, rank: 0, holeValues });
   }
   return ranked(comp.id, rows, higher, !higher);
+}
+
+/**
+ * Match mellom to sider (`RoundCompetitions.matchPlay`): `MatchPlay`s hullvinner med spillehandicapet i runden og
+ * konkurransens andel (rundet som JS), slagene som i rundens matcher. Stopper når en side er flere hull opp enn det er
+ * igjen (regel 3.2a(3)). Uten to sider: ingen rader.
+ */
+function matchPlay(comp: RoundCompetition, round: Round, roster: readonly Player[], rules: Ruleset): RoundCompetitionResult {
+  const sides = (comp.entrants ?? []).filter((e) => e.length > 0);
+  if (sides.length !== 2 || sides[0].some((p) => sides[1].includes(p))) return { id: comp.id, supported: true, rows: [] };
+  const [a, b] = sides;
+  const hcp = new Map<string, number>();
+  for (const p of [...a, ...b]) {
+    const own = effectiveHandicap(roster.find((x) => x.id === p) ?? makePlayer(p), round, roster, rules);
+    hcp.set(p, comp.allowance === null ? own : jsRound(own * comp.allowance));
+  }
+  const handicap = (p: string) => hcp.get(p) ?? 0;
+  const offset = strokeOffsetFor(a, b, rules, handicap);
+  const count = Math.min(countingHoles(round), courseHoles(round).length);
+  const holes: number[] = [];
+  for (let h = 0; h < count; h++) if (inRange(h, comp.holes)) holes.push(h);
+  let up = 0;
+  let played = 0;
+  const perHole = new Map<number, number>();
+  for (const h of holes) {
+    if (played > 0 && Math.abs(up) > holes.length - played) break;
+    const v = holeWinnerFor(a, b, h, offset, round, handicap);
+    if (v === null) continue;
+    played += 1;
+    up += v;
+    perHole.set(h, v);
+  }
+  const remaining = holes.length - played;
+  const standing = (mine: number, opponents: string[]): MatchStanding =>
+    ({ up: mine, played, remaining, decided: Math.abs(mine) > remaining && played > 0, opponents });
+  const rows: RoundCompetitionRow[] = [
+    { players: [...a], score: up, holes: played, rank: 0, holeValues: perHole, match: standing(up, [...b]) },
+    { players: [...b], score: 0 - up, holes: played, rank: 0, holeValues: new Map([...perHole].map(([h, v]) => [h, 0 - v])), match: standing(0 - up, [...a]) },
+  ];
+  return ranked(comp.id, rows, true, false);
 }
 
 function ranked(id: string, rows: RoundCompetitionRow[], higherIsBetter: boolean, byHoles: boolean): RoundCompetitionResult {

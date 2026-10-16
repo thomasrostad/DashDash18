@@ -7,7 +7,7 @@ import {
   decodeCompetitionRow, decodeProfile, decodeRoundParticipant, decodeTavlaData, LeagueStandings, makeSnapshot,
   decodeRoundRow, HIDDEN_HOLES_NOTE, hidesLastHoles, isPlayoff, PersonDirectory, type RoundsGrid, type UUID,
   decodeSeasonRow, tavlaInput, TavlaStandings, tavlaToJSON,
-  competitionBoards, competitionScoreText, decodeRuleset, decodeStoredCompetition, frozenFromRows, makeRoundFromSnapshot,
+  competitionBoards, competitionRowText, competitionScoreText, decodeRuleset, decodeStoredCompetition, frozenFromRows, makeRoundFromSnapshot,
   sidesFromRaw, snapshotFields, snapshotHandicap, snapshotRoster, teamMatchResult, type Ruleset, type StoredCompetition, type TavlaData,
 } from "../../golfgutu-core/src/index.ts";
 
@@ -122,11 +122,11 @@ export function extraPanels(board: Record<string, unknown>, rules: Ruleset | nul
   const name = (id: string) => names.get(id) ?? "Ukjent";
   const extras = competitionBoards({
     competitions: comps.filter((c) => c.roundID === round.id), roundFormat: round.format, frozen,
-    live: { round: live, roster, rules },
+    live: { round: live, roster, rules }, sides: sidesIn(round.id),
   }).filter((b) => !b.isMain).map((b) => ({
     title: b.name,
     lines: b.supported
-      ? b.rows.slice(0, 5).map((r) => ({ name: `${r.rank}. ${r.players.map(name).join(" og ")}`, score: competitionScoreText(r.score, b.signed) }))
+      ? b.rows.slice(0, 5).map((r) => ({ name: `${r.rank}. ${r.players.map(name).join(" og ")}`, score: competitionRowText(b, r) }))
       : [{ name: "Ikke støttet ennå", score: "" }],
   }));
   const team = teamMatchResult(live, sidesIn(round.id), roster, frozen?.ruleset ?? rules);
