@@ -30,6 +30,12 @@ nonisolated enum HomeLiveBar {
         return "du står \(row.value.lowercased())"
     }
 
+    /// Baren vises når en runde går og ingen føring står åpen: inne i runden er «Fortsett» unødvendig,
+    /// den er for å komme tilbake til føringen.
+    static func isShown(liveCount: Int, openRoundScreens: Int) -> Bool {
+        liveCount > 0 && openRoundScreens == 0
+    }
+
     /// «+1 runde til», «+2 runder til». nil når bare én går.
     static func moreText(count: Int) -> String? {
         let others = count - 1
@@ -69,19 +75,38 @@ struct HjemLiveRoundBar: View {
 struct HjemLiveAccessory: ViewModifier {
     let live: [HomeLive]
     let open: (HomeLive) -> Void
+    /// Føringene som står framme (`hidesLiveRoundBar`). Fanelinja skjules der, men tilbehøret over
+    /// den gjør ikke det av seg selv.
+    @State private var openRoundScreens: Set<UUID> = []
 
     func body(content: Content) -> some View {
+        let marked = content.environment(\.markRoundScreen) { id, isOpen in
+            if isOpen { openRoundScreens.insert(id) } else { openRoundScreens.remove(id) }
+        }
         if #available(iOS 26.1, *) {
-            content
-                .tabViewBottomAccessory(isEnabled: !live.isEmpty) {
+            marked
+                .tabViewBottomAccessory(isEnabled: HomeLiveBar.isShown(liveCount: live.count,
+                                                                      openRoundScreens: openRoundScreens.count)) {
                     HjemLiveRoundBar(live: live, open: open)
                 }
                 .tabBarMinimizeBehavior(.onScrollDown)
         } else {
-            content
+            marked
                 .tabBarMinimizeBehavior(.onScrollDown)
                 .environment(\.liveBarInFeed, true)
         }
+    }
+}
+
+/// Melder fra til `HjemLiveAccessory` at føringen står framme, så baren over fanelinja skjules.
+private struct HidesLiveRoundBar: ViewModifier {
+    @Environment(\.markRoundScreen) private var mark
+    @State private var id = UUID()
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { mark(id, true) }
+            .onDisappear { mark(id, false) }
     }
 }
 
@@ -90,11 +115,19 @@ extension View {
     func hjemLiveAccessory(_ live: [HomeLive], open: @escaping (HomeLive) -> Void) -> some View {
         modifier(HjemLiveAccessory(live: live, open: open))
     }
+
+    /// Føringen: ingen «Fortsett»-bar over fanelinja mens den står framme.
+    func hidesLiveRoundBar() -> some View {
+        modifier(HidesLiveRoundBar())
+    }
 }
 
 extension EnvironmentValues {
     /// iOS 26.0: tilbehøret over fanelinja kan ikke skrus av, så runden står øverst i feeden.
     @Entry var liveBarInFeed = false
+
+    /// Føringen står framme (true) eller er borte (false). Fra `hidesLiveRoundBar`.
+    @Entry var markRoundScreen: (UUID, Bool) -> Void = { _, _ in }
 }
 
 /// Rundene som pågår uten klubb (`FriendsRootView`): de løse rundene du spiller i. Med klubb kommer

@@ -32,6 +32,13 @@ struct HjemLiveBarTests {
         #expect(HomeLiveBar.moreText(count: 3) == "+2 runder til")
     }
 
+    /// «Fortsett» er for å komme tilbake til føringen: ikke mens føringen står framme.
+    @Test func skjultInneIRunden() {
+        #expect(HomeLiveBar.isShown(liveCount: 1, openRoundScreens: 0))
+        #expect(!HomeLiveBar.isShown(liveCount: 1, openRoundScreens: 1))
+        #expect(!HomeLiveBar.isShown(liveCount: 0, openRoundScreens: 0))
+    }
+
     @Test func løseRunderUtenKlubb() throws {
         let rounds = [H.myLooseRound(status: .active), H.myLooseRound(status: .locked)]
         let live = LiveRoundsModel.live(rounds, userID: H.profile, now: H.now)
