@@ -7,8 +7,8 @@ import SwiftUI
 /// som tilskuere åpner fra WhatsApp uten app og uten konto. Arrangøren slår delingen på og av; da
 /// trekkes koden tilbake og lenken slutter å virke. Spillerne kan dele lenken videre når den er på.
 nonisolated enum TavlaShareFeature {
-    /// Av til 056 er kjørt på test og `/tavla` er ute i Workeren `atten-lenker`.
-    static let isEnabled = false
+    /// På fra 16.10.2026: 056 er kjørt på test og `/tavla` er ute i Workeren `atten-lenker`.
+    static let isEnabled = true
 }
 
 nonisolated enum TavlaShare {
