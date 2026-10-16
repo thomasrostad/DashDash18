@@ -65,6 +65,7 @@ struct RundeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .tabBar)
+        .hidesLiveRoundBar()
         .ddNavigationChrome()
         .toolbar { toolbar }
         .sheet(item: $scorecardFor) { target in
