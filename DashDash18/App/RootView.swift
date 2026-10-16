@@ -67,6 +67,9 @@ struct RootView: View {
             router.showRound(roundID)
         }
         .task(id: memberships.map(\.id)) { makeHome() }
+        // Trykk på en push: også det som kom før innloggingen var klar (kald oppstart).
+        .onChange(of: PushTapInbox.shared.pending, initial: true) { openPush() }
+        .onChange(of: membership.clubID) { openPush() }
         .environment(\.dayTerm, dayTerm)
         .task(id: context?.clubID) {
             guard let context else { return }
@@ -82,6 +85,19 @@ struct RootView: View {
         } else {
             router.showRound(live.roundID)
         }
+    }
+
+    /// Velger fanen og ber Hjem åpne skjermen. Sier pushen hvilken klubb, byttes det dit først.
+    private func openPush() {
+        guard let pending = PushTapInbox.shared.pending else { return }
+        if let clubID = pending.clubID, clubID != membership.clubID,
+           memberships.contains(where: { $0.clubID == clubID }) {
+            club?.select(clubID: clubID)
+            return
+        }
+        guard let tap = PushTapInbox.shared.take() else { return }
+        selectedTab = tap.destination.tab
+        if tap.destination.tab == .hjem { router.open(tap.destination) }
     }
 
     private var memberships: [Membership] {

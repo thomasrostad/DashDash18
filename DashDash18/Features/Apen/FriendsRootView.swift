@@ -64,6 +64,12 @@ struct FriendsRootView: View {
                 try? await Task.sleep(for: .seconds(60))
             }
         }
+        // Trykk på en push om en løs runde: åpnes i Spill. Resten gjelder klubben og venter på den.
+        .onChange(of: PushTapInbox.shared.pending, initial: true) { _, pending in
+            guard case .looseRound(let id) = pending?.destination, PushTapInbox.shared.take() != nil else { return }
+            selectedTab = .spill
+            openRound = id
+        }
         .onChange(of: openRound) { _, round in
             if round == nil { Task { await liveRounds.load() } }
         }
