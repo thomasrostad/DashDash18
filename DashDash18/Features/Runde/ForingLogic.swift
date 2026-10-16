@@ -654,12 +654,16 @@ nonisolated struct Scorecard: Equatable, Sendable {
         let strokes: Int?
         let points: Int?
         let scoreName: ScoreName?
+        /// Par/bogey (regel 21.3): «+», «0» eller «−» mot banen. Nil i andre former.
+        var parBogey: String? = nil
         var id: Int { index }
     }
 
     let name: String
     let inward: Bool
     let lines: [Line]
+    /// Par/bogey: summen for siden med regelsettets verdier (`formPlay.parBogey`). Nil i andre former.
+    var parBogeySum: Double? = nil
     var sumPar: Int { lines.reduce(0) { $0 + $1.par } }
     var sumStrokes: Int { lines.reduce(0) { $0 + ($1.strokes ?? 0) } }
     var sumPoints: Int { lines.reduce(0) { $0 + ($1.points ?? 0) } }
@@ -674,19 +678,37 @@ nonisolated extension RoundGame {
         let from = (hasInward && inward) ? 9 : 0
         let hcp = handicap(member)
         let mine = scores(member)
+        let isParBogey = round.form.axes.scoring == .parBogey
+        var parBogeySum = 0.0
         let lines = (from..<min(from + 9, holeCount)).map { i -> Scorecard.Line in
             let h = holes[i]
             guard let gross = mine[i] else {
                 return Scorecard.Line(index: i, number: holeNumber(i), par: h.par, strokes: nil, points: nil, scoreName: nil)
             }
+            var mark: String?
+            if isParBogey {
+                let received = round.hcpExtern ? 0
+                    : Scoring.handicapStrokes(handicap: hcp, strokeIndex: h.strokeIndex, holes: holeCount)
+                mark = HoleMath.parBogeyMark(net: gross - received, par: h.par)
+                parBogeySum += ParBogey.holeValue(net: gross - received, par: h.par, rules: rules.formPlay.parBogey)
+            }
             return Scorecard.Line(
                 index: i, number: holeNumber(i), par: h.par, strokes: gross,
-                points: Scoring.points(par: h.par, gross: gross, handicap: hcp, strokeIndex: h.strokeIndex,
-                                       holes: holeCount, rules: rules),
+                points: isParBogey ? nil : Scoring.points(par: h.par, gross: gross, handicap: hcp, strokeIndex: h.strokeIndex,
+                                                          holes: holeCount, rules: rules),
                 scoreName: Scoring.scoreName(par: h.par, gross: gross, handicap: hcp, strokeIndex: h.strokeIndex,
-                                             holes: holeCount))
+                                             holes: holeCount),
+                parBogey: mark)
         }
-        return Scorecard(name: name(member), inward: from == 9, lines: lines)
+        return Scorecard(name: name(member), inward: from == 9, lines: lines,
+                         parBogeySum: isParBogey ? parBogeySum : nil)
+    }
+
+    /// «Totalt i runden»: «24 poeng», eller par/bogey-summen med fortegn («+2 mot banen», som «Bayen nå»).
+    func scorecardTotal(for member: UUID) -> String {
+        guard round.form.axes.scoring == .parBogey else { return "\(total(member)) poeng" }
+        let sum = FormPlay.tablePoints(round, roster: roster, rules: rules)[member.uuidString] ?? 0
+        return RoundCompetitionBoard.signedText(sum.rounded()) + " mot banen"
     }
 }
 
