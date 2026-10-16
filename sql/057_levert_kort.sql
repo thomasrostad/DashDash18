@@ -1,5 +1,5 @@
 -- 057_levert_kort.sql — låst kort etter levering (regelvern, inspirert av Golfify).
--- IKKE KJØRT. Venter på godkjenning fra Thomas. Kjøres på test først.
+-- Godkjent og kjørt på test 16.10.2026. Ikke kjørt på prod.
 --
 -- Når markøren (eller spilleren selv, uten markør) leverer kortet for båsen, kan bare arrangøren
 -- føre på det, og bare arrangøren kan åpne det igjen. Appen viser «Lever kortet» når regelsettet har
