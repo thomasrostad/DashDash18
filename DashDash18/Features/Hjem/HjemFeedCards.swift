@@ -10,9 +10,11 @@ struct HjemSourcePill: View {
     let source: HomeFeedSource
 
     var body: some View {
+        // Krymper med «…» når navnet er langt («Golfgutu Invitational høstsesongen …»). Med fixedSize
+        // ble kortet bredere enn skjermen, og hele feeden kunne dras sideveis (16.10.2026).
         DDPill(source.title, tone: .chip)
             .lineLimit(1)
-            .fixedSize()
+            .accessibilityLabel(source.title)
     }
 }
 
