@@ -9,8 +9,8 @@ import {
   type StoredCompetition,
 } from "../../golfgutu-core/src/index.ts";
 import {
-  competitionConfig, competitionIssues, competitionsPayload, copiedCompetitions, draftFromStored, groupsFor, holeRange, pairsFor, recipeDraft,
-  recipesFor, roundResults, setSide, sideProblem, sidesFromRows, withSides, type CompetitionContext,
+  competitionConfig, competitionIssues, competitionsPayload, competitionSummary, copiedCompetitions, draftFromStored, groupsFor, holeRange, maxStrokesOf, pairsFor,
+  recipeDraft, recipesFor, roundResults, setSide, sideProblem, sidesFromRows, withMaxStrokes, withSides, type CompetitionContext,
 } from "../src/rounds/competitions.ts";
 import { RoundGame } from "../src/rounds/game.ts";
 import { newDraft } from "../src/rounds/logic.ts";
@@ -204,13 +204,64 @@ test("FrozenRound fra rules_snapshot og holes_snapshot: samme hull gir samme sva
   assert.equal(roundResults(g, { competitions: comps, snapshot: snapshotFields({ ...raw, snapshot_source: "backfill" }), sidePlayers: [] })!.reconstructed, true);
 });
 
-test("ikke støttet ennå: foursome og matchspill", () => {
+test("ikke støttet ennå: foursome i en runde som ikke spilles i foursome; match uten sider gir ingen rader", () => {
   const g = game();
   const r = roundResults(g, {
     competitions: [main, extra("Foursome", { form: "foursome" }), extra("Match", { teamForm: { type: "individual" }, scoring: { type: "matchPlay" } })],
     snapshot: snapshotFields({ format: "stableford" }), sidePlayers: [],
   })!;
-  assert.deepEqual(r.boards.map((b) => b.supported), [true, false, false]);
+  assert.deepEqual(r.boards.map((b) => b.supported), [true, false, true]);
+  assert.deepEqual(r.boards[2].rows, []);
+  assert.equal(r.boards[2].isMatch, true);
+});
+
+test("maksimumscore og match: slag med tak, og side 1 mot side 2 fra lag mot lag", () => {
+  const g = game();
+  const ids = g.snapshot.players.map((p) => p.memberID);
+  const sidePlayers = ids.map((id, i) => ({ member_id: id, side: i % 2 === 0 ? 1 : 2 }));
+  const r = roundResults(g, {
+    competitions: [main, extra("Maks", { form: "maks-score" }),
+      extra("Lagmatch", { teamForm: { type: "individual" }, scoring: { type: "matchPlay" } }),
+      extra("To", { teamForm: { type: "individual" }, scoring: { type: "matchPlay" }, entrants: [[ids[0]], [ids[1]]] })],
+    snapshot: snapshotFields({ format: "stableford" }), sidePlayers,
+  })!;
+  const [, maks, sides, two] = r.boards;
+  assert.ok(maks.supported && !maks.higherIsBetter && !maks.isMatch);
+  // Taket kan bare ta slag bort.
+  for (const row of maks.rows) {
+    const gross = [...(g.round.holeScores.get(row.players[0])?.values() ?? [])].reduce((a, b) => a + b, 0);
+    assert.ok(row.score <= gross, g.name(row.players[0]));
+  }
+  assert.ok(sides.supported && sides.isMatch);
+  assert.deepEqual(sides.rows.map((x) => x.players.length).sort(), [Math.floor(ids.length / 2), Math.ceil(ids.length / 2)].sort());
+  assert.equal(two.rows.length, 2);
+  assert.equal(two.rows[0].score, -two.rows[1].score);
+});
+
+test("oppskriftene maksimumscore og match: config, hvem og problemene", () => {
+  assert.deepEqual(competitionConfig(recipeDraft("maks", "stableford"), ctx()), { form: "maks-score" });
+  const fixed = withMaxStrokes(recipeDraft("maks", "stableford"), { type: "fixed", strokes: 8 });
+  assert.deepEqual(competitionConfig(fixed, ctx()), {
+    teamForm: { type: "individual" }, scoring: { type: "maximumScore", net: true, maxStrokes: { type: "fixed", strokes: 8 } },
+  });
+  assert.deepEqual(maxStrokesOf(withMaxStrokes(fixed, null)), null);
+  assert.equal(withMaxStrokes(fixed, null).form, "maks-score");
+  assert.ok(competitionSummary(fixed, 18).includes("tak 8 slag"));
+  assert.ok(competitionIssues([withMaxStrokes(fixed, { type: "fixed", strokes: 30 })], ctx())[0].includes("3–20"));
+
+  const match = { ...recipeDraft("match", "stableford"), selected: [A, C] };
+  assert.deepEqual(competitionConfig(match, ctx()), { teamForm: { type: "individual" }, scoring: { type: "matchPlay" }, entrants: [[A], [C]] });
+  assert.deepEqual(competitionIssues([match], ctx()), []);
+  assert.ok(competitionIssues([{ ...match, selected: [A] }], ctx())[0].includes("to spillere"));
+  const sides = { ...match, entrants: "sides" as const };
+  assert.deepEqual(competitionConfig(sides, ctx()), { teamForm: { type: "individual" }, scoring: { type: "matchPlay" } });
+  assert.ok(competitionIssues([sides], ctx())[0].includes("lag mot lag"));
+  assert.deepEqual(competitionIssues([sides], ctx({ sides: { [A]: 1, [B]: 2, [C]: 1, [D]: 2 } })), []);
+  assert.equal(competitionSummary(sides, 18).startsWith("Side 1 mot side 2"), true);
+  // Tilbake fra lagringen: uten sider er det side mot side, med to er det de valgte.
+  const stored = (config: Record<string, unknown>): StoredCompetition => ({ id: null, roundID: null, name: "M", isMain: false, formatVersion: 1, config, sortOrder: 1 });
+  assert.equal(draftFromStored(stored(competitionConfig(sides, ctx()))).entrants, "sides");
+  assert.equal(draftFromStored(stored(competitionConfig(match, ctx()))).entrants, "selected");
 });
 
 test("lag mot lag: matchene gir poeng til sidene", () => {

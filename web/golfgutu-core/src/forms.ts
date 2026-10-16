@@ -1,6 +1,9 @@
 // Konkurranseformene (`KONKURRANSEFORMER` i db-nytt.js, CompetitionForm.swift). Bare katalogen;
 // oppsettet for et antall spillere ligger i formsetup.ts.
 
+// Bare typen: ruleset.ts importerer katalogen herfra.
+import type { MaxStrokes } from "./ruleset.ts";
+
 /** Hvordan scorekortet føres. */
 export type FormCard = "per spiller" | "per lag";
 
@@ -117,7 +120,8 @@ export type ScoringMethod =
   | { type: "strokePlay"; net: boolean }
   | { type: "stableford"; net: boolean }
   | { type: "parBogey" }
-  | { type: "maximumScore" }
+  /** Maksimumscore (regel 21.2). `maxStrokes` utelatt: regelsettets `formPlay.maximumScore`. */
+  | { type: "maximumScore"; net: boolean; maxStrokes?: MaxStrokes }
   | { type: "matchPlay" }
   | { type: "pointsGame"; game: PointsGameKind }
   | { type: "skins" };
@@ -162,7 +166,7 @@ const AXES_BY_ID: Readonly<Record<string, FormAxes>> = Object.freeze({
   "slag-netto": { teamForm: IND, scoring: NET_STROKE },
   "slag-brutto": { teamForm: IND, scoring: { type: "strokePlay", net: false } },
   "par-bogey": { teamForm: IND, scoring: { type: "parBogey" } },
-  "maks-score": { teamForm: IND, scoring: { type: "maximumScore" } },
+  "maks-score": { teamForm: IND, scoring: { type: "maximumScore", net: true } },
   "match": { teamForm: IND, scoring: { type: "matchPlay" } },
   "fourball": { teamForm: { type: "pairs", pairs: "fourball" }, scoring: NET_STROKE },
   "fourball-4": { teamForm: { type: "team", size: 4 }, scoring: NET_STROKE },
@@ -215,6 +219,22 @@ export function decodeTeamForm(x: unknown, path = "$"): TeamForm {
   }
 }
 
+/** Taket i maksimumscore (`Ruleset.MaxStrokes`, som `decodeMaxStrokes` i ruleset.ts). */
+function decodeCap(x: unknown, path: string): MaxStrokes {
+  const o = x as Record<string, unknown>;
+  if (o === null || typeof o !== "object") throw new Error(`${path}: ventet et objekt`);
+  switch (o.type) {
+    case "off":
+    case "netDoubleBogey":
+      return { type: o.type };
+    case "fixed":
+      if (typeof o.strokes !== "number" || !Number.isInteger(o.strokes)) throw new Error(`${path}.strokes: mangler`);
+      return { type: "fixed", strokes: o.strokes };
+    default:
+      throw new Error(`${path}.type: ukjent`);
+  }
+}
+
 /** Poengtelling fra JSON (`{ type, net?, game? }`). `net` mangler: netto. */
 export function decodeScoringMethod(x: unknown, path = "$"): ScoringMethod {
   const o = x as Record<string, unknown>;
@@ -223,8 +243,13 @@ export function decodeScoringMethod(x: unknown, path = "$"): ScoringMethod {
     case "strokePlay":
     case "stableford":
       return { type: o.type, net: typeof o.net === "boolean" ? o.net : true };
+    case "maximumScore": {
+      const net = typeof o.net === "boolean" ? o.net : true;
+      return o.maxStrokes === undefined || o.maxStrokes === null
+        ? { type: "maximumScore", net }
+        : { type: "maximumScore", net, maxStrokes: decodeCap(o.maxStrokes, `${path}.maxStrokes`) };
+    }
     case "parBogey":
-    case "maximumScore":
     case "matchPlay":
     case "skins":
       return { type: o.type };

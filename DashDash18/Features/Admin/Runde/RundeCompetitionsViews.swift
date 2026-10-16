@@ -29,7 +29,7 @@ struct RundeCompetitionsSection: View {
                 Menu {
                     ForEach(CompetitionRecipe.allCases.filter { $0.isAvailable(holeCount: draft.holeCount) }) { recipe in
                         Button(recipe.title, systemImage: recipe.symbol) {
-                            draft.competitions.append(recipe.make(for: draft))
+                            draft.competitions.append(recipe.make(for: draft, rules: model.rules))
                         }
                     }
                 } label: {
@@ -67,7 +67,12 @@ struct CompetitionEditor: View {
                     }
                 }
             }
-            if !competition.isPairs { entrantsSection }
+            if competition.isMatch {
+                matchSection
+            } else if !competition.isPairs {
+                entrantsSection
+            }
+            if competition.maximumScore != nil { maximumScoreSection }
             Section {
                 DisclosureGroup("Avansert", isExpanded: $showsAdvanced) {
                     Stepper("Handicapandel: \(Int(((competition.config.allowance ?? 1) * 100).rounded())) %",
@@ -127,6 +132,79 @@ struct CompetitionEditor: View {
             if competition.isPointsGame {
                 DDFooter(selected == nil ? "Gruppene er lagene, ellers \(draft.groupTerm.definitePlural)." : "De valgte er én gruppe.")
             }
+        }
+    }
+
+    // MARK: Match
+
+    private var matchSection: some View {
+        Section {
+            if draft.isTeamVsTeam || competition.matchIsSides {
+                Picker("Hvem", selection: Binding(
+                    get: { competition.matchIsSides },
+                    set: { competition.setMatchSides($0, participants: draft.participants) }
+                )) {
+                    Text("Side mot side").tag(true)
+                    Text("To spillere").tag(false)
+                }
+                .pickerStyle(.segmented)
+            }
+            if !competition.matchIsSides {
+                ForEach([0, 1], id: \.self) { i in
+                    Picker("Spiller \(i + 1)", selection: Binding(
+                        get: { competition.matchPlayer(i) },
+                        set: { if let id = $0 { competition.setMatchPlayer(i, to: id) } }
+                    )) {
+                        if competition.matchPlayer(i) == nil { Text("Velg").tag(UUID?.none) }
+                        ForEach(draft.participants, id: \.self) { Text(model.memberName($0)).tag(UUID?.some($0)) }
+                    }
+                }
+            }
+        } header: {
+            DDHeader("Hvem spiller")
+        } footer: {
+            if let problem = CompetitionSetup.matchProblem(competition, draft: draft) {
+                Text(problem.prefix(1).uppercased() + problem.dropFirst()).foregroundStyle(Color.ddRustText)
+            } else {
+                DDFooter(competition.matchIsSides
+                         ? "Beste netto på hver side teller på hullet. Matchen er over når én side er flere hull opp enn det er igjen."
+                         : "Hull for hull med handicapslag. Matchen er over når én er flere hull opp enn det er igjen.")
+            }
+        }
+    }
+
+    // MARK: Maksimumscore
+
+    private var maximumScoreSection: some View {
+        let current = competition.maximumScore ?? (net: true, cap: nil)
+        let cap = current.cap ?? model.rules.formPlay.maximumScore
+        let fixed: Int? = if case .fixed(let n) = cap { n } else { nil }
+        return Section {
+            Picker("Tak per hull", selection: Binding(
+                get: { fixed != nil },
+                set: { isFixed in
+                    competition.setMaximumScore(
+                        net: current.net,
+                        cap: isFixed ? .fixed(fixed ?? Ruleset.MaxStrokes.fixedRange.upperBound / 2) : .netDoubleBogey)
+                }
+            )) {
+                Text("Netto dobbel bogey").tag(false)
+                Text("Fast antall").tag(true)
+            }
+            if let fixed {
+                Stepper("Maks \(fixed) slag", value: Binding(
+                    get: { fixed },
+                    set: { competition.setMaximumScore(net: current.net, cap: .fixed($0)) }
+                ), in: Ruleset.MaxStrokes.fixedRange)
+            }
+            Toggle("Netto (med handicap)", isOn: Binding(
+                get: { current.net },
+                set: { competition.setMaximumScore(net: $0, cap: current.cap) }
+            ))
+        } header: {
+            DDHeader("Maksimumscore")
+        } footer: {
+            DDFooter("Slag over taket teller som taket (regel 21.2). Netto dobbel bogey er par + 2 + slagene du får på hullet.")
         }
     }
 
@@ -241,7 +319,7 @@ struct CompetitionBoardCard: View {
                     .font(.dd(.sans, size: 14, relativeTo: .subheadline))
                     .foregroundStyle(Color.ddInkSecondary)
             } else if board.lines.isEmpty {
-                Text("Ingen scorer ennå")
+                Text(board.emptyText)
                     .font(.dd(.sans, size: 14, relativeTo: .subheadline))
                     .foregroundStyle(Color.ddInkSecondary)
             } else {

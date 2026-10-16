@@ -49,6 +49,7 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `formPlay.skinPoints` | tall | Tabellpoeng per skin vunnet (med `table.formPoints`). Standard 1. |
 | `formPlay.teamMatch` | `{win, draw, loss}` | Lag mot lag: poeng til siden per match. Standard 1 / 0,5 / 0. |
 | `formPlay.parBogey` | `{win, halve, loss}` | Par/bogey: verdien av et vunnet, delt og tapt hull mot banen. Standard +1 / 0 / −1 (regel 21.3). Skrives bare når den ikke er standard. |
+| `formPlay.maximumScore` | `{"type":"netDoubleBogey"}` / `{"type":"fixed","strokes":n}` | Maksimumscore: taket per hull når konkurransen ikke har sitt eget (samme JSON som `play.maxStrokes`, men ikke `off`; fast 3–20). Standard netto dobbel bogey (regel 21.2, WHS). Skrives bare når den ikke er standard. |
 | `play.maxStrokes` | `{"type":"off"}` / `{"type":"netDoubleBogey"}` / `{"type":"fixed","strokes":N}` | Maks slag per hull. Netto dobbel bogey = par + 2 + slagene spilleren får. Fast: 3–20. Standard av. |
 | `play.lockSubmittedCards` | sann/usann | Markøren leverer kortet, og bare arrangøren kan endre det eller åpne det igjen (sql/057). Standard usann. |
 | `play.hiddenHoles` | tall | Hvor mange av de siste hullene «Skjul de siste hullene» skjuler i en ny runde (1–9). Standard 3. |
@@ -350,7 +351,7 @@ og alle id-er i JSON er som før. Typen heter `ScoringMethod` fordi `Scoring` al
 | JSON | Verdier |
 |---|---|
 | `TeamForm` | `{"type":"individual"}`, `{"type":"pairs","pairs":"fourball"/"foursome"/"greensome"/"chapman"/"aggregate"}`, `{"type":"team","size":4}`, `{"type":"scramble","size":2}` |
-| `ScoringMethod` | `{"type":"strokePlay","net":true}`, `{"type":"stableford","net":false}`, `{"type":"parBogey"}`, `{"type":"maximumScore"}`, `{"type":"matchPlay"}`, `{"type":"pointsGame","game":"amerikaner"/"kobenhavner"}`, `{"type":"skins"}` |
+| `ScoringMethod` | `{"type":"strokePlay","net":true}`, `{"type":"stableford","net":false}`, `{"type":"parBogey"}`, `{"type":"maximumScore","net":true,"maxStrokes":{"type":"fixed","strokes":8}}` (`net` utelatt: netto, `maxStrokes` utelatt: `formPlay.maximumScore`), `{"type":"matchPlay"}`, `{"type":"pointsGame","game":"amerikaner"/"kobenhavner"}`, `{"type":"skins"}` |
 
 | Form-id | Lagform | Poengtelling |
 |---|---|---|
@@ -417,8 +418,8 @@ første mot første.
 grupper; utelatt: hver for seg, eller alle i én gruppe), `holes` (`{first, last}`, 0-basert; utelatt: alle) og
 `allowance` (utelatt: 1)) regnet fra de samme hullscorene. Støttet: stableford, slagspill og par/bogey
 individuelt, i fourball/lag (beste ball per hull), sammenlagt og med én ball per lag (se neste avsnitt); skins; Amerikaner
-og Københavner. Ikke ennå (`supported: false`): maksimumscore og matchspill (matchene regnes av `MatchPlay`). Plass: like deler plass (1, 1, 3). I slagspill står de med flest
-hull først.
+og Københavner; maksimumscore og match (se «Maksimumscore og match som konkurranse»). Plass: like deler plass (1, 1, 3). I slagspill
+og maksimumscore står de med flest hull først.
 
 ### Scramble, foursome, greensome, chapman og par/bogey (oktober 2026)
 
@@ -463,7 +464,33 @@ tapt. Fourball tar beste resultat, sammenlagt summen. Høyest sum vinner; likt d
 `table.formPoints` gir en par/bogey-runde summen i tabellen (`FormPlay.tablePoints`); uten er tabellen stableford
 som i PWA-en. `RoundCompetitionResult.Row.holeValues` har verdien per hull (poeng, slag eller ±1).
 
-Ikke ennå: maksimumscore og matchspill som konkurranse.
+### Maksimumscore og match som konkurranse (oktober 2026)
+
+Fixture: `maks-og-match.json` (regnet uavhengig av motoren og kontrollert for hånd). Tester: `MaksOgMatchTests.swift`
+og `web/golfgutu-core/test/maksmatch.test.ts`. Golfgutu-oppsettet er uendret (`formPlay.maximumScore` skrives
+ikke, rundens matcher regnes som før).
+
+**Maksimumscore** (Golfreglene 2019, regel 21.2): slagspill der hvert hull kappes til taket, `min(slag, tak)`.
+Taket er det samme som i føringen (`Ruleset.MaxStrokes`): netto dobbel bogey (par + 2 + slagene spilleren får
+på hullet) eller et fast tall. Konkurransen kan ha sitt eget (`scoring.maxStrokes`), ellers gjelder
+`formPlay.maximumScore` (standard netto dobbel bogey). Netto per hull er det kappede slaget minus slagene fått
+(spillehandicapet i runden ganget med konkurransens andel, rundet som JS); brutto er det kappede slaget, men
+netto dobbel bogey regnes fortsatt med slagene fått. Hull uten score som i slagspill: de teller ikke, flest
+hull står først, så lavest sum; likt deler plass (ingen egen tiebreak, som slagspill i konkurransene). Virker for
+alle lagformer som slagspill (beste ball, sammenlagt, én ball). Eksempel (par 4, spiller med 18): 9 på et hull
+teller 7 (4 + 2 + 1), netto 6.
+
+**Match** (`scoring: matchPlay`, `entrants` med to sider): hull for hull med `MatchPlay` (samme
+`holeWinner`/`sideNet`/`strokeOffset` som rundens matcher, med sidene som lister): beste netto på siden vinner
+hullet, slagene etter `formats.matchStrokes` (Golfgutu: laveste spiller fra scratch, de andre får forskjellen;
+`fullHandicap`: alle sitt eget) og konkurransens andel (rundet som JS). En side kan være én spiller, et par
+(fourball) eller en hel side i lag mot lag (appen fyller sidene fra `round_players.side` når `entrants` mangler).
+Matchen er over når en side er flere hull opp enn det er igjen (regel 3.2a(3)); hullene etter teller ikke, så
+stillingen blir «Vunnet 3&2». Rundens matcher (PWA-en) teller fortsatt alle hull. Hullene tas i rundens
+rekkefølge. Radene: `score` er hull opp sett fra siden, `holes` spilte hull, `holeValues` ±1/0 per hull og
+`match` stillingen (`MatchStanding`, tekst med `MatchPlay.text`: «2 opp etter 6», «Delt etter 5», «Vunnet 3&2»).
+Uten to sider (eller med samme spiller på begge): ingen rader. Ikke støttet: match med én ball per lag eller
+sammenlagt.
 
 ### Øyeblikksbildet ved start
 

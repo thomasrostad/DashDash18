@@ -145,6 +145,14 @@ extension Ruleset {
         if ![pb.win, pb.halve, pb.loss].allSatisfy(\.isFinite) || pb.win < pb.halve || pb.halve < pb.loss {
             add("formPlay.parBogey", "Par/bogey: vunnet hull må gi minst like mye som delt, og delt minst like mye som tapt.")
         }
+        switch formPlay.maximumScore {
+        case .off:
+            add("formPlay.maximumScore", "Maksimumscore må ha et tak per hull.")
+        case .fixed(let n) where !Ruleset.MaxStrokes.fixedRange.contains(n):
+            add("formPlay.maximumScore", "Taket i maksimumscore må være fra \(Ruleset.MaxStrokes.fixedRange.lowerBound) til \(Ruleset.MaxStrokes.fixedRange.upperBound) slag.")
+        default:
+            break
+        }
 
         // Tippekupongen. Grensene er databasens (events.tips_stake_points, events.tips_line).
         if Tips.startTime(tips.defaultStartTime, rules: .golfgutu) != tips.defaultStartTime

@@ -8,6 +8,7 @@ import type { HoleScores, PlayedHole, Player, Round } from "../models.ts";
 import {
   evaluateFrozenCompetitions, evaluateRoundCompetitions, type FrozenRound, type RoundCompetition, type RoundCompetitionResult,
 } from "../roundcompetitions.ts";
+import { matchText } from "../match.ts";
 import { decodeRuleset, type Ruleset } from "../ruleset.ts";
 import { evaluateRyderCup, type RyderCupResult } from "../rydercup.ts";
 import type { RoundPlayerRow, UUID } from "./rows.ts";
@@ -59,8 +60,20 @@ export function competitionAxes(c: StoredCompetition, roundFormat: string): Form
   }
 }
 
-/** Regelmotorens konkurranse. null: ukjent versjon eller form. */
-export function engineCompetition(c: StoredCompetition, roundFormat: string, key: string): RoundCompetition | null {
+/** Side 1 mot side 2 (`round_players.side`), spillerne sortert. null når en side er tom. */
+export function sidesAsEntrants(sides: ReadonlyMap<string, number>): string[][] | null {
+  const of = (n: number) => [...sides].filter(([, s]) => s === n).map(([p]) => p).sort();
+  const one = of(1);
+  const two = of(2);
+  return one.length > 0 && two.length > 0 ? [one, two] : null;
+}
+
+/**
+ * Regelmotorens konkurranse. null: ukjent versjon eller form. En match uten egne sider er side 1 mot side 2 i lag mot
+ * lag (`sides`), som appen.
+ */
+export function engineCompetition(c: StoredCompetition, roundFormat: string, key: string,
+  sides: ReadonlyMap<string, number> = new Map()): RoundCompetition | null {
   if (c.formatVersion !== 1) return null;
   const axes = competitionAxes(c, roundFormat);
   if (!axes) return null;
@@ -71,7 +84,8 @@ export function engineCompetition(c: StoredCompetition, roundFormat: string, key
   const holes = isObj(cfg.holes) && typeof cfg.holes.first === "number" && typeof cfg.holes.last === "number"
     ? { first: cfg.holes.first, last: cfg.holes.last } : null;
   const allowance = !c.isMain && typeof cfg.allowance === "number" ? cfg.allowance : null;
-  return { id: key, teamForm: axes.teamForm, scoring: axes.scoring, entrants, holes, allowance };
+  const resolved = entrants ?? (axes.scoring.type === "matchPlay" ? sidesAsEntrants(sides) : null);
+  return { id: key, teamForm: axes.teamForm, scoring: axes.scoring, entrants: resolved, holes, allowance };
 }
 
 // MARK: Øyeblikksbildet
@@ -145,6 +159,8 @@ export interface CompetitionBoard {
   higherIsBetter: boolean;
   /** Par/bogey: summen vises med fortegn («+3», «−2»). */
   signed: boolean;
+  /** Match: radene viser stillingen («2 opp etter 6», «Vunnet 3&2»), se `competitionRowText`. */
+  isMatch: boolean;
   rows: RoundCompetitionResult["rows"];
 }
 
@@ -157,11 +173,13 @@ export function competitionBoards(p: {
   roundFormat: string;
   frozen: FrozenRound | null;
   live: { round: Round; roster: readonly Player[]; rules: Ruleset };
+  /** Lag mot lag: sidene, for en match uten egne sider. */
+  sides?: ReadonlyMap<string, number>;
 }): CompetitionBoard[] {
   const stored = p.competitions.length > 0
     ? sortedCompetitions(p.competitions)
     : [{ id: null, roundID: null, name: formById(p.roundFormat).name, isMain: true, formatVersion: 1, config: { form: p.roundFormat }, sortOrder: 0 }];
-  const keyed = stored.map((c, i) => ({ c, key: c.id ?? `k${i}`, engine: engineCompetition(c, p.roundFormat, c.id ?? `k${i}`) }));
+  const keyed = stored.map((c, i) => ({ c, key: c.id ?? `k${i}`, engine: engineCompetition(c, p.roundFormat, c.id ?? `k${i}`, p.sides) }));
   const engines = keyed.flatMap((k) => (k.engine ? [k.engine] : []));
   const scores: Map<string, HoleScores> = p.live.round.holeScores;
   const results = p.frozen
@@ -175,6 +193,7 @@ export function competitionBoards(p: {
       supported: engine !== null && (r?.supported ?? false),
       higherIsBetter: engine ? !(engine.scoring.type === "strokePlay" || engine.scoring.type === "maximumScore") : true,
       signed: engine?.scoring.type === "parBogey",
+      isMatch: engine?.scoring.type === "matchPlay",
       rows: r?.rows ?? [],
     };
   });
@@ -201,4 +220,10 @@ export function competitionScoreText(score: number, signed = false): string {
   const text = Number.isInteger(Math.abs(score)) ? String(Math.abs(score)) : Math.abs(score).toFixed(1).replace(".", ",");
   if (score < 0) return (signed ? "−" : "-") + text;
   return (signed && score > 0 ? "+" : "") + text;
+}
+
+/** Raden som tekst: stillingen i en match («2 opp etter 6», «Delt etter 5», «Vunnet 3&2»), ellers poengene eller slagene. */
+export function competitionRowText(b: Pick<CompetitionBoard, "signed" | "isMatch">, r: RoundCompetitionResult["rows"][number]): string {
+  if (b.isMatch && r.match) return matchText(r.match);
+  return competitionScoreText(r.score, b.signed);
 }

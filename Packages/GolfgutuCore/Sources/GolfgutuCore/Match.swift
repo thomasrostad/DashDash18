@@ -142,17 +142,15 @@ public enum MatchPlay {
     /// `sideHandicap`: laveste `effectiveHandicap` på siden. Tom side → 0.
     public static func sideHandicap(_ playerIDs: [String], in round: Round, roster: [Player],
                                     rules: Ruleset = .golfgutu) -> Double {
-        playerIDs.map { effective($0, round, roster, rules) }.min() ?? 0
+        sideHandicap(playerIDs) { effective($0, round, roster, rules) }
     }
 
     /// `matchSlag`: tallet som trekkes fra alles handicap i matchen. Med `lowestFromScratch` (Golfgutu)
     /// spiller den laveste fra scratch og de andre får forskjellen; med `fullHandicap` 0.
     public static func strokeOffset(for match: Match, in round: Round, roster: [Player],
                                     rules: Ruleset = .golfgutu) -> Double {
-        if rules.formats.matchStrokes == .fullHandicap { return 0 }
         let s = sides(of: match, in: round)
-        return min(sideHandicap(s.a, in: round, roster: roster, rules: rules),
-                   sideHandicap(s.b, in: round, roster: roster, rules: rules))
+        return strokeOffset(a: s.a, b: s.b, rules: rules) { effective($0, round, roster, rules) }
     }
 
     /// `sideNettoPaaHull`: beste netto på siden på hullet. Slagene er `effectiveHandicap − ekstraSlag`
@@ -160,18 +158,7 @@ public enum MatchPlay {
     /// ikke finnes.
     public static func sideNet(_ playerIDs: [String], hole: Int, extraStrokes: Double, in round: Round,
                                roster: [Player], rules: Ruleset = .golfgutu) -> Int? {
-        let course = round.courseHoles()
-        guard hole >= 0, hole < course.count else { return nil }
-        let played = course[hole]
-        var best: Int?
-        for pid in playerIDs {
-            guard let gross = round.holeScores[pid]?[hole] else { continue }
-            let own = effective(pid, round, roster, rules)
-            let net = Scoring.netStrokes(gross: gross, handicap: max(0, own - extraStrokes),
-                                         strokeIndex: played.strokeIndex, holes: round.numberOfHoles)
-            if best == nil || net < best! { best = net }
-        }
-        return best
+        sideNet(playerIDs, hole: hole, extraStrokes: extraStrokes, in: round) { effective($0, round, roster, rules) }
     }
 
     // MARK: Hull for hull
@@ -181,11 +168,47 @@ public enum MatchPlay {
     public static func holeWinner(_ match: Match, hole: Int, in round: Round, roster: [Player],
                                   rules: Ruleset = .golfgutu, strokeOffset lowest: Double? = nil) -> Int? {
         let s = sides(of: match, in: round)
-        guard !s.a.isEmpty, !s.b.isEmpty else { return nil }
         let lav = lowest ?? strokeOffset(for: match, in: round, roster: roster, rules: rules)
-        guard let a = sideNet(s.a, hole: hole, extraStrokes: lav, in: round, roster: roster, rules: rules),
-              let b = sideNet(s.b, hole: hole, extraStrokes: lav, in: round, roster: roster, rules: rules) else { return nil }
-        return a < b ? 1 : (b < a ? -1 : 0)
+        return holeWinner(a: s.a, b: s.b, hole: hole, offset: lav, in: round) { effective($0, round, roster, rules) }
+    }
+
+    // MARK: Sidene som lister (rundens matcher og matchen som konkurranse, `RoundCompetitions`)
+
+    /// `sideHandicap` med handicapet fra `handicap`.
+    static func sideHandicap(_ playerIDs: [String], handicap: (String) -> Double) -> Double {
+        playerIDs.map(handicap).min() ?? 0
+    }
+
+    /// `matchSlag` for to sider med handicapet fra `handicap`.
+    static func strokeOffset(a: [String], b: [String], rules: Ruleset, handicap: (String) -> Double) -> Double {
+        if rules.formats.matchStrokes == .fullHandicap { return 0 }
+        return min(sideHandicap(a, handicap: handicap), sideHandicap(b, handicap: handicap))
+    }
+
+    /// `sideNettoPaaHull` med handicapet fra `handicap`.
+    static func sideNet(_ playerIDs: [String], hole: Int, extraStrokes: Double, in round: Round,
+                        handicap: (String) -> Double) -> Int? {
+        let course = round.courseHoles()
+        guard hole >= 0, hole < course.count else { return nil }
+        let played = course[hole]
+        var best: Int?
+        for pid in playerIDs {
+            guard let gross = round.holeScores[pid]?[hole] else { continue }
+            let own = handicap(pid)
+            let net = Scoring.netStrokes(gross: gross, handicap: max(0, own - extraStrokes),
+                                         strokeIndex: played.strokeIndex, holes: round.numberOfHoles)
+            if best == nil || net < best! { best = net }
+        }
+        return best
+    }
+
+    /// `matchHullVinner` for to sider med handicapet fra `handicap`.
+    static func holeWinner(a: [String], b: [String], hole: Int, offset: Double, in round: Round,
+                           handicap: (String) -> Double) -> Int? {
+        guard !a.isEmpty, !b.isEmpty,
+              let na = sideNet(a, hole: hole, extraStrokes: offset, in: round, handicap: handicap),
+              let nb = sideNet(b, hole: hole, extraStrokes: offset, in: round, handicap: handicap) else { return nil }
+        return na < nb ? 1 : (nb < na ? -1 : 0)
     }
 
     /// `matchHullDiff`: summen over de tellende hullene, sett fra A. Slagfordelingen går fortsatt

@@ -65,8 +65,10 @@ public enum ScoringMethod: Hashable, Sendable {
     case stableford(net: Bool)
     /// Par/bogey: pluss, deling eller minus mot netto par.
     case parBogey
-    /// Maksimumscore: slagspill med tak per hull.
-    case maximumScore
+    /// Maksimumscore (Golfreglene 2019, regel 21.2): slagspill med tak per hull. Taket er det samme som
+    /// `play.maxStrokes` (netto dobbel bogey eller et fast tall); `nil` er regelsettets
+    /// `formPlay.maximumScore`.
+    case maximumScore(net: Bool = true, maxStrokes: Ruleset.MaxStrokes? = nil)
     /// Matchspill, hull for hull.
     case matchPlay
     /// Poengspill i gruppe (Amerikaner, Københavner).
@@ -118,7 +120,7 @@ extension CompetitionForm {
         "slag-netto": FormAxes(teamForm: .individual, scoring: .strokePlay(net: true)),
         "slag-brutto": FormAxes(teamForm: .individual, scoring: .strokePlay(net: false)),
         "par-bogey": FormAxes(teamForm: .individual, scoring: .parBogey),
-        "maks-score": FormAxes(teamForm: .individual, scoring: .maximumScore),
+        "maks-score": FormAxes(teamForm: .individual, scoring: .maximumScore()),
         "match": FormAxes(teamForm: .individual, scoring: .matchPlay),
         "fourball": FormAxes(teamForm: .pairs(.fourball), scoring: .strokePlay(net: true)),
         "fourball-4": FormAxes(teamForm: .team(size: 4), scoring: .strokePlay(net: true)),
@@ -179,7 +181,7 @@ extension TeamForm: Codable {
 }
 
 extension ScoringMethod: Codable {
-    private enum CodingKeys: String, CodingKey { case type, net, game }
+    private enum CodingKeys: String, CodingKey { case type, net, game, maxStrokes }
     private enum Kind: String, Codable { case strokePlay, stableford, parBogey, maximumScore, matchPlay, pointsGame, skins }
 
     public init(from decoder: Decoder) throws {
@@ -188,7 +190,9 @@ extension ScoringMethod: Codable {
         case .strokePlay: self = .strokePlay(net: try c.decodeIfPresent(Bool.self, forKey: .net) ?? true)
         case .stableford: self = .stableford(net: try c.decodeIfPresent(Bool.self, forKey: .net) ?? true)
         case .parBogey: self = .parBogey
-        case .maximumScore: self = .maximumScore
+        case .maximumScore:
+            self = .maximumScore(net: try c.decodeIfPresent(Bool.self, forKey: .net) ?? true,
+                                 maxStrokes: try c.decodeIfPresent(Ruleset.MaxStrokes.self, forKey: .maxStrokes))
         case .matchPlay: self = .matchPlay
         case .pointsGame: self = .pointsGame(try c.decode(PointsGameKind.self, forKey: .game))
         case .skins: self = .skins
@@ -205,7 +209,10 @@ extension ScoringMethod: Codable {
             try c.encode(Kind.stableford, forKey: .type)
             try c.encode(net, forKey: .net)
         case .parBogey: try c.encode(Kind.parBogey, forKey: .type)
-        case .maximumScore: try c.encode(Kind.maximumScore, forKey: .type)
+        case .maximumScore(let net, let maxStrokes):
+            try c.encode(Kind.maximumScore, forKey: .type)
+            try c.encode(net, forKey: .net)
+            try c.encodeIfPresent(maxStrokes, forKey: .maxStrokes)
         case .matchPlay: try c.encode(Kind.matchPlay, forKey: .type)
         case .pointsGame(let g):
             try c.encode(Kind.pointsGame, forKey: .type)

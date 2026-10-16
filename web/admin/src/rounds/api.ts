@@ -360,7 +360,7 @@ export async function saveDraft(ctx: SetupContext, d: RoundDraft): Promise<void>
 /** Det konkurransene trenger fra oppsettet. Lagene bare når formen har lag (som team_no i set_round_setup). */
 export function competitionContext(d: RoundDraft): CompetitionContext {
   const teams = coreIsTeamForm(draftForm(d)) ? d.teams : {};
-  return { participants: d.participants, teams, bays: d.bays, holeCount: d.holeCount, mainForm: d.formID };
+  return { participants: d.participants, teams, bays: d.bays, holeCount: d.holeCount, mainForm: d.formID, sides: d.sides ?? {} };
 }
 
 /** Sidene og konkurransene sjekkes før noe skrives (048). */

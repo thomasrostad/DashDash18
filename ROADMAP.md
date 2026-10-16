@@ -493,7 +493,7 @@ Tre regelinnstillinger under «Føring og visning» i reglene (`play` i regelset
 - [x] Par/bogey (regel 21.3) i motoren og TypeScript: konkurranse, hovedform (stilling «+3», tabell med `table.formPoints`), verdiene i `formPlay.parBogey`.
 - [x] Én ball per lag (foursome, greensome, chapman, scramble 2 og 4) i `RoundCompetitions` når runden spilles i lagformen; føringen gjenbruker «samme tall på hele laget». Ingen SQL.
 - [x] WHS-lagshandicap (Appendix C) som forhåndsvalg i reglene («Bruk WHS-anbefalingen»); Golfgutu uendret.
-- [ ] Maksimumscore og match som konkurranse.
+- [x] Maksimumscore (regel 21.2, tak netto dobbel bogey eller fast, `formPlay.maximumScore` som standard) og match (to spillere eller side 1 mot side 2, `MatchPlay`-hullene, stopper når avgjort) som konkurranser i runden, appen, web-admin og TV. Ingen SQL (innstillingene ligger i `scoring` i config).
 - [ ] Par/bogey-symbol (+/0/−) på hullkortet i føringen (i dag viser kortet birdie/par/bogey og stablefordpoeng).
 
 ### Fase 12–17 – Åpen app med flere bruksområder

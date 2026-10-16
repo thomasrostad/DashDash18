@@ -26,15 +26,61 @@ nonisolated struct RoundCompetitionDraft: Equatable, Identifiable, Sendable {
         if case .pairs = axes.teamForm, !axes.teamForm.playsOneBall { true } else { false }
     }
     var isPointsGame: Bool { if case .pointsGame = axes.scoring { true } else { false } }
+    /// Match: to spillere (`entrants` [[a], [b]]), eller side 1 mot side 2 i lag mot lag (uten `entrants`).
+    var isMatch: Bool { axes.scoring == .matchPlay }
 
     /// Spillerne som er valgt, når konkurransen ikke er for alle.
     var selectedPlayers: Set<String>? { config.entrants.map { Set($0.flatMap { $0 }) } }
+
+    // MARK: Match
+
+    /// Matchen er side 1 mot side 2 (sidene i lag mot lag), ikke to valgte spillere.
+    var matchIsSides: Bool { isMatch && config.entrants == nil }
+
+    /// Spiller 1 og 2 i matchen (første på hver side).
+    func matchPlayer(_ index: Int) -> UUID? {
+        guard let entrants = config.entrants, entrants.indices.contains(index) else { return nil }
+        return entrants[index].first.flatMap(UUID.init(uuidString:))
+    }
+
+    /// Setter spiller 1 eller 2. Den andre beholdes (eller blir tom).
+    mutating func setMatchPlayer(_ index: Int, to id: UUID) {
+        var players = [matchPlayer(0), matchPlayer(1)]
+        players[index] = id
+        config.entrants = players.map { $0.map { [$0.uuidString] } ?? [] }
+    }
+
+    /// Side 1 mot side 2 (nil), eller to spillere (de to første i lista når ingen er valgt).
+    mutating func setMatchSides(_ sides: Bool, participants: [UUID]) {
+        if sides {
+            config.entrants = nil
+        } else if config.entrants == nil {
+            config.entrants = participants.prefix(2).map { [$0.uuidString] }
+        }
+    }
+
+    // MARK: Maksimumscore
+
+    /// Maksimumscore: netto eller brutto og taket (nil: regelsettets `formPlay.maximumScore`).
+    var maximumScore: (net: Bool, cap: Ruleset.MaxStrokes?)? {
+        if case .maximumScore(let net, let cap) = axes.scoring { (net, cap) } else { nil }
+    }
+
+    /// Endrer netto/brutto og taket. Konkurransen får aksene (ikke formen) i config.
+    mutating func setMaximumScore(net: Bool, cap: Ruleset.MaxStrokes?) {
+        let teamForm = axes.teamForm
+        config.form = nil
+        config.teamForm = teamForm
+        config.scoring = .maximumScore(net: net, maxStrokes: cap)
+    }
 }
 
 /// Oppskriftene i «Legg til konkurranse». Detaljene (hvem, hull, andel) kan endres etterpå.
 nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable {
     case bestBallPairs
     case parBogey
+    case maximumScore
+    case matchPlay
     case skins
     case frontNine
     case backNine
@@ -47,6 +93,8 @@ nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable
         switch self {
         case .bestBallPairs: "Bestball i par"
         case .parBogey: "Par/bogey"
+        case .maximumScore: "Maksimumscore"
+        case .matchPlay: "Match"
         case .skins: "Skins"
         case .frontNine: "Første ni"
         case .backNine: "Siste ni"
@@ -59,6 +107,8 @@ nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable
         switch self {
         case .bestBallPairs: "person.2"
         case .parBogey: "plusminus"
+        case .maximumScore: "arrow.down.to.line"
+        case .matchPlay: "person.line.dotted.person"
         case .skins: "dollarsign.circle"
         case .frontNine: "1.circle"
         case .backNine: "10.circle"
@@ -75,8 +125,9 @@ nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable
         }
     }
 
-    /// Konkurransen oppskriften gir for kladden.
-    func make(for draft: RoundDraft) -> RoundCompetitionDraft {
+    /// Konkurransen oppskriften gir for kladden. Maksimumscore tar taket fra regelsettet
+    /// (`formPlay.maximumScore`), og match er side 1 mot side 2 i lag mot lag, ellers de to første.
+    func make(for draft: RoundDraft, rules: Ruleset = .golfgutu) -> RoundCompetitionDraft {
         let config: CompetitionConfig = switch self {
         case .bestBallPairs:
             CompetitionConfig(teamForm: .pairs(.fourball), scoring: .stableford(net: true),
@@ -86,6 +137,12 @@ nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable
             draft.form.axes.teamForm.playsOneBall
                 ? CompetitionConfig(teamForm: draft.form.axes.teamForm, scoring: .parBogey)
                 : CompetitionConfig(form: "par-bogey")
+        case .maximumScore:
+            CompetitionConfig(teamForm: draft.form.axes.teamForm.playsOneBall ? draft.form.axes.teamForm : .individual,
+                              scoring: .maximumScore(net: true, maxStrokes: rules.formPlay.maximumScore))
+        case .matchPlay:
+            CompetitionConfig(teamForm: .individual, scoring: .matchPlay,
+                              entrants: draft.isTeamVsTeam ? nil : draft.participants.prefix(2).map { [$0.uuidString] })
         case .skins: CompetitionConfig(form: "skins")
         case .frontNine: CompetitionConfig(form: draft.formID, holes: HoleRange(first: 0, last: 8))
         case .backNine: CompetitionConfig(form: draft.formID, holes: HoleRange(first: 9, last: 17))
@@ -180,8 +237,22 @@ nonisolated enum CompetitionSetup {
             if let h = c.config.holes, h.last >= draft.holeCount { return "\(name): hullene er utenfor runden." }
             if c.isPairs, (c.config.entrants ?? []).isEmpty { return "\(name): sett opp parene." }
             if let a = c.config.allowance, !(0...1).contains(a) { return "\(name): andelen må være 0–100 %." }
+            if c.isMatch, let problem = matchProblem(c, draft: draft) { return "\(name): \(problem)" }
+            if case .fixed(let n)? = c.maximumScore?.cap, !Ruleset.MaxStrokes.fixedRange.contains(n) {
+                return "\(name): taket må være \(Ruleset.MaxStrokes.fixedRange.lowerBound)–\(Ruleset.MaxStrokes.fixedRange.upperBound) slag."
+            }
         }
         return nil
+    }
+
+    /// Matchen trenger to forskjellige spillere som er med, eller lag mot lag med to sider.
+    static func matchProblem(_ c: RoundCompetitionDraft, draft: RoundDraft) -> String? {
+        if c.matchIsSides {
+            let sides = Set(draft.participants.compactMap { draft.sides[$0] })
+            return sides.isSuperset(of: [1, 2]) ? nil : "slå på lag mot lag, eller velg to spillere."
+        }
+        let players = [c.matchPlayer(0), c.matchPlayer(1)].compactMap { $0 }.filter(draft.participants.contains)
+        return players.count == 2 && players[0] != players[1] ? nil : "velg to forskjellige spillere."
     }
 
     /// Lista til `round_competitions_set`: hovedkonkurransen (formen) først, så de ekstra. nil: ingenting
@@ -224,11 +295,18 @@ nonisolated enum CompetitionSetup {
     /// «Bestball i par · hull 1–9 · alle».
     static func summary(_ c: RoundCompetitionDraft, holeCount: Int, firstHole: Int) -> String {
         var parts = [RoundCompetitionBoard.formName(c.axes)]
+        if let cap = c.maximumScore?.cap { parts.append(RoundCompetitionBoard.capText(cap)) }
         if let h = c.config.holes, h.first > 0 || h.last < holeCount - 1 {
             let offset = firstHole == 10 ? 10 : 1
             parts.append("hull \(h.first + offset)–\(h.last + offset)")
         }
-        if c.isPairs {
+        if c.isMatch {
+            // Katalogens navn er «Matchspill (individuelt)»; side mot side er ikke individuelt.
+            if c.matchIsSides {
+                parts[0] = "Matchspill"
+                parts.append("side 1 mot side 2")
+            }
+        } else if c.isPairs {
             let n = c.config.entrants?.count ?? 0
             parts.append(n == 1 ? "1 par" : "\(n) par")
         } else if let picked = c.selectedPlayers {

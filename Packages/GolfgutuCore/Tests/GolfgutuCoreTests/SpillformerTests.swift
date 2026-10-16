@@ -167,7 +167,7 @@ struct SpillformerTests {
                                      entrants: [["a", "c"]])
         #expect(!RoundCompetitions.evaluate(round(r), roster: roster, competitions: [mixed], rules: Self.whs)[0].supported)
         #expect(RoundCompetitions.supports(FormAxes(teamForm: .scramble(size: 2), scoring: .parBogey)))
-        #expect(!RoundCompetitions.supports(FormAxes(teamForm: .individual, scoring: .maximumScore)))
+        #expect(!RoundCompetitions.supports(FormAxes(teamForm: .pairs(.foursome), scoring: .matchPlay)))
     }
 
     // MARK: Par/bogey
