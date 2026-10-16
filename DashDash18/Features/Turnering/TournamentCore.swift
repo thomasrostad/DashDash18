@@ -542,7 +542,8 @@ nonisolated enum StartList {
 
     /// «Bås 3» i simulatoren, tom på ekte bane (flight uten ressurs).
     static func defaultLabel(_ groupNo: Int, venue: String?) -> String {
-        venue == "course" ? "" : "Bås \(groupNo)"
+        let term = GroupTerm.for(stored: venue)
+        return term == .flight ? "" : term.numbered(groupNo)
     }
 
     /// Tee-tider med fast mellomrom fra første gruppe («18:00», 10 min → 18:00, 18:10, …).
@@ -569,7 +570,8 @@ nonisolated enum StartList {
     }
 
     /// Samme sjekker som `save_start_list` (sql/032), med norsk tekst.
-    static func issues(_ groups: [StartGroupDraft], wave: Int, holeCount: Int, staffIDs: Set<UUID>) -> [String] {
+    static func issues(_ groups: [StartGroupDraft], wave: Int, holeCount: Int, staffIDs: Set<UUID>,
+                       term: GroupTerm = .bay) -> [String] {
         var out: [String] = []
         if !(1...20).contains(wave) { out.append("Puljen må være mellom 1 og 20.") }
         if groups.count > 99 { out.append("Høyst 99 grupper.") }
@@ -586,7 +588,8 @@ nonisolated enum StartList {
             out.append("En funksjonær er ikke lenger i staben.")
         }
         if groups.contains(where: { $0.resourceLabel.trimmingCharacters(in: .whitespaces).count > 40 }) {
-            out.append("Bås eller tee kan ha høyst 40 tegn.")
+            out.append(term == .flight ? "Tee eller startsted kan ha høyst 40 tegn."
+                                       : "Bås eller simulator kan ha høyst 40 tegn.")
         }
         return out
     }
@@ -619,7 +622,7 @@ nonisolated enum StartList {
         if let label, !label.isEmpty {
             parts.append(label)
         } else {
-            parts.append(venue == "course" ? "Flight \(groupNo)" : "Bås \(groupNo)")
+            parts.append(GroupTerm.for(stored: venue).numbered(groupNo))
         }
         if let time = saved?.startsAt { parts.append(timeText(time)) }
         if let hole = saved?.startHole, hole != 1 { parts.append("starter på hull \(hole)") }

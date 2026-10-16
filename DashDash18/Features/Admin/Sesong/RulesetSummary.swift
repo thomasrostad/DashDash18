@@ -45,7 +45,7 @@ nonisolated enum RulesetSummary {
     static func lines(for rules: Ruleset) -> [String] {
         var out: [String] = []
         let form = CompetitionForm.form(id: rules.formats.defaultFormID)
-        out.append("\(form.name), høyst \(rules.formats.maxPerBay) per bås")
+        out.append("\(form.name), høyst \(rules.formats.maxPerBay) per bås eller flight")
         out.append(eveningsAndCounting(rules))
         let mp = rules.table.matchPoints
         if rules.table.pointsSource == .stableford {
@@ -151,7 +151,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .teamHandicap: "Lagshandicap"
         case .defaultForm: "Standardform"
         case .allowedForms: "Tillatte former"
-        case .maxPerBay: "Maks per bås"
+        case .maxPerBay: "Maks per bås eller flight"
         case .matchStrokes: "Slag i match"
         case .drawMethod: "Trekning av matcher"
         case .other: "Tips, veddemål, ledelse og føring"

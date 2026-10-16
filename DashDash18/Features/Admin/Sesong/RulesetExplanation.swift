@@ -162,7 +162,7 @@ nonisolated enum RulesetExplanation {
         } else {
             out.append("\(standard) er standardformen, og \(allowed.count) av \(catalog.count) former er tillatt.")
         }
-        out.append(f.maxPerBay == 1 ? "Høyst 1 spiller per bås." : "Høyst \(f.maxPerBay) spillere per bås.")
+        out.append(f.maxPerBay == 1 ? "Høyst 1 spiller per bås eller flight." : "Høyst \(f.maxPerBay) spillere per bås eller flight.")
         switch f.matchStrokes {
         case .lowestFromScratch: out.append("I match spiller den laveste fra scratch.")
         case .fullHandicap: out.append("I match spiller alle på fullt handicap.")

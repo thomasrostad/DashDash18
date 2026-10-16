@@ -550,6 +550,8 @@ nonisolated struct HoleDot: Equatable, Identifiable, Sendable {
     let isLongestDrive: Bool
     let isClosestToPin: Bool
     let isBayHole: Bool
+    /// Ordet for gruppa i «båsens hull» / «flightens hull».
+    var groupTerm: GroupTerm = .bay
     var id: Int { index }
 
     /// Hullbrikken (V15): nåværende er fylt, førte har chip-bakgrunn, kommende har strek.
@@ -579,7 +581,7 @@ nonisolated struct HoleDot: Equatable, Identifiable, Sendable {
         if isPending { parts.append("ikke sendt ennå") }
         if isLongestDrive { parts.append("longest drive") }
         if isClosestToPin { parts.append("nærmest pinnen") }
-        if isBayHole { parts.append("båsens hull") }
+        if isBayHole { parts.append("\(groupTerm.definiteGenitive) hull") }
         return parts.joined(separator: ", ")
     }
 }
@@ -596,7 +598,7 @@ nonisolated extension RoundGame {
             return HoleDot(index: i, number: holeNumber(i), state: done ? .done : (partial ? .partial : .upcoming),
                            isCurrent: i == currentHole, isPending: pending.contains(i),
                            isLongestDrive: i == longestDriveHole, isClosestToPin: i == closestToPinHole,
-                           isBayHole: i == bh)
+                           isBayHole: i == bh, groupTerm: groupTerm)
         }
     }
 }

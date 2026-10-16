@@ -577,6 +577,7 @@ private struct AdminHubContent: View {
                                           venue: round.venue, bays: roundBays)
         return Section {
             TonightRoundCard(title: model.title(round), shape: shape, bays: roundBays,
+                             groupTerm: GroupTerm.for(stored: round.venue),
                              conflictText: MarkerConflicts.organizerText(live.conflicts.filter { $0.roundID == round.id }),
                              showTV: { showsTV = true }, openRound: { showRound(round.id) })
         } header: {

@@ -117,7 +117,8 @@ final class StartListModel {
     func save() async -> Bool {
         let staffIDs = Set(staff.map(\.profileID))
         for r in rounds {
-            if let issue = StartList.issues(r.groups, wave: r.wave, holeCount: r.round.holeCount, staffIDs: staffIDs).first {
+            if let issue = StartList.issues(r.groups, wave: r.wave, holeCount: r.round.holeCount, staffIDs: staffIDs,
+                                            term: GroupTerm.for(stored: r.round.venue)).first {
                 error = "\(r.title): \(issue)"
                 return false
             }
@@ -301,7 +302,7 @@ struct StartGroupRowView: View {
     private var title: String {
         let label = group.resourceLabel.trimmingCharacters(in: .whitespaces)
         if !label.isEmpty { return label }
-        return venue == "course" ? "Flight \(group.groupNo)" : "Bås \(group.groupNo)"
+        return GroupTerm.for(stored: venue).numbered(group.groupNo)
     }
 }
 

@@ -25,7 +25,7 @@ struct RulesetFormatSection: View {
                     RuleFieldLabel(title: "Tillatte former", changeNote: draft.changeNote(.allowedForms))
                 }
             }
-            RuleStepper("Maks per bås", value: $draft.rules.formats.maxPerBay, changeNote: draft.changeNote(.maxPerBay))
+            RuleStepper("Maks per bås eller flight", value: $draft.rules.formats.maxPerBay, changeNote: draft.changeNote(.maxPerBay))
             Picker(selection: $draft.rules.formats.matchStrokes) {
                 ForEach(Ruleset.MatchStrokes.allCases, id: \.self) { Text(RuleNames.title($0)).tag($0) }
             } label: {

@@ -170,6 +170,11 @@ nonisolated enum TonightLive {
 
     /// Linja under rundens tittel: «Stableford · 4 båser à 3», eller «4 båser · 11 spillere» når båsene
     /// er ulike store.
+    /// «Ingen båser er fordelt i oppsettet.» / «Ingen flighter …».
+    static func noGroupsText(_ term: GroupTerm) -> String {
+        "Ingen \(term.plural) er fordelt i oppsettet."
+    }
+
     static func shapeText(formatName: String, venue: String?, bays: [BayLive]) -> String {
         var parts = [formatName]
         let term = GroupTerm.for(stored: venue)
