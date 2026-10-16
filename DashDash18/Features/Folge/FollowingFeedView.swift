@@ -90,7 +90,10 @@ struct FollowingFeedView: View {
             .padding(.horizontal, DDSpacing.gutter)
             .padding(.top, 12)
             .padding(.bottom, DDSpacing.xxl)
+            // Aldri bredere enn skjermen, som på Hjem (`HjemFeedView`): ellers kan lista dras sideveis.
+            .containerRelativeFrame(.horizontal)
         }
+        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         .task {
             if showsAddFriends, addFriends == nil, let client = model.client {
                 addFriends = FollowAddFriendsModel(client: client, userID: model.userID)
