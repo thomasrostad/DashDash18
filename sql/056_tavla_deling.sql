@@ -1,4 +1,4 @@
--- 056: Tavla i nettleseren for tilskuere («Del tavla»). IKKE KJØRT. Krever godkjenning.
+-- 056: Tavla i nettleseren for tilskuere («Del tavla»). Godkjent og kjørt på test 16.10.2026. Ikke kjørt på prod.
 --
 -- Arrangøren slår på deling av Tavla i appen. Da får turneringen en lenke, dashdash18.com/tavla/KODE,
 -- som kan legges i WhatsApp-gruppa. Siden viser tabellen, «Alle runder» og scorekortene, oppdatert
