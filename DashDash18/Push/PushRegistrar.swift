@@ -225,10 +225,14 @@ extension PushAppDelegate: UNUserNotificationCenterDelegate {
                                             didReceive response: UNNotificationResponse,
                                             withCompletionHandler completionHandler: @escaping () -> Void) {
         let done = PushCompletion(completionHandler)
+        // Leses her: `userInfo` er ikke Sendable. Bare selve trykket åpner en skjerm, ikke «fjern».
+        let tap = response.actionIdentifier == UNNotificationDefaultActionIdentifier
+            ? PushTap(userInfo: response.notification.request.content.userInfo) : nil
         PushMainThread.run {
-            // Ved kald oppstart finnes ingen innlogging eller klubb ennå. Det er greit: varselet
-            // går bare til bjella, som henter på nytt når den vises.
+            // Ved kald oppstart finnes ingen innlogging eller klubb ennå. Trykket venter i
+            // `PushTapInbox` til RootView er klar, og bjella henter på nytt når den vises.
             PushInbox.didReceive()
+            if let tap { PushTapInbox.shared.receive(tap) }
             done.call(())
         }
     }

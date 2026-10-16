@@ -14,6 +14,12 @@ enum HjemRoute: Hashable {
     case looseRound(UUID)
     /// Kveldens tråd, med kameraet åpent (bildeoppfordringen, sql/050).
     case thread(UUID, camera: Bool)
+    /// Varsler bak bjella, fra en push.
+    case notifications
+    /// Veddemålene, fra en push.
+    case bets
+    /// «Mine oppgjør», fra en push.
+    case bills
 }
 
 /// Ber Hjem åpne runden som går (arrangørsidens «Gå til runden»). RootView eier den.
@@ -35,6 +41,18 @@ final class HjemRouter {
     func showLooseRound(_ roundID: UUID) {
         requestedLooseRoundID = roundID
         looseRequest += 1
+    }
+
+    /// Skjermen fra et trykk på en push. Venter her til Hjem finnes (kald oppstart).
+    private(set) var pendingPush: PushDestination?
+
+    func open(_ destination: PushDestination) {
+        pendingPush = destination
+    }
+
+    func takePush() -> PushDestination? {
+        defer { pendingPush = nil }
+        return pendingPush
     }
 }
 
@@ -143,6 +161,9 @@ private struct HjemClubContent: View {
             .onChange(of: liveInput, initial: true) { _, live in home.live = live }
             .onChange(of: context.clubID, initial: true) { _, club in home.liveClubID = club }
             .onChange(of: round.hasRound) { _, has in if has { consumeRoundRequest() } }
+            .onChange(of: router?.pendingPush, initial: true) { _, _ in
+                if let destination = router?.takePush() { open(destination) }
+            }
             .onChange(of: router?.looseRequest) { _, _ in
                 if let id = router?.requestedLooseRoundID { route = .looseRound(id) }
             }
@@ -327,6 +348,22 @@ private struct HjemClubContent: View {
         Task { await home.load() }
     }
 
+    /// Et trykk på en push (`PushTap`). Finnes ikke runden eller kvelden lenger, viser skjermen det.
+    private func open(_ destination: PushDestination) {
+        switch destination {
+        case .clubRound(let id): openClubRound(id)
+        case .looseRound(let id): route = .looseRound(id)
+        case .evening: route = .evening
+        case .thread(let eventID, let camera): route = .thread(eventID, camera: camera)
+        case .competition(let id): openTable(id)
+        case .bets: route = .bets
+        case .bills: route = .bills
+        case .notifications: route = .notifications
+        case .tavla: selectTab(.tavla)
+        case .home: route = nil
+        }
+    }
+
     /// «Gå til runden» fra arrangørsiden: åpne runden når Hjem står framme og runden er hentet.
     private func consumeRoundRequest() {
         guard wantsRound, round.hasRound else { return }
@@ -355,6 +392,12 @@ private struct HjemClubContent: View {
             LooseRoundScreen(context: LooseRoundContext(client: context.client, userID: context.user.id, roundID: id))
                 .toolbar(.hidden, for: .tabBar)
                 .onDisappear { Task { await home.load() } }
+        case .notifications:
+            HjemVarslerView(model: home)
+        case .bets:
+            BetsView()
+        case .bills:
+            BillSettlementsView(client: context.client, userID: context.user.id)
         }
     }
 }
