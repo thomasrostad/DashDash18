@@ -45,7 +45,7 @@ Fargene er kopiert fra `DesignSystem/DDPalette.swift` til `DashDash18Widgets/Wid
 
 9. **Bygg og prøv.** Kjør skjemaet DashDash18 på simulator eller telefon.
    - **Widgets:** Åpne Kveld og Tavla én gang, så skrives dataene. Legg så til «Neste kveld» og «Tavla topp 3» fra Hjem-skjermen (liten og middels) eller fra låseskjermen.
-   - **Live Activity:** Start en runde du spiller i, og lås skjermen. Aktiviteten oppdateres hver gang runden lastes på nytt (føring og realtime). Den avsluttes når runden låses.
+   - **Live Activity:** Start en runde du spiller i, og lås skjermen. Aktiviteten oppdateres hver gang runden lastes på nytt (føring og realtime). Den avsluttes når runden låses. Med en paret Apple Watch (watchOS 11+) vises den også i Smart Stack på klokka (`.supplementalActivityFamilies([.small])`, `RoundWatchView`): hull, poeng og slag, og matchen eller plassen i båsen.
 
 ## Hvordan det henger sammen
 
