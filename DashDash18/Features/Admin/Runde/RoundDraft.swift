@@ -40,8 +40,11 @@ nonisolated struct RoundDraft: Equatable, Sendable {
     var counts: Bool = true
     /// Poengtabellen fra regelsettet (`table.pointsTables`). nil: «Vanlig».
     var pointsTable: String? = nil
-    /// «Skjul de tre siste hullene» (`hide_last_holes` 3, ellers 0).
+    /// «Skjul de siste hullene» (`hide_last_holes` = `hiddenHoles`, ellers 0).
     var hidesLastHoles: Bool = false
+    /// Hvor mange av de siste hullene som skjules når valget er på (1–9). Ny runde: regelsettets
+    /// `play.hiddenHoles` (Golfgutu 3).
+    var hiddenHoles: Int = RoundDraft.hiddenHoleCount
     /// Lag mot lag (sql/048): side 1 eller 2 per spiller. Tom: runden er ikke lag mot lag.
     var sides: [UUID: Int] = [:]
     /// De ekstra konkurransene i runden (sql/048). Hovedkonkurransen er formen.
@@ -54,8 +57,15 @@ nonisolated struct RoundDraft: Equatable, Sendable {
     /// Runden spilles lag mot lag.
     var isTeamVsTeam: Bool { !sides.isEmpty }
 
-    /// Antall skjulte hull når valget er på.
-    static let hiddenHoleCount = 3
+    /// Antall skjulte hull når valget er på og ingenting annet er valgt (`Ruleset.PlayRules.standard`).
+    static let hiddenHoleCount = Ruleset.PlayRules.standard.hiddenHoles
+
+    /// Antallet som lagres i `hide_last_holes`: 0 når valget er av, ellers 1–9 og høyst hullene i runden.
+    var storedHiddenHoles: Int {
+        guard hidesLastHoles else { return 0 }
+        let range = Ruleset.PlayRules.hiddenHolesRange
+        return min(max(range.lowerBound, hiddenHoles), range.upperBound, max(1, holeCount))
+    }
 
     var form: CompetitionForm { CompetitionForm.form(id: formID) }
 
@@ -76,7 +86,8 @@ nonisolated struct RoundDraft: Equatable, Sendable {
             formID: form.id, teams: [:], matches: [],
             ldEnabled: rules.sidePrizes.longestDrive.enabled, ldHoleIndex: nil,
             kpEnabled: rules.sidePrizes.closestToPin.enabled, kpHoleIndex: nil,
-            weight: 1, externalHandicap: rules.handicap.externalHandicap, allowance: rules.allowance(for: form)
+            weight: 1, externalHandicap: rules.handicap.externalHandicap, allowance: rules.allowance(for: form),
+            hiddenHoles: rules.play.hiddenHoles
         )
     }
 
@@ -107,6 +118,7 @@ nonisolated struct RoundDraft: Equatable, Sendable {
             weight: round.weight, externalHandicap: round.externalHandicap, allowance: round.handicapAllowance,
             venue: Venue(stored: round.venue),
             counts: round.countsInTable, pointsTable: round.pointsTable, hidesLastHoles: round.hiddenLastHoles > 0,
+            hiddenHoles: round.hiddenLastHoles > 0 ? round.hiddenLastHoles : RoundDraft.hiddenHoleCount,
             sides: sides, competitions: extra, mainCompetitionID: mainID, hasSavedCompetitions: !competitions.isEmpty
         )
     }
@@ -392,7 +404,7 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         includesRules = includeRules
         counts = draft.counts
         pointsTable = draft.pointsTable.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }
-        hideLastHoles = draft.hidesLastHoles ? RoundDraft.hiddenHoleCount : 0
+        hideLastHoles = draft.storedHiddenHoles
     }
 
     func encode(to encoder: any Encoder) throws {

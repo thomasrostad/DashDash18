@@ -309,7 +309,7 @@ final class RundeModel {
     /// − og +: justerer og bekrefter samtidig.
     func step(_ delta: Int, member: UUID) {
         guard let card, let row = card.rows.first(where: { $0.memberID == member }), row.editable else { return }
-        drafts[currentHole, member] = StrokeInput.clamp(row.value + delta)
+        drafts[currentHole, member] = StrokeInput.clamp(row.value + delta, max: row.maxStrokes)
     }
 
     /// Trykk på tallet bekrefter det som står (par når ingenting er ført).

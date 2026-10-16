@@ -154,7 +154,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .maxPerBay: "Maks per bås"
         case .matchStrokes: "Slag i match"
         case .drawMethod: "Trekning av matcher"
-        case .other: "Tips, veddemål og ledelse"
+        case .other: "Tips, veddemål, ledelse og føring"
         }
     }
 
@@ -190,7 +190,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .maxPerBay: a.formats.maxPerBay != b.formats.maxPerBay
         case .matchStrokes: a.formats.matchStrokes != b.formats.matchStrokes
         case .drawMethod: a.formats.drawMethod != b.formats.drawMethod
-        case .other: a.tips != b.tips || a.bets != b.bets || a.leadCheckpoints != b.leadCheckpoints
+        case .other: a.tips != b.tips || a.bets != b.bets || a.leadCheckpoints != b.leadCheckpoints || a.play != b.play
         }
     }
 
@@ -252,5 +252,40 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         guard differs(rules, base) else { return nil }
         if self == .teamHandicap || self == .other { return "Endret fra standard" }
         return "Endret · standard \(valueText(base))"
+    }
+}
+
+/// Valgene under «Føring og visning» (regelvern). De telles som en del av `RulesetField.other` i
+/// sammenligningen med oppsettet, og har egne «Endret · standard …»-merker i skjemaet.
+nonisolated enum PlayField: CaseIterable, Hashable, Sendable {
+    case maxStrokes, lockSubmittedCards, hiddenHoles
+
+    var title: String {
+        switch self {
+        case .maxStrokes: "Maks slag per hull"
+        case .lockSubmittedCards: "Lås kortet når det er levert"
+        case .hiddenHoles: "Skjul de siste hullene"
+        }
+    }
+
+    func differs(_ a: Ruleset, _ b: Ruleset) -> Bool {
+        switch self {
+        case .maxStrokes: a.play.maxStrokes != b.play.maxStrokes
+        case .lockSubmittedCards: a.play.lockSubmittedCards != b.play.lockSubmittedCards
+        case .hiddenHoles: a.play.hiddenHoles != b.play.hiddenHoles
+        }
+    }
+
+    func valueText(_ rules: Ruleset) -> String {
+        switch self {
+        case .maxStrokes: RulesetExplanation.maxStrokesText(rules.play.maxStrokes)
+        case .lockSubmittedCards: rules.play.lockSubmittedCards ? "på" : "av"
+        case .hiddenHoles: "\(rules.play.hiddenHoles) hull"
+        }
+    }
+
+    /// «Endret · standard av», eller nil når valget er som i `base`.
+    func changeNote(_ rules: Ruleset, from base: Ruleset) -> String? {
+        differs(rules, base) ? "Endret · standard \(valueText(base))" : nil
     }
 }

@@ -13,6 +13,12 @@ nonisolated enum StrokeInput {
     static func clamp(_ value: Int) -> Int {
         min(range.upperBound, max(range.lowerBound, value))
     }
+
+    /// Som `clamp`, og aldri over regelsettets maks slag på hullet (`play.maxStrokes`, nil: ingen).
+    static func clamp(_ value: Int, max limit: Int?) -> Int {
+        guard let limit else { return clamp(value) }
+        return Swift.min(clamp(value), Swift.max(range.lowerBound, limit))
+    }
 }
 
 /// Et trykk på «Lagre» rett etter at kortet byttet hull, var ment for hullet før: andre halvdel
@@ -39,9 +45,11 @@ nonisolated extension RoundGame {
     /// `kanFore`: kan `writer` føre for `target`? Samme regel som `can_score` i databasen:
     /// arrangøren alltid; runden går ikke (kladd eller låst): ingen andre; spillerens bås har
     /// markør: bare markøren; ellers spilleren selv.
-    func canScore(_ viewer: Viewer, for target: UUID) -> Bool {
+    /// Levert kort (sql/057): bare arrangøren. `ignoringSubmission`: som om kortet ikke var levert.
+    func canScore(_ viewer: Viewer, for target: UUID, ignoringSubmission: Bool = false) -> Bool {
         if viewer.isOrganizer { return true }
         guard status == .active else { return false }
+        if !ignoringSubmission, isCardSubmitted(target) { return false }
         if let marker = bay(of: target)?.marker { return marker == viewer.memberID }
         return viewer.memberID == target
     }
@@ -59,12 +67,13 @@ nonisolated extension RoundGame {
 
     /// `hullkortRadKanFores`: får jeg føre raden på kortet? Strengere enn `canScore`:
     /// en arrangør i en bås med markør fører ikke på kortet (han retter i stedet).
-    func cardRowEditable(_ member: UUID, for viewer: Viewer) -> Bool {
+    func cardRowEditable(_ member: UUID, for viewer: Viewer, ignoringSubmission: Bool = false) -> Bool {
         if status != .active && !viewer.isOrganizer { return false }
         let me = viewer.memberID
-        guard let bay = bay(of: me) else { return member == me && canScore(viewer, for: me) }
-        if let marker = bay.marker { return marker == me && canScore(viewer, for: member) }
-        return member == me && canScore(viewer, for: me)
+        let skip = ignoringSubmission
+        guard let bay = bay(of: me) else { return member == me && canScore(viewer, for: me, ignoringSubmission: skip) }
+        if let marker = bay.marker { return marker == me && canScore(viewer, for: member, ignoringSubmission: skip) }
+        return member == me && canScore(viewer, for: me, ignoringSubmission: skip)
     }
 
     /// Hullet er ført for alle disse spillerne.
@@ -250,7 +259,11 @@ nonisolated struct HoleCard: Equatable, Sendable {
         let scoreName: ScoreName?
         /// Nil i en match (der er det hullet som vinnes, ikke poengene).
         let points: Int?
+        /// Regelsettets maks slag på hullet for spilleren (`play.maxStrokes`). Nil: ingen grense.
+        var maxStrokes: Int? = nil
         var id: UUID { memberID }
+        /// Stepperen står på grensen (+ er av).
+        var isAtMax: Bool { maxStrokes.map { value >= $0 } ?? false }
         /// Står på forvalget (par) uten at markøren har rørt det.
         var isDefault: Bool { editable && !confirmed }
     }
@@ -310,10 +323,12 @@ nonisolated extension RoundGame {
             let saved = scores(member)[index]
             let isEditable = editable.contains(member)
             let confirmed = isEditable ? isConfirmed(member) : saved != nil
-            let value = drafts[index, member] ?? saved ?? hole.par
             let hcp = handicap(member)
             let received = round.hcpExtern ? 0
                 : Scoring.handicapStrokes(handicap: hcp, strokeIndex: hole.strokeIndex, holes: count)
+            // Maks slag per hull (`play.maxStrokes`): stepperen stopper der, og forvalget går ikke over.
+            let limit = rules.play.maxStrokes.limit(par: hole.par, strokesReceived: received)
+            let value = StrokeInput.clamp(drafts[index, member] ?? saved ?? hole.par, max: limit)
             let show = isEditable || saved != nil
             let inMatch = MatchPlay.holeMatch(for: member.uuidString, in: round) != nil
             return HoleCard.Row(
@@ -330,7 +345,8 @@ nonisolated extension RoundGame {
                 scoreName: show ? Scoring.scoreName(par: hole.par, gross: value, handicap: hcp,
                                                     strokeIndex: hole.strokeIndex, holes: count) : nil,
                 points: (show && !inMatch) ? Scoring.points(par: hole.par, gross: value, handicap: hcp,
-                                                            strokeIndex: hole.strokeIndex, holes: count, rules: rules) : nil
+                                                            strokeIndex: hole.strokeIndex, holes: count, rules: rules) : nil,
+                maxStrokes: limit
             )
         }
 

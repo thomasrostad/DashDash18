@@ -191,6 +191,9 @@ extension Ruleset {
         if zip(leadCheckpoints, leadCheckpoints.dropFirst()).contains(where: { $0 >= $1 }) {
             add("leadCheckpoints", "Sjekkpunktene for ledelsen må stå i stigende rekkefølge, uten like.")
         }
+        // Føring og visning (maks slag, skjulte hull).
+        issues.append(contentsOf: play.issues())
+
         return issues
     }
 }

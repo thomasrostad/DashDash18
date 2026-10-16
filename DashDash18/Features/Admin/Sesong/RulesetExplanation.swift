@@ -50,7 +50,36 @@ nonisolated enum RulesetExplanation {
 
         out.append(contentsOf: handicapSentences(rules.handicap, matches: table.pointsSource == .matches))
         out.append(contentsOf: formatSentences(rules.formats))
+        out.append(contentsOf: playSentences(rules.play))
         return out
+    }
+
+    /// Føring og visning (regelvern), bare det som ikke er standard (Golfgutu har ingen).
+    static func playSentences(_ play: Ruleset.PlayRules) -> [String] {
+        var out: [String] = []
+        switch play.maxStrokes {
+        case .off: break
+        case .netDoubleBogey:
+            out.append("Du kan føre høyst netto dobbel bogey på et hull (par + 2 + slagene du får). Et høyere tall teller som grensen.")
+        case .fixed(let n):
+            out.append("Du kan føre høyst \(n) slag på et hull. Et høyere tall teller som grensen.")
+        }
+        if play.lockSubmittedCards {
+            out.append("Når markøren har levert kortet, kan bare arrangøren endre det eller åpne det igjen.")
+        }
+        if play.hiddenHoles != Ruleset.PlayRules.standard.hiddenHoles {
+            out.append("Skjuler arrangøren de siste hullene i en runde, er det de \(play.hiddenHoles) siste: stillingen vises uten dem til runden er låst.")
+        }
+        return out
+    }
+
+    /// «av», «netto dobbel bogey» eller «10 slag».
+    static func maxStrokesText(_ m: Ruleset.MaxStrokes) -> String {
+        switch m {
+        case .off: "av"
+        case .netDoubleBogey: "netto dobbel bogey"
+        case .fixed(let n): "\(n) slag"
+        }
     }
 
     // MARK: Deler

@@ -26,10 +26,12 @@ public struct Season: Sendable {
                 playingHandicaps: [String: [String: Double]] = [:]) {
         self.players = players
         let rounds = rounds.map { round -> Round in
-            guard let id = round.id, let frozen = playingHandicaps[id], !frozen.isEmpty else { return round }
             var r = round
-            r.playingHandicaps.merge(frozen) { _, new in new }
-            return r
+            if let id = round.id, let frozen = playingHandicaps[id], !frozen.isEmpty {
+                r.playingHandicaps.merge(frozen) { _, new in new }
+            }
+            // Maks slag per hull (`play.maxStrokes`): scorer over grensen teller som grensen. Av: uendret.
+            return r.cappingStrokes(roster: players, rules: ruleset)
         }
         self.rounds = rounds
         self.claims = claims

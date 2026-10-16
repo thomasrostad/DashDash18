@@ -3,6 +3,7 @@
 
 import { FORM_CATALOG } from "./forms.ts";
 import type { CompetitionRules, Counting, LeagueRules, Ruleset } from "./ruleset.ts";
+import { HIDDEN_HOLES_RANGE, MAX_STROKES_FIXED, STANDARD_PLAY } from "./ruleset.ts";
 
 /** Et problem i et regelsett, med feltet det gjelder og en norsk melding til arrangøren. */
 export interface RulesetIssue {
@@ -214,6 +215,15 @@ export function validateRuleset(r: Ruleset): RulesetIssue[] {
   if (lc.some((x) => !(x >= 1 && x <= 18))) add("leadCheckpoints", "Sjekkpunktene for ledelsen må være hull fra 1 til 18.");
   if (lc.some((x, i) => i + 1 < lc.length && x >= lc[i + 1])) {
     add("leadCheckpoints", "Sjekkpunktene for ledelsen må stå i stigende rekkefølge, uten like.");
+  }
+
+  // Føring og visning (maks slag, skjulte hull).
+  const play = r.play ?? STANDARD_PLAY;
+  if (play.maxStrokes.type === "fixed" && !inRange(play.maxStrokes.strokes, MAX_STROKES_FIXED)) {
+    add("play.maxStrokes.strokes", `Maks slag per hull må være fra ${MAX_STROKES_FIXED[0]} til ${MAX_STROKES_FIXED[1]}.`);
+  }
+  if (!inRange(play.hiddenHoles, HIDDEN_HOLES_RANGE)) {
+    add("play.hiddenHoles", `Antall skjulte hull må være fra ${HIDDEN_HOLES_RANGE[0]} til ${HIDDEN_HOLES_RANGE[1]}.`);
   }
   return issues;
 }
