@@ -1,3 +1,4 @@
+import CoreText
 import Foundation
 import Testing
 import UIKit
@@ -41,9 +42,19 @@ struct DesignFontTests {
         #expect(large.pointSize > small.pointSize)
     }
 
+    /// Norske bokstaver i selve skriften, ikke lånt fra systemskriften (42dot Sans manglet æ og ø).
+    @Test(arguments: DDFontFamily.allCases, DDFontWeight.allCases)
+    func harNorskeBokstaver(family: DDFontFamily, weight: DDFontWeight) throws {
+        DDFonts.register()
+        let font = try #require(UIFont(name: family.postScriptName(weight), size: 17))
+        let covered = CTFontCopyCharacterSet(font as CTFont) as CharacterSet
+        let missing = "æøåÆØÅé–«»·…".unicodeScalars.filter { !covered.contains($0) }.map(String.init).joined()
+        #expect(missing.isEmpty, "\(family.postScriptName(weight)) mangler \(missing)")
+    }
+
     private func expectedFamily(_ family: DDFontFamily) -> String {
         switch family {
-        case .sans: "42dot Sans"
+        case .sans: "Figtree"
         case .mono: "Sometype Mono"
         }
     }

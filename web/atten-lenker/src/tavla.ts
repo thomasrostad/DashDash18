@@ -143,9 +143,9 @@ export async function fetchSharePayload(code: string, env: TVEnv): Promise<Share
 // MARK: Siden
 
 // Fargene er appens (DashDash18/DesignSystem/DDPalette.swift), lys og mørk. Skriftene er appens
-// (42dot Sans og Sometype Mono), kuttet til latinske tegn og servert fra /fonts (public/).
+// (Figtree og Sometype Mono), kuttet til latinske tegn og servert fra /fonts (public/).
 const STYLE = `
-@font-face { font-family:"42dot Sans"; src:url("/fonts/42dotSans.woff2") format("woff2"); font-weight:300 800; font-display:swap; }
+@font-face { font-family:"Figtree"; src:url("/fonts/Figtree.woff2") format("woff2"); font-weight:300 900; font-display:swap; }
 @font-face { font-family:"Sometype Mono"; src:url("/fonts/SometypeMono.woff2") format("woff2"); font-weight:400 700; font-display:swap; }
 :root { color-scheme: light dark;
   --bg:#FFF9DF; --card:#FFFFFF; --forest:#1C483A; --ink:#21292B; --ink2:#5F5D53; --ondark:#FFF9DF; --hero2:#CFE0D5;
@@ -153,7 +153,7 @@ const STYLE = `
   --yellow:#F5C842; --yellowink:#21292B; --yellowtext:#7A5C00; --rust:#A84A10; --forestink:#1C483A;
   --eagle-bg:#EFE3B0; --eagle:#5A4A0E; --birdie-bg:#D9EBD0; --birdie:#21451F; --par-bg:#F3E9DD; --par:#4A4438;
   --bogey-bg:#FCE5DB; --bogey:#8A2F0E; --dobbel-bg:#F7D4C6; --dobbel:#7A2408; --blowup-bg:#EEEBE3; --blowup:#5F5D53;
-  --sans:"42dot Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --sans:"Figtree",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --mono:"Sometype Mono",ui-monospace,"SF Mono",Menlo,monospace; }
 @media (prefers-color-scheme: dark) { :root {
   --bg:#0C1F18; --card:#17332A; --forest:#123026; --ink:#E8EFE7; --ink2:#A3B5AB; --ondark:#F3F0E2; --hero2:#BFD3C7;
@@ -366,7 +366,7 @@ ${appBanner()}
   return `<!doctype html><html lang="nb"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex"><meta name="theme-color" content="#1C483A" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0C1F18" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="Tavla i Atten"><meta property="og:description" content="Tabellen og scorekortene, live.">
-<title>Tavla · Atten</title><link rel="preload" href="/fonts/42dotSans.woff2" as="font" type="font/woff2" crossorigin><style>${STYLE}</style></head><body>${body}
+<title>Tavla · Atten</title><link rel="preload" href="/fonts/Figtree.woff2" as="font" type="font/woff2" crossorigin><style>${STYLE}</style></head><body>${body}
 <script nonce="${nonce}">${script}</script></body></html>`;
 }
 
