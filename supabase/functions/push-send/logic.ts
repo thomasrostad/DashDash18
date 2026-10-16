@@ -603,6 +603,10 @@ function planActivity(payload: JobPayload, now: Date): PushPlan {
   const data: Record<string, string> = { type: "activity", activity_id: activity.id, kind: activity.kind };
   if (activity.event_id) data.event_id = activity.event_id;
   if (activity.round_id) data.round_id = activity.round_id;
+  // Appen åpner skjermen i riktig klubb og turnering (trykk på varsel, PR #124).
+  if (payload.club.id) data.club_id = payload.club.id;
+  const competitionId = str(activity.data?.competition) ?? payload.competition?.id;
+  if (competitionId) data.competition_id = competitionId;
   const targetKind = str(activity.data?.target_kind), targetId = str(activity.data?.target_id);
   if (targetKind && targetId) {
     data.target_kind = targetKind;
@@ -652,7 +656,8 @@ function planThread(payload: JobPayload, now: Date): PushPlan {
     ? `Tråden · ${eveningLongText(message.event_date)}`
     : `${payload.club.name} · tråden`;
   const body = threadText(author, message.body, message.has_image);
-  const data = { type: "thread", message_id: message.id, event_id: message.event_id };
+  const data: Record<string, string> = { type: "thread", message_id: message.id, event_id: message.event_id };
+  if (payload.club.id) data.club_id = payload.club.id;
   return {
     notifications: to.flatMap((m) =>
       m.devices.map((d) => ({
@@ -945,7 +950,11 @@ export function activityDisplay(activity: ActivityPayload, name: NameLookup, day
       const ld = num(d.ld_hole), kp = num(d.kp_hole), bays = num(d.bays);
       if (ld !== undefined) extras.push(`longest drive på hull ${ld}`);
       if (kp !== undefined) extras.push(`nærmest pinnen på hull ${kp}`);
-      if (bays !== undefined && bays > 0) extras.push(bays === 1 ? "1 bås" : `${bays} båser`);
+      // Ekte bane (venue «course», appen skriver det fra PR #123): flight. Ellers, og i eldre linjer: bås.
+      const course = str(d.venue) === "course";
+      if (bays !== undefined && bays > 0) {
+        extras.push(course ? (bays === 1 ? "1 flight" : `${bays} flighter`) : (bays === 1 ? "1 bås" : `${bays} båser`));
+      }
       if (extras.length) text += " — " + extras.join(", ");
       return { emoji: "🏌️", text };
     }
