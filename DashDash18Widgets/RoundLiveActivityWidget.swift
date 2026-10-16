@@ -2,12 +2,12 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-/// Live Activity under runden: låseskjerm og Dynamic Island. Dataene kommer fra
-/// `RoundActivityController` i appen (`RoundActivityAttributes`).
+/// Live Activity under runden: låseskjerm, Dynamic Island og Smart Stack på Apple Watch
+/// (`.small`). Dataene kommer fra `RoundActivityController` i appen (`RoundActivityAttributes`).
 struct RoundLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RoundActivityAttributes.self) { context in
-            RoundLockScreenView(attributes: context.attributes, state: context.state, isStale: context.isStale)
+            RoundActivityContentView(attributes: context.attributes, state: context.state, isStale: context.isStale)
                 .activityBackgroundTint(WidgetPalette.forest)
                 .activitySystemActionForegroundColor(WidgetPalette.onDark)
         } dynamicIsland: { context in
@@ -59,6 +59,69 @@ struct RoundLiveActivityWidget: Widget {
             }
             .keylineTint(WidgetPalette.gold)
         }
+        .supplementalActivityFamilies([.small])
+    }
+}
+
+/// Velger visning etter flaten: `.small` er Smart Stack på klokka (og CarPlay), ellers låseskjermen.
+struct RoundActivityContentView: View {
+    let attributes: RoundActivityAttributes
+    let state: RoundActivityAttributes.ContentState
+    let isStale: Bool
+    @Environment(\.activityFamily) private var family
+
+    var body: some View {
+        switch family {
+        case .small:
+            RoundWatchView(attributes: attributes, state: state, isStale: isStale)
+        default:
+            RoundLockScreenView(attributes: attributes, state: state, isStale: isStale)
+        }
+    }
+}
+
+/// Klokka: banen og hullet øverst, poengene stort, så matchen eller plassen i båsen.
+struct RoundWatchView: View {
+    let attributes: RoundActivityAttributes
+    let state: RoundActivityAttributes.ContentState
+    let isStale: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) {
+                Text("HULL \(state.holeNumber)")
+                    .foregroundStyle(WidgetPalette.gold)
+                Text("· \(state.holesPlayed)/\(state.holeCount)")
+                    .foregroundStyle(WidgetPalette.onDarkSecondary)
+                Spacer(minLength: 4)
+                Text(isStale ? "Ikke oppdatert" : attributes.courseName)
+                    .foregroundStyle(WidgetPalette.onDarkSecondary)
+                    .lineLimit(1)
+            }
+            .font(.system(size: 12, weight: .semibold, design: .rounded))
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text("\(state.points)")
+                    .font(.system(size: 30, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                Text("p · \(state.strokes) slag")
+                    .font(.system(size: 13, design: .rounded))
+                    .foregroundStyle(WidgetPalette.onDarkSecondary)
+            }
+            if let match = state.matchText {
+                Text(match)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(RoundText.matchColor(state.matchTone))
+                    .lineLimit(1)
+            } else if let place = RoundText.place(state) {
+                Text(place)
+                    .font(.system(size: 13, design: .rounded))
+                    .lineLimit(1)
+            }
+        }
+        .foregroundStyle(WidgetPalette.onDark)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
     }
 }
 
@@ -165,6 +228,12 @@ extension RoundActivityAttributes.ContentState {
     RoundLiveActivityWidget()
 } contentStates: {
     RoundActivityAttributes.ContentState.preview
+}
+
+#Preview("Klokke") {
+    RoundWatchView(attributes: .preview, state: .preview, isStale: false)
+        .frame(width: 176, height: 80)
+        .background(WidgetPalette.forest, in: .rect(cornerRadius: 16))
 }
 
 #Preview("Utvidet", as: .dynamicIsland(.expanded), using: RoundActivityAttributes.preview) {

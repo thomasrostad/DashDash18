@@ -243,7 +243,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 - [x] **APNs-push:** tabell for enhetstokens (SQL til godkjenning) og en sender (Supabase Edge Function), med kategorier som kan slås av og på per spiller og av arrangør. *(07.10: 010 godkjent og kjørt på test (12/12), `push-send` deployet, secrets, webhook `dd18_push_queue` og pg_cron-påminnelse satt opp, Push-capability lagt til, flagget på. Ikke prøvd på telefon. Ikke prod.)*
 - [x] Varsler for store scorer, ledelsesskifte, ny runde, påminnelse før kveld, purring, tråd (nevnt/alle/av). *(07.10: hull i kø logges, ledelsen regnes på ferske data, ingen duplikater fra samme telefon. Mellom telefoner: forslag 011. Arrangørskjermene «Hva blir push» og «Hvem har push». Ikke prøvd på telefon.)*
-- [x] **Live Activity** under runde: hull, egen score, stilling i bås og match. *(07.10: target DashDash18WidgetsExtension, slått på. Oppdateres bare fra appen; push-oppdatering kommer med APNs. Prøvd på telefon.)*
+- [x] **Live Activity** under runde: hull, egen score, stilling i bås og match. *(07.10: target DashDash18WidgetsExtension, slått på. Oppdateres bare fra appen; push-oppdatering kommer med APNs. Prøvd på telefon. 17.10: vises også i Smart Stack på Apple Watch.)*
 - [x] **Widgets:** neste kveld og tabell-topp. *(07.10: App Group `group.com.dashdash18.app`, slått på. Prøvd på telefon.)*
 - [x] **Kamera** i tråden. *(07.10. Prøvd på telefon.)*
 - [x] **Kalender:** «Legg i kalender» via EventKit. *(07.10: på Kveld, uten kalendertilgang. Prøvd på telefon.)*
@@ -603,7 +603,7 @@ Utenfor v1. Databasen har ingen banegeometri.
 - **Penger:** skyldliste, Vipps, bøter, utlegg, premiepenger. Veddemål kommer med poeng i fase 10.
 - **Android.** Kommer etter v1 (B13).
 - **GPS og avstand til green.**
-- **Apple Watch.**
+- **Apple Watch** som egen app (føring og tavle). Live Activity vises allerede på klokka (17.10.2026).
 - **Ekte bane** (ikke simulator) som eget bruksmønster. Regelsettet stenger ikke for det, men appen er ikke testet for det.
 - **iPad-tilpasset bred modus.** Appen kjører på iPad som iPhone-layout.
 - **Plakaten for kvelden** (canvas til Instagram).
