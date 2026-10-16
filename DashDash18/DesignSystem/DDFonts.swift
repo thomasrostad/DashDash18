@@ -3,16 +3,16 @@ import SwiftUI
 import UIKit
 
 /// Skriftene (begge SIL Open Font License, se `Resources/Fonts/OFL-*.txt`).
-/// 42dot Sans for overskrifter, brødtekst og tall (føringen fra konseptappen «golfee»),
-/// Sometype Mono fra PWA-en bare for små etiketter i versaler.
+/// Figtree for overskrifter, brødtekst og tall (erstattet 42dot Sans 16.10.2026: den manglet æ og ø,
+/// som da ble hentet fra systemskriften og så rare ut). Sometype Mono fra PWA-en bare for små etiketter i versaler.
 nonisolated enum DDFontFamily: String, CaseIterable, Sendable {
-    case sans   // 42dot Sans
+    case sans   // Figtree
     case mono   // Sometype Mono
 
     /// Fila i appbunten (variabel skrift, alle vekter i én fil).
     var fileName: String {
         switch self {
-        case .sans: "42dotSans-Variable"
+        case .sans: "Figtree-Variable"
         case .mono: "SometypeMono-Variable"
         }
     }
@@ -22,11 +22,11 @@ nonisolated enum DDFontFamily: String, CaseIterable, Sendable {
         switch self {
         case .sans:
             switch weight {
-            case .light: "42dotSans-Light"
-            case .regular: "42dotSans-Light_Regular"
-            case .medium: "42dotSans-Light_Medium"
-            case .semibold: "42dotSans-Light_SemiBold"
-            case .bold: "42dotSans-Light_Bold"
+            case .light: "Figtree-Light"
+            case .regular: "Figtree-Regular"
+            case .medium: "Figtree-Medium"
+            case .semibold: "Figtree-SemiBold"
+            case .bold: "Figtree-Bold"
             }
         case .mono:
             switch weight {

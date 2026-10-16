@@ -55,7 +55,7 @@ Mangler / må avklares:
 - Tekst `#21292B`, sekundær `#727065`, skoggrønn `#1C483A`, krem på grønt `#FFF9DF`, stat sekundær `#9A9A9A`
 - Lime `#D9EBD0`/`#21451F`, sol `#EFE3B0`/`#4B4A35`, earth `#F3E9DD`/`#612807`, blush `#FCE5DB`, blushDeep `#F7D4C6`, gull `#E4C767`/`#4B3A0B`
 - Aksent lime `#6BE07A`/`#0F2E17`, gul `#F5C842`/`#1E1A05`, aktiv fane `#7A5C00`, tallmerke `#A84A10`
-- Skrift: 42dot Sans (tittel 24 medium, korttittel 20 medium, brød 16, callout 14, caption 13, heltall 52 lett), Sometype Mono (eyebrow 10, sporing 1,4, versaler; pille 9,5, sporing 1,1)
+- Skrift: Figtree (fra 16.10.2026; før 42dot Sans, som manglet æ og ø) (tittel 24 medium, korttittel 20 medium, brød 16, callout 14, caption 13, heltall 52 lett), Sometype Mono (eyebrow 10, sporing 1,4, versaler; pille 9,5, sporing 1,1)
 - Radius: kort 24, stort kort 30, stripe 16, piller fulle. Sideluft 20, mellom kort 10.
 
 ## Filer
