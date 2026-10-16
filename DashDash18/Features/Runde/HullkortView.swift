@@ -313,7 +313,10 @@ struct HullRadView: View {
     private var result: some View {
         if let name = row.scoreName {
             HStack(spacing: 8) {
-                if let points = row.points {
+                if let mark = row.parBogey {
+                    // Par/bogey: «+ · netto birdie», «0 · netto par», «− · netto bogey».
+                    ScoreChip(name: name, text: "\(mark) · netto \(name.label.lowercased())")
+                } else if let points = row.points {
                     // «2 p · netto par» i scorefargen (planen K1).
                     ScoreChip(name: name, text: "\(points) p · netto \(name.label.lowercased())")
                 } else {
@@ -387,12 +390,22 @@ nonisolated enum StrokeAccessibility {
         "\(row.name), \(row.value) slag"
     }
 
-    /// «2 poeng», «forvalgt par, 2 poeng» eller tomt i en match.
+    /// «2 poeng», «forvalgt par, 2 poeng», «hullet vunnet» (par/bogey) eller tomt i en match.
     static func value(_ row: HoleCard.Row) -> String {
         var parts: [String] = []
         if row.isDefault { parts.append("forvalgt par") }
         if let points = row.points { parts.append("\(points) poeng") }
+        if let mark = row.parBogey { parts.append(parBogey(mark)) }
         return parts.joined(separator: ", ")
+    }
+
+    /// Tegnet lest opp: «hullet vunnet», «hullet delt», «hullet tapt».
+    static func parBogey(_ mark: String) -> String {
+        switch mark {
+        case "+": "hullet vunnet"
+        case "0": "hullet delt"
+        default: "hullet tapt"
+        }
     }
 }
 

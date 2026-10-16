@@ -257,8 +257,10 @@ nonisolated struct HoleCard: Equatable, Sendable {
         let calculation: String?
         /// Nil når det ikke er noe å vise (ikke ført i seer-modus).
         let scoreName: ScoreName?
-        /// Nil i en match (der er det hullet som vinnes, ikke poengene).
+        /// Nil i en match (der er det hullet som vinnes, ikke poengene) og i par/bogey.
         let points: Int?
+        /// Par/bogey (regel 21.3): «+» vunnet, «0» delt, «−» tapt hull mot banen. Nil i andre former.
+        var parBogey: String? = nil
         /// Regelsettets maks slag på hullet for spilleren (`play.maxStrokes`). Nil: ingen grense.
         var maxStrokes: Int? = nil
         var id: UUID { memberID }
@@ -314,6 +316,7 @@ nonisolated extension RoundGame {
         let editable = players.filter { cardRowEditable($0, for: viewer) }
         let canEdit = !editable.isEmpty
         let mustConfirm = editable.count > 1
+        let isParBogey = round.form.axes.scoring == .parBogey
 
         func isConfirmed(_ member: UUID) -> Bool {
             !mustConfirm || drafts[index, member] != nil || scores(member)[index] != nil
@@ -331,6 +334,7 @@ nonisolated extension RoundGame {
             let value = StrokeInput.clamp(drafts[index, member] ?? saved ?? hole.par, max: limit)
             let show = isEditable || saved != nil
             let inMatch = MatchPlay.holeMatch(for: member.uuidString, in: round) != nil
+            let parBogey = isParBogey && show ? HoleMath.parBogeyMark(net: value - received, par: hole.par) : nil
             return HoleCard.Row(
                 memberID: member,
                 name: name(member),
@@ -344,8 +348,9 @@ nonisolated extension RoundGame {
                     ? HoleMath.calculation(gross: value, received: received) : nil,
                 scoreName: show ? Scoring.scoreName(par: hole.par, gross: value, handicap: hcp,
                                                     strokeIndex: hole.strokeIndex, holes: count) : nil,
-                points: (show && !inMatch) ? Scoring.points(par: hole.par, gross: value, handicap: hcp,
+                points: (show && !inMatch && !isParBogey) ? Scoring.points(par: hole.par, gross: value, handicap: hcp,
                                                             strokeIndex: hole.strokeIndex, holes: count, rules: rules) : nil,
+                parBogey: parBogey,
                 maxStrokes: limit
             )
         }
@@ -521,6 +526,11 @@ nonisolated extension RoundGame {
 /// Tekst og tall til hullkortet.
 nonisolated enum HoleMath {
     /// Regnestykket: «5 brutto − 1 = 4 netto».
+    /// Par/bogey-tegnet på hullet (regel 21.3): «+» under par netto, «0» på par, «−» over.
+    static func parBogeyMark(net: Int, par: Int) -> String {
+        net < par ? "+" : net == par ? "0" : "−"
+    }
+
     static func calculation(gross: Int, received: Int) -> String {
         "\(gross) brutto − \(received) = \(gross - received) netto"
     }
