@@ -263,7 +263,7 @@ Deno.test("tråden: tittel med kvelden og tekst med navn", () => {
   is(n.title, "Tråden · torsdag 8. oktober");
   is(n.body, "Anders: Hei @Bjørn kommer du?");
   is(n.threadId, "thread-event-1");
-  eq(n.data, { type: "thread", message_id: "msg-1", event_id: "event-1" });
+  eq(n.data, { type: "thread", message_id: "msg-1", event_id: "event-1", club_id: "club-1" });
 });
 
 Deno.test("tråden: bilde og lange meldinger (PWA: meldingTekst)", () => {
@@ -417,6 +417,10 @@ Deno.test("forfall: bare forfall, og bare signup_dropped nær i tid", () => {
 Deno.test("ny runde", () => {
   is(text(activity("round_started", "round", { round_no: 1, course_name: "Pebble Beach", hole_count: 18, bays: 3, ld_hole: 7 })).text,
     "Ny runde: Runde 1 – Pebble Beach · 18 hull — longest drive på hull 7, 3 båser");
+  // Ekte bane: flight. Uten venue (eldre linjer) og i simulatoren: bås.
+  is(text(activity("round_started", "round", { round_no: 1, bays: 3, venue: "course" })).text, "Ny runde: Runde 1 — 3 flighter");
+  is(text(activity("round_started", "round", { round_no: 1, bays: 1, venue: "course" })).text, "Ny runde: Runde 1 — 1 flight");
+  is(text(activity("round_started", "round", { round_no: 1, bays: 1, venue: "simulator" })).text, "Ny runde: Runde 1 — 1 bås");
   is(text(activity("round_locked", "round", { round_no: 2 }, { actor_member_id: THOMAS })).text, "Thomas låste Runde 2");
 });
 
@@ -464,7 +468,9 @@ Deno.test("varselet: klubbnavnet som tittel, emoji foran teksten", () => {
   const n = planPush(job(EAGLE), NOW).notifications[0];
   is(n.title, "Golfgutu");
   is(n.body, "🦅 Anders eagle på hull 5 — 3 slag på par 5");
-  eq(n.data, { type: "activity", activity_id: "act-1", kind: "big_score", event_id: "event-1", round_id: "round-1" });
+  eq(n.data, {
+    type: "activity", activity_id: "act-1", kind: "big_score", event_id: "event-1", round_id: "round-1", club_id: "club-1",
+  });
   eq(apnsBody(n), {
     aps: { alert: { title: "Golfgutu", body: n.body }, sound: "default", "thread-id": "club-club-1" },
     dd18: { ...n.data, category: "score" },
@@ -992,4 +998,15 @@ Deno.test("054: profil-id-er på mottakerlista leses som innloggingen også for 
   const a = follow("follow_accepted", ["user-espen"]);
   const p = personJob(a, [member("annen-id", "Espen", { user_id: "user-espen" })]);
   ok(isRecipient(p, a, p.members[0]));
+});
+
+Deno.test("varselet: klubb og turnering, så trykket åpner riktig sted (PR #124)", () => {
+  const inComp = activity("big_score", "score", { ...EAGLE.data, competition: "comp-1" });
+  is(planPush(job(inComp), NOW).notifications[0].data.competition_id, "comp-1");
+  // Fra jobben når linja ikke har turneringen.
+  const fromJob = { ...job(EAGLE), competition: { id: "comp-2", name: "Jakkeracet" } };
+  is(planPush(fromJob, NOW).notifications[0].data.competition_id, "comp-2");
+  // Turnering uten klubb (sql/046): ingen club_id.
+  const noClub = { ...job(EAGLE), club: { id: null, name: "Morrocupen", disabled_categories: [] } };
+  ok(!("club_id" in planPush(noClub, NOW).notifications[0].data));
 });
