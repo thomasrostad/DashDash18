@@ -39,3 +39,40 @@ struct HullkortParBogeyTests {
         #expect(HoleMath.parBogeyMark(net: 6, par: 4) == "−")
     }
 }
+
+/// Par/bogey på scorekortet: tegnet per hull, summen med fortegn og «mot banen» totalt.
+struct ScorekortParBogeyTests {
+    private let me = F.id(F.anders)
+
+    /// Netto par + `offset` på hull 1–3, med slagene spilleren får.
+    private func game(_ offsets: [Int], format: String) -> RoundGame {
+        let base = RoundGame(F.snapshot(F.markorPlayers(), round: F.round(format: format)))
+        let scores = offsets.enumerated().map { i, offset in
+            let h = base.holes[i]
+            let received = Scoring.handicapStrokes(handicap: base.handicap(me), strokeIndex: h.strokeIndex,
+                                                   holes: base.holeCount)
+            return (F.anders, i, h.par + received + offset)
+        }
+        return RoundGame(F.snapshot(F.markorPlayers(), round: F.round(format: format), scores: scores))
+    }
+
+    @Test func tegnOgSum() {
+        let g = game([-1, 0, 2], format: "par-bogey")
+        let card = g.scorecard(for: me, inward: false)
+        #expect(card.lines.prefix(3).map(\.parBogey) == ["+", "0", "−"])
+        #expect(card.lines[0].points == nil)
+        #expect(card.parBogeySum == 0)
+        #expect(g.scorecardTotal(for: me) == "0 mot banen")
+        let opp = game([-1, -1, 0], format: "par-bogey")
+        #expect(opp.scorecard(for: me, inward: false).parBogeySum == 2)
+        #expect(opp.scorecardTotal(for: me) == "+2 mot banen")
+    }
+
+    @Test func stablefordSomFoer() {
+        let g = game([0], format: "stableford")
+        let card = g.scorecard(for: me, inward: false)
+        #expect(card.lines[0].parBogey == nil && card.lines[0].points == 2)
+        #expect(card.parBogeySum == nil)
+        #expect(g.scorecardTotal(for: me) == "2 poeng")
+    }
+}

@@ -87,7 +87,7 @@ struct ScorekortSheet: View {
                         }
                         rule
                         row("Sum", "\(card.sumPar)", card.sumStrokes > 0 ? "\(card.sumStrokes)" : "—", nil,
-                            sum: card.sumPoints)
+                            sum: card.parBogeySum.map(RoundCompetitionBoard.signedText) ?? "\(card.sumPoints)")
                     }
                     .padding(.horizontal, 18)
                     .padding(.vertical, 8)
@@ -95,7 +95,7 @@ struct ScorekortSheet: View {
                     HStack {
                         Text("Totalt i runden")
                         Spacer()
-                        Text("\(game.total(memberID)) poeng")
+                        Text(game.scorecardTotal(for: memberID))
                             .font(.ddNumber)
                             .monospacedDigit()
                             .foregroundStyle(Color.ddForestInk)
@@ -124,7 +124,7 @@ struct ScorekortSheet: View {
     }
 
     private func row(_ hole: String, _ par: String, _ strokes: String, _ line: Scorecard.Line?,
-                     header: Bool = false, sum: Int? = nil) -> some View {
+                     header: Bool = false, sum: String? = nil) -> some View {
         HStack {
             Text(hole).frame(width: 44, alignment: .leading)
                 .font(header ? .ddEyebrow : .ddNumber)
@@ -133,11 +133,14 @@ struct ScorekortSheet: View {
             Text(strokes).frame(width: 44)
             Spacer()
             if header {
-                Text("Poeng")
+                Text(game.round.form.axes.scoring == .parBogey ? "Par/bogey" : "Poeng")
             } else if let sum {
-                Text("\(sum)")
+                Text(sum)
                     .font(.ddNumberLarge)
                     .foregroundStyle(Color.ddGold)
+            } else if let line, let name = line.scoreName, let mark = line.parBogey {
+                DDPointsBadge(text: mark, name: name)
+                    .accessibilityLabel(StrokeAccessibility.parBogey(mark))
             } else if let line, let name = line.scoreName, let points = line.points {
                 DDPointsBadge(points: points, name: name)
             } else {

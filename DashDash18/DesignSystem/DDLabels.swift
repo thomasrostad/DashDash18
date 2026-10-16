@@ -270,11 +270,21 @@ struct DDYouBadge: View {
 
 /// Poengtall i en farget rundel, som på scorekortet (`1` i blush, `4` i sol …). Tom = «–».
 struct DDPointsBadge: View {
-    let points: Int?
+    let text: String?
     let name: ScoreName?
 
+    init(points: Int?, name: ScoreName?) {
+        self.init(text: points.map(String.init), name: name)
+    }
+
+    /// Fritt merke, f.eks. par/bogey-tegnet «+», «0» eller «−».
+    init(text: String?, name: ScoreName?) {
+        self.text = text
+        self.name = name
+    }
+
     var body: some View {
-        Text(points.map(String.init) ?? "–")
+        Text(text ?? "–")
             .font(.dd(.sans, size: 15, weight: .semibold, relativeTo: .body))
             .monospacedDigit()
             .foregroundStyle(name?.tone.foreground ?? .ddInkSecondary)
