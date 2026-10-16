@@ -19,6 +19,10 @@ struct RundeView: View {
     @State private var showsRules = false
     /// Konflikten arket viser (K6/6.3).
     @State private var conflictSheet: HoleConflictRow?
+    /// «Ferdig? Avslutt runden» (`RoundEndPrompt`): bekreftelsen, låsingen og feilen.
+    @State private var confirmsEnd = false
+    @State private var isEnding = false
+    @State private var endError: String?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -49,6 +53,15 @@ struct RundeView: View {
         .refreshable { await model.load() }
         .safeAreaInset(edge: .bottom) {
             if let game = model.game, segment(game) == .scoring, !model.needsParConfirmation,
+               let prompt = endLinePrompt {
+                RundeAvslutningLinje(
+                    prompt: prompt,
+                    isEnding: isEnding,
+                    onScorecard: game.isPlaying(model.viewer.memberID)
+                        ? { scorecardFor = ScorecardTarget(memberID: model.viewer.memberID) } : nil,
+                    onEnd: { confirmsEnd = true }
+                )
+            } else if let game = model.game, segment(game) == .scoring, !model.needsParConfirmation,
                let card = model.card, card.action != .none {
                 FoeringBunnlinje(
                     card: card,
@@ -82,6 +95,14 @@ struct RundeView: View {
                     try await model.resolve(conflict, strokes: strokes)
                 }
             }
+        }
+        .roundEndConfirmation(isPresented: $confirmsEnd, offer: model.endOffer, perform: endRound)
+        .alert("Runden ble ikke avsluttet", isPresented: Binding(
+            get: { endError != nil }, set: { if !$0 { endError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(endError ?? "")
         }
         .sheet(isPresented: $showsRules) {
             if let game = model.game {
@@ -142,6 +163,10 @@ struct RundeView: View {
                         }
                     }
                     Button("Reglene i runden", systemImage: "info.circle") { showsRules = true }
+                    if model.endOffer != nil {
+                        Button(RoundEndOffer.menuTitle, systemImage: "flag.checkered") { confirmsEnd = true }
+                            .disabled(isEnding)
+                    }
                     if !game.snapshot.players.isEmpty {
                         ResultShareButton(share: game.share(viewer: model.viewer))
                     }
@@ -152,6 +177,36 @@ struct RundeView: View {
             }
             .tint(Color.ddForestInk)
             .accessibilityLabel("Mer")
+        }
+    }
+
+    // MARK: Avslutningen
+
+    /// Avslutningslinja i stedet for «Lagre hull»: når kortet er ferdig og ingenting venter på å bli
+    /// lagret på hullet du står på (en retting vises som vanlig).
+    private var endLinePrompt: RoundEndPrompt? {
+        guard let prompt = model.endPrompt else { return nil }
+        if let card = model.card, case .save = card.action { return nil }
+        return prompt
+    }
+
+    /// Låser runden. En løs runde blir stående med resultatet; en klubbrunde går ikke lenger, så
+    /// føringen lukkes og Hjem henter på nytt (runden åpnes ikke igjen).
+    private func endRound() {
+        isEnding = true
+        endError = nil
+        Task {
+            defer { isEnding = false }
+            do throws(DataError) {
+                try await model.endRound()
+            } catch {
+                endError = error.message
+                return
+            }
+            if model.looseContext == nil {
+                dismiss()
+                await model.load()
+            }
         }
     }
 

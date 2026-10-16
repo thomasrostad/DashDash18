@@ -42,6 +42,8 @@ struct FriendsRootView: View {
                                     LooseRoundScreen(context: LooseRoundContext(client: client, userID: user.id,
                                                                                 roundID: roundID))
                                         .toolbar(.hidden, for: .tabBar)
+                                        // Avsluttet runde: ut av baren med en gang, ikke etter neste henting.
+                                        .onDisappear { Task { await liveRounds.load() } }
                                 }
                             }
                     }
