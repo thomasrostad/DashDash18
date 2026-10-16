@@ -4,8 +4,8 @@ import Testing
 
 /// «Del tavla» (sql/056): lenken og hva arket viser.
 struct TavlaShareTests {
-    @Test func flaggetErAvTil056ErKjørt() {
-        #expect(TavlaShareFeature.isEnabled == false)
+    @Test func flaggetErPå() {
+        #expect(TavlaShareFeature.isEnabled == true)
     }
 
     @Test func lenken() {
