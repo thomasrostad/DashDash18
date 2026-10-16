@@ -108,12 +108,13 @@ struct DesignColorTests {
     }
 
     @Test("Øk kontrast gir mørkere sekundærtekst i lys modus og lysere i mørk")
-    func highContrast() {
+    @MainActor func highContrast() {
         let color = DDToken.inkSecondary.uiColor
         let normal = color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
-        let high = color.resolvedColor(with: UITraitCollection(traitsFrom: [
-            UITraitCollection(userInterfaceStyle: .light), UITraitCollection(accessibilityContrast: .high),
-        ]))
+        let high = color.resolvedColor(with: UITraitCollection {
+            $0.userInterfaceStyle = .light
+            $0.accessibilityContrast = .high
+        })
         var r1: CGFloat = 0, r2: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         normal.getRed(&r1, green: &g, blue: &b, alpha: &a)
         high.getRed(&r2, green: &g, blue: &b, alpha: &a)

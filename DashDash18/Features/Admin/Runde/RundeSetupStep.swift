@@ -94,7 +94,7 @@ struct RundeSetupStep: View {
 
     /// Formene som er ferdige i appen etter PWA-en, selv om PWA-katalogen (`CompetitionForm.all`) sier
     /// «delvis»: par/bogey regnes av motoren i konkurransene, stillingen og tabellen.
-    static let completedForms: Set<String> = ["par-bogey"]
+    nonisolated static let completedForms: Set<String> = ["par-bogey"]
 
     private func supportNote(_ form: CompetitionForm) -> String {
         switch form.support {
