@@ -182,6 +182,40 @@ struct ForingLagringTests {
         #expect(g.recipients(for: id(F.cato)) == [id(F.cato)])
     }
 
+    /// Scramble med markør: laget står én gang på kortet, og tallet går til alle fire.
+    @Test func scrambleViserLagetSomEnRad() {
+        let players = F.markorPlayers().map { var p = $0; p.team = p.n <= 4 ? 1 : 2; return p }
+        let g = RoundGame(F.snapshot(players, round: F.round(format: "scramble-4")))
+        let viewer = F.viewer(F.anders)
+        #expect(g.cardRows(for: viewer) == [id(F.anders)])
+        let card = g.card(hole: 0, drafts: HoleDrafts(), viewer: viewer)
+        #expect(card.rows.map(\.name) == ["Anders, Bjørn, Cato og Dag"])
+        #expect(!card.mustConfirm)
+
+        var drafts = HoleDrafts()
+        drafts[0, id(F.anders)] = 3
+        let sub = g.submission(hole: 0, drafts: drafts, viewer: viewer, recordedAt: Date())
+        #expect(sub?.entries.map(\.memberID) == [F.anders, F.bjorn, F.cato, F.dag].map(id))
+        #expect(sub?.entries.allSatisfy { $0.strokes == 3 } == true)
+    }
+
+    /// To lag i samme flight: én rad per lag, og hvert lag får sitt eget tall.
+    @Test func toScrambleLagIFlightenFaarHverSinRad() {
+        let players = F.markorPlayers().map { var p = $0; p.team = (p.n + 1) / 2; return p }
+        let g = RoundGame(F.snapshot(players, round: F.round(format: "scramble-2")))
+        let viewer = F.viewer(F.anders)
+        #expect(g.cardRows(for: viewer) == [id(F.anders), id(F.cato)])
+        #expect(g.card(hole: 0, drafts: HoleDrafts(), viewer: viewer).rows.map(\.name)
+                == ["Anders og Bjørn", "Cato og Dag"])
+
+        var drafts = HoleDrafts()
+        drafts[0, id(F.cato)] = 5
+        let sub = g.submission(hole: 0, drafts: drafts, viewer: viewer, recordedAt: Date())
+        let strokes = Dictionary(uniqueKeysWithValues: (sub?.entries ?? []).map { ($0.memberID, $0.strokes) })
+        let par = g.holes[0].par
+        #expect(strokes == [id(F.anders): par, id(F.bjorn): par, id(F.cato): 5, id(F.dag): 5])
+    }
+
     @Test func lagreRettEtterHullbytteSperres() {
         let changed = Date(timeIntervalSince1970: 100)
         #expect(!SaveTapGuard.allows(now: changed.addingTimeInterval(0.2), holeChangedAt: changed))
