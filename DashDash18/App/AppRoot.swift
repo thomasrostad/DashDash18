@@ -173,9 +173,17 @@ struct ClubGate: View {
     var body: some View {
         switch OpenAppGate.home(club: club.state, choice: choice) {
         case .loading:
-            ProgressView("Henter klubben din …")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .ddScreenBackground()
+            VStack(spacing: DDSpacing.l) {
+                ProgressView("Henter klubben din …")
+                if club.isWaitingForNetwork {
+                    Text("Dårlig dekning. Prøver igjen …")
+                        .font(.ddCallout)
+                        .foregroundStyle(Color.ddInkSecondary)
+                    SignOutButton()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ddScreenBackground()
         case .chooser:
             OnboardingChoiceView { choose($0) }
         case .clubOnboarding:
@@ -197,19 +205,20 @@ struct ClubGate: View {
             } description: {
                 Text(error.message)
             } actions: {
-                Button("Prøv igjen") {
-                    Task { await club.load(userID: user.id) }
+                Button {
+                    Task { await club.refresh(userID: user.id) }
+                } label: {
+                    HStack(spacing: DDSpacing.s) {
+                        Text("Prøv igjen")
+                        if club.isRefreshing { ProgressView() }
+                    }
                 }
                 .buttonStyle(.dd(.primary))
+                .disabled(club.isRefreshing)
                 SignOutButton()
             }
             .ddScreenBackground()
-            // Prøv igjen av seg selv når nettet kommer tilbake (første verdi kommer med en gang).
-            .task {
-                for await online in PathNetworkMonitor().availability() where online {
-                    await club.load(userID: user.id)
-                }
-            }
+            .task { await club.reloadWhenOnline(userID: user.id) }
         }
     }
 
