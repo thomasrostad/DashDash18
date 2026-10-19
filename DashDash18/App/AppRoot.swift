@@ -204,6 +204,12 @@ struct ClubGate: View {
                 SignOutButton()
             }
             .ddScreenBackground()
+            // Prøv igjen av seg selv når nettet kommer tilbake (første verdi kommer med en gang).
+            .task {
+                for await online in PathNetworkMonitor().availability() where online {
+                    await club.load(userID: user.id)
+                }
+            }
         }
     }
 
