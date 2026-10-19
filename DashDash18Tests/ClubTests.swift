@@ -191,3 +191,25 @@ struct JoinNameTests {
         #expect(p.sortedOpenMembers.map(\.displayName) == ["Bjørn", "Zorro", "Ærlige", "Øyvind", "Åse"])
     }
 }
+
+/// Oppstarten prøver på nytt ved nettverksfeil, men bare mens ingenting vises.
+struct ClubStartupRetryTests {
+    @Test(arguments: [URLError.Code.timedOut, .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost])
+    func nettverksfeilProvesPaaNytt(code: URLError.Code) {
+        #expect(ClubModel.shouldRetry(URLError(code), attempt: 0, retries: 3, state: .loading))
+        #expect(ClubModel.shouldRetry(URLError(code), attempt: 2, retries: 3, state: .failed(.offline)))
+    }
+
+    @Test func stopperEtterSisteForsok() {
+        #expect(!ClubModel.shouldRetry(URLError(.timedOut), attempt: 3, retries: 3, state: .loading))
+    }
+
+    @Test func avbruttEllerAnnenFeilProvesIkke() {
+        #expect(!ClubModel.shouldRetry(URLError(.cancelled), attempt: 0, retries: 3, state: .loading))
+        #expect(!ClubModel.shouldRetry(ClubError.notAllowed, attempt: 0, retries: 3, state: .loading))
+    }
+
+    @Test func ikkeNaarNoeVises() {
+        #expect(!ClubModel.shouldRetry(URLError(.timedOut), attempt: 0, retries: 3, state: .noClub))
+    }
+}

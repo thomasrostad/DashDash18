@@ -13,11 +13,15 @@ final class ClubModel {
     private(set) var roleAccess: [UUID: ClubRoleAccess] = [:]
     private let client: SupabaseClient
     private let cache: MembershipCache
+    /// Ventetidene før nye forsøk når oppstarten ikke får kontakt (1, 2 og 4 sekunder).
+    private let retryDelays: [Duration]
     private static let rememberedKey = "valgtKlubb"
 
-    init(client: SupabaseClient, cache: MembershipCache = MembershipCache()) {
+    init(client: SupabaseClient, cache: MembershipCache = MembershipCache(),
+         retryDelays: [Duration] = [.seconds(1), .seconds(2), .seconds(4)]) {
         self.client = client
         self.cache = cache
+        self.retryDelays = retryDelays
     }
 
     var current: Membership? {
@@ -39,12 +43,7 @@ final class ClubModel {
         isRefreshing = true
         defer { isRefreshing = false }
         do {
-            let rows: [Membership] = try await client
-                .from("club_members")
-                .select(Membership.selectColumns)
-                .eq("user_id", value: userID)
-                .execute()
-                .value
+            let rows = try await fetchMemberships(userID: userID)
             cache.save(rows, userID: userID)
             apply(rows)
             await loadRoleAccess()
@@ -56,6 +55,36 @@ final class ClubModel {
             case .noClub, .pending, .active: break
             }
             return failure
+        }
+    }
+
+    /// Henter medlemskapene. Uten noe å vise (første oppstart, ingen lagret kopi) prøves en
+    /// nettverksfeil på nytt etter `retryDelays`, så et kort brudd i dekningen ikke gir feilskjermen.
+    private func fetchMemberships(userID: UUID) async throws -> [Membership] {
+        var attempt = 0
+        while true {
+            do {
+                return try await client
+                    .from("club_members")
+                    .select(Membership.selectColumns)
+                    .eq("user_id", value: userID)
+                    .execute()
+                    .value
+            } catch {
+                guard Self.shouldRetry(error, attempt: attempt, retries: retryDelays.count, state: state) else { throw error }
+                try await Task.sleep(for: retryDelays[attempt])
+                attempt += 1
+            }
+        }
+    }
+
+    /// Nytt forsøk bare for nettverksfeil (ikke avbrutt), bare mens ingenting vises, og bare
+    /// så mange ganger som det finnes ventetider.
+    nonisolated static func shouldRetry(_ error: any Error, attempt: Int, retries: Int, state: ClubState) -> Bool {
+        guard attempt < retries, let urlError = error as? URLError, urlError.code != .cancelled else { return false }
+        switch state {
+        case .loading, .failed: return true
+        case .noClub, .pending, .active: return false
         }
     }
 
