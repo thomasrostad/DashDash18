@@ -214,6 +214,25 @@ struct OutboxTests {
         outbox.stop()
     }
 
+    /// Avviste hull står for runden til føringen har sagt fra (`acknowledgeRejected`).
+    @Test func avvisteHullForRundenTilDeErSett() async throws {
+        let outbox = makeOutbox()
+        let otherRound = UUID()
+        sender.mode = .fail(.invalid("Runden er låst"))
+        _ = try? await outbox.submit(hole(6, [(anna, 4)]))
+        _ = try? await outbox.submit(hole(2, [(anna, 4)]))
+        _ = try? await outbox.submit(hole(1, round: otherRound, [(anna, 4)]))
+        #expect(outbox.rejectedHoles(roundID: roundID)
+                == [RejectedHole(holeIndex: 2, message: "Runden er låst"), RejectedHole(holeIndex: 6, message: "Runden er låst")])
+
+        outbox.acknowledgeRejected(roundID: roundID, holes: [6])
+        #expect(outbox.rejectedHoles(roundID: roundID).map(\.holeIndex) == [2])
+        outbox.acknowledgeRejected(roundID: roundID)
+        #expect(outbox.rejectedHoles(roundID: roundID).isEmpty)
+        #expect(outbox.rejectedHoles(roundID: otherRound).map(\.holeIndex) == [1])
+        #expect(outbox.status.rejectedCount == 1)
+    }
+
     @Test func ugyldigKastesOgAvvises() async throws {
         let outbox = makeOutbox()
         sender.mode = .fail(.invalid("Ugyldig hull"))
@@ -419,5 +438,26 @@ struct OutboxTests {
         #expect(outbox.pendingHoles(roundID: otherRound) == [1])
         #expect(outbox.status.pendingCount == 3)
         #expect(outbox.status.rejectedCount == 1)
+    }
+}
+
+struct RejectedHolesTextTests {
+    private func number(_ i: Int) -> Int { i + 1 }
+
+    @Test func ettHull() {
+        #expect(RejectedHoles.text([RejectedHole(holeIndex: 6, message: "Runden er låst")], holeNumber: number)
+                == "Hull 7 ble ikke lagret: Runden er låst. Tallene står ikke på kortet. Før dem på nytt, eller si fra til arrangøren.")
+    }
+
+    @Test func flereHullISortertRekkefolge() {
+        let holes = [RejectedHole(holeIndex: 8, message: "Du har ikke tilgang til dette."),
+                     RejectedHole(holeIndex: 6, message: "Du har ikke tilgang til dette."),
+                     RejectedHole(holeIndex: 7, message: "Du har ikke tilgang til dette.")]
+        #expect(RejectedHoles.text(holes, holeNumber: number)
+                == "Hull 7, 8 og 9 ble ikke lagret: Du har ikke tilgang til dette. Tallene står ikke på kortet. Før dem på nytt, eller si fra til arrangøren.")
+    }
+
+    @Test func ingenAvviste() {
+        #expect(RejectedHoles.text([], holeNumber: number) == nil)
     }
 }

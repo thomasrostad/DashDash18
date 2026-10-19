@@ -41,6 +41,8 @@ final class RundeModel {
     private var holeChangedAt = Date.distantPast
     private(set) var drafts = HoleDrafts()
     private(set) var pendingHoles: Set<Int> = []
+    /// Hull i kø som serveren avviste i bakgrunnen (runden låst, ingen tilgang): tallene er ikke lagret.
+    private(set) var rejectedHoles: [RejectedHole] = []
     private(set) var isSaving = false
     var saveError: String?
     var celebration: Celebration?
@@ -202,6 +204,7 @@ final class RundeModel {
         // ville erstattet tallet i køen). Bekreftede hull er ute av køen og står hos serveren.
         let pending = submitter?.pendingSubmissions(roundID: snapshot.round.id) ?? []
         pendingHoles = Set(pending.map(\.holeIndex))
+        rejectedHoles = submitter?.rejectedHoles(roundID: snapshot.round.id) ?? []
         logConfirmedQueuedHoles(server: snapshot)
         // «Skjul de tre siste hullene» (sql/047): båsen din og arrangøren ser alt, andre ikke ennå.
         game = RoundGame(HiddenHoles.apply(snapshot.overlaying(pending.map(QueuedHole.init)), viewer: viewer))
@@ -298,6 +301,26 @@ final class RundeModel {
         isLive = false
     }
 
+    // MARK: Køen
+
+    /// Køen er endret i bakgrunnen (et hull ble sendt eller avvist): vis runden med køen slik den er nå.
+    func queueChanged() {
+        rebuild()
+    }
+
+    /// «Den er sett» på stripa om avviste hull.
+    func acknowledgeRejectedHoles() {
+        guard let game else { return }
+        submitter?.acknowledgeRejected(roundID: game.roundID)
+        rebuild()
+    }
+
+    /// Stripa om avviste hull, eller nil.
+    var rejectedText: String? {
+        guard let game else { return nil }
+        return RejectedHoles.text(rejectedHoles, holeNumber: game.holeNumber)
+    }
+
     // MARK: Føring
 
     func goTo(hole: Int) {
@@ -360,6 +383,9 @@ final class RundeModel {
             advance(from: hole)
         } catch {
             saveError = "Hull \(game.holeNumber(hole)) ble ikke lagret: \(DataError.from(error).message) Prøv igjen."
+            // Markøren ser det i feilmeldingen, så hullet skal ikke stå som avvist i stripa også.
+            submitter.acknowledgeRejected(roundID: game.roundID, holes: [hole])
+            rebuild()
         }
     }
 
