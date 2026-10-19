@@ -65,6 +65,28 @@ nonisolated extension RoundGame {
         return [me] + bay.players.filter { $0 != me }
     }
 
+    /// Radene på hullkortet. I en form med ett kort per lag (scramble, foursome …) står hvert lag
+    /// én gang, med den første fra laget på kortet. Tallet skrives på hele laget (`recipients`).
+    /// Ellers én rad per spiller, som `cardPlayers`.
+    func cardRows(for viewer: Viewer) -> [UUID] {
+        let players = cardPlayers(for: viewer)
+        guard round.form.card == .perTeam else { return players }
+        var seen: Set<UUID> = []
+        return players.filter { member in
+            guard !seen.contains(member) else { return false }
+            seen.formUnion(recipients(for: member))
+            return true
+        }
+    }
+
+    /// Navnet på raden: hele laget («Anders, Bjørn og Cato») når laget spiller én ball, ellers spilleren.
+    func rowName(_ member: UUID) -> String {
+        let team = recipients(for: member)
+        guard team.count > 1 else { return name(member) }
+        let names = team.map(name).sorted { NorwegianSort.areInIncreasingOrder($0, $1) }
+        return names.dropLast().joined(separator: ", ") + " og " + names.last!
+    }
+
     /// `hullkortRadKanFores`: får jeg føre raden på kortet? Strengere enn `canScore`:
     /// en arrangør i en bås med markør fører ikke på kortet (han retter i stedet).
     func cardRowEditable(_ member: UUID, for viewer: Viewer, ignoringSubmission: Bool = false) -> Bool {
@@ -84,7 +106,7 @@ nonisolated extension RoundGame {
     /// Synkstatus over «Lagre» (utbedringsplanen K6). Nil når ingenting er ført ennå.
     /// `pending`: hull som ligger i køen på telefonen.
     func syncStatus(viewer: Viewer, pending: Set<Int>) -> SyncStatus? {
-        let players = cardPlayers(for: viewer).filter { cardRowEditable($0, for: viewer) }
+        let players = cardRows(for: viewer).filter { cardRowEditable($0, for: viewer) }
         guard !players.isEmpty else { return nil }
         if !pending.isEmpty {
             return SyncStatus(text: "Lagret på telefonen · sendes når du får dekning", isPending: true)
@@ -111,14 +133,14 @@ nonisolated extension RoundGame {
 
     /// Det «Lagre hull» sender: radene `viewer` får føre på kortet, med tallet som står
     /// (utkastet, ellers det lagrede, ellers par). Bare rader som er endret mot serveren.
-    /// I en form med ett kort per lag skrives samme tall på hele laget (`saveHoleScore`).
+    /// I en form med ett kort per lag har laget én rad, og tallet skrives på hele laget (`saveHoleScore`).
     /// `nil` når ingenting er endret.
     func submission(hole: Int, drafts: HoleDrafts, viewer: Viewer, recordedAt: Date) -> HoleSubmission? {
         guard holes.indices.contains(hole) else { return nil }
         let par = holes[hole].par
         var entries: [HoleSubmission.Entry] = []
         var seen: Set<UUID> = []
-        for member in cardPlayers(for: viewer) where cardRowEditable(member, for: viewer) {
+        for member in cardRows(for: viewer) where cardRowEditable(member, for: viewer) {
             let saved = scores(member)[hole]
             let value = drafts[hole, member] ?? saved ?? par
             guard value != saved else { continue }
@@ -312,7 +334,7 @@ nonisolated extension RoundGame {
     func card(hole index: Int, drafts: HoleDrafts, viewer: Viewer) -> HoleCard {
         let hole = holes[index]
         let count = holeCount
-        let players = cardPlayers(for: viewer)
+        let players = cardRows(for: viewer)
         let editable = players.filter { cardRowEditable($0, for: viewer) }
         let canEdit = !editable.isEmpty
         let mustConfirm = editable.count > 1
@@ -337,7 +359,7 @@ nonisolated extension RoundGame {
             let parBogey = isParBogey && show ? HoleMath.parBogeyMark(net: value - received, par: hole.par) : nil
             return HoleCard.Row(
                 memberID: member,
-                name: name(member),
+                name: rowName(member),
                 isMe: member == viewer.memberID,
                 editable: isEditable,
                 confirmed: confirmed,
