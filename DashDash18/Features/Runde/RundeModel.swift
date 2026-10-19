@@ -352,7 +352,7 @@ final class RundeModel {
             drafts.clear(hole: hole)
             rebuild()
             if let updated = self.game {
-                celebration = updated.celebration(hole: hole, saved: fresh)
+                celebration = updated.celebration(hole: hole, saved: fresh, viewer: viewer)
                 if case .saved = outcome {
                     logAfterSaving(hole: hole, fresh: fresh, in: updated)
                 }
@@ -410,7 +410,8 @@ final class RundeModel {
 
     private func advance(from hole: Int) {
         guard let game else { return }
-        currentHole = min(game.holeCount - 1, hole + 1)
+        // Gunstart: fra 18 til 1 når gruppa startet midt i runden. Etter siste hull blir kortet stående.
+        currentHole = game.nextHole(after: hole, for: viewer) ?? hole
     }
 
     // MARK: Markørkonflikt (K6/6.3, sql/055)

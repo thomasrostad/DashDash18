@@ -12,6 +12,9 @@ nonisolated struct RoundSnapshot: Equatable, Sendable {
     var sideClaims: [SideClaimRow] = []
     var course: CourseRow?
     var courseHoles: [CourseHoleRecord] = []
+    /// Starthullet per gruppe (bås/flight) fra startlista (sql/031 `round_start_groups.start_hole`,
+    /// hullnummer 1–18). Tom uten startliste: alle starter på første hull.
+    var startHoles: [Int: Int] = [:]
     /// Kveldens dato (`YYYY-MM-DD`), fra `events`.
     var eventDate: String?
     /// Regelsettet til sesongen kvelden hører til. Mangler det, gjelder Golfgutu-oppsettet.
