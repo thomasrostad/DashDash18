@@ -55,6 +55,7 @@ Status 12.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detalje
 | [`SPEC.md`](SPEC.md) | Kartlegging av PWA-en (funksjoner og regler) |
 | [`CLAUDE.md`](CLAUDE.md) | Arbeidsregler for Claude Code. Gjelder også for mennesker |
 | [`docs/ui-utbedring.md`](docs/ui-utbedring.md) | UI-utbedringen etter skjermgjennomgangen i oktober 2026: kart fra skjerm til kode, status per punkt og avvik fra planen |
+| [`docs/lanseringssjekk.md`](docs/lanseringssjekk.md) | Gjennomgang 17.10.2026 mot en sjekkliste for lansering, og hvordan appen skal ta betalt |
 | [`docs/gjoremal.md`](docs/gjoremal.md) | Det som må gjøres manuelt (App Store Connect, Supabase-konsoll, Google) |
 | [`sql/README.md`](sql/README.md) | Databasemigreringer og status per fil (test og prod) |
 | [`docs/folge.md`](docs/folge.md) | Følge andre spillere (steg 13): hva Strava og andre gjør, Thomas sine valg, personvern og datamodell |
