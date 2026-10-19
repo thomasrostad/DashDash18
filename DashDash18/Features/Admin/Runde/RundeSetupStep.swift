@@ -11,6 +11,8 @@ struct RundeSetupStep: View {
     @State private var editingMatch: MatchEditItem?
     /// «Avansert» åpen. Nil: åpen bare når noe der er endret fra standarden.
     @State private var showsAdvanced: Bool?
+    /// «Tilfeldige lag» kunne ikke fordele lagene (de står da som de var), så footeren sier hvorfor.
+    @State private var randomTeamsFailed = false
 
     private var rules: Ruleset { model.rules }
     private var coreCourse: Course? { model.coreCourse(for: draft) }
@@ -124,8 +126,12 @@ struct RundeSetupStep: View {
                 }
             }
             Button("Tilfeldige lag", systemImage: "dice") {
-                draft.teams = TeamPlanner.random(participants: draft.participants, form: form,
-                                                 maxPerBay: rules.formats.maxPerBay, seed: .random(in: .min ... .max))
+                let teams = TeamPlanner.random(participants: draft.participants, form: form,
+                                               maxPerBay: rules.formats.maxPerBay, seed: .random(in: .min ... .max))
+                // Går det ikke opp, står lagene som de var, og arrangøren får vite hvorfor.
+                randomTeamsFailed = teams.isEmpty
+                guard !teams.isEmpty else { return }
+                draft.teams = teams
                 draft.redrawMatches(roster: model.members, plan: plan)
             }
             NavigationLink {
@@ -140,6 +146,11 @@ struct RundeSetupStep: View {
             if let problem = TeamPlanner.problem(teams: draft.teams, participants: draft.participants, form: form,
                                                  maxPerBay: rules.formats.maxPerBay, term: draft.groupTerm) {
                 Text(problem).foregroundStyle(Color.ddRustText)
+            } else if randomTeamsFailed,
+                      let reason = TeamPlanner.unavailable(players: draft.participants.count, form: form,
+                                                           maxPerBay: rules.formats.maxPerBay) {
+                // Bare så lenge det fortsatt ikke går opp (deltakerne eller formen kan ha endret seg).
+                Text(reason).foregroundStyle(Color.ddRustText)
             }
         }
     }

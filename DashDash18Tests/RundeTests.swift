@@ -158,9 +158,52 @@ struct TeamAndMatchTests {
     @Test func foursomeMedElleveGaarIkkeOpp() {
         let eleven = (1...11).map(id)
         #expect(TeamPlanner.suggested(participants: eleven, form: CompetitionForm.form(id: "foursome"), maxPerBay: 4).isEmpty)
+        #expect(TeamPlanner.unavailable(players: 11, form: CompetitionForm.form(id: "foursome"), maxPerBay: 4)
+                == "11 spillere går ikke opp i lag på 2 i Foursome. Velg en annen form, eller endre hvem som er med.")
+        #expect(TeamPlanner.problem(teams: [:], participants: eleven, form: CompetitionForm.form(id: "foursome"), maxPerBay: 4)
+                == "11 spillere går ikke opp i lag på 2 i Foursome. Velg en annen form, eller endre hvem som er med.")
+    }
+
+    /// Scramble-4 og andre former med ett kort per lag trenger ingen motstander: lagene går opp for alle
+    /// antall, og lag som ikke blir fulle får én færre. Før ble lagene tømt utenom 8, 16 …
+    @Test func scrambleFireGaarOppForAlleAntall() {
+        let form = CompetitionForm.form(id: "scramble-4")
+        let expected: [Int: [Int]] = [
+            5: [3, 2], 6: [3, 3], 7: [4, 3], 8: [4, 4], 9: [3, 3, 3], 10: [4, 3, 3], 11: [4, 4, 3], 12: [4, 4, 4],
+            13: [4, 3, 3, 3], 16: [4, 4, 4, 4], 17: [4, 4, 3, 3, 3], 24: [4, 4, 4, 4, 4, 4],
+        ]
+        for (count, sizes) in expected {
+            let ids = (1...count).map(id)
+            let teams = TeamPlanner.suggested(participants: ids, form: form, maxPerBay: 4)
+            let got = Dictionary(grouping: teams.values, by: { $0 }).mapValues(\.count)
+            #expect(got == Dictionary(uniqueKeysWithValues: sizes.enumerated().map { ($0.offset + 1, $0.element) }),
+                    "scramble-4 med \(count)")
+            #expect(TeamPlanner.problem(teams: teams, participants: ids, form: form, maxPerBay: 4) == nil, "\(count)")
+            let random = TeamPlanner.random(participants: ids, form: form, maxPerBay: 4, seed: 3)
+            #expect(Set(random.keys) == Set(ids), "tilfeldig \(count)")
+        }
+    }
+
+    /// Ett kort per lag uten skjeve lag (foursome): et oddetall lag går fint når alle lag er fulle.
+    @Test func foursomeMedSeksGirTreLag() {
+        let six = (1...6).map(id)
+        let form = CompetitionForm.form(id: "foursome")
+        let teams = TeamPlanner.suggested(participants: six, form: form, maxPerBay: 4)
+        #expect(Dictionary(grouping: teams.values, by: { $0 }).mapValues(\.count) == [1: 2, 2: 2, 3: 2])
+        #expect(TeamPlanner.problem(teams: teams, participants: six, form: form, maxPerBay: 4) == nil)
+    }
+
+    /// Lag mot lag med hver sin ball (fourball) trenger fortsatt et partall lag, som i PWA-en.
+    @Test func fourballBeholderPartallLag() {
+        let form = CompetitionForm.form(id: "fourball-4")
+        #expect(TeamPlanner.suggested(participants: (1...12).map(id), form: form, maxPerBay: 4).isEmpty)
+        #expect(TeamPlanner.unavailable(players: 12, form: form, maxPerBay: 4)
+                == form.setup(players: 12, maxPerBay: 4).reason)
+        #expect(TeamPlanner.unavailable(players: 8, form: form, maxPerBay: 4) == nil)
     }
 
     @Test func lagSomIkkeGaarOpp() {
+        // Fire i foursome går opp, så den tomme lista ber om lag (ikke hvorfor det ikke går).
         let foursome = CompetitionForm.form(id: "foursome")
         let four = [a, b, c, d]
         #expect(TeamPlanner.problem(teams: [:], participants: four, form: foursome, maxPerBay: 4) == "Sett opp lagene før du starter runden.")
