@@ -1,5 +1,5 @@
 -- 058_scramble_turnering.sql — klubbturnering med scramble: flere lag og funksjonærer som fører.
--- Til godkjenning. Ikke kjørt på test eller prod.
+-- Godkjent 19.10.2026. Ikke kjørt på test eller prod.
 --
 -- Hva som endres:
 -- * Lagnummer kan være 1–99 (før 1–20): round_players.team_no og round_matches.team_a/team_b.
