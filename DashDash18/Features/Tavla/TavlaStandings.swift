@@ -75,6 +75,13 @@ nonisolated struct TavlaStandings: Sendable {
     let previousPlaces: [UUID: Int]?
     /// Neste kveld som ikke er spilt (`YYYY-MM-DD`).
     let nextEventDate: String?
+    /// Radene slik tabellen på Tavla viser dem: ett lag per rad når alle rundene spilles med én ball
+    /// per lag og de samme lagene (`TavlaTeams`), ellers `rows`.
+    let boardRows: [Row]
+    /// `previousPlaces` for `boardRows` (plassen blant lagene i lagtabellen).
+    let boardPreviousPlaces: [UUID: Int]?
+    /// Tabellen står med ett lag per rad.
+    let isTeamBoard: Bool
 
     /// - Parameter viewer: den som ser på. Med «skjul de tre siste hullene» ser andre enn båsen din og
     ///   arrangøren (`isOrganizer`: rettigheten `rounds`) rundene uten de siste hullene til de er låst.
@@ -150,6 +157,16 @@ nonisolated struct TavlaStandings: Sendable {
                        side: r.side, matches: r.matches, holes: r.holes, stableford: r.stableford,
                        evenings: Season.eveningCount(played), isMe: id == me, roundPoints: r.roundPoints,
                        played: r.played, qualified: s.place != nil, playoffPending: s.playoffPending)
+        }
+        if let teams = TavlaTeams.fixedTeams(snapshots) {
+            let merged = TavlaTeams.merge(rows, previous: previousPlaces, teams: teams, me: me)
+            boardRows = merged.rows
+            boardPreviousPlaces = merged.previous
+            isTeamBoard = true
+        } else {
+            boardRows = rows
+            boardPreviousPlaces = previousPlaces
+            isTeamBoard = false
         }
     }
 
