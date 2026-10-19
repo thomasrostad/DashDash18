@@ -6,16 +6,19 @@ struct AppRoot: View {
     let services: AppServices
     @Environment(\.scenePhase) private var scenePhase
     /// Invitasjon fra en lenke: en løs runde (`dashdash://runde/KODE`, fase 13) eller en privat
-    /// konkurranse (`dashdash://konkurranse/KODE`, fase 15). Venter til du er logget inn.
-    @State private var pendingLink: AppLink?
+    /// konkurranse (`dashdash://konkurranse/KODE`, fase 15). Venter til du er logget inn, og huskes
+    /// på telefonen til den er brukt (`PendingLinkStore`), også om iOS lukker appen imens.
+    @State private var pendingLink: AppLink? = PendingLinkStore.appLinks.load().flatMap {
+        AppLink.parse($0, rounds: LooseRoundsFeature.isEnabled, competitions: CompetitionsFeature.isActive)
+    }
     /// Kjøp i appen (fase 17). Lages per innlogging når `PurchaseFeature` er på; ellers nil.
     @State private var purchases: PurchaseService?
     /// Invitasjon til en klubb (`dashdash://klubb/KODE`). Huskes på telefonen gjennom innloggingen,
     /// og vises når klubbene er hentet (`ClubInviteFlow`).
     @State private var pendingClubInvite: ClubInvite? = PendingClubInviteStore().load()
     @State private var presentedClubInvite: PresentedClubInvite?
-    /// Følgelenken (`dashdash18.com/folg/KODE`, sql/054). Venter til du er logget inn.
-    @State private var pendingFollow: FollowLink?
+    /// Følgelenken (`dashdash18.com/folg/KODE`, sql/054). Venter til du er logget inn, og huskes som `pendingLink`.
+    @State private var pendingFollow: FollowLink? = PendingLinkStore.follows.load().flatMap(FollowLink.init(url:))
 
     var body: some View {
         Group {
@@ -56,7 +59,7 @@ struct AppRoot: View {
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
             if let url = activity.webpageURL { open(url) }
         }
-        .sheet(item: Binding(get: { signedInUser == nil ? nil : pendingLink }, set: { pendingLink = $0 })) { link in
+        .sheet(item: Binding(get: { signedInUser == nil ? nil : pendingLink }, set: { setPendingLink($0) })) { link in
             if let user = signedInUser {
                 switch link {
                 case .round(let code):
@@ -68,7 +71,7 @@ struct AppRoot: View {
                 }
             }
         }
-        .sheet(item: Binding(get: { signedInUser == nil ? nil : pendingFollow }, set: { pendingFollow = $0 })) { link in
+        .sheet(item: Binding(get: { signedInUser == nil ? nil : pendingFollow }, set: { setPendingFollow($0) })) { link in
             FollowFromLinkView(client: services.client, link: link)
         }
         .onChange(of: clubInviteStep, initial: true) { _, step in presentClubInvite(step) }
@@ -120,12 +123,25 @@ extension AppRoot {
             return
         }
         if let follow = FollowLink(url: url) {
+            PendingLinkStore.follows.save(url)
             pendingFollow = follow
             return
         }
         guard let link = AppLink.parse(url, rounds: LooseRoundsFeature.isEnabled,
                                        competitions: CompetitionsFeature.isActive) else { return }
+        PendingLinkStore.appLinks.save(url)
         pendingLink = link
+    }
+
+    /// Arket er lukket (lenken er brukt): glem den på telefonen også.
+    private func setPendingLink(_ link: AppLink?) {
+        if link == nil { PendingLinkStore.appLinks.clear() }
+        pendingLink = link
+    }
+
+    private func setPendingFollow(_ link: FollowLink?) {
+        if link == nil { PendingLinkStore.follows.clear() }
+        pendingFollow = link
     }
 
     /// Hva som skal skje med invitasjonen nå. nil: ingen invitasjon venter.
