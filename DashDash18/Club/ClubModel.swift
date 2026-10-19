@@ -7,21 +7,44 @@ import Supabase
 final class ClubModel {
     private(set) var state: ClubState = .loading
     private(set) var memberships: [Membership] = []
-    /// En henting pågår (så retur fra bakgrunnen ikke starter en til).
-    private(set) var isRefreshing = false
+    /// En henting pågår (så retur fra bakgrunnen eller «Prøv igjen» ikke starter en til).
+    var isRefreshing: Bool { loadsInFlight > 0 }
+    /// Oppstarten venter på et nytt forsøk fordi den ikke fikk kontakt.
+    private(set) var isWaitingForNetwork = false
     /// Rollene per klubb (sql/044). Tom når 044 ikke er kjørt: da gjelder flaggene.
     private(set) var roleAccess: [UUID: ClubRoleAccess] = [:]
-    private let client: SupabaseClient
+    private var loadsInFlight = 0
     private let cache: MembershipCache
-    /// Ventetidene før nye forsøk når oppstarten ikke får kontakt (1, 2 og 4 sekunder).
-    private let retryDelays: [Duration]
+    private let fetchRows: @Sendable (UUID) async throws -> [Membership]
+    private let network: any NetworkMonitoring
+    private let clock: any OutboxClock
+    /// Ventetidene før nye forsøk (1, 2 og 4 sekunder med `maxRetries` 3).
+    private let backoff: OutboxBackoff
+    private let maxRetries: Int
+    /// Hvor lenge ett forsøk får holde på. Uten grense venter URLSession 60 sekunder per forsøk.
+    private let attemptTimeout: Duration
+    private let client: SupabaseClient
     private static let rememberedKey = "valgtKlubb"
 
     init(client: SupabaseClient, cache: MembershipCache = MembershipCache(),
-         retryDelays: [Duration] = [.seconds(1), .seconds(2), .seconds(4)]) {
+         network: any NetworkMonitoring = PathNetworkMonitor(), clock: any OutboxClock = SystemOutboxClock(),
+         backoff: OutboxBackoff = OutboxBackoff(), maxRetries: Int = 3, attemptTimeout: Duration = .seconds(10),
+         fetchRows: (@Sendable (UUID) async throws -> [Membership])? = nil) {
         self.client = client
         self.cache = cache
-        self.retryDelays = retryDelays
+        self.network = network
+        self.clock = clock
+        self.backoff = backoff
+        self.maxRetries = maxRetries
+        self.attemptTimeout = attemptTimeout
+        self.fetchRows = fetchRows ?? { userID in
+            try await client
+                .from("club_members")
+                .select(Membership.selectColumns)
+                .eq("user_id", value: userID)
+                .execute()
+                .value
+        }
     }
 
     var current: Membership? {
@@ -34,21 +57,24 @@ final class ClubModel {
     /// Henter medlemskapene. Ved oppstart vises det sist kjente med en gang (uten nett eller
     /// med treg dekning), og byttes når svaret kommer. Feiler hentingen mens noe vises,
     /// blir det stående: da kastes ingen ut av en runde eller et halvferdig skjema.
+    /// Avbrytes hentingen (utlogging), røres ikke tilstanden.
     /// Returnerer feilen, så «Sjekk igjen» kan si fra.
     @discardableResult
     func load(userID: UUID) async -> ClubError? {
         if state == .loading, let cached = cache.load(userID: userID) {
             apply(cached)
         }
-        isRefreshing = true
-        defer { isRefreshing = false }
+        loadsInFlight += 1
+        defer { loadsInFlight -= 1 }
         do {
             let rows = try await fetchMemberships(userID: userID)
+            try Task.checkCancellation()
             cache.save(rows, userID: userID)
             apply(rows)
             await loadRoleAccess()
             return nil
         } catch {
+            if error is CancellationError || Task.isCancelled { return nil }
             let failure = Self.clubError(from: error)
             switch state {
             case .loading, .failed: state = .failed(failure)
@@ -58,41 +84,63 @@ final class ClubModel {
         }
     }
 
-    /// Henter medlemskapene. Uten noe å vise (første oppstart, ingen lagret kopi) prøves en
-    /// nettverksfeil på nytt etter `retryDelays`, så et kort brudd i dekningen ikke gir feilskjermen.
+    /// Henter medlemskapene. Hvert forsøk får `attemptTimeout`. Uten noe å vise (første oppstart,
+    /// ingen lagret kopi) prøves en nettverksfeil på nytt etter `backoff`, så et kort brudd i
+    /// dekningen ikke gir feilskjermen.
     private func fetchMemberships(userID: UUID) async throws -> [Membership] {
+        let fetchRows = fetchRows
         var attempt = 0
         while true {
             do {
-                return try await client
-                    .from("club_members")
-                    .select(Membership.selectColumns)
-                    .eq("user_id", value: userID)
-                    .execute()
-                    .value
+                return try await Self.withTimeout(attemptTimeout) { try await fetchRows(userID) }
             } catch {
-                guard Self.shouldRetry(error, attempt: attempt, retries: retryDelays.count, state: state) else { throw error }
-                try await Task.sleep(for: retryDelays[attempt])
+                guard Self.shouldRetry(error, attempt: attempt, retries: maxRetries, state: state) else { throw error }
                 attempt += 1
+                isWaitingForNetwork = true
+                defer { isWaitingForNetwork = false }
+                try await clock.sleep(for: backoff.delay(afterFailures: attempt))
             }
         }
     }
 
-    /// Nytt forsøk bare for nettverksfeil (ikke avbrutt), bare mens ingenting vises, og bare
-    /// så mange ganger som det finnes ventetider.
-    nonisolated static func shouldRetry(_ error: any Error, attempt: Int, retries: Int, state: ClubState) -> Bool {
-        guard attempt < retries, let urlError = error as? URLError, urlError.code != .cancelled else { return false }
-        switch state {
-        case .loading, .failed: return true
-        case .noClub, .pending, .active: return false
+    /// Kaster `URLError(.timedOut)` når `operation` bruker lenger enn `limit`.
+    private nonisolated static func withTimeout<T: Sendable>(
+        _ limit: Duration, _ operation: @escaping @Sendable () async throws -> T
+    ) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask { try await operation() }
+            group.addTask {
+                try await Task.sleep(for: limit)
+                throw URLError(.timedOut)
+            }
+            defer { group.cancelAll() }
+            return try await group.next()!
         }
     }
 
-    /// Når appen kommer tilbake fra bakgrunnen: ny rolle (arrangør), godkjenning eller
-    /// arkivering slår inn uten omstart.
+    /// Nytt forsøk bare for nettverksfeil (ikke avbrutt), bare ved første oppstart (ingenting
+    /// vises, ingen feilskjerm ennå), og bare `retries` ganger.
+    nonisolated static func shouldRetry(_ error: any Error, attempt: Int, retries: Int, state: ClubState) -> Bool {
+        guard attempt < retries, let urlError = error as? URLError, urlError.code != .cancelled else { return false }
+        return state == .loading
+    }
+
+    /// Når appen kommer tilbake fra bakgrunnen, og fra «Prøv igjen»: ny rolle (arrangør),
+    /// godkjenning eller arkivering slår inn uten omstart. Pågår en henting, startes ingen ny.
     func refresh(userID: UUID) async {
         guard !isRefreshing else { return }
         await load(userID: userID)
+    }
+
+    /// Mens feilskjermen vises: henter på nytt når nettet kommer tilbake etter å ha vært borte,
+    /// og bare når feilen var manglende nett. Første verdi (slik nettet er nå) utløser ingenting.
+    func reloadWhenOnline(userID: UUID) async {
+        var wasOnline: Bool?
+        for await online in network.availability() {
+            defer { wasOnline = online }
+            guard online, wasOnline == false, case .failed(.offline) = state else { continue }
+            await refresh(userID: userID)
+        }
     }
 
     /// Rollene og hvilke du har, i klubbene du er aktiv i. Feiler det (044 ikke kjørt, uten nett),

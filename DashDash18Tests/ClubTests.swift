@@ -1,4 +1,5 @@
 import Foundation
+import Supabase
 import Testing
 @testable import DashDash18
 
@@ -197,7 +198,7 @@ struct ClubStartupRetryTests {
     @Test(arguments: [URLError.Code.timedOut, .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost])
     func nettverksfeilProvesPaaNytt(code: URLError.Code) {
         #expect(ClubModel.shouldRetry(URLError(code), attempt: 0, retries: 3, state: .loading))
-        #expect(ClubModel.shouldRetry(URLError(code), attempt: 2, retries: 3, state: .failed(.offline)))
+        #expect(ClubModel.shouldRetry(URLError(code), attempt: 2, retries: 3, state: .loading))
     }
 
     @Test func stopperEtterSisteForsok() {
@@ -209,7 +210,154 @@ struct ClubStartupRetryTests {
         #expect(!ClubModel.shouldRetry(ClubError.notAllowed, attempt: 0, retries: 3, state: .loading))
     }
 
-    @Test func ikkeNaarNoeVises() {
+    @Test func ikkeNaarNoeVisesEllerFraFeilskjermen() {
         #expect(!ClubModel.shouldRetry(URLError(.timedOut), attempt: 0, retries: 3, state: .noClub))
+        #expect(!ClubModel.shouldRetry(URLError(.timedOut), attempt: 0, retries: 3, state: .failed(.offline)))
+    }
+}
+
+/// Henting med falske svar: hva `load` gjør med forsøk, ventetid, tidsgrense og avbrudd.
+@MainActor
+@Suite(.serialized)
+struct ClubLoadTests {
+    /// Svarene i rekkefølge. `nil` betyr tom liste (ingen klubb). Tomt for svar: henger.
+    @MainActor
+    final class Script {
+        var replies: [(any Error)?]
+        private(set) var calls = 0
+        init(_ replies: [(any Error)?]) { self.replies = replies }
+
+        func next() async throws -> [Membership] {
+            calls += 1
+            guard !replies.isEmpty else {
+                try await Task.sleep(for: .seconds(30))
+                return []
+            }
+            if let error = replies.removeFirst() { throw error }
+            return []
+        }
+    }
+
+    /// Klokke som ikke venter, men husker ventetidene. Avbrutt oppgave gir `CancellationError`.
+    @MainActor
+    final class InstantClock: OutboxClock {
+        var now = Date()
+        private(set) var sleeps: [Duration] = []
+        var onSleep: (() -> Void)?
+        func sleep(for duration: Duration) async throws {
+            sleeps.append(duration)
+            onSleep?()
+            try Task.checkCancellation()
+        }
+    }
+
+    let userID = UUID()
+    let client = SupabaseClient(supabaseURL: URL(string: "https://example.invalid")!, supabaseKey: "sb_publishable_test")
+    let defaults = UserDefaults(suiteName: "ClubLoadTests.\(UUID().uuidString)")!
+
+    func model(_ script: Script, clock: InstantClock = InstantClock(), network: FakeNetwork = FakeNetwork(),
+               timeout: Duration = .seconds(5)) -> ClubModel {
+        ClubModel(client: client, cache: MembershipCache(defaults: defaults), network: network, clock: clock,
+                  attemptTimeout: timeout, fetchRows: { _ in try await script.next() })
+    }
+
+    @Test func provesPaaNyttMedOkendeVentetid() async {
+        let script = Script([URLError(.notConnectedToInternet), URLError(.timedOut), nil])
+        let clock = InstantClock()
+        let club = model(script, clock: clock)
+        #expect(await club.load(userID: userID) == nil)
+        #expect(club.state == .noClub)
+        #expect(script.calls == 3)
+        #expect(clock.sleeps == [.seconds(1), .seconds(2)])
+        #expect(!club.isRefreshing)
+        #expect(!club.isWaitingForNetwork)
+    }
+
+    @Test func girOppEtterTreNyeForsok() async {
+        let script = Script(Array(repeating: URLError(.notConnectedToInternet), count: 5))
+        let clock = InstantClock()
+        let club = model(script, clock: clock)
+        #expect(await club.load(userID: userID) == .offline)
+        #expect(club.state == .failed(.offline))
+        #expect(script.calls == 4)
+        #expect(clock.sleeps == [.seconds(1), .seconds(2), .seconds(4)])
+    }
+
+    @Test func fraFeilskjermenBareEttForsok() async {
+        let script = Script(Array(repeating: URLError(.notConnectedToInternet), count: 5))
+        let clock = InstantClock()
+        let club = model(script, clock: clock)
+        await club.load(userID: userID)
+        await club.refresh(userID: userID)
+        #expect(script.calls == 5)
+        #expect(clock.sleeps.count == 3)
+    }
+
+    @Test func forsokSomHengerFaarTidsgrense() async {
+        let script = Script([])
+        let club = model(script, timeout: .milliseconds(50))
+        #expect(await club.load(userID: userID) == .offline)
+        #expect(script.calls == 4)
+    }
+
+    @Test func avbruttUnderVentetidRorIkkeTilstanden() async {
+        let script = Script([URLError(.notConnectedToInternet)])
+        let clock = InstantClock()
+        let club = model(script, clock: clock)
+        let task = Task { await club.load(userID: userID) }
+        clock.onSleep = { task.cancel() }
+        #expect(await task.value == nil)
+        #expect(club.state == .loading)
+        #expect(!club.isRefreshing)
+    }
+
+    @Test func provIgjenMensHentingPaagarStarterIngenNy() async {
+        let script = Script([])
+        let club = model(script)
+        let first = Task { await club.load(userID: userID) }
+        while script.calls == 0 { await Task.yield() }
+        #expect(club.isRefreshing)
+        await club.refresh(userID: userID)
+        #expect(script.calls == 1)
+        first.cancel()
+        _ = await first.value
+        #expect(!club.isRefreshing)
+    }
+
+    @Test func henterNaarNettetKommerTilbake() async {
+        let script = Script(Array(repeating: URLError(.notConnectedToInternet), count: 4) + [nil])
+        let network = FakeNetwork()
+        let club = model(script, network: network)
+        await club.load(userID: userID)
+        #expect(club.state == .failed(.offline))
+
+        let watcher = Task { await club.reloadWhenOnline(userID: userID) }
+        network.send(true)
+        await settle()
+        #expect(script.calls == 4)
+
+        network.send(false)
+        network.send(true)
+        await settle()
+        #expect(script.calls == 5)
+        #expect(club.state == .noClub)
+        watcher.cancel()
+    }
+
+    @Test func henterIkkeNaarFeilenIkkeErNett() async {
+        let script = Script([ClubError.notAllowed])
+        let network = FakeNetwork()
+        let club = model(script, network: network)
+        await club.load(userID: userID)
+        let watcher = Task { await club.reloadWhenOnline(userID: userID) }
+        network.send(false)
+        network.send(true)
+        await settle()
+        #expect(script.calls == 1)
+        watcher.cancel()
+    }
+
+    private func settle() async {
+        for _ in 0..<20 { await Task.yield() }
     }
 }
