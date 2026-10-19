@@ -37,6 +37,8 @@ nonisolated enum SaveTapGuard {
 nonisolated struct Viewer: Equatable, Sendable {
     let memberID: UUID
     let isOrganizer: Bool
+    /// Gruppene viewer er funksjonær for (`RoundSnapshot.scorerGroups`).
+    var scorerGroups: Set<Int> = []
 }
 
 nonisolated extension RoundGame {
@@ -46,10 +48,12 @@ nonisolated extension RoundGame {
     /// arrangøren alltid; runden går ikke (kladd eller låst): ingen andre; spillerens bås har
     /// markør: bare markøren; ellers spilleren selv.
     /// Levert kort (sql/057): bare arrangøren. `ignoringSubmission`: som om kortet ikke var levert.
+    /// Funksjonæren for spillerens gruppe (`is_group_scorer`, sql/032) fører også.
     func canScore(_ viewer: Viewer, for target: UUID, ignoringSubmission: Bool = false) -> Bool {
         if viewer.isOrganizer { return true }
         guard status == .active else { return false }
         if !ignoringSubmission, isCardSubmitted(target) { return false }
+        if let group = bay(of: target)?.number, viewer.scorerGroups.contains(group) { return true }
         if let marker = bay(of: target)?.marker { return marker == viewer.memberID }
         return viewer.memberID == target
     }
@@ -57,12 +61,19 @@ nonisolated extension RoundGame {
     // MARK: Kortet
 
     /// `hullkortSpillere`: båsen din med deg først. Uten båsoppsett eller uten bås: bare deg.
-    /// Er du ikke med i runden, står ingen på kortet.
+    /// Er du ikke med i runden, står ingen på kortet, med mindre du er funksjonær: da gruppa di.
     func cardPlayers(for viewer: Viewer) -> [UUID] {
         let me = viewer.memberID
-        guard isPlaying(me) else { return [] }
+        guard isPlaying(me) else { return scorerBay(for: viewer)?.players ?? [] }
         guard let bay = bay(of: me) else { return [me] }
         return [me] + bay.players.filter { $0 != me }
+    }
+
+    /// Gruppa en funksjonær som ikke spiller selv fører for: den laveste av gruppene hans i runden.
+    /// nil for spillere og for den som ikke er funksjonær.
+    func scorerBay(for viewer: Viewer) -> Bay? {
+        guard !isPlaying(viewer.memberID) else { return nil }
+        return viewer.scorerGroups.sorted().lazy.compactMap { bays[$0] }.first
     }
 
     /// Radene på hullkortet. I en form med ett kort per lag (scramble, foursome …) står hvert lag
@@ -93,6 +104,9 @@ nonisolated extension RoundGame {
         if status != .active && !viewer.isOrganizer { return false }
         let me = viewer.memberID
         let skip = ignoringSubmission
+        if let group = scorerBay(for: viewer) {
+            return group.players.contains(member) && canScore(viewer, for: member, ignoringSubmission: skip)
+        }
         guard let bay = bay(of: me) else { return member == me && canScore(viewer, for: me, ignoringSubmission: skip) }
         if let marker = bay.marker { return marker == me && canScore(viewer, for: member, ignoringSubmission: skip) }
         return member == me && canScore(viewer, for: me, ignoringSubmission: skip)
@@ -234,6 +248,8 @@ nonisolated extension RoundGame {
     /// (PWA: `kanBekrefteBaneoppsett`).
     func canConfirmPar(_ viewer: Viewer) -> Bool {
         if viewer.isOrganizer { return true }
+        // Funksjonæren for en gruppe (sql/058).
+        if status == .active, !viewer.scorerGroups.isEmpty { return true }
         guard status == .active,
               let me = snapshot.players.first(where: { $0.memberID == viewer.memberID }) else { return false }
         guard let bay = me.bayNo, bay >= 1 else { return true }
@@ -246,7 +262,7 @@ nonisolated extension RoundGame {
 nonisolated enum ParConfirmation {
     static func error(_ error: DataError) -> DataError {
         // 55000 («Runden er ikke i gang») kommer med serverens tekst som `.invalid`.
-        error == .notAllowed ? .invalid("Bare arrangøren eller en markør kan bekrefte parene.") : error
+        error == .notAllowed ? .invalid("Bare arrangøren, en markør eller funksjonæren kan bekrefte parene.") : error
     }
 
     /// Teksten under knappen. Feil som kan gå over av seg selv, sier «Prøv igjen»
