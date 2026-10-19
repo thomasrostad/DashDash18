@@ -54,25 +54,34 @@ nonisolated enum LoginError: Error, Equatable {
         case .invalidEmail: "Det ser ikke ut som en e-postadresse."
         case .invalidCode: "Koden er bare tall. Sjekk at du fikk med alle sifrene."
         case .wrongOrExpiredCode: "Koden er feil eller utløpt. Be om en ny kode."
-        case .tooManyAttempts: "For mange forsøk. Vent litt og prøv igjen."
+        case .tooManyAttempts: "For mange forsøk – vent litt og prøv igjen."
         case .offline: "Ingen kontakt med serveren. Sjekk nettet og prøv igjen."
         case .appleFailed: "Innloggingen med Apple ble ikke fullført. Prøv igjen, eller bruk e-post."
         case .googleFailed: "Innloggingen med Google ble ikke fullført. Prøv igjen, eller bruk e-post."
-        case .unknown(let detail): "Noe gikk galt: \(detail)"
+        // Systemteksten (ofte engelsk) vises ikke; den ligger i `detail` for feilsøking.
+        case .unknown: "Noe gikk galt med innloggingen. Vent litt og prøv igjen."
         }
     }
 
-    /// Oversetter Supabase sin `error_code`. Kodene står i supabase-swift `ErrorCode`.
+    /// Oversetter Supabase sin `error_code`. Kodene står i supabase-swift `ErrorCode`. Uten kjent kode
+    /// leses den engelske teksten for de vanligste feilene (for mange forsøk, utløpt kode).
     static func from(errorCode: String?, fallback: String) -> LoginError {
         switch errorCode {
         case "otp_expired", "invalid_credentials", "bad_jwt":
             .wrongOrExpiredCode
-        case "over_email_send_rate_limit", "over_request_rate_limit", "over_sms_send_rate_limit":
+        case "over_email_send_rate_limit", "over_request_rate_limit", "over_sms_send_rate_limit", "too_many_requests":
             .tooManyAttempts
         case "email_address_invalid", "validation_failed":
             .invalidEmail
         default:
-            .unknown(fallback)
+            fromText(fallback) ?? .unknown(fallback)
         }
+    }
+
+    private static func fromText(_ text: String) -> LoginError? {
+        let lower = text.lowercased()
+        if lower.contains("rate limit") || lower.contains("too many") { return .tooManyAttempts }
+        if lower.contains("expired") || (lower.contains("token") && lower.contains("invalid")) { return .wrongOrExpiredCode }
+        return nil
     }
 }

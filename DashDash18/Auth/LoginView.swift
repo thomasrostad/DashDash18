@@ -149,6 +149,11 @@ struct LoginView: View {
             Text("Sendt til \(email). Bli i appen og skriv inn koden her.")
                 .font(.ddCallout)
                 .foregroundStyle(Color.ddInkSecondary)
+            // Koden havner ofte i søppelpost eller «Kampanjer» første gang.
+            Label("Finner du ikke e-posten? Sjekk søppelpost, eller «Kampanjer» hvis du bruker Gmail.",
+                  systemImage: "envelope.badge")
+                .font(.ddCallout)
+                .foregroundStyle(Color.ddInkSecondary)
             Text("Kode")
                 .font(.ddCallout)
                 .foregroundStyle(Color.ddInkSecondary)
