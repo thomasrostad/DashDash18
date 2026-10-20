@@ -51,10 +51,20 @@ export const AASA = {
 
 const AASA_PATHS = new Set(["/.well-known/apple-app-site-association", "/apple-app-site-association"]);
 
-const KINDS: Record<InviteKind, { what: string; joinHint: string }> = {
+const KINDS: Record<InviteKind, { what: string; joinHint: string; steps?: string[] }> = {
   klubb: { what: "en klubb", joinHint: "Eller skriv inn koden i appen når du blir med i en klubb." },
   runde: { what: "en runde", joinHint: "Eller skriv inn koden under Spill → «Har du en kode?»." },
-  konkurranse: { what: "en turnering", joinHint: "Eller skriv inn koden under Turneringer → «Har du en kode?»." },
+  konkurranse: {
+    what: "en turnering",
+    joinHint: "Eller skriv inn koden under Turneringer → «Har du en kode?».",
+    // sql/060: arrangøren har ofte lagt deg inn fra før. Du tar plassen din og fører ditt eget kort.
+    steps: [
+      "Hent Atten og logg inn med Apple eller e-post. Det tar et minutt.",
+      "Trykk på lenken igjen, eller «Åpne i Atten» under.",
+      "Velg navnet ditt på lista, eller meld deg på som ny.",
+      "Før ditt eget kort og følg tabellen underveis.",
+    ],
+  },
 };
 
 /// Koden slik appen tolker den, eller null når den ikke kan være en kode av denne typen.
@@ -129,6 +139,8 @@ const STYLE = `
   .knapp { display: block; margin: 24px 0 16px; padding: 16px; border-radius: 999px; background: var(--gul); color: var(--skog);
     font-weight: 700; text-decoration: none; }
   .liten { font-size: 15px; opacity: .85; }
+  .steg { text-align: left; margin: 0 0 16px; padding-left: 24px; }
+  .steg li { margin: 0 0 8px; }
   a { color: var(--gul); }
 `;
 
@@ -178,6 +190,7 @@ function invitePage(kind: InviteKind, code: string, nonce: string): string {
 <span class="kode">${escapeHTML(displayCode(kind, code))}</span>
 <button type="button" class="kopier" id="kopier" data-kode="${escapeHTML(code)}" hidden>Kopier koden</button>
 <a class="knapp" href="${escapeHTML(appLink)}">Åpne i Atten</a>
+${info.steps ? `<ol class="steg">${info.steps.map((step) => `<li>${escapeHTML(step)}</li>`).join("")}</ol>` : ""}
 <p class="liten">${escapeHTML(info.joinHint)}</p>
 <p class="liten">${GET_THE_APP_HTML}</p>`;
   return page("Invitasjon til Atten", content, nonce, COPY_SCRIPT);
