@@ -106,6 +106,26 @@ final class TroppModel {
         }
     }
 
+    /// Legger til mange ledige navn i én skriving (alt eller ingenting). Linjer med feil hoppes over.
+    /// Returnerer hvor mange som ble lagt til, eller nil når det feilet.
+    func add(_ lines: [TroppImportLine]) async -> Int? {
+        let valid = TroppImport.valid(lines)
+        guard !valid.isEmpty else { return 0 }
+        do {
+            let added: [ClubMemberRow] = try await context.client
+                .from("club_members")
+                .insert(valid.map { NewMember(clubID: context.clubID, displayName: $0.name, handicapIndex: $0.handicapIndex) })
+                .select(ClubMemberRow.columns)
+                .execute()
+                .value
+            rows += added
+            return added.count
+        } catch {
+            self.error = Self.troppError(from: error)
+            return nil
+        }
+    }
+
     /// Lagrer navn og handicap. Returnerer `true` når det er lagret.
     func saveDetails(of id: UUID, name: String, handicap: String) async -> Bool {
         switch TroppInput.validate(name: name, handicap: handicap, rows: rows, editing: id) {

@@ -253,3 +253,44 @@ struct TroppDisplayTests {
         #expect(TroppDisplay.details(for: member("Kari"), groups: []) == "")
     }
 }
+
+/// «Legg til mange»: én linje per navn, handicap etter navnet eller i egen kolonne.
+struct TroppImportTests {
+    @Test(arguments: [
+        ("Kari Nordmann", "Kari Nordmann", ""),
+        ("Kari Nordmann 18,4", "Kari Nordmann", "18,4"),
+        ("Kari Nordmann, 18.4", "Kari Nordmann", "18.4"),
+        ("Kari Nordmann;+2,3", "Kari Nordmann", "+2,3"),
+        ("Kari Nordmann\t\t12", "Kari Nordmann", "12"),
+        ("Hole 19", "Hole", "19"),
+        ("Per Olav Ås", "Per Olav Ås", ""),
+    ])
+    func delerNavnOgHandicap(_ line: String, _ name: String, _ handicap: String) {
+        #expect(TroppImport.split(line) == (name, handicap))
+    }
+
+    @Test func lesesMedFeilPerLinje() {
+        let rows = [member("Anne"), member("Borte", status: .archived)]
+        let text = """
+        Kari Nordmann 18,4
+
+        anne
+        Borte 10
+        Kari nordmann
+        Ola 70
+        Per -2
+        """
+        let lines = TroppImport.parse(text, rows: rows)
+        #expect(lines.map(\.name) == ["Kari Nordmann", "anne", "Borte", "Kari nordmann", "Ola", "Per"])
+        #expect(lines.map(\.problem) == [nil, .exists, nil, .repeated,
+                                         .invalid("Handicap må være mellom +10 og 54."),
+                                         .invalid("Plusshandicap skrives med «+», f.eks. +2,3.")])
+        #expect(lines[0].handicapIndex == 18.4)
+        #expect(TroppImport.valid(lines).map(\.name) == ["Kari Nordmann", "Borte"])
+    }
+
+    @Test func hoystTohundreLinjer() {
+        let text = (1...250).map { "Spiller \($0)" }.joined(separator: "\n")
+        #expect(TroppImport.parse(text, rows: []).count == TroppImport.maxLines)
+    }
+}
