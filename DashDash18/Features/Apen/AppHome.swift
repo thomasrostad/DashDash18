@@ -42,6 +42,18 @@ nonisolated enum OpenAppGate {
     }
 }
 
+nonisolated extension OpenAppGate {
+    /// Valget appen tar for deg (sql/060): har du ikke valgt ennå og er deltaker i en klubbturnering
+    /// (eller ble nettopp med fra en lenke), får du vennemodus, så du ser turneringen med en gang
+    /// i stedet for valgskjermen. nil: ikke noe å velge.
+    static func automaticChoice(club: ClubState, choice: AppHomeChoice?, hasParticipations: Bool,
+                                joinedByLink: Bool = false, openApp: Bool = OpenAppFeature.isEnabled) -> AppHomeChoice? {
+        guard home(club: club, choice: choice, openApp: openApp) == .chooser,
+              hasParticipations || joinedByLink else { return nil }
+        return .friends
+    }
+}
+
 /// Valget lagres per innlogging, så en annen konto på samme telefon får spørsmålet selv.
 nonisolated struct AppHomeChoiceStore {
     var defaults: UserDefaults = .standard

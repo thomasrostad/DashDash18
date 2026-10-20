@@ -115,11 +115,13 @@ nonisolated struct CompetitionAccess: Equatable, Sendable {
         return .open
     }
 
-    /// «Inviter» (`competition_invite`): bare private liga-, cup- og morroturneringer som ikke er
-    /// ferdige, og ikke en trukket cup. Eieren og de påmeldte deler koden.
+    /// «Inviter» (`competition_invite`): liga-, cup- og morroturneringer som ikke er ferdige, og ikke
+    /// en trukket cup. I en privat deler eieren og de påmeldte koden. I en klubbturnering med påmelding
+    /// (sql/060) deler bare arrangøren den, ikke deltakerne.
     func canInvite(_ c: CompetitionRow, _ participants: [CompetitionParticipantRow], isDrawn: Bool) -> Bool {
-        guard c.clubID == nil, [.league, .cup, .fun].contains(c.kind), c.status != .finished,
+        guard [.league, .cup, .fun].contains(c.kind), c.status != .finished,
               !(c.kind == .cup && isDrawn) else { return false }
+        if c.clubID != nil { return c.entry == .listed && isAdmin(c) }
         return isAdmin(c) || myParticipation(c, participants) != nil
     }
 }

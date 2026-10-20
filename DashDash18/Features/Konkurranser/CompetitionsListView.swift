@@ -27,6 +27,10 @@ struct CompetitionsListView: View {
                     }
                 }
             }
+            // Med i en turnering fra en lenke (sql/060): den står i lista med en gang.
+            .onReceive(NotificationCenter.default.publisher(for: CompetitionJoinEvents.joined)) { _ in
+                Task { await model.load() }
+            }
             .sheet(isPresented: $showsJoin) {
                 if let client = model.client {
                     NavigationStack {

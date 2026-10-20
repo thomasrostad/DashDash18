@@ -230,6 +230,8 @@ nonisolated struct TroppImportLine: Equatable, Sendable {
     let name: String
     let handicapIndex: Double?
     let problem: Problem?
+    /// NGF-nummeret fra en egen kolonne (deltakerlista, sql/060). Troppen bruker det ikke.
+    var ngfNumber: String? = nil
 
     var message: String? {
         switch problem {
@@ -292,6 +294,28 @@ nonisolated enum TroppImport {
             return (trimmed(words.joined(separator: " ")), last)
         }
         return (trimmed(line), "")
+    }
+
+    /// Navn, handicap og NGF-nummer fra én linje (deltakerlista, sql/060). Som `split`, men i kolonner
+    /// (tabulator eller semikolon) kan én kolonne være NGF-nummeret: «Kari Nordmann;18,4;12-3456».
+    /// Et NGF-nummer har bindestrek mellom sifrene eller minst fire sifre, så det ikke blir tatt for et handicap.
+    static func columns(_ line: String) -> (name: String, handicap: String, ngf: String) {
+        let columns = line.split(omittingEmptySubsequences: false) { $0 == "\t" || $0 == ";" }
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+        guard columns.count > 1 else {
+            let (name, handicap) = split(line)
+            return (name, handicap, "")
+        }
+        let rest = columns.dropFirst().filter { !$0.isEmpty }
+        let ngf = rest.first(where: looksLikeNGF) ?? ""
+        let handicap = rest.first { !looksLikeNGF($0) } ?? ""
+        return (trimmed(columns[0]), handicap, ngf)
+    }
+
+    private static func looksLikeNGF(_ text: String) -> Bool {
+        let digits = text.filter(\.isNumber).count
+        guard digits > 0, text.allSatisfy({ $0.isNumber || $0 == "-" }) else { return false }
+        return text.dropFirst().contains("-") || digits >= 4
     }
 
     private static func looksLikeHandicap(_ word: String) -> Bool {

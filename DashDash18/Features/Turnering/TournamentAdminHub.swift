@@ -119,6 +119,8 @@ struct TournamentSetupRows: View {
                             systemImage: "person.crop.circle.badge.plus")
             }
         }
+        // sql/060: deltakerne fra en liste, og lenken de tar plassen sin med.
+        ParticipantInviteRows(competition: competition, context: context)
         NavigationLink {
             StaffView(model: StaffModel(client: context.client, competition: competition, me: context.user.id))
         } label: {

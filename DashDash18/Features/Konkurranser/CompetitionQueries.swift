@@ -276,10 +276,53 @@ enum CompetitionQueries {
         return try await client.rpc("competition_invite_preview", params: Params(p_code: code.value)).execute().value
     }
 
-    /// «Bli med» (`claim_competition_invite`): melder deg på. Én transaksjon.
-    static func claimInvite(client: SupabaseClient, code: InviteCode) async throws -> CompetitionClaimResult {
-        struct Params: Encodable { let p_code: String }
-        return try await client.rpc("claim_competition_invite", params: Params(p_code: code.value)).execute().value
+    /// «Bli med» (`claim_competition_invite`): melder deg på. Én transaksjon. Med `memberID` (sql/060)
+    /// tar du det ledige deltakernavnet i en klubbturnering.
+    static func claimInvite(client: SupabaseClient, code: InviteCode, memberID: UUID? = nil) async throws
+        -> CompetitionClaimResult {
+        struct Params: Encodable {
+            let p_code: String
+            let p_member_id: UUID?
+            func encode(to encoder: any Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(p_code, forKey: .p_code)
+                // Uten navnet sendes bare koden, så kallet virker som før 060.
+                try c.encodeIfPresent(p_member_id, forKey: .p_member_id)
+            }
+            enum CodingKeys: String, CodingKey { case p_code, p_member_id }
+        }
+        return try await client.rpc("claim_competition_invite", params: Params(p_code: code.value, p_member_id: memberID))
+            .execute().value
+    }
+
+    // MARK: Deltakere (sql/060)
+
+    /// Arrangøren legger inn deltakere i en klubbturnering (`add_competition_participants`). Gir hvor
+    /// mange som ble lagt til. Én transaksjon.
+    static func addParticipants(client: SupabaseClient, competitionID: UUID,
+                                entries: [ParticipantImport.Entry]) async throws -> Int {
+        struct Params: Encodable { let p_competition_id: UUID; let p_entries: [ParticipantImport.Entry] }
+        return try await client.rpc("add_competition_participants",
+                                    params: Params(p_competition_id: competitionID, p_entries: entries))
+            .execute().value
+    }
+
+    /// Navnene som er påmeldt turneringen (medlemmer og deltakere), så lista ikke legger dem inn på nytt.
+    static func enteredNames(client: SupabaseClient, competitionID: UUID) async throws -> [String] {
+        struct Entry: Decodable {
+            struct Member: Decodable {
+                let displayName: String
+                enum CodingKeys: String, CodingKey { case displayName = "display_name" }
+            }
+            let member: Member?
+            enum CodingKeys: String, CodingKey { case member = "club_members" }
+        }
+        let entries: [Entry] = try await client.from("competition_participants")
+            .select("club_members(display_name)")
+            .eq("competition_id", value: competitionID)
+            .eq("status", value: CompetitionParticipantRow.Status.active.rawValue)
+            .execute().value
+        return entries.compactMap(\.member?.displayName)
     }
 
     // MARK: Kveld
