@@ -1,6 +1,8 @@
 import { fetchTVPayload, normalizeTVCode, tvBoardPage, tvCodePage, type TVEnv } from "./tv.ts";
 import { calendarResponse } from "./kalender.ts";
 import { fetchSharePayload, REFRESH_SECONDS, shareInvalidPage, sharePage, type SharePayload } from "./tavla.ts";
+import { escapeHTML } from "./html.ts";
+import { legalPage } from "./juridisk.ts";
 // Atten på https://dashdash18.com: filen som kobler domenet til appen (universelle lenker),
 // og en enkel side for invitasjonslenker når appen ikke er installert.
 //
@@ -10,10 +12,6 @@ import { fetchSharePayload, REFRESH_SECONDS, shareInvalidPage, sharePage, type S
 /// f.eks. `Last ned Atten fra <a href="https://apps.apple.com/…">App Store</a>.` (HTML er lov her).
 export const GET_THE_APP_HTML =
   "Har du ikke appen? Atten er i testing – spør den som inviterte deg om en TestFlight-invitasjon.";
-
-/// Personvernerklæringen, når den er publisert (samme adresse som `LegalLinks.privacy` i appen).
-/// null: ingen lenke på forsiden.
-export const PRIVACY_URL: string | null = null;
 
 export const APP_ID = "JNMQJPCV24.com.dashdash18.app";
 const APP_SCHEME = "dashdash";
@@ -112,15 +110,6 @@ function htmlResponse(body: string, status: number, nonce: string, cache: string
   });
 }
 
-function escapeHTML(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 const STYLE = `
   :root { color-scheme: light; --skog: #1C483A; --krem: #FFF9DF; --gul: #F5C842; }
   * { box-sizing: border-box; }
@@ -142,9 +131,20 @@ const STYLE = `
   .steg { text-align: left; margin: 0 0 16px; padding-left: 24px; }
   .steg li { margin: 0 0 8px; }
   a { color: var(--gul); }
+  .lenker a { margin: 0 8px; }
+  /* Personvern, vilkår og support (src/juridisk.ts): lengre tekst, venstrestilt. */
+  main.dok { max-width: 680px; text-align: left; }
+  .dok h2 { font-size: 21px; line-height: 1.3; margin: 32px 0 8px; }
+  .dok ul { margin: 0 0 16px; padding-left: 24px; }
+  .dok li { margin: 0 0 6px; }
+  .dok code { font: .9em ui-monospace, "SF Mono", Menlo, monospace; }
+  .tabell { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 0 16px; }
+  .tabell table { border-collapse: collapse; min-width: 560px; font-size: 15px; line-height: 1.4; }
+  .tabell th, .tabell td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid rgba(255, 249, 223, .25); }
+  .tabell th { color: var(--gul); }
 `;
 
-function page(title: string, content: string, nonce: string, script = ""): string {
+function page(title: string, content: string, nonce: string, script = "", mainClass = ""): string {
   return `<!doctype html>
 <html lang="nb">
 <head>
@@ -156,7 +156,7 @@ function page(title: string, content: string, nonce: string, script = ""): strin
 <style>${STYLE}</style>
 </head>
 <body>
-<main>
+<main${mainClass ? ` class="${mainClass}"` : ""}>
 <p class="merke">Atten</p>
 ${content}
 </main>
@@ -218,11 +218,10 @@ function invalidInvitePage(nonce: string): string {
 }
 
 function homePage(nonce: string): string {
-  const privacy = PRIVACY_URL ? `<p class="liten"><a href="${escapeHTML(PRIVACY_URL)}">Personvern</a></p>` : "";
   const content = `
 <h1>Atten</h1>
 <p>Atten er en app for å føre golfrunder og turneringer med gjengen.</p>
-${privacy}`;
+<p class="liten lenker"><a href="/personvern">Personvern</a> <a href="/vilkar">Vilkår</a> <a href="/support">Support</a></p>`;
   return page("Atten", content, nonce);
 }
 
@@ -277,6 +276,12 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
 
   if (pathname === "/") {
     return htmlResponse(homePage(nonce), 200, nonce, "public, max-age=3600", isHead);
+  }
+
+  // Personvern, vilkår og support (App Store). Teksten kommer fra docs/*.md via `npm run juridisk`.
+  const legal = legalPage(pathname);
+  if (legal) {
+    return htmlResponse(page(legal.title, legal.content, nonce, "", "dok"), 200, nonce, "public, max-age=3600", isHead);
   }
 
   // TV-visning med kode (fase 26, sql/041).

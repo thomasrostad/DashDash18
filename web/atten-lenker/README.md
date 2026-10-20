@@ -11,7 +11,9 @@ Cloudflare Worker for https://dashdash18.com. Den gjør to ting:
 
 - **Tavla for tilskuere** (`sql/056`). `/tavla/KODE` er lenken fra «Del tavla» i appen: tabellen, «Alle runder» og scorekortene, mobilvennlig, lys og mørk, med appens farger og skrifter. Siden henter `/tavla/KODE.json` hvert 20. sekund (og når fanen kommer fram igjen). Workeren henter `tv_board_data(kode)` som TV-siden og regner med `web/golfgutu-core` (`src/tavla.ts`). JSON-svaret holdes 10 sekunder i Cloudflares hurtigbuffer per kode, så mange tilskuere ikke gir mange kall til Supabase. Avslått eller ukjent kode gir 404, og siden sier «Lenken virker ikke lenger». Skriftene (Figtree og Sometype Mono, kuttet til latinske tegn, OFL) ligger i `public/fonts` og serveres som statiske filer (`[assets]` i `wrangler.toml`).
 
-`/` er en kort side om Atten. Alt annet gir 404. Siden har ingen sporing, ingen cookies og ingen eksterne skript.
+- **Personvern, vilkår og support** (App Store). `/personvern` og `/vilkar` viser `docs/personvern.md` og `docs/vilkar.md`, `/support` er en kort side med kontakt (personvern@dashdash18.com), sletting av konto og rapportering. Alle tre godtar også / til slutt og caches én time. Markdown-filene er kilden: `npm run juridisk` skriver dem til `src/juridisk-tekst.ts` (generert, sjekkes inn), og `src/juridisk.ts` gjør dem om til HTML (overskrifter, avsnitt, lister, tabeller, fet, kursiv, kode, lenker; all tekst escapes). En test feiler hvis den genererte filen ikke stemmer med `docs/`.
+
+`/` er en kort side om Atten med lenker til personvern, vilkår og support. Alt annet gir 404. Siden har ingen sporing, ingen cookies og ingen eksterne skript.
 
 ## Endre tekst
 
@@ -19,7 +21,7 @@ Cloudflare Worker for https://dashdash18.com. Den gjør to ting:
 
 - `GET_THE_APP_HTML`: teksten til den som ikke har appen. Bytt til App Store-lenken når appen er ute.
 - `APP_STORE_URL` (i `src/tavla.ts`): App Store-lenken i «Få Atten-appen» på Tavla-siden. `null` gir «Kommer snart».
-- `PRIVACY_URL`: adressen til personvernerklæringen. Lenken vises på forsiden når den er satt (samme adresse som `LegalLinks.privacy` i appen).
+- Personvern og vilkår: endre `docs/personvern.md` eller `docs/vilkar.md` og kjør `npm run juridisk`. Skriptet advarer om uutfylte hakeparenteser (f.eks. `[Oslo tingrett]`). **Før publisering:** `npm run juridisk -- --strict`, som avslutter med kode 1 så lenge noen står igjen. Adressene (`https://dashdash18.com/personvern` og `/vilkar`) settes i `LegalLinks` i appen.
 
 ## Test
 

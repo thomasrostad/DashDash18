@@ -1,6 +1,6 @@
 # Vilkår for bruk av Atten
 
-*Sist endret: 7. oktober 2026 (versjon `2026-10`, samme som `LegalLinks.termsVersion`). Utkast, publiseres før lansering. Adressen settes i `LegalLinks.terms` i appen.*
+*Sist endret: 7. oktober 2026 (versjon 2026-10).*
 
 Ved å bruke Atten godtar du disse vilkårene. De gjelder sammen med Apples standard lisensavtale for apper (Apple Standard EULA).
 

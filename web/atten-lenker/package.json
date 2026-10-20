@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test test/*.test.ts",
+    "juridisk": "node scripts/juridisk.mjs",
     "deploy": "wrangler deploy",
     "dry-run": "wrangler deploy --dry-run --outdir dist"
   },

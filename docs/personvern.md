@@ -1,6 +1,6 @@
 # Personvernerklæring for Atten
 
-*Sist endret: 12. oktober 2026. Utkast, publiseres før lansering. Adressen settes i `LegalLinks.privacy` i appen.*
+*Sist endret: 12. oktober 2026.*
 
 Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer. Her står hvilke opplysninger appen bruker, hvorfor, og hva du kan gjøre med dem.
 
