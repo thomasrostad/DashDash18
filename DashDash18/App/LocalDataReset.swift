@@ -95,3 +95,45 @@ nonisolated enum FreshInstallGuard {
         SecItemDelete(query as CFDictionary)
     }
 }
+
+/// Test-bygg og prod-bygg har samme bundle-id. Går telefonen fra et bygg mot test til et bygg mot
+/// prod (eller omvendt), peker klubbvalg, utboks og widgetdata på rader som ikke finnes i den nye
+/// basen. Supabase lagrer økten per prosjekt, så den gamle innloggingen brukes uansett ikke.
+nonisolated enum EnvironmentSwitchGuard {
+    static let refKey = "databaseRef"
+
+    /// Nøkler som står når basen byttes: installasjonsmerket og selve ref-en.
+    static let keptKeys: Set<String> = [FreshInstallGuard.markerKey, refKey]
+
+    /// Ingen lagret ref (første start med vakten): ingenting å rydde, bare husk ref-en.
+    static func shouldReset(storedRef: String?, currentRef: String) -> Bool {
+        guard let storedRef, !storedRef.isEmpty else { return false }
+        return storedRef != currentRef
+    }
+
+    /// Kjøres før Supabase-klienten og utboksen lages. Gir true når dataene ble ryddet.
+    @discardableResult
+    static func run(currentRef: String,
+                    defaults: UserDefaults = .standard,
+                    domain: String? = Bundle.main.bundleIdentifier,
+                    removeLocalStores: () -> Void = removeLocalStores) -> Bool {
+        let reset = shouldReset(storedRef: defaults.string(forKey: refKey), currentRef: currentRef)
+        if reset {
+            let keys = domain.flatMap(defaults.persistentDomain(forName:))?.keys.map { $0 } ?? []
+            keys.filter { !keptKeys.contains($0) }.forEach(defaults.removeObject(forKey:))
+            removeLocalStores()
+        }
+        defaults.set(currentRef, forKey: refKey)
+        return reset
+    }
+
+    /// Utboksen (hull som ikke er sendt) og widgetenes øyeblikksbilde.
+    static func removeLocalStores() {
+        let fileManager = FileManager.default
+        let support = URL.applicationSupportDirectory
+        for suffix in ["", "-shm", "-wal"] {
+            try? fileManager.removeItem(at: support.appending(path: "Utboks.store\(suffix)"))
+        }
+        try? fileManager.removeItem(at: WidgetSnapshotStore.shared.fileURL)
+    }
+}

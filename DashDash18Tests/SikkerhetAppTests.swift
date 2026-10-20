@@ -107,6 +107,39 @@ struct SikkerhetAppTests {
         #expect(FreshInstallGuard.decide(appDefaults: [FreshInstallGuard.markerKey: true]) == .known)
     }
 
+    // MARK: Bytte mellom test og prod
+
+    @Test func byttetBaseRyddesBareVedNyRef() {
+        #expect(!EnvironmentSwitchGuard.shouldReset(storedRef: nil, currentRef: "prod"))
+        #expect(!EnvironmentSwitchGuard.shouldReset(storedRef: "", currentRef: "prod"))
+        #expect(!EnvironmentSwitchGuard.shouldReset(storedRef: "prod", currentRef: "prod"))
+        #expect(EnvironmentSwitchGuard.shouldReset(storedRef: "test", currentRef: "prod"))
+    }
+
+    @Test func byttetBaseFjernerLokaleData() {
+        let (defaults, name) = Self.defaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        var removedStores = 0
+        // Første start med vakten: bare husk ref-en.
+        defaults.set("x", forKey: "valgtKlubb")
+        #expect(!EnvironmentSwitchGuard.run(currentRef: "test", defaults: defaults, domain: name) { removedStores += 1 })
+        #expect(defaults.string(forKey: "valgtKlubb") == "x")
+
+        // Samme base: ingenting skjer.
+        #expect(!EnvironmentSwitchGuard.run(currentRef: "test", defaults: defaults, domain: name) { removedStores += 1 })
+        #expect(removedStores == 0)
+
+        // Ny base: alt bortsett fra installasjonsmerket ryddes, og den nye ref-en huskes.
+        defaults.set(true, forKey: FreshInstallGuard.markerKey)
+        defaults.set("y", forKey: "apenValg.\(Self.userA.uuidString.lowercased())")
+        #expect(EnvironmentSwitchGuard.run(currentRef: "prod", defaults: defaults, domain: name) { removedStores += 1 })
+        #expect(removedStores == 1)
+        #expect(defaults.object(forKey: "valgtKlubb") == nil)
+        #expect(defaults.object(forKey: "apenValg.\(Self.userA.uuidString.lowercased())") == nil)
+        #expect(defaults.bool(forKey: FreshInstallGuard.markerKey))
+        #expect(defaults.string(forKey: EnvironmentSwitchGuard.refKey) == "prod")
+    }
+
     @Test func vaktenKjorerBareEnGang() {
         let (defaults, name) = Self.defaults()
         defer { defaults.removePersistentDomain(forName: name) }

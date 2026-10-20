@@ -4,8 +4,17 @@
 #   SUPABASE_PROJECT_REF      prosjekt-id, f.eks. tsekialrxuhrugscosgi (bare bokstaver;
 #                             Xcode Cloud godtar ikke «https://» i verdier)
 #   SUPABASE_PUBLISHABLE_KEY  publishable key (aldri service-role)
-# Bygget går alltid mot test. Prod kommer i fase 9.
+#   ATTEN_ENVIRONMENT         test (standard) eller prod. Prod-workflowen setter prod og
+#                             prod-verdiene over. Skriptet stopper hvis ref og miljø ikke passer.
 set -eu
+
+ATTEN_ENVIRONMENT=$(printf '%s' "${ATTEN_ENVIRONMENT:-test}" | tr -d '[:space:]')
+PROD_REF=wxabhadvuzyrmndxpuza
+case "$ATTEN_ENVIRONMENT" in
+  test) ENV_NAME=Test ;;
+  prod) ENV_NAME=Prod ;;
+  *) echo "Feil: ATTEN_ENVIRONMENT må være test eller prod (er «$ATTEN_ENVIRONMENT»)" >&2; exit 1 ;;
+esac
 
 # Mellomrom og linjeskift fra liming i Xcode Cloud fjernes før sjekkene.
 SUPABASE_PROJECT_REF=$(printf '%s' "${SUPABASE_PROJECT_REF:-}" | tr -d '[:space:]')
@@ -14,6 +23,13 @@ SUPABASE_PUBLISHABLE_KEY=$(printf '%s' "${SUPABASE_PUBLISHABLE_KEY:-}" | tr -d '
 case "$SUPABASE_PROJECT_REF" in
   *[!a-z0-9]*) echo "Feil: SUPABASE_PROJECT_REF skal bare ha små bokstaver og tall" >&2; exit 1 ;;
 esac
+# Et prod-bygg skal aldri gå mot test, og omvendt.
+if [ "$ATTEN_ENVIRONMENT" = prod ] && [ "$SUPABASE_PROJECT_REF" != "$PROD_REF" ]; then
+  echo "Feil: ATTEN_ENVIRONMENT=prod, men SUPABASE_PROJECT_REF er ikke Atten Prod ($PROD_REF)" >&2; exit 1
+fi
+if [ "$ATTEN_ENVIRONMENT" = test ] && [ "$SUPABASE_PROJECT_REF" = "$PROD_REF" ]; then
+  echo "Feil: SUPABASE_PROJECT_REF er Atten Prod, men ATTEN_ENVIRONMENT er test" >&2; exit 1
+fi
 SUPABASE_URL="https://$SUPABASE_PROJECT_REF.supabase.co"
 : "${SUPABASE_PUBLISHABLE_KEY:?Mangler SUPABASE_PUBLISHABLE_KEY i Xcode Cloud-workflowen}"
 
@@ -27,13 +43,13 @@ esac
 
 CONFIG_DIR="$CI_PRIMARY_REPOSITORY_PATH/DashDash18/Config"
 mkdir -p "$CONFIG_DIR"
-cat > "$CONFIG_DIR/Supabase-Test.plist" <<PLIST
+cat > "$CONFIG_DIR/Supabase-$ENV_NAME.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>Environment</key>
-	<string>test</string>
+	<string>$ATTEN_ENVIRONMENT</string>
 	<key>SupabasePublishableKey</key>
 	<string>$SUPABASE_PUBLISHABLE_KEY</string>
 	<key>SupabaseURL</key>
@@ -41,8 +57,10 @@ cat > "$CONFIG_DIR/Supabase-Test.plist" <<PLIST
 </dict>
 </plist>
 PLIST
-plutil -lint "$CONFIG_DIR/Supabase-Test.plist"
-echo "Skrev Supabase-Test.plist for $SUPABASE_URL"
+plutil -lint "$CONFIG_DIR/Supabase-$ENV_NAME.plist"
+# Appen leser miljøet fra Info.plist (AppEnvironment.current). Endringen skjer bare i bygget.
+plutil -replace AttenEnvironment -string "$ATTEN_ENVIRONMENT" "$CI_PRIMARY_REPOSITORY_PATH/DashDash18/Info.plist"
+echo "Skrev Supabase-$ENV_NAME.plist for $SUPABASE_URL (miljø: $ATTEN_ENVIRONMENT)"
 
 # Pakkene løses med den Xcode-versjonen Xcode Cloud faktisk bruker. Nyere Swift kan velge en
 # annen manifestfil i en avhengighet (swift-clocks → swift-issue-reporting), og da stemmer ikke
