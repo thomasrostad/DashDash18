@@ -1,0 +1,83 @@
+# Nattlig backup av Atten Prod (wxabhadvuzyrmndxpuza) til en privat Cloudflare R2-bøtte.
+# Gratisplanen i Supabase har ingen backup; dette erstatter den til vi går over til Pro.
+# Gjenoppretting og oppsett: docs/backup.md.
+#
+# Secrets (Settings → Secrets and variables → Actions), aldri i repoet:
+#   PROD_DB_URL           Session pooler-strengen fra Supabase (Connect → Session pooler), med passord
+#   BACKUP_PASSPHRASE     Passordet backupene krypteres med (ligger også i passordhvelvet)
+#   R2_ACCESS_KEY_ID      R2 API-token med Object Read & Write på bøtta atten-backup
+#   R2_SECRET_ACCESS_KEY
+#
+# Repoet er offentlig: ingenting fra databasen skrives til loggen, og filene forlater aldri
+# runneren ukryptert.
+name: Backup av Atten Prod
+
+on:
+  schedule:
+    - cron: "0 1 * * *" # 01:00 UTC, 02:00/03:00 norsk tid
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-prod
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      R2_ENDPOINT: https://749a71cc47cf4aee087ba73caeb8d2ef.r2.cloudflarestorage.com
+      R2_BUCKET: atten-backup
+    steps:
+      - name: Sjekk secrets
+        run: |
+          missing=""
+          for v in PROD_DB_URL BACKUP_PASSPHRASE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then echo "::error::Mangler secrets:$missing (se docs/backup.md)"; exit 1; fi
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+
+      - name: Dump roller, skjema og data
+        run: |
+          set -euo pipefail
+          mkdir -p dump
+          supabase db dump --db-url "$PROD_DB_URL" --role-only -f dump/roles.sql
+          supabase db dump --db-url "$PROD_DB_URL" -f dump/schema.sql
+          supabase db dump --db-url "$PROD_DB_URL" --data-only --use-copy -f dump/data.sql
+          # Bare størrelser i loggen, aldri innhold.
+          for f in dump/*.sql; do
+            size=$(stat -c %s "$f")
+            [ "$size" -gt 1000 ] || { echo "::error::$f er bare $size byte"; exit 1; }
+            echo "$(basename "$f"): $size byte"
+          done
+          sha256sum dump/*.sql > dump/SHA256SUMS
+
+      - name: Krypter
+        run: |
+          set -euo pipefail
+          stamp=$(date -u +%Y-%m-%dT%H%MZ)
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+          tar -czf - -C dump . | gpg --batch --yes --symmetric --cipher-algo AES256 \
+            --passphrase-fd 3 -o "atten-prod-$stamp.tar.gz.gpg" 3<<<"$BACKUP_PASSPHRASE"
+          rm -rf dump
+          ls -l "atten-prod-$stamp.tar.gz.gpg"
+
+      - name: Last opp til R2
+        run: |
+          set -euo pipefail
+          aws s3 cp "atten-prod-$STAMP.tar.gz.gpg" "s3://$R2_BUCKET/daglig/atten-prod-$STAMP.tar.gz.gpg" \
+            --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          echo "Lastet opp daglig/atten-prod-$STAMP.tar.gz.gpg"
+          # Bøtta sletter filer eldre enn 7 dager selv (livssyklusregel), som personvernerklæringen sier.
