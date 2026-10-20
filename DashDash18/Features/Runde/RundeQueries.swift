@@ -32,6 +32,15 @@ enum RundeQueries {
                 .eq("member_id", value: memberID)
                 .execute().value
             mine = Set(played.map(\.roundID))
+            // En funksjonær som ikke spiller (sql/032): runden han fører for.
+            if let userID = client.auth.currentUser?.id {
+                let scoring: [Played] = try await client.from("round_start_groups")
+                    .select("round_id")
+                    .in("round_id", values: rounds.map(\.id.uuidString))
+                    .eq("scorer_id", value: userID)
+                    .execute().value
+                mine.formUnion(scoring.map(\.roundID))
+            }
         }
         guard let round = ActiveRounds.pick(rounds, mine: mine, preferred: preferred) else { return nil }
         return try await snapshot(client: client, round: round)
@@ -50,13 +59,39 @@ enum RundeQueries {
         async let events: [EventRow] = client.from("events")
             .select(EventRow.columns)
             .eq("id", value: eventID).execute().value
+        async let scorerGroups = scorerGroups(client: client, roundID: round.id)
 
         var snapshot = try await base
         snapshot.names = Dictionary(try await members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { a, _ in a })
         let event = try await events.first
         snapshot.eventDate = event?.eventDate
         snapshot.rules = try await rules(client: client, clubID: clubID, seasonID: event?.seasonID)
+        snapshot.scorerGroups = await scorerGroups
         return snapshot
+    }
+
+    /// Gruppene den innloggede er funksjonær for i runden (sql/032), så lenge han er i staben.
+    /// Feiler det (032 ikke kjørt, uten nett), er svaret tomt: da fører bare spillerne og arrangøren.
+    static func scorerGroups(client: SupabaseClient, roundID: UUID) async -> Set<Int> {
+        guard let userID = client.auth.currentUser?.id else { return [] }
+        struct Group: Decodable {
+            let groupNo: Int
+            enum CodingKeys: String, CodingKey { case groupNo = "group_no" }
+        }
+        struct Params: Encodable { let p_round_id: UUID }
+        do {
+            let groups: [Group] = try await client.from("round_start_groups")
+                .select("group_no")
+                .eq("round_id", value: roundID)
+                .eq("scorer_id", value: userID)
+                .execute().value
+            guard !groups.isEmpty else { return [] }
+            let isStaff: Bool = try await client.rpc("is_round_staff", params: Params(p_round_id: roundID))
+                .execute().value
+            return isStaff ? Set(groups.map(\.groupNo)) : []
+        } catch {
+            return []
+        }
     }
 
     /// En løs runde: deltakerne (profil eller gjest) med navn fra `round_roster`, eieren, og

@@ -24,6 +24,9 @@ nonisolated struct RoundSnapshot: Equatable, Sendable {
     var competitions: [RoundCompetitionRow] = []
     /// Øyeblikksbildet ved start (sql/048). nil: kladd, eller 048 mangler.
     var freeze: RoundFreeze?
+    /// Gruppene (bås/flight) den innloggede er funksjonær for (sql/032 `round_start_groups.scorer_id`,
+    /// fortsatt i staben). Tom for de fleste.
+    var scorerGroups: Set<Int> = []
 
     /// En runde uten klubb og kveld.
     var isLoose: Bool { round.clubID == nil }

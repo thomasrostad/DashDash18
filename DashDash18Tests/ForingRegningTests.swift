@@ -216,6 +216,32 @@ struct ForingLagringTests {
         #expect(strokes == [id(F.anders): par, id(F.bjorn): par, id(F.cato): 5, id(F.dag): 5])
     }
 
+    /// Funksjonæren for flight 2 spiller ikke selv, men fører hele flighten (sql/032 og 058).
+    @Test func funksjonaerForerGruppaSi() {
+        let g = RoundGame(F.snapshot(F.markorPlayers()))
+        let viewer = Viewer(memberID: id(99), isOrganizer: false, scorerGroups: [2])
+        let flight = [F.erik, F.frode, F.gunnar, F.halvor].map(id)
+        #expect(Set(g.cardPlayers(for: viewer)) == Set(flight))
+        #expect(flight.allSatisfy { g.cardRowEditable($0, for: viewer) })
+        #expect(!g.canScore(viewer, for: id(F.anders)))
+        #expect(g.canConfirmPar(viewer))
+
+        var drafts = HoleDrafts()
+        drafts[0, id(F.frode)] = 6
+        let sub = g.submission(hole: 0, drafts: drafts, viewer: viewer, recordedAt: Date())
+        #expect(Set(sub?.entries.map(\.memberID) ?? []) == Set(flight))
+        #expect(sub?.entries.first { $0.memberID == id(F.frode) }?.strokes == 6)
+    }
+
+    @Test func utenFunksjonaerrolleIngentingAaFore() {
+        let g = RoundGame(F.snapshot(F.markorPlayers()))
+        let viewer = Viewer(memberID: id(99), isOrganizer: false)
+        #expect(g.cardPlayers(for: viewer).isEmpty)
+        #expect(!g.canConfirmPar(viewer))
+        // En gruppe som ikke finnes i runden gir heller ikke noe kort.
+        #expect(g.cardPlayers(for: Viewer(memberID: id(99), isOrganizer: false, scorerGroups: [7])).isEmpty)
+    }
+
     @Test func lagreRettEtterHullbytteSperres() {
         let changed = Date(timeIntervalSince1970: 100)
         #expect(!SaveTapGuard.allows(now: changed.addingTimeInterval(0.2), holeChangedAt: changed))
