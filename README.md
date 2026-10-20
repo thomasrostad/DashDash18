@@ -3,12 +3,12 @@
 Native iOS-app for golfturneringer blant venner. Den erstatter GolfGutu-PWA-en som Golfgutu Invitational bruker i dag. Brukerne ser navnet **Atten**. Repo, Xcode-prosjekt, bundle-id (`com.dashdash18.app`), domenet dashdash18.com og URL-skjemaet `dashdash://` heter fortsatt DashDash18.
 
 - SwiftUI, iOS 26+, Swift 6, Swift Testing
-- Backend: egen Supabase via `supabase-swift` (foreløpig bare test, prod kommer)
+- Backend: egen Supabase via `supabase-swift`, to prosjekter: test og Atten Prod
 - iPhone først, Android senere
 
 ## Hva appen gjør nå
 
-Status 20.10.2026. Alt kjører mot test-Supabase; prod er ikke satt opp. Detaljer per fase står i [`ROADMAP.md`](ROADMAP.md).
+Status 20.10.2026. **Atten 1.0 er sendt til App Review** (build 181, gratis, bare iPhone, bare Norge). Prod-bygg går mot Atten Prod (`wxabhadvuzyrmndxpuza`) via Xcode Cloud-workflowen «App Store (prod)» med `ATTEN_ENVIRONMENT=prod`; bygg fra «TestFlight fra main» går fortsatt mot test. Gjengen er fortsatt på test. Sjekklisten står i [`docs/prod-sjekkliste.md`](docs/prod-sjekkliste.md). Detaljer per fase står i [`ROADMAP.md`](ROADMAP.md).
 
 **Fanene.** Hjem · Spill · Tavla · Arrangør · Deg. «Arrangør» vises bare for arrangører i klubben (med sql/044: dem med minst én rettighet). Uten klubb har appen Spill og Deg.
 
@@ -145,7 +145,7 @@ Når `main` endres, sender Xcode Cloud et nytt bygg til TestFlight (15–30 min)
 
 ## Database (Supabase)
 
-Foreløpig ett prosjekt: **test** (`tsekialrxuhrugscosgi`). Prod opprettes før byttet for gjengen (fase 9). PWA-ens database er bare kilde for import og skrives aldri til.
+To prosjekter: **test** (`tsekialrxuhrugscosgi`) og **Atten Prod** (`wxabhadvuzyrmndxpuza`, satt opp 20.10.2026 med alle migreringene, se `docs/prod-sjekkliste.md`). Nye migreringer kjøres på test først og så på prod. PWA-ens database er bare kilde for import og skrives aldri til.
 
 Endringer går slik (detaljer i [`sql/README.md`](sql/README.md)):
 
