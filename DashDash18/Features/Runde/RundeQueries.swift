@@ -140,8 +140,11 @@ enum RundeQueries {
         // Konkurransene og øyeblikksbildet (sql/048). Mangler de, er alt som før.
         async let competitions = RoundFormatsQueries.competitions(client: client, roundID: id)
         async let freeze = RoundFormatsQueries.freeze(client: client, roundID: id)
+        // Gunstart: starthullet per gruppe fra startlista (sql/031).
+        async let startHoles = startHoles(client: client, roundID: id)
 
         var snapshot = RoundSnapshot(round: round)
+        snapshot.startHoles = await startHoles
         snapshot.competitions = await competitions
         snapshot.freeze = await freeze
         snapshot.roundHoles = try await holes
@@ -161,6 +164,18 @@ enum RundeQueries {
             snapshot.courseHoles = try await courseHoles
         }
         return snapshot
+    }
+
+    /// Starthullet per gruppe i startlista (sql/031). Feiler det (031 mangler, uten nett, en løs runde
+    /// uten startliste), er svaret tomt, og alle starter på første hull som før.
+    static func startHoles(client: SupabaseClient, roundID: UUID) async -> [Int: Int] {
+        do {
+            let groups = try await TournamentCoreQueries.startGroups(client: client, roundIDs: [roundID])
+            return Dictionary(groups.compactMap { g in g.startHole.map { (g.groupNo, $0) } },
+                              uniquingKeysWith: { first, _ in first })
+        } catch {
+            return [:]
+        }
     }
 
     /// Regelsettet til kveldens sesong, ellers hovedturneringens, ellers Golfgutu-oppsettet.

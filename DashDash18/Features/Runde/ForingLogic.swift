@@ -136,11 +136,37 @@ nonisolated extension RoundGame {
         return SyncStatus(text: "\(synced.count) hull er synket", isPending: false)
     }
 
-    /// `baasensHull`: første hull der ikke alle på kortet er ført. Alle ført: siste hull.
+    /// `baasensHull`: første hull der ikke alle på kortet er ført, regnet fra gruppas starthull og
+    /// rundt (gunstart på hull 10: 10–18, så 1–9). Alle ført: det siste i rekka.
     func bayHole(for viewer: Viewer) -> Int {
         let players = cardPlayers(for: viewer)
         guard !players.isEmpty else { return 0 }
-        return (0..<holeCount).first { !isComplete(hole: $0, for: players) } ?? holeCount - 1
+        let order = holeOrder(for: viewer)
+        return order.first { !isComplete(hole: $0, for: players) } ?? order.last ?? 0
+    }
+
+    /// Indeksen til starthullet for gruppa på kortet (startlista, sql/031). 0 uten startliste,
+    /// og når starthullet ikke er i runden. Nummeret er banens hullnummer; finnes det ikke i runden
+    /// (9 hull fra hull 10, starthull 3), er det plassen i runden.
+    func startHoleIndex(for viewer: Viewer) -> Int {
+        guard let first = cardPlayers(for: viewer).first, let group = bay(of: first)?.number,
+              let start = snapshot.startHoles[group] else { return 0 }
+        if let index = (0..<holeCount).first(where: { holeNumber($0) == start }) { return index }
+        return (1...max(holeCount, 1)).contains(start) ? start - 1 : 0
+    }
+
+    /// Hullene i den rekkefølgen gruppa spiller dem: fra starthullet og rundt.
+    func holeOrder(for viewer: Viewer) -> [Int] {
+        let start = startHoleIndex(for: viewer)
+        return (0..<holeCount).map { (start + $0) % holeCount }
+    }
+
+    /// Hullet etter `index` for gruppa: fra 18 til 1 når gruppa startet midt i runden.
+    /// nil etter gruppas siste hull.
+    func nextHole(after index: Int, for viewer: Viewer) -> Int? {
+        let order = holeOrder(for: viewer)
+        guard let position = order.firstIndex(of: index), position + 1 < order.count else { return nil }
+        return order[position + 1]
     }
 
     // MARK: Lagring
@@ -418,7 +444,7 @@ nonisolated extension RoundGame {
                 guard let d = drafts[index, m] else { return false }
                 return d != scores(m)[index]
             }
-            let next: Int? = index < count - 1 ? index + 1 : nil
+            let next = nextHole(after: index, for: viewer)
             if allSaved && !changed {
                 action = next.map { .next(title: "Neste hull → hull \(holeNumber($0))", hole: $0) } ?? .scorecard
             } else {
@@ -818,7 +844,8 @@ nonisolated extension RoundGame {
     /// tekst, poeng og plass. Flere: alle som fikk birdie eller bedre.
     /// - Parameter saved: hulltallene som nettopp ble lagret, i en runde der de står inne.
     ///   Rettinger (hullet var lagret fra før) tas ikke med av den som kaller.
-    func celebration(hole index: Int, saved: [(member: UUID, strokes: Int)]) -> Celebration? {
+    /// - Parameter viewer: med den går «Videre til hull N» rundt fra gruppas starthull (gunstart).
+    func celebration(hole index: Int, saved: [(member: UUID, strokes: Int)], viewer: Viewer? = nil) -> Celebration? {
         let hole = holes[index]
         let hits: [(level: CelebrationLevel, member: UUID, strokes: Int)] = saved.compactMap { s in
             let net = Scoring.netStrokes(gross: s.strokes, handicap: handicap(s.member),
@@ -827,7 +854,8 @@ nonisolated extension RoundGame {
         }
         guard let best = hits.max(by: { $0.level < $1.level }) else { return nil }
         let eyebrow = "HULL \(holeNumber(index)) · PAR \(hole.par)"
-        let next = index < holeCount - 1 ? holeNumber(index + 1) : nil
+        let following = viewer.map { nextHole(after: index, for: $0) } ?? (index < holeCount - 1 ? index + 1 : nil)
+        let next = following.map(holeNumber)
 
         if hits.count > 1 {
             let text = hits.sorted { $0.level > $1.level }.map { h in
