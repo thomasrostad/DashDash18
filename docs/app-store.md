@@ -27,9 +27,10 @@ Svar i App Store Connect → appen → **App Privacy**. Ingen sporing: svar **Ne
 | Identifiers → **User ID** | Ja (konto-id) | Ja | Nei | App Functionality |
 | Identifiers → **Device ID** | Ja (push-token, identifierForVendor) | Ja | Nei | App Functionality |
 | Purchases → **Purchase History** | Ja (når kjøp er på) | Ja | Nei | App Functionality |
-| Usage Data, Diagnostics, Location, Contacts, Health, Financial Info, Browsing, Search, Sensitive Info | **Nei** | – | – | – |
+| Diagnostics → **Crash Data** og **Performance Data** (MetricKit, `sql/064`, fra bygget etter 1.0) | Ja | Ja (konto-id) | Nei | App Functionality |
+| Usage Data, Location, Contacts, Health, Financial Info, Browsing, Search, Sensitive Info | **Nei** | – | – | – |
 
-Merk: «Sports»-statistikk som handicap regnes som Other User Content. Krasjrapporter fra Apple (Xcode Organizer) teller ikke, fordi Apple samler dem.
+Merk: «Sports»-statistikk som handicap regnes som Other User Content. Krasjrapporter fra Apple (Xcode Organizer) teller ikke, fordi Apple samler dem. MetricKit-rapportene vi sender til vår egen database (`app_diagnostics`), teller: App Privacy i App Store Connect må få Crash Data og Performance Data før et bygg med `DiagnosticsFeature` sendes inn.
 
 ## 3. App Store Connect
 

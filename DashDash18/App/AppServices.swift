@@ -12,6 +12,8 @@ final class AppServices {
     let outbox: OutboxScoreSubmitter
     /// Push (fase 8). Gjør ingenting når `PushFeature` er av.
     let push: PushRegistrar
+    /// Feilsporing med MetricKit (fase 17, sql/064). Gjør ingenting når `DiagnosticsFeature` er av.
+    let diagnostics: DiagnosticsReporter
     /// Lagring av hull: utboksen utenpå `DirectScoreSubmitter`.
     var scoreSubmitter: any ScoreSubmitting { outbox }
 
@@ -30,6 +32,9 @@ final class AppServices {
         club = ClubModel(client: client)
         outbox = OutboxScoreSubmitter(inner: DirectScoreSubmitter(client: client), container: Self.makeOutboxContainer())
         push = PushRegistrar(client: client)
+        diagnostics = DiagnosticsReporter(sender: SupabaseDiagnosticsSender(client: client))
+        // Tidlig, så diagnosene fra forrige kjøring (krasj, heng) kommer med en gang.
+        diagnostics.subscribe()
         // Telefonen fjernes mens økten finnes, så den forrige innloggingen ikke får push her.
         auth.willSignOut = { [push] in await push.unregister() }
         // Slettet konto: hullene som ikke ble sendt, og innstillingene for kontoen, fjernes også her.

@@ -46,6 +46,7 @@ struct AppRoot: View {
                 .task(id: user.id) { await services.club.load(userID: user.id) }
                 .task(id: user.id) { services.outbox.start(userID: user.id) }
                 .task(id: user.id) { await services.push.start(userID: user.id) }
+                .task(id: user.id) { await services.diagnostics.start(userID: user.id) }
                 .task(id: user.id) { startPurchases(userID: user.id) }
             }
         }
@@ -96,6 +97,7 @@ struct AppRoot: View {
                 services.club.reset()
                 services.outbox.stop()
                 services.push.stop()
+                services.diagnostics.stop()
                 purchases?.stop()
                 purchases = nil
                 SignedOutCleanup.run()
@@ -106,6 +108,7 @@ struct AppRoot: View {
             // og hent medlemskapet på nytt, så ny rolle eller godkjenning slår inn uten omstart.
             if phase == .active, case .signedIn(let user) = services.auth.state {
                 Task { await services.outbox.flush() }
+                Task { await services.diagnostics.flush() }
                 Task { await services.club.refresh(userID: user.id) }
             }
         }

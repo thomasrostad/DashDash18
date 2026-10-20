@@ -31,7 +31,7 @@ Startet 20.10.2026. Kilder: `sql/README.md`, `docs/gjoremal.md`, `docs/lansering
 
 Rekkefølgen er den samme som på test, ikke den numeriske. 044 lager policyer på `seasons`, så den må kjøres **før** 035, som gjør `seasons` til et view. Kontrollen nederst i hver fil kjøres før neste fil.
 
-001, 002, 004, 005, 006, 007, 008, 010, 011, 012, 015, 016, 014, 017, 020, 018, 019, 021, 024, 022, 023, 025, 026, 027, 029, 030, 031, 032, 033, 036, 037, 038, 039, 040, 041, 042, 043, 034, 044, 045, 047, 046, 049, 050, 051, 048, 052, 052b, 054, 055, 035, 056, 057, 058, 059, 060, 061, 062, 063.
+001, 002, 004, 005, 006, 007, 008, 010, 011, 012, 015, 016, 014, 017, 020, 018, 019, 021, 024, 022, 023, 025, 026, 027, 029, 030, 031, 032, 033, 036, 037, 038, 039, 040, 041, 042, 043, 034, 044, 045, 047, 046, 049, 050, 051, 048, 052, 052b, 054, 055, 035, 056, 057, 058, 059, 060, 061, 062, 063, 064.
 
 Skal ikke kjøres: 009 (tatt med i 011), `010_kontroll.sql`, `lokal/` og `import/`.
 
@@ -65,8 +65,9 @@ Skal ikke kjøres: 009 (tatt med i 011), `010_kontroll.sql`, `lokal/` og `import
 
 ## 7. Før lansering (C, fra lanseringssjekken)
 
-- [ ] 7.1 Feilsporing (MetricKit eller Sentry) og norske feiltekster i stedet for systemets.
+- [x] 7.1 Feilsporing (MetricKit eller Sentry). *(20.10: MetricKit i appen (`DashDash18/Diagnostics/`, `DiagnosticsFeature`) og `sql/064_feilrapporter.sql`. Rapportene havner i `public.app_diagnostics` når 064 er kjørt på test og prod; før det ligger de i kø på telefonen. Spørring i README, «Feilrapporter». Norske feiltekster er flyttet til 7.3.)*
 - [ ] 7.2 Grenser for antall forsøk der de mangler, og grense på dashdash18.com.
+- [ ] 7.3 Norske feiltekster i stedet for systemets.
 
 ## 8. Byttet for gjengen (fase 9, utsatt)
 

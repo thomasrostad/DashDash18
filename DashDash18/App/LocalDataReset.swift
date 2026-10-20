@@ -127,7 +127,7 @@ nonisolated enum EnvironmentSwitchGuard {
         return reset
     }
 
-    /// Utboksen (hull som ikke er sendt) og widgetenes øyeblikksbilde.
+    /// Utboksen (hull som ikke er sendt), widgetenes øyeblikksbilde og feilrapportene i kø.
     static func removeLocalStores() {
         let fileManager = FileManager.default
         let support = URL.applicationSupportDirectory
@@ -135,5 +135,6 @@ nonisolated enum EnvironmentSwitchGuard {
             try? fileManager.removeItem(at: support.appending(path: "Utboks.store\(suffix)"))
         }
         try? fileManager.removeItem(at: WidgetSnapshotStore.shared.fileURL)
+        try? fileManager.removeItem(at: DiagnosticsQueue.defaultFileURL)
     }
 }
