@@ -31,6 +31,7 @@ struct TroppAdminView: View {
 private struct TroppListView: View {
     @Bindable var model: TroppModel
     @State private var isAdding = false
+    @State private var isImporting = false
     /// Avvis spør først, som på spillersiden.
     @State private var rejecting: ClubMemberRow?
 
@@ -74,7 +75,14 @@ private struct TroppListView: View {
         .refreshable { await model.load() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button { isAdding = true } label: {
+                Menu {
+                    Button { isAdding = true } label: {
+                        Label("Ett navn", systemImage: "person.badge.plus")
+                    }
+                    Button { isImporting = true } label: {
+                        Label("Mange navn (lim inn liste)", systemImage: "list.bullet.rectangle")
+                    }
+                } label: {
                     Label("Legg til navn", systemImage: "plus")
                 }
             }
@@ -82,7 +90,10 @@ private struct TroppListView: View {
         .sheet(isPresented: $isAdding) {
             TroppAddView(model: model)
         }
-        .troppErrorAlert(model: model, isActive: !isAdding)
+        .sheet(isPresented: $isImporting) {
+            TroppImportView(model: model)
+        }
+        .troppErrorAlert(model: model, isActive: !isAdding && !isImporting)
         .confirmationDialog(
             rejecting.map { "Avvise \($0.displayName)?" } ?? "",
             isPresented: Binding(get: { rejecting != nil }, set: { if !$0 { rejecting = nil } }),

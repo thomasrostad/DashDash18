@@ -191,6 +191,97 @@ nonisolated enum TroppInput {
     }
 }
 
+// MARK: - Mange navn på én gang
+
+/// Én linje fra «Legg til mange»: navnet og handicapet, eller hvorfor linja ikke kan legges til.
+nonisolated struct TroppImportLine: Equatable, Sendable {
+    enum Problem: Equatable, Sendable {
+        case invalid(String)
+        /// Navnet finnes i troppen fra før.
+        case exists
+        /// Samme navn står lenger opp i lista.
+        case repeated
+    }
+
+    let text: String
+    let name: String
+    let handicapIndex: Double?
+    let problem: Problem?
+
+    var message: String? {
+        switch problem {
+        case .invalid(let text): text
+        case .exists: "Finnes i troppen fra før"
+        case .repeated: "Står allerede i lista"
+        case nil: nil
+        }
+    }
+}
+
+/// Navn limt inn fra en liste, et regneark eller en e-post: ett navn per linje, med handicap
+/// etter navnet om du vil («Kari Nordmann 18,4», «Kari Nordmann;18,4» eller kolonner fra et regneark).
+nonisolated enum TroppImport {
+    /// Høyst så mange linjer per innliming.
+    static let maxLines = 200
+
+    static func parse(_ text: String, rows: [ClubMemberRow]) -> [TroppImportLine] {
+        var seen: Set<String> = []
+        return text.split(whereSeparator: \.isNewline).prefix(maxLines).compactMap { raw in
+            let line = raw.trimmingCharacters(in: .whitespaces)
+            guard !line.isEmpty else { return nil }
+            let (rawName, rawHandicap) = split(line)
+            guard let name = ClubInput.normalizedName(rawName) else {
+                return TroppImportLine(text: line, name: rawName, handicapIndex: nil,
+                                       problem: .invalid("Mangler navn, eller navnet er over 40 tegn"))
+            }
+            let handicap: Double?
+            switch ClubInput.handicapIndex(rawHandicap) {
+            case .success(let index): handicap = index
+            case .failure(let error):
+                return TroppImportLine(text: line, name: name, handicapIndex: nil, problem: .invalid(error.message))
+            }
+            let key = TroppRules.nameKey(name)
+            let problem: TroppImportLine.Problem?
+            if TroppRules.nameTaken(name, in: rows) { problem = .exists }
+            else if seen.contains(key) { problem = .repeated }
+            else { problem = nil }
+            seen.insert(key)
+            return TroppImportLine(text: line, name: name, handicapIndex: handicap, problem: problem)
+        }
+    }
+
+    /// Linjene som kan legges til.
+    static func valid(_ lines: [TroppImportLine]) -> [TroppImportLine] {
+        lines.filter { $0.problem == nil }
+    }
+
+    /// Navn og handicap fra én linje. Tabulator eller semikolon skiller kolonnene; ellers er det
+    /// siste ordet handicapet hvis det ser ut som et tall («18,4», «+2», «54»).
+    static func split(_ line: String) -> (name: String, handicap: String) {
+        let columns = line.split(omittingEmptySubsequences: false) { $0 == "\t" || $0 == ";" }
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+        if columns.count > 1 {
+            return (trimmed(columns[0]), columns.dropFirst().first { !$0.isEmpty } ?? "")
+        }
+        var words = line.split(separator: " ").map(String.init)
+        if words.count > 1, let last = words.last, looksLikeHandicap(last) {
+            words.removeLast()
+            return (trimmed(words.joined(separator: " ")), last)
+        }
+        return (trimmed(line), "")
+    }
+
+    private static func looksLikeHandicap(_ word: String) -> Bool {
+        let digits = word.drop { $0 == "+" || $0 == "-" }
+        return !digits.isEmpty && digits.allSatisfy { $0.isNumber || $0 == "," || $0 == "." }
+    }
+
+    /// «Kari Nordmann,» → «Kari Nordmann» (komma før handicapet i en e-post).
+    private static func trimmed(_ name: String) -> String {
+        name.trimmingCharacters(in: CharacterSet(charactersIn: ",").union(.whitespaces))
+    }
+}
+
 // MARK: - Seeding
 
 nonisolated enum TroppSeeding {
