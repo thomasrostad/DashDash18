@@ -4,6 +4,8 @@ Dette er skjemaet for appens **nye, egne** database. PWA-ens database røres ikk
 
 > **Status 06.10.2026:** `001_skjema_v1.sql` er **godkjent av brukeren og kjørt på test** (`tsekialrxuhrugscosgi`). Kontrollspørringene ga 10 av 10 ok, og uinnloggede forespørsler mot tabeller og RPC-er får 42501. Åpne spørsmål er besvart etter anbefalingene: markørens par-bekreftelse kommer som egen RPC i neste migrering, og `playing_handicap` lagres ved start. Ikke kjørt på prod.
 
+> **Prod 20.10.2026:** alle migreringene fra 001 til 062 (unntatt 009) er kjørt på **Atten Prod** (`wxabhadvuzyrmndxpuza`) i rekkefølgen i `docs/prod-sjekkliste.md` avsnitt 3, uten feil. Skjemaet er sammenlignet med test og er likt. «Ikke prod» i tabellen under gjelder bare fram til denne datoen. Nye filer kjøres på test først og så på prod.
+
 ## Prosess (ROADMAP B5)
 
 1. **Fil:** hver endring er en nummerert fil her (`001_…`, `002_…`). Én fil er én transaksjon.
