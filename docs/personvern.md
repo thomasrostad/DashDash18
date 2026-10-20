@@ -25,6 +25,7 @@ Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer
 | Regninger du deler («Del regningen»): hva det gjelder, beløpet, hvem som skal betale, og om delen er sendt og mottatt. Vipps-nummeret ditt bare når du selv får pengene og legger det inn | For at gjengen skal kunne gjøre opp. Ingen penger går gjennom appen | Avtale |
 | Kalenderlenken din (en tilfeldig kode) | For at kveldene du er påmeldt på, skal dukke opp i kalenderen din | Avtale |
 | Kjøp i appen (produkt, transaksjons-id, status), når kjøp blir tilgjengelig | For å låse opp det du har betalt for | Avtale og regnskapsplikt |
+| Feilrapporter når appen krasjer eller henger (appversjon, iOS-versjon, telefonmodell og hva som gikk galt i koden), koblet til kontoen din | For å finne og rette feil | Berettiget interesse (art. 6 nr. 1 f) |
 | Rapporter og blokkeringer | For å holde appen fri for støtende innhold | Berettiget interesse (art. 6 nr. 1 f) |
 | Hvem du følger og hvem som følger deg, om du vil godkjenne følgere og være synlig i søket, QR-koden din, og en logg over søk og forespørsler (slettes etter to døgn) | For at du skal kunne følge andre spillere, og for å hindre misbruk av søket | Avtale, og berettiget interesse for loggen |
 
@@ -46,7 +47,7 @@ Appen ber om tilgang til kameraet bare når du vil ta et bilde til tråden eller
 
 ## Hvor dataene ligger
 
-Dataene lagres hos **Supabase** (database, innlogging, fillagring og serverfunksjoner) i et datasenter i EU. Supabase er databehandler for oss, med databehandleravtale. Varsler sendes gjennom **Apple Push Notification service**. Kommer det kjøp i appen, går de gjennom **Apple (App Store)**; vi får aldri kortopplysningene dine. E-post med innloggingskode sendes gjennom **Resend**. Logger du inn med **Apple**, får vi navnet og e-postadressen du godkjenner der.
+Dataene lagres hos **Supabase** (database, innlogging, fillagring og serverfunksjoner) i et datasenter i EU. Krypterte sikkerhetskopier lagres hos **Cloudflare** (R2) i Vest-Europa. Supabase er databehandler for oss, med databehandleravtale. Varsler sendes gjennom **Apple Push Notification service**. Kommer det kjøp i appen, går de gjennom **Apple (App Store)**; vi får aldri kortopplysningene dine. E-post med innloggingskode sendes gjennom **Resend**. Logger du inn med **Apple**, får vi navnet og e-postadressen du godkjenner der.
 
 ## Hvor lenge
 
@@ -58,7 +59,7 @@ Vi lagrer opplysningene så lenge du har en konto. Sletter du kontoen:
 - navnet ditt byttes til **«Slettet spiller»** i klubber og runder, mens scorene står, slik at tabellene til de andre ikke endres,
 - kjøpsopplysninger beholdes uten kobling til deg så lenge regnskapsloven krever det.
 
-Sikkerhetskopier hos Supabase slettes automatisk etter høyst 7 dager.
+Feilrapporter slettes etter høyst 90 dager. Sikkerhetskopier slettes automatisk etter høyst 7 dager.
 
 ## Rettighetene dine
 
