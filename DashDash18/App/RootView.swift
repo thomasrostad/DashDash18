@@ -66,6 +66,10 @@ struct RootView: View {
             selectedTab = .hjem
             router.showRound(roundID)
         }
+        .onReceive(NotificationCenter.default.publisher(for: RoundRequests.show)) { note in
+            selectedTab = .hjem
+            router.showRound(note.object as? UUID)
+        }
         .task(id: memberships.map(\.id)) { makeHome() }
         // Trykk på en push: også det som kom før innloggingen var klar (kald oppstart).
         .onChange(of: PushTapInbox.shared.pending, initial: true) { openPush() }
@@ -141,6 +145,12 @@ extension EnvironmentValues {
     /// Åpner runden som går, på Hjem (arrangørsidens «Gå til runden»).
     /// Åpner runden som går på Hjem. Med id: den runden (flere kan gå samtidig, sql/034).
     @Entry var showRound: (UUID?) -> Void = { _ in }
+}
+
+/// «Åpne runden på Hjem» fra et ark utenfor `RootView` (turneringen fra en lenke): arket lukkes,
+/// og `RootView` tar imot runde-id-en (`object`, nil: runden som går).
+nonisolated enum RoundRequests {
+    static let show = Notification.Name("DashDash18.showRound")
 }
 
 /// Merke i verktøylinjen så det aldri er tvil om at appen ikke kjører mot prod.

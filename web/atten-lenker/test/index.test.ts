@@ -51,6 +51,8 @@ test("invitasjonsside for klubb, runde og konkurranse", async () => {
     assert.ok(html.includes(`href="${appLink}"`), `${path}: lenke til appen`);
     assert.match(html, /Åpne i Atten/);
     assert.match(html, /TestFlight-invitasjon/);
+    // Turneringen (sql/060): stegene for å ta plassen sin.
+    assert.equal(html.includes("Velg navnet ditt på lista"), path.startsWith("/konkurranse/"), `${path}: stegene`);
     // Ingen eksterne skript eller ressurser.
     assert.doesNotMatch(html, /<script[^>]*src=/);
     assert.doesNotMatch(html, /https?:\/\//);
