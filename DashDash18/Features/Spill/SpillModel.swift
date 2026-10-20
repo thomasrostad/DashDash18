@@ -44,6 +44,12 @@ final class SpillModel {
         { [client, userID] roundID in client.map { LooseRoundContext(client: $0, userID: userID, roundID: roundID) } }
     }
 
+    /// Profilen er lagret fra Spill (navn og handicap): brukes i neste runde med en gang.
+    func profileSaved(_ row: OwnProfileRow) {
+        me?.displayName = row.displayName
+        me?.handicapIndex = row.handicapIndex
+    }
+
     /// Føringen for en turneringsrunde i lista.
     func participantContext(_ roundID: UUID) -> ParticipantRoundContext? {
         guard let client, let round = participantRounds[roundID] else { return nil }

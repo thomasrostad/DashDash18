@@ -12,6 +12,8 @@ struct SpillView: View {
     @State private var openTournamentRound: UUID?
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.clubContext) private var clubContext
+    /// Skjemaet for navn og handicap, åpnet fra oppfordringen (uten klubb, profilen mangler navn).
+    @State private var editingProfile: OwnProfileModel?
 
     var body: some View {
         DDList {
@@ -31,6 +33,9 @@ struct SpillView: View {
                         .disabled(model.client == nil)
                 }
                 .padding(.vertical, DDSpacing.s)
+                if showsNamePrompt, let client = model.client {
+                    OwnProfileNamePrompt { editingProfile = OwnProfileModel(client: client, userID: model.userID) }
+                }
             }
 
             if case .failed(let message) = model.state {
@@ -103,6 +108,11 @@ struct SpillView: View {
                     .onDisappear { Task { await model.load() } }
             }
         }
+        .sheet(isPresented: Binding(get: { editingProfile != nil }, set: { if !$0 { editingProfile = nil } })) {
+            if let editingProfile {
+                OwnProfileEditSheet(model: editingProfile, scope: .full) { model.profileSaved($0) }
+            }
+        }
         .sheet(isPresented: $showsNew) {
             if let client = model.client {
                 NavigationStack {
@@ -127,6 +137,11 @@ struct SpillView: View {
                 .tint(Color.ddForestInk)
             }
         }
+    }
+
+    /// Uten klubb og uten navn heter du «Spiller» for de andre. Med klubb står navnet i troppen.
+    private var showsNamePrompt: Bool {
+        clubContext == nil && model.me != nil && OwnProfile.needsName(model.me?.displayName)
     }
 
     @ViewBuilder

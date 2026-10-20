@@ -137,37 +137,34 @@ enum FriendsRound: Hashable {
     case participant(ParticipantRound)
 }
 
-/// Deg uten klubb: profilen, klubb (bli med eller lag), innlogging, personvern og konto.
+/// Deg uten klubb: profilen (navn, handicap, NGF-nummer), klubb (bli med eller lag), innlogging,
+/// personvern og konto.
 struct FriendsDegView: View {
     let config: AppConfig
     let client: SupabaseClient?
     let user: AuthUser
-    /// Profilnavnet (fra `ensure_profile`), eller nil til det er hentet.
-    @State private var name: String?
+    @State private var profile: OwnProfileModel
 
-    init(config: AppConfig, client: SupabaseClient?, user: AuthUser, name: String? = nil) {
+    init(config: AppConfig, client: SupabaseClient?, user: AuthUser) {
         self.config = config
         self.client = client
         self.user = user
-        _name = State(initialValue: name)
+        _profile = State(initialValue: OwnProfileModel(client: client, userID: user.id))
     }
+
+    #if DEBUG
+    /// Skjermprøve uten nett.
+    init(config: AppConfig, user: AuthUser, preview row: OwnProfileRow) {
+        self.config = config
+        client = nil
+        self.user = user
+        _profile = State(initialValue: OwnProfileModel(preview: row))
+    }
+    #endif
 
     var body: some View {
         DDList {
-            Section {
-                HStack(spacing: DDSpacing.m) {
-                    DDAvatar(name: name ?? "?", size: 52)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(name ?? "Ditt navn")
-                            .font(.ddName)
-                            .foregroundStyle(Color.ddInk)
-                        Text("Spiller uten klubb")
-                            .font(.ddCallout)
-                            .foregroundStyle(Color.ddInkSecondary)
-                    }
-                }
-                .padding(.vertical, 6)
-            }
+            OwnProfileSections(model: profile)
             Section {
                 NavigationLink { JoinClubView(user: user) } label: {
                     Label("Bli med i en klubb", systemImage: "person.badge.plus")
@@ -193,10 +190,6 @@ struct FriendsDegView: View {
                     SlopeNoAboutRow()
                 }
             }
-        }
-        .task {
-            guard name == nil, let client else { return }
-            name = (try? await LooseRoundQueries.ensureProfile(client: client))?.displayName
         }
     }
 }

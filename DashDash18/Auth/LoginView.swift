@@ -273,7 +273,8 @@ struct LoginView: View {
                 return
             }
             let nonce = appleNonce
-            run { try await auth.signInWithApple(idToken: idToken, rawNonce: nonce) }
+            let fullName = credential.fullName
+            run { try await auth.signInWithApple(idToken: idToken, rawNonce: nonce, fullName: fullName) }
         case .failure(let failure):
             // Avbrutt av brukeren er ikke en feil.
             if (failure as? ASAuthorizationError)?.code == .canceled { return }
