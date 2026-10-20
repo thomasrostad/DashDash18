@@ -189,6 +189,21 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         return ((try? context.fetch(descriptor)) ?? []).filter(belongsToCurrentUser)
     }
 
+    func rejectedHoles(roundID: UUID) -> [RejectedHole] {
+        rejectedItems().filter { $0.roundID == roundID }.map {
+            RejectedHole(holeIndex: $0.holeIndex, message: $0.lastError ?? DataError.notAllowed.message)
+        }
+        .sorted { $0.holeIndex < $1.holeIndex }
+    }
+
+    func acknowledgeRejected(roundID: UUID, holes: Set<Int>?) {
+        let items = rejectedItems().filter { $0.roundID == roundID && (holes?.contains($0.holeIndex) ?? true) }
+        guard !items.isEmpty else { return }
+        for item in items { context.delete(item) }
+        save()
+        refreshStatus()
+    }
+
     // MARK: - Internt
 
     private enum Attempt {

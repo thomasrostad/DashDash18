@@ -345,6 +345,9 @@ struct RundeView: View {
             // «Du står ikke i noen bås …»: resten av markørlinja står i verktøylinja.
             DDInfoStripe(line)
         }
+        if let text = model.rejectedText {
+            AvvisteHullStripe(text: text) { model.acknowledgeRejectedHoles() }
+        }
         if let text = MarkerConflicts.stripeText(model.conflicts, holeNumber: game.holeNumber, name: game.name) {
             MarkorKonfliktStripe(text: text) {
                 guard let conflict = MarkerConflicts.first(model.conflicts, preferring: model.currentHole) else { return }

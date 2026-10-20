@@ -35,10 +35,39 @@ protocol ScoreSubmitting: AnyObject {
     /// Innsendingene som ligger i kø for runden, eldst først. Runde-skjermen legger dem oppå
     /// serverens tall, så hullene står også etter at appen er startet på nytt.
     func pendingSubmissions(roundID: UUID) -> [HoleSubmission]
+    /// Hull i runden som lå i kø og ble avvist av serveren (runden låst, ingen tilgang). Tallene
+    /// står ikke på kortet, så føringen sier fra til de er sett.
+    func rejectedHoles(roundID: UUID) -> [RejectedHole]
+    /// Føringen har sagt fra: glem de avviste hullene i runden (alle, eller bare `holes`).
+    func acknowledgeRejected(roundID: UUID, holes: Set<Int>?)
 }
 
 extension ScoreSubmitting {
     func pendingSubmissions(roundID: UUID) -> [HoleSubmission] { [] }
+    func rejectedHoles(roundID: UUID) -> [RejectedHole] { [] }
+    func acknowledgeRejected(roundID: UUID, holes: Set<Int>?) {}
+    func acknowledgeRejected(roundID: UUID) { acknowledgeRejected(roundID: roundID, holes: nil) }
+}
+
+/// Et hull serveren avviste, med grunnen slik den ble vist (`DataError.message`).
+nonisolated struct RejectedHole: Equatable, Sendable {
+    let holeIndex: Int
+    let message: String
+}
+
+nonisolated enum RejectedHoles {
+    /// Stripa i føringen: «Hull 7, 8 og 9 ble ikke lagret: Runden er låst. Tallene står ikke på kortet.
+    /// Før dem på nytt, eller si fra til arrangøren.» Grunnen er den første. nil uten avviste hull.
+    static func text(_ holes: [RejectedHole], holeNumber: (Int) -> Int) -> String? {
+        let sorted = holes.sorted { $0.holeIndex < $1.holeIndex }
+        guard let first = sorted.first else { return nil }
+        let numbers = Array(Set(sorted.map(\.holeIndex))).sorted().map { String(holeNumber($0)) }
+        let list = numbers.count == 1 ? numbers[0]
+            : numbers.dropLast().joined(separator: ", ") + " og " + numbers.last!
+        var reason = first.message.trimmingCharacters(in: .whitespaces)
+        if let last = reason.last, !".!?".contains(last) { reason += "." }
+        return "Hull \(list) ble ikke lagret: \(reason) Tallene står ikke på kortet. Før dem på nytt, eller si fra til arrangøren."
+    }
 }
 
 /// Sender et hull rett til `save_hole` (én transaksjon for hele båsen).
