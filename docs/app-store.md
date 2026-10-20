@@ -87,7 +87,7 @@ Ingenting i prosjektfila er endret. Dette må gjøres i Xcode:
 
 1. **Kjøp i appen (capability):** target DashDash18 → Signing & Capabilities → **+ Capability → In-App Purchase**.
 2. **StoreKit-test lokalt:** dra `StoreKit/DashDash.storekit` inn i prosjektnavigatoren (ikke huk av for noe target, så den ikke havner i appen), og velg den i **Product → Scheme → Edit Scheme → Run → Options → StoreKit Configuration**. Da viser betalingsveggen pris og kan «kjøpe» i simulatoren uten App Store Connect. Fjern valget før TestFlight.
-3. **Kamera-tekst:** «Atten bruker kameraet bare når du vil ta et bilde til tråden eller til portrettet ditt.» står i `DashDash18/Resources/InfoPlist.xcstrings` (en og nb) og gjelder. Grunnteksten i Build Settings (Info.plist Values) sier fortsatt «DashDash18 …»; sett den gjerne til samme tekst, den brukes bare om lokaliseringen mangler.
+3. **Kamera-tekst:** «Atten bruker kameraet bare når du vil ta et bilde til tråden eller portrettet ditt, eller skanne en QR-kode for å følge noen.» står i `DashDash18/Resources/InfoPlist.xcstrings` (en og nb) og gjelder. Grunnteksten i Build Settings (Info.plist Values) sier fortsatt «DashDash18 …»; sett den gjerne til samme tekst, den brukes bare om lokaliseringen mangler.
 4. **Appnavn:** appen heter **Atten**. `CFBundleDisplayName` og `CFBundleName` står i `InfoPlist.xcstrings`. Valgfritt i Xcode: Display Name (target → General) = Atten, og widget-utvidelsens Display Name (står som `DashDash18Widgets`) = Atten. Target, bundle-id `com.dashdash18.app` og App Group beholdes.
 5. Push: `aps-environment` står som `development` i entitlements; Xcode setter production ved arkivering for App Store. Ingenting å gjøre.
 
