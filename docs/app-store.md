@@ -70,7 +70,7 @@ Merk: «Sports»-statistikk som handicap regnes som Other User Content. Krasjrap
    ```
    Begge med JWT-sjekk på (standard).
 4. Secrets for `verify-purchase` (Edge Functions → Secrets): `APPSTORE_ISSUER_ID`, `APPSTORE_KEY_ID`, `APPSTORE_PRIVATE_KEY` (innholdet i `.p8`), `APPSTORE_BUNDLE_ID` = `com.dashdash18.app`. Bare på test-prosjektet: `APPSTORE_ALLOW_SANDBOX` = `true` (ellers avvises sandkassekjøp fra TestFlight og Xcode, så et testkjøp aldri låser opp i produksjon). `delete-account` trenger ingen egne.
-5. **Varsel om nye rapporter** (Apple vil ha oppfølging innen 24 timer): Database → Webhooks → på INSERT i `public.content_reports` → send e-post (f.eks. via en liten Edge Function med Resend) til personvern@dashdash18.com. Til da: kjør kontroll 10 i 019 daglig.
+5. **Varsel om nye rapporter** (Apple vil ha oppfølging innen 24 timer): `sql/063_rapportvarsel.sql` lager en trigger på INSERT i `public.content_reports` som kaller Edge Function-en `supabase/functions/report-alert/` (pg_net, hemmeligheten fra Vault `report_alert_secret`). Funksjonen sender e-post med SMTP (samme `SMTP_*` som push-send) til `REPORT_ALERT_TO`, for eksempel personvern@dashdash18.com. Oppsett: Vault `report_alert_secret`, secrets `REPORT_ALERT_SECRET` og `REPORT_ALERT_TO`, deploy med `supabase functions deploy report-alert --no-verify-jwt` fra roten av repoet. Ingen webhook i dashboardet. Til det er satt opp: kjør kontroll 10 i 019 daglig.
 6. Prod: samme rekkefølge når test er godkjent.
 
 ## 6. Personvern og vilkår

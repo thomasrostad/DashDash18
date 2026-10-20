@@ -31,7 +31,7 @@ Prod-prosjektet er **Atten Prod** (`wxabhadvuzyrmndxpuza`, `eu-west-1`, Postgres
 
 Rekkefølgen er den samme som på test, ikke den numeriske. 044 lager policyer på `seasons`, så den må kjøres **før** 035, som gjør `seasons` til et view. Kontrollen nederst i hver fil kjøres før neste fil.
 
-001, 002, 004, 005, 006, 007, 008, 010, 011, 012, 015, 016, 014, 017, 020, 018, 019, 021, 024, 022, 023, 025, 026, 027, 029, 030, 031, 032, 033, 036, 037, 038, 039, 040, 041, 042, 043, 034, 044, 045, 047, 046, 049, 050, 051, 048, 052, 052b, 054, 055, 035, 056, 057, 058, 059, 060, 061, 062.
+001, 002, 004, 005, 006, 007, 008, 010, 011, 012, 015, 016, 014, 017, 020, 018, 019, 021, 024, 022, 023, 025, 026, 027, 029, 030, 031, 032, 033, 036, 037, 038, 039, 040, 041, 042, 043, 034, 044, 045, 047, 046, 049, 050, 051, 048, 052, 052b, 054, 055, 035, 056, 057, 058, 059, 060, 061, 062, 063.
 
 Skal ikke kjøres: 009 (tatt med i 011), `010_kontroll.sql`, `lokal/` og `import/`.
 
@@ -46,6 +46,7 @@ Skal ikke kjøres: 009 (tatt med i 011), `010_kontroll.sql`, `lokal/` og `import
 - [x] 4.1 *(20.10: alt unntatt `APPSTORE_*`)* Secrets for prod: `APNS_*` (produksjonsmiljø), `PUSH_HOOK_SECRET`, `BET_SETTLE_SECRET`, `SLOPE_SYNC_SECRET`. `APPSTORE_*` venter på kjøpene. `APPSTORE_ALLOW_SANDBOX` skal ikke settes i prod.
 - [x] 4.2 *(20.10)* Deploy `push-send`, `bet-settle` og `slope-sync` med `--no-verify-jwt`, og `delete-account` med JWT-sjekk. `bet-settle` deployes fra roten av repoet (den importerer `web/golfgutu-core`).
 - [ ] 4.3 `verify-purchase` venter på kjøpene (avsnitt 6).
+- [ ] 4.4 Rapportvarsel (063): Vault `report_alert_secret` (ny verdi for prod), secrets `REPORT_ALERT_SECRET` (samme verdi), `REPORT_ALERT_TO` (kommaseparert, f.eks. personvern@dashdash18.com) og `SMTP_*` som push-send. Deploy `report-alert` med `--no-verify-jwt` fra roten av repoet (den importerer `../push-send/email.ts`). Prøv med en rapport og se `net._http_response` (200) og at e-posten kommer.
 
 ## 5. Web og app mot prod (C+T)
 
