@@ -7,9 +7,9 @@ workers_dev = false
 routes = [{ pattern = "dashdash18.com", custom_domain = true }]
 
 # TV-siden (fase 26) henter tv_board_data herfra. Den publiserbare nøkkelen ligger som secret
-# (wrangler secret put SUPABASE_KEY), ikke i repoet. Test-prosjektet til prod er satt opp.
+# (wrangler secret put SUPABASE_KEY), ikke i repoet. Peker på Atten Prod fra 20.10.2026.
 [vars]
-SUPABASE_URL = "https://tsekialrxuhrugscosgi.supabase.co"
+SUPABASE_URL = "https://wxabhadvuzyrmndxpuza.supabase.co"
 
 # Skriftene til Tavla-siden (sql/056): appens 42dot Sans og Sometype Mono, kuttet til latinske tegn.
 # Filer som finnes i public/, serveres direkte; alt annet går til workeren.
