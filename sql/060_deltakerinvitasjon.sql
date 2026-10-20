@@ -1,6 +1,6 @@
 -- 060_deltakerinvitasjon.sql — arrangøren legger inn deltakere uten innlogging, og deltakerne tar
 -- plassen sin med turneringens lenke (og lager bruker i appen).
--- Til godkjenning. Ikke kjørt på test eller prod.
+-- Godkjent og kjørt på test 20.10.2026 (rolleprøve i transaksjon som ble rullet tilbake: ok). Ikke kjørt på prod.
 --
 -- Bakgrunn: med 059 kan en klubbturnering ha deltakere som ikke er medlemmer. Men en deltaker fantes
 -- bare når personen selv meldte seg på i appen. En klubb som kjører turnering, har ofte lista fra før
