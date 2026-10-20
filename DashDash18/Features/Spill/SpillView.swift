@@ -8,6 +8,8 @@ struct SpillView: View {
     @State private var showsNew = false
     @State private var showsJoin = false
     @State private var openRound: UUID?
+    /// En turneringsrunde du spiller som deltaker (sql/059).
+    @State private var openTournamentRound: UUID?
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.clubContext) private var clubContext
 
@@ -38,7 +40,8 @@ struct SpillView: View {
             }
 
             roundsSection("Pågår", items: model.ongoing,
-                          empty: model.state == .loaded ? "Ingen runder går nå." : nil)
+                          empty: model.state == .loaded && model.tournamentRounds.isEmpty ? "Ingen runder går nå." : nil)
+            roundsSection("Turneringsrunder", items: model.tournamentRounds, empty: nil) { openTournamentRound = $0 }
             roundsSection("Ferdige", items: model.finished,
                           empty: model.state == .loaded ? "Rundene du avslutter, havner her med resultatet." : nil)
 
@@ -94,6 +97,12 @@ struct SpillView: View {
                     .onDisappear { Task { await model.load() } }
             }
         }
+        .navigationDestination(item: $openTournamentRound) { roundID in
+            if let context = model.participantContext(roundID) {
+                LooseRoundScreen(participant: context)
+                    .onDisappear { Task { await model.load() } }
+            }
+        }
         .sheet(isPresented: $showsNew) {
             if let client = model.client {
                 NavigationStack {
@@ -121,7 +130,8 @@ struct SpillView: View {
     }
 
     @ViewBuilder
-    private func roundsSection(_ title: String, items: [MyRoundItem], empty: String?) -> some View {
+    private func roundsSection(_ title: String, items: [MyRoundItem], empty: String?,
+                               open: ((UUID) -> Void)? = nil) -> some View {
         if !items.isEmpty || empty != nil {
             Section {
                 if items.isEmpty, let empty {
@@ -130,7 +140,7 @@ struct SpillView: View {
                         .foregroundStyle(Color.ddInkSecondary)
                 }
                 ForEach(items) { item in
-                    Button { openRound = item.id } label: { MyRoundRow(item: item) }
+                    Button { if let open { open(item.id) } else { openRound = item.id } } label: { MyRoundRow(item: item) }
                         .buttonStyle(.plain)
                 }
             } header: {
@@ -180,6 +190,7 @@ struct MyRoundRow: View {
 }
 
 /// En løs runde: samme runde-skjerm og føring som kvelden (hullkort, utboks, realtime), hentet på id.
+/// Også klubbrunden for en deltaker i en turnering (sql/059), som ikke har noen klubb i appen.
 struct LooseRoundScreen: View {
     @State private var model: RundeModel
     @Environment(\.scoreSubmitter) private var submitter
@@ -188,6 +199,10 @@ struct LooseRoundScreen: View {
 
     init(context: LooseRoundContext) {
         _model = State(initialValue: RundeModel(loose: context))
+    }
+
+    init(participant: ParticipantRoundContext) {
+        _model = State(initialValue: RundeModel(participant: participant))
     }
 
     var body: some View {

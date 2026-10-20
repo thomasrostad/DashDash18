@@ -143,9 +143,14 @@ enum HomeFeedQueries {
 
         // Turneringene, og tabellgrunnlaget for de private.
         if CompetitionsFeature.isActive, let overview = try? await CompetitionQueries.overview(client: client) {
+            // Deltakerradene (sql/059): turneringer i klubber du ikke er medlem i, men er påmeldt.
+            var participations: [Participation] = []
+            if let profile = viewer.profileID {
+                participations = (try? await ParticipationQueries.mine(client: client, userID: profile)) ?? []
+            }
             let access = CompetitionAccess(profileID: viewer.profileID, memberships: viewer.memberships.map {
                 CompetitionAccess.Membership(clubID: $0.key, memberID: $0.value, isOrganizer: false, isActive: true)
-            })
+            }).with(participations: participations)
             raw.competitions = overview.competitions.filter { access.canSee($0, overview.participants) }
             let privates = raw.competitions.filter { c in
                 (c.kind == .league || c.kind == .fun) && c.status == .active

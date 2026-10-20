@@ -31,11 +31,18 @@ nonisolated enum MyRounds {
 
     static func item(_ snapshot: RoundSnapshot, userID: UUID, referenceYear: Int? = nil) -> MyRoundItem {
         if snapshot.round.isPlayoff { return playoffItem(snapshot, referenceYear: referenceYear) }
+        return item(snapshot, viewer: LooseRoundRights.viewer(info: snapshot.loose, userID: userID),
+                    referenceYear: referenceYear)
+    }
+
+    /// Runden sett fra `viewer`. `prefix` står først i linja under tittelen (klubben for en
+    /// deltaker i en klubbturnering, sql/059).
+    static func item(_ snapshot: RoundSnapshot, viewer: Viewer, prefix: String? = nil,
+                     referenceYear: Int? = nil) -> MyRoundItem {
         let game = RoundGame(snapshot)
-        let viewer = LooseRoundRights.viewer(info: snapshot.loose, userID: userID)
         let rows = game.bayenNaa(viewer: viewer)
         let players = snapshot.players.count
-        var parts: [String] = []
+        var parts: [String] = prefix.map { [$0] } ?? []
         if let day = snapshot.eventDate {
             parts.append(EveningDates.longText(day, referenceYear: referenceYear, capitalized: true))
         }

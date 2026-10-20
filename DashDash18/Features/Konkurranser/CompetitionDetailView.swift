@@ -33,7 +33,10 @@ struct CompetitionDetailView: View {
     @State private var confirmsDelete = false
     @State private var showsTVCode = false
     @State private var showsShare = false
+    /// Runden «Før runden» åpnet (deltaker, eller en løs runde i en turnering uten klubb).
+    @State private var playing: CompetitionPlay.Target?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.showRound) private var showRound
     @Environment(PurchaseService.self) private var purchases: PurchaseService?
 
     var body: some View {
@@ -112,6 +115,12 @@ struct CompetitionDetailView: View {
                 PaywallView(service: purchases, competitionID: model.competition.id,
                             competitionName: model.competition.name, clubID: model.competition.clubID)
             }
+            .navigationDestination(item: $playing) { target in
+                if let client = list?.client, let userID = model.access.profileID {
+                    CompetitionPlayScreen(target: target, client: client, userID: userID)
+                        .onDisappear { Task { await model.load() } }
+                }
+            }
             .sheet(item: $resultFor) { game in
                 NavigationStack {
                     CupResultSheet(model: model, game: game) { resultFor = nil }
@@ -177,6 +186,7 @@ struct CompetitionDetailView: View {
                 } else if let list {
                     CompetitionSignupButton(model: list, competition: model.competition)
                 }
+                CompetitionPlaySection(entries: model.playEntries(currentClub: list?.clubID), open: play)
                 // sql/052: veddemål i turneringen, og bryteren for den som styrer den.
                 if BetsFeature.isEnabled, let client = list?.client, let profile = model.access.profileID {
                     CompetitionBetsCard(client: client, viewer: BetViewer(access: model.access, userID: profile),
@@ -186,6 +196,15 @@ struct CompetitionDetailView: View {
             }
             .padding(.horizontal, DDSpacing.gutter)
             .padding(.vertical, DDSpacing.l)
+        }
+    }
+
+    /// «Før runden»: medlemmet i klubben som er valgt fører på Hjem, ellers åpnes føringen her.
+    private func play(_ target: CompetitionPlay.Target) {
+        if case .club(let roundID) = target {
+            showRound(roundID)
+        } else {
+            playing = target
         }
     }
 
@@ -274,6 +293,49 @@ struct CompetitionDetailView: View {
             return "**\(round)**: motstanderen din er ikke klar ennå."
         }
         return "**\(round)**: du møter \(opponent.name)."
+    }
+}
+
+/// «Før runden» for hver runde i turneringen som går, og der du spiller.
+struct CompetitionPlaySection: View {
+    let entries: [CompetitionPlay.Entry]
+    let open: (CompetitionPlay.Target) -> Void
+
+    var body: some View {
+        ForEach(entries) { entry in
+            VStack(alignment: .leading, spacing: DDSpacing.s) {
+                HStack {
+                    Text(entry.title)
+                        .font(.ddBodyEmphasis)
+                        .foregroundStyle(Color.ddInk)
+                    Spacer(minLength: 8)
+                    DDPill("Pågår", tone: .live)
+                        .fixedSize()
+                }
+                Button("Før runden", systemImage: "pencil.and.list.clipboard") { open(entry.target) }
+                    .buttonStyle(.dd(.primary, fullWidth: true))
+            }
+            .ddCard()
+        }
+    }
+}
+
+/// Føringen fra «Før runden» når den ikke åpnes på Hjem.
+private struct CompetitionPlayScreen: View {
+    let target: CompetitionPlay.Target
+    let client: SupabaseClient
+    let userID: UUID
+
+    var body: some View {
+        switch target {
+        case .participant(let round):
+            LooseRoundScreen(participant: ParticipantRoundContext(client: client, userID: userID, round: round))
+        case .loose(let roundID):
+            LooseRoundScreen(context: LooseRoundContext(client: client, userID: userID, roundID: roundID))
+        case .club:
+            // Åpnes på Hjem (`showRound`).
+            EmptyView()
+        }
     }
 }
 
