@@ -294,3 +294,52 @@ struct TroppImportTests {
         #expect(TroppImport.parse(text, rows: []).count == TroppImport.maxLines)
     }
 }
+
+/// Deltakere i turneringer (sql/059): egen liste, ingen roller, kan gjøres til medlem.
+struct TroppParticipantTests {
+    private func participant(_ name: String) -> ClubMemberRow {
+        var row = member(name)
+        row.kind = .participant
+        return row
+    }
+
+    @Test func deltakereStaarForSeg() {
+        let sections = TroppSections([member("Anne"), participant("Gjest"), member("Ny", status: .pending)])
+        #expect(sections.active.map(\.displayName) == ["Anne"])
+        #expect(sections.participants.map(\.displayName) == ["Gjest"])
+        #expect(sections.pending.map(\.displayName) == ["Ny"])
+    }
+
+    @Test func deltakerKanHeteDetSammeSomEtMedlem() {
+        let rows = [member("Kari"), participant("Ola")]
+        #expect(!TroppRules.nameTaken("Ola", in: rows))
+        #expect(TroppRules.nameTaken("kari", in: rows))
+    }
+
+    @Test func deltakerFaarBareNavnMedlemOgArkiv() {
+        let gjest = participant("Ola")
+        let rows = [member("Kari", organizer: true), gjest]
+        let me = rows[0].id
+        func availability(_ action: TroppAction) -> TroppAvailability {
+            TroppRules.availability(action, for: gjest, in: rows, me: me)
+        }
+        #expect(availability(.makeMember) == .allowed)
+        #expect(availability(.edit) == .allowed)
+        #expect(availability(.archive) == .allowed)
+        for action: TroppAction in [.grantOrganizer, .grantTreasurer, .setSeedGroup, .releaseLogin, .approve, .delete] {
+            #expect(availability(action) == .hidden)
+        }
+        #expect(TroppRules.availability(.makeMember, for: rows[0], in: rows, me: me) == .hidden)
+    }
+
+    @Test func navnetMaaVaereLedigForAaBliMedlem() {
+        let gjest = participant("Kari")
+        let rows = [member("Kari"), gjest]
+        #expect(TroppRules.availability(.makeMember, for: gjest, in: rows, me: UUID()).reason != nil)
+    }
+
+    @Test func gjorTilMedlemSenderBareKind() throws {
+        let json = try JSONEncoder().encode(MemberPatch.makeMember)
+        #expect(String(decoding: json, as: UTF8.self) == #"{"kind":"member"}"#)
+    }
+}

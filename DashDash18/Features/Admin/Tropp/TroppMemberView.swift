@@ -42,13 +42,17 @@ struct TroppMemberView: View {
                 }
             }
 
+            if row.isParticipant {
+                participantSection(row)
+            }
+
             detailsSection(row)
 
             if model.availability(.setSeedGroup, for: row).isVisible {
                 seedSection(row)
             }
 
-            if row.status == .active {
+            if row.status == .active, !row.isParticipant {
                 if model.roles.isAvailable {
                     clubRolesSection(row)
                 } else {
@@ -65,7 +69,7 @@ struct TroppMemberView: View {
             titleVisibility: .visible,
             presenting: confirming
         ) { action in
-            Button(confirmButton(action), role: .destructive) { run(action) }
+            Button(confirmButton(action), role: action == .makeMember ? nil : .destructive) { run(action) }
             Button("Avbryt", role: .cancel) {}
         }
         .confirmationDialog("Gi eierskapet til \(row.displayName)?", isPresented: $confirmsTransfer,
@@ -209,6 +213,22 @@ struct TroppMemberView: View {
         }
     }
 
+    /// En deltaker i en av klubbens turneringer (sql/059): ser bare turneringen, ikke klubben.
+    private func participantSection(_ row: ClubMemberRow) -> some View {
+        let makeMember = model.availability(.makeMember, for: row)
+        return Section {
+            if makeMember.isVisible {
+                Button("Gjør til medlem") { confirming = .makeMember }
+                    .disabled(!makeMember.isAllowed)
+            }
+        } header: {
+            DDHeader("Deltaker i turnering")
+        } footer: {
+            DDFooter(makeMember.reason
+                     ?? "Meldte seg på en av klubbens turneringer uten å være medlem. Ser turneringen og rundene sine, ikke resten av klubben.")
+        }
+    }
+
     @ViewBuilder
     private func statusSection(_ row: ClubMemberRow) -> some View {
         let archive = model.availability(.archive, for: row)
@@ -266,6 +286,7 @@ struct TroppMemberView: View {
         case .releaseLogin: "Frigjøre innloggingen til \(name)?"
         case .archive: "Arkivere \(name)?"
         case .delete: "Slette \(name)?"
+        case .makeMember: "Gjøre \(name) til medlem?"
         default: ""
         }
     }
@@ -276,6 +297,7 @@ struct TroppMemberView: View {
         case .releaseLogin: "Frigjør"
         case .archive: "Arkiver"
         case .delete: "Slett"
+        case .makeMember: "Gjør til medlem"
         default: "OK"
         }
     }
