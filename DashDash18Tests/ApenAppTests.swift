@@ -56,8 +56,10 @@ struct ApenOnboardingTests {
         #expect(!GoogleLoginFeature.isEnabled)
         #expect(!PurchaseFeature.isEnabled)
         #expect(BillSplitFeature.isEnabled)
-        // Med onboarding på vises personvern og vilkår (teksten «publiseres før lansering» til lenkene finnes).
+        // Personvern og vilkår lenkes til dashdash18.com.
         #expect(LegalLinks.isVisible)
+        #expect(LegalLinks.privacy?.absoluteString == "https://dashdash18.com/personvern")
+        #expect(LegalLinks.terms?.absoluteString == "https://dashdash18.com/vilkar")
         #expect(!LoginMethod.google.isAvailable)
     }
 }

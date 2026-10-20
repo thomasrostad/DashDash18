@@ -42,11 +42,11 @@ nonisolated enum BillSplitFeature {
     static let isEnabled = true
 }
 
-/// Personvernerklæringen og vilkårene (docs/personvern.md og docs/vilkar.md). Fyll inn adressene
-/// når de er publisert. Til da vises teksten «publiseres før lansering» i stedet for en lenke.
+/// Personvernerklæringen og vilkårene, publisert på dashdash18.com av workeren `atten-lenker`
+/// (generert fra `docs/personvern.md` og `docs/vilkar.md`).
 nonisolated enum LegalLinks {
-    static let privacy: URL? = nil
-    static let terms: URL? = nil
+    static let privacy: URL? = URL(string: "https://dashdash18.com/personvern")
+    static let terms: URL? = URL(string: "https://dashdash18.com/vilkar")
     /// Hvor folk melder fra om støtende innhold eller spør om personvern.
     static let contactEmail = "personvern@dashdash18.com"
     /// Versjonen av vilkårene. Øk den når vilkårene endres, så alle godtar på nytt.
