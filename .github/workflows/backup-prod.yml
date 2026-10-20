@@ -57,10 +57,14 @@ jobs:
           supabase db dump --db-url "$PROD_DB_URL" -f dump/schema.sql
           supabase db dump --db-url "$PROD_DB_URL" --data-only --use-copy -f dump/data.sql
           # Bare størrelser i loggen, aldri innhold.
+          # roles.sql er liten når prosjektet ikke har egne roller; skjema og data skal aldri være tomme.
           for f in dump/*.sql; do
             size=$(stat -c %s "$f")
-            [ "$size" -gt 1000 ] || { echo "::error::$f er bare $size byte"; exit 1; }
             echo "$(basename "$f"): $size byte"
+          done
+          for f in dump/schema.sql dump/data.sql; do
+            size=$(stat -c %s "$f")
+            [ "$size" -gt 10000 ] || { echo "::error::$f er bare $size byte"; exit 1; }
           done
           sha256sum dump/*.sql > dump/SHA256SUMS
 
