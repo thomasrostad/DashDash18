@@ -33,63 +33,77 @@ struct LoginView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    LoginHero()
-                        .padding(.vertical, 48)
-                    VStack(alignment: .leading, spacing: DDSpacing.l) {
-                        if hasClubInvite {
-                            DDInfoStripe(tone: .earth) {
-                                Label("Invitasjonen er tatt vare på. Logg inn, så går du rett videre til klubben.",
-                                      systemImage: "envelope.open")
+            GeometryReader { proxy in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Logoen tar plassen som blir til overs, så kortet ligger nede som et ark.
+                        LoginHero()
+                            .padding(.vertical, 48)
+                            .frame(maxHeight: .infinity)
+                        VStack(alignment: .leading, spacing: DDSpacing.l) {
+                            if hasClubInvite {
+                                DDInfoStripe(tone: .earth) {
+                                    Label("Invitasjonen er tatt vare på. Logg inn, så går du rett videre til klubben.",
+                                          systemImage: "envelope.open")
+                                }
+                            } else if hasCompetitionInvite {
+                                DDInfoStripe(tone: .earth) {
+                                    Label("Logg inn for å ta plassen din i turneringen. Lenken er tatt vare på.",
+                                          systemImage: "trophy")
+                                }
                             }
-                        } else if hasCompetitionInvite {
-                            DDInfoStripe(tone: .earth) {
-                                Label("Logg inn for å ta plassen din i turneringen. Lenken er tatt vare på.",
-                                      systemImage: "trophy")
+                            switch step {
+                            case .email:
+                                appleSection
+                                emailSection
+                            case .code(let email):
+                                codeSection(email: email)
+                            }
+                            if showsLegal {
+                                LegalLinksRow()
+                                    .padding(.top, DDSpacing.s)
+                            }
+                            if let error {
+                                Label(error.message, systemImage: "exclamationmark.triangle")
+                                    .font(.ddCallout)
+                                    .foregroundStyle(Color.ddError)
+                            } else if let info {
+                                Label(info, systemImage: "envelope")
+                                    .font(.ddCallout)
+                                    .foregroundStyle(Color.ddForestInk)
                             }
                         }
-                        switch step {
-                        case .email:
-                            appleSection
-                            emailSection
-                        case .code(let email):
-                            codeSection(email: email)
-                        }
-                        if showsLegal {
-                            LegalLinksRow()
-                                .padding(.top, DDSpacing.s)
-                        }
-                        if let error {
-                            Label(error.message, systemImage: "exclamationmark.triangle")
-                                .font(.ddCallout)
-                                .foregroundStyle(Color.ddError)
-                        } else if let info {
-                            Label(info, systemImage: "envelope")
-                                .font(.ddCallout)
-                                .foregroundStyle(Color.ddForestInk)
-                        }
+                        .padding(.horizontal, DDSpacing.xxl)
+                        .padding(.top, DDSpacing.xxl)
+                        .padding(.bottom, 40)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            UnevenRoundedRectangle(topLeadingRadius: DDRadius.sheet, topTrailingRadius: DDRadius.sheet)
+                                .fill(Color.ddCard)
+                                .ignoresSafeArea(edges: .bottom)
+                        )
                     }
-                    .padding(.horizontal, DDSpacing.xxl)
-                    .padding(.top, DDSpacing.xxl)
-                    .padding(.bottom, 40)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        UnevenRoundedRectangle(topLeadingRadius: DDRadius.sheet, topTrailingRadius: DDRadius.sheet)
-                            .fill(Color.ddCard)
-                            .ignoresSafeArea(edges: .bottom)
-                    )
+                    .frame(maxWidth: 480)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: proxy.size.height)
                 }
-                .frame(maxWidth: 480)
-                .frame(maxWidth: .infinity)
+                .scrollBounceBehavior(.basedOnSize)
             }
-            .scrollBounceBehavior(.basedOnSize)
-            .background(Color.ddForestDeep.ignoresSafeArea())
+            // Skoggrønt bak logoen og kortets farge nederst (bak kortet), så arket går helt ned
+            // under hjemindikatoren.
+            .background {
+                VStack(spacing: 0) {
+                    Color.ddForestDeep
+                    Color.ddCard.frame(height: 300)
+                }
+                .ignoresSafeArea()
+            }
             .navigationTitle("Logg inn")
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
             .disabled(isBusy)
-            .onAppear { focused = true }
+            // Ingen fokus i e-postfeltet ved oppstart: tastaturet skal ikke dekke Apple-knappen.
+            // Kodesteget får fokus selv (sendCode).
         }
     }
 
