@@ -97,7 +97,9 @@ test("forsiden", async () => {
   const html = await res.text();
   assert.match(html, /<h1>Atten<\/h1>/);
   assert.doesNotMatch(html, /<script/);
-  assert.doesNotMatch(html, /Personvern/); // ikke publisert ennå
+  for (const path of ["/personvern", "/vilkar", "/support"]) {
+    assert.ok(html.includes(`href="${path}"`), `forsiden lenker til ${path}`);
+  }
 });
 
 test("alt annet er 404", async () => {
