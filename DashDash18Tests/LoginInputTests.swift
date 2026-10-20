@@ -41,6 +41,22 @@ struct LoginInputTests {
         #expect(LoginError.from(errorCode: nil, fallback: "detalj") == .unknown("detalj"))
     }
 
+    /// Uten feilkode, eller med en ny: kjente engelske tekster fra Supabase blir norske feil.
+    @Test func engelskeTeksterUtenKode() {
+        #expect(LoginError.from(errorCode: nil, fallback: "Email rate limit exceeded") == .tooManyAttempts)
+        #expect(LoginError.from(errorCode: nil, fallback: "Request rate limit reached") == .tooManyAttempts)
+        #expect(LoginError.from(errorCode: "unexpected_failure", fallback: "Too many requests") == .tooManyAttempts)
+        #expect(LoginError.from(errorCode: nil, fallback: "Token has expired or is invalid") == .wrongOrExpiredCode)
+        #expect(LoginError.from(errorCode: "too_many_requests", fallback: "") == .tooManyAttempts)
+    }
+
+    /// Ukjente feil viser ingen engelsk systemtekst, bare en norsk melding.
+    @Test func ukjentFeilErNorsk() {
+        #expect(LoginError.unknown("AuthApiError: Database error saving new user").message
+                == "Noe gikk galt med innloggingen. Vent litt og prøv igjen.")
+        #expect(LoginError.tooManyAttempts.message == "For mange forsøk – vent litt og prøv igjen.")
+    }
+
     @Test func alleFeilHarNorskMelding() {
         let feil: [LoginError] = [.invalidEmail, .invalidCode, .wrongOrExpiredCode, .tooManyAttempts, .offline, .appleFailed, .unknown("x")]
         #expect(feil.allSatisfy { !$0.message.isEmpty })
