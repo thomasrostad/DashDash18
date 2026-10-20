@@ -12,6 +12,8 @@ import GolfgutuCore
 nonisolated struct TroppSections: Equatable, Sendable {
     var pending: [ClubMemberRow] = []
     var active: [ClubMemberRow] = []
+    /// Deltakere i klubbens turneringer som ikke er medlemmer (sql/059).
+    var participants: [ClubMemberRow] = []
     var archived: [ClubMemberRow] = []
 
     init(_ rows: [ClubMemberRow]) {
@@ -22,6 +24,7 @@ nonisolated struct TroppSections: Equatable, Sendable {
         for row in sorted {
             switch row.status {
             case .pending: pending.append(row)
+            case .active where row.isParticipant: participants.append(row)
             case .active: active.append(row)
             case .archived: archived.append(row)
             }
@@ -44,6 +47,8 @@ nonisolated enum TroppAction: Hashable, Sendable {
     case archive
     case restore
     case delete
+    /// Gjør en deltaker til medlem i klubben (sql/059).
+    case makeMember
 }
 
 /// Om en handling vises, og om den kan brukes.
@@ -84,10 +89,11 @@ nonisolated enum TroppRules {
         name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
-    /// Finnes navnet allerede blant radene som ikke er arkivert (unik-indeksen)?
+    /// Finnes navnet allerede blant medlemmene som ikke er arkivert (unik-indeksen)?
+    /// Deltakere kan hete det samme som et medlem (sql/059).
     static func nameTaken(_ name: String, in rows: [ClubMemberRow], excluding id: UUID? = nil) -> Bool {
         let key = nameKey(name)
-        return rows.contains { $0.id != id && $0.status != .archived && nameKey($0.displayName) == key }
+        return rows.contains { $0.id != id && $0.status != .archived && !$0.isParticipant && nameKey($0.displayName) == key }
     }
 
     static func availability(
@@ -99,7 +105,24 @@ nonisolated enum TroppRules {
         let isMe = row.id == me
         let lastOrganizer = isLastOrganizer(row, in: rows)
 
+        // En deltaker har ingen roller eller seeding: navn, gjøre til medlem og arkivere.
+        if row.isParticipant {
+            switch action {
+            case .edit: return .allowed
+            case .makeMember:
+                guard row.status == .active else { return .hidden }
+                return nameTaken(row.displayName, in: rows, excluding: row.id)
+                    ? .blocked("Navnet «\(row.displayName)» finnes blant medlemmene. Gi nytt navn først.")
+                    : .allowed
+            case .archive: return row.status == .active ? .allowed : .hidden
+            default: return .hidden
+            }
+        }
+
         switch action {
+        case .makeMember:
+            return .hidden
+
         case .approve, .reject:
             return row.status == .pending ? .allowed : .hidden
 
@@ -314,6 +337,7 @@ nonisolated struct MemberPatch: Encodable, Equatable, Sendable {
     var isTreasurer: Bool?
     var status: MemberStatus?
     var userID: UUID??
+    var kind: MemberKind?
 
     enum CodingKeys: String, CodingKey {
         case displayName = "display_name"
@@ -323,6 +347,7 @@ nonisolated struct MemberPatch: Encodable, Equatable, Sendable {
         case isTreasurer = "is_treasurer"
         case status
         case userID = "user_id"
+        case kind
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -334,6 +359,7 @@ nonisolated struct MemberPatch: Encodable, Equatable, Sendable {
         try c.encodeIfPresent(isTreasurer, forKey: .isTreasurer)
         try c.encodeIfPresent(status, forKey: .status)
         if let userID { try c.encodeNullable(userID, forKey: .userID) }
+        try c.encodeIfPresent(kind, forKey: .kind)
     }
 
     static let approve = MemberPatch(status: .active)
@@ -345,6 +371,7 @@ nonisolated struct MemberPatch: Encodable, Equatable, Sendable {
     static let archive = MemberPatch(isOrganizer: false, isTreasurer: false, status: .archived)
     static let restore = MemberPatch(status: .active)
     static let releaseLogin = MemberPatch(userID: .some(nil))
+    static let makeMember = MemberPatch(kind: .member)
 
     static func details(_ value: TroppInputValue) -> MemberPatch {
         MemberPatch(displayName: value.name, handicapIndex: .some(value.handicapIndex))

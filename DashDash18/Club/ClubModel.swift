@@ -42,6 +42,8 @@ final class ClubModel {
                 .from("club_members")
                 .select(Membership.selectColumns)
                 .eq("user_id", value: userID)
+                // En deltaker i en turnering (sql/059) er ikke med i klubben.
+                .eq("kind", value: MemberKind.member.rawValue)
                 .execute()
                 .value
         }

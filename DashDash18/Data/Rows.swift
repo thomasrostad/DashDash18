@@ -19,6 +19,10 @@ nonisolated struct ClubMemberRow: Codable, Equatable, Identifiable, Sendable {
     var isTreasurer: Bool
     var status: MemberStatus
     var avatarPath: String?
+    /// Medlem, eller deltaker i en av klubbens turneringer (sql/059). nil: medlem.
+    var kind: MemberKind?
+    /// NGF-medlemsnummer (sql/059), valgfritt.
+    var ngfNumber: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -31,13 +35,24 @@ nonisolated struct ClubMemberRow: Codable, Equatable, Identifiable, Sendable {
         case isTreasurer = "is_treasurer"
         case status
         case avatarPath = "avatar_path"
+        case kind
+        case ngfNumber = "ngf_number"
     }
 
     static let columns =
-        "id, club_id, user_id, display_name, handicap_index, seed_group, is_organizer, is_treasurer, status, avatar_path"
+        "id, club_id, user_id, display_name, handicap_index, seed_group, is_organizer, is_treasurer, status, avatar_path, kind, ngf_number"
+
+    /// Deltaker i en turnering, ikke medlem i klubben (sql/059).
+    var isParticipant: Bool { kind == .participant }
 
     /// Ledig navn i troppen som ingen har tatt ennå.
     var isOpen: Bool { userID == nil }
+}
+
+/// `club_members.kind` (sql/059).
+nonisolated enum MemberKind: String, Codable, Sendable {
+    case member
+    case participant
 }
 
 nonisolated enum SeasonStatus: String, Codable, Sendable {

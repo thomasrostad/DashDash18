@@ -63,6 +63,15 @@ private struct TroppListView: View {
             } footer: {
                 DDFooter("Navn uten innlogging kan tas av spilleren med invitasjonskoden.")
             }
+            if !sections.participants.isEmpty {
+                Section {
+                    ForEach(sections.participants) { row in memberLink(row) }
+                } header: {
+                    DDHeader("Deltakere i turneringer (\(sections.participants.count))")
+                } footer: {
+                    DDFooter("Meldte seg på uten å være medlem. Kan settes i runder i turneringen, men ser ikke resten av klubben.")
+                }
+            }
             if !sections.archived.isEmpty {
                 DDSection("Arkivert") {
                     ForEach(sections.archived) { row in memberLink(row) }

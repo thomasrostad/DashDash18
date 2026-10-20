@@ -155,6 +155,7 @@ final class TroppModel {
         case .archive: await update(id, with: .archive)
         case .restore: await update(id, with: .restore)
         case .delete: await delete(id)
+        case .makeMember: await update(id, with: .makeMember)
         case .edit, .setSeedGroup: break
         }
     }
