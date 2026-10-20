@@ -22,9 +22,9 @@ Prod-prosjektet er **Atten Prod** (`wxabhadvuzyrmndxpuza`, `eu-west-1`, Postgres
 - [x] 2.1 *(20.10, heter Atten Prod, foreløpig gratisplan)* Opprett **Dash18 Prod** i samme organisasjon, region `eu-west-1` som test. Pro-plan.
 - [ ] 2.2 Backup: slå på PITR og lag `docs/backup.md` etter en prøvegjenoppretting (lanseringssjekk punkt 9).
 - [x] 2.3 *(20.10, samme versjoner og skjemaer som test)* Database → Extensions: slå på **pg_cron** og **pg_net** (ingen fil lager dem, og 052b feiler uten).
-- [ ] 2.4 Authentication som på test (gjøremål A1, 6–8): Confirm email, Secure email change, OTP 8 sifre og 600 s, Leaked password protection, lave rate limits, bare `public` i Data API, Auth 2.185.0 eller nyere.
-- [ ] 2.5 Apple-innlogging i prod-Auth, og `dashdash://login-callback` i Redirect URLs.
-- [ ] 2.6 Egen SMTP (gjøremål 13) og CAPTCHA (Turnstile).
+- [x] 2.4 *(20.10: likt test. Leaked password protection krever Pro og er av, som på test)* Authentication som på test (gjøremål A1, 6–8): Confirm email, Secure email change, OTP 8 sifre og 600 s, Leaked password protection, lave rate limits, bare `public` i Data API, Auth 2.185.0 eller nyere.
+- [x] 2.5 *(20.10)* Apple-innlogging i prod-Auth med Client ID `com.dashdash18.app`. Site URL `https://dashdash18.com`. `dashdash://login-callback` legges i Redirect URLs først når Google slås på (test har den heller ikke).
+- [ ] 2.6 *(SMTP gjort 20.10: Resend med egen nøkkel for prod, avsender «Atten» <noreply@dashdash18.com>, 30 e-poster per time. E-postmalene «Confirm sign up» og «Magic link or OTP» viser koden, sier Atten og ti minutter.)* Egen SMTP (gjøremål 13) og CAPTCHA (Turnstile). CAPTCHA gjenstår.
 - [x] 2.7 Send prosjekt-ref og publishable key til Claude. Aldri secret key i chatten.
 
 ## 3. Databasen i prod (C, etter ja fra Thomas)
@@ -35,7 +35,7 @@ Rekkefølgen er den samme som på test, ikke den numeriske. 044 lager policyer p
 
 Skal ikke kjøres: 009 (tatt med i 011), `010_kontroll.sql`, `lokal/` og `import/`.
 
-- [ ] 3.1 Vault: `project_url`, `push_hook_secret`, `bet_settle_secret` og `slope_sync_secret`, med nye verdier for prod (ikke gjenbruk fra test).
+- [x] 3.1 *(20.10, laget av `prod_secrets.sh`; prøvekall til push-send og bet-settle ga 200)* Vault: `project_url`, `push_hook_secret`, `bet_settle_secret` og `slope_sync_secret`, med nye verdier for prod (ikke gjenbruk fra test).
 - [x] 3.2 *(20.10, alle 58 uten feil)* Kjør migreringene i rekkefølgen over.
 - [x] 3.3 Webhooken og cron-jobbene kommer med 062. Ingen webhook skal lages i dashboardet.
 - [x] 3.4 *(20.10: alle 879 objekter er like på test og prod, med funksjonskroppene; eneste forskjell er Supabase sin egen `rls_auto_enable`)* Kontroller: Security Advisor, anon-tilgang (bare `calendar_feed` og `tv_board_data`), realtime-publikasjonen (27 tabeller), bøttene `avatars` og `thread`, og `app_config` (`min_ios_build`, `waitlist_offer_hours`).
@@ -43,7 +43,7 @@ Skal ikke kjøres: 009 (tatt med i 011), `010_kontroll.sql`, `lokal/` og `import
 
 ## 4. Edge Functions i prod (C)
 
-- [ ] 4.1 Secrets for prod: `APNS_*` (produksjonsmiljø), `PUSH_HOOK_SECRET`, `BET_SETTLE_SECRET`, `SLOPE_SYNC_SECRET`. `APPSTORE_*` venter på kjøpene. `APPSTORE_ALLOW_SANDBOX` skal ikke settes i prod.
+- [x] 4.1 *(20.10: alt unntatt `APPSTORE_*`)* Secrets for prod: `APNS_*` (produksjonsmiljø), `PUSH_HOOK_SECRET`, `BET_SETTLE_SECRET`, `SLOPE_SYNC_SECRET`. `APPSTORE_*` venter på kjøpene. `APPSTORE_ALLOW_SANDBOX` skal ikke settes i prod.
 - [x] 4.2 *(20.10)* Deploy `push-send`, `bet-settle` og `slope-sync` med `--no-verify-jwt`, og `delete-account` med JWT-sjekk. `bet-settle` deployes fra roten av repoet (den importerer `web/golfgutu-core`).
 - [ ] 4.3 `verify-purchase` venter på kjøpene (avsnitt 6).
 
