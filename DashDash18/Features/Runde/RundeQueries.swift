@@ -46,6 +46,18 @@ enum RundeQueries {
         return try await snapshot(client: client, round: round)
     }
 
+    /// Runden på id med alt under, også når den er låst. nil når den ikke finnes eller ikke kan leses
+    /// (en deltaker i en klubbturnering, sql/059, leser rundene i turneringen).
+    static func snapshot(client: SupabaseClient, roundID: UUID) async throws -> RoundSnapshot? {
+        let rows: [RoundRow] = try await client.from("rounds")
+            .select(RoundRow.columns)
+            .eq("id", value: roundID)
+            .limit(1)
+            .execute().value
+        guard let round = rows.first else { return nil }
+        return try await snapshot(client: client, round: round)
+    }
+
     /// Runden med alt under. En klubbrunde får navn fra troppen og regler fra sesongen; en løs runde
     /// (uten klubb, sql/017) får navn fra deltakerne og regelsettet for løse runder.
     static func snapshot(client: SupabaseClient, round: RoundRow) async throws -> RoundSnapshot {

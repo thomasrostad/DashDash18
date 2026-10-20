@@ -18,7 +18,9 @@ final class CompetitionsModel {
     private(set) var busy: UUID?
     var error: String?
 
-    let access: CompetitionAccess
+    /// Deg sett fra konkurransene. Deltakerradene (sql/059) kommer med hver henting, så en ny
+    /// påmelding i en annen klubbs turnering gjelder med en gang.
+    private(set) var access: CompetitionAccess
     /// Klubben som er valgt i appen, og navnet.
     let clubID: UUID?
     let clubName: String?
@@ -55,13 +57,21 @@ final class CompetitionsModel {
     func load() async {
         guard let client else { return }
         do {
+            async let participations = loadParticipations(client: client)
             overview = try await CompetitionQueries.overview(client: client)
+            if let participations = await participations { access = access.with(participations: participations) }
             state = .loaded
         } catch is CancellationError {
         } catch {
             if case .loaded = state { return }
             state = .failed(DataError.from(error).message)
         }
+    }
+
+    /// Deltakerradene dine, eller nil når hentingen feilet (da står det som var).
+    private func loadParticipations(client: SupabaseClient) async -> [Participation]? {
+        guard let profileID = access.profileID else { return nil }
+        return try? await ParticipationQueries.mine(client: client, userID: profileID)
     }
 
     // MARK: Utvalg
@@ -284,6 +294,12 @@ final class CompetitionDetailModel {
         return false
     }
 
+    /// «Før runden»: rundene i turneringen som går, og der du spiller. `currentClub`: klubben som er
+    /// valgt i appen.
+    func playEntries(currentClub: UUID?) -> [CompetitionPlay.Entry] {
+        CompetitionPlay.entries(rounds: detail?.rawRounds ?? [], access: access, currentClub: currentClub)
+    }
+
     /// Kan du føre (eller endre) resultatet i kampen?
     func recordRight(_ game: CupStandings.Game) -> CupRecording.Right {
         CupRecording.right(game, isAdmin: isAdmin)
@@ -295,7 +311,8 @@ final class CompetitionDetailModel {
             if competition.kind == .season {
                 let input = try await CompetitionQueries.season(client: client, competition: competition)
                 let mine = access.memberships.first { $0.clubID == competition.clubID }
-                let me = mine?.memberID
+                // Medlemmet, eller deltakerraden (sql/059).
+                let me = access.rowID(inClub: competition.clubID)
                 let viewer = Viewer(memberID: me ?? UUID(), isOrganizer: mine?.isOrganizer ?? false)
                 content = .season(input.map { TavlaStandings($0, me: me, viewer: viewer, comparesPrevious: true) })
             } else {

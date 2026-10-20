@@ -29,7 +29,7 @@ struct RundeView: View {
         ScrollView {
             if let game = model.game {
                 VStack(alignment: .leading, spacing: 14) {
-                    if game.status == .locked, model.looseContext != nil {
+                    if model.showsLockedResult {
                         DDInfoStripe("Runden er avsluttet. Resultatet står under, og du kan dele det.")
                     }
                     DDSegmentedControl([
@@ -126,7 +126,7 @@ struct RundeView: View {
 
     private var scoringTitle: ScoringTitle {
         model.game?.scoringTitle(viewer: model.viewer)
-            ?? ScoringTitle(title: model.looseContext == nil ? DayTerm.capitalized(dayTerm.the) : "Runden", subtitle: nil)
+            ?? ScoringTitle(title: model.clubContext != nil ? DayTerm.capitalized(dayTerm.the) : "Runden", subtitle: nil)
     }
 
     @ToolbarContentBuilder
@@ -230,7 +230,7 @@ struct RundeView: View {
 
     @ViewBuilder
     private func scoring(_ game: RoundGame) -> some View {
-        if game.status == .locked, model.looseContext != nil {
+        if model.showsLockedResult {
             if let card = model.card {
                 HullprikkerView(dots: game.dots(currentHole: model.currentHole, viewer: model.viewer,
                                                 pending: model.pendingHoles)) { model.goTo(hole: $0) }
@@ -309,7 +309,8 @@ struct RundeView: View {
         return "\(game.snapshot.scores.count)-\(game.status.rawValue)-\(model.currentHole)"
     }
 
-    /// Klienten og deg for veddemålene: klubben som er valgt, eller profilen i en løs runde.
+    /// Klienten og deg for veddemålene: klubben som er valgt, eller profilen i en løs runde. En deltaker
+    /// (sql/059) har ingen veddemål i klubben.
     private var betsAccess: (client: SupabaseClient, viewer: BetViewer)? {
         if let context = model.clubContext { return (context.client, context.betViewer) }
         if let loose = model.looseContext { return (loose.client, BetViewer(userID: loose.userID)) }
@@ -318,9 +319,9 @@ struct RundeView: View {
 
     /// Klienten og innloggingen for «Følg medspillerne».
     private var followAccess: (client: SupabaseClient, userID: UUID)? {
+        // Uten klubb (løs runde, deltaker): innloggingen.
         if let context = model.clubContext { return (context.client, context.user.id) }
-        if let loose = model.looseContext { return (loose.client, loose.userID) }
-        return nil
+        return model.statsAccess
     }
 
     // MARK: Føringen

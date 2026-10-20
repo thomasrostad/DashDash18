@@ -5,7 +5,7 @@ import GolfgutuCore
 // morrokvelder på Kveld og tekstene. Ingen nettverk og ingen SwiftUI. Reglene speiler RLS og
 // RPC-ene i sql/017 og sql/022, så appen viser bare det databasen vil godta.
 
-/// Deg, sett fra konkurransene: profilen og klubbmedlemskapene dine.
+/// Deg, sett fra konkurransene: profilen, klubbmedlemskapene og deltakerradene dine (sql/059).
 nonisolated struct CompetitionAccess: Equatable, Sendable {
     /// Medlemskapet ditt i én klubb.
     struct Membership: Equatable, Sendable {
@@ -15,12 +15,30 @@ nonisolated struct CompetitionAccess: Equatable, Sendable {
         let isActive: Bool
     }
 
+    /// Deltakerraden din i en klubb (sql/059): påmeldt en av klubbens turneringer uten å være medlem.
+    /// Gir ingen tilgang til klubben, bare til turneringene raden er påmeldt.
+    struct Participant: Equatable, Sendable {
+        let clubID: UUID
+        let memberID: UUID
+    }
+
     let profileID: UUID?
     let memberships: [Membership]
+    let participants: [Participant]
 
-    init(profileID: UUID?, memberships: [Membership]) {
+    init(profileID: UUID?, memberships: [Membership], participants: [Participant] = []) {
         self.profileID = profileID
         self.memberships = memberships
+        self.participants = participants
+    }
+
+    /// Med deltakerradene fra `ParticipationQueries.mine`. En klubb du er medlem i, telles ikke to
+    /// ganger (en profil har én rad per klubb).
+    func with(participations: [Participation]) -> CompetitionAccess {
+        let clubs = Set(memberships.map(\.clubID))
+        return CompetitionAccess(profileID: profileID, memberships: memberships,
+                                 participants: participations.filter { !clubs.contains($0.clubID) }
+                                     .map { Participant(clubID: $0.clubID, memberID: $0.id) })
     }
 
     private func membership(in club: UUID?) -> Membership? {
@@ -29,10 +47,19 @@ nonisolated struct CompetitionAccess: Equatable, Sendable {
     }
 
     var memberIDs: Set<UUID> { Set(memberships.filter(\.isActive).map(\.memberID)) }
+    var participantIDs: Set<UUID> { Set(participants.map(\.memberID)) }
+    /// Radene dine i klubbene: medlemskapene og deltakerradene (`my_member_ids`).
+    var rowIDs: Set<UUID> { memberIDs.union(participantIDs) }
 
-    /// Er påmeldingen din? Profilen din, eller et av medlemskapene dine.
+    /// Raden din i klubben (medlem eller deltaker): spiller-id-en i klubbens runder.
+    func rowID(inClub club: UUID?) -> UUID? {
+        guard let club else { return nil }
+        return membership(in: club)?.memberID ?? participants.first { $0.clubID == club }?.memberID
+    }
+
+    /// Er påmeldingen din? Profilen din, et av medlemskapene eller en av deltakerradene dine.
     func isMine(_ p: CompetitionParticipantRow) -> Bool {
-        (p.profileID != nil && p.profileID == profileID) || p.memberID.map(memberIDs.contains) == true
+        (p.profileID != nil && p.profileID == profileID) || p.memberID.map(rowIDs.contains) == true
     }
 
     /// Din aktive påmelding i konkurransen.
@@ -61,7 +88,7 @@ nonisolated struct CompetitionAccess: Equatable, Sendable {
 
     /// Personene du er i tabellene, for å markere «deg».
     var myEntrants: Set<Entrant> {
-        var out = Set(memberIDs.map(Entrant.member))
+        var out = Set(rowIDs.map(Entrant.member))
         if let profileID { out.insert(.profile(profileID)) }
         return out
     }
@@ -83,8 +110,8 @@ nonisolated struct CompetitionAccess: Equatable, Sendable {
         if myParticipation(c, participants) != nil { return .entered }
         guard canSee(c, participants), c.isSignupOpen, c.status != .finished,
               !(c.kind == .cup && isDrawn) else { return .closed }
-        // En klubbkonkurranse melder på medlemmet: du må være aktivt medlem.
-        if c.clubID != nil, membership(in: c.clubID) == nil { return .closed }
+        // En klubbkonkurranse melder på raden din i klubben (`join_competition`): medlem eller deltaker.
+        if c.clubID != nil, rowID(inClub: c.clubID) == nil { return .closed }
         return .open
     }
 
@@ -116,6 +143,58 @@ nonisolated enum CupRecording {
         if isAdmin { return .edit }
         let mine = game.a?.isMe == true || game.b?.isMe == true
         return mine && game.winner == nil ? .record : .none
+    }
+}
+
+// MARK: - Spill runden
+
+/// «Før runden» på turneringssiden: rundene i turneringen som går, og der du spiller.
+nonisolated enum CompetitionPlay {
+    /// Hvor føringen åpnes.
+    enum Target: Hashable, Sendable {
+        /// Medlem i klubben som er valgt: føringen på Hjem.
+        case club(roundID: UUID)
+        /// Deltaker i klubben (sql/059), eller medlem i en annen klubb enn den som er valgt.
+        case participant(ParticipantRound)
+        /// En løs runde i en turnering uten klubb.
+        case loose(roundID: UUID)
+    }
+
+    struct Entry: Identifiable, Equatable, Sendable {
+        let target: Target
+        /// «Losby · runde 2».
+        let title: String
+        let roundID: UUID
+        var id: UUID { roundID }
+    }
+
+    /// Rundene som går og som du spiller i, eldste først. `currentClub`: klubben som er valgt i appen
+    /// (medlemskapet der åpner føringen på Hjem).
+    static func entries(rounds: [RoundSnapshot], access: CompetitionAccess, currentClub: UUID?) -> [Entry] {
+        rounds
+            .filter { $0.round.status == .active && !$0.round.isPlayoff }
+            .sorted { ($0.round.startedAt ?? .distantPast) < ($1.round.startedAt ?? .distantPast) }
+            .compactMap { s in
+                guard let target = target(s, access: access, currentClub: currentClub) else { return nil }
+                return Entry(target: target, title: title(s), roundID: s.round.id)
+            }
+    }
+
+    static func target(_ s: RoundSnapshot, access: CompetitionAccess, currentClub: UUID?) -> Target? {
+        let plays: (UUID) -> Bool = { id in s.players.contains { $0.memberID == id } }
+        guard let club = s.round.clubID else {
+            guard let profile = access.profileID, let me = s.loose?.participant(profile: profile)?.playerID,
+                  plays(me) else { return nil }
+            return .loose(roundID: s.round.id)
+        }
+        guard let row = access.rowID(inClub: club), plays(row) else { return nil }
+        if club == currentClub, access.memberIDs.contains(row) { return .club(roundID: s.round.id) }
+        return .participant(ParticipantRound(roundID: s.round.id, clubID: club, memberID: row))
+    }
+
+    static func title(_ s: RoundSnapshot) -> String {
+        let course = s.course?.name ?? "Runden"
+        return s.isLoose || s.round.roundNo <= 0 ? course : "\(course) · runde \(s.round.roundNo)"
     }
 }
 

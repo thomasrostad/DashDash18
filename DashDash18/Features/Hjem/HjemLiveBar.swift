@@ -130,11 +130,13 @@ extension EnvironmentValues {
     @Entry var markRoundScreen: (UUID, Bool) -> Void = { _, _ in }
 }
 
-/// Rundene som pågår uten klubb (`FriendsRootView`): de løse rundene du spiller i. Med klubb kommer
-/// de fra Hjem-feeden (`HomeFeedModel`).
+/// Rundene som pågår uten klubb (`FriendsRootView`): de løse rundene du spiller i, og klubbrundene du
+/// spiller som deltaker i en turnering (sql/059). Med klubb kommer de fra Hjem-feeden (`HomeFeedModel`).
 @Observable
 final class LiveRoundsModel {
     private(set) var live: [HomeLive] = []
+    /// Deltakerrundene i baren: føringen åpnes med deltakerraden.
+    private(set) var participantRounds: [UUID: ParticipantRound] = [:]
     private let client: SupabaseClient?
     private let userID: UUID
 
@@ -145,12 +147,18 @@ final class LiveRoundsModel {
 
     func load() async {
         guard let client, let rounds = try? await LooseRoundQueries.myRounds(client: client) else { return }
-        live = Self.live(rounds, userID: userID)
+        // Deltakerrundene er et tillegg: feiler hentingen, vises de løse rundene som før.
+        let participations = (try? await ParticipationQueries.mine(client: client, userID: userID)) ?? []
+        let clubRounds = (try? await ParticipationQueries.activeRounds(client: client, participations: participations)) ?? []
+        live = Self.live(rounds + clubRounds, userID: userID, participations: participations)
+        participantRounds = Dictionary(clubRounds.compactMap { ParticipantRounds.round($0, participations: participations) }
+                                           .map { ($0.roundID, $0) }, uniquingKeysWith: { a, _ in a })
     }
 
-    /// Rundene som går og som du spiller i, som baren viser dem.
-    nonisolated static func live(_ rounds: [RoundSnapshot], userID: UUID, now: Date = .now) -> [HomeLive] {
-        let viewer = HomeViewer(profileID: userID, memberships: [:])
+    /// Rundene som går og som du spiller i, som baren viser dem. Klubbrunder bare med en deltakerrad.
+    nonisolated static func live(_ rounds: [RoundSnapshot], userID: UUID, participations: [Participation] = [],
+                                 now: Date = .now) -> [HomeLive] {
+        let viewer = HomeViewer(profileID: userID, memberships: ParticipantRounds.memberships(participations))
         let input = HomeFeedInput(now: now, viewer: viewer)
         let context = HomeFeedContext(input)
         return HomeFeed.liveInputs(focused: nil, rounds: rounds, viewer: viewer, club: nil)

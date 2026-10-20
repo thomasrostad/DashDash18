@@ -3,10 +3,12 @@ import GolfgutuCore
 import Observation
 import Supabase
 
-/// Hvilken runde skjermen viser: klubbens runde som går, eller en løs runde (fase 13).
+/// Hvilken runde skjermen viser: klubbens runde som går, en løs runde (fase 13), eller en klubbrunde
+/// du spiller som deltaker i en turnering (sql/059).
 enum RundeSource {
     case club(ClubContext)
     case loose(LooseRoundContext)
+    case participant(ParticipantRoundContext)
 }
 
 /// En løs runde (sql/017–018): runden og den innloggede.
@@ -14,6 +16,26 @@ struct LooseRoundContext {
     let client: SupabaseClient
     let userID: UUID
     let roundID: UUID
+}
+
+/// En klubbrunde for en deltaker (sql/059): ikke medlem, så ingen ClubContext. Hentes på id (også når
+/// den er låst). Du fører ditt eget kort og ser stillingen; klubbens tråd, tips, veddemål, aktivitet og
+/// avslutningen er ikke dine.
+struct ParticipantRoundContext {
+    let client: SupabaseClient
+    let userID: UUID
+    let clubID: UUID
+    /// Deltakerraden din i klubben: spiller-id-en i runden.
+    let memberID: UUID
+    let roundID: UUID
+
+    init(client: SupabaseClient, userID: UUID, round: ParticipantRound) {
+        self.client = client
+        self.userID = userID
+        clubID = round.clubID
+        memberID = round.memberID
+        roundID = round.roundID
+    }
 }
 
 /// Kveld-skjermen under spill: runden som går, hullkortet for båsen og «Bayen nå».
@@ -77,6 +99,11 @@ final class RundeModel {
         source = .loose(loose)
     }
 
+    /// En klubbrunde for en deltaker (sql/059): hentes på id, også når den er låst.
+    init(participant: ParticipantRoundContext) {
+        source = .participant(participant)
+    }
+
     #if DEBUG
     /// Skjermprøve av en løs runde som alt er hentet (`-DDDesignScreen losrunde`). Ingen henting.
     init(previewLoose snapshot: RoundSnapshot, context: LooseRoundContext) {
@@ -93,6 +120,7 @@ final class RundeModel {
         switch source {
         case .club(let context): context.client
         case .loose(let loose): loose.client
+        case .participant(let participant): participant.client
         }
     }
 
@@ -107,7 +135,20 @@ final class RundeModel {
         switch source {
         case .club(let context): (context.client, context.user.id)
         case .loose(let loose): (loose.client, loose.userID)
+        case .participant(let participant): (participant.client, participant.userID)
         }
+    }
+
+    /// Klubbrunden for en deltaker, når skjermen viser en.
+    var participantContext: ParticipantRoundContext? {
+        if case .participant(let participant) = source { return participant }
+        return nil
+    }
+
+    /// Runden er låst og vises med resultatet (løs runde eller deltaker). En klubbrunde for medlemmet
+    /// forsvinner fra skjermen når den låses.
+    var showsLockedResult: Bool {
+        game?.status == .locked && clubContext == nil
     }
 
     /// Den løse runden, når skjermen viser en.
@@ -123,6 +164,9 @@ final class RundeModel {
                    scorerGroups: snapshot?.scorerGroups ?? [])
         case .loose(let loose):
             LooseRoundRights.viewer(info: snapshot?.loose, userID: loose.userID)
+        case .participant(let participant):
+            // Ingen rettigheter i klubben: ditt eget kort, og gruppa du er funksjonær for.
+            Viewer(memberID: participant.memberID, isOrganizer: false, scorerGroups: snapshot?.scorerGroups ?? [])
         }
     }
     var hasRound: Bool { game != nil }
@@ -193,6 +237,8 @@ final class RundeModel {
                                                preferred: preferredRoundID ?? snapshot?.round.id)
         case .loose(let loose):
             try await LooseRoundQueries.snapshot(client: client, roundID: loose.roundID)
+        case .participant(let participant):
+            try await RundeQueries.snapshot(client: client, roundID: participant.roundID)
         }
     }
 

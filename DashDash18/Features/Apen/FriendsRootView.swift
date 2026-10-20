@@ -10,8 +10,8 @@ struct FriendsRootView: View {
     @State private var selectedTab: AppTab = .spill
     /// Rundene som pågår, for baren over fanelinja (utbedringsplanen V1).
     @State private var liveRounds: LiveRoundsModel
-    /// Runden baren åpnet, i Spill-fanen.
-    @State private var openRound: UUID?
+    /// Runden baren (eller en push) åpnet, i Spill-fanen.
+    @State private var openRound: FriendsRound?
     @Environment(\.scenePhase) private var scenePhase
 
     init(config: AppConfig, client: SupabaseClient?, user: AuthUser) {
@@ -37,10 +37,9 @@ struct FriendsRootView: View {
                                     }
                                 }
                             }
-                            .navigationDestination(item: roundBinding(for: tab)) { roundID in
+                            .navigationDestination(item: roundBinding(for: tab)) { round in
                                 if let client {
-                                    LooseRoundScreen(context: LooseRoundContext(client: client, userID: user.id,
-                                                                                roundID: roundID))
+                                    roundScreen(round, client: client)
                                         .toolbar(.hidden, for: .tabBar)
                                         // Avsluttet runde: ut av baren med en gang, ikke etter neste henting.
                                         .onDisappear { Task { await liveRounds.load() } }
@@ -53,8 +52,13 @@ struct FriendsRootView: View {
             }
         }
         .hjemLiveAccessory(liveRounds.live) { live in
-            selectedTab = .spill
-            openRound = live.roundID
+            if live.isLoose {
+                selectedTab = .spill
+                openRound = .loose(live.roundID)
+            } else if let round = liveRounds.participantRounds[live.roundID] {
+                selectedTab = .spill
+                openRound = .participant(round)
+            }
         }
         .tint(Color.ddForestInk)
         .environment(\.selectTab) { selectedTab = $0 }
@@ -66,11 +70,19 @@ struct FriendsRootView: View {
                 try? await Task.sleep(for: .seconds(60))
             }
         }
-        // Trykk på en push om en løs runde: åpnes i Spill. Resten gjelder klubben og venter på den.
+        // Trykk på en push om en løs runde: åpnes i Spill. En klubbrunde åpnes når du er deltaker i
+        // klubben (sql/059). Resten gjelder klubben og venter på den.
         .onChange(of: PushTapInbox.shared.pending, initial: true) { _, pending in
-            guard case .looseRound(let id) = pending?.destination, PushTapInbox.shared.take() != nil else { return }
-            selectedTab = .spill
-            openRound = id
+            switch pending?.destination {
+            case .looseRound(let id):
+                guard PushTapInbox.shared.take() != nil else { return }
+                selectedTab = .spill
+                openRound = .loose(id)
+            case .clubRound(let id):
+                Task { await openParticipantRound(id) }
+            default:
+                break
+            }
         }
         .onChange(of: openRound) { _, round in
             if round == nil { Task { await liveRounds.load() } }
@@ -78,8 +90,29 @@ struct FriendsRootView: View {
     }
 
     /// Runden fra baren åpnes i Spill-fanen.
-    private func roundBinding(for tab: AppTab) -> Binding<UUID?> {
+    private func roundBinding(for tab: AppTab) -> Binding<FriendsRound?> {
         tab == .spill ? $openRound : .constant(nil)
+    }
+
+    @ViewBuilder
+    private func roundScreen(_ round: FriendsRound, client: SupabaseClient) -> some View {
+        switch round {
+        case .loose(let id):
+            LooseRoundScreen(context: LooseRoundContext(client: client, userID: user.id, roundID: id))
+        case .participant(let round):
+            LooseRoundScreen(participant: ParticipantRoundContext(client: client, userID: user.id, round: round))
+        }
+    }
+
+    /// En push om en klubbrunde: åpnes bare når runden hører til en klubb der du er deltaker. Ellers
+    /// blir trykket liggende som før (det gjelder en klubb du ikke er med i her).
+    private func openParticipantRound(_ roundID: UUID) async {
+        guard let client,
+              let round = await ParticipationQueries.participantRound(client: client, userID: user.id, roundID: roundID),
+              case .clubRound(roundID) = PushTapInbox.shared.pending?.destination,
+              PushTapInbox.shared.take() != nil else { return }
+        selectedTab = .spill
+        openRound = .participant(round)
     }
 
     @ViewBuilder
@@ -95,6 +128,13 @@ struct FriendsRootView: View {
             EmptyView()
         }
     }
+}
+
+/// Runden som åpnes i Spill-fanen uten klubb.
+enum FriendsRound: Hashable {
+    case loose(UUID)
+    /// En klubbrunde du spiller som deltaker i en turnering (sql/059).
+    case participant(ParticipantRound)
 }
 
 /// Deg uten klubb: profilen, klubb (bli med eller lag), innlogging, personvern og konto.

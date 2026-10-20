@@ -129,7 +129,7 @@ private struct FindTournamentDetail: View {
                     CompetitionSignupSection(model: CompetitionSignupModel(client: client, competitionID: row.id),
                                              competitionName: row.name, onChange: onChange)
                 } footer: {
-                    DDFooter(row.signupOpen ? "Når du er påmeldt, står turneringen under «Turneringer» i Spill."
+                    DDFooter(row.signupOpen ? "Når du er påmeldt, står turneringen under «Turneringer» i Spill. Når en runde du spiller i går, fører du den fra turneringen («Før runden»)."
                                             : "Påmeldingen er ikke åpen nå.")
                 }
             }
