@@ -31,6 +31,10 @@ struct DegView: View {
                     .fontWeight(.medium)
                 }
             }
+            if let context {
+                OwnProfileNGFSection(context: context)
+                    .id(context.user.id)
+            }
             if PushFeature.isEnabled, let context {
                 Section {
                     NavigationLink { PushSettingsView(context: context) } label: {

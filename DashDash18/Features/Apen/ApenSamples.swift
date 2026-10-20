@@ -27,7 +27,8 @@ struct ApenSampleScreen: View {
             LoginView(showsGoogle: true, showsLegal: true)
         case .apendeg:
             NavigationStack {
-                FriendsDegView(config: .preview, client: nil, user: .preview, name: "Frida Fjellstad")
+                FriendsDegView(config: .preview, user: .preview,
+                               preview: OwnProfileRow(id: AuthUser.preview.id, displayName: "Frida Fjellstad", handicapIndex: 14.2, ngfNumber: nil))
                     .navigationTitle("Deg")
                     .ddNavigationChrome()
             }

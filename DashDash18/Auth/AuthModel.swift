@@ -20,12 +20,14 @@ enum AuthState: Equatable {
 final class AuthModel {
     private(set) var state: AuthState = .starting
     private let auth: AuthClient
+    private let client: SupabaseClient
     /// Kjøres før utlogging, mens økten fortsatt finnes (push: fjern telefonen).
     @ObservationIgnored var willSignOut: (() async -> Void)?
     /// Kjøres når kontoen er slettet på serveren, før den lokale økten fjernes (rydd telefonen).
     @ObservationIgnored var didDeleteAccount: ((UUID) -> Void)?
 
     init(client: SupabaseClient) {
+        self.client = client
         auth = client.auth
     }
 
@@ -59,14 +61,19 @@ final class AuthModel {
         }
     }
 
-    /// Logg inn med Apple: ID-tokenet fra Apple byttes mot en Supabase-økt.
-    func signInWithApple(idToken: String, rawNonce: String) async throws(LoginError) {
+    /// Logg inn med Apple: ID-tokenet fra Apple byttes mot en Supabase-økt. Navnet Apple gir ved
+    /// første innlogging (det står ikke i tokenet), blir profilnavnet når profilen ikke har et navn.
+    func signInWithApple(idToken: String, rawNonce: String, fullName: PersonNameComponents? = nil) async throws(LoginError) {
+        let session: Session
         do {
-            try await auth.signInWithIdToken(
+            session = try await auth.signInWithIdToken(
                 credentials: OpenIDConnectCredentials(provider: .apple, idToken: idToken, nonce: rawNonce)
             )
         } catch {
             throw Self.loginError(from: error)
+        }
+        if let name = AppleName.displayName(from: fullName) {
+            await OwnProfileQueries.fillMissingName(client: client, userID: session.user.id, appleName: name)
         }
     }
 
