@@ -1,0 +1,138 @@
+{
+  "timeStampBegin" : "2026-10-19 00:00:00",
+  "timeStampEnd" : "2026-10-19 23:59:00",
+  "crashDiagnostics" : [
+    {
+      "version" : "1.0.0",
+      "callStackTree" : {
+        "callStackPerThread" : true,
+        "callStacks" : [
+          {
+            "threadAttributed" : false,
+            "callStackRootFrames" : [
+              {
+                "binaryUUID" : "70B89F27-1634-3580-A695-57CDB41D7743",
+                "offsetIntoBinaryTextSegment" : 4096,
+                "sampleCount" : 1,
+                "binaryName" : "libsystem_kernel.dylib",
+                "address" : 7380120116
+              }
+            ]
+          },
+          {
+            "threadAttributed" : true,
+            "callStackRootFrames" : [
+              {
+                "binaryUUID" : "70B89F27-1634-3580-A695-57CDB41D7743",
+                "offsetIntoBinaryTextSegment" : 123,
+                "sampleCount" : 1,
+                "binaryName" : "libswiftCore.dylib",
+                "address" : 7380120200,
+                "subFrames" : [
+                  {
+                    "binaryUUID" : "9E1A1A2B-0000-4000-8000-000000000001",
+                    "offsetIntoBinaryTextSegment" : 6699,
+                    "sampleCount" : 1,
+                    "binaryName" : "DashDash18",
+                    "address" : 4295006251,
+                    "subFrames" : [
+                      {
+                        "binaryUUID" : "9E1A1A2B-0000-4000-8000-000000000001",
+                        "offsetIntoBinaryTextSegment" : 16,
+                        "sampleCount" : 1,
+                        "binaryName" : "DashDash18",
+                        "address" : 4294983696
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "diagnosticMetaData" : {
+        "appBuildVersion" : "42",
+        "appVersion" : "1.0",
+        "regionFormat" : "NO",
+        "exceptionType" : 1,
+        "osVersion" : "iPhone OS 26.0.1 (23A355)",
+        "deviceType" : "iPhone17,1",
+        "signal" : 11,
+        "exceptionCode" : 0,
+        "platformArchitecture" : "arm64e",
+        "bundleIdentifier" : "com.dashdash18.app",
+        "terminationReason" : "Namespace SIGNAL, Code 11 Segmentation fault: 11",
+        "virtualMemoryRegionInfo" : "0 is not in any region."
+      }
+    },
+    {
+      "version" : "1.0.0",
+      "callStackTree" : {
+        "callStackPerThread" : true,
+        "callStacks" : [
+          {
+            "threadAttributed" : true,
+            "callStackRootFrames" : [
+              {
+                "binaryUUID" : "11111111-2222-3333-4444-555555555555",
+                "offsetIntoBinaryTextSegment" : 2048,
+                "sampleCount" : 1,
+                "binaryName" : "CoreFoundation",
+                "address" : 7000000000
+              }
+            ]
+          }
+        ]
+      },
+      "diagnosticMetaData" : {
+        "appBuildVersion" : "42",
+        "appVersion" : "1.0",
+        "exceptionType" : 10,
+        "signal" : 6,
+        "osVersion" : "iPhone OS 26.0.1 (23A355)",
+        "deviceType" : "iPhone17,1",
+        "objectiveCexceptionReason" : {
+          "composedMessage" : "*** -[__NSArrayM objectAtIndex:]: index 3 beyond bounds [0 .. 2]",
+          "formatString" : "*** -[__NSArrayM objectAtIndex:]: index %lu beyond bounds [0 .. %lu]",
+          "arguments" : [ "3", "2" ],
+          "exceptionType" : "NSRangeException",
+          "className" : "__NSArrayM",
+          "exceptionName" : "NSRangeException"
+        }
+      }
+    }
+  ],
+  "hangDiagnostics" : [
+    {
+      "version" : "1.0.0",
+      "callStackTree" : {
+        "callStackPerThread" : false,
+        "callStacks" : [
+          {
+            "threadAttributed" : true,
+            "callStackRootFrames" : [
+              {
+                "binaryUUID" : "9E1A1A2B-0000-4000-8000-000000000001",
+                "offsetIntoBinaryTextSegment" : 255,
+                "sampleCount" : 20,
+                "binaryName" : "DashDash18",
+                "address" : 4294983935
+              }
+            ]
+          }
+        ]
+      },
+      "diagnosticMetaData" : {
+        "appBuildVersion" : "43",
+        "appVersion" : "1.0.1",
+        "regionFormat" : "NO",
+        "osVersion" : "iPhone OS 26.1 (23B85)",
+        "deviceType" : "iPhone18,2",
+        "hangDuration" : "3 sec",
+        "platformArchitecture" : "arm64e",
+        "bundleIdentifier" : "com.dashdash18.app"
+      }
+    }
+  ]
+}

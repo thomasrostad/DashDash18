@@ -46,6 +46,7 @@ Status 20.10.2026. **Atten 1.0 er sendt til App Review** (build 181, gratis, bar
 | Deltakerinvitasjon (20.10.2026, sql/060) | Arrangøren av en klubbturnering med påmelding har «Legg til deltakere (lim inn liste)» og «Del lenken til turneringen» på arrangørsiden (under turneringen, ved Påmelding og Stab). Lista limes inn fra e-post, GolfBox eller et regneark: ett navn per linje, handicap etter navnet eller i egen kolonne, og NGF-nummer i en tredje kolonne (`navn; handicap; NGF`). Navn som står to ganger eller er påmeldt fra før, er merket og hoppes over; samme navn som et medlem er greit. Alt legges inn i én omgang (høyst 300) og gir «N lagt til». Arrangøren deler lenken (`https://dashdash18.com/konkurranse/KODE`, QR, ny kode og «Trekk tilbake», virker i 60 dager) også med «Inviter» på turneringssiden; deltakerne får ikke «Inviter». Den som åpner lenken, ser klubben og «Er du en av disse?» med de ledige navnene (søk når lista er lang) og «Jeg står ikke på lista», og at hen blir deltaker i turneringen, ikke medlem i klubben. Etterpå: «Åpne turneringen», Turneringer henter på nytt, og en ny bruker uten klubb får vennemodus i stedet for valgskjermen (også når appen ser at du har deltakerrader). Innloggingen viser «Logg inn for å ta plassen din i turneringen» når lenken venter |
 | Profil uten klubb (20.10.2026) | Deg uten klubb har «Navn og handicap» med «Endre»: navn, handicapindeks og NGF-medlemsnummer (valgfritt, sifre med én bindestrek som i databasen) lagres på profilen og brukes i løse runder, i søk og når du blir deltaker i en turnering. Et NGF-nummer som står på en annen bruker, gir «Det NGF-nummeret er registrert på en annen bruker.» Med klubb står navn og handicap i medlemskapet som før, og Deg har «NGF-medlemsnummer» for profilen. Mangler profilen navn, viser Deg og Spill (uten klubb) «Legg inn navnet ditt, så ser de andre hvem du er», som åpner skjemaet. Navnet Apple gir ved første innlogging, blir profilnavnet når profilen ikke har navn fra før (et navn du har satt, står). Ingen ny SQL |
 | Markørkonflikt (K6/6.3, krever sql/055) | Fører to markører ulikt for samme spiller og hull, får føringen en stripe og et merke på raden. Arket viser begge tallene, hvem som førte og når, og markøren eller arrangøren velger hvilket som gjelder. Arrangøren ser det også i rundekortet på «I kveld». Bare klubbrunder. Uten 055 er alt som før |
+| Feilsporing (20.10.2026, krever sql/064) | MetricKit melder krasj, heng, høy CPU, mye skriving til disk og treg oppstart fra ekte brukere (dagen etter, ikke i simulatoren). Appen legger dem i en kø på telefonen (høyst 50, eldste kastes) og sender dem med `submit_diagnostics` når du er innlogget, ved oppstart og når appen blir aktiv. Ingen persondata utover bruker-id-en. Uten 064 blir de liggende i køen, og appen virker som før. Flagg: `DiagnosticsFeature` |
 
 **Funksjonsflagg.** Nye deler ligger bak et flagg i koden til SQL-en er kjørt og prøvd. Av nå: `PurchaseFeature` (kjøp, venter på App Store Connect) og `GoogleLoginFeature` (venter på Google Cloud). Resten er på. Søk etter `Feature {` for å finne dem.
 
@@ -156,6 +157,21 @@ Endringer går slik (detaljer i [`sql/README.md`](sql/README.md)):
 5. Prod (når det finnes) først etter ny godkjenning.
 
 Filen legges i en PR som andre endringer. Status i `sql/README.md` oppdateres når den er kjørt.
+
+### Feilrapporter (MetricKit)
+
+Krasj og heng fra appen havner i `public.app_diagnostics` i samme prosjekt som bygget snakker med (test eller prod, også i kolonnen `environment`), når `sql/064_feilrapporter.sql` er kjørt. Tabellen har ingen policyer, så den leses bare i SQL Editor (eller med service_role). `signature` er unntaket eller signalet og øverste ramme i appen (`DashDash18+0x…`, ikke symbolisert; bruk dSYM-en i Xcode Organizer for linjen), og `payload` er Apples JSON for diagnosen.
+
+```sql
+-- Oftest siste 7 dager
+select kind, signature, count(*) as antall, count(distinct user_id) as brukere,
+       max(app_version || ' (' || build || ')') as siste_bygg, max(created_at) as sist
+  from public.app_diagnostics
+ where created_at > now() - interval '7 days'
+ group by kind, signature
+ order by antall desc
+ limit 20;
+```
 
 ## Distribusjon
 
