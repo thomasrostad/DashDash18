@@ -72,6 +72,11 @@ struct AppRoot: View {
                                                     .init(clubID: $0.clubID, memberID: $0.id, isOrganizer: $0.isOrganizer,
                                                           isActive: $0.status == .active)
                                                 })
+                    // «Før runden» for et medlem: lukk arket og før på Hjem (`RootView`).
+                    .environment(\.showRound) { roundID in
+                        setPendingLink(nil)
+                        NotificationCenter.default.post(name: RoundRequests.show, object: roundID)
+                    }
                 }
             }
         }
