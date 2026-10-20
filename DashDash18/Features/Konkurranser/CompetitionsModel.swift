@@ -35,9 +35,10 @@ final class CompetitionsModel {
 
     /// Uten klubb (appen med bare Spill og Deg): de private turneringene du eier eller er med i, og
     /// «Ny turnering» (liga, cup, morro). Serveren krever ingen klubb for dem (sql/017, 022, 026).
-    init(client: SupabaseClient, userID: UUID) {
+    /// `memberships`: klubbene dine, når lista vises utenfor klubbappen (turneringen du ble med i fra en lenke).
+    init(client: SupabaseClient, userID: UUID, memberships: [CompetitionAccess.Membership] = []) {
         self.client = client
-        access = CompetitionAccess(profileID: userID, memberships: [])
+        access = CompetitionAccess(profileID: userID, memberships: memberships)
         clubID = nil
         clubName = nil
     }

@@ -222,16 +222,10 @@ struct CompetitionDetailView: View {
         }
     }
 
-    /// Koden til konkurransen. Eieren kan fornye og trekke den tilbake (sql/022).
+    /// Koden til konkurransen. Eieren eller arrangøren kan fornye og trekke den tilbake (sql/022, 060).
     private func inviteModel(client: SupabaseClient) -> InviteModel {
-        let id = model.competition.id
-        let manage = model.isAdmin
-            ? InviteModel.Manage(renew: { try await CompetitionQueries.invite(client: client, competitionID: id, renew: true) },
-                                 revoke: { try await CompetitionQueries.revokeInvite(client: client, competitionID: id) })
-            : nil
-        return InviteModel(target: .competition(name: model.competition.name), manage: manage) {
-            try await CompetitionQueries.invite(client: client, competitionID: id)
-        }
+        .competition(client: client, competition: model.competition, clubName: list?.clubName(of: model.competition),
+                     isAdmin: model.isAdmin)
     }
 
     // MARK: Cup

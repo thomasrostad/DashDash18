@@ -83,7 +83,9 @@ nonisolated struct InviteCode: Equatable, Hashable, Sendable {
 /// kode, ulik lenke og tekst.
 nonisolated enum InviteTarget: Equatable, Sendable {
     case round(courseName: String?)
-    case competition(name: String)
+    /// En turnering. `clubName` for en klubbturnering (sql/060): bare arrangøren deler den, og den som
+    /// blir med, blir deltaker i turneringen.
+    case competition(name: String, clubName: String? = nil)
 
     /// `dashdash://konkurranse/<KODE>`.
     static let competitionHost = "konkurranse"
@@ -102,7 +104,11 @@ nonisolated enum InviteTarget: Equatable, Sendable {
         switch self {
         case .round(let courseName):
             return code.shareText(courseName: courseName, universal: universal)
-        case .competition(let name):
+        case .competition(let name, let clubName?):
+            return "Bli med i \(name) (\(clubName)) i Atten. Står du på lista, tar du plassen din.\n"
+                + "\(code.shareURL(host: host, universal: universal).absoluteString)\n"
+                + "Eller skriv inn koden \(code.display) under Turneringer → «Har du en kode?»."
+        case .competition(let name, nil):
             return "Bli med i \(name) i Atten.\n\(code.shareURL(host: host, universal: universal).absoluteString)\n"
                 + "Eller skriv inn koden \(code.display) under Turneringer → «Har du en kode?»."
         }
@@ -120,7 +126,12 @@ nonisolated enum InviteTarget: Equatable, Sendable {
         case .round:
             "Skann QR-koden med kameraet, eller trykk på lenken i meldingen. Uten lenke: skriv inn koden under "
                 + "Spill → «Har du en kode?». Koden virker i 7 dager, og til runden avsluttes."
-        case .competition:
+        case .competition(_, _?):
+            "Skann QR-koden med kameraet, eller trykk på lenken i meldingen. Uten lenke: skriv inn koden under "
+                + "Turneringer → «Har du en kode?». Står navnet på lista, velger de det og tar plassen; ellers "
+                + "meldes de på som nye deltakere. De blir deltakere i turneringen, ikke medlem i klubben. "
+                + "Koden virker i 60 dager, og til turneringen er ferdig."
+        case .competition(_, nil):
             "Skann QR-koden med kameraet, eller trykk på lenken i meldingen. Uten lenke: skriv inn koden under "
                 + "Turneringer → «Har du en kode?». Den som blir med, meldes på. Koden virker i 7 dager, og til "
                 + "turneringen er ferdig."

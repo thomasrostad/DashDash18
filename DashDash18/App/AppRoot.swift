@@ -28,7 +28,7 @@ struct AppRoot: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ddScreenBackground()
             case .signedOut:
-                LoginView(hasClubInvite: pendingClubInvite != nil)
+                LoginView(hasClubInvite: pendingClubInvite != nil, hasCompetitionInvite: pendingCompetitionInvite)
             case .signedIn(let user):
                 // «Oppdater Atten» når bygget er eldre enn app_config.min_ios_build (sql/031).
                 MinimumBuildGate(client: services.client) {
@@ -67,7 +67,11 @@ struct AppRoot: View {
                         .environment(services.outbox.status)
                         .environment(\.scoreSubmitter, services.scoreSubmitter)
                 case .competition(let code):
-                    JoinCompetitionFromLinkView(client: services.client, code: code)
+                    JoinCompetitionFromLinkView(client: services.client, code: code, userID: user.id,
+                                                memberships: services.club.memberships.map {
+                                                    .init(clubID: $0.clubID, memberID: $0.id, isOrganizer: $0.isOrganizer,
+                                                          isActive: $0.status == .active)
+                                                })
                 }
             }
         }
@@ -165,6 +169,12 @@ extension AppRoot {
         }
     }
 
+    /// En turneringslenke venter på innloggingen (stripa på innloggingen, sql/060).
+    private var pendingCompetitionInvite: Bool {
+        if case .competition = pendingLink { return true }
+        return false
+    }
+
     private var signedInUser: AuthUser? {
         if case .signedIn(let user) = services.auth.state { return user }
         return nil
@@ -187,7 +197,22 @@ struct ClubGate: View {
     }
 
     var body: some View {
-        switch OpenAppGate.home(club: club.state, choice: choice) {
+        let home = OpenAppGate.home(club: club.state, choice: choice)
+        content(home)
+            // sql/060: deltaker i en klubbturnering uten å ha valgt: vennemodus, så turneringen vises.
+            .task(id: home == .chooser) {
+                guard home == .chooser,
+                      let rows = try? await ParticipationQueries.mine(client: services.client, userID: user.id) else { return }
+                chooseAutomatically(hasParticipations: !rows.isEmpty)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: CompetitionJoinEvents.joined)) { _ in
+                chooseAutomatically(hasParticipations: false, joinedByLink: true)
+            }
+    }
+
+    @ViewBuilder
+    private func content(_ home: AppHome) -> some View {
+        switch home {
         case .loading:
             VStack(spacing: DDSpacing.l) {
                 ProgressView("Henter klubben din …")
@@ -235,6 +260,13 @@ struct ClubGate: View {
             }
             .ddScreenBackground()
             .task { await club.reloadWhenOnline(userID: user.id) }
+        }
+    }
+
+    private func chooseAutomatically(hasParticipations: Bool, joinedByLink: Bool = false) {
+        if let next = OpenAppGate.automaticChoice(club: club.state, choice: choice, hasParticipations: hasParticipations,
+                                                  joinedByLink: joinedByLink) {
+            choose(next)
         }
     }
 

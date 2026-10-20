@@ -690,8 +690,9 @@ nonisolated private struct FakePurchaseBackend: PurchaseBackend {
         #expect(a.canInvite(theirs, entered, isDrawn: false))
         // Meldt av: ingen kode.
         #expect(!a.canInvite(theirs, [F.participant(7702, theirs, profile: F.me, status: .withdrawn)], isDrawn: false))
-        // Klubbens deles i klubben, og ferdige og trukne cuper tar ingen nye.
-        #expect(!F.access(organizer: true).canInvite(F.competition(7703, kind: .fun), [], isDrawn: false))
+        // Klubbens deles bare av arrangøren (sql/060), og ferdige og trukne cuper tar ingen nye.
+        #expect(F.access(organizer: true).canInvite(F.competition(7703, kind: .fun), [], isDrawn: false))
+        #expect(!a.canInvite(F.competition(7703, kind: .fun), [], isDrawn: false))
         #expect(!a.canInvite(F.competition(7704, kind: .fun, club: nil, owner: F.me, status: .finished), [], isDrawn: false))
         let cup = F.competition(7705, kind: .cup, club: nil, owner: F.me)
         #expect(a.canInvite(cup, [], isDrawn: false) && !a.canInvite(cup, [], isDrawn: true))

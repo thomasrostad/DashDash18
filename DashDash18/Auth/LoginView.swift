@@ -9,6 +9,8 @@ struct LoginView: View {
     var showsLegal = LegalLinks.isVisible
     /// Åpnet fra en klubbinvitasjon (`dashdash://klubb/KODE`): si at den er tatt vare på.
     var hasClubInvite = false
+    /// Åpnet fra en turneringslenke (`dashdash18.com/konkurranse/KODE`, sql/060).
+    var hasCompetitionInvite = false
     @Environment(AuthModel.self) private var auth
     @Environment(\.colorScheme) private var colorScheme
     @State private var appleNonce = ""
@@ -40,6 +42,11 @@ struct LoginView: View {
                             DDInfoStripe(tone: .earth) {
                                 Label("Invitasjonen er tatt vare på. Logg inn, så går du rett videre til klubben.",
                                       systemImage: "envelope.open")
+                            }
+                        } else if hasCompetitionInvite {
+                            DDInfoStripe(tone: .earth) {
+                                Label("Logg inn for å ta plassen din i turneringen. Lenken er tatt vare på.",
+                                      systemImage: "trophy")
                             }
                         }
                         switch step {
