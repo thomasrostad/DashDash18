@@ -239,13 +239,37 @@ nonisolated enum MatchDrawText {
 // MARK: - Lag
 
 nonisolated enum TeamPlanner {
-    /// Forslag til lag: lagstørrelsene fra `oppsettForAntall`, fylt i deltakernes rekkefølge.
+    /// Lagstørrelsene for antallet: `oppsettForAntall` når den går opp (et partall lag, som i PWA-en).
+    /// Former med ett kort per lag (scramble, foursome …) trenger ingen motstander, så der går det også
+    /// med et oddetall lag: så få lag som mulig, og lag som ikke blir fulle får én færre. Formen må tåle
+    /// skjeve lag for det; ellers må alle lag være fulle. `nil` når det ikke går opp.
+    static func sizes(players: Int, form: CompetitionForm, maxPerBay: Int) -> [Int]? {
+        if case .teams(let split, _, _) = form.setup(players: players, maxPerBay: maxPerBay) { return split.sizes }
+        let k = form.teamSize
+        guard form.card == .perTeam, k > 1, k <= maxPerBay else { return nil }
+        let count = (players + k - 1) / k
+        guard count >= 2, form.allowsUnevenTeams || players % k == 0 else { return nil }
+        let base = players / count, extra = players % count
+        return (0..<count).map { base + ($0 < extra ? 1 : 0) }
+    }
+
+    /// Hvorfor lagene ikke kan fordeles med antallet. `nil` når de kan.
+    static func unavailable(players: Int, form: CompetitionForm, maxPerBay: Int) -> String? {
+        guard sizes(players: players, form: form, maxPerBay: maxPerBay) == nil else { return nil }
+        if form.card == .perTeam, players >= 2 {
+            return "\(players) spillere går ikke opp i lag på \(form.teamSize) i \(form.name). "
+                + "Velg en annen form, eller endre hvem som er med."
+        }
+        return form.setup(players: players, maxPerBay: maxPerBay).reason
+    }
+
+    /// Forslag til lag: lagstørrelsene fra `sizes`, fylt i deltakernes rekkefølge.
     /// Tomt når formen ikke er en lagform eller ikke går opp med antallet.
     static func suggested(participants: [UUID], form: CompetitionForm, maxPerBay: Int) -> [UUID: Int] {
-        guard case .teams(let split, _, _) = form.setup(players: participants.count, maxPerBay: maxPerBay) else { return [:] }
+        guard form.isTeamForm, let sizes = sizes(players: participants.count, form: form, maxPerBay: maxPerBay) else { return [:] }
         var teams: [UUID: Int] = [:]
         var i = 0
-        for (number, size) in split.sizes.enumerated() {
+        for (number, size) in sizes.enumerated() {
             for _ in 0..<size where i < participants.count {
                 teams[participants[i]] = number + 1
                 i += 1
@@ -255,7 +279,7 @@ nonisolated enum TeamPlanner {
     }
 
     /// Tilfeldige lag (`Teams.random`): deltakerne stokkes med frøet, så fylles lagstørrelsene fra formen
-    /// som i `suggested`. Tomt når formen ikke går opp med antallet.
+    /// som i `suggested`. Tomt når formen ikke går opp med antallet (se `unavailable`).
     static func random(participants: [UUID], form: CompetitionForm, maxPerBay: Int, seed: UInt64) -> [UUID: Int] {
         let shuffled = Teams.random(participants.map(\.uuidString), teamSize: 1, seed: seed)
         let order = participants.sorted { (shuffled[$0.uuidString] ?? 0) < (shuffled[$1.uuidString] ?? 0) }
@@ -277,7 +301,10 @@ nonisolated enum TeamPlanner {
         for id in participants {
             if let team = teams[id] { counts[team, default: 0] += 1 }
         }
-        if counts.isEmpty { return "Sett opp lagene før du starter runden." }
+        if counts.isEmpty {
+            return unavailable(players: participants.count, form: form, maxPerBay: maxPerBay)
+                ?? "Sett opp lagene før du starter runden."
+        }
         if counts.count < 2 { return "Det må være minst to lag." }
         if withoutTeam > 0 {
             return withoutTeam == 1 ? "Én av deltakerne har ikke lag." : "\(withoutTeam) av deltakerne har ikke lag."
