@@ -4,7 +4,7 @@ Startet 20.10.2026. Kilder: `sql/README.md`, `docs/gjoremal.md`, `docs/lansering
 
 **Hvem:** (C) = Claude gjør det, (T) = Thomas gjør det, (C+T) = Claude forbereder og Thomas sier ja eller klikker.
 
-Prod-prosjektet er **Atten Prod** (`wxabhadvuzyrmndxpuza`, `eu-west-1`, Postgres 17.11), opprettet 20.10.2026. Test er `tsekialrxuhrugscosgi`.
+**20.10.2026: Atten 1.0 (build 181, mot prod) er sendt til App Review.** Prod-prosjektet er **Atten Prod** (`wxabhadvuzyrmndxpuza`, `eu-west-1`, Postgres 17.11), opprettet 20.10.2026. Test er `tsekialrxuhrugscosgi`.
 
 ## 1. Forberedelse i repoet (C)
 
@@ -39,7 +39,7 @@ Skal ikke kjøres: 009 (tatt med i 011), `010_kontroll.sql`, `lokal/` og `import
 - [x] 3.2 *(20.10, alle 58 uten feil)* Kjør migreringene i rekkefølgen over.
 - [x] 3.3 Webhooken og cron-jobbene kommer med 062. Ingen webhook skal lages i dashboardet.
 - [x] 3.4 *(20.10: alle 879 objekter er like på test og prod, med funksjonskroppene; eneste forskjell er Supabase sin egen `rls_auto_enable`)* Kontroller: Security Advisor, anon-tilgang (bare `calendar_feed` og `tv_board_data`), realtime-publikasjonen (27 tabeller), bøttene `avatars` og `thread`, og `app_config` (`min_ios_build`, `waitlist_offer_hours`).
-- [ ] 3.5 Første slope-sync for hånd (030).
+- [x] 3.5 *(20.10: 1 309 baner, 9 349 tees, 109 422 tee-hull)* Første slope-sync for hånd (030).
 
 ## 4. Edge Functions i prod (C)
 
@@ -50,15 +50,15 @@ Skal ikke kjøres: 009 (tatt med i 011), `010_kontroll.sql`, `lokal/` og `import
 
 ## 5. Web og app mot prod (C+T)
 
-- [ ] 5.1 Workeren `atten-lenker`: `SUPABASE_URL` til prod og ny `SUPABASE_KEY`. Det finnes bare én worker, så TV-, Tavla- og kalenderlenkene mot test slutter å virke ved byttet. `APP_STORE_URL` og teksten «hent appen» sier TestFlight.
+- [x] 5.1 *(20.10, #153)* Workeren `atten-lenker`: `SUPABASE_URL` til prod og ny `SUPABASE_KEY`. Det finnes bare én worker, så TV-, Tavla- og kalenderlenkene mot test slutter å virke ved byttet. `APP_STORE_URL` og teksten «hent appen» sier TestFlight.
 - [ ] 5.2 Web-admin: bygg på nytt med prod-verdier (`VITE_SUPABASE_URL` og `VITE_SUPABASE_KEY` blir bakt inn i bygget).
-- [ ] 5.3 Xcode Cloud: prod-verdiene i en egen workflow (T), sånn at TestFlight fra test kan gå videre.
+- [x] 5.3 *(20.10: workflowen «App Store (prod)», manuell start, ATTEN_ENVIRONMENT=prod (#155))* Xcode Cloud: prod-verdiene i en egen workflow (T), sånn at TestFlight fra test kan gå videre.
 - [ ] 5.4 Prøv appen mot prod med to kontoer: innlogging, klubb, runde, push og sletting av konto.
 
 ## 6. App Store (T, fra gjøremål C)
 
-- [ ] 6.1 Personvern og vilkår: navn eller firma, org.nr., adresse og verneting. Claude publiserer dem og setter `LegalLinks` (Apple krever dette).
-- [ ] 6.2 App Store Connect: navnet Atten, Paid Apps Agreement, kjøpene `no.atten.turnering.sesong` og `.ar`, In-App Purchase-nøkkelen, App Privacy, support-URL, aldersgrense, demokonto og sandbox-tester.
+- [x] 6.1 *(20.10: Thomas Rostad, Oslo tingrett, publisert #159)* Personvern og vilkår: navn eller firma, org.nr., adresse og verneting. Claude publiserer dem og setter `LegalLinks` (Apple krever dette).
+- [ ] 6.2 *(1.0 er gratis: navn Atten, App Privacy, 13+, gratis i Norge, header/søkebilde/skjermbilder og review-notat er på plass 20.10. Kjøpene venter til 1.1)* App Store Connect: navnet Atten, Paid Apps Agreement, kjøpene `no.atten.turnering.sesong` og `.ar`, In-App Purchase-nøkkelen, App Privacy, support-URL, aldersgrense, demokonto og sandbox-tester.
 - [ ] 6.3 Xcode: capability In-App Purchase. Slå av «Default»-workflowen i Xcode Cloud.
 - [ ] 6.4 Google OAuth-klient med prod-redirecten (valgfritt, flagget er av).
 - [ ] 6.5 Deretter: deploy `verify-purchase` og slå på `PurchaseFeature` og `GoogleLoginFeature`.
