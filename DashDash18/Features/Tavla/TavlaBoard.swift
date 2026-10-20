@@ -32,7 +32,7 @@ nonisolated extension TavlaStandings {
     /// Plassen i tabellen: «1=» ved delt plass, «3» ellers, «–» før første kveld og uten nok kvelder.
     func boardPlace(_ row: Row) -> String {
         guard hasResults, row.qualified else { return "–" }
-        let shared = rows.contains { $0.memberID != row.memberID && $0.qualified && $0.place == row.place }
+        let shared = boardRows.contains { $0.memberID != row.memberID && $0.qualified && $0.place == row.place }
         return shared ? "\(row.place)=" : "\(row.place)"
     }
 
@@ -54,14 +54,14 @@ nonisolated extension TavlaStandings {
 
     /// Bevegelsen for raden, nil når spilleren ikke hadde plass før (eller ikke har nå).
     func movement(_ row: Row) -> Movement? {
-        guard showsMovement, row.qualified, let before = previousPlaces?[row.memberID] else { return nil }
+        guard showsMovement, row.qualified, let before = boardPreviousPlaces?[row.memberID] else { return nil }
         let change = before - row.place
         return change > 0 ? .up(change) : change < 0 ? .down(-change) : .same
     }
 
     /// De som står likt på flest poeng (minst to), i tabellens rekkefølge. Tom ellers.
     var tiedLeaders: [Row] {
-        let ranked = rows.filter(\.qualified)
+        let ranked = boardRows.filter(\.qualified)
         guard hasResults, let top = ranked.first else { return [] }
         let tied = ranked.filter { $0.total == top.total }
         return tied.count > 1 ? tied : []
@@ -73,7 +73,8 @@ nonisolated extension TavlaStandings {
     var leadTieText: String? {
         let leaders = tiedLeaders
         guard status != .finished, let first = leaders.first else { return nil }
-        let names = RuleFormat.list(leaders.map(\.name))
+        // Lagtabellen: «2 lag står likt …», for lagnavnene er alt lister.
+        let names = isTeamBoard ? "\(leaders.count) lag" : RuleFormat.list(leaders.map(\.name))
         let lead = "\(names) står likt på \(points(first.total)) poeng."
         let prize = countsStableford ? "førsteplassen" : "jakka"
         let table = rules.table

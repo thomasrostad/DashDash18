@@ -95,7 +95,7 @@ struct TavlaTVView: View {
         // Stående: siste runde står under tabellen og tar sin del av høyden.
         let latestHeight: CGFloat = wide ? 0 : min(size.height * 0.36, 360 * scale)
         let perPage = max(3, Int((size.height - headerHeight - latestHeight - 40 * scale) / rowHeight))
-        let pages = TavlaTV.pages(count: standings.rows.count, perPage: perPage)
+        let pages = TavlaTV.pages(count: standings.boardRows.count, perPage: perPage)
         let latest = TavlaTV.latestRound(standings.roundGrid)
 
         return VStack(alignment: .leading, spacing: 16 * scale) {
@@ -106,7 +106,7 @@ struct TavlaTVView: View {
                         : Int(context.date.timeIntervalSinceReferenceDate / TavlaTV.pageSeconds) % pages.count
                     VStack(spacing: 0) {
                         if let range = pages.isEmpty ? nil : pages[page] {
-                            ForEach(standings.rows[range]) { row in
+                            ForEach(standings.boardRows[range]) { row in
                                 tableRow(row, standings: standings, scale: scale, showsDetail: wide)
                                     .frame(height: rowHeight)
                             }

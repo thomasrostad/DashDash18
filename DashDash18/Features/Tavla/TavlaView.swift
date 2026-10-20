@@ -218,7 +218,7 @@ private struct TavlaTableSection: View {
                 } else {
                     VStack(spacing: 0) {
                         TavlaColumnHeader(showsMovement: standings.showsMovement)
-                        ForEach(standings.rows) { row in
+                        ForEach(standings.boardRows) { row in
                             DDDivider()
                             NavigationLink {
                                 PlayerProfileView(standings: standings, memberID: row.memberID)
