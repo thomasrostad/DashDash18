@@ -238,7 +238,13 @@ final class RundeModel {
         case .loose(let loose):
             try await LooseRoundQueries.snapshot(client: client, roundID: loose.roundID)
         case .participant(let participant):
-            try await RundeQueries.snapshot(client: client, roundID: participant.roundID)
+            // Deltakeren kan ikke lese klubbens hovedturnering, som er reservereglene i
+            // `RundeQueries.rules`. Regelsettet fra rundens start (sql/048) er det runden spilles etter.
+            try await RundeQueries.snapshot(client: client, roundID: participant.roundID).map { s in
+                var s = s
+                if let frozen = s.freeze?.rules { s.rules = frozen }
+                return s
+            }
         }
     }
 
