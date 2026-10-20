@@ -19,6 +19,8 @@ final class AppServices {
         self.config = config
         // Før klienten lages: en økt fra en tidligere installasjon skal ikke brukes.
         FreshInstallGuard.run()
+        // Byttet mellom test og prod: data fra den andre basen ryddes før utboksen åpnes.
+        EnvironmentSwitchGuard.run(currentRef: config.projectRef)
         client = SupabaseClient(
             supabaseURL: config.supabaseURL,
             supabaseKey: config.publishableKey,

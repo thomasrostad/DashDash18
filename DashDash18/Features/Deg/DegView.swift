@@ -49,9 +49,12 @@ struct DegView: View {
             DegAccountSection(user: user)
             DegOpenAppSections(client: context?.client, user: user)
             DDSection("Om appen") {
-                LabeledContent("Miljø", value: config.environment.displayName)
-                LabeledContent("Database") {
-                    Text(config.projectRef).font(.ddMonoSmall)
+                // Miljø og database vises bare i test-bygg.
+                if config.environment != .prod {
+                    LabeledContent("Miljø", value: config.environment.displayName)
+                    LabeledContent("Database") {
+                        Text(config.projectRef).font(.ddMonoSmall)
+                    }
                 }
                 if SlopeNoFeature.isEnabled {
                     SlopeNoAboutRow()

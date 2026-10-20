@@ -57,6 +57,14 @@ struct AppConfigTests {
         #expect(AppEnvironment.current == .test)
     }
 
+    @Test func miljoFraInfoPlist() {
+        #expect(AppEnvironment.from(infoValue: "prod") == .prod)
+        #expect(AppEnvironment.from(infoValue: "test") == .test)
+        #expect(AppEnvironment.from(infoValue: "Prod") == .test)
+        #expect(AppEnvironment.from(infoValue: nil) == .test)
+        #expect(AppEnvironment.from(infoValue: 1) == .test)
+    }
+
     @Test func testKonfigLiggerIAppen() throws {
         let config = try AppConfig.load(.test)
         #expect(config.environment == .test)

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Hvilken Supabase appen snakker med. Prod finnes ikke ennå (ROADMAP fase 9).
+/// Hvilken Supabase appen snakker med: test (`tsekialrxuhrugscosgi`) eller Atten Prod (`wxabhadvuzyrmndxpuza`).
 nonisolated enum AppEnvironment: String, Sendable {
     case test
     case prod
@@ -15,8 +15,14 @@ nonisolated enum AppEnvironment: String, Sendable {
     /// Navnet på konfigfila i appen, f.eks. `Supabase-Test.plist`.
     var configFileName: String { "Supabase-\(displayName)" }
 
-    /// Miljøet dette bygget bruker. Alle bygg går mot test til prod er satt opp og godkjent.
-    static let current: AppEnvironment = .test
+    /// Miljøet dette bygget bruker, fra `AttenEnvironment` i `Info.plist`. Standard er test;
+    /// Xcode Cloud setter `prod` når workflowen har `ATTEN_ENVIRONMENT=prod` (`ci_post_clone.sh`).
+    static let current: AppEnvironment = from(infoValue: Bundle.main.object(forInfoDictionaryKey: "AttenEnvironment"))
+
+    /// Ukjent eller manglende verdi gir test, så et bygg aldri havner i prod ved en feil.
+    static func from(infoValue: Any?) -> AppEnvironment {
+        (infoValue as? String).flatMap(AppEnvironment.init(rawValue:)) ?? .test
+    }
 }
 
 /// Miljøkonfig lest fra `Config/Supabase-<Miljø>.plist`. Fila er holdt utenfor git.
