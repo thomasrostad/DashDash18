@@ -1,16 +1,16 @@
 # Vilkår for bruk av Atten
 
-*Sist endret: 7. oktober 2026 (versjon 2026-10).*
+*Sist endret: 20. oktober 2026 (versjon 2026-10).*
 
 Ved å bruke Atten godtar du disse vilkårene. De gjelder sammen med Apples standard lisensavtale for apper (Apple Standard EULA).
 
 ## 1. Tjenesten
 
-Atten lar deg føre golfrunder, spille med venner, være med i klubber og kjøre turneringer. Appen er gratis å bruke. Det koster å kjøre en turnering (se punkt 5).
+Atten lar deg føre golfrunder, spille med venner, være med i klubber og kjøre turneringer. Appen er gratis å bruke.
 
 ## 2. Kontoen din
 
-- Du logger inn med Apple, Google eller en kode på e-post. Du er ansvarlig for det som skjer med kontoen din.
+- Du logger inn med Apple eller en kode på e-post. Du er ansvarlig for det som skjer med kontoen din.
 - Du må være minst 13 år.
 - Du kan slette kontoen når som helst under **Deg → Slett konto**.
 
@@ -32,10 +32,7 @@ Veddemål, tips og spill på runden gjøres opp i **poeng**. Atten formidler ikk
 
 ## 5. Kjøp
 
-- Kjøp skjer i App Store, og Apples vilkår for kjøp gjelder.
-- **Kjør turneringen** låser opp én turnering så lenge den varer.
-- Et **abonnement** fornyes automatisk til du sier det opp i Innstillinger → Apple-ID → Abonnementer, senest 24 timer før perioden er over.
-- Refusjon søkes hos Apple (reportaproblem.apple.com).
+Atten har ingen kjøp i appen i dag. Kommer det kjøp senere, skjer de i App Store, Apples vilkår for kjøp gjelder, og vilkårene her oppdateres før kjøpene blir tilgjengelige. Refusjon søkes da hos Apple (reportaproblem.apple.com).
 
 ## 6. Ansvar
 
@@ -47,6 +44,6 @@ Vi kan endre vilkårene. Ved vesentlige endringer ber appen deg godta dem på ny
 
 ## 8. Lov og verneting
 
-Norsk lov gjelder. Tvister løses ved [Oslo tingrett].
+Norsk lov gjelder. Tvister løses ved Oslo tingrett.
 
 Kontakt: personvern@dashdash18.com

@@ -1,10 +1,10 @@
 # Personvernerklæring for Atten
 
-*Sist endret: 12. oktober 2026.*
+*Sist endret: 20. oktober 2026.*
 
 Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer. Her står hvilke opplysninger appen bruker, hvorfor, og hva du kan gjøre med dem.
 
-**Behandlingsansvarlig:** [Navn / firma, organisasjonsnummer, adresse]. Kontakt: personvern@dashdash18.com.
+**Behandlingsansvarlig:** Thomas Rostad, som utvikler og driver Atten. Kontakt: personvern@dashdash18.com.
 
 ## Kort fortalt
 
@@ -17,14 +17,14 @@ Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer
 
 | Opplysning | Hvorfor | Grunnlag (GDPR) |
 |---|---|---|
-| E-postadresse, eller innlogging med Apple eller Google | For at du skal kunne logge inn | Avtale (art. 6 nr. 1 b) |
+| E-postadresse, eller innlogging med Apple | For at du skal kunne logge inn | Avtale (art. 6 nr. 1 b) |
 | Navn og handicapindeks | For å regne poeng og vise deg på tabellen | Avtale |
 | Scorer, runder, matcher, sidepremier, tips, veddemål i poeng og statistikk du fører selv | Det er selve tjenesten | Avtale |
 | Meldinger og bilder i kveldens tråd, og portrettet ditt | For at gjengen skal kunne snakke sammen | Avtale |
 | Push-token (en kode for telefonen din) og varselvalgene dine | For å sende varsler du har slått på | Samtykke (du sier ja i iOS), kan trekkes når som helst |
 | Regninger du deler («Del regningen»): hva det gjelder, beløpet, hvem som skal betale, og om delen er sendt og mottatt. Vipps-nummeret ditt bare når du selv får pengene og legger det inn | For at gjengen skal kunne gjøre opp. Ingen penger går gjennom appen | Avtale |
 | Kalenderlenken din (en tilfeldig kode) | For at kveldene du er påmeldt på, skal dukke opp i kalenderen din | Avtale |
-| Kjøp i appen (produkt, transaksjons-id, status) | For å låse opp turneringer du har betalt for | Avtale og regnskapsplikt |
+| Kjøp i appen (produkt, transaksjons-id, status), når kjøp blir tilgjengelig | For å låse opp det du har betalt for | Avtale og regnskapsplikt |
 | Rapporter og blokkeringer | For å holde appen fri for støtende innhold | Berettiget interesse (art. 6 nr. 1 f) |
 | Hvem du følger og hvem som følger deg, om du vil godkjenne følgere og være synlig i søket, QR-koden din, og en logg over søk og forespørsler (slettes etter to døgn) | For at du skal kunne følge andre spillere, og for å hindre misbruk av søket | Avtale, og berettiget interesse for loggen |
 
@@ -46,7 +46,7 @@ Appen ber om tilgang til kameraet bare når du vil ta et bilde til tråden eller
 
 ## Hvor dataene ligger
 
-Dataene lagres hos **Supabase** (database, innlogging, fillagring og serverfunksjoner) i et datasenter i EU. Supabase er databehandler for oss, med databehandleravtale. Varsler sendes gjennom **Apple Push Notification service**. Kjøp går gjennom **Apple (App Store)**; vi får aldri kortopplysningene dine. E-post med innloggingskode sendes gjennom **Resend**. Logger du inn med **Google** eller **Apple**, får vi navnet og e-postadressen du godkjenner der.
+Dataene lagres hos **Supabase** (database, innlogging, fillagring og serverfunksjoner) i et datasenter i EU. Supabase er databehandler for oss, med databehandleravtale. Varsler sendes gjennom **Apple Push Notification service**. Kommer det kjøp i appen, går de gjennom **Apple (App Store)**; vi får aldri kortopplysningene dine. E-post med innloggingskode sendes gjennom **Resend**. Logger du inn med **Apple**, får vi navnet og e-postadressen du godkjenner der.
 
 ## Hvor lenge
 
@@ -58,7 +58,7 @@ Vi lagrer opplysningene så lenge du har en konto. Sletter du kontoen:
 - navnet ditt byttes til **«Slettet spiller»** i klubber og runder, mens scorene står, slik at tabellene til de andre ikke endres,
 - kjøpsopplysninger beholdes uten kobling til deg så lenge regnskapsloven krever det.
 
-Sikkerhetskopier hos Supabase slettes automatisk etter høyst [7] dager.
+Sikkerhetskopier hos Supabase slettes automatisk etter høyst 7 dager.
 
 ## Rettighetene dine
 
