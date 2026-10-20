@@ -1,5 +1,5 @@
 -- 059_deltakere.sql — deltakere i klubbturneringer (ikke medlemmer) og NGF-medlemsnummer.
--- Til godkjenning (retningen godkjent 20.10.2026). Ikke kjørt på test eller prod.
+-- Godkjent og kjørt på test 20.10.2026 (rolleprøve i transaksjon som ble rullet tilbake: ok). Ikke kjørt på prod.
 --
 -- Bakgrunn: en spiller i en runde må stå i klubbens tropp (round_players → club_members). Den som
 -- melder seg på en åpen klubbturnering uten å være medlem, ble bare `competition_participants.profile_id`
