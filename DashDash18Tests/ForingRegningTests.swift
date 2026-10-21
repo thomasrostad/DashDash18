@@ -421,4 +421,34 @@ struct ForingFeiringTests {
         #expect(rows.map(\.thru) == [2, 1, 0])
         #expect(rows[1].isMe)
     }
+
+    /// Scratchspillere: Anders har tre bogeyer (3 p etter 3 hull), Bjørn par på første (2 p etter 1),
+    /// Cato har ikke ført noe.
+    static let pacePlayers = [F.P(n: 1, name: "Anders", handicap: 0), F.P(n: 2, name: "Bjørn", handicap: 0),
+                              F.P(n: 3, name: "Cato", handicap: 0)]
+    static let paceScores = [(1, 0, 5), (1, 1, 6), (1, 2, 4), (2, 0, 4)]
+
+    @Test func underveisRangeresPaaPoengMotPar() {
+        let g = RoundGame(F.snapshot(Self.pacePlayers, scores: Self.paceScores))
+        #expect(g.ranksByPace)
+        let viewer = Viewer(memberID: id(1), isOrganizer: false)
+        #expect(g.standings(viewer: viewer).map(\.name) == ["Bjørn", "Anders", "Cato"])
+        let rows = g.bayenNaa(viewer: viewer)
+        #expect(rows.map(\.name) == ["Bjørn", "Anders", "Cato"])
+        #expect(rows.map(\.total) == [2, 3, 0])
+        #expect(rows.map(\.paceText) == ["på par", "3 p under par", nil])
+    }
+
+    @Test func laastRundeRangeresPaaSummen() {
+        let g = RoundGame(F.snapshot(Self.pacePlayers, round: F.round(status: .locked), scores: Self.paceScores))
+        #expect(!g.ranksByPace)
+        let rows = g.bayenNaa(viewer: Viewer(memberID: id(1), isOrganizer: false))
+        #expect(rows.map(\.name) == ["Anders", "Bjørn", "Cato"])
+        #expect(rows.allSatisfy { $0.paceText == nil })
+    }
+
+    @Test func overskriftenFoelgerStedet() {
+        #expect(GroupTerm.bay.standingsTitle == "Bayen nå")
+        #expect(GroupTerm.flight.standingsTitle == "Flighten nå")
+    }
 }

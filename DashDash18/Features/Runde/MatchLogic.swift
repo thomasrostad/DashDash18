@@ -242,16 +242,54 @@ nonisolated struct BayenRow: Equatable, Identifiable, Sendable {
     /// Det som står til høyre: «24», «24 p», «1 opp», «Delt» eller «—».
     let value: String
     let tone: MatchTone
+    /// Poeng mot par så langt («2 p over par»), når runden går og rangeres på det. Ellers nil.
+    var paceText: String? = nil
     var id: UUID { members[0] }
     /// Den som åpnes i scorekortet.
     var memberID: UUID { members[0] }
 }
 
 nonisolated extension RoundGame {
+    /// Rangeres stillingen på poeng mot par (`pace`)? Bare individuell stableford mens runden går og
+    /// ikke er avkortet: da teller ikke hvor mange hull hver har ført. Ellers (låst, avkortet, lag,
+    /// match, par/bogey) på summen, som tabellen.
+    var ranksByPace: Bool {
+        guard status == .active, !Truncation.isTruncated(round), !isDecidedHoleByHole,
+              round.form.card != .perTeam, case .stableford = round.form.axes.scoring else { return false }
+        return true
+    }
+
+    /// Poeng mot par etter `thru` hull: summen minus netto par-poengene for hullene som er ført.
+    func pace(total: Int, thru: Int) -> Int {
+        total - rules.scoring.netParPoints * thru
+    }
+
+    /// Rekkefølgen i stillingen for to spillere eller lag som ikke står i match. Med `ranksByPace`:
+    /// best mot par først, og de som ikke har ført noe, sist. Ellers flest poeng først.
+    /// Likt: norsk navnesortering.
+    func standsBefore(_ a: (name: String, total: Int, thru: Int), _ b: (name: String, total: Int, thru: Int)) -> Bool {
+        if ranksByPace {
+            if (a.thru == 0) != (b.thru == 0) { return b.thru == 0 }
+            let pa = pace(total: a.total, thru: a.thru), pb = pace(total: b.total, thru: b.thru)
+            if pa != pb { return pa > pb }
+        } else if a.total != b.total {
+            return a.total > b.total
+        }
+        return NorwegianSort.areInIncreasingOrder(a.name, b.name)
+    }
+
+    /// «2 p over par», «1 p under par», «på par». Nil uten ført hull.
+    static func paceText(_ pace: Int, thru: Int) -> String? {
+        guard thru > 0 else { return nil }
+        if pace == 0 { return "på par" }
+        return "\(abs(pace)) p \(pace > 0 ? "over" : "under") par"
+    }
+
     /// «Bayen nå» som i PWA-en: avgjøres runden hull for hull, viser matchspillerne stillingen
     /// (flest hull opp først, så flest hull ført) og kommer før dem på poeng. Ellers flest
-    /// poeng først. Likt: norsk navnesortering. Formene med ett kort per lag: én rad per lag
-    /// med lagets sum. Par/bogey: summen mot banen (regel 21.3), vist med fortegn.
+    /// poeng først, eller best mot par mens runden går (`ranksByPace`). Likt: norsk
+    /// navnesortering. Formene med ett kort per lag: én rad per lag med lagets sum.
+    /// Par/bogey: summen mot banen (regel 21.3), vist med fortegn.
     func bayenNaa(viewer: Viewer) -> [BayenRow] {
         let holeByHole = isDecidedHoleByHole
         let perTeam = round.form.card == .perTeam
@@ -300,13 +338,13 @@ nonisolated extension RoundGame {
                 let ua = a.match?.up ?? 0, ub = b.match?.up ?? 0
                 if ua != ub { return ua > ub }
                 if a.thru != b.thru { return a.thru > b.thru }
-            } else if a.total != b.total {
-                return a.total > b.total
+                return NorwegianSort.areInIncreasingOrder(a.name, b.name)
             }
-            return NorwegianSort.areInIncreasingOrder(a.name, b.name)
+            return standsBefore((a.name, a.total, a.thru), (b.name, b.total, b.thru))
         }
 
         let me = viewer.memberID
+        let byPace = ranksByPace
         return entries.enumerated().map { i, e in
             BayenRow(members: e.members, name: e.name, isMe: e.members.contains(me), thru: e.thru,
                      bay: snapshot.players.first { $0.memberID == e.members[0] }?.bayNo,
@@ -314,7 +352,8 @@ nonisolated extension RoundGame {
                      value: e.inMatch ? MatchPlay.shortText(e.match)
                         : parBogey != nil ? RoundCompetitionBoard.signedText(Double(e.total))
                         : "\(e.total)" + (holeByHole ? " p" : ""),
-                     tone: e.inMatch ? MatchTone(e.match) : .neutral)
+                     tone: e.inMatch ? MatchTone(e.match) : .neutral,
+                     paceText: byPace ? Self.paceText(pace(total: e.total, thru: e.thru), thru: e.thru) : nil)
         }
     }
 }

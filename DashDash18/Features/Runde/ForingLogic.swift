@@ -695,16 +695,14 @@ nonisolated extension RoundGame {
         Scoring.points(from: scores(member), in: round, handicap: handicap(member), rules: rules)
     }
 
-    /// «Bayen nå»: alle i runden, flest poeng først. Likt: norsk navnesortering.
+    /// «Bayen nå»: alle i runden, flest poeng først (best mot par mens runden går, `standsBefore`).
     func standings(viewer: Viewer) -> [StandingRow] {
         snapshot.players
             .map { p in
                 StandingRow(memberID: p.memberID, name: name(p.memberID), total: total(p.memberID),
                             thru: scores(p.memberID).count, bay: p.bayNo, isMe: p.memberID == viewer.memberID)
             }
-            .sorted { a, b in
-                a.total != b.total ? a.total > b.total : NorwegianSort.areInIncreasingOrder(a.name, b.name)
-            }
+            .sorted { a, b in standsBefore((a.name, a.total, a.thru), (b.name, b.total, b.thru)) }
     }
 }
 

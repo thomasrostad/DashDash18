@@ -78,7 +78,7 @@ nonisolated enum RoundCompetitionBoard {
                 detail: comp.map { detail($0, holeCount: game.holeCount, firstHole: s.round.firstHole, rules: frozen.ruleset) } ?? "",
                 supported: supported,
                 lines: supported ? (result?.rows ?? []).map { line($0, scoring: comp!.scoring, game: game) } : [],
-                emptyText: comp.map { emptyText($0, isMain: row.isMain) } ?? "Ingen scorer ennå"
+                emptyText: comp.map { emptyText($0, isMain: row.isMain, term: game.groupTerm) } ?? "Ingen scorer ennå"
             )
         }
     }
@@ -147,10 +147,10 @@ nonisolated enum RoundCompetitionBoard {
     }
 
     /// Uten rader: en match mangler sidene (med én ball: to lag), ellers er det ingen scorer ennå.
-    static func emptyText(_ comp: RoundCompetition, isMain: Bool) -> String {
+    static func emptyText(_ comp: RoundCompetition, isMain: Bool, term: GroupTerm = .bay) -> String {
         if comp.scoring == .matchPlay, comp.teamForm.playsOneBall, !isMain { return "Mangler to lag." }
         guard comp.scoring == .matchPlay, (comp.entrants?.count ?? 0) != 2 else { return "Ingen scorer ennå" }
-        return isMain ? "Matchene i runden står i «Bayen nå»." : "Mangler to spillere eller lag mot lag."
+        return isMain ? "Matchene i runden står i «\(term.standingsTitle)»." : "Mangler to spillere eller lag mot lag."
     }
 
     /// Taket i maksimumscore: «tak netto dobbel bogey» eller «tak 8 slag».
