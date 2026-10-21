@@ -12,9 +12,9 @@ struct RapporterBanerTurneringerTests {
         return CourseListItem(course: row, holes: [], isFromSource: fromSource)
     }
 
-    @Test func flaggetErAvTil066ErKjoert() {
-        #expect(!PublicContentReportFeature.flag)
-        #expect(!PublicContentReportFeature.isEnabled)
+    @Test func flaggetErPaaEtter066() {
+        #expect(PublicContentReportFeature.flag)
+        #expect(PublicContentReportFeature.isEnabled == ModerationFeature.isEnabled)
     }
 
     @Test func nyeTyperMedTekster() {

@@ -29,7 +29,8 @@ nonisolated enum ModerationFeature {
 /// `sql/066_rapporter_baner_turneringer.sql` (typene `course` og `competition` i `report_content`
 /// og `my_hidden_content`). Av til 066 er kjørt på test og prod; uten 066 ville rapporten feile.
 nonisolated enum PublicContentReportFeature {
-    static let flag = false
+    /// På 21.10.2026: 066 er kjørt på test og prod, og report-alert er deployet begge steder.
+    static let flag = true
     static let isEnabled = flag && ModerationFeature.isEnabled
 }
 
