@@ -1,4 +1,4 @@
--- 068: anbefalt bygg og nødbrytere i app_config (1.0.2, docs/utgivelser.md). Kjørt på test 21.10.2026.
+-- 068: anbefalt bygg og nødbrytere i app_config (1.0.2, docs/utgivelser.md). Kjørt på test og prod 21.10.2026.
 --
 -- app_config (031) har min_ios_build: bygg under den får «Oppdater Atten» og kommer ikke videre.
 -- Det virker fra 1.0. Fra 1.0.2 leser appen også:
