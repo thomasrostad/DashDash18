@@ -18,8 +18,20 @@
 
 import { activityDisplay, type JobPayload, MAX_AGE_MS, nameLookup } from "./logic.ts";
 
-/** Linjene som kan gå som e-post. Samme liste som push_email_kinds() i 046. */
-export const EMAIL_KINDS = ["announcement", "nudge", "reminder", "waitlist_promoted", "signup_dropped"] as const;
+/** Linjene som kan gå som e-post. Samme liste som push_email_kinds() i 046 (og 067). */
+export const EMAIL_KINDS = [
+  "announcement", "nudge", "reminder", "waitlist_promoted", "signup_dropped", "member_pending",
+] as const;
+
+/** Hva mottakeren gjør i appen, når det er noe bestemt. Ellers «Åpne Atten for å se mer.» */
+function emailNextStep(kind: string): string {
+  switch (kind) {
+    case "member_pending":
+      return "Godkjenn eller avvis i Atten under Arrangør → Troppen.";
+    default:
+      return "Åpne Atten for å se mer.";
+  }
+}
 
 export interface SmtpConfig {
   host: string;
@@ -65,15 +77,19 @@ export function emailEligible(payload: JobPayload, now: Date): boolean {
   return Number.isFinite(t) && now.getTime() - t <= MAX_AGE_MS.activity;
 }
 
-/** Emne og tekst. Samme tekst som pushen, uten emoji i emnet. Kort, på norsk. */
+/**
+ * Emne og tekst. Samme tekst som pushen, uten emoji i emnet. Kort, på norsk. member_pending har
+ * klubben i teksten («Ola vil bli med i Golfgutu Invitational»), så den gjentas ikke foran.
+ */
 export function emailMessage(payload: JobPayload, to: string): EmailMessage {
   const display = activityDisplay(payload.activity!, nameLookup(payload.members), payload.day_term);
   const title = payload.club.name;
-  const subject = `${title}: ${display.text}`.replace(/\s+/g, " ").slice(0, 150);
+  const head = payload.activity!.kind === "member_pending" ? display.text : `${title}: ${display.text}`;
+  const subject = head.replace(/\s+/g, " ").slice(0, 150);
   const text = [
     `${display.emoji} ${display.text}`,
     "",
-    "Åpne Atten for å se mer.",
+    emailNextStep(payload.activity!.kind),
     "",
     "Du får denne e-posten fordi du ikke har varsler på telefonen.",
     "Slå den av i Atten under Deg → Varsler.",

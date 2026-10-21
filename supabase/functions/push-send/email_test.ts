@@ -69,6 +69,22 @@ Deno.test("emnet og teksten: samme tekst som pushen, kort og på norsk", () => {
   ok(!m.text.includes("—"), "ingen tankestrek");
 });
 
+Deno.test("ventende medlem (sql/067): e-post til arrangøren uten push, med Troppen som neste steg", () => {
+  const pending = payload("member_pending", "club",
+    { member: "ny-1", name: "Ola Nordmann", club_name: "Golfgutu Invitational" },
+    { actor_member_id: "ny-1", event_id: null, recipients: [THOMAS] });
+  ok(emailEligible(pending, NOW));
+  ok(!emailEligible(payload("member_pending", "club", { name: "Ola" }, { created_at: "2026-10-08T17:00:00Z" }), NOW),
+    "for gammel (ventet fra før 067)");
+  const m = emailMessage(pending, "thomas@example.no");
+  is(m.subject, "Ola Nordmann vil bli med i Golfgutu Invitational");
+  ok(m.text.startsWith("🙋 Ola Nordmann vil bli med i Golfgutu Invitational\r\n"));
+  ok(m.text.includes("Godkjenn eller avvis i Atten under Arrangør → Troppen."));
+  ok(!m.text.includes("Åpne Atten for å se mer."));
+  // De andre linjene som før.
+  ok(emailMessage(ANNOUNCEMENT, "per@example.no").text.includes("Åpne Atten for å se mer."));
+});
+
 Deno.test("MIME: UTF-8 i emnet og base64 i teksten", () => {
   is(encodeHeader("Hei"), "Hei");
   is(encodeHeader("Påmelding"), "=?UTF-8?B?UMOlbWVsZGluZw==?=");

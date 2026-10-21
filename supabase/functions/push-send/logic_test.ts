@@ -23,6 +23,7 @@ import {
   isRecipient,
   type JobPayload,
   type MemberPayload,
+  memberPendingText,
   nameLookup,
   planPush,
   playerAllows,
@@ -1009,4 +1010,58 @@ Deno.test("varselet: klubb og turnering, så trykket åpner riktig sted (PR #124
   // Turnering uten klubb (sql/046): ingen club_id.
   const noClub = { ...job(EAGLE), club: { id: null, name: "Morrocupen", disabled_categories: [] } };
   ok(!("club_id" in planPush(noClub, NOW).notifications[0].data));
+});
+
+// ---------------------------------------------------------------------------
+// Ventende medlem (sql/067)
+// ---------------------------------------------------------------------------
+
+const OLA = "00000000-0000-0000-0000-000000000067"; // venter, ingen push
+
+function pendingJob(extra: Partial<ActivityPayload> = {}, opts: { members?: MemberPayload[] } = {}): JobPayload {
+  const a = activity("member_pending", "club", { member: OLA, name: "Ola Nordmann", club_name: "Golfgutu Invitational" }, {
+    actor_member_id: OLA, event_id: null, round_id: null, recipients: [THOMAS, CATO], round_status: null, ...extra,
+  });
+  const ola = member(OLA, "Ola Nordmann", { active: false, devices: [] });
+  return { ...job(a, { members: opts.members ?? [...members(), ola] }), group: "organizer", collapse: null, audience: "club" };
+}
+
+Deno.test("ventende medlem: teksten er navnet og klubben", () => {
+  const name = nameLookup(members());
+  eq(activityDisplay(pendingJob().activity!, name), { emoji: "🙋", text: "Ola Nordmann vil bli med i Golfgutu Invitational" });
+  is(memberPendingText({ member: ANDERS }, name, "Golfgutu"), "Anders vil bli med i Golfgutu");
+  is(memberPendingText({ name: "  Ola  " }, name), "Ola vil bli med i klubben");
+  eq(activityDisplay(activity("member_pending", "club", {}), name), { emoji: "🔔", text: "Ny hendelse i klubben" });
+});
+
+Deno.test("ventende medlem: bare arrangørene med rettigheten, med dyplenke til Troppen", () => {
+  const plan = planPush(pendingJob(), NOW);
+  eq(plan.notifications.map((n) => n.memberId).sort(), [CATO, THOMAS].sort());
+  const n = plan.notifications[0];
+  is(n.title, "Golfgutu");
+  is(n.body, "🙋 Ola Nordmann vil bli med i Golfgutu Invitational");
+  is(n.category, "club");
+  is(n.threadId, "club-club-1");
+  is(n.collapseId, undefined);
+  // Appen åpner Arrangør → Troppen i riktig klubb (PushTap, kind member_pending).
+  eq(n.data, { type: "activity", activity_id: "act-1", kind: "member_pending", club_id: "club-1" });
+  eq(apnsBody(n).dd18, { type: "activity", activity_id: "act-1", kind: "member_pending", club_id: "club-1", category: "club" });
+});
+
+Deno.test("ventende medlem: den som venter står bak (blokkering), og valgene virker", () => {
+  ok(pushOriginators(pendingJob()).includes(OLA));
+  // Thomas har blokkert Ola: ingen push til Thomas.
+  const blocked = attachBlocks(pendingJob(), [{ id: THOMAS, user_id: "u-thomas" }, { id: OLA, user_id: "u-ola" }],
+    [{ blocker_id: "u-thomas", blocked_id: "u-ola" }]);
+  eq(planPush(blocked, NOW).notifications.map((n) => n.memberId), [CATO]);
+  // Klubben eller spilleren har slått av «Klubben».
+  is(planPush({ ...pendingJob(), club: { id: "club-1", name: "Golfgutu", disabled_categories: ["club"] } }, NOW).skipped,
+    "club er av for klubben");
+  const off = pendingJob({}, { members: members().map((m) => m.id === CATO ? { ...m, disabled_categories: ["club"] } : m) });
+  eq(planPush(off, NOW).notifications.map((n) => n.memberId), [THOMAS]);
+  // Gruppen Arrangør av (push_job_payload gir group_off og ingen telefoner).
+  const groupOff = pendingJob({}, { members: members().map((m) => m.id === THOMAS ? { ...m, group_off: true, devices: [] } : m) });
+  eq(planPush(groupOff, NOW).notifications.map((n) => n.memberId), [CATO]);
+  // Eldre enn 30 minutter (ventet fra før 067): ingen push.
+  is(planPush(pendingJob({ created_at: "2026-10-08T16:00:00Z" }), NOW).skipped, "for gammel");
 });

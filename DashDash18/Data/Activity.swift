@@ -143,6 +143,8 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
     var authorProfile: UUID? = nil
     /// `bet_resolved` (sql/052): avgjort av serveren (`bet-settle`) fra scorene.
     var server: Bool? = nil
+    /// `member_pending` (sql/067): klubben slik den het da. Navnet på den som venter står i `name`.
+    var clubName: String? = nil
 
     init(member: UUID? = nil, members: [UUID]? = nil, hole: Int? = nil, holeIndex: Int? = nil, name: String? = nil,
          strokes: Int? = nil, par: Int? = nil, afterHole: Int? = nil, leaders: [UUID]? = nil, points: Int? = nil,
@@ -225,6 +227,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         case authorName = "author_name"
         case authorProfile = "author_profile"
         case server
+        case clubName = "club_name"
     }
 
     /// Tåler felt med feil type (en annen klient, en eldre versjon): feltet blir nil,
@@ -280,6 +283,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
         authorName = get(.authorName)
         authorProfile = get(.authorProfile)
         server = get(.server)
+        clubName = get(.clubName)
     }
 }
 
@@ -477,6 +481,10 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     case mentioned(SocialComment)
     /// «Ta et bilde av gjengen» når runden låses (sql/050, til spillerne i runden).
     case photoPrompt(eventDate: String?, roundNo: Int?, courseName: String?)
+    /// Noen har bedt om å bli med i klubben og venter på godkjenning (sql/067, skrevet av serveren
+    /// til dem med Medlemmer og invitasjon). `member` er den ventende raden, `name` navnet slik det
+    /// ble skrevet og `clubName` klubben. Kategori `club`, gruppe Arrangør.
+    case memberPending(member: UUID, name: String?, clubName: String?)
     case unknown(kind: String)
 
     /// Alle kjente nøkler, for tester og dokumentasjon.
@@ -485,7 +493,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         "score_corrected", "signup", "nudge", "reminder", "announcement", "committee_drawn",
         "member_joined", "tips_king", "bet_created", "bet_challenge", "bet_resolved", "table_changed",
         "waitlist_promoted", "signup_dropped", "evening_started", "comment_added", "mentioned", "photo_prompt",
-        "bill_share_sent", "bill_share_disputed",
+        "bill_share_sent", "bill_share_disputed", "member_pending",
     ]
 
     var kind: String {
@@ -516,6 +524,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .commentAdded: "comment_added"
         case .mentioned: "mentioned"
         case .photoPrompt: "photo_prompt"
+        case .memberPending: "member_pending"
         case .unknown(let kind): kind
         }
     }
@@ -532,7 +541,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .reminder: .reminder
         case .announcement: .announcement
         case .committeeDrawn, .commentAdded, .mentioned, .photoPrompt, .billShareSent, .billShareDisputed: .social
-        case .memberJoined: .club
+        case .memberJoined, .memberPending: .club
         case .tipsKing: .tips
         case .betCreated, .betChallenge, .betResolved: .bet
         case .unknown: .club
@@ -597,6 +606,12 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             c.data
         case let .photoPrompt(eventDate, roundNo, courseName):
             ActivityData(eventDate: eventDate, roundNo: roundNo, courseName: courseName)
+        case let .memberPending(member, name, clubName):
+            {
+                var d = ActivityData(member: member, name: name)
+                d.clubName = clubName
+                return d
+            }()
         case .unknown:
             ActivityData()
         }
@@ -683,6 +698,9 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             self = .mentioned(SocialComment(d))
         case "photo_prompt":
             self = .photoPrompt(eventDate: d.eventDate, roundNo: d.roundNo, courseName: d.courseName)
+        case "member_pending":
+            guard let member = d.member else { self = .unknown(kind: kind); return }
+            self = .memberPending(member: member, name: d.name, clubName: d.clubName)
         default:
             self = .unknown(kind: kind)
         }
@@ -745,6 +763,12 @@ nonisolated enum ActivityText {
     /// «Thomas sier at din del for Simulatorleie ikke kom» (sql/051).
     static func billShareDisputed(title: String?, name: String?) -> String {
         "\(nonEmpty(name) ?? "Mottakeren") sier at din del for \(nonEmpty(title) ?? "regningen") ikke kom"
+    }
+
+    /// «Ola Nordmann vil bli med i Golfgutu Invitational» (sql/067). Samme tekst som push-send
+    /// (`memberPendingText`).
+    static func memberPending(name: String, clubName: String?) -> String {
+        "\(name) vil bli med i \(nonEmpty(clubName) ?? "klubben")"
     }
 
     private static func nonEmpty(_ text: String?) -> String? {
@@ -886,6 +910,10 @@ nonisolated enum ActivityText {
 
         case let .memberJoined(member):
             return ActivityDisplay(symbol: "person.badge.plus", emoji: "⛳", text: "\(who(member)) ble med i klubben")
+
+        case let .memberPending(member, name, clubName):
+            return ActivityDisplay(symbol: "person.badge.clock", emoji: "🙋",
+                                   text: memberPending(name: nonEmpty(name) ?? who(member), clubName: clubName))
 
         case let .tipsKing(members, correct, possible, eventDate):
             let title = members.count > 1 ? "Tippekongene" : "Tippekongen"

@@ -361,6 +361,8 @@ private struct HjemClubContent: View {
         case .notifications: route = .notifications
         case .tavla: selectTab(.tavla)
         case .home: route = nil
+        // Åpnes av RootView på Arrangør-fanen.
+        case .roster: selectTab(.arrangor)
         }
     }
 

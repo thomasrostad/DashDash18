@@ -29,10 +29,16 @@ nonisolated enum PushDestination: Equatable, Sendable {
     case notifications
     /// Hjem, uten noe mer (ny spiller, slettet runde).
     case home
+    /// Arrangør → Troppen: noen vil bli med i klubben (sql/067, `PendingMembersFeature`).
+    case roster
 
     /// Fanen skjermen ligger i.
     var tab: AppTab {
-        self == .tavla ? .tavla : .hjem
+        switch self {
+        case .tavla: .tavla
+        case .roster: .arrangor
+        default: .hjem
+        }
     }
 }
 
@@ -48,9 +54,10 @@ nonisolated struct PushTap: Equatable, Sendable {
     }
 
     /// Fra `userInfo`. nil når innholdet mangler, er ukjent eller ikke holder til en skjerm.
-    init?(userInfo: [AnyHashable: Any], bets: Bool = BetsFeature.isEnabled) {
+    init?(userInfo: [AnyHashable: Any], bets: Bool = BetsFeature.isEnabled,
+          pendingMembers: Bool = PendingMembersFeature.isEnabled) {
         guard let data = userInfo["dd18"] as? [String: Any],
-              let destination = Self.destination(data, bets: bets) else { return nil }
+              let destination = Self.destination(data, bets: bets, pendingMembers: pendingMembers) else { return nil }
         self.destination = destination
         clubID = Self.uuid(data["club_id"])
     }
@@ -59,7 +66,7 @@ nonisolated struct PushTap: Equatable, Sendable {
         (value as? String).flatMap(UUID.init(uuidString:))
     }
 
-    private static func destination(_ data: [String: Any], bets: Bool) -> PushDestination? {
+    private static func destination(_ data: [String: Any], bets: Bool, pendingMembers: Bool) -> PushDestination? {
         let event = uuid(data["event_id"])
         switch data["type"] as? String {
         case "thread":
@@ -67,14 +74,14 @@ nonisolated struct PushTap: Equatable, Sendable {
         case "activity":
             guard let kind = data["kind"] as? String else { return nil }
             return activity(kind, event: event, round: uuid(data["round_id"]),
-                            competition: uuid(data["competition_id"]), bets: bets)
+                            competition: uuid(data["competition_id"]), bets: bets, pendingMembers: pendingMembers)
         default:
             return nil
         }
     }
 
     private static func activity(_ kind: String, event: UUID?, round: UUID?, competition: UUID?,
-                                 bets: Bool) -> PushDestination? {
+                                 bets: Bool, pendingMembers: Bool) -> PushDestination? {
         switch kind {
         case "round_started", "evening_started", "lead_changed", "big_score", "side_prize", "score_corrected":
             // En runde med kveld er klubbens; uten kveld er den løs (eller en turnering uten klubb).
@@ -98,6 +105,8 @@ nonisolated struct PushTap: Equatable, Sendable {
             return .bills
         case "table_changed":
             return competition.map(PushDestination.competition) ?? .tavla
+        case "member_pending":
+            return pendingMembers ? .roster : .home
         default:
             return nil
         }
