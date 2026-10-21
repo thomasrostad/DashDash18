@@ -2,6 +2,7 @@ import AuthenticationServices
 import SwiftUI
 
 /// Innlogging med Apple, Google (bak `GoogleLoginFeature`) eller engangskode på e-post.
+/// Med `CaptchaFeature` på kommer en Turnstile-sjekk (`CaptchaSheet`) før hver kode sendes.
 struct LoginView: View {
     /// Google-knappen (skjermprøven viser den selv om flagget er av).
     var showsGoogle = GoogleLoginFeature.isEnabled
@@ -29,6 +30,15 @@ struct LoginView: View {
     @State private var lastSentAt: Date?
     /// «Ny kode er sendt» etter et nytt forsøk.
     @State private var info: String?
+    /// Turnstile-sjekken før koden sendes (`CaptchaFeature`).
+    @State private var captcha: CaptchaRequest?
+
+    private struct CaptchaRequest: Identifiable {
+        let id = UUID()
+        let siteKey: String
+        let email: String
+        let isResend: Bool
+    }
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -102,6 +112,12 @@ struct LoginView: View {
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
             .disabled(isBusy)
+            .sheet(item: $captcha) { request in
+                CaptchaSheet(siteKey: request.siteKey) { token in
+                    captcha = nil
+                    deliverCode(to: request.email, isResend: request.isResend, captchaToken: token)
+                }
+            }
             // Ingen fokus i e-postfeltet ved oppstart: tastaturet skal ikke dekke Apple-knappen.
             // Kodesteget får fokus selv (sendCode).
         }
@@ -249,21 +265,34 @@ struct LoginView: View {
             error = .invalidEmail
             return
         }
-        run {
-            try await auth.sendCode(to: email)
-            lastSentAt = .now
-            step = .code(email: email)
-            codeText = ""
-            focused = true
-        }
+        requestCode(to: email, isResend: false)
     }
 
     private func resend(to email: String) {
+        requestCode(to: email, isResend: true)
+    }
+
+    /// Med `CaptchaFeature` på: først Turnstile-sjekken, så koden. Ellers rett på.
+    private func requestCode(to email: String, isResend: Bool) {
+        if let siteKey = auth.captchaSiteKey {
+            error = nil
+            info = nil
+            captcha = CaptchaRequest(siteKey: siteKey, email: email, isResend: isResend)
+        } else {
+            deliverCode(to: email, isResend: isResend, captchaToken: nil)
+        }
+    }
+
+    private func deliverCode(to email: String, isResend: Bool, captchaToken: String?) {
         run {
-            try await auth.sendCode(to: email)
+            try await auth.sendCode(to: email, captchaToken: captchaToken)
             lastSentAt = .now
             codeText = ""
-            info = "Ny kode er sendt. Bruk den nyeste."
+            if isResend {
+                info = "Ny kode er sendt. Bruk den nyeste."
+            } else {
+                step = .code(email: email)
+            }
             focused = true
         }
     }

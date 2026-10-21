@@ -28,7 +28,7 @@ final class AppServices {
             supabaseKey: config.publishableKey,
             options: SupabaseClientOptions(auth: .init(emitLocalSessionAsInitialSession: true))
         )
-        auth = AuthModel(client: client)
+        auth = AuthModel(client: client, captchaSiteKey: config.turnstileSiteKey)
         club = ClubModel(client: client)
         outbox = OutboxScoreSubmitter(inner: DirectScoreSubmitter(client: client), container: Self.makeOutboxContainer())
         push = PushRegistrar(client: client)

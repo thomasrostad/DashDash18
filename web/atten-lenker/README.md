@@ -13,7 +13,9 @@ Cloudflare Worker for https://dashdash18.com. Den gjør to ting:
 
 - **Personvern, vilkår og support** (App Store). `/personvern` og `/vilkar` viser `docs/personvern.md` og `docs/vilkar.md`, `/support` er en kort side med kontakt (personvern@dashdash18.com), sletting av konto og rapportering. Alle tre godtar også / til slutt og caches én time. Markdown-filene er kilden: `npm run juridisk` skriver dem til `src/juridisk-tekst.ts` (generert, sjekkes inn), og `src/juridisk.ts` gjør dem om til HTML (overskrifter, avsnitt, lister, tabeller, fet, kursiv, kode, lenker; all tekst escapes). En test feiler hvis den genererte filen ikke stemmer med `docs/`.
 
-`/` er en kort side om Atten med lenker til personvern, vilkår og support. Alt annet gir 404. Siden har ingen sporing, ingen cookies og ingen eksterne skript.
+- **CAPTCHA ved innlogging** (1.0.1, `CaptchaFeature` i appen). `/captcha?sitekey=…` viser Cloudflare Turnstile (`appearance: interaction-only`, så ruta bare vises når Turnstile vil ha et trykk) og sender svaret til appen med `window.webkit.messageHandlers.atten.postMessage`: `{type: "token", token}`, `{type: "error", code}`, `expired`, `timeout` og `interactive`. Site key-en kommer fra appen i adressen (den er offentlig), så samme side virker for test og prod. Ugyldig eller manglende nøkkel gir 400. CSP slipper bare inn `https://challenges.cloudflare.com` (skript og ramme), `Cache-Control: no-store`, og `Referrer-Policy: strict-origin` så Turnstile ser domenet. Domenet `dashdash18.com` må stå på widgeten i Cloudflare. Siden må være deployet før appen får en site key.
+
+`/` er en kort side om Atten med lenker til personvern, vilkår og support. Alt annet gir 404. Sidene har ingen sporing, ingen cookies og ingen eksterne skript, med unntak av Turnstile på `/captcha`.
 
 ## Endre tekst
 
