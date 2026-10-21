@@ -66,6 +66,7 @@ Status 20.10.2026. **Atten 1.0 er sendt til App Review** (build 181, gratis, bar
 | [`CLAUDE.md`](CLAUDE.md) | Arbeidsregler for Claude Code. Gjelder også for mennesker |
 | [`docs/ui-utbedring.md`](docs/ui-utbedring.md) | UI-utbedringen etter skjermgjennomgangen i oktober 2026: kart fra skjerm til kode, status per punkt og avvik fra planen |
 | [`docs/lanseringssjekk.md`](docs/lanseringssjekk.md) | Gjennomgang 17.10.2026 mot en sjekkliste for lansering, og hvordan appen skal ta betalt |
+| [`docs/utgivelser.md`](docs/utgivelser.md) | Regler for utgivelser: fast rytme, hasteretting, brytere, bakoverkompatibel database, støttevindu og iOS-minimum |
 | [`docs/gjoremal.md`](docs/gjoremal.md) | Det som må gjøres manuelt (App Store Connect, Supabase-konsoll, Google) |
 | [`sql/README.md`](sql/README.md) | Databasemigreringer og status per fil (test og prod) |
 | [`docs/folge.md`](docs/folge.md) | Følge andre spillere (steg 13): hva Strava og andre gjør, Thomas sine valg, personvern og datamodell |
