@@ -47,6 +47,7 @@ private let samples: [ActivityEvent] = [
     .mentioned(SocialComment(targetKind: "message", targetID: id(502), commentID: id(503), preview: "@Thomas",
                              authorProfile: id(100))),
     .photoPrompt(eventDate: "2026-10-08", roundNo: 3, courseName: "Losby"),
+    .memberPending(member: id(600), name: "Ola Nordmann", clubName: "Golfgutu Invitational"),
 ]
 
 /// Veddemål (012): PWA-ens ordlyd fra handleUtfordring og markets, med poeng for kroner.

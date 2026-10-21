@@ -15,6 +15,11 @@ struct RootView: View {
     @State private var router = HjemRouter()
     /// «Kveld» eller «spilledag» for klubbens hovedturnering (`DayTerm`). Arrangørsiden bruker den valgte.
     @State private var dayTerm: DayTerm = .evening
+    /// De som venter på godkjenning (sql/067): merket på Arrangør-fanen. nil når flagget er av.
+    @State private var pendingMembers: PendingMembersModel?
+    /// Troppen på Arrangør-fanen, fra et trykk på varselet om et ventende medlem.
+    @State private var showsRoster = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -55,6 +60,7 @@ struct RootView: View {
                     .environment(\.currentTab, tab)
                     .ddScreenBackground()
                 }
+                .badge(tab == .arrangor ? pendingMembers?.badge ?? 0 : 0)
             }
         }
         // Runden som pågår over fanelinja, på alle fanene (utbedringsplanen V1).
@@ -79,6 +85,29 @@ struct RootView: View {
             guard let context else { return }
             dayTerm = await DayTermQueries.main(client: context.client, clubID: context.clubID)
         }
+        // Ventende medlemmer (sql/067): nytt tall når klubben eller rettigheten byttes, appen blir
+        // aktiv, en push kommer eller fanen byttes.
+        .environment(pendingMembers)
+        .task(id: PendingMembersKey(clubID: context?.clubID, canManage: context?.can(.members) ?? false)) {
+            await makePendingMembers()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await pendingMembers?.load() } }
+        }
+        .onChange(of: selectedTab) { Task { await pendingMembers?.load() } }
+        .onReceive(NotificationCenter.default.publisher(for: PushInbox.received)) { _ in
+            Task { await pendingMembers?.load() }
+        }
+    }
+
+    private func makePendingMembers() async {
+        guard PendingMembersFeature.isEnabled, let context, context.can(.members) else {
+            pendingMembers = nil
+            return
+        }
+        let model = PendingMembersModel(client: context.client, clubID: context.clubID, canManage: true)
+        pendingMembers = model
+        await model.load()
     }
 
     /// Baren over fanelinja: føringen åpnes på Hjem, som før fra «Pågår nå».
@@ -100,6 +129,17 @@ struct RootView: View {
             return
         }
         guard let tap = PushTapInbox.shared.take() else { return }
+        // Troppen: bare for dem med Medlemmer og invitasjon (ellers Hjem).
+        if tap.destination == .roster {
+            guard context?.can(.members) == true,
+                  AppTab.tabs(isOrganizer: context?.isOrganizer ?? false).contains(.arrangor) else {
+                selectedTab = .hjem
+                return
+            }
+            selectedTab = .arrangor
+            showsRoster = true
+            return
+        }
         selectedTab = tap.destination.tab
         if tap.destination.tab == .hjem { router.open(tap.destination) }
     }
@@ -129,10 +169,18 @@ struct RootView: View {
                 SpillView(model: SpillModel(client: context.client, userID: user.id))
             }
         case .tavla: TavlaView()
-        case .arrangor: AdminHubView()
+        case .arrangor:
+            AdminHubView()
+                .navigationDestination(isPresented: $showsRoster) { TroppAdminView() }
         case .deg: DegView(config: config, user: user, membership: membership)
         }
     }
+}
+
+/// Når merket for ventende medlemmer må lages på nytt: ny klubb, eller rettigheten endres.
+private struct PendingMembersKey: Hashable {
+    let clubID: UUID?
+    let canManage: Bool
 }
 
 extension EnvironmentValues {

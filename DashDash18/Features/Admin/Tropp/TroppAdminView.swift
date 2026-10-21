@@ -5,6 +5,8 @@ import SwiftUI
 struct TroppAdminView: View {
     @Environment(\.clubContext) private var context
     @Environment(ClubModel.self) private var club: ClubModel?
+    /// Merket for ventende (sql/067) hentes på nytt når troppen lukkes.
+    @Environment(PendingMembersModel.self) private var pendingMembers: PendingMembersModel?
     @State private var model: TroppModel?
 
     var body: some View {
@@ -25,6 +27,7 @@ struct TroppAdminView: View {
             self.model = model
             await model.load()
         }
+        .onDisappear { Task { await pendingMembers?.load() } }
     }
 }
 

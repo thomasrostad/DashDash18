@@ -11,6 +11,8 @@ nonisolated struct HomeBellItem: Identifiable, Equatable, Sendable {
     let target: HomeReactions
     /// Kommentarene linja handler om (`comment_added`, `mentioned`).
     var opens: SocialTarget? = nil
+    /// Klubben der noen venter på godkjenning (`member_pending`, sql/067): «Åpne Troppen».
+    var opensRoster: UUID? = nil
     var id: UUID { row.id }
 }
 
@@ -36,6 +38,8 @@ nonisolated enum HomeBellList {
                 var opens: SocialTarget?
                 if case let .commentAdded(c) = row.event { opens = c.target(clubID: club) }
                 if case let .mentioned(c) = row.event { opens = c.target(clubID: club) }
+                var roster: UUID?
+                if case .memberPending = row.event { roster = club }
                 return HomeBellItem(row: row,
                                     display: ActivityText.display(row, name: { names[$0] }),
                                     time: ActivityFeed.relativeTime(row.createdAt, now: now),
@@ -43,7 +47,8 @@ nonisolated enum HomeBellList {
                                     chips: chips,
                                     target: HomeReactions(activityID: row.id, clubID: club, chips: chips,
                                                           commentCount: social?.commentCount),
-                                    opens: opens)
+                                    opens: opens,
+                                    opensRoster: roster)
             })
         }
     }

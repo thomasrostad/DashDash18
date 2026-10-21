@@ -27,7 +27,8 @@ nonisolated enum PushGroup: String, Codable, CaseIterable, Sendable {
         case .game: "Scorer, ledelsen, sidepremier og runder"
         case .social: "Sosialkomiteen, klubben og tråden"
         case .evening: "Påmelding, påminnelser og når \(term.the) er i gang"
-        case .organizer: "Når noen melder seg av"
+        case .organizer: PendingMembersFeature.isEnabled
+            ? "Når noen melder seg av eller vil bli med i klubben" : "Når noen melder seg av"
         }
     }
 
@@ -38,7 +39,7 @@ nonisolated enum PushGroup: String, Codable, CaseIterable, Sendable {
     /// Ukjent kategori gir nil. `thread` er tråden.
     static func of(category: String, kind: String? = nil) -> PushGroup? {
         switch kind {
-        case "signup_dropped": return .organizer
+        case "signup_dropped", "member_pending": return .organizer
         case "evening_started": return .evening
         default: break
         }
@@ -80,8 +81,8 @@ nonisolated struct PushGroupMapRow: Decodable, Equatable, Sendable {
 nonisolated struct PushGroupMap: Equatable, Sendable {
     let rows: [PushGroupMapRow]
 
-    /// Samme tabell som `push_group_map()` i 046.
-    static let local = PushGroupMap(rows: localPairs.map {
+    /// Samme tabell som `push_group_map()` i 046, med `member_pending` (067) når flagget er på.
+    static let local = PushGroupMap(rows: (localPairs + (PendingMembersFeature.isEnabled ? pendingPairs : [])).map {
         PushGroupMapRow(groupKey: PushGroup.of(category: $0.0, kind: $0.1)?.rawValue, category: $0.0, kind: $0.1)
     })
 
@@ -96,6 +97,9 @@ nonisolated struct PushGroupMap: Equatable, Sendable {
         ("bet", "bet_created"), ("bet", "bet_challenge"), ("bet", "bet_resolved"),
         ("thread", "thread_message"),
     ]
+
+    /// sql/067: noen vil bli med i klubben (Arrangør).
+    private static let pendingPairs: [(String, String)] = [("club", "member_pending")]
 
     /// Gruppen kategorien hører til: den flest av kategoriens kinds står i. Likt (eller ingen
     /// rader): som `push_group(kategori)`. `round` er Spillet selv om «kvelden er i gang» er Kvelden.
@@ -127,6 +131,7 @@ nonisolated struct PushGroupMap: Equatable, Sendable {
         switch kind {
         case "evening_started": "\(DayTerm.capitalized(term.the)) er i gang"
         case "signup_dropped": "Avmeldinger fra «kommer»"
+        case "member_pending": "Nye som vil bli med i klubben"
         default: nil
         }
     }

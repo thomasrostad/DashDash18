@@ -40,6 +40,11 @@
 //     for blokkering), tittelen er «Atten» og threadId 'follow' (kommentarer: card-<kort>).
 //     follow_requested, follow_accepted og followed har egen tekst (data.actor_name).
 //     round_finished går aldri som push (køen tar den ikke heller).
+//   * Ventende medlem (sql/067): member_pending skrives av serveren når noen ber om å bli med i
+//     klubben (join_club), til dem med rettigheten Medlemmer og invitasjon (recipients). Gruppe
+//     Arrangør, kategori club. Teksten er «Ola Nordmann vil bli med i Golfgutu Invitational»
+//     (data.name og data.club_name). Den ventende er aktøren (actor_member_id og data.member).
+//     Appen åpner Arrangør → Troppen (kind og club_id i dd18).
 //
 // Tekstene følger ActivityText.display i appen (DashDash18/Data/Activity.swift),
 // med emojien foran, siden et varsel ikke har ikon.
@@ -273,7 +278,8 @@ export function pushOriginators(payload: JobPayload): string[] {
     case "side_prize":
     case "signup":
     case "signup_dropped":
-    case "member_joined": {
+    case "member_joined":
+    case "member_pending": {
       const member = str(d.member);
       if (member) out.add(member);
       break;
@@ -933,6 +939,16 @@ export function billShareDisputedText(data: Record<string, unknown>): string {
   return `${str(data.name)?.trim() || "Mottakeren"} sier at din del for ${str(data.title)?.trim() || "regningen"} ikke kom`;
 }
 
+/**
+ * «Ola Nordmann vil bli med i Golfgutu Invitational» (sql/067). Navnet fra data.name (slik det
+ * ble skrevet), ellers fra medlemslista; klubben fra data.club_name, ellers fra jobben.
+ */
+export function memberPendingText(data: Record<string, unknown>, name: NameLookup, clubName?: string | null): string {
+  const who = str(data.name)?.trim() || name(str(data.member));
+  const club = str(data.club_name)?.trim() || clubName?.trim() || "klubben";
+  return `${who} vil bli med i ${club}`;
+}
+
 /** Teksten for en linje. Mangler et felt hendelsen ikke klarer seg uten, blir den den nøytrale teksten. */
 export function activityDisplay(activity: ActivityPayload, name: NameLookup, dayTerm?: unknown): ActivityDisplay {
   const d = activity.data ?? {};
@@ -1072,6 +1088,10 @@ export function activityDisplay(activity: ActivityPayload, name: NameLookup, day
       if (!member) return UNKNOWN;
       return { emoji: "⛳", text: `${who(member)} ble med i klubben` };
     }
+    // sql/067: skrevet av serveren til dem med Medlemmer og invitasjon.
+    case "member_pending":
+      if (!str(d.member) && !str(d.name)) return UNKNOWN;
+      return { emoji: "🙋", text: memberPendingText(d, name) };
     case "tips_king": {
       const members = ids(d.members), correct = num(d.correct), possible = num(d.possible);
       if (!members || correct === undefined || possible === undefined) return UNKNOWN;

@@ -37,12 +37,15 @@ nonisolated enum HomeBellReason: Equatable, Sendable {
     case photoPrompt
     /// Del regningen: en del er sendt til deg, eller din del kom ikke frem (sql/051).
     case bill
+    /// Noen vil bli med i klubben (til dem med Medlemmer og invitasjon, sql/067).
+    case memberPending
 }
 
 nonisolated enum HomeBell {
     /// Hvorfor linja angår deg, eller nil når den ikke gjør det. `myRounds` er rundene du spiller
-    /// eller har spilt (for «din runde»).
-    static func reason(_ row: ActivityRow, viewer: HomeViewer, myRounds: Set<UUID> = []) -> HomeBellReason? {
+    /// eller har spilt (for «din runde»). `pendingMembers`: `PendingMembersFeature` (sql/067).
+    static func reason(_ row: ActivityRow, viewer: HomeViewer, myRounds: Set<UUID> = [],
+                       pendingMembers: Bool = PendingMembersFeature.isEnabled) -> HomeBellReason? {
         // Hendelser uten klubb (sql/034) har ingen mottaker i en klubb ennå.
         guard let club = row.clubID, let me = viewer.memberships[club] else { return nil }
         switch row.event {
@@ -81,6 +84,9 @@ nonisolated enum HomeBell {
             return row.recipients?.contains(me) == true ? .photoPrompt : nil
         case .billShareSent, .billShareDisputed:
             return row.recipients?.contains(me) == true ? .bill : nil
+        case .memberPending:
+            guard pendingMembers else { return nil }
+            return row.recipients?.contains(me) == true ? .memberPending : nil
         default:
             return nil
         }

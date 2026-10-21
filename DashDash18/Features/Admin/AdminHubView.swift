@@ -133,6 +133,8 @@ private struct AdminHubContent: View {
     @Environment(\.selectTab) private var selectTab
     /// Det nyeste (rollene kan endres mens siden står åpen). nil i skjermprøvene.
     @Environment(\.clubContext) private var liveContext
+    /// De som venter på godkjenning (sql/067). nil når flagget er av og i skjermprøvene.
+    @Environment(PendingMembersModel.self) private var pendingMembers: PendingMembersModel?
 
     @State private var openEvent: UUID?
     @State private var showsNewTournament = false
@@ -174,6 +176,7 @@ private struct AdminHubContent: View {
                 case .failed(let text):
                     failed(text)
                 case .loaded:
+                    pendingSection
                     if shows(.timeline) { timeline }
                     setupSection
                     rareSections
@@ -698,6 +701,24 @@ private struct AdminHubContent: View {
         }
     }
 
+    // MARK: Venter på godkjenning
+
+    /// Øverst når noen vil bli med i klubben (sql/067): én rad til Troppen, med antallet.
+    @ViewBuilder
+    private var pendingSection: some View {
+        if let pendingMembers, pendingMembers.badge > 0, shows(.roster) {
+            Section {
+                NavigationLink { TroppAdminView() } label: {
+                    AdminHubRow(PendingMembers.rowTitle(count: pendingMembers.count, firstName: pendingMembers.names.first),
+                                PendingMembers.rowSubtitle, systemImage: "person.badge.clock")
+                }
+                .badge(pendingMembers.count)
+            } header: {
+                DDHeader("Venter på godkjenning")
+            }
+        }
+    }
+
     // MARK: Kom i gang
 
     private var gettingStartedSection: some View {
@@ -829,7 +850,10 @@ private struct AdminHubContent: View {
             }
             Section("Oppsett") {
                 ForEach(setupDestinations) { destination in
-                    Button(destination.title, systemImage: destination.systemImage) { setup = destination }
+                    Button(destination == .roster
+                               ? PendingMembers.menuTitle(destination.title, count: pendingMembers?.badge ?? 0)
+                               : destination.title,
+                           systemImage: destination.systemImage) { setup = destination }
                 }
             }
         } label: {

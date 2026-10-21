@@ -125,6 +125,15 @@ struct HjemVarslerView: View {
                                                  showWho: item.target.isSocial && !item.chips.isEmpty
                                                      ? { whoTarget = item.target } : nil)
                                 .overlay(alignment: .bottomTrailing) {
+                                    // Noen vil bli med (sql/067): Troppen i klubben som er valgt.
+                                    if let club = item.opensRoster, club == context?.clubID,
+                                       context?.can(.members) == true {
+                                        NavigationLink("Åpne Troppen") { TroppAdminView() }
+                                            .font(.ddCaption)
+                                            .foregroundStyle(Color.ddForestInk)
+                                            .buttonStyle(.plain)
+                                            .frame(minHeight: 44)
+                                    }
                                     // Kommentaren eller omtalen: trykk for å se kommentarene.
                                     if let target = item.opens {
                                         Button("Se kommentarene") {
