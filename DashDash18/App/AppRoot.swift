@@ -92,6 +92,8 @@ struct AppRoot: View {
             }
         }
         .task { await services.auth.observe() }
+        // Varsler med en gang appen åpnes første gang (påmelding), før innlogging.
+        .task { await services.push.askOnFirstLaunch() }
         .onChange(of: services.auth.state) { _, state in
             if state == .signedOut {
                 services.club.reset()
