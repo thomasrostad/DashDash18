@@ -58,6 +58,9 @@ nonisolated struct GroupTerm: Equatable, Sendable {
     /// «Båsen» / «Flighten»
     var definiteTitle: String { definite.prefix(1).uppercased() + definite.dropFirst() }
 
+    /// Stillingen i runden: «Bayen nå» i simulatoren, «Flighten nå» på ekte bane.
+    var standingsTitle: String { self == .flight ? "Flighten nå" : "Bayen nå" }
+
     /// «Båser» / «Flighter»
     var pluralTitle: String { plural.prefix(1).uppercased() + plural.dropFirst() }
 

@@ -173,7 +173,7 @@ struct BayenNaaListe: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionLabel(text: "Bayen nå")
+            SectionLabel(text: term.standingsTitle)
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { i, row in
                     Button { onSelect(row.memberID) } label: {
@@ -189,7 +189,8 @@ struct BayenNaaListe: View {
                                         .foregroundStyle(Color.ddStatText)
                                     if row.isMe { DDYouBadge() }
                                 }
-                                Text("etter \(row.thru) hull" + (row.bay.map { " · \(term.numberedLower($0))" } ?? ""))
+                                Text("etter \(row.thru) hull" + (row.paceText.map { " · \($0)" } ?? "")
+                                     + (row.bay.map { " · \(term.numberedLower($0))" } ?? ""))
                                     .font(.dd(.sans, size: 12, relativeTo: .caption))
                                     .foregroundStyle(Color.ddStatSecondary)
                             }
