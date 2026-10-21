@@ -11,6 +11,8 @@ final class CourseLibraryModel {
     private(set) var isLoading = false
     private(set) var hasLoaded = false
     var error: DataError?
+    /// Baner du har rapportert (sql/066). Skjules i biblioteket og velgeren for deg.
+    private(set) var hidden = HiddenContent()
 
     /// nil bare i skjermprøvene (`init(preview:)`) og for det felles biblioteket: da går ingenting
     /// til klubben.
@@ -67,6 +69,24 @@ final class CourseLibraryModel {
 
     /// Det felles biblioteket, ikke klubbens.
     var isShared: Bool { shared != nil }
+
+    /// Banene som vises i lista: uten dem du har rapportert.
+    var listedItems: [CourseListItem] {
+        CourseReports.listed(items, hidden: hidden.courses, isOwn: canEdit)
+    }
+
+    /// Kan du rapportere banen? Bare i det felles biblioteket, og bare en bane en annen har lagt inn.
+    func canReport(_ item: CourseListItem) -> Bool {
+        CourseReports.canReport(item, isShared: isShared, isOwn: canEdit(item), enabled: PublicContentReportFeature.isEnabled)
+    }
+
+    /// Rapporterer banen (`report_content('course', …)`, sql/066). Den skjules for deg med en gang.
+    func report(_ item: CourseListItem, reason: ReportReason, note: String) async throws {
+        guard let shared else { throw DataError.offline }
+        _ = try await ModerationService(client: shared.client)
+            .report(kind: .course, targetID: item.id, reason: reason, note: note)
+        hidden.insert(.course, item.id)
+    }
 
     /// Kan du rette banen? I klubben avgjør arrangørrollen (skjermen). I det felles biblioteket bare
     /// den som la den inn.
@@ -408,6 +428,12 @@ final class CourseLibraryModel {
             items = CourseListItem.sorted(CourseListItem.adding(items.filter(\.isFromSource), to: own))
             hasLoaded = true
             error = nil
+            // Det du har rapportert. Feiler det, vises banene som før (det du rapporterte på denne
+            // telefonen, står skjult).
+            if PublicContentReportFeature.isEnabled,
+               let fresh = try? await ModerationService(client: shared.client).hiddenContent() {
+                hidden = HiddenContent(courses: fresh.courses)
+            }
         } catch {
             self.error = DataError.from(error)
         }
@@ -498,6 +524,21 @@ final class CourseLibraryModel {
             return .invalid("Banen er brukt i en runde og kan ikke slettes. Sett den til «ikke i bruk» i stedet, så forsvinner den fra velgeren.")
         }
         return DataError.from(error)
+    }
+}
+
+/// Rapporter på baner i det felles biblioteket (sql/066). Rent, uten nett.
+nonisolated enum CourseReports {
+    /// En bane kan rapporteres i det felles biblioteket når en annen har lagt den inn. Hentede baner
+    /// (slope.no) er ikke brukerinnhold.
+    static func canReport(_ item: CourseListItem, isShared: Bool, isOwn: Bool, enabled: Bool) -> Bool {
+        enabled && isShared && !isOwn && !item.isFromSource
+    }
+
+    /// Lista uten banene du har rapportert. Dine egne står alltid.
+    static func listed(_ items: [CourseListItem], hidden: Set<UUID>, isOwn: (CourseListItem) -> Bool) -> [CourseListItem] {
+        guard !hidden.isEmpty else { return items }
+        return items.filter { !hidden.contains($0.id) || isOwn($0) }
     }
 }
 

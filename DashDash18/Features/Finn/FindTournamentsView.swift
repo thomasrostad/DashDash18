@@ -9,6 +9,9 @@ final class FindTournamentsModel {
     private(set) var rows: [PublicCompetitionRow] = []
     private(set) var state: LoadState = .loading
     var query = ""
+    /// Turneringer du har rapportert (sql/066). Serveren tar dem ut av lista; dette skjuler dem med
+    /// en gang, før lista er hentet på nytt.
+    private(set) var hidden = HiddenContent()
     let client: SupabaseClient?
 
     init(client: SupabaseClient) { self.client = client }
@@ -21,7 +24,10 @@ final class FindTournamentsModel {
     }
     #endif
 
-    var visible: [PublicCompetitionRow] { FindTournaments.filter(rows, query: query) }
+    var visible: [PublicCompetitionRow] { FindTournaments.visible(rows, query: query, hidden: hidden.competitions) }
+
+    /// Kan turneringen rapporteres her? (`PublicContentReportFeature`, sql/066.)
+    var canReport: Bool { PublicContentReportFeature.isEnabled && client != nil }
 
     func load() async {
         guard let client else { return }
@@ -32,6 +38,24 @@ final class FindTournamentsModel {
         } catch {
             if rows.isEmpty { state = .failed(DataError.from(error).message) }
         }
+        if PublicContentReportFeature.isEnabled,
+           let fresh = try? await ModerationService(client: client).hiddenContent() {
+            hidden = HiddenContent(competitions: fresh.competitions)
+        }
+    }
+
+    /// Rapporterer turneringen (`report_content('competition', …)`). Med `hide` skjules den for deg
+    /// med en gang; fra turneringssiden skjules den først når arket er lukket (`hide(_:)`), så siden
+    /// ikke forsvinner under takken.
+    func report(_ row: PublicCompetitionRow, reason: ReportReason, note: String, hide: Bool = true) async throws {
+        guard let client else { throw DataError.offline }
+        _ = try await ModerationService(client: client)
+            .report(kind: .competition, targetID: row.id, reason: reason, note: note)
+        if hide { self.hide(row) }
+    }
+
+    func hide(_ row: PublicCompetitionRow) {
+        hidden.insert(.competition, row.id)
     }
 }
 
@@ -39,6 +63,8 @@ final class FindTournamentsModel {
 /// påmeldingskortet (samme som på turneringssiden).
 struct FindTournamentsView: View {
     @State var model: FindTournamentsModel
+    /// Turneringen som rapporteres fra lista.
+    @State private var reporting: PublicCompetitionRow?
 
     var body: some View {
         DDList {
@@ -63,10 +89,12 @@ struct FindTournamentsView: View {
                     Section {
                         ForEach(model.visible) { row in
                             NavigationLink {
-                                FindTournamentDetail(row: row, client: model.client) { await model.load() }
+                                detail(row)
                             } label: {
                                 FindTournamentRow(row: row)
                             }
+                            .contextMenu { reportButton(row) }
+                            .swipeActions(edge: .trailing) { reportButton(row) }
                         }
                     } footer: {
                         DDFooter("Turneringer som er åpne for alle. Du ser tabellen når du er påmeldt.")
@@ -79,6 +107,29 @@ struct FindTournamentsView: View {
         .ddNavigationChrome()
         .task { await model.load() }
         .refreshable { await model.load() }
+        .sheet(item: $reporting) { row in
+            ReportSheet(target: FindTournaments.reportTarget(row)) { reason, note, _ in
+                try await model.report(row, reason: reason, note: note)
+            }
+        }
+    }
+
+    private func detail(_ row: PublicCompetitionRow) -> FindTournamentDetail {
+        let model = model
+        var onReport: ((ReportReason, String) async throws -> Void)?
+        if model.canReport {
+            onReport = { reason, note in try await model.report(row, reason: reason, note: note, hide: false) }
+        }
+        return FindTournamentDetail(row: row, client: model.client, onReport: onReport,
+                                    onReported: { model.hide(row) }, onChange: { await model.load() })
+    }
+
+    @ViewBuilder
+    private func reportButton(_ row: PublicCompetitionRow) -> some View {
+        if model.canReport {
+            Button("Rapporter turneringen", systemImage: "flag") { reporting = row }
+                .tint(Color.ddRust)
+        }
     }
 }
 
@@ -113,7 +164,14 @@ private struct FindTournamentRow: View {
 private struct FindTournamentDetail: View {
     let row: PublicCompetitionRow
     let client: SupabaseClient?
+    /// «Rapporter turneringen» (sql/066). nil når flagget er av.
+    var onReport: ((ReportReason, String) async throws -> Void)?
+    /// Etter at arket er lukket: turneringen skjules i lista.
+    var onReported: () -> Void = {}
     let onChange: () async -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var isReporting = false
+    @State private var reported = false
 
     var body: some View {
         DDList {
@@ -137,5 +195,25 @@ private struct FindTournamentDetail: View {
         .navigationTitle(row.name)
         .navigationBarTitleDisplayMode(.inline)
         .ddNavigationChrome()
+        .toolbar {
+            if onReport != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu("Mer", systemImage: "ellipsis") {
+                        Button("Rapporter turneringen", systemImage: "flag") { isReporting = true }
+                    }
+                }
+            }
+        }
+        // Rapportert: turneringen er skjult i lista, så siden lukkes når arket er borte.
+        .sheet(isPresented: $isReporting, onDismiss: {
+            guard reported else { return }
+            dismiss()
+            onReported()
+        }) {
+            ReportSheet(target: FindTournaments.reportTarget(row)) { reason, note, _ in
+                try await onReport?(reason, note)
+                reported = true
+            }
+        }
     }
 }

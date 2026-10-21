@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Det som rapporteres fra tråden: meldingen (eller bildet) og hvem den er fra.
-struct ReportTarget: Identifiable, Equatable {
+nonisolated struct ReportTarget: Identifiable, Equatable, Sendable {
     let kind: ReportKind
     let targetID: UUID
     /// Medlemmet bak innholdet, så det kan blokkeres samtidig.
@@ -30,8 +30,7 @@ struct ReportSheet: View {
             DDList {
                 if sent {
                     Section {
-                        Label("Takk. Rapporten er sendt til arrangøren og oss, og vi ser på den innen 24 timer.",
-                              systemImage: "checkmark.seal")
+                        Label(target.kind.sentText, systemImage: "checkmark.seal")
                             .font(.ddCallout)
                             .foregroundStyle(Color.ddForestInk)
                     }

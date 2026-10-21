@@ -24,6 +24,15 @@ nonisolated enum ModerationFeature {
     static let isEnabled = true
 }
 
+/// «Rapporter» på baner i det felles biblioteket (en annen har lagt dem inn) og på turneringer i
+/// «Finn turneringer» (1.0.1, App Review 1.2). Det du har rapportert, skjules for deg. Krever
+/// `sql/066_rapporter_baner_turneringer.sql` (typene `course` og `competition` i `report_content`
+/// og `my_hidden_content`). Av til 066 er kjørt på test og prod; uten 066 ville rapporten feile.
+nonisolated enum PublicContentReportFeature {
+    static let flag = false
+    static let isEnabled = flag && ModerationFeature.isEnabled
+}
+
 /// Logg inn med Google (B9). Krever OAuth-klient i Google Cloud og Google slått på i Supabase Auth,
 /// med `dashdash://login-callback` i «Redirect URLs».
 nonisolated enum GoogleLoginFeature {

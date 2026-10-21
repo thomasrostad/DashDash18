@@ -4,10 +4,12 @@
 
 import type { EmailMessage, EmailSender, SmtpConfig } from "../push-send/email.ts";
 
-/** Det report_alert_payload(rapport) gir (sql/063). Navn, aldri e-post. */
+/** Det report_alert_payload(rapport) gir (sql/063, target_id fra 066). Navn, aldri e-post. */
 export interface ReportPayload {
   id: string;
   kind: string;
+  /** Innholdets id (sql/066). Mangler før 066 er kjørt. */
+  target_id?: string | null;
   reason: string;
   note: string | null;
   excerpt: string | null;
@@ -26,7 +28,12 @@ export const KIND_LABELS: Record<string, string> = {
   member: "navn i troppen",
   profile: "profil",
   comment: "kommentar",
+  course: "bane i banebiblioteket",
+  competition: "turnering i «Finn turneringer»",
 };
+
+/** Typene uten arrangør over seg (sql/066): ingen kan avgjøre dem i appen, vi tar dem i databasen. */
+export const UNMODERATED_KINDS = new Set(["course", "competition"]);
 
 /** Grunnene, som i appen (Moderation.swift, ReportReason.title). */
 export const REASON_LABELS: Record<string, string> = {
@@ -99,11 +106,17 @@ export function formatTime(iso: string): string {
 /** Emne og tekst. Kort, på norsk, uten e-postadresser til brukerne. */
 export function alertMessage(p: ReportPayload, to: string): EmailMessage {
   const kind = kindLabel(p.kind);
-  const where = p.club_name
+  const where = p.kind === "course"
+    ? "Det felles banebiblioteket (alle innloggede ser banen)"
+    : p.kind === "competition"
+    ? `Turnering: ${oneLine(p.competition_name, 60) || "(ukjent navn)"}` +
+      (p.club_name ? ` (klubb: ${oneLine(p.club_name, 60)})` : "") + ", i «Finn turneringer» for alle"
+    : p.club_name
     ? `Klubb: ${oneLine(p.club_name, 60)}`
     : p.competition_name
     ? `Turnering: ${oneLine(p.competition_name, 60)}`
     : "Utenfor klubb og turnering (løse runder eller profil)";
+  const unmoderated = UNMODERATED_KINDS.has(p.kind);
   const excerpt = oneLine(p.excerpt, EXCERPT_MAX);
   const note = oneLine(p.note, EXCERPT_MAX);
   const lines = [
@@ -118,13 +131,21 @@ export function alertMessage(p: ReportPayload, to: string): EmailMessage {
     p.kind === "image" ? `Bildet (sti i Storage): ${excerpt || "(mangler)"}` : `Utdrag: ${excerpt || "(tomt)"}`,
   ];
   if (note) lines.push(`Kommentar fra den som rapporterte: ${note}`);
-  lines.push(
-    "",
-    "Rapporten må følges opp innen 24 timer (App Store 1.2): fjern innholdet eller avvis",
-    "rapporten i Atten, eller ta det i databasen.",
-    "",
-    `Rapport-id: ${p.id}`,
-  );
+  lines.push("");
+  if (unmoderated) {
+    lines.push(
+      "Rapporten må følges opp innen 24 timer (App Store 1.2). Ingen arrangør kan avgjøre den i",
+      "Atten: ta den i databasen (se OPPFØLGING i sql/066_rapporter_baner_turneringer.sql).",
+    );
+  } else {
+    lines.push(
+      "Rapporten må følges opp innen 24 timer (App Store 1.2): fjern innholdet eller avvis",
+      "rapporten i Atten, eller ta det i databasen.",
+    );
+  }
+  lines.push("");
+  if (p.target_id) lines.push(`Innholdets id: ${p.target_id}`);
+  lines.push(`Rapport-id: ${p.id}`);
   return { to, subject: `Atten: ny rapport (${kind})`, text: lines.join("\r\n") };
 }
 

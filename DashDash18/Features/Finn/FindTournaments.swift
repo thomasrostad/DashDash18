@@ -48,6 +48,11 @@ nonisolated enum FindTournaments {
         }
     }
 
+    /// Lista som vises: uten turneringer du har rapportert (sql/066), så søket.
+    static func visible(_ rows: [PublicCompetitionRow], query: String, hidden: Set<UUID>) -> [PublicCompetitionRow] {
+        filter(hidden.isEmpty ? rows : rows.filter { !hidden.contains($0.id) }, query: query)
+    }
+
     /// «12 av 16 påmeldt · 3 på venteliste», «5 påmeldt», «Fullt».
     static func places(_ row: PublicCompetitionRow) -> String {
         var text: String
@@ -81,6 +86,11 @@ nonisolated enum FindTournaments {
         case let (nil, e?): return "Til \(e)"
         default: return nil
         }
+    }
+
+    /// Det som rapporteres: turneringen, med navnet i arket. Ingen å blokkere (klubben står bak).
+    static func reportTarget(_ row: PublicCompetitionRow) -> ReportTarget {
+        ReportTarget(kind: .competition, targetID: row.id, memberID: nil, authorName: row.name)
     }
 
     static func load(client: SupabaseClient) async throws -> [PublicCompetitionRow] {
