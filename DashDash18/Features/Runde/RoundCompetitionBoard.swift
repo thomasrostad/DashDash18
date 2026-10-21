@@ -48,14 +48,15 @@ nonisolated enum RoundCompetitionBoard {
         var isMain: Bool
         /// «Stableford · hull 1–9 · 90 %».
         var detail: String
-        /// `false`: «Ikke støttet ennå».
+        /// `false`: `unsupportedText`.
         var supported: Bool
         var lines: [Line]
         /// Teksten når det ikke er noen rader.
         var emptyText = "Ingen scorer ennå"
     }
 
-    static let unsupportedText = "Ikke støttet ennå"
+    /// Oppsettet er nyere enn appen, eller motoren regner ikke denne kombinasjonen.
+    static let unsupportedText = "Denne versjonen av Atten kan ikke vise stillingen her."
 
     /// Konkurransene på runden, i rekkefølge, med hovedkonkurransen først. Tom når runden bare har
     /// formen (ingen rader i `round_competitions`), siden den står i resten av skjermen.

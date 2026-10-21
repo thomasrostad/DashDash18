@@ -81,7 +81,7 @@ nonisolated struct CompetitionConfig: Codable, Hashable, Sendable {
 }
 
 /// En rad i `round_competitions`. Et oppsett appen ikke kan lese (ny versjon eller ukjent felt) gir
-/// `config == nil`, og konkurransen vises som «Ikke støttet ennå».
+/// `config == nil`, og konkurransen vises med `RoundCompetitionBoard.unsupportedText`.
 nonisolated struct RoundCompetitionRow: Decodable, Equatable, Identifiable, Sendable {
     let id: UUID
     let roundID: UUID

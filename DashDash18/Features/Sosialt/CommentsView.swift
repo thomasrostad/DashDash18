@@ -105,7 +105,8 @@ struct CommentsSheet: View {
         }
         if item.canReport, ModerationFeature.isEnabled {
             Button("Rapporter kommentaren", systemImage: "flag") {
-                reportTarget = CommentReport(comment: item.comment, author: item.author)
+                reportTarget = CommentReport(comment: item.comment, author: item.author,
+                                             canBlock: model.canBlock(item.comment))
             }
         }
     }
@@ -206,10 +207,12 @@ private struct CommentTarget: Identifiable {
 private struct CommentReport: Identifiable {
     let comment: CommentRow
     let author: String
+    let canBlock: Bool
     var id: UUID { comment.id }
 
     var target: ReportTarget {
-        ReportTarget(kind: .comment, targetID: comment.id, memberID: comment.memberID, authorName: author)
+        ReportTarget(kind: .comment, targetID: comment.id, memberID: comment.memberID, authorName: author,
+                     canBlock: canBlock)
     }
 }
 

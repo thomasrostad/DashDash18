@@ -7,6 +7,8 @@ struct ReportTarget: Identifiable, Equatable {
     /// Medlemmet bak innholdet, så det kan blokkeres samtidig.
     let memberID: UUID?
     let authorName: String
+    /// Vis «Blokker … også». Bare når det finnes en innlogging bak navnet (`BlockRules`).
+    var canBlock: Bool = false
     var id: String { kind.rawValue + targetID.uuidString }
 }
 
@@ -58,7 +60,7 @@ struct ReportSheet: View {
                         TextField("Kommentar (valgfritt)", text: $note, axis: .vertical)
                             .lineLimit(2...4)
                             .ddField()
-                        if target.memberID != nil {
+                        if target.canBlock {
                             Toggle("Blokker \(target.authorName) også", isOn: $alsoBlock)
                                 .tint(Color.ddForestInk)
                         }

@@ -316,8 +316,12 @@ final class HomeFeedModel {
         let author = target.kind == .activity ? raw.activity.first { $0.id == target.id }?.actorMemberID : nil
         let people = raw.members.filter { $0.clubID == club && $0.status != .archived }
             .map { TradPerson(id: $0.id, name: $0.displayName) }
+        // Troppen er ikke hentet: la BlockRules anta innlogging i stedet for å skjule blokkering for alle.
+        let squad = raw.members.filter { $0.clubID == club }
+        let withLogin = squad.isEmpty ? nil : Set(squad.filter { $0.userID != nil }.map(\.id))
         let model = CommentsModel(target: target, me: me, isModerator: canModerate ?? viewer.organizerClubs.contains(club),
-                                  isTargetAuthor: author == me, people: people, names: raw.names, client: client)
+                                  isTargetAuthor: author == me, people: people, names: raw.names,
+                                  membersWithLogin: withLogin, client: client)
         model.onCountChange = { [weak self] count in self?.setCommentCount(count, on: target.id) }
         return model
     }

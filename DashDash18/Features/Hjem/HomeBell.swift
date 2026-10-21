@@ -52,7 +52,7 @@ nonisolated enum HomeBell {
             guard let recipients = row.recipients else { return .nudged }
             return recipients.contains(me) ? .nudged : nil
         case let .betChallenge(_, against, _, _):
-            return against == me ? .challenged : nil
+            return BetsFeature.isEnabled && against == me ? .challenged : nil
         case let .bigScore(member, _, _, _, _, _):
             return member == me ? .myFeat : nil
         case .roundLocked, .roundDeleted:

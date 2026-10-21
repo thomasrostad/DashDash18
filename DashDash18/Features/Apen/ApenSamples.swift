@@ -36,7 +36,7 @@ struct ApenSampleScreen: View {
         case .apenslett:
             AccountDeletionSheet(client: nil, user: .preview, organizerClubs: ["Golfgutu Invitational"])
         case .apenrapport:
-            ReportSheet(target: ReportTarget(kind: .message, targetID: UUID(), memberID: UUID(), authorName: "Kåre")) { _, _, _ in }
+            ReportSheet(target: ReportTarget(kind: .message, targetID: UUID(), memberID: UUID(), authorName: "Kåre", canBlock: true)) { _, _, _ in }
         case .apenrapporter:
             NavigationStack {
                 ReportsAdminView(service: nil, clubID: UUID(), preview: ApenSamples.reports)
