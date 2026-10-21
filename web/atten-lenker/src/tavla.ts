@@ -12,7 +12,7 @@ import { buildTVPayload, leagueStandings, seasonStandings, type TVEnv, type TVPa
  * App Store-lenken i «Få Atten-appen». null til appen er publisert: da står det «Kommer snart i App Store»
  * uten lenke. Bytt til f.eks. "https://apps.apple.com/no/app/atten/id1234567890".
  */
-export const APP_STORE_URL: string | null = null;
+export const APP_STORE_URL: string | null = "https://apps.apple.com/no/app/atten/id6820031728";
 
 /** Hvor ofte siden henter på nytt (sekunder). Workeren holder svaret like lenge i hurtigbufferen. */
 export const REFRESH_SECONDS = 20;

@@ -50,12 +50,13 @@ test("invitasjonsside for klubb, runde og konkurranse", async () => {
     assert.ok(html.includes(`<span class="kode">${shown}</span>`), `${path}: koden vises`);
     assert.ok(html.includes(`href="${appLink}"`), `${path}: lenke til appen`);
     assert.match(html, /Åpne i Atten/);
-    assert.match(html, /TestFlight-invitasjon/);
+    assert.match(html, /href="https:\/\/apps\.apple\.com\/no\/app\/atten\/id6820031728"/);
     // Turneringen (sql/060): stegene for å ta plassen sin.
     assert.equal(html.includes("Velg navnet ditt på lista"), path.startsWith("/konkurranse/"), `${path}: stegene`);
     // Ingen eksterne skript eller ressurser.
     assert.doesNotMatch(html, /<script[^>]*src=/);
-    assert.doesNotMatch(html, /https?:\/\//);
+    // Eneste lenke ut er App Store.
+    assert.doesNotMatch(html.replaceAll("https://apps.apple.com/no/app/atten/id6820031728", ""), /https?:\/\//);
     // Det innebygde skriptet har nonce-en fra CSP-en.
     const nonce = /'nonce-([0-9a-f]+)'/.exec(csp)?.[1];
     assert.ok(nonce && html.includes(`<script nonce="${nonce}">`));
@@ -127,7 +128,8 @@ test("følgekoden (sql/054): side med lenke til appen, ugyldig kode gir 404", as
   assert.match(html, /Åpne Atten for å følge/);
   assert.ok(html.includes('<span class="kode">ABCD-EFGH</span>'));
   assert.ok(html.includes('href="dashdash://folg/ABCDEFGH"'));
-  assert.doesNotMatch(html, /https?:\/\//);
+  // Eneste lenke ut er App Store.
+  assert.doesNotMatch(html.replaceAll("https://apps.apple.com/no/app/atten/id6820031728", ""), /https?:\/\//);
   assert.equal((await get("/folg/ABCDEFG1")).status, 404);
   assert.equal((await get("/folg/")).status, 404);
   assert.equal(normalizeFollowCode(" abcd efgh "), "ABCDEFGH");
