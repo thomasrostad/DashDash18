@@ -60,7 +60,7 @@ Skal ikke kjøres: 009 (tatt med i 011), `010_kontroll.sql`, `lokal/` og `import
   3. (C+T) Deploy på test, med JWT-sjekk som før: `supabase functions deploy delete-account --project-ref tsekialrxuhrugscosgi`. Prøv med en testkonto som er logget inn med Apple: slett kontoen, se «apple-revoke: tokenet er trukket tilbake» i loggen til funksjonen, og at Atten er borte fra Innstillinger → [navnet ditt] → Logg inn med Apple. Prøv også en konto med e-postkode (ingen Apple-ark, «hoppet over, kontoen har ikke Apple-innlogging»).
   4. (T) Samme secrets på **prod** (`wxabhadvuzyrmndxpuza`); samme nøkkel kan brukes. Deretter `supabase functions deploy delete-account --project-ref wxabhadvuzyrmndxpuza`. Funksjonen kan deployes før appen 1.0.1 er ute: uten kode fra appen hoppes Apple over.
   5. (T) 1.0.1 til App Review med svaret i Resolution Center: kontoer med Logg inn med Apple trekker tilbake tokenet via `appleid.apple.com/auth/revoke` når kontoen slettes.
-- [ ] 4.6 Rapport på baner og turneringer (1.0.1): kjør `sql/066_rapporter_baner_turneringer.sql` på test og så prod (etter 065), og deploy `report-alert` på nytt begge steder (tekst for de nye typene). Slå så på `PublicContentReportFeature` i appen.
+- [x] 4.6 *(21.10: 066 kjørt test+prod, report-alert deployet, flagget på)* Rapport på baner og turneringer (1.0.1): kjør `sql/066_rapporter_baner_turneringer.sql` på test og så prod (etter 065), og deploy `report-alert` på nytt begge steder (tekst for de nye typene). Slå så på `PublicContentReportFeature` i appen.
 
 ## 5. Web og app mot prod (C+T)
 
