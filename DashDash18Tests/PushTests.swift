@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import UserNotifications
 @testable import DashDash18
 
 // Push (fase 8): token som heks, miljø, parameterne til register_push_device og valgene per
@@ -182,5 +183,13 @@ struct PushForegroundTests {
         // Slått av i Innstillinger mens appen var registrert.
         #expect(PushRegistrar.nextStatus(.denied, current: .registered) == .denied)
         #expect(PushRegistrar.nextStatus(.notDetermined, current: .disabled) == .notDetermined)
+    }
+
+    @Test func spoerVedOppstartBareFoersteGang() {
+        // Påmeldingen hviler på varsler: iOS spør ved første oppstart, aldri etter et svar.
+        #expect(PushRegistrar.shouldAskOnLaunch(.notDetermined))
+        #expect(!PushRegistrar.shouldAskOnLaunch(.denied))
+        #expect(!PushRegistrar.shouldAskOnLaunch(.authorized))
+        #expect(!PushRegistrar.shouldAskOnLaunch(.provisional))
     }
 }

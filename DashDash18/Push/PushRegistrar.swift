@@ -62,7 +62,8 @@ final class PushRegistrar {
     private var deviceID: String? { UIDevice.current.identifierForVendor?.uuidString.lowercased() }
 
     /// Etter innlogging: registrer på nytt hvis tillatelsen alt er gitt (tokenet kan ha endret
-    /// seg). Spør ikke om tillatelse her; det gjør `requestAuthorization()` fra innstillingene.
+    /// seg). Spør ikke om tillatelse her; det gjør `askOnFirstLaunch()` ved oppstart og
+    /// `requestAuthorization()` fra innstillingene.
     func start(userID: UUID) async {
         guard PushFeature.isEnabled else { return }
         self.userID = userID
@@ -92,6 +93,21 @@ final class PushRegistrar {
         case .denied: .denied
         case .allowed: current == .registered ? .registered : .registering
         }
+    }
+
+    /// Oppstart: iOS spør om varsler med en gang, også før innlogging, fordi påmeldingen hviler
+    /// på dem. Tokenet sendes når noen er logget inn (`start`, via `PushTokenRelay`). Spør bare
+    /// når ingenting er avgjort; et nei står til du slår det på under Deg → Varsler.
+    func askOnFirstLaunch() async {
+        guard PushFeature.isEnabled else { return }
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        guard Self.shouldAskOnLaunch(settings.authorizationStatus) else { return }
+        await requestAuthorization()
+    }
+
+    /// Bare når iOS ikke har spurt før.
+    nonisolated static func shouldAskOnLaunch(_ status: UNAuthorizationStatus) -> Bool {
+        status == .notDetermined
     }
 
     /// «Slå på varsler»: spør iOS, og registrer hos APNs hvis svaret er ja.
