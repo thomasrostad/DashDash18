@@ -2,7 +2,7 @@ import Foundation
 import Supabase
 
 /// Henting og skriving for fase 23 (sql/031 og 032). Kalles bare når `TournamentCoreFeature` er på,
-/// bortsett fra `minimumBuild`, som bare leser `app_config` (031).
+/// bortsett fra `buildConfig`, som bare leser `app_config` (031, 068).
 nonisolated enum TournamentCoreQueries {
     // MARK: Velgeren
 
@@ -171,13 +171,12 @@ nonisolated enum TournamentCoreQueries {
 
     // MARK: Minste appbygg
 
-    /// `app_config.min_ios_build` (sql/031). nil når raden mangler eller ikke kan leses.
-    static func minimumBuild(client: SupabaseClient) async throws -> Int? {
-        let rows: [AppConfigMinBuildRow] = try await client.from("app_config")
-            .select("value")
-            .eq("key", value: "min_ios_build")
-            .limit(1)
+    /// `app_config` for bygget: minste (sql/031) og anbefalt bygg og nødbrytere (sql/068).
+    static func buildConfig(client: SupabaseClient) async throws -> AppBuildConfig {
+        let rows: [AppConfigRow] = try await client.from("app_config")
+            .select("key,value")
+            .in("key", values: AppBuildConfig.keys)
             .execute().value
-        return rows.first?.value?.build
+        return AppBuildConfig(rows: rows)
     }
 }

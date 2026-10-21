@@ -10,7 +10,8 @@ import GolfgutuCore
 nonisolated enum SocialFeature {
     /// På: 050 er kjørt på test 12.10.2026. Mangler 050 likevel (prod før kjøring), merker appen det
     /// på svaret (`PushSchema.isMissing`) og bruker den gamle veien.
-    static let isEnabled = true
+    /// Kan slås av fra serveren: `ios_flags.social` (sql/068).
+    static var isEnabled: Bool { !KillSwitch.isOff("social") }
 }
 
 /// Hva en reaksjon eller kommentar henger på (`reactions.target_kind`, `comments.target_kind`).

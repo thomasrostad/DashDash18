@@ -8,7 +8,8 @@ import SwiftUI
 nonisolated enum TVCodeFeature {
     /// På siden 10.10.2026: 041 er kjørt på test, og TV-siden er ute (Workeren `atten-lenker`, prøvd med en
     /// kode mot «Test golf»).
-    static let isEnabled = true
+    /// Kan slås av fra serveren: `ios_flags.tv_code` (sql/068).
+    static var isEnabled: Bool { !KillSwitch.isOff("tv_code") }
     /// Liga, cup og morro (`sql/043_tv_liga.sql`): på siden 10.10.2026, 043 er kjørt på test og Workeren er ute
     /// (prøvd med en kode mot «Høstmorro»).
     static let competitionsEnabled = true

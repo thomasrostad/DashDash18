@@ -4,7 +4,8 @@ import Foundation
 /// Bryter for Live Activity. Krever widget-targetet (DashDash18Widgets) og
 /// `NSSupportsLiveActivities = YES`; uten dem feiler `Activity.request`. Se docs/widgets-oppsett.md.
 nonisolated enum LiveActivityFeature {
-    static let isEnabled = true
+    /// Kan slås av fra serveren: `ios_flags.live_activity` (sql/068).
+    static var isEnabled: Bool { !KillSwitch.isOff("live_activity") }
 }
 
 /// Starter, oppdaterer og avslutter Live Activity for runden som går. `RundeModel` kaller

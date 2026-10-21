@@ -49,7 +49,8 @@ nonisolated enum PurchaseFeature {
 /// «Del regningen» med Vipps (felles utgifter, aldri veddemål). Lagring og «Mine oppgjør» krever
 /// sql/051; uten den deles regningen som før, uten lagring.
 nonisolated enum BillSplitFeature {
-    static let isEnabled = true
+    /// Kan slås av fra serveren: `ios_flags.bill_split` (sql/068).
+    static var isEnabled: Bool { !KillSwitch.isOff("bill_split") }
 }
 
 /// Personvernerklæringen og vilkårene, publisert på dashdash18.com av workeren `atten-lenker`

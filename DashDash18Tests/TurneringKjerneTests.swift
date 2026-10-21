@@ -380,14 +380,59 @@ struct MinsteByggTests {
     }
 
     @Test func decodesConfigValue() throws {
-        func build(_ json: String) throws -> Int? {
-            try JSONDecoder().decode(AppConfigMinBuildRow.self, from: Data(json.utf8)).value?.build
+        func config(_ json: String) throws -> AppBuildConfig {
+            AppBuildConfig(rows: try JSONDecoder().decode([AppConfigRow].self, from: Data(json.utf8)))
         }
-        #expect(try build(#"{"value": {"build": 0}}"#) == 0)
-        #expect(try build(#"{"value": {"build": 57}}"#) == 57)
-        #expect(try build(#"{"value": {"build": "58"}}"#) == 58)
-        #expect(try build(#"{"value": {"build": "neste"}}"#) == nil)
-        #expect(try build(#"{"value": {}}"#) == nil)
-        #expect(try build(#"{"value": null}"#) == nil)
+        func build(_ value: String) throws -> Int? {
+            try config(#"[{"key": "min_ios_build", "value": \#(value)}]"#).minimumBuild
+        }
+        #expect(try build(#"{"build": 0}"#) == 0)
+        #expect(try build(#"{"build": 57}"#) == 57)
+        #expect(try build(#"{"build": "58"}"#) == 58)
+        #expect(try build(#"{"build": "neste"}"#) == nil)
+        #expect(try build(#"{}"#) == nil)
+        #expect(try build("null") == nil)
+        #expect(try config("[]") == AppBuildConfig())
+    }
+
+    /// sql/068: anbefalt bygg og nødbrytere i samme lesing. Ukjente nøkler og verdier som ikke er
+    /// sanne eller usanne, tas ikke med.
+    @Test func decodesRecommendedBuildAndFlags() throws {
+        let json = #"""
+        [{"key": "min_ios_build", "value": {"build": 181}},
+         {"key": "recommended_ios_build", "value": {"build": 201}},
+         {"key": "ios_flags", "value": {"social": false, "tv_code": true, "games": "av"}},
+         {"key": "waitlist_offer_hours", "value": {"hours": 48}}]
+        """#
+        let config = AppBuildConfig(rows: try JSONDecoder().decode([AppConfigRow].self, from: Data(json.utf8)))
+        #expect(config == AppBuildConfig(minimumBuild: 181, recommendedBuild: 201,
+                                         flags: ["social": false, "tv_code": true]))
+    }
+
+    @Test func suggestsOncePerRecommendedBuild() {
+        #expect(MinimumBuild.shouldSuggest(current: 190, recommended: 201, dismissed: nil))
+        #expect(MinimumBuild.shouldSuggest(current: 190, recommended: 201, dismissed: 195))
+        // Svart på 201: ingen ny beskjed før et nyere bygg anbefales.
+        #expect(!MinimumBuild.shouldSuggest(current: 190, recommended: 201, dismissed: 201))
+        #expect(MinimumBuild.shouldSuggest(current: 190, recommended: 210, dismissed: 201))
+        // Nytt nok, 0 eller ukjent: ingen beskjed.
+        #expect(!MinimumBuild.shouldSuggest(current: 201, recommended: 201, dismissed: nil))
+        #expect(!MinimumBuild.shouldSuggest(current: 190, recommended: 0, dismissed: nil))
+        #expect(!MinimumBuild.shouldSuggest(current: nil, recommended: 201, dismissed: nil))
+        #expect(!MinimumBuild.shouldSuggest(current: 190, recommended: nil, dismissed: nil))
+    }
+}
+
+/// sql/068: nødbryterne slår bare av. Det som ikke står i `ios_flags`, eller står som på, er på.
+/// Egne navn, så funksjonene andre tester bruker, aldri slås av mens de kjører.
+struct NodbryterTests {
+    @Test func flagsOnlyTurnOff() {
+        #expect(!KillSwitch.isOff("prove_068_av"))
+        KillSwitch.set(["prove_068_av": false, "prove_068_pa": true])
+        #expect(KillSwitch.isOff("prove_068_av"))
+        #expect(!KillSwitch.isOff("prove_068_pa"))
+        #expect(!KillSwitch.isOff("prove_068_ukjent"))
+        KillSwitch.set([:])
+        #expect(!KillSwitch.isOff("prove_068_av"))
     }
 }

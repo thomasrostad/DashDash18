@@ -8,7 +8,8 @@ import SwiftUI
 /// trekkes koden tilbake og lenken slutter å virke. Spillerne kan dele lenken videre når den er på.
 nonisolated enum TavlaShareFeature {
     /// På fra 16.10.2026: 056 er kjørt på test og `/tavla` er ute i Workeren `atten-lenker`.
-    static let isEnabled = true
+    /// Kan slås av fra serveren: `ios_flags.tavla_share` (sql/068).
+    static var isEnabled: Bool { !KillSwitch.isOff("tavla_share") }
 }
 
 nonisolated enum TavlaShare {
