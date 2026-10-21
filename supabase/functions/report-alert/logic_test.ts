@@ -133,6 +133,55 @@ Deno.test("e-posten: turnering, bilde, ukjente navn og utdrag på høyst 300 teg
   ok(prof.text.includes("Utenfor klubb og turnering"));
 });
 
+Deno.test("e-posten: bane i biblioteket (066) går bare til oss og har innholdets id", () => {
+  const m = alertMessage({
+    ...PAYLOAD,
+    kind: "course",
+    target_id: "0f0f0f0f-1111-4222-8333-944455556666",
+    reason: "offensive",
+    excerpt: "Tullebanen",
+    club_name: null,
+    competition_name: null,
+    note: null,
+  }, "a@b.no");
+  is(m.subject, "Atten: ny rapport (bane i banebiblioteket)");
+  ok(m.text.includes("Det felles banebiblioteket"));
+  ok(m.text.includes("Utdrag: Tullebanen"));
+  ok(m.text.includes("Ingen arrangør kan avgjøre den"));
+  ok(!m.text.includes("i Atten, eller ta det i databasen"));
+  ok(m.text.includes("Innholdets id: 0f0f0f0f-1111-4222-8333-944455556666"));
+  ok(m.text.includes(`Rapport-id: ${ID}`));
+  ok(!m.text.includes("Utenfor klubb og turnering"));
+});
+
+Deno.test("e-posten: turnering i «Finn turneringer» (066) med klubben", () => {
+  const m = alertMessage({
+    ...PAYLOAD,
+    kind: "competition",
+    target_id: "0e0e0e0e-1111-4222-8333-944455556666",
+    reason: "impersonation",
+    excerpt: "Vinterserien · Bryn Studio",
+    club_name: "Bryn Studio",
+    competition_name: "Vinterserien",
+  }, "a@b.no");
+  is(m.subject, "Atten: ny rapport (turnering i «Finn turneringer»)");
+  ok(m.text.includes("Turnering: Vinterserien (klubb: Bryn Studio), i «Finn turneringer» for alle"));
+  ok(!m.text.includes("Klubb: Bryn Studio"));
+  ok(m.text.includes("Grunn: Utgir seg for å være en annen"));
+  ok(m.text.includes("Ingen arrangør kan avgjøre den"));
+  ok(m.text.includes("Innholdets id: 0e0e0e0e-1111-4222-8333-944455556666"));
+
+  const unknown = alertMessage({ ...PAYLOAD, kind: "competition", competition_name: null, club_name: null }, "a@b.no");
+  ok(unknown.text.includes("Turnering: (ukjent navn), i «Finn turneringer» for alle"));
+});
+
+Deno.test("e-posten: uten target_id (før 066) står bare rapport-id-en, og meldinger er som før", () => {
+  const m = alertMessage(PAYLOAD, "a@b.no");
+  ok(!m.text.includes("Innholdets id"));
+  ok(m.text.includes("fjern innholdet eller avvis"));
+  ok(m.text.includes("Klubb: Golfgutu"));
+});
+
 Deno.test("kjøring: feil hemmelighet gir 401 uten oppslag", async () => {
   const { d, calls, sent } = deps({ header: "feil" });
   eq(await runAlert(d), { status: 401, body: { error: "unauthorized" } });

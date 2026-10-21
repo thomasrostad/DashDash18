@@ -13,9 +13,11 @@ struct CoursePickerView: View {
     @State private var isCreating = false
     @State private var loadingID: UUID?
     @State private var slopeError: DataError?
+    /// Banen som rapporteres (sql/066, `PublicContentReportFeature`).
+    @State private var reporting: CourseListItem?
 
     private var matching: [CourseListItem] {
-        CourseSearch.filter(model.items, query: search)
+        CourseSearch.filter(model.listedItems, query: search)
     }
 
     /// Hentede baner med hull (fase 20b), bare når en bane velges til en runde.
@@ -74,6 +76,12 @@ struct CoursePickerView: View {
         }
         .navigationDestination(isPresented: $isCreating) {
             CourseEditView(model: model, item: nil)
+        }
+        .sheet(item: $reporting) { item in
+            ReportSheet(target: ReportTarget(kind: .course, targetID: item.id, memberID: nil,
+                                             authorName: item.course.name)) { reason, note, _ in
+                try await model.report(item, reason: reason, note: note)
+            }
         }
     }
 
@@ -157,11 +165,25 @@ struct CoursePickerView: View {
                     if model.canEdit(item) {
                         NavigationLink("Rett banen") { CourseEditView(model: model, item: item) }
                     }
+                    reportButton(item)
                 }
+                .swipeActions(edge: .trailing) { reportButton(item) }
         } else if model.canEdit(item) {
             NavigationLink { CourseEditView(model: model, item: item) } label: { label }
         } else {
+            // Også «Ikke klar»-baner fra andre kan rapporteres.
             label
+                .contextMenu { reportButton(item) }
+                .swipeActions(edge: .trailing) { reportButton(item) }
+        }
+    }
+
+    /// «Rapporter banen» for en bane en annen har lagt inn i det felles biblioteket.
+    @ViewBuilder
+    private func reportButton(_ item: CourseListItem) -> some View {
+        if model.canReport(item) {
+            Button("Rapporter banen", systemImage: "flag") { reporting = item }
+                .tint(Color.ddRust)
         }
     }
 }

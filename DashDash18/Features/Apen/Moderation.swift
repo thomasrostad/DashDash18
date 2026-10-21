@@ -12,6 +12,10 @@ nonisolated enum ReportKind: String, Codable, Sendable {
     case profile
     /// En kommentar (sql/050).
     case comment
+    /// En bane i det felles biblioteket som en annen har lagt inn (sql/066).
+    case course
+    /// En turnering i «Finn turneringer» (sql/066).
+    case competition
 
     var title: String {
         switch self {
@@ -20,6 +24,8 @@ nonisolated enum ReportKind: String, Codable, Sendable {
         case .member: "Rapporter navnet"
         case .profile: "Rapporter profilen"
         case .comment: "Rapporter kommentaren"
+        case .course: "Rapporter banen"
+        case .competition: "Rapporter turneringen"
         }
     }
 
@@ -31,7 +37,25 @@ nonisolated enum ReportKind: String, Codable, Sendable {
         case .member: "Navn i troppen"
         case .profile: "Profil"
         case .comment: "Kommentar"
+        case .course: "Bane"
+        case .competition: "Turnering"
         }
+    }
+
+    /// Ser en arrangør rapporten? Baner og offentlige turneringer har ingen arrangør over seg
+    /// (klubbens arrangør står bak turneringen), så de går bare til oss (sql/066).
+    var reachesOrganizer: Bool {
+        switch self {
+        case .course, .competition: false
+        default: true
+        }
+    }
+
+    /// Takken etter at rapporten er sendt.
+    var sentText: String {
+        reachesOrganizer
+            ? "Takk. Rapporten er sendt til arrangøren og oss, og vi ser på den innen 24 timer."
+            : "Takk. Rapporten er sendt til oss, og vi ser på den innen 24 timer."
     }
 }
 
@@ -58,12 +82,13 @@ nonisolated enum ReportReason: String, CaseIterable, Codable, Identifiable, Send
     }
 
     /// Grunnene som passer for typen innhold: bildegrunnen for bilder, navn og profiler, og
-    /// «utgir seg for» bare for navn og profiler.
+    /// «utgir seg for» bare for navn, profiler og turneringer (en turnering kan late som den er en
+    /// annen klubbs).
     static func options(for kind: ReportKind) -> [ReportReason] {
         allCases.filter { reason in
             switch reason {
             case .inappropriateImage: kind == .image || kind == .member || kind == .profile
-            case .impersonation: kind == .member || kind == .profile
+            case .impersonation: kind == .member || kind == .profile || kind == .competition
             default: true
             }
         }
@@ -188,6 +213,53 @@ nonisolated enum BlockRules {
     }
 }
 
+/// Det du har rapportert og som ikke er avvist (`my_hidden_content`, sql/066). Skjules for deg i
+/// banebiblioteket og i «Finn turneringer», slik rapporterte meldinger skjules i tråden.
+nonisolated struct HiddenContent: Equatable, Sendable {
+    var courses: Set<UUID> = []
+    var competitions: Set<UUID> = []
+
+    struct Row: Decodable, Equatable, Sendable {
+        let kind: String
+        let targetID: UUID
+
+        enum CodingKeys: String, CodingKey {
+            case kind
+            case targetID = "target_id"
+        }
+    }
+
+    init(courses: Set<UUID> = [], competitions: Set<UUID> = []) {
+        self.courses = courses
+        self.competitions = competitions
+    }
+
+    /// Radene fra serveren. Ukjente typer hoppes over.
+    init(rows: [Row]) {
+        for row in rows {
+            switch ReportKind(rawValue: row.kind) {
+            case .course: courses.insert(row.targetID)
+            case .competition: competitions.insert(row.targetID)
+            default: break
+            }
+        }
+    }
+
+    /// Legger til det som nettopp er rapportert, så det forsvinner med en gang.
+    mutating func insert(_ kind: ReportKind, _ id: UUID) {
+        switch kind {
+        case .course: courses.insert(id)
+        case .competition: competitions.insert(id)
+        default: break
+        }
+    }
+
+    /// Begge settene sammen.
+    func merging(_ other: HiddenContent) -> HiddenContent {
+        HiddenContent(courses: courses.union(other.courses), competitions: competitions.union(other.competitions))
+    }
+}
+
 /// Kallene mot Supabase.
 nonisolated struct ModerationService: Sendable {
     let client: SupabaseClient
@@ -218,6 +290,16 @@ nonisolated struct ModerationService: Sendable {
 
     func unblock(_ userID: UUID) async throws {
         try await client.from("user_blocks").delete().eq("blocked_id", value: userID).execute()
+    }
+
+    /// Baner og turneringer du har rapportert (sql/066). Tomt når `PublicContentReportFeature` er av.
+    func hiddenContent() async throws -> HiddenContent {
+        guard PublicContentReportFeature.isEnabled else { return HiddenContent() }
+        struct Params: Encodable { let p_kinds: [String] }
+        let rows: [HiddenContent.Row] = try await client.rpc("my_hidden_content", params: Params(
+            p_kinds: [ReportKind.course.rawValue, ReportKind.competition.rawValue]
+        )).execute().value
+        return HiddenContent(rows: rows)
     }
 
     func myBlocks() async throws -> [BlockedUser] {
