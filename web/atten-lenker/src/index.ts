@@ -13,7 +13,7 @@ import { captchaResponse } from "./captcha.ts";
 /// Teksten til den som ikke har appen. Bytt til App Store-lenken når appen er ute,
 /// f.eks. `Last ned Atten fra <a href="https://apps.apple.com/…">App Store</a>.` (HTML er lov her).
 export const GET_THE_APP_HTML =
-  "Har du ikke appen? Atten er i testing – spør den som inviterte deg om en TestFlight-invitasjon.";
+  'Har du ikke appen? Last ned Atten fra <a href="https://apps.apple.com/no/app/atten/id6820031728" rel="noopener">App Store</a>.';
 
 export const APP_ID = "JNMQJPCV24.com.dashdash18.app";
 const APP_SCHEME = "dashdash";
