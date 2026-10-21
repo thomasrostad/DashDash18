@@ -88,8 +88,16 @@ nonisolated struct HomeFeedDrafts: Sendable {
         case let .bigScore(member, hole, _, name, strokes, par):
             let label = row.roundID.flatMap { input.roundLabels[$0] }
             let card = feat(member: member, name: context.name(member), isMe: context.viewer.memberIDs.contains(member),
-                            kind: name, hole: hole, strokes: strokes, par: par, label: label, roundID: row.roundID,
-                            reactions: context.reactions(row))
+                            kind: HomeFeatKind(name), hole: hole, strokes: strokes, par: par, label: label,
+                            roundID: row.roundID, reactions: context.reactions(row))
+            return HomeFeedDraft(id: id, date: row.createdAt, source: placement.source, filters: placement.filters,
+                                 kind: .feat(card), isUnread: unread, isOwn: own)
+
+        case let .quietScore(member, hole, _, name, strokes, par):
+            let label = row.roundID.flatMap { input.roundLabels[$0] }
+            let card = feat(member: member, name: context.name(member), isMe: context.viewer.memberIDs.contains(member),
+                            kind: HomeFeatKind(name), hole: hole, strokes: strokes, par: par, label: label,
+                            roundID: row.roundID, reactions: context.reactions(row))
             return HomeFeedDraft(id: id, date: row.createdAt, source: placement.source, filters: placement.filters,
                                  kind: .feat(card), isUnread: unread, isOwn: own)
 
@@ -216,8 +224,9 @@ nonisolated struct HomeFeedDrafts: Sendable {
 
     // MARK: Bragder utenfor klubbene
 
-    /// Eagle og bedre (brutto) i løse runder og i runder fra klubber du ikke er med i (private
-    /// turneringer). Klubbrundene dine har dem allerede som `big_score` i aktiviteten.
+    /// Eagle og bedre (brutto), birdie og shank (når regelsettet slår det på) i løse runder og i
+    /// runder fra klubber du ikke er med i (private turneringer). Klubbrundene dine har dem allerede
+    /// som `big_score` og `quiet_score` i aktiviteten.
     var roundFeats: [HomeFeedDraft] {
         uniqueRounds.flatMap { s -> [HomeFeedDraft] in
             guard s.round.status != .draft else { return [] }
@@ -229,7 +238,9 @@ nonisolated struct HomeFeedDrafts: Sendable {
             return s.scores.compactMap { score -> HomeFeedDraft? in
                 guard game.holes.indices.contains(score.holeIndex) else { return nil }
                 let par = game.holes[score.holeIndex].par
-                guard let kind = BigScore.detect(gross: score.strokes, par: par) else { return nil }
+                guard let kind = BigScore.detect(gross: score.strokes, par: par).map(HomeFeatKind.init)
+                        ?? QuietScore.detect(gross: score.strokes, par: par, shankPosts: game.rules.play.shankPosts)
+                            .map(HomeFeatKind.init) else { return nil }
                 let name = s.names[score.memberID] ?? input.names[score.memberID] ?? "Noen"
                 let card = feat(member: score.memberID, name: name, isMe: score.memberID == me, kind: kind,
                                 hole: game.holeNumber(score.holeIndex), strokes: score.strokes, par: par, label: label,
@@ -242,7 +253,7 @@ nonisolated struct HomeFeedDrafts: Sendable {
         }
     }
 
-    func feat(member: UUID, name: String, isMe: Bool, kind: BigScoreName, hole: Int, strokes: Int, par: Int,
+    func feat(member: UUID, name: String, isMe: Bool, kind: HomeFeatKind, hole: Int, strokes: Int, par: Int,
               label: HomeRoundLabel?, roundID: UUID?, reactions: HomeReactions?) -> HomeFeatCard {
         let place = [HomeFeedText.roundPlace(label), "hull \(hole)"].compactMap { $0 }.joined(separator: " · ")
         let detail = ["\(strokes) slag på par \(par)", label?.courseName].compactMap { $0 }.joined(separator: " · ")

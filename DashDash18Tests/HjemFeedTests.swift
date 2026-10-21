@@ -364,6 +364,25 @@ struct HjemFeedKortTests {
         #expect(feed.pills.last?.tone == .earth)
     }
 
+    /// Birdie og shank (sql/068) står som bragd i feeden, med egen overskrift og farge.
+    @Test func birdieOgShankFraAktiviteten() throws {
+        let input = H.input([
+            H.row(1, .quietScore(member: H.anders, hole: 3, holeIndex: 2, name: .birdie, strokes: 2, par: 3),
+                  actor: H.anders, round: H.clubRound, at: H.ago(minutes: 3)),
+            H.row(2, .quietScore(member: H.bjorn, hole: 4, holeIndex: 3, name: .shank, strokes: 8, par: 4),
+                  actor: H.bjorn, round: H.clubRound, at: H.ago(minutes: 5)),
+        ])
+        let feats = HomeFeed.build(input).sections.flatMap(\.cards).compactMap { c -> HomeFeatCard? in
+            if case .feat(let f) = c.content { f } else { nil }
+        }
+        #expect(feats.map(\.headline) == ["Birdie på hull 3", "Shank på hull 4"])
+        #expect(feats.map(\.kind) == [.birdie, .shank])
+        #expect(HjemDisplay.featTitle(feats[0]) == "Anders Berg slo birdie")
+        #expect(HjemDisplay.featScoreName(.birdie) == .birdie)
+        #expect(HjemDisplay.featScoreName(.shank) == .blowup)
+        #expect(feats[0].reactions != nil)
+    }
+
     @Test func bragderIKlubbrundeneDineKommerBareFraAktiviteten() {
         var input = H.input()
         input.rounds = [H.myClubRound()]  // Anders' eagle står i hullscorene, men ikke i aktiviteten

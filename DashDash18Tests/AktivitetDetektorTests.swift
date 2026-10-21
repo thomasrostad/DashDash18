@@ -51,6 +51,36 @@ struct AktivitetStorScoreTests {
         #expect(g.bigScoreEvents(hole: 99, saved: [(anders, 1)]).isEmpty)
     }
 
+    /// Birdie og shank (sql/068): brutto, og shank bare når regelsettet slår det på.
+    @Test func stilleScorerErBrutto() {
+        #expect(QuietScore.detect(gross: 3, par: 4, shankPosts: false) == .birdie)
+        #expect(QuietScore.detect(gross: 2, par: 3, shankPosts: false) == .birdie)
+        #expect(QuietScore.detect(gross: 1, par: 3, shankPosts: true) == nil)
+        #expect(QuietScore.detect(gross: 3, par: 5, shankPosts: true) == nil)
+        #expect(QuietScore.detect(gross: 4, par: 4, shankPosts: true) == nil)
+        #expect(QuietScore.detect(gross: 7, par: 4, shankPosts: true) == nil)
+        #expect(QuietScore.detect(gross: 8, par: 4, shankPosts: true) == .shank)
+        #expect(QuietScore.detect(gross: 9, par: 4, shankPosts: false) == nil)
+    }
+
+    @Test func stilleScorerForHulletSomBleLagret() {
+        // Hull 1 er par 4.
+        var s = F.snapshot([F.P(n: 1, name: "Anders"), F.P(n: 2, name: "Bjørn"), F.P(n: 3, name: "Cato")])
+        #expect(RoundGame(s).quietScoreEvents(hole: 0, saved: [(anders, 3), (bjorn, 8), (cato, 4)])
+                == [.quietScore(member: anders, hole: 1, holeIndex: 0, name: .birdie, strokes: 3, par: 4)])
+        s.rules.play.shankPosts = true
+        let g = RoundGame(s)
+        #expect(g.quietScoreEvents(hole: 0, saved: [(anders, 3), (bjorn, 8), (cato, 4)]) == [
+            .quietScore(member: anders, hole: 1, holeIndex: 0, name: .birdie, strokes: 3, par: 4),
+            .quietScore(member: bjorn, hole: 1, holeIndex: 0, name: .shank, strokes: 8, par: 4),
+        ])
+        // Lagret hull: både eagle (push) og birdie (feeden) kommer ut, i den rekkefølgen.
+        #expect(g.bigScoreEventsAfterSaving(hole: 1, fresh: [(anders, 3), (bjorn, 4)]) == [
+            .bigScore(member: anders, hole: 2, holeIndex: 1, name: .eagle, strokes: 3, par: 5),
+            .quietScore(member: bjorn, hole: 2, holeIndex: 1, name: .birdie, strokes: 4, par: 5),
+        ])
+    }
+
     @Test func sisteNiBrukerHullnummeretPåKortet() {
         var s = F.snapshot([F.P(n: 1, name: "Anders")], round: F.round(holeCount: 9, firstHole: 10))
         s.scores = []

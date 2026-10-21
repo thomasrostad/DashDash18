@@ -31,6 +31,9 @@ nonisolated enum ActivityOnce {
         case let .bigScore(member, hole, holeIndex, _, _, _):
             let spot = holeIndex.map { "i\($0)" } ?? "h\(hole)"
             return "big_score:\(round):\(member.uuidString):\(spot)"
+        case let .quietScore(member, hole, holeIndex, _, _, _):
+            let spot = holeIndex.map { "i\($0)" } ?? "h\(hole)"
+            return "quiet_score:\(round):\(member.uuidString):\(spot)"
         case let .leadChanged(afterHole, _, _, _):
             return "lead_changed:\(round):\(afterHole)"
         case let .tableChanged(competition, _, _, _):
@@ -66,12 +69,12 @@ nonisolated extension RoundGame {
         status == .active ? startedEvent : nil
     }
 
-    /// Store scorer blant hullene som ble ført for første gang (`loggStorScore`). En retting
-    /// (spilleren er ikke i `fresh`) gir ingen.
+    /// Store scorer blant hullene som ble ført for første gang (`loggStorScore`), og birdie og shank
+    /// til feeden (sql/068). En retting (spilleren er ikke i `fresh`) gir ingen.
     /// Ingen på et skjult hull (sql/047, «skjul de tre siste hullene»): varselet ville vist scoren.
     func bigScoreEventsAfterSaving(hole: Int, fresh: [FreshScore]) -> [ActivityEvent] {
         guard status == .active, !round.hiddenHoleIndices.contains(hole) else { return [] }
-        return bigScoreEvents(hole: hole, saved: fresh)
+        return bigScoreEvents(hole: hole, saved: fresh) + quietScoreEvents(hole: hole, saved: fresh)
     }
 
     /// Skal ledelsen sjekkes etter at `hole` er lagret? Bare når noen førte hullet for første gang

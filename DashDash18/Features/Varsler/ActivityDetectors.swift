@@ -17,6 +17,21 @@ nonisolated enum BigScore {
     }
 }
 
+/// `quiet_score` (sql/068): brutto birdie, og shank (brutto firedobbel bogey eller verre) når
+/// regelsettet slår det på. Hole in one er en `BigScore`, ikke en birdie.
+nonisolated enum QuietScore {
+    /// Så mange slag over par en shank er (firedobbel bogey).
+    static let shankOverPar = 4
+
+    static func detect(gross: Int, par: Int, shankPosts: Bool) -> QuietScoreName? {
+        guard BigScore.detect(gross: gross, par: par) == nil else { return nil }
+        let diff = gross - par
+        if diff == -1 { return .birdie }
+        if shankPosts, diff >= shankOverPar { return .shank }
+        return nil
+    }
+}
+
 // MARK: - Ledelsen underveis
 
 /// `loggLedelseHvisEndret`: hvem leder etter de n FØRSTE hullene, ved sjekkpunktene.
@@ -129,6 +144,17 @@ nonisolated extension RoundGame {
         return saved.compactMap { s in
             BigScore.detect(gross: s.strokes, par: par).map {
                 .bigScore(member: s.member, hole: holeNumber(index), holeIndex: index, name: $0, strokes: s.strokes, par: par)
+            }
+        }
+    }
+
+    /// Birdie og shank blant hullene som nettopp ble lagret for første gang (feeden, ingen push).
+    func quietScoreEvents(hole index: Int, saved: [(member: UUID, strokes: Int)]) -> [ActivityEvent] {
+        guard holes.indices.contains(index) else { return [] }
+        let par = holes[index].par
+        return saved.compactMap { s in
+            QuietScore.detect(gross: s.strokes, par: par, shankPosts: rules.play.shankPosts).map {
+                .quietScore(member: s.member, hole: holeNumber(index), holeIndex: index, name: $0, strokes: s.strokes, par: par)
             }
         }
     }

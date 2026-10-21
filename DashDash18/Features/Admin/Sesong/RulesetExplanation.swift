@@ -67,6 +67,9 @@ nonisolated enum RulesetExplanation {
         if play.lockSubmittedCards {
             out.append("Når markøren har levert kortet, kan bare arrangøren endre det eller åpne det igjen.")
         }
+        if play.shankPosts {
+            out.append("Firedobbel bogey eller verre (brutto) står i feeden som en shank, uten varsel.")
+        }
         if play.hiddenHoles != Ruleset.PlayRules.standard.hiddenHoles {
             out.append("Skjuler arrangøren de siste hullene i en runde, er det de \(play.hiddenHoles) siste: stillingen vises uten dem til runden er låst.")
         }

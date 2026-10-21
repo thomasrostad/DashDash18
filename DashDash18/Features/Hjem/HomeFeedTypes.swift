@@ -251,17 +251,38 @@ nonisolated struct HomeMyRoundCard: Equatable, Sendable {
 }
 
 /// Bragd: eagle, albatross eller hole in one (brutto).
+/// Hva bragden er: eagle og bedre (`big_score`, push), eller birdie og shank (`quiet_score`, bare
+/// i feeden, sql/068).
+nonisolated enum HomeFeatKind: Equatable, Sendable {
+    case holeInOne, albatross, eagle, birdie, shank
+
+    init(_ name: BigScoreName) {
+        self = switch name {
+        case .holeInOne: .holeInOne
+        case .albatross: .albatross
+        case .eagle: .eagle
+        }
+    }
+
+    init(_ name: QuietScoreName) {
+        self = switch name {
+        case .birdie: .birdie
+        case .shank: .shank
+        }
+    }
+}
+
 nonisolated struct HomeFeatCard: Equatable, Sendable {
     let memberID: UUID
     let name: String
     /// «AB».
     let initials: String
     let isMe: Bool
-    let kind: BigScoreName
+    let kind: HomeFeatKind
     let strokes: Int
     let par: Int
     let hole: Int
-    /// «Eagle på hull 5», «Hole in one på hull 12!».
+    /// «Eagle på hull 5», «Hole in one på hull 12!», «Birdie på hull 3».
     let headline: String
     /// «3 slag på par 5 · Losby».
     let detail: String
