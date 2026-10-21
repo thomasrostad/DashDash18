@@ -10,10 +10,10 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | Fase 12–17 bygget. På test er 011–024 kjørt (08.10). Slått på: alt unntatt Google-innlogging og kjøp (onboarding uten klubb på 09.10), som venter på oppsett i App Store Connect og Google og på publisert personvern (`docs/gjoremal.md`). |
-| **Sist gjort** | 14.10: UI-utbedringen etter skjermgjennomgangen (`docs/ui-utbedring.md`): nytt designsystem, systemets navigasjonslinje, par som forvalg i føringen, live-bar over fanelinja, ny Tavla, «I kveld» for arrangøren og fokusert føring. 08.10: arrangørsiden gjennomgått mot beste praksis og omstrukturert (fase 11, `docs/arrangorsiden-vurdering.md`): Kveldene/Kvelden, én rundeliste, én oppsettsflyt, «Kom i gang», sesong lander på aktiv. Hjem-feed vurdert i `docs/hjem-feed.md`. Før det, 07.10: total gjennomgang av oppførselen i fem områder (Kveld/admin-runde, Runde/utboks/Live Activity, Tavla/deling/widgets/veddemål, Tråd/varsler/push/tips/Deg, innlogging/klubb/app-skall/admin). Rundt 45 feil rettet, bl.a. hull i kø som forsvant etter omstart, oppstart uten nett, live-oppdatering av Kveld og Tavla, push mens appen er åpen. 680 enhetstester grønne. |
-| **Neste oppgave** | Fase 12–17 er bygget, og 019–027 og 029–032 er kjørt på test. `delete-account` er deployet. Gjenstår: oppsett i App Store Connect og Google (`docs/gjoremal.md` C), så `verify-purchase` med IAP-nøkkelen og flaggene for kjøp og Google (onboarding er på). Prøve arrangørflyten på telefon. Deretter byttet for gjengen (fase 9) og prod. |
-| **Venter på deg** | Beta App Review for første eksterne bygg. «Allow manual linking» i Supabase Auth (Apple-kobling). Prøve LD/KP, avkorting og avslutt kvelden på telefon. B15: slope.no dekker CR/slope for nordiske baner (fase 20); GolfAPI.io trengs bare for par og indeks per hull. Google-innlogging. |
+| **Nåværende fase** | **Atten 1.0 er ute i App Store** (godkjent og sluppet 21.10, bare Norge, gratis). Gjengen har byttet fra PWA-en (fase 9 ferdig 21.10). 1.0.1 (build 201) er i App Review med rask behandling og slippes automatisk. Prod (`wxabhadvuzyrmndxpuza`) har alle migreringer til og med 067. |
+| **Sist gjort** | 20.–21.10: prod satt opp (`docs/prod-sjekkliste.md`), nattlig backup til R2 (#163), feilsporing med MetricKit (#164), personvern og vilkår publisert (#159). 1.0 avvist for simulert gambling (2.3.6), rettet med veddemål av og tips for æra i prod (#166–#168), godkjent 21.10. Import fra PWA-en til prod og PWA-en fryst (golfgutu#58). 1.0.1: CAPTCHA (av til site key, #169), blokkering (#170), Apple-token trekkes tilbake ved sletting (#171), rapport på baner og turneringer (#172–#173), varsel om ventende medlemmer (#176–#177), varsler spørres ved første oppstart (#178). 15.–20.10: regelvern, nye spillformer, Del tavla, konfliktark, scramble-turneringer og deltakere uten innlogging (055–061). |
+| **Neste oppgave** | Første klubbkveld i appen 22.10: følg med og samle tilbakemeldinger. Etter det: 1.1 (Google-innlogging og kjøp), prøve flytene som står «Prøve på telefon» under, og rydde flagg som står permanent på. |
+| **Venter på deg** | Slippe CAPTCHA på i prod-Supabase når 1.0.1 er ute (krever Turnstile site key). Prøve gjenoppretting fra backup (passordet har bare du). «Development Region» til norsk i Xcode. Google-innlogging og kjøp i App Store Connect og Google før 1.1. |
 
 ---
 
@@ -48,7 +48,7 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Miljøkonfig for test og prod i filer som ikke sjekkes inn, med tydelig visning av miljø i appen. *(`Config/Supabase-<Miljø>.plist` utenfor git, `AppConfig` avviser feil miljø og hemmelig nøkkel, TEST-merke i verktøylinjen og miljø i Deg.)*
 - [x] **Skjema v1** for kjernen (SQL i `sql/`, til godkjenning): klubb/tropp, medlemmer og roller, sesong med regelsett (B12), kveld, påmelding, bane og hull, runde, deltakere, bås og markør, lag, match, score. Med RLS og grants, også anon-revoke. *(`sql/001_skjema_v1.sql`, godkjent 06.10.)*
 - [x] Kjøre skjemaet på test etter godkjenning, med kontrollspørringer. *(10/10 ok, anon får 42501.)*
-- [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først. *(06.10: e-postkode prøvd på telefon via Resend fra `noreply@dashdash18.com`. Logg inn med Apple bygget og slått på i Supabase. Google gjenstår.)*
+- [ ] Innlogging: Logg inn med Apple (native), Google (OAuth) og e-postkode (B9). Supabase-konfig godkjennes først. *(06.10: e-postkode prøvd på telefon via Resend fra `noreply@dashdash18.com`. Logg inn med Apple bygget og slått på i Supabase. Google gjenstår.)* *(21.10: 1.0 har Apple og e-postkode. Google kommer i 1.1.)*
 - [x] Første innlogging: velg navn i troppen eller bli med som ny. Arrangør kan godkjenne og frigjøre. *(06.10: lag klubb, bli med med kode, ta ledig navn eller vent på godkjenning, Deg viser klubb/rolle/kode. Godkjenning i admin kommer i fase 3. «Lag en ny klubb» prøvd på telefon mot test 06.10.)*
 - [x] Rolig Kveld-skjerm som viser «Ingen kveld satt opp» og hvem som er logget inn. *(Erstattet av Kveld-fanen med neste kveld og påmelding.)*
 
@@ -163,8 +163,8 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 - [x] Lokal lagring med SwiftData (B6): cache og utboks. Hull i kø sendes i rekkefølge med nye forsøk, også etter at appen er drept. *(06.10: utboks med kø, komprimering, backoff. Ikke prøvd i flymodus.)*
 - [x] Realtime og henting på nytt når appen blir aktiv. *(06.10.)*
 - [x] Scorekort Ut/Inn. Feiring (birdie, eagle, albatross, hole in one) med redusert-bevegelse-støtte. *(06.10.)*
-- [ ] TestFlight-oppsett og første bygg til noen i gjengen (B1).
-- [ ] Prøvekveld: en kveld der minst én bås fører i appen ved siden av PWA-en.
+- [x] TestFlight-oppsett og første bygg til noen i gjengen (B1). *(Gjengen testet via TestFlight fra 16.10.)*
+- [ ] Prøvekveld: en kveld der minst én bås fører i appen ved siden av PWA-en. *(Hoppet over: gjengen byttet 21.10, første kveld i appen er 22.10.)*
 
 **Ferdig når:**
 - Jeg fører 9 hull for fire spillere, og poengene i appen er de samme som PWA-en ville gitt for samme slag.
@@ -270,12 +270,12 @@ Tester i parentes er filer i `referanse/golfgutu-pwa/tests/`. Hver av dem skal h
 
 - [x] Importverktøy (lesing fra PWA-ens prod, skriving til appens database): spillere, baner, terminliste, påmeldinger, runder med oppsett, scorer, sidepremier, tips. Idempotent, kan kjøres flere ganger. *(07.10: `Packages/DashImport`, 28 tester. Ikke kjørt på ekte data.)*
 - [x] Hvordan dataene hentes ut (SQL-eksport, eller lesing med innlogget bruker) avgjøres i fasen. Ingenting skrives til PWA-basen. *(07.10: én lesende eksport-SQL, `sql/import/export_pwa.sql`. Se `docs/import-plan.md`.)*
-- [ ] Kontroll: etter import viser appens Tavla det samme som PWA-ens for hele sesongen.
-- [ ] Prod-oppsett av appens Supabase (skjema, innlogging, APNs) etter godkjenning.
-- [ ] TestFlight-invitasjon til alle med iPhone. Hver spiller logger inn og velger navnet sitt (importert).
-- [ ] Generalprøve på test med hele gjengen.
-- [ ] Byttedag: siste import etter siste PWA-kveld, så neste kveld i appen.
-- [ ] PWA-en fryses: viser «Vi har flyttet til appen» og lar seg ikke føre i.
+- [x] Kontroll: etter import viser appens Tavla det samme som PWA-ens for hele sesongen. *(21.10: `dashimport parity` 0 avvik, 20 rundepoeng.)*
+- [x] Prod-oppsett av appens Supabase (skjema, innlogging, APNs) etter godkjenning. *(20.10: Atten Prod `wxabhadvuzyrmndxpuza`, se `docs/prod-sjekkliste.md`.)*
+- [x] TestFlight-invitasjon til alle med iPhone. Hver spiller logger inn og velger navnet sitt (importert). *(21.10: App Store i stedet for TestFlight. Spillerne tar navnet sitt i «Golfgutu Invitational».)*
+- [ ] Generalprøve på test med hele gjengen. *(Hoppet over: Thomas byttet 21.10.)*
+- [x] Byttedag: siste import etter siste PWA-kveld, så neste kveld i appen. *(21.10: siste import til prod ca. 14:30, første kveld i appen 22.10.)*
+- [x] PWA-en fryses: viser «Vi har flyttet til appen» og lar seg ikke føre i. *(21.10: golfgutu.com viser flyttesiden, golfgutu#58.)*
 
 **Ferdig når:**
 - Tavla i appen er identisk med PWA-ens etter siste import.
@@ -410,24 +410,24 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] 031 (additivt, trygt for dagens app): kjørt på test 09.10, kontrollen 12 av 12, paritet identisk. Beslutningene 2–9 står nederst i designdokumentet.
 - [x] 032: stab, påmelding med tak og venteliste (tilbud gjelder 48 timer), startliste, mengdebaserte RLS-hjelpere. Kjørt på test 09.10, kontrollen 10 av 10, paritet identisk, cron for utløpte tilbud.
 - [x] 033: speilingen snus (turneringen er kilden), `is_main` bare uten aktiv hovedturnering, runder kobles via `events.competition_id` for alle turneringer. Kjørt på test 09.10: kontrollen 9/9, paritet identisk. Appen (09.10): «Spilledager og runder» på arrangørsiden for liga/cup/morro, med samme tidslinje som sesongen (ny spilledag, oppsett, start, lås); sesongens tidslinje viser ikke ligaens dager.
-- [ ] 034–035: gamle regler fjernes (krever `min_ios_build`), `activate_season` lar jakkeracet gå når en annen serie aktiveres, `seasons` som view.
+- [x] 034–035: gamle regler fjernes (krever `min_ios_build`), `activate_season` lar jakkeracet gå når en annen serie aktiveres, `seasons` som view. *(034 på test 11.10, 035 på test 12.10, begge på prod 20.10.)*
 - [x] Fase 23: arrangør per turnering (velger, åpen påmelding, venteliste, startliste, stab), `min_ios_build` i appen. `TournamentCoreFeature` på 09.10. *(Ikke prøvd på telefon.)*
 - [ ] Fase 24: skala (Tavla-data i én RPC, tabellen på serveren, sanntid).
   - [x] Tavla-data i én RPC (`sql/036_tavla_data.sql`, `TavlaRPCFeature`): Tavla, Vedd og jakkeracet henter sesongen i ett kall. Kjørt på test 09.10, svaret likt med RLS-spørringene, 13 ms. Ikke-medlemmer henter som før.
   - [x] Mengdebaserte RPC-er (`sql/037_mengde_rpc.sql`, `SetQueriesFeature`): «folk du kjenner», dine løse runder, turneringslista og Hjem-feeden. Kjørt på test 09.10, likt med RLS for alle brukerne. Gjenstår: policyene med `(select auth.uid())` (mål i lasttesten først).
   - [x] Lasttest på SQL-nivå av 036–038 (`sql/lokal/lasttest_fase24.sql`, 09.10): Tavla 53 ms i ett kall, folk du kjenner 1,3 ms, turneringslista 2,6 ms. Funn: `my_loose_rounds` 296 ms, rettet i 039 (5,7 ms, kjørt på test 09.10). Lasttest gjennom PostgREST krever Docker (ikke installert).
   - [ ] Sanntid via Broadcast (`sql/040`, `BroadcastFeature` av): runden og Tavla lytter på private kanaler per runde og klubb i stedet for alle hullscorer i basen. Kjørt på test 09.10 (meldingene og tilgangen sjekket). Flagget slås på etter prøving med to telefoner.
-- [ ] Fase 26: TV med kode, turneringer med tidsvindu og web-admin. Plan: `docs/fase-26-tv-tidsvindu-web.md`.
-- [ ] **Gjennomføring (startet 11.10.2026): `docs/gjennomforingsplan.md`, tolv steg.** Erstatter fase 27–34 under som arbeidsrekkefølge.
+- [x] Fase 26: TV med kode, turneringer med tidsvindu og web-admin. Plan: `docs/fase-26-tv-tidsvindu-web.md`. *(10.10: TV-kode 041/043, «Spill når det passer» 042, web-admin på admin.dashdash18.com.)*
+- [ ] **Gjennomføring (startet 11.10.2026): `docs/gjennomforingsplan.md`, tolv steg.** Erstatter fase 27–34 under som arbeidsrekkefølge. *(21.10: steg 1–11 og 13 er merget og kjørt på test og prod. Steg 12 er delvis gjort gjennom fase 17 før lansering: vilkår, rapportvarsel, Apple-token, demoklubb og prod.)*
 - [ ] Fase 27–34: konkurranser, påmelding, medlemmer og sosialt lag (oppdrag 11.10.2026). Gap-analyse, datamodell, oppgaver og spørsmål: `docs/plan-konkurranser-og-sosialt.md`. Svar fra Thomas 11.10 under «Beslutninger» i planen: alle målgrupper, alt med, egne roller per klubb, playoff om førsteplassen, automatisk opprykk, Dash18 Prod, App Store som mål.
   - [ ] Fase 27: tekniske prøver (push fra Edge Function finnes; offline-køen og Broadcast med to telefoner).
-  - [ ] Fase 28: grunnmur (eier og eieroverføring, invitasjoner med kort kode, tak og utløp, RPC i stedet for skrivepolicyer, hjelpere i `private`, RLS-tester).
-  - [ ] Fase 29: formatmotor og runde (lagform og poengtelling som to akser, NGF/WHS-handicapsett, flere spill per runde, øyeblikksbilde, «uoffisielt», oppskrifter, «ta over føringen»).
-  - [ ] Fase 30: sesong og gjenbruk (resultattype, snitt, minste antall, poengtabeller, eclectic, sesongbygger, spillbibliotek, trekning uten gjentakelser).
-  - [ ] Fase 31: påmelding per kveld (standardsvar, frister, tak, venteliste i låsende RPC), påminnelser styrt av svar, kalender (ICS, avlys, ny dato, avstemning).
-  - [ ] Fase 32: sosialt lag med moderering (kommentarer, reaksjoner på alt, feed med sider, galleri, delebilde, myk sletting, tekstfilter).
-  - [ ] Fase 33: varsler og live (fire grupper, demping per kveld, samling per kveld, live-stripe).
-  - [ ] Fase 34: App Store-pakken (vilkår håndhevet, varsel ved rapport, Apple-token ved sletting, demogruppe, eventuelt regnskap).
+  - [ ] Fase 28: grunnmur (eier og eieroverføring, invitasjoner med kort kode, tak og utløp, RPC i stedet for skrivepolicyer, hjelpere i `private`, RLS-tester). *(Det meste bygget i steg 1–2. Ikke sjekket punkt for punkt.)*
+  - [x] Fase 29: formatmotor og runde (lagform og poengtelling som to akser, NGF/WHS-handicapsett, flere spill per runde, øyeblikksbilde, «uoffisielt», oppskrifter, «ta over føringen»). *(Steg 7, 048.)*
+  - [x] Fase 30: sesong og gjenbruk (resultattype, snitt, minste antall, poengtabeller, eclectic, sesongbygger, spillbibliotek, trekning uten gjentakelser). *(Steg 6 og 8, 047 og 049.)*
+  - [ ] Fase 31: påmelding per kveld (standardsvar, frister, tak, venteliste i låsende RPC), påminnelser styrt av svar, kalender (ICS, avlys, ny dato, avstemning). *(Påmelding og kalender bygget i steg 4 og 10. Ikke sjekket punkt for punkt.)*
+  - [x] Fase 32: sosialt lag med moderering (kommentarer, reaksjoner på alt, feed med sider, galleri, delebilde, myk sletting, tekstfilter). *(Steg 9, 050.)*
+  - [x] Fase 33: varsler og live (fire grupper, demping per kveld, samling per kveld, live-stripe). *(Steg 5, 046.)*
+  - [x] Fase 34: App Store-pakken (vilkår håndhevet, varsel ved rapport, Apple-token ved sletting, demogruppe, eventuelt regnskap). *(20.–21.10: vilkår, rapportvarsel #160, Apple-token #171, demoklubb for App Review.)*
 - [ ] Fase 25: spillersiden (finn og meld deg på turneringer nær deg).
   - [x] «Finn turneringer» i Spill (også uten klubb): åpne turneringer fra `public_competitions` (032), søk på navn, klubb og sted, og påmelding med samme kort som turneringssiden. *(09.10.)* Gjenstår: «nær deg» (sted/avstand), push når en ny åpen turnering legges ut.
 
@@ -442,7 +442,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] «Forrige kupong · dato» på Hjem-kortet og på Kveld-skjermen, så resultatet og tippekongen kan åpnes når neste kveld har tatt over. *(09.10.)*
 - [x] Spillere uten klubb ser og lager private turneringer (liga, cup, morro) fra «Turneringer» i Spill (`CompetitionsModel(client:userID:)`). *(09.10.)*
 - [x] Veddemålene gjøres opp fra Hjem på arrangørens telefon (høyst hvert femte minutt), ikke bare når veddemålene åpnes. *(09.10.)*
-- [ ] Veddemål per turnering med egen poengbank, private turneringer og oppgjør uten arrangør: forslag i `docs/vedd-per-turnering.md`. Besvart 11.10: av som standard, slås på per turnering eller runde, oppgjør på serveren.
+- [x] Veddemål per turnering med egen poengbank, private turneringer og oppgjør uten arrangør: forslag i `docs/vedd-per-turnering.md`. Besvart 11.10: av som standard, slås på per turnering eller runde, oppgjør på serveren. *(Steg 11, 052, #98. Av i prod-bygget etter App Review 2.3.6.)*
 
 ### Alle runder (09.10.2026, Thomas: «se hva de andre har slått, slik som i PGA»)
 
@@ -455,7 +455,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Føring uten nett med merke for det som ikke er sendt: fantes allerede (utboksen, «ikke sendt ennå» og prikken på hullet).
 - [x] Én fører per gruppe eller bås: fantes allerede (markøren).
 - [x] Tavla i nettleseren uten app (Squabbit, Golfifys «Tournament Magic Link»). *(15.10: bygget, PR «Tavla i nettleseren for tilskuere». Valget: egen delekode per turnering som arrangøren slår av og på (`sql/056_tavla_deling.sql`, kjørt på test 16.10), lesing med `tv_board_data` som TV-en, så det samme vises: tabellen, «Alle runder» og scorekortene, ingen e-post eller bilder. Siden dashdash18.com/tavla/KODE i Workeren `atten-lenker`, «Del tavla» i appen bak `TavlaShareFeature`, på fra 16.10 (Workeren deployet samme dag). Gjenstår: prøve fra WhatsApp på telefon, og App Store-lenken i `APP_STORE_URL` når appen er ute.)*
-- [ ] Turneringer med tidsvindu (18Birdies): hver spiller spiller når det passer i perioden. Krever valg om regler (én runde per spiller per periode? beste av flere?).
+- [x] Turneringer med tidsvindu (18Birdies): hver spiller spiller når det passer i perioden. Krever valg om regler (én runde per spiller per periode? beste av flere?). *(Fase 26: «Spill når det passer», 042.)*
 - [ ] Brutto og netto side om side, og tak på slag per hull i simulator (SGT/GSPro).
 
 ### Skjermsjekk 09.10.2026 (alle skjermprøvene, lys og mørk)
@@ -464,7 +464,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] «thru 18» → «etter 18 hull». «Inviter spillere» står ikke dobbelt når «Kom i gang» vises.
 - [x] Kontrast: knappene i verktøylinja («Lagre», «Lag», «Ferdig», «Avbryt») er lys tekst på lys mintgrønn pille i lys modus (verktøylinja står i mørk modus, så `ddForestInk` blir mint). Besluttet 11.10 (Thomas): gul med mørk tekst. Fikset 11.10: `DDConfirmToolbarItem` gir gul pille med mørk tekst (11,0:1), `DDCancelToolbarItem` gir krem tekst rett på den grønne linja uten glasspille (9,8:1 lys, 13,5:1 mørk). Alle `.confirmationAction`/`.cancellationAction` bruker dem.
 - [ ] «Sign in with Apple» og «Paste» følger telefonens språk: sett «Development Region» til norsk (nb) i Xcode (prosjektinnstilling, Thomas).
-- [ ] «Vilkår/Personvern (publiseres før lansering)» må byttes med lenker før App Store (gjøremål 12).
+- [x] «Vilkår/Personvern (publiseres før lansering)» må byttes med lenker før App Store (gjøremål 12). *(20.10: lenker til dashdash18.com, #158 og #159.)*
 - [ ] Små ting: cup-treet kuttes i høyre kant (konkcup), ord som brytes inne i piller («ETTER HULL 7 · / 7 SKINS STÅR»), «Kommer ikke» krymper på Hjem-kortet, «Gjenopprett kjøp» brytes, slopeklubb uten tittellinje.
 
 ### Kodegjennomgang 08.10.2026: åpne funn
@@ -475,7 +475,7 @@ Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rett
 - [x] **Kjøp:** «Ny turnering» sier fra når koblingen av en ledig kreditt feiler. *(08.10.)*
 - [x] **Google (før `GoogleLoginFeature` slås på):** utloggingsteksten nevner Google når kontoen har det. *(08.10.)*
 - [x] **Veddemål i Varsler:** egne tekster i appen og i `push-send` (PWA-ens ordlyd, poeng for kroner). *(08.10. push-send versjon 3 deployet på test.)*
-- [ ] **Flagg som står permanent på** (fjernes når skjemaet er i prod): Foundation, Push, LiveActivity, Widget, Venue, CourseKind, Stats, Bets, Games, Competitions, LooseRounds, AccountDeletion, Moderation, BillSplit.
+- [ ] **Flagg som står permanent på** (fjernes når skjemaet er i prod): Foundation, Push, LiveActivity, Widget, Venue, CourseKind, Stats, Bets, Games, Competitions, LooseRounds, AccountDeletion, Moderation, BillSplit. *(21.10: skjemaet er i prod, så flaggene kan ryddes.)*
 - [x] **Små ting:** kolonnelistene samlet, konkurransesiden henter bare sine egne påmeldinger, og utboksen kan ikke få to retry-løkker. `EveningDates` ligger også i widget-targetet (08.10), og kopiene i widgeten er fjernet. *(08.10.)*
 
 ---
@@ -495,7 +495,7 @@ Tre regelinnstillinger under «Føring og visning» i reglene (`play` i regelset
 - [x] WHS-lagshandicap (Appendix C) som forhåndsvalg i reglene («Bruk WHS-anbefalingen»); Golfgutu uendret.
 - [x] Maksimumscore (regel 21.2, tak netto dobbel bogey eller fast, `formPlay.maximumScore` som standard) og match (to spillere eller side 1 mot side 2, `MatchPlay`-hullene, stopper når avgjort) som konkurranser i runden, appen, web-admin og TV. Ingen SQL (innstillingene ligger i `scoring` i config).
 - [x] Match med én ball per lag (foursome, greensome, chapman, scramble) som konkurranse: rundens to lag eller to valgte lag, lagets ene score, lagshandicapet fra `handicap.teamHandicap` og slagene etter `formats.matchStrokes` (WHS Appendix C), stopper når avgjort. Appen, web-admin og TV. Ingen SQL og ingen ny regelverdi. Sammenlagt match står fortsatt som ikke støttet.
-- [ ] Par/bogey-symbol (+/0/−) på hullkortet i føringen (i dag viser kortet birdie/par/bogey og stablefordpoeng).
+- [x] Par/bogey-symbol (+/0/−) på hullkortet i føringen (i dag viser kortet birdie/par/bogey og stablefordpoeng). *(16.10, #131 og #132.)*
 
 ### Fase 12–17 – Åpen app med flere bruksområder
 
