@@ -1,7 +1,7 @@
 // Kjøres med Node 24 uten Cloudflare: `npm test` (eller `node --test test/`).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import worker, { normalizeCode, normalizeFollowCode, APP_ID } from "../src/index.ts";
+import worker, { normalizeCode, normalizeFollowCode, APP_ID, APP_STORE_URL } from "../src/index.ts";
 
 const BASE = "https://dashdash18.com";
 
@@ -55,8 +55,9 @@ test("invitasjonsside for klubb, runde og konkurranse", async () => {
     assert.equal(html.includes("Velg navnet ditt på lista"), path.startsWith("/konkurranse/"), `${path}: stegene`);
     // Ingen eksterne skript eller ressurser.
     assert.doesNotMatch(html, /<script[^>]*src=/);
-    // Eneste lenke ut er App Store.
-    assert.doesNotMatch(html.replaceAll("https://apps.apple.com/no/app/atten/id6820031728", ""), /https?:\/\//);
+    // Eneste lenke ut er App Store (Smart App Banner peker tilbake til samme adresse).
+    const withoutBanner = html.replace(/<meta name="apple-itunes-app" [^>]*>/, "");
+    assert.doesNotMatch(withoutBanner.replaceAll("https://apps.apple.com/no/app/atten/id6820031728", ""), /https?:\/\//);
     // Det innebygde skriptet har nonce-en fra CSP-en.
     const nonce = /'nonce-([0-9a-f]+)'/.exec(csp)?.[1];
     assert.ok(nonce && html.includes(`<script nonce="${nonce}">`));
@@ -96,8 +97,17 @@ test("forsiden", async () => {
   const res = await get("/");
   assert.equal(res.status, 200);
   const html = await res.text();
-  assert.match(html, /<h1>Atten<\/h1>/);
+  assert.match(html, /<h1>Golfkvelden med gjengen/);
   assert.doesNotMatch(html, /<script/);
+  // Søk: forsiden skal indekseres, ha beskrivelse, kanonisk adresse og lenke til App Store.
+  assert.doesNotMatch(html, /noindex/);
+  assert.match(html, /<meta name="description" content="[^"]{50,160}">/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/dashdash18\.com\/">/);
+  assert.match(html, /<meta name="apple-itunes-app" content="app-id=6820031728">/);
+  assert.ok(html.includes(`href="${APP_STORE_URL}"`), "forsiden lenker til App Store");
+  for (const word of ["golfturnering", "Scorekort", "Tavla", "Liga", "golfgjeng"]) {
+    assert.ok(html.includes(word), `forsiden har søkeordet ${word}`);
+  }
   for (const path of ["/personvern", "/vilkar", "/support"]) {
     assert.ok(html.includes(`href="${path}"`), `forsiden lenker til ${path}`);
   }
@@ -135,4 +145,33 @@ test("følgekoden (sql/054): side med lenke til appen, ugyldig kode gir 404", as
   assert.equal(normalizeFollowCode(" abcd efgh "), "ABCDEFGH");
   assert.equal(normalizeFollowCode("ABCDEFGO"), null);
   assert.equal(normalizeFollowCode("ABCDEFGHJ"), null);
+});
+
+test("robots.txt og sitemap.xml: bare forsiden indekseres", async () => {
+  const robots = await get("/robots.txt");
+  assert.equal(robots.status, 200);
+  assert.match(robots.headers.get("content-type") ?? "", /^text\/plain/);
+  const text = await robots.text();
+  assert.match(text, /Sitemap: https:\/\/dashdash18\.com\/sitemap\.xml/);
+  for (const path of ["/tavla/", "/tv/", "/kalender/"]) assert.ok(text.includes(`Disallow: ${path}`), path);
+  const sitemap = await get("/sitemap.xml");
+  assert.equal(sitemap.status, 200);
+  assert.match(sitemap.headers.get("content-type") ?? "", /^application\/xml/);
+  const xml = await sitemap.text();
+  assert.equal((xml.match(/<loc>/g) ?? []).length, 1);
+  assert.match(xml, /<loc>https:\/\/dashdash18\.com\/<\/loc>/);
+});
+
+test("invitasjoner: noindex og Smart App Banner som åpner riktig lenke", async () => {
+  const res = await get("/runde/ABCDE12345");
+  const html = await res.text();
+  assert.match(html, /<meta name="robots" content="noindex">/);
+  assert.match(html, /<meta name="apple-itunes-app" content="app-id=6820031728, app-argument=https:\/\/dashdash18\.com\/runde\/ABCDE12345">/);
+});
+
+test("andre sider er fortsatt noindex", async () => {
+  for (const path of ["/personvern", "/support", "/finnes-ikke"]) {
+    const html = await (await get(path)).text();
+    assert.match(html, /<meta name="robots" content="noindex">/, path);
+  }
 });

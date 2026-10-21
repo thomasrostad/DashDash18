@@ -16,6 +16,18 @@ export const GET_THE_APP_HTML =
   'Har du ikke appen? Last ned Atten fra <a href="https://apps.apple.com/no/app/atten/id6820031728" rel="noopener">App Store</a>.';
 
 export const APP_ID = "JNMQJPCV24.com.dashdash18.app";
+
+/// App Store-id-en til Atten (apps.apple.com/no/app/atten/id6820031728).
+export const APP_STORE_ID = "6820031728";
+export const APP_STORE_URL = `https://apps.apple.com/no/app/atten/id${APP_STORE_ID}`;
+const SITE = "https://dashdash18.com";
+
+/// Smart App Banner i Safari: «Hent» eller «Åpne» øverst på siden. `appArgument` sendes til appen når
+/// den åpnes fra banneret (samme https-adresse som de universelle lenkene).
+function smartBanner(appArgument?: string): string {
+  const content = appArgument ? `app-id=${APP_STORE_ID}, app-argument=${appArgument}` : `app-id=${APP_STORE_ID}`;
+  return `<meta name="apple-itunes-app" content="${escapeHTML(content)}">`;
+}
 const APP_SCHEME = "dashdash";
 
 /// Samme alfabet og lengde som `InviteCode` i appen (Crockford base32 uten I, L, O og U).
@@ -146,13 +158,15 @@ const STYLE = `
   .tabell th { color: var(--gul); }
 `;
 
-function page(title: string, content: string, nonce: string, script = "", mainClass = ""): string {
+/// `index`: siden skal vises i Google (bare forsiden). `head`: ekstra meta-tagger (allerede escapet).
+function page(title: string, content: string, nonce: string, script = "", mainClass = "",
+              options: { index?: boolean; head?: string } = {}): string {
   return `<!doctype html>
 <html lang="nb">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
+${options.index ? "" : '<meta name="robots" content="noindex">\n'}${options.head ?? ""}
 <meta name="theme-color" content="#1C483A">
 <title>${escapeHTML(title)}</title>
 <style>${STYLE}</style>
@@ -195,7 +209,8 @@ function invitePage(kind: InviteKind, code: string, nonce: string): string {
 ${info.steps ? `<ol class="steg">${info.steps.map((step) => `<li>${escapeHTML(step)}</li>`).join("")}</ol>` : ""}
 <p class="liten">${escapeHTML(info.joinHint)}</p>
 <p class="liten">${GET_THE_APP_HTML}</p>`;
-  return page("Invitasjon til Atten", content, nonce, COPY_SCRIPT);
+  return page("Invitasjon til Atten", content, nonce, COPY_SCRIPT, "",
+              { head: smartBanner(`${SITE}/${kind}/${code}`) + "\n" });
 }
 
 /// `/folg/KODE`: QR-koden for å følge noen. Appen åpner lenken selv; uten appen vises denne.
@@ -219,12 +234,61 @@ function invalidInvitePage(nonce: string): string {
   return page("Ugyldig invitasjon – Atten", content, nonce);
 }
 
+const HOME_TITLE = "Atten – golfapp for golfgjengen: turnering, scorekort og tavle";
+const HOME_DESCRIPTION =
+  "Atten samler golfkvelden med gjengen: påmelding, båser, scorekort hull for hull og en tavle som oppdateres mens dere spiller. Liga og cup hele sesongen.";
+
+/// Forsiden er den eneste siden Google skal finne. Ordene her er de samme som i App Store
+/// (golfturnering, scorekort, tavle, liga, golfgjeng), så nettsøk og App Store-søk peker samme vei.
 function homePage(nonce: string): string {
+  const head = [
+    `<meta name="description" content="${escapeHTML(HOME_DESCRIPTION)}">`,
+    `<link rel="canonical" href="${SITE}/">`,
+    `<meta property="og:type" content="website">`,
+    `<meta property="og:url" content="${SITE}/">`,
+    `<meta property="og:title" content="${escapeHTML(HOME_TITLE)}">`,
+    `<meta property="og:description" content="${escapeHTML(HOME_DESCRIPTION)}">`,
+    `<meta property="og:locale" content="nb_NO">`,
+    smartBanner(),
+    "",
+  ].join("\n");
   const content = `
-<h1>Atten</h1>
-<p>Atten er en app for å føre golfrunder og turneringer med gjengen.</p>
+<h1>Golfkvelden med gjengen, samlet i én app</h1>
+<p>Atten er golfappen for gjengen som spiller sammen hele sesongen. Påmelding, båser, scorekort og tavle, uten regneark.</p>
+<a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>
+<ul class="steg">
+<li><strong>Påmelding og båser:</strong> meld deg på kvelden og se hvem du spiller med.</li>
+<li><strong>Scorekort hull for hull:</strong> stableford, slagspill og matchspill med handicap.</li>
+<li><strong>Tavla:</strong> resultatene oppdateres mens dere spiller.</li>
+<li><strong>Liga og cup:</strong> golfturnering over hele sesongen, med vinnerjakke til slutt.</li>
+<li><strong>Gjengen:</strong> inviter med lenke og start en ny golfgjeng på et minutt.</li>
+</ul>
+<p class="liten">Gratis for iPhone. Ingen reklame og ingen sporing.</p>
 <p class="liten lenker"><a href="/personvern">Personvern</a> <a href="/vilkar">Vilkår</a> <a href="/support">Support</a></p>`;
-  return page("Atten", content, nonce);
+  return page(HOME_TITLE, content, nonce, "", "", { index: true, head });
+}
+
+const ROBOTS_TXT = `User-agent: *
+Allow: /
+Disallow: /tavla/
+Disallow: /tv/
+Disallow: /kalender/
+Disallow: /captcha
+
+Sitemap: ${SITE}/sitemap.xml
+`;
+
+const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>${SITE}/</loc></url>
+</urlset>
+`;
+
+function textResponse(body: string, contentType: string, isHead: boolean): Response {
+  return new Response(isHead ? null : body, {
+    status: 200,
+    headers: { ...SECURITY_HEADERS, "Content-Type": contentType, "Cache-Control": "public, max-age=86400" },
+  });
 }
 
 function notFoundPage(nonce: string): string {
@@ -268,6 +332,10 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
       },
     });
   }
+
+  // For søkemotorer: bare forsiden skal indekseres.
+  if (pathname === "/robots.txt") return textResponse(ROBOTS_TXT, "text/plain; charset=utf-8", isHead);
+  if (pathname === "/sitemap.xml") return textResponse(SITEMAP_XML, "application/xml; charset=utf-8", isHead);
 
   // Kalenderabonnement (steg 10, sql/051): personlig lenke, iCalendar.
   const calendar = /^\/kalender\/([^/]+)\.ics$/.exec(pathname);
