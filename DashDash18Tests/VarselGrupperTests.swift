@@ -42,7 +42,8 @@ struct VarselGruppeTests {
         #expect(map.mainGroup(of: "round") == .game)
         #expect(map.mainGroup(of: "signup") == .evening)
         #expect(map.extraKinds(in: .evening) == ["evening_started"])
-        #expect(map.extraKinds(in: .organizer) == ["signup_dropped"])
+        // 067 (21.10.2026): «Nye som vil bli med i klubben» står under Arrangør når flagget er på.
+        #expect(map.extraKinds(in: .organizer) == ["signup_dropped", "member_pending"])
         #expect(map.extraKinds(in: .game).isEmpty)
         #expect(PushGroupMap.kindTitle("evening_started", term: .playingDay) == "Spilledagen er i gang")
         #expect(PushGroupMap.kindTitle("signup_dropped") == "Avmeldinger fra «kommer»")

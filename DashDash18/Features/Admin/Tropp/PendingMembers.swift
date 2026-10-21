@@ -11,7 +11,8 @@ import Supabase
 /// prod; uten 067 kommer det verken varsel eller push, og merket ville vært det eneste som viste
 /// noe nytt.
 nonisolated enum PendingMembersFeature {
-    static let flag = false
+    /// På 21.10.2026: 067 er kjørt på test og prod, og push-send er deployet begge steder.
+    static let flag = true
     static let isEnabled = flag
 }
 
