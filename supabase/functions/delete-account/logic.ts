@@ -59,6 +59,8 @@ export interface DeletionResult {
   summary?: Record<string, unknown>;
   failedAt?: Step;
   error?: string;
+  /** Utfallet av Apple-tilbaketrekkingen (RevokeOutcome i apple.ts). Bare når kontoen er slettet. */
+  apple?: string;
 }
 
 export function failure(step: Step, error: unknown, removedFiles = 0): DeletionResult {

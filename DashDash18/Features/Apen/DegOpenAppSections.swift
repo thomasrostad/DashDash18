@@ -70,6 +70,8 @@ struct AccountDeletionSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var typed = ""
     @State private var model: AccountDeletionModel?
+    /// Kontoen har Apple-innlogging: da bekrefter du med Apple til slutt.
+    @State private var hasApple = false
 
     var body: some View {
         NavigationStack {
@@ -125,7 +127,7 @@ struct AccountDeletionSheet: View {
                 } header: {
                     DDHeader("Bekreft")
                 } footer: {
-                    DDFooter("Skriv \(AccountDeletion.confirmationWord) med store bokstaver for å slette.")
+                    DDFooter(AccountDeletion.confirmFooter(apple: hasApple))
                 }
             }
             .navigationTitle("Slett konto")
@@ -139,6 +141,7 @@ struct AccountDeletionSheet: View {
             }
             .task {
                 if model == nil, let client { model = AccountDeletionModel(client: client, auth: auth) }
+                if client != nil { hasApple = AppleReauthorization.isNeeded(identities: await auth.identities()) }
             }
         }
         .tint(Color.ddForestInk)

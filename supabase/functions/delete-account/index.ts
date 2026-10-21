@@ -7,15 +7,20 @@
 //   2. sletter portretter og trådbilder i Storage (account_storage_objects),
 //   3. anonymiserer i databasen (delete_account_data): «Slettet spiller», scorene står,
 //      meldinger, reaksjoner, push og blokkeringer slettes,
-//   4. sletter auth-brukeren (auth.admin.deleteUser). Profilen følger med (cascade).
+//   4. sletter auth-brukeren (auth.admin.deleteUser). Profilen følger med (cascade),
+//   5. trekker tilbake Logg inn med Apple (apple.ts) når kontoen har Apple og appen sendte
+//      en fersk `appleAuthorizationCode`. Feil hos Apple logges og stopper ikke slettingen.
 // Hvert steg tåler å kjøres på nytt, så appen kan prøve igjen hvis noe feiler underveis.
 //
-// Secrets: ingen egne. SUPABASE_URL, SUPABASE_ANON_KEY og SUPABASE_SERVICE_ROLE_KEY settes
-// av Supabase selv. Service role-nøkkelen forlater aldri funksjonen.
+// Secrets: SUPABASE_URL, SUPABASE_ANON_KEY og SUPABASE_SERVICE_ROLE_KEY settes av Supabase
+// selv. Service role-nøkkelen forlater aldri funksjonen. For Apple: APPLE_TEAM_ID,
+// APPLE_KEY_ID, APPLE_PRIVATE_KEY og APPLE_CLIENT_ID (se apple.ts). Mangler de, hoppes
+// tilbaketrekkingen over med en logglinje.
 //
 // Deploy (når godkjent): supabase functions deploy delete-account
 // (JWT-sjekken i Supabase står PÅ: bare innloggede kommer inn.)
 
+import { appleCodeFrom, appleConfigFrom, appleSubjectOf, revokeAppleToken, revokeLogLine } from "./apple.ts";
 import {
   bearerToken,
   type DeletionResult,
@@ -68,10 +73,13 @@ Deno.serve(async (request) => {
 
   // 1. Hvem er dette? Spør Auth med brukerens eget token.
   let userId: string;
+  let appleSubject: string | null;
   try {
     const user = await call(`${url}/auth/v1/user`, anonKey, { method: "GET", bearer: jwt }) as { id?: string };
     if (!user?.id) return json({ error: "Ikke innlogget" }, 401);
     userId = user.id;
+    // Apple-ID-en må leses nå: etter steg 4 finnes ikke brukeren lenger.
+    appleSubject = appleSubjectOf(user);
   } catch {
     return json({ error: "Ikke innlogget" }, 401);
   }
@@ -112,6 +120,13 @@ Deno.serve(async (request) => {
     return json(result, statusFor(result));
   }
 
-  const result: DeletionResult = { ok: true, removedFiles: removed, summary };
+  // 5. Apple. Kontoen er borte uansett utfall, så svaret er ok også når Apple feiler.
+  const { config, missing } = appleConfigFrom((name) => Deno.env.get(name));
+  const apple = await revokeAppleToken({ code: appleCodeFrom(body), appleSubject, config });
+  const line = revokeLogLine(apple, missing);
+  if (apple.outcome === "failed") console.error(line);
+  else console.log(line);
+
+  const result: DeletionResult = { ok: true, removedFiles: removed, summary, apple: apple.outcome };
   return json(result);
 });
