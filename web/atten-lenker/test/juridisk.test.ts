@@ -113,7 +113,7 @@ test("personvern: tabellen kan rulles, og utkastsmerknaden vises ikke", async ()
   const html = await (await get("/personvern")).text();
   assert.match(html, /<title>Personvernerklæring for Atten<\/title>/);
   assert.match(html, /<div class="tabell"><table>/);
-  assert.match(html, /<em>Sist endret: 20\. oktober 2026\.<\/em>/);
+  assert.match(html, /<em>Sist endret: 21\. oktober 2026\.<\/em>/);
   assert.doesNotMatch(html, /Utkast|LegalLinks/);
   assert.match(await (await get("/vilkar")).text(), /<strong>ikke lov<\/strong>/);
 });

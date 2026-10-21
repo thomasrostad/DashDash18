@@ -1,6 +1,6 @@
 # Personvernerklæring for Atten
 
-*Sist endret: 20. oktober 2026.*
+*Sist endret: 21. oktober 2026.*
 
 Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer. Her står hvilke opplysninger appen bruker, hvorfor, og hva du kan gjøre med dem.
 
@@ -19,7 +19,7 @@ Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer
 |---|---|---|
 | E-postadresse, eller innlogging med Apple | For at du skal kunne logge inn | Avtale (art. 6 nr. 1 b) |
 | Navn og handicapindeks | For å regne poeng og vise deg på tabellen | Avtale |
-| Scorer, runder, matcher, sidepremier, tips, veddemål i poeng og statistikk du fører selv | Det er selve tjenesten | Avtale |
+| Scorer, runder, matcher, sidepremier, tips, spill i poeng og statistikk du fører selv | Det er selve tjenesten | Avtale |
 | Meldinger og bilder i kveldens tråd, og portrettet ditt | For at gjengen skal kunne snakke sammen | Avtale |
 | Push-token (en kode for telefonen din) og varselvalgene dine | For å sende varsler du har slått på | Samtykke (du sier ja i iOS), kan trekkes når som helst |
 | Regninger du deler («Del regningen»): hva det gjelder, beløpet, hvem som skal betale, og om delen er sendt og mottatt. Vipps-nummeret ditt bare når du selv får pengene og legger det inn | For at gjengen skal kunne gjøre opp. Ingen penger går gjennom appen | Avtale |

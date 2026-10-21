@@ -1,6 +1,6 @@
 # Vilkår for bruk av Atten
 
-*Sist endret: 20. oktober 2026 (versjon 2026-10).*
+*Sist endret: 21. oktober 2026 (versjon 2026-10).*
 
 Ved å bruke Atten godtar du disse vilkårene. De gjelder sammen med Apples standard lisensavtale for apper (Apple Standard EULA).
 
@@ -28,7 +28,7 @@ Alle kan **rapportere** innhold og **blokkere** andre brukere. Arrangøren i klu
 
 ## 4. Poeng, ikke penger
 
-Veddemål, tips og spill på runden gjøres opp i **poeng**. Atten formidler ikke penger mellom brukere og skal ikke brukes til pengespill. «Del regningen» er bare en hjelp til å dele felles utgifter (som simulatorleie og greenfee); betalingen skjer i Vipps, utenfor appen og utenfor vårt ansvar.
+Tips, konkurranser og spill på runden gjøres opp i **poeng**. Poengene kan ikke kjøpes, selges eller veksles inn i noe. Atten formidler ikke penger mellom brukere og skal ikke brukes til pengespill. «Del regningen» er bare en hjelp til å dele felles utgifter (som simulatorleie og greenfee); betalingen skjer i Vipps, utenfor appen og utenfor vårt ansvar.
 
 ## 5. Kjøp
 
