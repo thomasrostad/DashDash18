@@ -684,6 +684,8 @@ nonisolated enum MinimumBuild {
         let title: String
         let url: URL
         let message: String
+        /// Teksten i «Ny versjon av Atten» (anbefalt bygg, sql/068): du kan fortsette.
+        let suggestion: String
     }
 
     static let appStoreURL = URL(string: "https://apps.apple.com/app/id6820031728")!
@@ -693,11 +695,20 @@ nonisolated enum MinimumBuild {
         switch environment {
         case .prod:
             return UpdateLink(title: "Åpne App Store", url: appStoreURL,
-                              message: "Denne utgaven av appen er for gammel til å brukes lenger. Hent den nyeste i App Store, " + tail)
+                              message: "Denne utgaven av appen er for gammel til å brukes lenger. Hent den nyeste i App Store, " + tail,
+                              suggestion: "En nyere utgave ligger klar i App Store. Ingenting av det du har ført, går tapt.")
         case .test:
             return UpdateLink(title: "Åpne TestFlight", url: URL(string: "itms-beta://")!,
-                              message: "Denne utgaven av appen er for gammel til å brukes lenger. Hent den nyeste i TestFlight, " + tail)
+                              message: "Denne utgaven av appen er for gammel til å brukes lenger. Hent den nyeste i TestFlight, " + tail,
+                              suggestion: "En nyere utgave ligger klar i TestFlight. Ingenting av det du har ført, går tapt.")
         }
+    }
+
+    /// Skal «Ny versjon av Atten» vises? Når bygget er eldre enn det anbefalte (sql/068), og bare
+    /// én gang per anbefalt bygg: `dismissed` er det anbefalte bygget da du sist svarte.
+    static func shouldSuggest(current: Int?, recommended: Int?, dismissed: Int?) -> Bool {
+        guard isOutdated(current: current, required: recommended), let recommended else { return false }
+        return (dismissed ?? 0) < recommended
     }
 }
 
@@ -720,8 +731,4 @@ nonisolated struct MinimumBuildValue: Decodable, Equatable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey { case build }
-}
-
-nonisolated struct AppConfigMinBuildRow: Decodable, Sendable {
-    let value: MinimumBuildValue?
 }

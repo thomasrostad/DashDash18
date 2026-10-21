@@ -81,6 +81,7 @@ struct OppdaterAttenLenkeTests {
         #expect(link.title == "Åpne App Store")
         #expect(link.url == URL(string: "https://apps.apple.com/app/id6820031728"))
         #expect(!link.message.contains("TestFlight"))
+        #expect(link.suggestion.contains("App Store"))
     }
 
     @Test func testbyggetBeholderTestFlight() {

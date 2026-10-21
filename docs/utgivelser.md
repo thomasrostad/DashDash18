@@ -24,8 +24,10 @@ Send inn med en gang og be om expedited review (developer.apple.com/contact/app-
 
 ## 3. Nyheter bak brytere
 
-- Ny funksjon sendes med i appen **avslått**. Den slås på når serveren er klar og versjonen har nådd de fleste, og kan slås av igjen hvis den feiler.
-- I dag er bryterne skrevet i koden (for eksempel `TavlaShareFeature.isEnabled`). Å slå av en funksjon krever da et nytt bygg og en ny gjennomgang hos Apple. Målet er brytere som leses fra serveren (punkt 6).
+- **Nødbrytere (fra 1.0.2):** utvalgte funksjoner kan slås av fra serveren uten nytt bygg, med `app_config.ios_flags` (`sql/068`): Del tavla, TV-kode, Finn turneringer, Del regningen, Sosialt og Live Activity.
+- **Bare av, aldri på.** Apple forbyr funksjoner som skrus på etter gjennomgangen (App Review 2.3.1). En ny funksjon er derfor på i bygget som sendes inn, og serveren må være klar før versjonen slippes (punkt 4).
+- Kjernen (føring, Tavla, spillformer, påmelding) har ingen nødbryter. Å slå av noe der midt i en runde er verre enn feilen. Der gjelder hasteretting (punkt 2).
+- Andre brytere i koden (`…Feature.isEnabled`) krever nytt bygg. En ny nødbryter legges til med én linje i funksjonens `…Feature` og navnet i `sql/068`.
 
 ## 4. Server og database
 
@@ -46,9 +48,9 @@ iOS oppdaterer ikke en app som er åpen på skjermen, men kan gjøre det mens de
 ## 6. Støttevindu og tvungen oppdatering
 
 - Alle versjoner fra de siste **90 dagene** er støttet.
-- Eldre versjoner får en **myk beskjed**: «Ny versjon av Atten finnes», med lenke til App Store og mulighet til å fortsette.
-- **Tvungen oppdatering** (skjerm uten vei forbi) brukes bare når en gammel versjon lager feil data eller serveren ikke lenger kan støtte den.
-- **Mangler i dag.** 1.0 og 1.0.1 har verken minimumsversjon eller brytere fra serveren. Det må inn i neste versjon. Brukere som aldri oppdaterer fra en versjon uten det, kan vi ikke nå, så jo før, jo bedre.
+- **Myk beskjed (fra 1.0.2):** bygg under `app_config.recommended_ios_build` (`sql/068`) får «Ny versjon av Atten» én gang, med «Oppdater» og «Senere». Settes når en ny versjon har nådd 100 % i phased release.
+- **Tvungen oppdatering (fra 1.0):** bygg under `app_config.min_ios_build` (`sql/031`) får «Oppdater Atten» etter innlogging og kommer ikke videre. Brukes bare når en gammel versjon lager feil data eller serveren ikke lenger kan støtte den. Virker også for 1.0 og 1.0.1.
+- Begge tar byggnummeret (`CFBundleVersion` fra Xcode Cloud), ikke versjonen. Kommandoene står øverst i `sql/068`.
 
 ## 7. iOS-versjon
 
@@ -68,5 +70,5 @@ iOS oppdaterer ikke en app som er åpen på skjermen, men kan gjøre det mens de
 
 ## Status 21.10.2026
 
-- **Har:** TestFlight-gruppen Gjengen, prod-workflow i Xcode Cloud, utboks på telefonen, feilrapporter med appversjon, expedited review prøvd (1.0.1).
-- **Mangler:** minimumsversjon og brytere fra serveren, oversikt over hvilke appversjoner som er i bruk (versjonen lagres i dag bare ved feil). 1.0.1 er satt til automatisk utgivelse; fra neste versjon gjelder punkt 1.
+- **Har:** TestFlight-gruppen Gjengen, prod-workflow i Xcode Cloud, utboks på telefonen, feilrapporter med appversjon, expedited review prøvd (1.0.1), tvungen oppdatering (1.0). Myk beskjed og nødbrytere kommer med 1.0.2.
+- **Mangler:** oversikt over hvilke appversjoner som er i bruk (versjonen lagres i dag bare ved feil). 1.0.1 er satt til automatisk utgivelse; fra neste versjon gjelder punkt 1.

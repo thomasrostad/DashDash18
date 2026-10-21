@@ -5,7 +5,8 @@ import Supabase
 /// (sql/032): bare turneringer med «åpen for alle» og «vis i lista», ikke runder eller tropp.
 nonisolated enum FindTournamentsFeature {
     /// På siden 09.10.2026: 032 er kjørt på test, og påmeldingen bruker samme RPC-er som turneringssiden.
-    static let isEnabled = true
+    /// Kan slås av fra serveren: `ios_flags.find_tournaments` (sql/068).
+    static var isEnabled: Bool { !KillSwitch.isOff("find_tournaments") }
 }
 
 /// En rad fra `public_competitions`.
