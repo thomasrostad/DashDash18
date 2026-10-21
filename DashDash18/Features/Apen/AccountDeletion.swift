@@ -15,13 +15,18 @@ nonisolated enum AccountDeletion {
     }
 
     /// Hva som skjer, i den rekkefølgen det vises.
-    static let consequences: [String] = [
-        "Innloggingen din slettes. Du kan ikke logge inn på denne kontoen igjen.",
-        "Navnet ditt byttes til «Slettet spiller» i klubber og runder. Scorene står, så tabellene til de andre ikke endres.",
-        "Meldingene og bildene dine i tråden slettes, og det gjør også portrettet ditt.",
-        "Telefonene dine slutter å få varsler, og blokkeringene dine slettes.",
-        "Kjøp i appen refunderes ikke. Abonnement sier du opp i App Store.",
-    ]
+    static let consequences: [String] = consequences(purchases: PurchaseFeature.isEnabled)
+
+    /// Linja om kjøp er bare med når appen har kjøp (`PurchaseFeature`). Uten kjøp skal ikke
+    /// appen snakke om kjøp og abonnement (App Review).
+    static func consequences(purchases: Bool) -> [String] {
+        [
+            "Innloggingen din slettes. Du kan ikke logge inn på denne kontoen igjen.",
+            "Navnet ditt byttes til «Slettet spiller» i klubber og runder. Scorene står, så tabellene til de andre ikke endres.",
+            "Meldingene og bildene dine i tråden slettes, og det gjør også portrettet ditt.",
+            "Telefonene dine slutter å få varsler, og blokkeringene dine slettes.",
+        ] + (purchases ? ["Kjøp i appen refunderes ikke. Abonnement sier du opp i App Store."] : [])
+    }
 
     /// Advarsel når du er eneste arrangør i en klubb.
     static func organizerWarning(clubs: [String]) -> String? {

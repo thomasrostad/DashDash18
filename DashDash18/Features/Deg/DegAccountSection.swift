@@ -27,7 +27,7 @@ struct DegAccountSection: View {
         } header: {
             DDHeader("Innloggingsmåter")
         } footer: {
-            DDFooter(GoogleLoginFeature.isEnabled ? "Samme konto uansett hvilken måte du bruker." : "Samme konto uansett hvilken måte du bruker. Google kommer senere.")
+            DDFooter("Samme konto uansett hvilken måte du bruker.")
         }
         .task { identities = await auth.identities() }
         .alert(
@@ -121,9 +121,6 @@ private struct LoginMethodRowView: View {
                 Text(row.trailingText)
                     .font(.ddCallout)
                     .foregroundStyle(Color.ddInkSecondary)
-            case .comingSoon:
-                DDPill(row.trailingText, tone: .earth)
-                    .fixedSize()
             }
         }
         .accessibilityElement(children: .combine)
