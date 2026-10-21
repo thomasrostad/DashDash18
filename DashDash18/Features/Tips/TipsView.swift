@@ -269,29 +269,33 @@ private struct TipsSettingsSection: View {
     @State private var error: String?
 
     private var fixed: Bool { !board.canEditSettings }
+    /// Uten innsats (App Store-bygget) beholdes det som står lagret på kvelden.
+    private var stakeToSave: Int? { board.allowsStakes ? board.stake : board.event.stakePoints }
 
     var body: some View {
         Section {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Innsats per kupong")
-                    .font(.ddBodyEmphasis)
-                    .foregroundStyle(Color.ddForestInk)
-                HStack(spacing: 8) {
-                    ForEach(board.rules.tips.stakeOptions, id: \.self) { n in
-                        Button(n > 0 ? "\(n)" : "Æra") { save(stake: n, line: board.line) }
-                            .buttonStyle(DDChoiceButtonStyle(selected: n == board.stake))
-                            .accessibilityAddTraits(n == board.stake ? .isSelected : [])
+            if board.allowsStakes {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Innsats per kupong")
+                        .font(.ddBodyEmphasis)
+                        .foregroundStyle(Color.ddForestInk)
+                    HStack(spacing: 8) {
+                        ForEach(board.rules.tips.stakeOptions, id: \.self) { n in
+                            Button(n > 0 ? "\(n)" : "Æra") { save(stake: n, line: board.line) }
+                                .buttonStyle(DDChoiceButtonStyle(selected: n == board.stake))
+                                .accessibilityAddTraits(n == board.stake ? .isSelected : [])
+                        }
                     }
                 }
+                .padding(.vertical, 4)
             }
-            .padding(.vertical, 4)
             HStack(spacing: 10) {
                 Text("Linja")
                     .font(.ddBodyEmphasis)
                     .foregroundStyle(Color.ddForestInk)
                 Spacer()
                 Button {
-                    save(stake: board.stake, line: board.line - board.rules.tips.lineStep)
+                    save(stake: stakeToSave, line: board.line - board.rules.tips.lineStep)
                 } label: { Image(systemName: "minus") }
                     .buttonStyle(DDStepperButtonStyle(kind: .minus, size: 44))
                     .disabled(fixed || !Tips.isValidLine(board.line - board.rules.tips.lineStep))
@@ -301,7 +305,7 @@ private struct TipsSettingsSection: View {
                     .monospacedDigit()
                     .frame(minWidth: 56)
                 Button {
-                    save(stake: board.stake, line: board.line + board.rules.tips.lineStep)
+                    save(stake: stakeToSave, line: board.line + board.rules.tips.lineStep)
                 } label: { Image(systemName: "plus") }
                     .buttonStyle(DDStepperButtonStyle(kind: .plus, size: 44))
                     .disabled(fixed || !Tips.isValidLine(board.line + board.rules.tips.lineStep))
@@ -320,7 +324,7 @@ private struct TipsSettingsSection: View {
         .disabled(fixed || model.isSaving)
     }
 
-    private func save(stake: Int, line: Double) {
+    private func save(stake: Int?, line: Double) {
         error = nil
         Task {
             do { try await model.saveSettings(stake: stake, line: line) } catch { self.error = DataError.from(error).message }

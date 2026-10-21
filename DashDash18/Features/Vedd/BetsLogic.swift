@@ -6,8 +6,11 @@ import GolfgutuCore
 // SwiftUI. Regnestykket (låsing, utfall, oppgjør, poengbank) ligger i GolfgutuCore (`Bets`).
 
 /// Bryter for veddemålene. Av: ingenting kaller RPC-ene fra `sql/012_veddemaal.sql`.
+/// Av i App Store-bygget (prod): poeng satt på spill er «simulert gambling» for Apple, og det
+/// krever at appen sendes inn av en organisasjon (avvist 21.10.2026, 2.3.6). Styrer også innsatsen
+/// i tippekupongen (`TipsBoard`), som da alltid er for æra.
 nonisolated enum BetsFeature {
-    static let isEnabled = true
+    static let isEnabled = AppEnvironment.current != .prod
 }
 
 // MARK: - Radene

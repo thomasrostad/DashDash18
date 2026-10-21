@@ -25,7 +25,9 @@ nonisolated enum ClubRight: String, Codable, CaseIterable, Hashable, Sendable {
         case .tournaments: "Turneringer, regler, terminliste, påmelding og sosialkomité."
         case .rounds: "Sette opp, starte og låse runder, rette score, baner og par."
         case .members: "Godkjenne, invitere, handicap, seeding, arkivere og gi roller."
-        case .money: "Del regningen, veddemål, tippekupong, rapporter og fjerning av innhold."
+        case .money: BetsFeature.isEnabled
+            ? "Del regningen, veddemål, tippekupong, rapporter og fjerning av innhold."
+            : "Del regningen, tippekupong, rapporter og fjerning av innhold."
         }
     }
 }

@@ -183,7 +183,7 @@ struct BillSplitView: View {
                     } header: {
                         DDHeader("Hver betaler")
                     } footer: {
-                        DDFooter("Vipps fyller ikke inn beløpet for private betalinger. Kopier beløpet, åpne Vipps og send til \(payer ?? "mottakeren")\(phone.map { " på \(VippsRecipient.formatted($0))" } ?? ""). Veddemål gjøres opp i poeng, aldri her.")
+                        DDFooter("Vipps fyller ikke inn beløpet for private betalinger. Kopier beløpet, åpne Vipps og send til \(payer ?? "mottakeren")\(phone.map { " på \(VippsRecipient.formatted($0))" } ?? "")." + (BetsFeature.isEnabled ? " Veddemål gjøres opp i poeng, aldri her." : ""))
                     }
                     if canSave == true, saveContext != nil {
                         saveSection(total: total)
