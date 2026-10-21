@@ -188,7 +188,7 @@ Alt er additivt, med standardverdier som gir dagens oppførsel, slik 031–043 e
 - Broadcast-kanalen `event:<id>` i tillegg til `round:` og `club:` (040).
 
 **App Store (fase 34)**
-- `profiles.terms_version`, håndhevet i RPC-ene som skriver innhold. Tekstfilter i de samme RPC-ene. `content_reports` → varsel til appeier (e-post fra Edge Function). Myk sletting via `deleted_at`. Apple-token: lagre `refresh_token` fra Apple ved innlogging og kall `/auth/revoke` i `delete-account`.
+- `profiles.terms_version`, håndhevet i RPC-ene som skriver innhold. Tekstfilter i de samme RPC-ene. `content_reports` → varsel til appeier (e-post fra Edge Function). Myk sletting via `deleted_at`. Apple-token: lagre `refresh_token` fra Apple ved innlogging og kall `/auth/revoke` i `delete-account`. *(21.10.2026: løst uten lagring. Appen ber om en fersk Apple-innlogging rett før sletting, og `delete-account` bytter koden og kaller `/auth/revoke`; se `docs/prod-sjekkliste.md` punkt 4.5.)*
 - Demogruppe: seed-skript (`sql/lokal/demo.sql`) for test og prod, med kode til App Review.
 - Med ja på spørsmål 2: `settlements` og `settlement_lines` (nullsum sjekket i RPC), betalt og bekreftet.
 

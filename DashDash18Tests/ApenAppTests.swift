@@ -1,3 +1,4 @@
+import AuthenticationServices
 import Foundation
 import Testing
 @testable import DashDash18
@@ -96,6 +97,42 @@ struct ApenKontoTests {
         let text = AccountDeletion.consequences.joined(separator: " ")
         #expect(text.contains("Slettet spiller"))
         #expect(text.contains("Scorene står"))
+    }
+
+    @Test func appleBesBareOmNaarKontoenHarApple() {
+        #expect(AppleReauthorization.isNeeded(identities: [LinkedIdentity(provider: "apple")]))
+        #expect(AppleReauthorization.isNeeded(identities: [LinkedIdentity(provider: "email"), LinkedIdentity(provider: "Apple")]))
+        #expect(!AppleReauthorization.isNeeded(identities: [LinkedIdentity(provider: "email", email: "a@b.no")]))
+        #expect(!AppleReauthorization.isNeeded(identities: [LinkedIdentity(provider: "google")]))
+        #expect(!AppleReauthorization.isNeeded(identities: []))
+    }
+
+    @Test func svaretFraAppleBlirKodeAvbruttEllerIngenKode() {
+        #expect(AppleReauthorization.outcome(authorizationCode: Data("c1.0.abc".utf8)) == .code("c1.0.abc"))
+        #expect(AppleReauthorization.outcome(authorizationCode: nil) == .unavailable)
+        #expect(AppleReauthorization.outcome(authorizationCode: Data()) == .unavailable)
+        #expect(AppleReauthorization.outcome(error: ASAuthorizationError(.canceled)) == .cancelled)
+        #expect(AppleReauthorization.outcome(error: ASAuthorizationError(.failed)) == .unavailable)
+        #expect(AppleReauthorization.outcome(error: URLError(.notConnectedToInternet)) == .unavailable)
+    }
+
+    @Test func appleKodenSendesBareNaarDenFinnes() {
+        #expect(AccountDeletion.requestBody(appleAuthorizationCode: nil) == ["confirm": "SLETT"])
+        #expect(AccountDeletion.requestBody(appleAuthorizationCode: "c1.0.abc")
+                == ["confirm": "SLETT", "appleAuthorizationCode": "c1.0.abc"])
+    }
+
+    @Test func teksteneNevnerAppleBareMedApple() {
+        #expect(!AccountDeletion.confirmFooter(apple: false).contains("Apple"))
+        #expect(AccountDeletion.confirmFooter(apple: false) == "Skriv SLETT med store bokstaver for å slette.")
+        #expect(AccountDeletion.confirmFooter(apple: true).contains("bekrefter du med Apple"))
+    }
+
+    @Test func svaretMedAppleUtfallDekodes() throws {
+        let response = try JSONDecoder().decode(AccountDeletionResponse.self,
+                                                from: Data(#"{"ok":true,"removedFiles":0,"summary":{},"apple":"revoked"}"#.utf8))
+        #expect(response.apple == "revoked")
+        #expect(AccountDeletionError.from(response) == nil)
     }
 
     @Test func kjoepNevnesBareNaarAppenHarKjoep() {

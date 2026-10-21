@@ -35,6 +35,19 @@ nonisolated enum AccountDeletion {
         return "Du er arrangør i \(names). Har klubben ingen annen arrangør, tar det eldste medlemmet med innlogging over."
     }
 
+    /// Teksten under knappen. Med Apple-innlogging bekrefter du med Apple til slutt.
+    static func confirmFooter(apple: Bool) -> String {
+        let base = "Skriv \(confirmationWord) med store bokstaver for å slette."
+        return apple ? base + " Til slutt bekrefter du med Apple, så Atten også fjernes fra Apple-ID-en din." : base
+    }
+
+    /// Det som sendes til `delete-account`. Koden er bare med når Apple ga en.
+    static func requestBody(appleAuthorizationCode: String?) -> [String: String] {
+        var body = ["confirm": confirmationWord]
+        if let appleAuthorizationCode { body["appleAuthorizationCode"] = appleAuthorizationCode }
+        return body
+    }
+
     /// Advarsel når hull ikke er sendt ennå (de forsvinner med kontoen).
     static func pendingWarning(pending: Int) -> String? {
         guard pending > 0 else { return nil }
@@ -48,6 +61,8 @@ nonisolated struct AccountDeletionResponse: Decodable, Equatable, Sendable {
     var removedFiles: Int?
     var failedAt: String?
     var error: String?
+    /// Utfallet av Apple-tilbaketrekkingen («revoked», «skipped_…», «failed»). Bare til feilsøking.
+    var apple: String?
 }
 
 nonisolated enum AccountDeletionError: Error, Equatable {
@@ -90,6 +105,10 @@ final class AccountDeletionModel {
     var error: AccountDeletionError?
     private let client: SupabaseClient
     private let auth: AuthModel
+    /// Fersk Apple-innlogging (`AppleAuthorizationCodeRequest`). En egen egenskap, så den kan byttes ut.
+    @ObservationIgnored var requestAppleCode: () async -> AppleReauthorization.Outcome = {
+        await AppleAuthorizationCodeRequest().run()
+    }
 
     init(client: SupabaseClient, auth: AuthModel) {
         self.client = client
@@ -100,10 +119,21 @@ final class AccountDeletionModel {
         guard AccountDeletion.isConfirmed(typed) else { error = .notConfirmed; return }
         isDeleting = true
         defer { isDeleting = false }
+        error = nil
+        // Med Apple-innlogging: en fersk kode, så serveren kan trekke tilbake Apple-tokenet.
+        // Lukker du Apple-arket, slettes ingenting. Gir Apple ingen kode, slettes kontoen likevel.
+        var appleCode: String?
+        if AppleReauthorization.isNeeded(identities: await auth.identities()) {
+            switch await requestAppleCode() {
+            case .code(let code): appleCode = code
+            case .cancelled: return
+            case .unavailable: appleCode = nil
+            }
+        }
         do {
             let response: AccountDeletionResponse = try await client.functions.invoke(
                 "delete-account",
-                options: FunctionInvokeOptions(body: ["confirm": AccountDeletion.confirmationWord])
+                options: FunctionInvokeOptions(body: AccountDeletion.requestBody(appleAuthorizationCode: appleCode))
             )
             if let failure = AccountDeletionError.from(response) {
                 error = failure
