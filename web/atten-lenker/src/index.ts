@@ -3,10 +3,12 @@ import { calendarResponse } from "./kalender.ts";
 import { fetchSharePayload, REFRESH_SECONDS, shareInvalidPage, sharePage, type SharePayload } from "./tavla.ts";
 import { escapeHTML } from "./html.ts";
 import { legalPage } from "./juridisk.ts";
+import { captchaResponse } from "./captcha.ts";
 // Atten på https://dashdash18.com: filen som kobler domenet til appen (universelle lenker),
 // og en enkel side for invitasjonslenker når appen ikke er installert.
 //
-// Ingen sporing, ingen cookies, ingen eksterne skript eller fonter.
+// Ingen sporing, ingen cookies, ingen eksterne skript eller fonter. Unntaket er /captcha, som laster
+// Cloudflare Turnstile (src/captcha.ts).
 
 /// Teksten til den som ikke har appen. Bytt til App Store-lenken når appen er ute,
 /// f.eks. `Last ned Atten fra <a href="https://apps.apple.com/…">App Store</a>.` (HTML er lov her).
@@ -252,7 +254,8 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
     return new Response(null, { status: 405, headers: { ...SECURITY_HEADERS, Allow: "GET, HEAD" } });
   }
 
-  const { pathname } = new URL(request.url);
+  const url = new URL(request.url);
+  const { pathname } = url;
 
   // Lastes ned av Apple (via CDN-et deres) når appen installeres. Må være JSON uten omdirigering.
   if (AASA_PATHS.has(pathname)) {
@@ -270,6 +273,11 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
   const calendar = /^\/kalender\/([^/]+)\.ics$/.exec(pathname);
   if (calendar) {
     return calendarResponse(calendar[1], env, isHead);
+  }
+
+  // CAPTCHA (Turnstile) for innlogging med e-postkode. Appen åpner siden i en WKWebView.
+  if (pathname === "/captcha" || pathname === "/captcha/") {
+    return captchaResponse(url, isHead);
   }
 
   const nonce = crypto.randomUUID().replace(/-/g, "");

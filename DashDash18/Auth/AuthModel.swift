@@ -25,10 +25,13 @@ final class AuthModel {
     @ObservationIgnored var willSignOut: (() async -> Void)?
     /// Kjøres når kontoen er slettet på serveren, før den lokale økten fjernes (rydd telefonen).
     @ObservationIgnored var didDeleteAccount: ((UUID) -> Void)?
+    /// Site key for Turnstile når `CaptchaFeature` er på (fra appkonfigen), ellers `nil`.
+    let captchaSiteKey: String?
 
-    init(client: SupabaseClient) {
+    init(client: SupabaseClient, captchaSiteKey: String? = nil) {
         self.client = client
         auth = client.auth
+        self.captchaSiteKey = CaptchaFeature.isEnabled(siteKey: captchaSiteKey) ? captchaSiteKey : nil
     }
 
     /// Følger økten så lenge appen lever. Første verdi er den lagrede økten (eller ingen).
@@ -45,14 +48,17 @@ final class AuthModel {
         }
     }
 
-    func sendCode(to email: String) async throws(LoginError) {
+    /// Sender engangskoden. `captchaToken` er Turnstile-tokenet (`CaptchaFeature`); Supabase krever det
+    /// når CAPTCHA er slått på i Auth. Et token kan bare brukes én gang.
+    func sendCode(to email: String, captchaToken: String? = nil) async throws(LoginError) {
         do {
-            try await auth.signInWithOTP(email: email, shouldCreateUser: true)
+            try await auth.signInWithOTP(email: email, shouldCreateUser: true, captchaToken: captchaToken)
         } catch {
             throw Self.loginError(from: error)
         }
     }
 
+    /// Uten `captchaToken`: Supabase sjekker ikke CAPTCHA på `/verify`, bare på `/otp`.
     func verify(email: String, code: String) async throws(LoginError) {
         do {
             try await auth.verifyOTP(email: email, token: code, type: .email)

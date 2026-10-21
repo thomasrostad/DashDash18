@@ -21,6 +21,8 @@ struct ConfigErrorView: View {
             "Konfigfila kunne ikke leses."
         case .missingValue(let key):
             "Konfigfila mangler \(key)."
+        case .invalidValue(let key):
+            "Konfigfila har en ugyldig verdi for \(key)."
         case .wrongEnvironment(let expected, let found):
             "Konfigfila er for «\(found)», men bygget forventer «\(expected.rawValue)»."
         case .secretKey:

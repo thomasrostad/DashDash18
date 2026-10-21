@@ -6,6 +6,9 @@
 #   SUPABASE_PUBLISHABLE_KEY  publishable key (aldri service-role)
 #   ATTEN_ENVIRONMENT         test (standard) eller prod. Prod-workflowen setter prod og
 #                             prod-verdiene over. Skriptet stopper hvis ref og miljø ikke passer.
+#   TURNSTILE_SITE_KEY        valgfri: site key for Cloudflare Turnstile (CAPTCHA ved innlogging
+#                             med e-post, CaptchaFeature). Tom eller mangler: ingen CAPTCHA.
+#                             Bare site key; secret key hører hjemme i Supabase Auth.
 set -eu
 
 ATTEN_ENVIRONMENT=$(printf '%s' "${ATTEN_ENVIRONMENT:-test}" | tr -d '[:space:]')
@@ -41,6 +44,12 @@ case "$SUPABASE_PUBLISHABLE_KEY" in
   *) echo "Feil: SUPABASE_PUBLISHABLE_KEY skal starte med sb_publishable_ (begynner med «$(printf '%s' "$SUPABASE_PUBLISHABLE_KEY" | cut -c1-3)…», ${#SUPABASE_PUBLISHABLE_KEY} tegn)" >&2; exit 1 ;;
 esac
 
+TURNSTILE_SITE_KEY=$(printf '%s' "${TURNSTILE_SITE_KEY:-}" | tr -d '[:space:]')
+# Samme regel som CaptchaFeature.isValidSiteKey i appen.
+if [ -n "$TURNSTILE_SITE_KEY" ] && ! printf '%s' "$TURNSTILE_SITE_KEY" | grep -Eq '^[0-9A-Za-z_-]{20,100}$'; then
+  echo "Feil: TURNSTILE_SITE_KEY ser ikke ut som en Turnstile site key (${#TURNSTILE_SITE_KEY} tegn)" >&2; exit 1
+fi
+
 CONFIG_DIR="$CI_PRIMARY_REPOSITORY_PATH/DashDash18/Config"
 mkdir -p "$CONFIG_DIR"
 cat > "$CONFIG_DIR/Supabase-$ENV_NAME.plist" <<PLIST
@@ -57,6 +66,12 @@ cat > "$CONFIG_DIR/Supabase-$ENV_NAME.plist" <<PLIST
 </dict>
 </plist>
 PLIST
+if [ -n "$TURNSTILE_SITE_KEY" ]; then
+  plutil -insert TurnstileSiteKey -string "$TURNSTILE_SITE_KEY" "$CONFIG_DIR/Supabase-$ENV_NAME.plist"
+  echo "CAPTCHA (Turnstile) er på i dette bygget."
+else
+  echo "Ingen TURNSTILE_SITE_KEY: CAPTCHA er av i dette bygget."
+fi
 plutil -lint "$CONFIG_DIR/Supabase-$ENV_NAME.plist"
 # Appen leser miljøet fra Info.plist (AppEnvironment.current). Endringen skjer bare i bygget.
 plutil -replace AttenEnvironment -string "$ATTEN_ENVIRONMENT" "$CI_PRIMARY_REPOSITORY_PATH/DashDash18/Info.plist"

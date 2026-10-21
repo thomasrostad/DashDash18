@@ -30,6 +30,9 @@ nonisolated struct AppConfig: Equatable, Sendable {
     let environment: AppEnvironment
     let supabaseURL: URL
     let publishableKey: String
+    /// Site key for Cloudflare Turnstile (`TurnstileSiteKey` i plist-en, valgfri). Uten den er
+    /// `CaptchaFeature` av og innloggingen med e-post sender ingen `captchaToken`.
+    let turnstileSiteKey: String?
 
     /// Prosjekt-ref-en, f.eks. `tsekialrxuhrugscosgi`.
     var projectRef: String {
@@ -40,6 +43,7 @@ nonisolated struct AppConfig: Equatable, Sendable {
         case missingFile(String)
         case unreadable
         case missingValue(String)
+        case invalidValue(String)
         case wrongEnvironment(expected: AppEnvironment, found: String)
         case secretKey
     }
@@ -69,10 +73,17 @@ nonisolated struct AppConfig: Equatable, Sendable {
         }
         // Den hemmelige nøkkelen skal aldri inn i appen.
         guard !Self.isSecretKey(key) else { throw .secretKey }
+        // Tom eller manglende: ingen CAPTCHA. En feilskrevet nøkkel stopper appen, så den ikke
+        // havner i App Store med en sjekk som aldri lykkes.
+        let rawSiteKey = (dict["TurnstileSiteKey"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !rawSiteKey.isEmpty, !CaptchaFeature.isValidSiteKey(rawSiteKey) {
+            throw .invalidValue("TurnstileSiteKey")
+        }
 
         self.environment = environment
         self.supabaseURL = url
         self.publishableKey = key
+        self.turnstileSiteKey = rawSiteKey.isEmpty ? nil : rawSiteKey
     }
 
     /// Ny hemmelig nøkkel (`sb_secret_…`) eller gammel JWT-nøkkel med rollen `service_role`.

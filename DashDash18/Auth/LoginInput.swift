@@ -47,6 +47,8 @@ nonisolated enum LoginError: Error, Equatable {
     case offline
     case appleFailed
     case googleFailed
+    /// Supabase godtok ikke CAPTCHA-tokenet (eller fikk ikke noe).
+    case captchaFailed
     case unknown(String)
 
     var message: String {
@@ -58,6 +60,7 @@ nonisolated enum LoginError: Error, Equatable {
         case .offline: "Ingen kontakt med serveren. Sjekk nettet og prøv igjen."
         case .appleFailed: "Innloggingen med Apple ble ikke fullført. Prøv igjen, eller bruk e-post."
         case .googleFailed: "Innloggingen med Google ble ikke fullført. Prøv igjen, eller bruk e-post."
+        case .captchaFailed: "Vi fikk ikke bekreftet at du er et menneske. Prøv igjen, eller logg inn med Apple."
         // Systemteksten (ofte engelsk) vises ikke; den ligger i `detail` for feilsøking.
         case .unknown: "Noe gikk galt med innloggingen. Vent litt og prøv igjen."
         }
@@ -73,6 +76,8 @@ nonisolated enum LoginError: Error, Equatable {
             .tooManyAttempts
         case "email_address_invalid", "validation_failed":
             .invalidEmail
+        case "captcha_failed":
+            .captchaFailed
         default:
             fromText(fallback) ?? .unknown(fallback)
         }
@@ -80,6 +85,8 @@ nonisolated enum LoginError: Error, Equatable {
 
     private static func fromText(_ text: String) -> LoginError? {
         let lower = text.lowercased()
+        // «captcha protection: request disallowed (…)» fra Supabase Auth.
+        if lower.contains("captcha") { return .captchaFailed }
         if lower.contains("rate limit") || lower.contains("too many") { return .tooManyAttempts }
         if lower.contains("expired") || (lower.contains("token") && lower.contains("invalid")) { return .wrongOrExpiredCode }
         return nil
