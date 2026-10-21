@@ -10,10 +10,10 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 
 | | |
 |---|---|
-| **Nåværende fase** | **Atten 1.0 er ute i App Store** (godkjent og sluppet 21.10, bare Norge, gratis). Gjengen har byttet fra PWA-en (fase 9 ferdig 21.10). 1.0.1 (build 201) er i App Review med rask behandling og slippes automatisk. Prod (`wxabhadvuzyrmndxpuza`) har alle migreringer til og med 067. |
+| **Nåværende fase** | **Atten 1.0 er ute i App Store** (godkjent og sluppet 21.10, bare Norge, gratis). Gjengen har byttet fra PWA-en (fase 9 ferdig 21.10). 1.0.1 (build 201) ble godkjent av Apple 21.10 (kveld) og slippes automatisk. Prod (`wxabhadvuzyrmndxpuza`) har alle migreringer til og med 067. |
 | **Sist gjort** | 20.–21.10: prod satt opp (`docs/prod-sjekkliste.md`), nattlig backup til R2 (#163), feilsporing med MetricKit (#164), personvern og vilkår publisert (#159). 1.0 avvist for simulert gambling (2.3.6), rettet med veddemål av og tips for æra i prod (#166–#168), godkjent 21.10. Import fra PWA-en til prod og PWA-en fryst (golfgutu#58). 1.0.1: CAPTCHA (av til site key, #169), blokkering (#170), Apple-token trekkes tilbake ved sletting (#171), rapport på baner og turneringer (#172–#173), varsel om ventende medlemmer (#176–#177), varsler spørres ved første oppstart (#178). 15.–20.10: regelvern, nye spillformer, Del tavla, konfliktark, scramble-turneringer og deltakere uten innlogging (055–061). |
 | **Neste oppgave** | Første klubbkveld i appen 22.10: følg med og samle tilbakemeldinger. Etter det: 1.1 (Google-innlogging og kjøp), prøve flytene som står «Prøve på telefon» under, og rydde flagg som står permanent på. |
-| **Venter på deg** | Slippe CAPTCHA på i prod-Supabase når 1.0.1 er ute (krever Turnstile site key). Prøve gjenoppretting fra backup (passordet har bare du). Google-innlogging og kjøp i App Store Connect og Google før 1.1. |
+| **Venter på deg** | Slippe CAPTCHA på i prod-Supabase nå som 1.0.1 er godkjent, når den vises i App Store (krever Turnstile site key). Prøve gjenoppretting fra backup (passordet har bare du). Google-innlogging og kjøp i App Store Connect og Google før 1.1. |
 
 ---
 
