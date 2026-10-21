@@ -27,7 +27,8 @@ nonisolated enum TournamentDeletion {
     }
 
     /// Hva spørsmålet sier før sletting.
-    static let warning = "Kveldene, rundene, resultatene, påmeldingene og veddemålene i turneringen slettes for godt. Runder som bare teller også her, blir stående. Skriv navnet for å bekrefte."
+    static let warning = (BetsFeature.isEnabled ? "Kveldene, rundene, resultatene, påmeldingene og veddemålene" : "Kveldene, rundene, resultatene og påmeldingene")
+        + " i turneringen slettes for godt. Runder som bare teller også her, blir stående. Skriv navnet for å bekrefte."
 
     /// «Høst 2026 er slettet, med 7 kvelder og 9 runder.»
     static func message(_ r: Result, term: DayTerm = .evening) -> String {
