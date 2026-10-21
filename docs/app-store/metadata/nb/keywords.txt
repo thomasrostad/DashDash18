@@ -1,0 +1,1 @@
+golfturnering,scorekort,liga,stableford,slagspill,matchspill,handicap,poeng,venner,klubb,resultater
