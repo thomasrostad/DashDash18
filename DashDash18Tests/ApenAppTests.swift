@@ -97,6 +97,13 @@ struct ApenKontoTests {
         #expect(text.contains("Slettet spiller"))
         #expect(text.contains("Scorene står"))
     }
+
+    @Test func kjoepNevnesBareNaarAppenHarKjoep() {
+        #expect(!AccountDeletion.consequences(purchases: false).joined().contains("Kjøp"))
+        #expect(!AccountDeletion.consequences(purchases: false).joined().contains("Abonnement"))
+        #expect(AccountDeletion.consequences(purchases: true).last?.contains("Abonnement") == true)
+        #expect(AccountDeletion.consequences == AccountDeletion.consequences(purchases: PurchaseFeature.isEnabled))
+    }
 }
 
 struct ApenModereringTests {

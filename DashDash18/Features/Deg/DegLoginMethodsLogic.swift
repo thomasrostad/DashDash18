@@ -43,7 +43,6 @@ nonisolated struct LoginMethodRow: Equatable, Identifiable, Sendable {
         case linked(detail: String?)
         /// Ikke koblet. `canLink` = knapp for å koble til.
         case notLinked(canLink: Bool)
-        case comingSoon
     }
 
     let method: LoginMethod
@@ -55,7 +54,6 @@ nonisolated struct LoginMethodRow: Equatable, Identifiable, Sendable {
         switch status {
         case .linked: "Koblet"
         case .notLinked: "Ikke koblet"
-        case .comingSoon: "Kommer"
         }
     }
 }
@@ -72,14 +70,15 @@ nonisolated struct LinkedIdentity: Equatable, Sendable {
 }
 
 nonisolated enum LoginMethods {
-    /// Radene for kontoen. Identiteter fra innloggingsmåter appen ikke kjenner, vises ikke.
+    /// Radene for kontoen. Identiteter fra innloggingsmåter appen ikke kjenner, vises ikke. En måte
+    /// som ikke er slått på (Google), vises bare når kontoen alt har den: ingen «Kommer» (App Review 2.1).
     static func rows(identities: [LinkedIdentity], appleLinkingEnabled: Bool = AccountLinkingFeature.appleEnabled) -> [LoginMethodRow] {
-        LoginMethod.allCases.map { method in
+        LoginMethod.allCases.compactMap { method in
             let linked = identities.filter { $0.provider.lowercased() == method.rawValue }
             if !linked.isEmpty {
                 return LoginMethodRow(method: method, status: .linked(detail: detail(for: method, linked: linked)))
             }
-            guard method.isAvailable else { return LoginMethodRow(method: method, status: .comingSoon) }
+            guard method.isAvailable else { return nil }
             // E-postkode kobles ved å logge inn med koden; Apple kan kobles herfra når det er slått på.
             return LoginMethodRow(method: method, status: .notLinked(canLink: method == .apple && appleLinkingEnabled))
         }
