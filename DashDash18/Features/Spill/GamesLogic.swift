@@ -263,8 +263,8 @@ nonisolated enum GameTexts {
             "Hvert hull er et skin. Lavest score alene vinner hullet og får poeng fra hver av de andre. "
                 + "Blir hullet delt, går skinnet videre til neste hull."
         case .nassau:
-            "Tre veddemål mellom to sider: første ni, siste ni og hele runden. Den som vinner flest hull, "
-                + "vinner hvert av dem. Med press starter et nytt veddemål når noen ligger to hull under."
+            "Tre matcher mellom to sider: første ni, siste ni og hele runden. Den som vinner flest hull, "
+                + "vinner hver av dem. Med press starter en ny match når noen ligger to hull under."
         case .wolf:
             "Dere er wolf etter tur. Wolfen velger partner etter utslagene, eller spiller alene for flere poeng. "
                 + "Beste ball på hver side avgjør hullet."

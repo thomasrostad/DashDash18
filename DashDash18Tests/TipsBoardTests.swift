@@ -143,6 +143,19 @@ struct TipsBoardTests {
         #expect(b.groups(.winner).first { $0.text == "Bjørn" }?.correct == false)
     }
 
+    /// App Store-bygget: ingen innsats eller pott, selv om kvelden har 50 poeng lagret.
+    @Test func utenInnsatsErKupongenForAera() {
+        var input = TipsInput(event: T.event, members: T.four, rounds: T.evening(status: .locked), coupons: T.coupons)
+        input.serverOpen = false
+        let b = TipsBoard(input, me: T.id(T.anders), isOrganizer: true, allowsStakes: false)
+        #expect(!b.allowsStakes && b.stake == 0)
+        #expect(b.stakeText == "For æra · ingen poeng")
+        #expect(b.potText == "4 levert")
+        #expect(b.pot.total == 0)
+        #expect(b.kingText == "4 av 5 riktige")
+        #expect(b.result.winners == [T.anders, T.cato].map { T.id($0).uuidString })
+    }
+
     /// Kladden teller ikke i fasiten, men kvelden er ikke ferdig så lenge den finnes.
     @Test func kladdTellerIkke() {
         var rounds = T.evening(status: .locked)

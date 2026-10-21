@@ -57,6 +57,8 @@ nonisolated struct TipsBoard: Sendable {
     let deadline: Date?
     /// Innsats per kupong i poeng. 0 = for æra.
     let stake: Int
+    /// Om arrangøren kan sette innsats (av i App Store-bygget).
+    let allowsStakes: Bool
     let line: Double
     /// Kandidatene: de som kommer først, så resten av troppen. Kommer ingen, er alle i `first`.
     let firstCandidates: [Candidate]
@@ -78,12 +80,15 @@ nonisolated struct TipsBoard: Sendable {
     private let names: [UUID: String]
     private let shortNames: [UUID: String]
 
-    init(_ input: TipsInput, me: UUID, isOrganizer: Bool, now: Date = .now) {
+    /// `allowsStakes` av (App Store-bygget, `BetsFeature`): kupongen er alltid for æra, uten pott.
+    init(_ input: TipsInput, me: UUID, isOrganizer: Bool, now: Date = .now,
+         allowsStakes: Bool = BetsFeature.isEnabled) {
         self.me = me
         self.isOrganizer = isOrganizer
+        self.allowsStakes = allowsStakes
         event = input.event
         rules = input.rules
-        stake = Tips.stake(input.event.stakePoints, rules: input.rules)
+        stake = allowsStakes ? Tips.stake(input.event.stakePoints, rules: input.rules) : 0
         line = Tips.line(input.event.line, rules: input.rules)
 
         let names = Dictionary(input.members.map { ($0.id, $0.displayName) }, uniquingKeysWith: { a, _ in a })
