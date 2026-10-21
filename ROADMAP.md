@@ -13,7 +13,7 @@ Henvisninger som «SPEC 4.9» peker til seksjoner i `SPEC.md`.
 | **Nåværende fase** | **Atten 1.0 er ute i App Store** (godkjent og sluppet 21.10, bare Norge, gratis). Gjengen har byttet fra PWA-en (fase 9 ferdig 21.10). 1.0.1 (build 201) er i App Review med rask behandling og slippes automatisk. Prod (`wxabhadvuzyrmndxpuza`) har alle migreringer til og med 067. |
 | **Sist gjort** | 20.–21.10: prod satt opp (`docs/prod-sjekkliste.md`), nattlig backup til R2 (#163), feilsporing med MetricKit (#164), personvern og vilkår publisert (#159). 1.0 avvist for simulert gambling (2.3.6), rettet med veddemål av og tips for æra i prod (#166–#168), godkjent 21.10. Import fra PWA-en til prod og PWA-en fryst (golfgutu#58). 1.0.1: CAPTCHA (av til site key, #169), blokkering (#170), Apple-token trekkes tilbake ved sletting (#171), rapport på baner og turneringer (#172–#173), varsel om ventende medlemmer (#176–#177), varsler spørres ved første oppstart (#178). 15.–20.10: regelvern, nye spillformer, Del tavla, konfliktark, scramble-turneringer og deltakere uten innlogging (055–061). |
 | **Neste oppgave** | Første klubbkveld i appen 22.10: følg med og samle tilbakemeldinger. Etter det: 1.1 (Google-innlogging og kjøp), prøve flytene som står «Prøve på telefon» under, og rydde flagg som står permanent på. |
-| **Venter på deg** | Slippe CAPTCHA på i prod-Supabase når 1.0.1 er ute (krever Turnstile site key). Prøve gjenoppretting fra backup (passordet har bare du). «Development Region» til norsk i Xcode. Google-innlogging og kjøp i App Store Connect og Google før 1.1. |
+| **Venter på deg** | Slippe CAPTCHA på i prod-Supabase når 1.0.1 er ute (krever Turnstile site key). Prøve gjenoppretting fra backup (passordet har bare du). Google-innlogging og kjøp i App Store Connect og Google før 1.1. |
 
 ---
 
@@ -463,7 +463,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Norsk dato, «for 3 dager siden», datovelgere og grafer også når telefonen står på engelsk (`ddAppStyle` setter `nb_NO`).
 - [x] «thru 18» → «etter 18 hull». «Inviter spillere» står ikke dobbelt når «Kom i gang» vises.
 - [x] Kontrast: knappene i verktøylinja («Lagre», «Lag», «Ferdig», «Avbryt») er lys tekst på lys mintgrønn pille i lys modus (verktøylinja står i mørk modus, så `ddForestInk` blir mint). Besluttet 11.10 (Thomas): gul med mørk tekst. Fikset 11.10: `DDConfirmToolbarItem` gir gul pille med mørk tekst (11,0:1), `DDCancelToolbarItem` gir krem tekst rett på den grønne linja uten glasspille (9,8:1 lys, 13,5:1 mørk). Alle `.confirmationAction`/`.cancellationAction` bruker dem.
-- [ ] «Sign in with Apple» og «Paste» følger telefonens språk: sett «Development Region» til norsk (nb) i Xcode (prosjektinnstilling, Thomas).
+- [x] «Sign in with Apple» og «Paste» følger telefonens språk. *(21.10: lar vi være (Thomas). iOS tegner disse på telefonens språk uansett hva appen er satt til; prøvd i simulatoren med norsk som utgangsspråk og uten engelsk språkpakke, knappen var fortsatt engelsk.)*
 - [x] «Vilkår/Personvern (publiseres før lansering)» må byttes med lenker før App Store (gjøremål 12). *(20.10: lenker til dashdash18.com, #158 og #159.)*
 - [ ] Små ting: cup-treet kuttes i høyre kant (konkcup), ord som brytes inne i piller («ETTER HULL 7 · / 7 SKINS STÅR»), «Kommer ikke» krymper på Hjem-kortet, «Gjenopprett kjøp» brytes, slopeklubb uten tittellinje.
 
