@@ -33,6 +33,8 @@ final class CommentsModel {
 
     let directory: MentionDirectory
     private let names: [UUID: String]
+    /// Medlemmene i klubben som har innlogging, eller nil når troppen ikke er kjent (`BlockRules`).
+    private let membersWithLogin: Set<UUID>?
     private let client: SupabaseClient?
     /// Antall kommentarer har endret seg (feeden og tråden viser det).
     var onCountChange: ((Int) -> Void)?
@@ -40,22 +42,24 @@ final class CommentsModel {
     private var listenTasks: [Task<Void, Never>] = []
 
     init(target: SocialTarget, me: UUID, isModerator: Bool, isTargetAuthor: Bool, people: [TradPerson],
-         names: [UUID: String], client: SupabaseClient?) {
+         names: [UUID: String], membersWithLogin: Set<UUID>? = nil, client: SupabaseClient?) {
         self.target = target
         self.me = me
         self.isModerator = isModerator
         self.isTargetAuthor = isTargetAuthor
         directory = MentionDirectory(people: people)
         self.names = names
+        self.membersWithLogin = membersWithLogin
         self.client = client
         following = ThreadFollow.isFollowing(row: nil, isTargetAuthor: isTargetAuthor)
     }
 
     /// Skjermprøve og tester: faste rader, ingen nettverk.
     convenience init(preview comments: [CommentRow], target: SocialTarget, me: UUID, isModerator: Bool = false,
-                     people: [TradPerson]) {
+                     people: [TradPerson], membersWithLogin: Set<UUID>? = nil) {
         self.init(target: target, me: me, isModerator: isModerator, isTargetAuthor: false, people: people,
-                  names: Dictionary(people.map { ($0.id, $0.name) }, uniquingKeysWith: { a, _ in a }), client: nil)
+                  names: Dictionary(people.map { ($0.id, $0.name) }, uniquingKeysWith: { a, _ in a }),
+                  membersWithLogin: membersWithLogin, client: nil)
         self.comments = comments
         state = .loaded
     }
@@ -65,6 +69,11 @@ final class CommentsModel {
     }
 
     func name(_ id: UUID) -> String? { names[id] }
+
+    /// Kan forfatteren blokkeres fra rapportarket? Bare når det finnes en innlogging bak navnet.
+    func canBlock(_ comment: CommentRow) -> Bool {
+        BlockRules.canBlock(memberID: comment.memberID, profileID: comment.profileID, membersWithLogin: membersWithLogin)
+    }
 
     func chips(for comment: UUID) -> [ReactionChip] {
         ReactionRows.chips(for: .comment, id: comment, in: reactions, me: [me], name: { names[$0] })
@@ -207,7 +216,7 @@ final class CommentsModel {
         let moderation = ModerationService(client: client)
         _ = try await moderation.report(kind: .comment, targetID: comment.id, reason: reason, note: note)
         hidden.insert(comment.id)
-        if block {
+        if block, canBlock(comment) {
             _ = try await moderation.block(memberID: comment.memberID, profileID: comment.memberID == nil ? comment.profileID : nil)
         }
         onCountChange?(CommentList.count(comments.filter { !hidden.contains($0.id) }))

@@ -956,10 +956,20 @@ nonisolated enum ActivityFeed {
         let rows: [ActivityRow]
     }
 
+    /// Hendelsene som kan vises. Uten veddemål (`BetsFeature`, App Store-bygget) står ingen
+    /// veddemålslinjer («satset», «Veddemål avgjort»), heller ikke de serveren har skrevet.
+    static func shown(_ rows: [ActivityRow], bets: Bool = BetsFeature.isEnabled) -> [ActivityRow] {
+        bets ? rows : rows.filter { !isBet($0) }
+    }
+
+    static func isBet(_ row: ActivityRow) -> Bool {
+        row.category == .bet || row.event.category == .bet || row.kind.hasPrefix("bet_")
+    }
+
     /// «I dag» (kalenderdagen i Oslo) og «Tidligere», nyeste først. Tomme seksjoner tas ikke med.
-    static func sections(_ rows: [ActivityRow], now: Date = .now) -> [Section] {
+    static func sections(_ rows: [ActivityRow], now: Date = .now, bets: Bool = BetsFeature.isEnabled) -> [Section] {
         let today = EveningDates.dateString(from: now)
-        let sorted = rows.sorted { $0.createdAt > $1.createdAt }
+        let sorted = shown(rows, bets: bets).sorted { $0.createdAt > $1.createdAt }
         let todayRows = sorted.filter { EveningDates.dateString(from: $0.createdAt) == today }
         let earlier = sorted.filter { EveningDates.dateString(from: $0.createdAt) != today }
         return [Section(title: "I dag", rows: todayRows), Section(title: "Tidligere", rows: earlier)]
@@ -967,8 +977,8 @@ nonisolated enum ActivityFeed {
     }
 
     /// Uleste: nyere enn sist sett, og ikke dine egne. Aldri sett = alt er ulest (som PWA-en).
-    static func unreadCount(_ rows: [ActivityRow], lastSeen: Date?, me: UUID?) -> Int {
-        rows.filter { isUnread($0, lastSeen: lastSeen, me: me) }.count
+    static func unreadCount(_ rows: [ActivityRow], lastSeen: Date?, me: UUID?, bets: Bool = BetsFeature.isEnabled) -> Int {
+        shown(rows, bets: bets).filter { isUnread($0, lastSeen: lastSeen, me: me) }.count
     }
 
     static func isUnread(_ row: ActivityRow, lastSeen: Date?, me: UUID?) -> Bool {

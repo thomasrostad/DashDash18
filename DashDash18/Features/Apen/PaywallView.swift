@@ -109,7 +109,8 @@ struct PaywallView: View {
             }
             .buttonStyle(.dd(.text))
             .disabled(isBusy)
-            Text("Betales med Apple-ID-en din. Abonnementet fornyes automatisk til du sier det opp i Innstillinger senest et døgn før perioden er over. Veddemål og spill er bare poeng, aldri penger.")
+            Text("Betales med Apple-ID-en din. Abonnementet fornyes automatisk til du sier det opp i Innstillinger senest et døgn før perioden er over."
+                 + (BetsFeature.isEnabled ? " Veddemål og spill er bare poeng, aldri penger." : ""))
                 .font(.ddCaption)
                 .foregroundStyle(Color.ddInkSecondary)
                 .fixedSize(horizontal: false, vertical: true)

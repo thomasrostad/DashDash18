@@ -41,6 +41,7 @@ struct UpdateRequiredView: View {
     let current: Int?
     let required: Int?
     var retry: () async -> Void = {}
+    var link = MinimumBuild.updateLink(for: AppEnvironment.current)
 
     @Environment(\.openURL) private var openURL
     @State private var isChecking = false
@@ -55,15 +56,13 @@ struct UpdateRequiredView: View {
             Text("Oppdater Atten")
                 .font(.ddTitle)
                 .multilineTextAlignment(.center)
-            Text("Denne utgaven av appen er for gammel til å brukes lenger. Hent den nyeste i TestFlight eller App Store, så er du i gang igjen. Ingenting av det du har ført, går tapt.")
+            Text(link.message)
                 .font(.ddBody)
                 .foregroundStyle(Color.ddInkSecondary)
                 .multilineTextAlignment(.center)
             Spacer()
             VStack(spacing: DDSpacing.m) {
-                Button("Åpne TestFlight") {
-                    if let url = URL(string: "itms-beta://") { openURL(url) }
-                }
+                Button(link.title) { openURL(link.url) }
                 .buttonStyle(.dd(.primary, fullWidth: true))
                 Button(isChecking ? "Sjekker …" : "Jeg har oppdatert") {
                     isChecking = true

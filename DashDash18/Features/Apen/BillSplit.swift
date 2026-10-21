@@ -23,7 +23,8 @@ nonisolated enum BillPurpose: String, CaseIterable, Identifiable, Sendable {
         case .simulator: "Simulatorleie"
         case .greenfee: "Greenfee"
         case .food: "Mat og drikke"
-        case .prizePot: "Premiepott"
+        // Ikke «pott» (App Review, ingen spilltekst i App Store-bygget): pengene går til premiene.
+        case .prizePot: "Premier"
         case .other: "Annet"
         }
     }

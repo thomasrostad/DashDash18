@@ -678,6 +678,27 @@ nonisolated enum MinimumBuild {
         guard let current, let required, required > 0 else { return false }
         return current < required
     }
+
+    /// Hvor «Oppdater Atten» sender deg: App Store-bygget til App Store, testbygget til TestFlight.
+    struct UpdateLink: Equatable, Sendable {
+        let title: String
+        let url: URL
+        let message: String
+    }
+
+    static let appStoreURL = URL(string: "https://apps.apple.com/app/id6820031728")!
+
+    static func updateLink(for environment: AppEnvironment) -> UpdateLink {
+        let tail = "så er du i gang igjen. Ingenting av det du har ført, går tapt."
+        switch environment {
+        case .prod:
+            return UpdateLink(title: "Åpne App Store", url: appStoreURL,
+                              message: "Denne utgaven av appen er for gammel til å brukes lenger. Hent den nyeste i App Store, " + tail)
+        case .test:
+            return UpdateLink(title: "Åpne TestFlight", url: URL(string: "itms-beta://")!,
+                              message: "Denne utgaven av appen er for gammel til å brukes lenger. Hent den nyeste i TestFlight, " + tail)
+        }
+    }
 }
 
 /// `app_config.value` for `min_ios_build`: `{"build": 42}`. Tåler tall som tekst, og alt annet

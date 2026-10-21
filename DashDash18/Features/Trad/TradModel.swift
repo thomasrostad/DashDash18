@@ -24,6 +24,8 @@ final class TradModel {
         let canDelete: Bool
         /// Portrettet til den som skrev (bøtta `avatars`), eller nil: initialene.
         var avatarPath: String? = nil
+        /// Den som skrev, har en innlogging og kan blokkeres (`BlockRules`).
+        var canBlock: Bool = false
         var id: UUID { message.id }
     }
 
@@ -107,7 +109,9 @@ final class TradModel {
             Item(message: message, author: names[message.memberID] ?? "Ukjent",
                  isMine: message.memberID == viewer, isPending: isPending,
                  canDelete: !isPending && TradPermissions.canDelete(message, viewer: viewer, isOrganizer: isOrganizer),
-                 avatarPath: avatarPaths[message.memberID])
+                 avatarPath: avatarPaths[message.memberID],
+                 canBlock: message.memberID != viewer
+                     && BlockRules.canBlock(memberID: message.memberID, userForMember: userForMember))
         }
     }
 
@@ -245,7 +249,8 @@ final class TradModel {
     func comments(for message: ThreadMessageRow) -> CommentsModel {
         let model = CommentsModel(target: SocialTarget(kind: .message, id: message.id, clubID: clubID), me: viewer,
                                   isModerator: isOrganizer, isTargetAuthor: message.memberID == viewer,
-                                  people: directory.people, names: names, client: client)
+                                  people: directory.people, names: names,
+                                  membersWithLogin: Set(userForMember.keys), client: client)
         model.onCountChange = { [weak self] count in self?.commentCounts[message.id] = count }
         return model
     }
@@ -259,7 +264,7 @@ final class TradModel {
         let service = ModerationService(client: client)
         _ = try await service.report(kind: target.kind, targetID: target.targetID, reason: reason, note: note)
         if target.kind == .message || target.kind == .image { moderation.reportedMessages.insert(target.targetID) }
-        if block, let member = target.memberID {
+        if block, target.canBlock, let member = target.memberID {
             moderation.blockedUsers.insert(try await service.block(memberID: member))
         }
     }

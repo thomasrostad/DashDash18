@@ -171,6 +171,23 @@ nonisolated struct ModerationFilter: Equatable, Sendable {
     }
 }
 
+/// Hvem som kan blokkeres. `block_user` trenger en innlogging bak navnet: et klubbnavn uten
+/// innlogging (lagt inn av arrangøren, eller kontoen er slettet) kan rapporteres, men ikke blokkeres.
+nonisolated enum BlockRules {
+    /// Medlemmet i tråden. `userForMember` er troppen (medlem → innlogging).
+    static func canBlock(memberID: UUID, userForMember: [UUID: UUID]) -> Bool {
+        userForMember[memberID] != nil
+    }
+
+    /// Forfatteren av en kommentar: et medlem med innlogging, eller en profil (alltid en innlogging).
+    /// `membersWithLogin` nil: troppen er ikke kjent, og medlemmet antas å ha innlogging (den som
+    /// kommenterer, er logget inn).
+    static func canBlock(memberID: UUID?, profileID: UUID?, membersWithLogin: Set<UUID>?) -> Bool {
+        if let memberID { return membersWithLogin?.contains(memberID) ?? true }
+        return profileID != nil
+    }
+}
+
 /// Kallene mot Supabase.
 nonisolated struct ModerationService: Sendable {
     let client: SupabaseClient

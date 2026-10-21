@@ -142,17 +142,20 @@ private struct TradContent: View {
         if !item.message.body.isEmpty {
             Button("Rapporter meldingen", systemImage: "flag") {
                 reportTarget = ReportTarget(kind: .message, targetID: item.id, memberID: item.message.memberID,
-                                            authorName: item.author)
+                                            authorName: item.author, canBlock: item.canBlock)
             }
         }
         if item.message.imagePath != nil {
             Button("Rapporter bildet", systemImage: "flag") {
                 reportTarget = ReportTarget(kind: .image, targetID: item.id, memberID: item.message.memberID,
-                                            authorName: item.author)
+                                            authorName: item.author, canBlock: item.canBlock)
             }
         }
-        Button("Blokker \(item.author)", systemImage: "hand.raised", role: .destructive) {
-            confirmingBlock = item
+        // Et navn uten innlogging kan ikke blokkeres (block_user), bare rapporteres.
+        if item.canBlock {
+            Button("Blokker \(item.author)", systemImage: "hand.raised", role: .destructive) {
+                confirmingBlock = item
+            }
         }
     }
 
@@ -565,7 +568,7 @@ private struct SampleTradBackend: TradBackend {
 
     func members(clubID: UUID) async throws -> [ClubMemberRow] {
         [(Self.thomas, "Thomas"), (Self.kare, "Kåre"), (Self.ola, "Ola")].map { id, name in
-            ClubMemberRow(id: id, clubID: Self.club, userID: nil, displayName: name, handicapIndex: nil, seedGroup: nil,
+            ClubMemberRow(id: id, clubID: Self.club, userID: id, displayName: name, handicapIndex: nil, seedGroup: nil,
                           isOrganizer: false, isTreasurer: false, status: .active, avatarPath: nil)
         }
     }

@@ -89,8 +89,14 @@ struct RundeSetupStep: View {
 
     /// De tillatte formene i regelsettet, og formen kladden har om den ikke er tillatt lenger.
     private var formChoices: [CompetitionForm] {
-        var forms = rules.allowedForms
-        if !forms.contains(where: { $0.id == draft.formID }) { forms.insert(draft.form, at: 0) }
+        RundeSetupStep.formChoices(allowed: rules.allowedForms, current: draft.form)
+    }
+
+    /// Formene i velgeren: de tillatte som appen kan føre (en form som mangler, som skins, kan ikke
+    /// lagres, se `RoundSetupIssue.formNotSupported`), og formen kladden har om den ikke er med.
+    nonisolated static func formChoices(allowed: [CompetitionForm], current: CompetitionForm) -> [CompetitionForm] {
+        var forms = allowed.filter { $0.support != .missing }
+        if !forms.contains(where: { $0.id == current.id }) { forms.insert(current, at: 0) }
         return forms
     }
 
@@ -102,7 +108,7 @@ struct RundeSetupStep: View {
         switch form.support {
         case .full: ""
         case .partial: RundeSetupStep.completedForms.contains(form.id) ? "" : " · ikke ferdig"
-        case .missing: " · ikke støttet ennå"
+        case .missing: " · kan ikke føres i appen"
         }
     }
 
