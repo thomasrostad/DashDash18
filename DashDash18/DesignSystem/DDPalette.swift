@@ -60,6 +60,7 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
     case earthDeep           // --earth-deep
     case forest              // --forest (header, flater)
     case forestDeep          // --forest-deep (feiring)
+    case celebrateAce        // feiringen for hole in one: dypeste skog i begge moduser
     case driveBox            // .gg-drivebox
     case youRow              // .gg-hullrad.deg
     // Tekst og strek
@@ -124,6 +125,7 @@ nonisolated enum DDToken: String, CaseIterable, Sendable {
         case .earthDeep: (DDRGBA(0xEADBCA), DDRGBA(0xF3E9DD, alpha: 0.16))
         case .forest: (DDRGBA(0x1C483A), DDRGBA(0x123026))
         case .forestDeep: (DDRGBA(0x123026), DDRGBA(0x0B1F18))
+        case .celebrateAce: (DDRGBA(0x0B1F18), DDRGBA(0x0B1F18))
         case .driveBox: (DDRGBA(0xFBF5DF), DDRGBA(0xE4C767, alpha: 0.08))
         case .youRow: (DDRGBA(0xFBF1C9), DDRGBA(0xE4C767, alpha: 0.14))
         case .forestInk: (DDRGBA(0x1C483A), DDRGBA(0xA8D8B4))

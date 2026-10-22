@@ -4,7 +4,7 @@ import SwiftUI
 // Toppen av Hjem (fase 19, utbedringsplanen V1, V2 og 4.1): filterpillene og «Neste kveld».
 // Runden som pågår står i baren over fanelinja (`HjemLiveBar.swift`).
 
-/// Filterpillene: vannrett rull, valgt i skog (planen 1.3).
+/// Filterpillene: vannrett rull, valgt i skog med hake (planen 1.3, `DDChoiceButtonStyle`).
 struct HjemFilterBar: View {
     let pills: [HomeFeedPill]
     let select: (HomeFeedFilter) -> Void
@@ -13,18 +13,9 @@ struct HjemFilterBar: View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
                 ForEach(pills) { pill in
-                    Button { select(pill.filter) } label: {
-                        Text(pill.title)
-                            .font(.dd(.sans, size: 14.5, weight: pill.isSelected ? .semibold : .medium,
-                                      relativeTo: .subheadline))
-                            .foregroundStyle(pill.isSelected ? Color.ddSelectedInk : Color.ddInk)
-                            .padding(.horizontal, 14)
-                            .frame(minHeight: 44)
-                            .background(Capsule().fill(pill.isSelected ? Color.ddSelected : Color.ddChipFill))
-                            .contentShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(pill.isSelected ? .isSelected : [])
+                    Button(pill.title) { select(pill.filter) }
+                        .buttonStyle(DDChoiceButtonStyle(selected: pill.isSelected, chip: true))
+                        .accessibilityAddTraits(pill.isSelected ? .isSelected : [])
                 }
             }
             .padding(.horizontal, DDSpacing.gutter)

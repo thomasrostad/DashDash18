@@ -77,9 +77,9 @@ struct TavlaExternalRoot: View {
         } else {
             VStack(spacing: 16) {
                 Text("Atten")
-                    .font(.system(size: 64, weight: .semibold))
+                    .font(.dd(.sans, fixedSize: 64, weight: .semibold))
                 Text("Åpne Tavla på telefonen for å vise tabellen her.")
-                    .font(.system(size: 30))
+                    .font(.dd(.sans, fixedSize: 30))
                     .opacity(0.85)
             }
             .foregroundStyle(Color.ddOnDark)

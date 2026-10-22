@@ -36,6 +36,7 @@ extension Color {
     static let ddEarthDeep = DDToken.earthDeep.color
     static let ddForest = DDToken.forest.color
     static let ddForestDeep = DDToken.forestDeep.color
+    static let ddCelebrateAce = DDToken.celebrateAce.color
     static let ddDriveBox = DDToken.driveBox.color
     static let ddYouRow = DDToken.youRow.color
     // Tekst og strek

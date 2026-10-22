@@ -68,7 +68,7 @@ nonisolated extension TavlaStandings {
         }
 
         return SeasonSummary(champion: champion,
-                             championLine: rules == .golfgutu ? "bærer den grønne jakka" : nil,
+                             championLine: hasJacket ? "bærer den grønne jakka" : nil,
                              championBasis: basis,
                              podium: Array(rows.prefix(3)), rest: Array(rows.dropFirst(3)),
                              bestRound: bestRound, mostBirdies: mostBirdies, longestDrive: drive,

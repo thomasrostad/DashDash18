@@ -59,6 +59,14 @@ nonisolated extension TavlaStandings {
         return change > 0 ? .up(change) : change < 0 ? .down(-change) : .same
     }
 
+    /// Jakka er premien med Golfgutu-oppsettet (som `championLine` i TavlaSummary). Andre klubber
+    /// og regelsett får nøytrale ord.
+    var hasJacket: Bool { rules == .golfgutu }
+
+    /// Overskriften over tabellen: «Jakkeracet · Høst 2026» med Golfgutu-oppsettet, ellers bare
+    /// turneringsnavnet.
+    var boardTitle: String { hasJacket ? "Jakkeracet · \(seasonName)" : seasonName }
+
     /// De som står likt på flest poeng (minst to), i tabellens rekkefølge. Tom ellers.
     var tiedLeaders: [Row] {
         let ranked = boardRows.filter(\.qualified)
@@ -68,15 +76,15 @@ nonisolated extension TavlaStandings {
     }
 
     /// Hero-kortet ved delt ledelse: «Odd og Ola står likt på 6 poeng. Blir det likt etter kveld 7,
-    /// avgjør playoff jakka.» Hva som avgjør, kommer fra regelsettet. Nil uten delt ledelse og når
-    /// turneringen er ferdig.
+    /// avgjør playoff jakka.» Hva som avgjør, kommer fra regelsettet. «jakka» bare med Golfgutu-
+    /// oppsettet, ellers «førsteplassen». Nil uten delt ledelse og når turneringen er ferdig.
     var leadTieText: String? {
         let leaders = tiedLeaders
         guard status != .finished, let first = leaders.first else { return nil }
         // Lagtabellen: «2 lag står likt …», for lagnavnene er alt lister.
         let names = isTeamBoard ? "\(leaders.count) lag" : RuleFormat.list(leaders.map(\.name))
         let lead = "\(names) står likt på \(points(first.total)) poeng."
-        let prize = countsStableford ? "førsteplassen" : "jakka"
+        let prize = hasJacket ? "jakka" : "førsteplassen"
         let table = rules.table
         let remaining = eveningsPlayed < eveningsTotal
         let when = "Blir det likt etter \(rules.day.one) \(eveningsTotal)"

@@ -100,6 +100,15 @@ extension Font {
         return .system(style, design: family.systemDesign, weight: weight.system)
     }
 
+    /// Skrift fra designsystemet i fast størrelse, uten Dynamic Type. Bare for TV-tavla, der
+    /// størrelsen regnes fra skjermen (`scale`) og ikke fra telefonens tekststørrelse.
+    nonisolated static func dd(_ family: DDFontFamily, fixedSize size: CGFloat, weight: DDFontWeight = .regular) -> Font {
+        if DDFonts.available.contains(family) {
+            return .custom(family.postScriptName(weight), fixedSize: size)
+        }
+        return .system(size: size, weight: weight.system, design: family.systemDesign)
+    }
+
     // Typografiskala. Store tall og navn i 42dot Sans (lett/medium), som i golfee;
     // størrelsene følger PWA-en på en 402 pt bred iPhone.
 

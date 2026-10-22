@@ -71,7 +71,7 @@ struct TavlaTVView: View {
                     Button { dismiss() } label: {
                         Image(systemName: "xmark")
                             .font(.body.weight(.semibold))
-                            .foregroundStyle(Color.ddOnDark.opacity(0.85))
+                            .foregroundStyle(Color.ddHeroSecondary)
                             .padding(12)
                             .contentShape(.rect)
                     }
@@ -141,10 +141,10 @@ struct TavlaTVView: View {
     private func header(_ standings: TavlaStandings, scale: CGFloat) -> some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 4 * scale) {
-                Text(standings.countsStableford ? standings.seasonName : "Jakkeracet · \(standings.seasonName)")
-                    .font(.system(size: 34 * scale, weight: .semibold))
+                Text(standings.boardTitle)
+                    .font(.dd(.sans, fixedSize: 34 * scale, weight: .semibold))
                 Text(standings.progressText)
-                    .font(.system(size: 18 * scale))
+                    .font(.dd(.sans, fixedSize: 18 * scale))
                     .opacity(0.85)
             }
             Spacer()
@@ -152,7 +152,7 @@ struct TavlaTVView: View {
                 .padding(.trailing, 16 * scale)
             TimelineView(.periodic(from: .now, by: 30)) { context in
                 Text(context.date, format: .dateTime.hour().minute())
-                    .font(.system(size: 30 * scale, weight: .light).monospacedDigit())
+                    .font(.dd(.sans, fixedSize: 30 * scale, weight: .light).monospacedDigit())
                     .opacity(0.8)
             }
         }
@@ -164,21 +164,21 @@ struct TavlaTVView: View {
                           showsDetail: Bool) -> some View {
         HStack(spacing: 18 * scale) {
             Text(standings.boardPlace(row))
-                .font(.system(size: 22 * scale, weight: .medium).monospacedDigit())
+                .font(.dd(.sans, fixedSize: 22 * scale, weight: .medium).monospacedDigit())
                 .opacity(0.8)
                 .frame(width: 44 * scale, alignment: .trailing)
             Text(row.name)
-                .font(.system(size: 26 * scale, weight: standings.isOnPodium(row) ? .semibold : .regular))
+                .font(.dd(.sans, fixedSize: 26 * scale, weight: standings.isOnPodium(row) ? .semibold : .regular))
                 .lineLimit(1)
             Spacer()
             if showsDetail {
                 Text(standings.detail(row))
-                    .font(.system(size: 15 * scale))
+                    .font(.dd(.sans, fixedSize: 15 * scale))
                     .opacity(0.8)
                     .lineLimit(1)
             }
             Text(standings.points(row.total))
-                .font(.system(size: 28 * scale, weight: .semibold).monospacedDigit())
+                .font(.dd(.sans, fixedSize: 28 * scale, weight: .semibold).monospacedDigit())
                 .foregroundStyle(row.qualified && row.place == 1 ? Color.ddGold : Color.ddOnDark)
                 .frame(minWidth: 70 * scale, alignment: .trailing)
         }
@@ -191,24 +191,24 @@ struct TavlaTVView: View {
         VStack(alignment: .leading, spacing: 10 * scale) {
             HStack(spacing: 8 * scale) {
                 Text(latest.isOngoing ? "Pågår nå" : "Siste runde")
-                    .font(.system(size: 16 * scale, weight: .semibold))
+                    .font(.dd(.sans, fixedSize: 16 * scale, weight: .semibold))
                     .textCase(.uppercase)
-                    .foregroundStyle(latest.isOngoing ? Color.ddGold : Color.ddOnDark.opacity(0.85))
+                    .foregroundStyle(latest.isOngoing ? Color.ddGold : Color.ddHeroSecondary)
                 if latest.isOngoing {
                     Circle().fill(Color.ddGold).frame(width: 8 * scale, height: 8 * scale)
                 }
             }
             Text(latest.title)
-                .font(.system(size: 20 * scale))
-                .foregroundStyle(Color.ddOnDark.opacity(0.85))
+                .font(.dd(.sans, fixedSize: 20 * scale))
+                .foregroundStyle(Color.ddHeroSecondary)
             ForEach(Array(latest.lines.enumerated()), id: \.offset) { i, line in
                 HStack {
                     Text("\(i + 1).").opacity(0.75).frame(width: 30 * scale, alignment: .trailing)
                     Text(line.name).lineLimit(1)
                     Spacer()
-                    Text("\(line.points)").monospacedDigit().fontWeight(.semibold)
+                    Text("\(line.points)").font(.dd(.sans, fixedSize: 21 * scale, weight: .semibold)).monospacedDigit()
                 }
-                .font(.system(size: 21 * scale))
+                .font(.dd(.sans, fixedSize: 21 * scale))
                 .foregroundStyle(Color.ddOnDark)
             }
         }
@@ -227,7 +227,7 @@ private struct TVLiveBadge: View {
                 .fill(Color.ddLimeOnAccent)
                 .frame(width: 9 * scale, height: 9 * scale)
             Text("Live")
-                .font(.system(size: 18 * scale, weight: .semibold))
+                .font(.dd(.sans, fixedSize: 18 * scale, weight: .semibold))
                 .foregroundStyle(Color.ddLimeOnAccent)
         }
         .padding(.horizontal, 14 * scale)

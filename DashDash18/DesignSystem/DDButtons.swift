@@ -140,9 +140,12 @@ struct DDChoiceButtonStyle: ButtonStyle {
     let selected: Bool
     /// Fra før valgte knappen farge. Nå tegnes alle valgte likt; verdien beholdes for kallene.
     var tint: DDChoiceTint = .forest
+    /// Chip i en vannrett rad (filterpillene på Hjem): så bred som teksten, 44 pt høy, i stedet for
+    /// å dele bredden med de andre.
+    var chip = false
 
     func makeBody(configuration: Configuration) -> some View {
-        DDChoiceBody(configuration: configuration, selected: selected, tint: tint)
+        DDChoiceBody(configuration: configuration, selected: selected, tint: tint, chip: chip)
     }
 }
 
@@ -154,6 +157,7 @@ private struct DDChoiceBody: View {
     let configuration: ButtonStyleConfiguration
     let selected: Bool
     let tint: DDChoiceTint
+    let chip: Bool
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -168,9 +172,9 @@ private struct DDChoiceBody: View {
         }
             .font(.dd(.sans, size: 15, weight: selected ? .semibold : .medium, relativeTo: .subheadline))
             .foregroundStyle(foreground)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 48)
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, chip ? 14 : 12)
+            .frame(minHeight: chip ? 44 : 48)
+            .frame(maxWidth: chip ? nil : .infinity)
             .background(Capsule().fill(background))
             .contentShape(Capsule())
             .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
