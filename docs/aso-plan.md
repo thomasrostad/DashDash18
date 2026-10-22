@@ -96,11 +96,11 @@ Disse krever innlogging som agentene ikke har.
 
 ## Status
 
-- [ ] A1 nettside merget
-- [x] A2 vurdering
-- [ ] A3 del-kort
-- [ ] A4 metadata
-- [ ] A5 skjermbilder
+- [x] A1 nettside merget (#186, 22.10). Ikke deployet ennå, se T1
+- [x] A2 vurdering (#190). Teller bare løse runder; klubbrunder bør telles i en senere PR
+- [x] A3 del-kort (#192)
+- [x] A4 metadata (#189), `node docs/app-store/sjekk.mjs` uten brudd
+- [x] A5 skjermbilder (#191). Bilde 5 viser $-ikon ved Skins: bytt ikon eller skjerm før opplasting (jf. avvisning 2.3.6)
 - [ ] T1 deploy og Search Console
 - [ ] T2 reklametekst
 - [ ] T3 innsending med ny metadata
