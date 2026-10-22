@@ -14,6 +14,7 @@ final class DashDash18UITestsLaunchTests: XCTestCase {
     @MainActor
     func testLaunch() throws {
         let app = XCUIApplication()
+        app.launchArguments.append("-DDUITest")  // Ingen forespørsel om vurdering (`ReviewPromptStore`).
         app.launch()
 
         let attachment = XCTAttachment(screenshot: app.screenshot())
