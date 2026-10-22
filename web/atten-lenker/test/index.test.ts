@@ -98,19 +98,65 @@ test("forsiden", async () => {
   assert.equal(res.status, 200);
   const html = await res.text();
   assert.match(html, /<h1>Golfkvelden med gjengen/);
-  assert.doesNotMatch(html, /<script/);
+  // Eneste script er JSON-LD (data, ikke kode), og det bærer nonce-en fra CSP-en.
+  const scripts = html.match(/<script[^>]*>/g) ?? [];
+  assert.equal(scripts.length, 1);
+  assert.match(scripts[0], /^<script type="application\/ld\+json" nonce="[0-9a-f]+">$/);
   // Søk: forsiden skal indekseres, ha beskrivelse, kanonisk adresse og lenke til App Store.
   assert.doesNotMatch(html, /noindex/);
   assert.match(html, /<meta name="description" content="[^"]{50,160}">/);
   assert.match(html, /<link rel="canonical" href="https:\/\/dashdash18\.com\/">/);
   assert.match(html, /<meta name="apple-itunes-app" content="app-id=6820031728">/);
   assert.ok(html.includes(`href="${APP_STORE_URL}"`), "forsiden lenker til App Store");
-  for (const word of ["golfturnering", "Scorekort", "Tavla", "Liga", "golfgjeng"]) {
-    assert.ok(html.includes(word), `forsiden har søkeordet ${word}`);
+  for (const word of ["golfturnering", "scorekort", "tavla", "liga", "golfgjeng"]) {
+    assert.ok(html.toLowerCase().includes(word), `forsiden har søkeordet ${word}`);
   }
   for (const path of ["/personvern", "/vilkar", "/support"]) {
     assert.ok(html.includes(`href="${path}"`), `forsiden lenker til ${path}`);
   }
+});
+
+test("forsiden: én h1, h2-er og brødtekst uten pengespill", async () => {
+  const res = await get("/");
+  const html = await res.text();
+  assert.equal((html.match(/<h1>/g) ?? []).length, 1);
+  const h2s = [...html.matchAll(/<h2>([^<]+)<\/h2>/g)].map((m) => m[1]);
+  assert.deepEqual(h2s, [
+    "Golfapp for turnering og liga",
+    "Stableford, slagspill og matchspill",
+    "For golfgjengen, klubben og simulatorkvelden",
+  ]);
+  const text = html.slice(html.indexOf("<body>")).replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean);
+  assert.ok(text.length >= 150 && text.length <= 300, `${text.length} ord på forsiden`);
+  // App Store 2.3.6: ingenting om innsats eller pengespill.
+  assert.doesNotMatch(html, /tipping|veddemål|betting|innsats|pott|gambling/i);
+  // Tittelen holder seg kort nok til å vises i Google.
+  const title = /<title>([^<]+)<\/title>/.exec(html)?.[1] ?? "";
+  assert.ok(title.length <= 60, `tittelen er ${title.length} tegn`);
+});
+
+test("forsiden: JSON-LD for appen (MobileApplication, Organization, WebSite), uten vurderinger", async () => {
+  const res = await get("/");
+  const html = await res.text();
+  const csp = res.headers.get("content-security-policy") ?? "";
+  const nonce = /'nonce-([0-9a-f]+)'/.exec(csp)?.[1];
+  assert.ok(nonce, "CSP har nonce");
+  const match = /<script type="application\/ld\+json" nonce="([0-9a-f]+)">(.*?)<\/script>/s.exec(html);
+  assert.ok(match, "forsiden har JSON-LD");
+  assert.equal(match[1], nonce);
+  const data = JSON.parse(match[2]);
+  assert.equal(data["@context"], "https://schema.org");
+  const byType = Object.fromEntries(data["@graph"].map((node: { "@type": string }) => [node["@type"], node]));
+  assert.deepEqual(Object.keys(byType).sort(), ["MobileApplication", "Organization", "WebSite"]);
+  const app = byType.MobileApplication;
+  assert.equal(app.name, "Atten");
+  assert.equal(app.operatingSystem, "iOS");
+  assert.equal(app.applicationCategory, "SportsApplication");
+  assert.equal(app.inLanguage, "nb");
+  assert.equal(app.downloadUrl, APP_STORE_URL);
+  assert.deepEqual(app.offers, { "@type": "Offer", price: "0", priceCurrency: "NOK" });
+  assert.ok(app.description.length > 50);
+  assert.doesNotMatch(match[2], /aggregateRating|ratingValue|review/i);
 });
 
 test("alt annet er 404, med egen side i samme stil", async () => {
@@ -166,6 +212,8 @@ test("robots.txt og sitemap.xml: forsiden, personvern, vilkår og support indeks
   const xml = await sitemap.text();
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
   assert.deepEqual(locs, INDEXED.map((path) => BASE + path));
+  // Hver side har lastmod som dato (ÅÅÅÅ-MM-DD).
+  assert.equal([...xml.matchAll(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g)].length, INDEXED.length);
   // Hver side i sitemap.xml svarer 200, kan indekseres og har seg selv som kanonisk adresse.
   for (const path of INDEXED) {
     const res = await get(path);
