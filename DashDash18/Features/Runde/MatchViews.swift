@@ -58,6 +58,8 @@ struct MatchkortSection: View {
 
 private struct MatchLineRow: View {
     let line: MatchLine
+    @ScaledMetric(relativeTo: .caption) private var numberMetric: CGFloat = 22
+    private var numberWidth: CGFloat { min(numberMetric, 40) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -65,7 +67,7 @@ private struct MatchLineRow: View {
                 Text("\(line.matchNo).")
                     .font(.dd(.sans, size: 12, relativeTo: .caption)).monospacedDigit()
                     .foregroundStyle(Color.ddStatSecondary)
-                    .frame(width: 22, alignment: .leading)
+                    .frame(width: numberWidth, alignment: .leading)
                 VStack(alignment: .leading, spacing: 1) {
                     title
                     if let subtitle = line.subtitle {
@@ -82,12 +84,31 @@ private struct MatchLineRow: View {
                     .foregroundStyle(line.text == "Ikke startet" ? Color.ddStatSecondary : line.tone.statColor)
             }
             .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityText)
             if !line.holes.isEmpty {
                 MatchHoleStrip(holes: line.holes)
-                    .padding(.leading, 30)
+                    .padding(.leading, numberWidth + 8)
             }
         }
         .padding(.vertical, 8)
+    }
+
+    /// Lederen står i halvfeit, som skjermleseren ikke ser: «2. Odd – Ola, Odd leder, 2 opp».
+    private var accessibilityText: String {
+        var parts = ["\(line.matchNo)."]
+        if let opponent = line.opponent {
+            parts.append("\(line.title) – \(opponent)")
+            switch line.leader {
+            case .a: parts.append("\(line.title) leder")
+            case .b: parts.append("\(opponent) leder")
+            case nil: break
+            }
+        } else {
+            parts.append(line.title)
+        }
+        if let subtitle = line.subtitle { parts.append(subtitle) }
+        parts.append(line.text)
+        return parts.joined(separator: ", ")
     }
 
     @ViewBuilder
@@ -170,6 +191,7 @@ struct BayenNaaListe: View {
     /// «bås» / «flight» etter hvor runden spilles.
     var term: GroupTerm = .bay
     let onSelect: (UUID) -> Void
+    @ScaledMetric(relativeTo: .subheadline) private var placeMetric: CGFloat = 28
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -181,7 +203,7 @@ struct BayenNaaListe: View {
                             Text(row.place.map { "\($0)." } ?? "")
                                 .font(.dd(.sans, size: 14, relativeTo: .subheadline)).monospacedDigit()
                                 .foregroundStyle(Color.ddStatSecondary)
-                                .frame(width: 28, alignment: .leading)
+                                .frame(width: min(placeMetric, 48), alignment: .leading)
                             VStack(alignment: .leading, spacing: 1) {
                                 HStack(spacing: 6) {
                                     Text(row.name)
@@ -236,6 +258,7 @@ struct SidepremieBoks: View {
     @State private var isBusy = false
     @State private var error: String?
     @FocusState private var focused: Bool
+    @ScaledMetric(relativeTo: .subheadline) private var rankMetric: CGFloat = 24
 
     private var selected: UUID? {
         if let member, box.claimants.contains(member) { return member }
@@ -247,6 +270,7 @@ struct SidepremieBoks: View {
             HStack(alignment: .firstTextBaseline) {
                 Label(box.title, systemImage: box.kind == .drive ? "ruler" : "scope")
                     .ddEyebrow()
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
             }
             Text(box.leader)
@@ -264,7 +288,7 @@ struct SidepremieBoks: View {
                             Text("\(line.rank).")
                                 .font(.dd(.sans, size: 14, relativeTo: .subheadline)).monospacedDigit()
                                 .foregroundStyle(Color.ddInkSecondary)
-                                .frame(width: 24, alignment: .leading)
+                                .frame(width: min(rankMetric, 44), alignment: .leading)
                             Text(line.name)
                                 .font(line.isLeader ? .ddBodyEmphasis : .ddBody)
                             if line.isMe { DDYouBadge() }

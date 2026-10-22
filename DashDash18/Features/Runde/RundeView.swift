@@ -24,6 +24,8 @@ struct RundeView: View {
     @State private var confirmsEnd = false
     @State private var isEnding = false
     @State private var endError: String?
+    /// Hullet som lagres, til opplesingen når lagringen er ferdig.
+    @State private var savingHole: Int?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.requestReview) private var requestReview
 
@@ -125,9 +127,33 @@ struct RundeView: View {
             model.reviewRequested()
             requestReview()
         }
+        // VoiceOver: lagret, feil og markørkonflikt leses opp, siden bunnlinja ellers bare skifter stille.
+        .onChange(of: model.isSaving) { _, saving in
+            if saving {
+                savingHole = model.game?.holeNumber(model.currentHole)
+            } else if let hole = savingHole, model.saveError == nil {
+                announce("Hull \(hole) er lagret.")
+                savingHole = nil
+            }
+        }
+        .onChange(of: model.saveError) { _, error in
+            if let error { announce(error) }
+        }
+        .onChange(of: conflictText) { _, text in
+            if let text { announce(text) }
+        }
         .task(id: model.game?.roundID) { await loadGames() }
         // Nye scorer og låsing: hent markeringene og oppgjøret på nytt.
         .task(id: gamesReloadKey) { await games?.load() }
+    }
+
+    private var conflictText: String? {
+        guard let game = model.game else { return nil }
+        return MarkerConflicts.stripeText(model.conflicts, holeNumber: game.holeNumber, name: game.name)
+    }
+
+    private func announce(_ text: String) {
+        AccessibilityNotification.Announcement(text).post()
     }
 
     // MARK: Verktøylinja

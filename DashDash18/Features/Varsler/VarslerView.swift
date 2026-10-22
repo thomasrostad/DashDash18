@@ -115,6 +115,8 @@ struct ActivityLineView: View {
                     .foregroundStyle(Color.ddInk)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 7)
+                    // Teksten, tiden og «Ulest» leses som én linje; reaksjonsbrikkene kan nås hver for seg.
+                    .accessibilityLabel(([display.text, time] + (isUnread ? ["Ulest"] : [])).joined(separator: ", "))
                 if !chips.isEmpty {
                     ReactionChipsView(chips: chips, onTap: toggle)
                 }
@@ -128,13 +130,13 @@ struct ActivityLineView: View {
                     .foregroundStyle(Color.ddInkSecondary)
                 if isUnread {
                     DDUnreadDot()
-                        .accessibilityLabel("Ulest")
                 }
             }
             .padding(.top, 9)
+            .accessibilityHidden(true)
         }
         .padding(.vertical, 6)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .contextMenu {
             ReactionMenuItems(isMine: hasReacted, toggle: toggle, pickOther: pickOther, showWho: showWho)
             let who = chips.filter { !$0.names.isEmpty }.map { $0.emoji + " " + NorwegianList.join($0.names) }

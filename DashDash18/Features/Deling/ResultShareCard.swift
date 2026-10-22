@@ -20,7 +20,7 @@ struct ResultShareCard: View {
                 if let subtitle = share.subtitle, !subtitle.isEmpty {
                     Text(subtitle)
                         .font(.ddCallout)
-                        .foregroundStyle(Color.ddOnDark.opacity(0.8))
+                        .foregroundStyle(Color.ddHeroSecondary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

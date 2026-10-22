@@ -203,8 +203,7 @@ private struct TavlaTableSection: View {
                     .padding(.bottom, DDSpacing.m)
                 }
 
-                // «Jakkeracet» er matchspill-seriens navn (PWA-en). En stableford-serie heter bare det den heter.
-                DDSectionLabel(standings.countsStableford ? standings.seasonName : "Jakkeracet · \(standings.seasonName)")
+                DDSectionLabel(standings.boardTitle)
                 TavlaProgress(standings: standings)
 
                 if let text = standings.leadTieText {
@@ -421,7 +420,7 @@ struct TavlaRowView: View {
         .padding(.horizontal, row.isMe ? 10 : 0)
         .background {
             if row.isMe {
-                RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.ddYouRow)
+                RoundedRectangle(cornerRadius: DDRadius.row, style: .continuous).fill(Color.ddYouRow)
             }
         }
         .padding(.horizontal, row.isMe ? -10 : 0)
@@ -467,7 +466,7 @@ private struct FinishedSeasonCard: View {
                     .font(.ddTitleSmall)
                 Text("Se mesteren, pallen og turneringens tall.")
                     .font(.ddCallout)
-                    .foregroundStyle(Color.ddOnDark.opacity(0.8))
+                    .foregroundStyle(Color.ddHeroSecondary)
             }
             Spacer(minLength: 8)
             Image(systemName: "arrow.right")

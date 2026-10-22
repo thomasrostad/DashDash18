@@ -255,7 +255,7 @@ struct DDRankRow<Trailing: View>: View {
         .padding(.horizontal, isMe ? 10 : 0)
         .background {
             if isMe {
-                RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.ddYouRow)
+                RoundedRectangle(cornerRadius: DDRadius.row, style: .continuous).fill(Color.ddYouRow)
             }
         }
         .padding(.horizontal, isMe ? -10 : 0)

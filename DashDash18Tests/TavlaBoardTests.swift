@@ -142,6 +142,21 @@ struct TavlaBoardTests {
         #expect(s.leadTieText == "Anne og Berit står likt på 54 poeng. Blir det likt etter kveld 7, deler de førsteplassen.")
     }
 
+    /// Jakke-ordene hører til Golfgutu-oppsettet. En annen klubb med matchspill får turneringsnavnet.
+    @Test func jakkaBareMedGolfgutuOppsettet() {
+        let golfgutu = B.standings([B.first], rules: .golfgutu)
+        #expect(golfgutu.boardTitle == "Jakkeracet · Høst 2026")
+        #expect(golfgutu.share.eyebrow == "Jakkeracet")
+
+        var annen = Ruleset.golfgutu
+        annen.evenings = 5
+        let s = B.standings([B.first], rules: annen)
+        #expect(!s.countsStableford)
+        #expect(s.boardTitle == "Høst 2026")
+        #expect(s.share.eyebrow == "Tavla")
+        #expect(s.share.heading == "Tavla · Høst 2026")
+    }
+
     @Test func ingenHeroNårTurneringenErFerdig() {
         let s = B.standings([B.first, B.round(2, date: "2026-09-08", over: [B.anne: 1, B.berit: 0, B.cecilie: 2])],
                             status: .finished)

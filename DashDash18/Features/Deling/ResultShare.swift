@@ -13,7 +13,7 @@ nonisolated struct ResultShare: Equatable, Hashable, Sendable {
         let isMe: Bool
     }
 
-    /// «Jakkeracet» eller «Kvelden».
+    /// «Jakkeracet» (Golfgutu-oppsettet), «Tavla» eller «Kvelden».
     let eyebrow: String
     /// Sesongnavnet eller banen.
     let title: String
@@ -64,7 +64,7 @@ nonisolated extension ResultShare {
 nonisolated extension TavlaStandings {
     /// Sesongtabellen til deling.
     var share: ResultShare {
-        return ResultShare(eyebrow: "Jakkeracet", title: seasonName,
+        return ResultShare(eyebrow: hasJacket ? "Jakkeracet" : "Tavla", title: seasonName,
                            subtitle: "\(eveningsPlayed) av \(rules.day.count(eveningsTotal)) spilt",
                            lines: ResultShare.lines(from: rows, points: points))
     }
