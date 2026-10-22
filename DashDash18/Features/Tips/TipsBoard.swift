@@ -51,6 +51,8 @@ nonisolated struct TipsBoard: Sendable {
 
     let event: TipsEventRow
     let rules: Ruleset
+    /// Spørsmålene på kupongen, fra regelsettet.
+    var questions: [TipsQuestion] { rules.tips.questions }
     let me: UUID
     let isOrganizer: Bool
     let phase: Phase
@@ -119,7 +121,7 @@ nonisolated struct TipsBoard: Sendable {
 
         let players = input.members.map { Player(id: $0.id.uuidString, name: $0.displayName) }
         let coupons = input.coupons.filter { $0.eventID == input.event.id }
-        result = Tips.result(coupons: coupons.map(\.coupon), key: key, players: players)
+        result = Tips.result(coupons: coupons.map(\.coupon), key: key, players: players, rules: input.rules)
         pot = Tips.pot(result, stake: stake)
         myCoupon = coupons.first { $0.memberID == me }?.coupon
 
@@ -337,5 +339,7 @@ nonisolated struct TipsDraft: Equatable, Sendable {
         saved == nil ? "Send inn kupongen" : (isChanged(from: saved) ? "Lagre endringene" : "Levert")
     }
 
-    func canSubmit(saved: TipsCoupon?) -> Bool { coupon.isComplete && isChanged(from: saved) }
+    func canSubmit(saved: TipsCoupon?, questions: [TipsQuestion] = Ruleset.golfgutu.tips.questions) -> Bool {
+        coupon.isComplete(for: questions) && isChanged(from: saved)
+    }
 }

@@ -10,6 +10,7 @@ import {
   competitionBoards, competitionRowText, competitionScoreText, decodeRuleset, decodeStoredCompetition, frozenFromRows, makeRoundFromSnapshot,
   sidesFromRaw, snapshotFields, snapshotHandicap, snapshotRoster, teamMatchResult, type Ruleset, type StoredCompetition, type TavlaData,
 } from "../../golfgutu-core/src/index.ts";
+import { ICON_LINKS } from "./html.ts";
 
 export interface TVEnv {
   SUPABASE_URL?: string;
@@ -256,12 +257,15 @@ export async function fetchTVPayload(code: string, env: TVEnv): Promise<TVPayloa
   return buildTVPayload((await res.json()) as Record<string, unknown>);
 }
 
+// Skriften er appens Figtree (public/fonts), som på Tavla-siden.
 const STYLE = `
+  @font-face { font-family:"Figtree"; src:url("/fonts/Figtree.woff2") format("woff2"); font-weight:300 900; font-display:swap; }
   :root { color-scheme: dark; --bg:#0B1F18; --ink:#FFF9DF; --dim:rgba(255,249,223,.6); --gold:#E4C767; --panel:rgba(255,249,223,.06); }
   * { box-sizing: border-box; } html, body { margin:0; height:100%; background:var(--bg); color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; overflow:hidden; }
+    font-family:"Figtree",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; overflow:hidden; }
   main { height:100%; padding:3vh 4vw; display:flex; flex-direction:column; gap:2vh; font-size:clamp(14px,1.6vw,40px); }
-  header { display:flex; align-items:baseline; gap:2vw; } h1 { margin:0; font-size:2.2em; font-weight:600; }
+  header { display:flex; align-items:baseline; gap:2vw; } header > div { min-width:0; }
+  h1 { margin:0; font-size:2.2em; font-weight:600; overflow-wrap:anywhere; }
   .dim { color:var(--dim); } .clock { margin-left:auto; font-size:1.9em; font-weight:300; font-variant-numeric:tabular-nums; }
   .body { flex:1; display:flex; gap:3vw; min-height:0; } .table { flex:1; display:flex; flex-direction:column; min-height:0; }
   .row { display:flex; align-items:center; gap:1.2em; padding:.45em 0; border-bottom:1px solid rgba(255,249,223,.08); }
@@ -272,7 +276,7 @@ const STYLE = `
   .first .total { color:var(--gold); } .dots { text-align:center; margin-top:1vh; } .dots span { opacity:.25; } .dots span.on { opacity:.9; }
   aside { width:30vw; background:var(--panel); border-radius:1.2em; padding:1.4em; align-self:flex-start; }
   aside h2 { margin:0 0 .3em; font-size:.9em; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); }
-  aside h2.live { color:var(--gold); } aside .line { display:flex; gap:.6em; padding:.25em 0; font-size:1.1em; }
+  aside h2.live { color:var(--gold); } aside .line { display:flex; gap:.6em; padding:.25em 0; font-size:1.1em; } aside .line span { min-width:0; overflow-wrap:anywhere; }
   aside .line b { margin-left:auto; } .msg { margin:auto; text-align:center; max-width:40em; }
   form { display:flex; gap:1em; justify-content:center; margin-top:2em; } input { font:inherit; font-size:1.6em; padding:.4em .6em; width:9em;
     text-transform:uppercase; letter-spacing:.15em; border-radius:.4em; border:0; } button { font:inherit; font-size:1.3em; padding:.4em 1em;
@@ -284,15 +288,15 @@ const STYLE = `
 
 function shell(title: string, body: string, nonce: string, script: string): string {
   return `<!doctype html><html lang="nb"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex"><title>${title}</title><style>${STYLE}</style></head><body>${body}
+<meta name="robots" content="noindex"><title>${title}</title>${ICON_LINKS}<style>${STYLE}</style></head><body>${body}
 <script nonce="${nonce}">${script}</script></body></html>`;
 }
 
 /** /tv: skriv inn koden (for en TV-nettleser uten tastatur er QR-lenken raskest). */
 export function tvCodePage(nonce: string): string {
-  return shell("Atten · TV", `<main><div class="msg"><h1>Atten på TV</h1>
+  return shell("TV-visning – Atten", `<main><div class="msg"><h1>Atten på TV</h1>
 <p class="dim">Skriv koden fra appen (Tavla → TV-visning → TV-kode).</p>
-<form id="f"><input id="k" maxlength="11" autocomplete="off" autofocus placeholder="ABCDE FGHJK"><button>Vis</button></form></div></main>`,
+<form id="f"><input id="k" maxlength="11" autocomplete="off" autofocus placeholder="ABCDE FGHJK" aria-label="TV-kode"><button>Vis</button></form></div></main>`,
     nonce, `document.getElementById("f").addEventListener("submit",e=>{e.preventDefault();
 const k=document.getElementById("k").value.replace(/[\\s-]/g,"").toUpperCase(); if(k) location.href="/tv/"+encodeURIComponent(k);});`);
 }
@@ -330,7 +334,7 @@ async function load(){
 }
 clock(); setInterval(clock, 15000); load(); setInterval(load, 15000); setInterval(()=>{ page++; render(); }, 10000);
 window.addEventListener("resize", render);`;
-  return shell("Atten · TV", `<main id="main"><header><div><h1 id="name">Atten</h1><div class="dim" id="played">Henter tabellen …</div></div>
+  return shell("Tavla på TV – Atten", `<main id="main"><header><div><h1 id="name">Atten</h1><div class="dim" id="played">Henter tabellen …</div></div>
 <div class="clock" id="clock"></div></header><div class="body"><div class="table"><div id="rows"></div><div class="dots" id="dots"></div></div>
 <div class="side"><aside id="latest" style="display:none"></aside><div id="extras"></div></div></div><div class="dim" id="note" style="display:none"></div></main>`, nonce, script);
 }

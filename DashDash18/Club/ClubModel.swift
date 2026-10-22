@@ -184,6 +184,13 @@ final class ClubModel {
         apply(memberships)
     }
 
+    /// Etter «Bli med» i en klubb du er med i fra før (lenke eller Deg): aktiv → bytt til klubben,
+    /// venter → bli der du er. Svarer med teksten som sier hva som skjedde.
+    func finishJoin(clubID: UUID, clubName: String, status: MemberStatus) -> String {
+        if status == .active { select(clubID: clubID) }
+        return ClubInviteFlow.joinedText(clubName: clubName, status: status)
+    }
+
     /// Ved utlogging. Det lagrede medlemskapet slettes også.
     func reset() {
         state = .loading

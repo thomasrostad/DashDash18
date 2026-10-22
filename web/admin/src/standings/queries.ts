@@ -112,7 +112,7 @@ export async function loadCompetition(competitionID: string): Promise<Competitio
 /** Feil fra playoff-RPC-ene med norsk tekst fra databasen når den finnes. */
 function playoffError(e: { message: string; code?: string }): Error {
   if (e.code === "PGRST202" || e.code === "42883") return new Error("Playoff krever en nyere database.");
-  return new Error(e.message);
+  return Object.assign(new Error(e.message), { code: e.code });
 }
 
 /** «Start playoff»: `create_playoff_round` (sql/047). Hullene er rundens 0-baserte hull i rekkefølge. */

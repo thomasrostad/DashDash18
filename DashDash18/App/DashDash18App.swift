@@ -8,6 +8,8 @@ struct DashDash18App: App {
         AppServices(config: try AppConfig.load())
     }
 
+    @AppStorage(AppearanceMode.storageKey) private var appearance = AppearanceMode.system.rawValue
+
     init() {
         DDAppearance.configure()
     }
@@ -31,6 +33,8 @@ struct DashDash18App: App {
                 #endif
             }
             .ddAppStyle()
+            // Utseende-valget (Deg). Ikke i ddAppStyle: Tavla på ekstern skjerm bruker den og tvinger mørkt.
+            .preferredColorScheme(AppearanceMode(stored: appearance).colorScheme)
         }
     }
 

@@ -1,0 +1,565 @@
+{
+ "_kilde": "Avledet av tips.json (tipsResultat i db-nytt.js): riktig/feil/strøket per spørsmål er PWA-ens, poeng, mulige, maks og vinnere er regnet på nytt med bare spørsmålene i regelsettet. Rader sortert på poeng, så navn. Standard = PWA-ens TIPS_SPORSMAAL.",
+ "standard": [
+  "winner",
+  "frontNine",
+  "mostPars",
+  "birdie",
+  "over"
+ ],
+ "utvalg": [
+  {
+   "navn": "tre spørsmål",
+   "sporsmaal": [
+    "winner",
+    "birdie",
+    "over"
+   ],
+   "resultater": [
+    {
+     "resultat": "før kvelden er ferdig",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 3,
+       "riktig": {
+        "winner": true,
+        "birdie": true,
+        "over": true
+       }
+      },
+      {
+       "spiller": "c",
+       "poeng": 2,
+       "riktig": {
+        "winner": true,
+        "birdie": true,
+        "over": false
+       }
+      },
+      {
+       "spiller": "b",
+       "poeng": 1,
+       "riktig": {
+        "winner": false,
+        "birdie": true,
+        "over": false
+       }
+      },
+      {
+       "spiller": "d",
+       "poeng": 1,
+       "riktig": {
+        "winner": false,
+        "birdie": false,
+        "over": true
+       }
+      }
+     ],
+     "mulige": 3,
+     "maks": 3,
+     "vinnere": []
+    },
+    {
+     "resultat": "ferdig: Anders og Cato deler",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 3,
+       "riktig": {
+        "winner": true,
+        "birdie": true,
+        "over": true
+       }
+      },
+      {
+       "spiller": "c",
+       "poeng": 2,
+       "riktig": {
+        "winner": true,
+        "birdie": true,
+        "over": false
+       }
+      },
+      {
+       "spiller": "b",
+       "poeng": 1,
+       "riktig": {
+        "winner": false,
+        "birdie": true,
+        "over": false
+       }
+      },
+      {
+       "spiller": "d",
+       "poeng": 1,
+       "riktig": {
+        "winner": false,
+        "birdie": false,
+        "over": true
+       }
+      }
+     ],
+     "mulige": 3,
+     "maks": 3,
+     "vinnere": [
+      "a"
+     ]
+    },
+    {
+     "resultat": "ufullstendig kupong og ukjent spiller",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 2,
+       "riktig": {
+        "winner": true,
+        "birdie": false,
+        "over": true
+       }
+      }
+     ],
+     "mulige": 3,
+     "maks": 2,
+     "vinnere": [
+      "a"
+     ]
+    },
+    {
+     "resultat": "uten første ni og snittet på linja: tre mulige",
+     "rader": [
+      {
+       "spiller": "d",
+       "poeng": 2,
+       "riktig": {
+        "winner": true,
+        "birdie": true,
+        "over": null
+       }
+      },
+      {
+       "spiller": "a",
+       "poeng": 1,
+       "riktig": {
+        "winner": true,
+        "birdie": false,
+        "over": null
+       }
+      },
+      {
+       "spiller": "b",
+       "poeng": 0,
+       "riktig": {
+        "winner": false,
+        "birdie": false,
+        "over": null
+       }
+      },
+      {
+       "spiller": "c",
+       "poeng": 0,
+       "riktig": {
+        "winner": false,
+        "birdie": false,
+        "over": null
+       }
+      }
+     ],
+     "mulige": 2,
+     "maks": 2,
+     "vinnere": [
+      "d"
+     ]
+    }
+   ]
+  },
+  {
+   "navn": "to, i egen rekkefølge",
+   "sporsmaal": [
+    "over",
+    "frontNine"
+   ],
+   "resultater": [
+    {
+     "resultat": "før kvelden er ferdig",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 1,
+       "riktig": {
+        "over": true,
+        "frontNine": false
+       }
+      },
+      {
+       "spiller": "b",
+       "poeng": 1,
+       "riktig": {
+        "over": false,
+        "frontNine": true
+       }
+      },
+      {
+       "spiller": "c",
+       "poeng": 1,
+       "riktig": {
+        "over": false,
+        "frontNine": true
+       }
+      },
+      {
+       "spiller": "d",
+       "poeng": 1,
+       "riktig": {
+        "over": true,
+        "frontNine": false
+       }
+      }
+     ],
+     "mulige": 2,
+     "maks": 1,
+     "vinnere": []
+    },
+    {
+     "resultat": "ferdig: Anders og Cato deler",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 1,
+       "riktig": {
+        "over": true,
+        "frontNine": false
+       }
+      },
+      {
+       "spiller": "b",
+       "poeng": 1,
+       "riktig": {
+        "over": false,
+        "frontNine": true
+       }
+      },
+      {
+       "spiller": "c",
+       "poeng": 1,
+       "riktig": {
+        "over": false,
+        "frontNine": true
+       }
+      },
+      {
+       "spiller": "d",
+       "poeng": 1,
+       "riktig": {
+        "over": true,
+        "frontNine": false
+       }
+      }
+     ],
+     "mulige": 2,
+     "maks": 1,
+     "vinnere": [
+      "a",
+      "b",
+      "c",
+      "d"
+     ]
+    },
+    {
+     "resultat": "ufullstendig kupong og ukjent spiller",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 1,
+       "riktig": {
+        "over": true,
+        "frontNine": false
+       }
+      }
+     ],
+     "mulige": 2,
+     "maks": 1,
+     "vinnere": [
+      "a"
+     ]
+    },
+    {
+     "resultat": "uten første ni og snittet på linja: tre mulige",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 0,
+       "riktig": {
+        "over": null,
+        "frontNine": null
+       }
+      },
+      {
+       "spiller": "b",
+       "poeng": 0,
+       "riktig": {
+        "over": null,
+        "frontNine": null
+       }
+      },
+      {
+       "spiller": "c",
+       "poeng": 0,
+       "riktig": {
+        "over": null,
+        "frontNine": null
+       }
+      },
+      {
+       "spiller": "d",
+       "poeng": 0,
+       "riktig": {
+        "over": null,
+        "frontNine": null
+       }
+      }
+     ],
+     "mulige": 0,
+     "maks": 0,
+     "vinnere": [
+      "a",
+      "b",
+      "c",
+      "d"
+     ]
+    }
+   ]
+  },
+  {
+   "navn": "ett",
+   "sporsmaal": [
+    "mostPars"
+   ],
+   "resultater": [
+    {
+     "resultat": "før kvelden er ferdig",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 1,
+       "riktig": {
+        "mostPars": true
+       }
+      },
+      {
+       "spiller": "c",
+       "poeng": 1,
+       "riktig": {
+        "mostPars": true
+       }
+      },
+      {
+       "spiller": "b",
+       "poeng": 0,
+       "riktig": {
+        "mostPars": false
+       }
+      },
+      {
+       "spiller": "d",
+       "poeng": 0,
+       "riktig": {
+        "mostPars": false
+       }
+      }
+     ],
+     "mulige": 1,
+     "maks": 1,
+     "vinnere": []
+    },
+    {
+     "resultat": "ferdig: Anders og Cato deler",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 1,
+       "riktig": {
+        "mostPars": true
+       }
+      },
+      {
+       "spiller": "c",
+       "poeng": 1,
+       "riktig": {
+        "mostPars": true
+       }
+      },
+      {
+       "spiller": "b",
+       "poeng": 0,
+       "riktig": {
+        "mostPars": false
+       }
+      },
+      {
+       "spiller": "d",
+       "poeng": 0,
+       "riktig": {
+        "mostPars": false
+       }
+      }
+     ],
+     "mulige": 1,
+     "maks": 1,
+     "vinnere": [
+      "a",
+      "c"
+     ]
+    },
+    {
+     "resultat": "ufullstendig kupong og ukjent spiller",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 1,
+       "riktig": {
+        "mostPars": true
+       }
+      }
+     ],
+     "mulige": 1,
+     "maks": 1,
+     "vinnere": [
+      "a"
+     ]
+    },
+    {
+     "resultat": "uten første ni og snittet på linja: tre mulige",
+     "rader": [
+      {
+       "spiller": "a",
+       "poeng": 1,
+       "riktig": {
+        "mostPars": true
+       }
+      },
+      {
+       "spiller": "c",
+       "poeng": 1,
+       "riktig": {
+        "mostPars": true
+       }
+      },
+      {
+       "spiller": "d",
+       "poeng": 1,
+       "riktig": {
+        "mostPars": true
+       }
+      },
+      {
+       "spiller": "b",
+       "poeng": 0,
+       "riktig": {
+        "mostPars": false
+       }
+      }
+     ],
+     "mulige": 1,
+     "maks": 1,
+     "vinnere": [
+      "a",
+      "c",
+      "d"
+     ]
+    }
+   ]
+  }
+ ],
+ "kuponger": [
+  {
+   "navn": "fire av fem",
+   "kupong": {
+    "playerID": "b",
+    "winner": "d",
+    "frontNine": "d",
+    "birdie": true,
+    "over": true
+   },
+   "sporsmaal": [
+    "winner",
+    "frontNine",
+    "birdie",
+    "over"
+   ],
+   "besvart": 4,
+   "komplett": true
+  },
+  {
+   "navn": "mangler ett av tre",
+   "kupong": {
+    "playerID": "b",
+    "winner": "d",
+    "birdie": true
+   },
+   "sporsmaal": [
+    "winner",
+    "birdie",
+    "over"
+   ],
+   "besvart": 2,
+   "komplett": false
+  },
+  {
+   "navn": "tom id er ikke et svar",
+   "kupong": {
+    "playerID": "b",
+    "winner": "",
+    "over": false
+   },
+   "sporsmaal": [
+    "winner",
+    "over"
+   ],
+   "besvart": 1,
+   "komplett": false
+  }
+ ],
+ "json": [
+  {
+   "navn": "uten feltet",
+   "tips": {
+    "defaultLine": 1.5
+   },
+   "sporsmaal": [
+    "winner",
+    "frontNine",
+    "mostPars",
+    "birdie",
+    "over"
+   ]
+  },
+  {
+   "navn": "færre",
+   "tips": {
+    "questions": [
+     "birdie",
+     "winner"
+    ]
+   },
+   "sporsmaal": [
+    "birdie",
+    "winner"
+   ]
+  },
+  {
+   "navn": "ukjent spørsmål hoppes over",
+   "tips": {
+    "questions": [
+     "winner",
+     "nyttSporsmaal",
+     "over"
+    ]
+   },
+   "sporsmaal": [
+    "winner",
+    "over"
+   ]
+  }
+ ]
+}

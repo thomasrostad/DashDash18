@@ -10,7 +10,7 @@ import {
   correctionParams, cutHint, cutRuleHelp, cutLineText, cutOptionTitle, cutPreview, cutSummary, defaultCutChoice, newCorrection, roundTable,
   signed, stepCorrection, type CutChoice, type RoundGame, type ScoreCorrection,
 } from "./game.ts";
-import { deleteButtonTitle, deleteMessage, deleteNoun, roundStatusText, type DeleteSummary } from "./logic.ts";
+import { dataErrorText, deleteButtonTitle, deleteMessage, deleteNoun, roundStatusText, type DeleteSummary } from "./logic.ts";
 
 /**
  * Rundens side for arrangøren (RoundTableView, AvkortView): spillere × hull med brutto, sum og poeng, og
@@ -38,7 +38,7 @@ export function RoundView({ round, title, rules, myMemberID, openCut, onLeft, ta
       setGame(g);
       setFormats(f);
       return g;
-    } catch (e) { setError((e as Error).message); return null; }
+    } catch (e) { setError(dataErrorText(e)); return null; }
   }, [round.id, rules]);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export function RoundView({ round, title, rules, myMemberID, openCut, onLeft, ta
 
   async function run(action: () => Promise<void>) {
     setBusy(true); setError(null); setNotice(null);
-    try { await action(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+    try { await action(); } catch (e) { setError(dataErrorText(e)); } finally { setBusy(false); }
   }
 
   if (!game) return error ? <p className="error">{error}</p> : <p className="muted">Henter runden …</p>;

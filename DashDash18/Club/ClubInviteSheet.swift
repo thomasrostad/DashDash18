@@ -85,8 +85,7 @@ struct ClubInviteSheet: View {
 
     /// Med i en annen klubb fra før: bytt til den nye når du er med med én gang.
     private func joined(_ preview: ClubPreview, _ status: MemberStatus) {
-        if status == .active { club.select(clubID: preview.clubID) }
-        done = ClubInviteFlow.joinedText(clubName: preview.name, status: status)
+        done = club.finishJoin(clubID: preview.clubID, clubName: preview.name, status: status)
     }
 }
 

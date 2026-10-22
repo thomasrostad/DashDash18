@@ -1,6 +1,8 @@
 // Påmelding per kveld (steg 4, sql/045). Ren logikk, som appens SignupSummary og
 // EveningSignupRules.swift: «kommer» er yes uten venteliste pluss bekreftede gjester.
 
+import { plainErrorText } from "./text.ts";
+
 export type SignupStatus = "yes" | "maybe" | "no";
 
 export interface EveningSignup {
@@ -149,7 +151,7 @@ export function waitlistText(place: number | null | undefined): string {
 export function signupErrorText(error: { code?: string; message?: string } | null | undefined): string {
   if (!error) return "";
   if (error.code === "DDB02") return DEADLINE_TEXT;
-  return error.message ?? "Noe gikk galt.";
+  return plainErrorText(error);
 }
 
 /** Funksjonen, kolonnen eller tabellen finnes ikke (sql/045 ikke kjørt). */

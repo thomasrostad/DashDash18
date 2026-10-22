@@ -1,7 +1,7 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Tippekupongen for én kveld: fem spørsmål mens den er åpen, alles kuponger når den er låst,
+/// Tippekupongen for én kveld: regelsettets spørsmål mens den er åpen, alles kuponger når den er låst,
 /// og fasit og resultatliste når kvelden er ferdig.
 struct TipsView: View {
     let eventID: UUID
@@ -120,11 +120,11 @@ private struct TipsFormSections: View {
     private var saved: TipsCoupon? { board.myCoupon }
 
     var body: some View {
-        ForEach(Array(TipsQuestion.allCases.enumerated()), id: \.element) { index, q in
+        ForEach(Array(board.questions.enumerated()), id: \.element) { index, q in
             Section {
                 answerControl(q)
             } header: {
-                DDHeader("\(index + 1) / \(TipsQuestion.allCases.count)")
+                DDHeader("\(index + 1) / \(board.questions.count)")
             } footer: {
                 DDFooter(q.subtitle)
             }
@@ -146,7 +146,7 @@ private struct TipsFormSections: View {
                     }
                 }
                 .buttonStyle(.dd(.primary, fullWidth: true))
-                .disabled(model.isSaving || !model.draft.canSubmit(saved: saved))
+                .disabled(model.isSaving || !model.draft.canSubmit(saved: saved, questions: board.questions))
                 if saved != nil {
                     Button("Trekk kupongen …", role: .destructive) { confirmWithdraw = true }
                         .buttonStyle(.dd(.danger, fullWidth: true))
@@ -169,7 +169,7 @@ private struct TipsFormSections: View {
     }
 
     private var hint: String {
-        let n = model.draft.coupon.answeredCount, total = TipsQuestion.allCases.count
+        let n = model.draft.coupon.answeredCount(for: board.questions), total = board.questions.count
         if n < total { return "\(n) av \(total) besvart." }
         return (saved != nil ? "Du kan endre svarene til \(board.deadlineText). " : "")
             + "De andre ser kupongen din først når den er låst."
@@ -346,7 +346,7 @@ private struct TipsAllSections: View {
                                        description: Text("Ingen leverte kupong til denne \(dayTerm.the)."))
             }
         } else {
-            ForEach(Array(TipsQuestion.allCases.enumerated()), id: \.element) { index, q in
+            ForEach(Array(board.questions.enumerated()), id: \.element) { index, q in
                 DDSection("\(index + 1). \(board.title(q))") {
                     ForEach(board.groups(q)) { g in
                         VStack(alignment: .leading, spacing: 4) {
@@ -414,11 +414,11 @@ private struct TipsFinishedSections: View {
             } header: {
                 DDHeader("Resultatliste")
             } footer: {
-                DDFooter("Merkene er spørsmål 1–5 i rekkefølge. Ett poeng per riktig svar"
-                         + (board.result.possible < TipsQuestion.allCases.count ? "; · er strøket og teller ikke for noen." : "."))
+                DDFooter("Merkene er spørsmål 1–\(board.questions.count) i rekkefølge. Ett poeng per riktig svar"
+                         + (board.result.possible < board.questions.count ? "; · er strøket og teller ikke for noen." : "."))
             }
             DDSection("Fasit") {
-                ForEach(TipsQuestion.allCases) { q in
+                ForEach(board.questions) { q in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(board.title(q))
                             .font(.ddCaption)
@@ -454,7 +454,7 @@ private struct TipsFinishedSections: View {
             }
             Spacer()
             HStack(spacing: 4) {
-                ForEach(TipsQuestion.allCases) { q in
+                ForEach(board.questions) { q in
                     let v = row.correct[q] ?? nil
                     Text(v == nil ? "·" : (v! ? "✓" : "✗"))
                         .foregroundStyle(v == nil ? Color.ddInkSecondary : (v! ? Color.ddLimeInk : Color.ddRustText))

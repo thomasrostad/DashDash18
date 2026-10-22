@@ -22,15 +22,8 @@ struct DegView: View {
                 LabeledContent("Klubb", value: membership.club.name)
                 LabeledContent("Navn i troppen", value: membership.displayName)
                 LabeledContent("Rolle", value: membership.roleText)
-                if otherActiveClubs.count > 0 {
-                    Menu("Bytt klubb") {
-                        ForEach(otherActiveClubs) { other in
-                            Button(other.club.name) { club.select(other) }
-                        }
-                    }
-                    .fontWeight(.medium)
-                }
             }
+            DegClubsSection(user: user, current: membership)
             if let context {
                 OwnProfileNGFSection(context: context)
                     .id(context.user.id)
@@ -46,6 +39,7 @@ struct DegView: View {
             if StatsFeature.isEnabled, let context {
                 StatsDegSection(context: context)
             }
+            DegAppearanceSection()
             DegAccountSection(user: user)
             DegOpenAppSections(client: context?.client, user: user)
             DDSection("Om appen") {
@@ -64,10 +58,6 @@ struct DegView: View {
                 }
             }
         }
-    }
-
-    private var otherActiveClubs: [Membership] {
-        club.memberships.filter { $0.status == .active && $0.clubID != membership.clubID }
     }
 }
 

@@ -1,4 +1,4 @@
-import { supabase } from "./supabase.ts";
+import { errorText, supabase } from "./supabase.ts";
 
 // Radene web-admin leser. Samme kolonner som appens radtyper (Rows.swift, FoundationRows.swift).
 
@@ -177,7 +177,7 @@ export async function saveEvent(clubID: string, id: string | null, e: EventInput
   }
   const savedID = (data as { id: string }).id;
   const { error: cErr } = await supabase.rpc("set_event_committee", { p_event_id: savedID, p_member_ids: committee });
-  if (cErr) throw new Error(`Datoen er lagret, men ikke sosialkomiteen. ${cErr.message}`);
+  if (cErr) throw new Error(`Datoen er lagret, men ikke sosialkomiteen. ${errorText(cErr)}`);
   return savedID;
 }
 
@@ -218,7 +218,7 @@ export async function createSeason(clubID: string, name: string, rules: Record<s
   if (error) throw error;
   if (start) {
     const { error: aErr } = await supabase.rpc("activate_season", activateSeasonParams(id, asMain));
-    if (aErr) throw new Error(`Turneringen er laget, men ikke startet. ${aErr.message}`);
+    if (aErr) throw new Error(`Turneringen er laget, men ikke startet. ${errorText(aErr)}`);
   }
   return id;
 }
