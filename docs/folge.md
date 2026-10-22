@@ -62,3 +62,14 @@ Uten 054 skal alt dette være skjult (sjekk at RPC-en finnes, som før).
 - **«Ny runde» og turneringer:** `known_profiles()` gir også dem du følger og dine følgere; sortere dem du følger øverst.
 - **push-send:** `audience = 'person'` (id-ene i `members` er profil-id-er, blokkering fra `user_blocks` mot `activity.actor_profile_id`, threadId for eksempel `follow`), tekst for de tre nye kindene og kommentarer på kort uten klubb. Gruppene for brukere uten klubb kan ikke slås av ennå (`push_set_groups` skriver per medlemskap), som for turneringer uten klubb.
 - **Personvern:** publisere teksten merket «Etter 054» i `docs/personvern.md` når 054 er kjørt.
+
+## Forenklet 22.10.2026
+
+Thomas: «Forenkle følgeprosessen – gjøre det enklere å følge andre i appen.» Ingen SQL.
+
+- «Legg til venner» og Deg → Følger var to nesten like skjermer som lenket til hverandre. Nå er det én skjerm (`FollowHubView`) med søkefeltet øverst, «Skann kode» og «Min kode» på én rad, forespørsler, «Folk du kjenner» og én lenke til listene og personvern (`FollowListsView`). Søk fra Deg: 3 → 2 trykk; fra Hjem: 4 → 3.
+- «Følg tilbake» etter Godta, på «X følger deg nå» og på følgere du ikke følger (kilde `suggestion`, det finnes ingen egen kilde).
+- «Følg medspillerne» står øverst i Stilling når runden er låst, med «Følg alle» (én `follow_request` per person, stopper ved første feil, også 54000).
+- Navnet på kortene i «Følger» og på medspillerne åpner profilen. Tavla er ikke med: radene har bare medlems-id.
+- Tekst: bunnteksten om godkjenning og skannerens hjelpetekst er rettet, kortet heter «Finn folk å følge», og tom forslagsliste har «Vis koden min».
+- Godkjenning som standard (beslutningen over) er uendret.
