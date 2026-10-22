@@ -49,10 +49,12 @@ nonisolated extension RoundGame {
     /// markør: bare markøren; ellers spilleren selv.
     /// Levert kort (sql/057): bare arrangøren. `ignoringSubmission`: som om kortet ikke var levert.
     /// Funksjonæren for spillerens gruppe (`is_group_scorer`, sql/032) fører også.
+    /// I en form med ett kort per lag fører alle på laget lagets kort (sql/071), også med markør i båsen.
     func canScore(_ viewer: Viewer, for target: UUID, ignoringSubmission: Bool = false) -> Bool {
         if viewer.isOrganizer { return true }
         guard status == .active else { return false }
         if !ignoringSubmission, isCardSubmitted(target) { return false }
+        if isOnTeamCard(viewer.memberID, with: target) { return true }
         if let group = bay(of: target)?.number, viewer.scorerGroups.contains(group) { return true }
         if let marker = bay(of: target)?.marker { return marker == viewer.memberID }
         return viewer.memberID == target
@@ -107,6 +109,7 @@ nonisolated extension RoundGame {
         if let group = scorerBay(for: viewer) {
             return group.players.contains(member) && canScore(viewer, for: member, ignoringSubmission: skip)
         }
+        if isOnTeamCard(me, with: member) { return canScore(viewer, for: member, ignoringSubmission: skip) }
         guard let bay = bay(of: me) else { return member == me && canScore(viewer, for: me, ignoringSubmission: skip) }
         if let marker = bay.marker { return marker == me && canScore(viewer, for: member, ignoringSubmission: skip) }
         return member == me && canScore(viewer, for: me, ignoringSubmission: skip)
@@ -191,6 +194,14 @@ nonisolated extension RoundGame {
         }
         guard !entries.isEmpty else { return nil }
         return HoleSubmission(roundID: roundID, holeIndex: hole, entries: entries, recordedAt: recordedAt)
+    }
+
+    /// Står `viewer` på samme lagkort som `member`? Bare i en form med ett kort per lag, og bare når
+    /// begge er på samme lag (`team_no` 1–99). Samme regel som grenen fra sql/071 i `can_score`.
+    func isOnTeamCard(_ viewer: UUID, with member: UUID) -> Bool {
+        guard round.form.card == .perTeam, isPlaying(viewer),
+              let team = Handicap.teammates(of: member.uuidString, in: round) else { return false }
+        return team.contains(viewer.uuidString)
     }
 
     /// Hvem et hulltall skrives på: hele laget når laget spiller én ball, ellers spilleren.
@@ -565,14 +576,19 @@ nonisolated extension RoundGame {
         return ScoringTitle(title: title, subtitle: scoringSubtitle(viewer: viewer))
     }
 
-    /// «Du fører for bås 2», «Bås 2 · Kåre fører», «Du fører ditt eget kort» eller «Runden er ferdig».
+    /// «Du fører for bås 2», «Du fører for laget ditt», «Bås 2 · Kåre fører», «Du fører ditt eget kort»
+    /// eller «Runden er ferdig».
     private func scoringSubtitle(viewer: Viewer) -> String? {
         if status == .locked { return "Runden er ferdig" }
         let me = viewer.memberID
         guard isPlaying(me) else { return viewer.isOrganizer ? "Du ser på som arrangør" : "Du ser på" }
-        if hasBays, let bay = bay(of: me) {
-            if bay.marker == me { return "Du fører for \(groupTerm.numberedLower(bay.number))" }
-            if let marker = bay.marker { return "\(groupTerm.numbered(bay.number)) · \(name(marker)) fører" }
+        if hasBays, let bay = bay(of: me), bay.marker == me {
+            return "Du fører for \(groupTerm.numberedLower(bay.number))"
+        }
+        // Ett kort per lag (sql/071): alle på laget fører, også med markør i båsen.
+        if isOnTeamCard(me, with: me) { return "Du fører for laget ditt" }
+        if hasBays, let bay = bay(of: me), let marker = bay.marker {
+            return "\(groupTerm.numbered(bay.number)) · \(name(marker)) fører"
         }
         return cardRowEditable(me, for: viewer) ? "Du fører ditt eget kort" : nil
     }
