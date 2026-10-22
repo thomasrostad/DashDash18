@@ -201,7 +201,7 @@ struct ForingHullkortTests {
 /// sql/071: i en form med ett kort per lag fører alle på laget lagets kort, også med markør i båsen.
 struct ForingLagkameratTests {
     /// Scramble-4 med markør: Anders, Bjørn, Cato og Dag er lag 1 i bås 1, resten lag 2 i bås 2.
-    static func players(team: (Int) -> Int?) -> [F.P] {
+    fileprivate static func players(team: (Int) -> Int?) -> [F.P] {
         F.markorPlayers().map { p in
             var p = p
             p.team = team(p.n)
