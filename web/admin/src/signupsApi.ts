@@ -1,6 +1,6 @@
-import { supabase } from "./supabase.ts";
+import { errorText, supabase } from "./supabase.ts";
 import {
-  DEADLINE_TEXT, isMissing, type EveningGuest, type EveningSettings, type EveningSignup, type SettingsForm,
+  isMissing, signupErrorText, type EveningGuest, type EveningSettings, type EveningSignup, type SettingsForm,
   type SignupLogRow, type SignupStatus, settingsPatch,
 } from "./signups.ts";
 
@@ -50,7 +50,7 @@ export async function eveningData(eventID: string): Promise<EveningSignupData> {
 }
 
 function signupError(error: { code?: string; message?: string }): Error {
-  return new Error(error.code === "DDB02" ? DEADLINE_TEXT : error.message ?? "Noe gikk galt.");
+  return new Error(signupErrorText(error));
 }
 
 /** Arrangøren endrer svaret for et medlem. `status` null fjerner svaret. Reserve uten sql/045: rett i signups. */
@@ -89,5 +89,5 @@ export async function signupLog(eventID: string): Promise<SignupLogRow[]> {
 /** Tak, frister og gjester (vanlig update på events). */
 export async function saveSettings(eventID: string, form: SettingsForm): Promise<void> {
   const { error } = await supabase.from("events").update(settingsPatch(form)).eq("id", eventID);
-  if (error) throw new Error(`Datoen er lagret, men ikke påmeldingen. ${error.message}`);
+  if (error) throw new Error(`Datoen er lagret, men ikke påmeldingen. ${errorText(error)}`);
 }
