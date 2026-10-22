@@ -73,6 +73,27 @@ struct RenderMatrixTests {
         }
     }
 
+    @Test("Delingskortet holder fast bredde med lange navn, og bunnteksten får plass")
+    func delingskort() throws {
+        let long = String(repeating: "Bartholomeus-Kristoffersen ", count: 3)
+        let card = ResultShareCard(share: ResultShare(
+            eyebrow: "Jakkeracet med et svært langt navn", title: "Høst 2026", subtitle: "3 av 7 kvelder spilt",
+            lines: [
+                .init(place: 1, name: long, value: "112,5 p", isMe: true),
+                .init(place: 2, name: "Bjørn", value: "10 p", isMe: false),
+            ]))
+        for scheme in Self.schemes {
+            let renderer = ImageRenderer(content: card.environment(\.colorScheme, scheme))
+            let size = try #require(renderer.uiImage?.size)
+            #expect(size.width == 390, "\(scheme): \(size)")
+        }
+        // Bunnteksten på én linje, uten avkutting, innenfor kortet (390 minus marg på hver side).
+        let footer = ImageRenderer(content: Text(ResultShareCard.footer).ddEyebrow().fixedSize()
+            .environment(\.dynamicTypeSize, .large))
+        let footerWidth = try #require(footer.uiImage?.size.width)
+        #expect(footerWidth < 390 - 2 * DDSpacing.l - 2 * DDSpacing.m, "bunntekst \(footerWidth) pt")
+    }
+
     @Test("Formen følger brutto mot par")
     func scoreShapes() {
         #expect(ScoreShape.forGross(1, par: 3) == .doubleCircle)

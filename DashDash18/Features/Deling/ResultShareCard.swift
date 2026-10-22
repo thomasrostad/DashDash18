@@ -5,6 +5,8 @@ import UniformTypeIdentifiers
 /// Delingskortet: grønn topp med overskrift, hvite rader med plass, navn og verdi.
 /// Tegnes alltid i lys modus, så bildet ser likt ut hos mottakeren.
 struct ResultShareCard: View {
+    static let footer = "Atten · dashdash18.com"
+
     let share: ResultShare
 
     var body: some View {
@@ -35,7 +37,7 @@ struct ResultShareCard: View {
             .padding(.vertical, DDSpacing.s)
             .background(Color.ddCard)
 
-            Text("Atten")
+            Text(Self.footer)
                 .ddEyebrow()
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, DDSpacing.m)
