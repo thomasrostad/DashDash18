@@ -49,7 +49,7 @@ final class TipsModel {
     /// Leverer eller lagrer endringene.
     func submit() async throws(DataError) {
         guard let board, !isSaving else { return }
-        guard draft.coupon.isComplete else { throw .invalid("Svar på alle fem først.") }
+        guard draft.coupon.isComplete(for: board.questions) else { throw .invalid("Svar på alle spørsmålene først.") }
         guard board.phase == .open else { throw TipsModel.locked }
         isSaving = true
         defer { isSaving = false }

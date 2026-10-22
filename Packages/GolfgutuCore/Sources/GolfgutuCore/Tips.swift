@@ -22,25 +22,32 @@ extension Ruleset {
         public var defaultLine: Double
         /// Hvor mye linja flyttes per trykk hos arrangøren (PWA-en: ett slag).
         public var lineStep: Double
+        /// Spørsmålene på kupongen, i kupongens rekkefølge. Bare disse vises, må besvares og gir poeng.
+        public var questions: [TipsQuestion]
 
         public init(defaultStartTime: String, defaultStakePoints: Int, stakeOptions: [Int], defaultLine: Double,
-                    lineStep: Double) {
+                    lineStep: Double, questions: [TipsQuestion] = TipsRules.golfgutuQuestions) {
             self.defaultStartTime = defaultStartTime
             self.defaultStakePoints = defaultStakePoints
             self.stakeOptions = stakeOptions
             self.defaultLine = defaultLine
             self.lineStep = lineStep
+            self.questions = questions
         }
 
-        /// Golfgutu: frist 17:00, 50 poeng (0/20/50/100), linje +2,5, ett slag per trykk.
+        /// PWA-ens fem spørsmål (`TIPS_SPORSMAAL`), i kupongens rekkefølge.
+        public static let golfgutuQuestions: [TipsQuestion] = [.winner, .frontNine, .mostPars, .birdie, .over]
+
+        /// Golfgutu: frist 17:00, 50 poeng (0/20/50/100), linje +2,5, ett slag per trykk, de fem spørsmålene.
         public static let golfgutu = TipsRules(defaultStartTime: "17:00", defaultStakePoints: 50,
-                                               stakeOptions: [0, 20, 50, 100], defaultLine: 2.5, lineStep: 1)
+                                               stakeOptions: [0, 20, 50, 100], defaultLine: 2.5, lineStep: 1,
+                                               questions: golfgutuQuestions)
     }
 }
 
 extension Ruleset.TipsRules: Codable {
     private enum CodingKeys: String, CodingKey {
-        case defaultStartTime, defaultStakePoints, stakeOptions, defaultLine, lineStep
+        case defaultStartTime, defaultStakePoints, stakeOptions, defaultLine, lineStep, questions
     }
 
     public init(from decoder: Decoder) throws {
@@ -51,12 +58,27 @@ extension Ruleset.TipsRules: Codable {
         stakeOptions = try c.decodeIfPresent([Int].self, forKey: .stakeOptions) ?? g.stakeOptions
         defaultLine = try c.decodeIfPresent(Double.self, forKey: .defaultLine) ?? g.defaultLine
         lineStep = try c.decodeIfPresent(Double.self, forKey: .lineStep) ?? g.lineStep
+        // Et spørsmål appen ikke kjenner (fra en nyere versjon), hoppes over i stedet for å stoppe hele regelsettet.
+        questions = try c.decodeIfPresent([String].self, forKey: .questions)?.compactMap(TipsQuestion.init(rawValue:))
+            ?? g.questions
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(defaultStartTime, forKey: .defaultStartTime)
+        try c.encode(defaultStakePoints, forKey: .defaultStakePoints)
+        try c.encode(stakeOptions, forKey: .stakeOptions)
+        try c.encode(defaultLine, forKey: .defaultLine)
+        try c.encode(lineStep, forKey: .lineStep)
+        // Bare når spørsmålene ikke er Golfgutus fem, så JSON-en for regelsett fra før er som før.
+        if questions != Ruleset.TipsRules.golfgutu.questions { try c.encode(questions, forKey: .questions) }
     }
 }
 
 // MARK: - Spørsmålene og kupongen
 
-/// De fem spørsmålene (`TIPS_SPORSMAAL`), i kupongens rekkefølge.
+/// Spørsmålene en kupong kan ha. Hvilke som er med, og i hvilken rekkefølge, står i regelsettet
+/// (`Ruleset.TipsRules.questions`); Golfgutu har de fem fra `TIPS_SPORSMAAL`.
 public enum TipsQuestion: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
     case winner
     case frontNine
@@ -149,11 +171,17 @@ public struct TipsCoupon: Codable, Hashable, Sendable {
         q.kind == .player ? !(player(q) ?? "").isEmpty : flag(q) != nil
     }
 
-    /// `tipsKomplett`: alle fem er besvart.
-    public var isComplete: Bool { TipsQuestion.allCases.allSatisfy(isAnswered) }
+    /// `tipsKomplett`: alle spørsmålene på kupongen (regelsettets liste) er besvart.
+    public func isComplete(for questions: [TipsQuestion]) -> Bool { questions.allSatisfy(isAnswered) }
 
-    /// Antall besvarte spørsmål.
-    public var answeredCount: Int { TipsQuestion.allCases.filter(isAnswered).count }
+    /// Antall besvarte spørsmål av dem på kupongen.
+    public func answeredCount(for questions: [TipsQuestion]) -> Int { questions.filter(isAnswered).count }
+
+    /// `isComplete(for:)` med Golfgutus fem spørsmål.
+    public var isComplete: Bool { isComplete(for: Ruleset.golfgutu.tips.questions) }
+
+    /// `answeredCount(for:)` med Golfgutus fem spørsmål.
+    public var answeredCount: Int { answeredCount(for: Ruleset.golfgutu.tips.questions) }
 
     /// Samme svar (spilleren som eier kupongen teller ikke).
     public func hasSameAnswers(as other: TipsCoupon) -> Bool {
@@ -246,7 +274,7 @@ public struct TipsResult: Hashable, Sendable {
     public struct Row: Hashable, Sendable {
         public var playerID: String
         public var coupon: TipsCoupon
-        /// Per spørsmål: riktig, feil eller `nil` (strøket).
+        /// Per spørsmål på kupongen: riktig, feil eller `nil` (strøket).
         public var correct: [TipsQuestion: Bool?]
         /// Ett poeng per riktig svar.
         public var points: Int
@@ -457,14 +485,17 @@ public enum Tips {
 
     /// `tipsResultat`: ett poeng per riktig svar. Kuponger fra spillere som ikke finnes i `players`,
     /// er ikke med. Tippekongen kåres først når kvelden er ferdig; står flere likt, deler de.
-    public static func result(coupons: [TipsCoupon], key: TipsAnswerKey, players: [Player]) -> TipsResult {
+    /// Bare spørsmålene i regelsettet teller.
+    public static func result(coupons: [TipsCoupon], key: TipsAnswerKey, players: [Player],
+                              rules: Ruleset = .golfgutu) -> TipsResult {
+        let questions = rules.tips.questions
         let names = Dictionary(players.map { ($0.id, $0.name) }, uniquingKeysWith: { a, _ in a })
         let rows = coupons
             .filter { names[$0.playerID] != nil }
             .map { coupon -> TipsResult.Row in
                 var correct: [TipsQuestion: Bool?] = [:]
                 var points = 0
-                for q in TipsQuestion.allCases {
+                for q in questions {
                     let r = isCorrect(q, coupon: coupon, key: key)
                     correct[q] = .some(r)
                     if r == true { points += 1 }
@@ -476,7 +507,7 @@ public enum Tips {
                 let order = NorwegianSort.compare(names[a.playerID] ?? "", names[b.playerID] ?? "")
                 return order != .orderedSame ? order == .orderedAscending : a.playerID < b.playerID
             }
-        let possible = TipsQuestion.allCases.filter { !key.isVoid($0) }.count
+        let possible = questions.filter { !key.isVoid($0) }.count
         let best = rows.first?.points ?? 0
         let winners = (key.finished && !rows.isEmpty) ? rows.filter { $0.points == best }.map(\.playerID) : []
         return TipsResult(finished: key.finished, answerKey: key, rows: rows, possible: possible, best: best,
