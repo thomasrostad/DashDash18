@@ -110,6 +110,7 @@ export function TournamentDetail({ competition, roster, onBack, onChanged }: {
               </li>
             ))}
           </ul>
+          {crew.length === 0 && <p className="muted">Ingen i staben ennå.</p>}
           {staffCandidates.length > 0 && (
             <form onSubmit={(e) => {
               e.preventDefault();

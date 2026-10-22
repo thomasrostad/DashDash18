@@ -11,7 +11,7 @@ import {
   teeGenderTitle, SLOPE_PICKER_LIMIT, type CourseItem, type SlopeCourse,
 } from "./courses.ts";
 import {
-  applySidePrize, bayCount as highestBay, drawFooter, randomSeed, randomTeamsFor, STANDINGS_PLAN, swapTwo, bayNumbers, coreRound, draftForm, prepareSetup, excludePlayer, formChoices,
+  applySidePrize, bayCount as highestBay, dataErrorText, drawFooter, randomSeed, randomTeamsFor, STANDINGS_PLAN, swapTwo, bayNumbers, coreRound, draftForm, prepareSetup, excludePlayer, formChoices,
   groupTerm, includePlayer, isTeamMatch, isTriangleMatch, makeMarker, markerIn, membersIn, moveSeat, playerMatch,
   playersSummary, redrawMatches, reshuffleBays, roundTitle, seatFor, setCourse, setForm, setStart, setVenue, setupIssues,
   sidePrizeChoice, startOptions, startProblems, startTitle, teamMatch, teamProblem, termCount, termNumbered,
@@ -52,7 +52,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
     if (!formats) return;
     if (initial.isSaved && initial.competitions === undefined) {
       withFormats(initial).then((f) => setDraft((d) => ({ ...d, sides: f.sides, competitions: f.competitions, mainCompetitionID: f.mainCompetitionID, hadCompetitions: f.hadCompetitions })),
-        (e) => setError((e as Error).message));
+        (e) => setError(dataErrorText(e)));
     } else {
       setDraft((d) => ({ ...d, sides: d.sides ?? {}, competitions: d.competitions ?? [] }));
     }
@@ -94,7 +94,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
         onDone(`${title} er lagret som kladd. Bare arrangørene ser den.`);
       }
     } catch (e) {
-      setError((e as Error).message);
+      setError(dataErrorText(e));
     } finally {
       setBusy(false);
     }
@@ -168,7 +168,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
             let d = setVenue(draft, "course", rules);
             d = setCourse(d, loaded.course.id, loaded.holes.length);
             setDraft({ ...d, teeID: suggestedTee(loaded.tees, previousTeeID(data.allRounds, loaded.course.id))?.id ?? null });
-          } catch (e) { setError((e as Error).message); }
+          } catch (e) { setError(dataErrorText(e)); }
         }} />
       </div>
 
@@ -460,7 +460,7 @@ function SlopePicker({ exclude, onPick }: { exclude: Set<string>; onPick: (c: Sl
   if (!open) {
     return <button className="link" onClick={async () => {
       setOpen(true);
-      if (!catalog) { try { setCatalog(await loadSlopeCatalog()); } catch (e) { setError((e as Error).message); } }
+      if (!catalog) { try { setCatalog(await loadSlopeCatalog()); } catch (e) { setError(dataErrorText(e)); } }
     }}>Fra slope.no …</button>;
   }
   return (

@@ -9,7 +9,7 @@ import {
 import { courseItemReady, previousTeeID, suggestedTee } from "./courses.ts";
 import { closeCheck, closePrompt, closeSummary, type ClosePrompt } from "./game.ts";
 import {
-  allowsNewRound, applySuggestion, autoArrange, bayNumbers, defaultBayCount, deleteButtonTitle, deleteMessage, deleteNoun,
+  allowsNewRound, applySuggestion, autoArrange, bayNumbers, dataErrorText, defaultBayCount, deleteButtonTitle, deleteMessage, deleteNoun,
   draftParticipants, initialParticipants, newDraft, nextRoundNo, previousRound, redrawMatches, reshuffleBays, roundStatusText,
   roundSubtitle, roundTitle, savedDraft, type DeleteSummary, type RoundDraft,
 } from "./logic.ts";
@@ -45,7 +45,7 @@ export function DayRounds({ clubID, event, days, comps, canTemplates = true, onB
   const [closing, setClosing] = useState<{ prompt: ClosePrompt; ids: string[] } | null>(null);
 
   const load = useCallback(async () => {
-    try { setData(await loadDay(clubID, event, comps)); } catch (e) { setError((e as Error).message); }
+    try { setData(await loadDay(clubID, event, comps)); } catch (e) { setError(dataErrorText(e)); }
   }, [clubID, event, comps]);
 
   useEffect(() => { load(); }, [load]);
@@ -66,7 +66,7 @@ export function DayRounds({ clubID, event, days, comps, canTemplates = true, onB
     try {
       const text = await action();
       if (text) setNotice(text);
-    } catch (e) { setError((e as Error).message); }
+    } catch (e) { setError(dataErrorText(e)); }
     finally { setBusy(false); }
   }
 

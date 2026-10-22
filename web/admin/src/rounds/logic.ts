@@ -9,6 +9,7 @@ import {
   type CompetitionForm, type Course, type Round, type RoundMatchRow, type RoundPlayerRow as CoreRoundPlayerRow, type Ruleset,
 } from "../../../golfgutu-core/src/index.ts";
 import type { CompetitionDraft } from "./competitions.ts";
+import { plainErrorText } from "../text.ts";
 
 export type UUID = string;
 export type RoundStatus = "draft" | "active" | "locked";
@@ -913,8 +914,8 @@ export function dataErrorText(e: unknown): string {
   switch (code) {
     case "42501": return "Du har ikke tilgang til dette.";
     case "23505": return "Det finnes allerede.";
-    case "22023": case "23514": case "23503": case "55000": case "P0002": return message;
-    default: return code ? `Noe gikk galt: ${message}` : message;
+    // Databasens egne norske tekster vises; engelske feil fra Postgres blir en kort tekst og logges.
+    default: return plainErrorText(e);
   }
 }
 

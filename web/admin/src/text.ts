@@ -33,3 +33,24 @@ export function timeText(t: string | null): string | null {
 export function todayISO(now = new Date()): string {
   return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Oslo" }).format(now);
 }
+
+// MARK: - Feiltekst
+
+/** Feilkodene databasen bruker med egen norsk tekst (`raise ... using errcode` i sql/; P0001 er raise uten kode). */
+const OWN_ERROR_CODES = new Set(["P0001", "P0002", "P0099", "22023", "23503", "23505", "23514", "42501", "54000", "55000", "DDB01", "DDB02", "DDOK1", "DDT47", "ZZ035"]);
+/** Engelsk tekst fra Postgres, PostgREST og nettleseren, også når koden er en av de over. */
+const TECHNICAL_TEXT = /permission denied|duplicate key|violates|relation "|column "|does not exist|JWT|syntax error|invalid input|schema cache|Could not find|Cannot read prop|is not a function/i;
+
+export const GENERIC_ERROR = "Noe gikk galt. Prøv igjen, eller last inn siden på nytt.";
+
+/** Teksten i feilen når den er skrevet for folk (norsk fra databasen eller fra oss). Ellers en kort norsk tekst, og detaljen logges. */
+export function plainErrorText(e: unknown): string {
+  const err = e as { name?: unknown; code?: unknown; message?: unknown } | null;
+  const message = typeof err?.message === "string" ? err.message : "";
+  const code = typeof err?.code === "string" ? err.code : null;
+  const technical = !message || (code !== null && !OWN_ERROR_CODES.has(code)) || TECHNICAL_TEXT.test(message)
+    || /^(TypeError|ReferenceError|SyntaxError|RangeError)$/.test(String(err?.name ?? ""));
+  if (!technical) return message;
+  console.error(e);
+  return GENERIC_ERROR;
+}
