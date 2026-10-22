@@ -176,6 +176,31 @@ export interface FormatRules {
   drawMethod: DrawMethod;
 }
 
+/** Spørsmålene en kupong kan ha (`TipsQuestion`). De fem første er PWA-ens. */
+export type TipsQuestion =
+  | "winner" | "frontNine" | "mostPars" | "birdie" | "over"
+  | "birdieCount" | "mostBirdies" | "backNine" | "winnerPoints";
+
+/** Alle spørsmålene i kupongens rekkefølge (`TipsQuestion.catalog`). */
+export const TIPS_QUESTIONS: readonly TipsQuestion[] = [
+  "winner", "frontNine", "backNine", "mostPars", "birdie", "birdieCount", "mostBirdies", "over", "winnerPoints",
+];
+
+/** Malene (`TipsTemplate`): ferdige utvalg av spørsmål. */
+export type TipsTemplate = "classic" | "birdieHunt" | "full";
+
+export const TIPS_TEMPLATES: readonly { id: TipsTemplate; title: string; questions: readonly TipsQuestion[] }[] = [
+  { id: "classic", title: "Klassisk", questions: ["winner", "frontNine", "mostPars", "birdie", "over"] },
+  { id: "birdieHunt", title: "Birdiejakt", questions: ["winner", "birdie", "birdieCount", "mostBirdies", "over"] },
+  { id: "full", title: "Full kupong", questions: TIPS_QUESTIONS },
+];
+
+/** Malen med akkurat disse spørsmålene i denne rekkefølgen, ellers `null` (tilpasset). */
+export function matchingTipsTemplate(questions: readonly TipsQuestion[]): TipsTemplate | null {
+  const t = TIPS_TEMPLATES.find((t) => t.questions.length === questions.length && t.questions.every((q, i) => q === questions[i]));
+  return t ? t.id : null;
+}
+
 /** Tippekupongen (bare reglene; tips-logikken er ikke portert). */
 export interface TipsRules {
   defaultStartTime: string;
@@ -183,6 +208,12 @@ export interface TipsRules {
   stakeOptions: number[];
   defaultLine: number;
   lineStep: number;
+  /** Spørsmålene på kupongen, i kupongens rekkefølge. */
+  questions: TipsQuestion[];
+  /** Linja på antall birdier i feltet. */
+  birdieCountLine: number;
+  /** Linja på vinnerens stablefordpoeng. */
+  winnerPointsLine: number;
 }
 
 /** Veddemål med poeng (bare reglene; veddemål-logikken er ikke portert). */
@@ -447,13 +478,17 @@ export function standardCompetitionRules(): CompetitionRules {
 /** Golfgutu: ledelsen meldes etter hull 3, 6, 9, 12, 15 og 18 (`LEDELSE_SJEKKPUNKT`). */
 const GOLFGUTU_LEAD_CHECKPOINTS = [3, 6, 9, 12, 15, 18];
 
-/** Golfgutu: frist 17:00, 50 poeng (0/20/50/100), linje +2,5, ett slag per trykk. */
+/** Golfgutu: frist 17:00, 50 poeng (0/20/50/100), linje +2,5, ett slag per trykk, de fem spørsmålene.
+ *  Linjene for antall birdier (14,5) og vinnerens poeng (37,5) brukes bare når de spørsmålene er med. */
 const GOLFGUTU_TIPS: TipsRules = {
   defaultStartTime: "17:00",
   defaultStakePoints: 50,
   stakeOptions: [0, 20, 50, 100],
   defaultLine: 2.5,
   lineStep: 1,
+  questions: ["winner", "frontNine", "mostPars", "birdie", "over"],
+  birdieCountLine: 14.5,
+  winnerPointsLine: 37.5,
 };
 
 /** Golfgutu: forsprang 1, tak 200, knappene 50/100/200, 100 valgt, 1000 i bank, hele poeng, annuller likt. */
@@ -805,13 +840,38 @@ function decodeTips(x: unknown, path: string): TipsRules {
   const o = obj(x, path);
   const g = GOLFGUTU_TIPS;
   const so = optArray(o, "stakeOptions", path);
+  const qs = optArray(o, "questions", path);
   return {
     defaultStartTime: optString(o, "defaultStartTime", path) ?? g.defaultStartTime,
     defaultStakePoints: optInt(o, "defaultStakePoints", path) ?? g.defaultStakePoints,
     stakeOptions: so ? numberArray(so, `${path}.stakeOptions`, true) : [...g.stakeOptions],
     defaultLine: optNumber(o, "defaultLine", path) ?? g.defaultLine,
     lineStep: optNumber(o, "lineStep", path) ?? g.lineStep,
+    // Et spørsmål vi ikke kjenner (fra en nyere app), hoppes over, som i Swift.
+    questions: qs
+      ? stringArray(qs, `${path}.questions`).filter((q): q is TipsQuestion => (TIPS_QUESTIONS as readonly string[]).includes(q))
+      : [...g.questions],
+    birdieCountLine: optNumber(o, "birdieCountLine", path) ?? g.birdieCountLine,
+    winnerPointsLine: optNumber(o, "winnerPointsLine", path) ?? g.winnerPointsLine,
   };
+}
+
+/** `tips` slik Swift skriver det: spørsmålene og de nye linjene bare når de ikke er standard. */
+function encodeTips(t: TipsRules): JSONObject {
+  const g = GOLFGUTU_TIPS;
+  const out: JSONObject = {
+    defaultStartTime: t.defaultStartTime,
+    defaultStakePoints: t.defaultStakePoints,
+    stakeOptions: [...t.stakeOptions],
+    defaultLine: t.defaultLine,
+    lineStep: t.lineStep,
+  };
+  if (t.questions.length !== g.questions.length || t.questions.some((q, i) => q !== g.questions[i])) {
+    out.questions = [...t.questions];
+  }
+  if (t.birdieCountLine !== g.birdieCountLine) out.birdieCountLine = t.birdieCountLine;
+  if (t.winnerPointsLine !== g.winnerPointsLine) out.winnerPointsLine = t.winnerPointsLine;
+  return out;
 }
 
 function decodeBets(x: unknown, path: string): BetRules {
@@ -994,7 +1054,7 @@ export function encodeRuleset(r: Ruleset): JSONObject {
       // Bare når trekningen ikke er etter tabellen.
       ...(r.formats.drawMethod !== "standings" ? { drawMethod: r.formats.drawMethod } : {}),
     },
-    tips: { ...r.tips, stakeOptions: [...r.tips.stakeOptions] },
+    tips: encodeTips(r.tips),
     bets: {
       lockAheadHoles: r.bets.lockAheadHoles,
       maxStakePerBet: r.bets.maxStakePerBet,

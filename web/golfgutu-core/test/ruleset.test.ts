@@ -15,11 +15,14 @@ import {
   encodeRuleset,
   GOLFGUTU,
   golfgutuRules,
+  matchingTipsTemplate,
   roundTablePoints,
   rulesetDay,
   rulesetEquals,
   standardCompetitionRules,
   teamHandicapRule,
+  TIPS_QUESTIONS,
+  TIPS_TEMPLATES,
 } from "../src/ruleset.ts";
 import { holePoints } from "../src/scoring.ts";
 import {
@@ -417,4 +420,51 @@ test("validering av konkurransereglene", () => {
     "competition.league.placementPoints", "competition.league.bestRounds",
     "competition.fun.participationPoints", "competition.fun.tiebreaks",
   ]));
+});
+
+// Tippekupongen: spørsmålene og linjene (Tips.swift, TipsNewQuestionsTests og TipsQuestionsTests).
+test("tips: spørsmål og linjer begge veier", () => {
+  const nye = fixture("tips-nye-sporsmaal");
+  assert.deepEqual(GOLFGUTU.tips.questions, fixture("tips-sporsmaal").standard);
+  assert.equal(GOLFGUTU.tips.birdieCountLine, nye.standard.birdieCountLine);
+  assert.equal(GOLFGUTU.tips.winnerPointsLine, nye.standard.winnerPointsLine);
+  // Malene er de samme som i Swift.
+  assert.deepEqual(TIPS_TEMPLATES.map((t) => ({ mal: t.id, navn: t.title, sporsmaal: [...t.questions] })), nye.maler);
+  for (const m of nye.maler) assert.equal(matchingTipsTemplate(m.sporsmaal), m.mal);
+  assert.equal(matchingTipsTemplate(["over", "winner"]), null);
+  assert.equal(new Set(TIPS_QUESTIONS).size, 9);
+
+  // Standard skrives ikke (Golfgutu-JSON-en er som før); noe annet skrives og leses tilbake.
+  const golf = encodeRuleset(GOLFGUTU).tips as any;
+  assert.equal(golf.questions, undefined);
+  assert.equal(golf.birdieCountLine, undefined);
+  assert.equal(golf.winnerPointsLine, undefined);
+  const r = golfgutuRules();
+  r.tips.questions = ["winner", "birdie", "birdieCount", "mostBirdies", "over"];
+  r.tips.birdieCountLine = 5.5;
+  r.tips.winnerPointsLine = 30.5;
+  const enc = encodeRuleset(r).tips as any;
+  assert.deepEqual(enc.questions, r.tips.questions);
+  assert.equal(enc.birdieCountLine, 5.5);
+  assert.equal(enc.winnerPointsLine, 30.5);
+  assert.ok(rulesetEquals(roundtrip(r), r));
+  assert.deepEqual(changedFields(r, GOLFGUTU), ["tips.birdieCountLine", "tips.questions", "tips.winnerPointsLine"]);
+  assert.deepEqual(validateRuleset(r), []);
+
+  // Lest fra JSON: ukjente spørsmål hoppes over, som i Swift (tips-sporsmaal.json).
+  for (const sak of fixture("tips-sporsmaal").json) {
+    assert.deepEqual(decodeRuleset({ version: 2, tips: sak.tips ?? {} }).tips.questions, sak.sporsmaal, sak.navn);
+  }
+  assert.deepEqual(decodeRuleset({ version: 2, tips: { questions: ["backNine", "nyttSporsmaal"] } }).tips.questions, ["backNine"]);
+});
+
+test("tips: validering av spørsmål og linjer", () => {
+  const r = golfgutuRules();
+  r.tips.questions = [];
+  r.tips.birdieCountLine = 5;
+  r.tips.winnerPointsLine = 150.5;
+  assert.deepEqual(new Set(validateRuleset(r).map((i) => i.field)), new Set(["tips.questions", "tips.birdieCountLine", "tips.winnerPointsLine"]));
+  const d = golfgutuRules();
+  d.tips.questions = ["winner", "winner"];
+  assert.deepEqual(validateRuleset(d).map((i) => i.field), ["tips.questions"]);
 });

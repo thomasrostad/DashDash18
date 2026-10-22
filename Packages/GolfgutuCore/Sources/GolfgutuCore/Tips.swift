@@ -24,30 +24,45 @@ extension Ruleset {
         public var lineStep: Double
         /// Spørsmålene på kupongen, i kupongens rekkefølge. Bare disse vises, må besvares og gir poeng.
         public var questions: [TipsQuestion]
+        /// Linja på «antall birdier»: netto birdie eller bedre for hele feltet, hele kvelden.
+        public var birdieCountLine: Double
+        /// Linja på «vinnerens poeng»: stablefordpoengene til kveldens vinner.
+        public var winnerPointsLine: Double
 
         public init(defaultStartTime: String, defaultStakePoints: Int, stakeOptions: [Int], defaultLine: Double,
-                    lineStep: Double, questions: [TipsQuestion] = TipsRules.golfgutuQuestions) {
+                    lineStep: Double, questions: [TipsQuestion] = TipsRules.golfgutuQuestions,
+                    birdieCountLine: Double = TipsRules.golfgutuBirdieCountLine,
+                    winnerPointsLine: Double = TipsRules.golfgutuWinnerPointsLine) {
             self.defaultStartTime = defaultStartTime
             self.defaultStakePoints = defaultStakePoints
             self.stakeOptions = stakeOptions
             self.defaultLine = defaultLine
             self.lineStep = lineStep
             self.questions = questions
+            self.birdieCountLine = birdieCountLine
+            self.winnerPointsLine = winnerPointsLine
         }
 
         /// PWA-ens fem spørsmål (`TIPS_SPORSMAAL`), i kupongens rekkefølge.
-        public static let golfgutuQuestions: [TipsQuestion] = [.winner, .frontNine, .mostPars, .birdie, .over]
+        public static let golfgutuQuestions: [TipsQuestion] = TipsTemplate.classic.questions
+        /// Standardlinjene for spørsmålene PWA-en ikke har. Et anslag; arrangøren kan endre dem.
+        public static let golfgutuBirdieCountLine = 14.5
+        public static let golfgutuWinnerPointsLine = 37.5
 
         /// Golfgutu: frist 17:00, 50 poeng (0/20/50/100), linje +2,5, ett slag per trykk, de fem spørsmålene.
+        /// Linjene for antall birdier (14,5) og vinnerens poeng (37,5) brukes bare når de spørsmålene er med.
         public static let golfgutu = TipsRules(defaultStartTime: "17:00", defaultStakePoints: 50,
                                                stakeOptions: [0, 20, 50, 100], defaultLine: 2.5, lineStep: 1,
-                                               questions: golfgutuQuestions)
+                                               questions: golfgutuQuestions,
+                                               birdieCountLine: golfgutuBirdieCountLine,
+                                               winnerPointsLine: golfgutuWinnerPointsLine)
     }
 }
 
 extension Ruleset.TipsRules: Codable {
     private enum CodingKeys: String, CodingKey {
         case defaultStartTime, defaultStakePoints, stakeOptions, defaultLine, lineStep, questions
+        case birdieCountLine, winnerPointsLine
     }
 
     public init(from decoder: Decoder) throws {
@@ -61,6 +76,8 @@ extension Ruleset.TipsRules: Codable {
         // Et spørsmål appen ikke kjenner (fra en nyere versjon), hoppes over i stedet for å stoppe hele regelsettet.
         questions = try c.decodeIfPresent([String].self, forKey: .questions)?.compactMap(TipsQuestion.init(rawValue:))
             ?? g.questions
+        birdieCountLine = try c.decodeIfPresent(Double.self, forKey: .birdieCountLine) ?? g.birdieCountLine
+        winnerPointsLine = try c.decodeIfPresent(Double.self, forKey: .winnerPointsLine) ?? g.winnerPointsLine
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -71,20 +88,37 @@ extension Ruleset.TipsRules: Codable {
         try c.encode(defaultLine, forKey: .defaultLine)
         try c.encode(lineStep, forKey: .lineStep)
         // Bare når spørsmålene ikke er Golfgutus fem, så JSON-en for regelsett fra før er som før.
-        if questions != Ruleset.TipsRules.golfgutu.questions { try c.encode(questions, forKey: .questions) }
+        let g = Ruleset.TipsRules.golfgutu
+        if questions != g.questions { try c.encode(questions, forKey: .questions) }
+        if birdieCountLine != g.birdieCountLine { try c.encode(birdieCountLine, forKey: .birdieCountLine) }
+        if winnerPointsLine != g.winnerPointsLine { try c.encode(winnerPointsLine, forKey: .winnerPointsLine) }
     }
 }
 
 // MARK: - Spørsmålene og kupongen
 
 /// Spørsmålene en kupong kan ha. Hvilke som er med, og i hvilken rekkefølge, står i regelsettet
-/// (`Ruleset.TipsRules.questions`); Golfgutu har de fem fra `TIPS_SPORSMAAL`.
+/// (`Ruleset.TipsRules.questions`); Golfgutu har de fem fra `TIPS_SPORSMAAL`. De fem første er PWA-ens,
+/// de andre er nye (avgjøres automatisk fra hullscorene, som de fem).
 public enum TipsQuestion: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
     case winner
     case frontNine
     case mostPars
     case birdie
     case over
+    /// Antall netto birdier (eller bedre) i feltet, over eller under en linje.
+    case birdieCount
+    /// Flest netto birdier (eller bedre).
+    case mostBirdies
+    /// Lavest netto på banens hull 10–18.
+    case backNine
+    /// Vinnerens stablefordpoeng, over eller under en linje.
+    case winnerPoints
+
+    /// Alle spørsmålene i rekkefølgen de står på kupongen når de er med (også i «Full kupong»).
+    public static let catalog: [TipsQuestion] = [
+        .winner, .frontNine, .backNine, .mostPars, .birdie, .birdieCount, .mostBirdies, .over, .winnerPoints,
+    ]
 
     public enum Kind: String, Codable, Sendable {
         /// Svaret er en spiller.
@@ -99,9 +133,9 @@ public enum TipsQuestion: String, Codable, Hashable, Sendable, CaseIterable, Ide
 
     public var kind: Kind {
         switch self {
-        case .winner, .frontNine, .mostPars: .player
+        case .winner, .frontNine, .mostPars, .mostBirdies, .backNine: .player
         case .birdie: .yesNo
-        case .over: .overUnder
+        case .over, .birdieCount, .winnerPoints: .overUnder
         }
     }
 
@@ -113,6 +147,10 @@ public enum TipsQuestion: String, Codable, Hashable, Sendable, CaseIterable, Ide
         case .mostPars: "Flest par eller bedre?"
         case .birdie: "Blir det slått en birdie?"
         case .over: "Over eller under linja?"
+        case .birdieCount: "Antall birdier: over eller under?"
+        case .mostBirdies: "Hvem får flest birdier?"
+        case .backNine: "Lavest netto på siste ni?"
+        case .winnerPoints: "Vinnerens poeng: over eller under?"
         }
     }
 
@@ -124,7 +162,43 @@ public enum TipsQuestion: String, Codable, Hashable, Sendable, CaseIterable, Ide
         case .mostPars: "Hull på netto par, birdie eller eagle, hele kvelden."
         case .birdie: "Minst én netto birdie eller bedre, av hvem som helst."
         case .over: "Snittet for alle som spiller: netto slag over par per ni hull."
+        case .birdieCount: "Netto birdie eller bedre, alle til sammen, hele kvelden."
+        case .mostBirdies: "Netto birdie eller bedre, hele kvelden. Ingen birdier: strøket."
+        case .backNine: "Banens hull 10–18. Færrest netto slag vinner."
+        case .winnerPoints: "Stablefordpoengene til den som vinner kvelden."
         }
+    }
+}
+
+/// Ferdige utvalg av spørsmål arrangøren kan starte fra. Regelsettet husker ikke malen; den kjennes
+/// igjen på spørsmålene (`matching`).
+public enum TipsTemplate: String, CaseIterable, Hashable, Sendable {
+    /// Golfgutus fem (PWA-en).
+    case classic
+    /// Birdiene i sentrum.
+    case birdieHunt
+    /// Alle spørsmålene.
+    case full
+
+    public var title: String {
+        switch self {
+        case .classic: "Klassisk"
+        case .birdieHunt: "Birdiejakt"
+        case .full: "Full kupong"
+        }
+    }
+
+    public var questions: [TipsQuestion] {
+        switch self {
+        case .classic: [.winner, .frontNine, .mostPars, .birdie, .over]
+        case .birdieHunt: [.winner, .birdie, .birdieCount, .mostBirdies, .over]
+        case .full: TipsQuestion.catalog
+        }
+    }
+
+    /// Malen med akkurat disse spørsmålene i denne rekkefølgen, ellers `nil` (tilpasset).
+    public static func matching(_ questions: [TipsQuestion]) -> TipsTemplate? {
+        allCases.first { $0.questions == questions }
     }
 }
 
@@ -136,15 +210,24 @@ public struct TipsCoupon: Codable, Hashable, Sendable {
     public var mostPars: String?
     public var birdie: Bool?
     public var over: Bool?
+    public var birdieCount: Bool?
+    public var mostBirdies: String?
+    public var backNine: String?
+    public var winnerPoints: Bool?
 
     public init(playerID: String, winner: String? = nil, frontNine: String? = nil, mostPars: String? = nil,
-                birdie: Bool? = nil, over: Bool? = nil) {
+                birdie: Bool? = nil, over: Bool? = nil, birdieCount: Bool? = nil, mostBirdies: String? = nil,
+                backNine: String? = nil, winnerPoints: Bool? = nil) {
         self.playerID = playerID
         self.winner = winner
         self.frontNine = frontNine
         self.mostPars = mostPars
         self.birdie = birdie
         self.over = over
+        self.birdieCount = birdieCount
+        self.mostBirdies = mostBirdies
+        self.backNine = backNine
+        self.winnerPoints = winnerPoints
     }
 
     /// Spilleren som er tippet på et spillerspørsmål.
@@ -153,7 +236,9 @@ public struct TipsCoupon: Codable, Hashable, Sendable {
         case .winner: winner
         case .frontNine: frontNine
         case .mostPars: mostPars
-        case .birdie, .over: nil
+        case .mostBirdies: mostBirdies
+        case .backNine: backNine
+        case .birdie, .over, .birdieCount, .winnerPoints: nil
         }
     }
 
@@ -162,7 +247,32 @@ public struct TipsCoupon: Codable, Hashable, Sendable {
         switch q {
         case .birdie: birdie
         case .over: over
-        case .winner, .frontNine, .mostPars: nil
+        case .birdieCount: birdieCount
+        case .winnerPoints: winnerPoints
+        case .winner, .frontNine, .mostPars, .mostBirdies, .backNine: nil
+        }
+    }
+
+    /// Setter spilleren på et spillerspørsmål (`nil` = ikke svart). Andre spørsmål røres ikke.
+    public mutating func setPlayer(_ q: TipsQuestion, _ id: String?) {
+        switch q {
+        case .winner: winner = id
+        case .frontNine: frontNine = id
+        case .mostPars: mostPars = id
+        case .mostBirdies: mostBirdies = id
+        case .backNine: backNine = id
+        case .birdie, .over, .birdieCount, .winnerPoints: break
+        }
+    }
+
+    /// Setter ja/nei eller over/under (`nil` = ikke svart). Andre spørsmål røres ikke.
+    public mutating func setFlag(_ q: TipsQuestion, _ value: Bool?) {
+        switch q {
+        case .birdie: birdie = value
+        case .over: over = value
+        case .birdieCount: birdieCount = value
+        case .winnerPoints: winnerPoints = value
+        case .winner, .frontNine, .mostPars, .mostBirdies, .backNine: break
         }
     }
 
@@ -185,8 +295,7 @@ public struct TipsCoupon: Codable, Hashable, Sendable {
 
     /// Samme svar (spilleren som eier kupongen teller ikke).
     public func hasSameAnswers(as other: TipsCoupon) -> Bool {
-        winner == other.winner && frontNine == other.frontNine && mostPars == other.mostPars
-            && birdie == other.birdie && over == other.over
+        TipsQuestion.allCases.allSatisfy { player($0) == other.player($0) && flag($0) == other.flag($0) }
     }
 }
 
@@ -234,13 +343,34 @@ public struct TipsAnswerKey: Hashable, Sendable {
     public var average: Double?
     public var line: Double
 
+    // De nye spørsmålene (ikke i PWA-en). `nil` på et svar betyr strøket, som over.
+
+    /// Antall birdier over linja. Rett på linja: `nil`.
+    public var birdieCount: Bool?
+    /// Netto birdier eller bedre i feltet. En lagball (ett kort per lag) teller én gang, som i snittet.
+    public var birdies: Int?
+    public var birdieCountLine: Double?
+    /// Flest netto birdier eller bedre. Ingen birdier: `nil` (strøket).
+    public var mostBirdies: [String]?
+    /// Birdiene til den beste.
+    public var mostBirdiesCount: Int?
+    /// Lavest netto på banens hull 10–18.
+    public var backNine: [String]?
+    /// Netto slag på siste ni for den beste.
+    public var backNineNet: Int?
+    /// Vinnerens poeng over linja. Rett på linja: `nil`.
+    public var overWinnerPoints: Bool?
+    public var winnerPointsLine: Double?
+
     /// Spillerne som er riktig svar på et spillerspørsmål.
     public func players(_ q: TipsQuestion) -> [String]? {
         switch q {
         case .winner: winner
         case .frontNine: frontNine
         case .mostPars: mostPars
-        case .birdie, .over: nil
+        case .mostBirdies: mostBirdies
+        case .backNine: backNine
+        case .birdie, .over, .birdieCount, .winnerPoints: nil
         }
     }
 
@@ -249,7 +379,9 @@ public struct TipsAnswerKey: Hashable, Sendable {
         switch q {
         case .birdie: birdie
         case .over: over
-        case .winner, .frontNine, .mostPars: nil
+        case .birdieCount: birdieCount
+        case .winnerPoints: overWinnerPoints
+        case .winner, .frontNine, .mostPars, .mostBirdies, .backNine: nil
         }
     }
 
@@ -258,12 +390,15 @@ public struct TipsAnswerKey: Hashable, Sendable {
         q.kind == .player ? players(q) == nil : flag(q) == nil
     }
 
-    /// Tallet bak svaret: poeng, netto slag eller hull. `nil` for ja/nei og over/under.
+    /// Tallet bak svaret: poeng, netto slag, hull eller birdier. `nil` for ja/nei og snittet.
     public func figure(_ q: TipsQuestion) -> Int? {
         switch q {
-        case .winner: winnerPoints
+        case .winner, .winnerPoints: winnerPoints
         case .frontNine: frontNineNet
         case .mostPars: mostParsHoles
+        case .mostBirdies: mostBirdiesCount
+        case .backNine: backNineNet
+        case .birdieCount: birdies
         case .birdie, .over: nil
         }
     }
@@ -315,6 +450,9 @@ public enum Tips {
     /// Grensene i databasen (`events_tips_stake_points_check`, `events_tips_line_check`).
     public static let stakeLimits = 0...1000
     public static let lineLimits = -9.5...18.5
+    /// Grensene for linjene på antall birdier og vinnerens poeng (regelsettet; ingen kolonne i databasen).
+    public static let birdieCountLineLimits = 0.5...99.5
+    public static let winnerPointsLineLimits = 0.5...149.5
 
     // MARK: Innsats og linje
 
@@ -332,7 +470,23 @@ public enum Tips {
 
     /// En lovlig linje i databasen: innenfor grensene og alltid et halvt slag.
     public static func isValidLine(_ x: Double) -> Bool {
-        lineLimits.contains(x) && x - x.rounded(.down) == 0.5
+        isHalf(x, in: lineLimits)
+    }
+
+    /// Et halvt tall innenfor grensene, så svaret aldri havner rett på linja.
+    public static func isHalf(_ x: Double, in limits: ClosedRange<Double>) -> Bool {
+        limits.contains(x) && x - x.rounded(.down) == 0.5
+    }
+
+    /// Linja et over/under-spørsmål har: kveldens linje for snittet, regelsettets for de nye.
+    /// `nil` for spørsmål uten linje.
+    public static func line(for q: TipsQuestion, eventLine: Double, rules: Ruleset = .golfgutu) -> Double? {
+        switch q {
+        case .over: eventLine
+        case .birdieCount: rules.tips.birdieCountLine
+        case .winnerPoints: rules.tips.winnerPointsLine
+        case .winner, .frontNine, .mostPars, .birdie, .mostBirdies, .backNine: nil
+        }
     }
 
     // MARK: Fristen
@@ -391,6 +545,11 @@ public enum Tips {
     /// - Parameter rounds: kveldens runder i opprettelsesrekkefølge. De sorteres på `holeStart`
     ///   (første ni før siste ni); kladder hoppes over.
     /// - Parameter line: kveldens linje (se `line(_:rules:)`).
+    ///
+    /// De nye spørsmålene regnes på samme hull: birdier er netto birdie eller bedre på tellende hull,
+    /// siste ni er banens hull 10–18 (en 9-hullsrunde med start på hull 10, ellers hull 10–18 i
+    /// første-ni-runden når den har 18 tellende hull), og linjene for antall birdier og vinnerens
+    /// poeng står i regelsettet.
     public static func answerKey(rounds: [TipsRound], line: Double, rules: Ruleset = .golfgutu) -> TipsAnswerKey {
         let played = rounds.enumerated()
             .filter { !$0.element.isDraft || $0.element.round.locked }
@@ -400,10 +559,12 @@ public enum Tips {
             }
             .map(\.element)
         let firstNine = played.firstIndex { ($0.round.holeStart ?? 0) == 0 }
+        let secondNine = played.firstIndex { ($0.round.holeStart ?? 0) == 9 && $0.round.numberOfHoles == 9 }
 
         var stableford: [String: Int] = [:], parHoles: [String: Int] = [:], frontNine: [String: Int] = [:]
+        var birdies: [String: Int] = [:], backNine: [String: Int] = [:]
         var birdie = false
-        var sumToPar = 0, ballHoles = 0
+        var sumToPar = 0, ballHoles = 0, ballBirdies = 0
         var field: Set<String> = []
         var names: [String: String] = [:]
 
@@ -415,6 +576,9 @@ public enum Tips {
             let oneCardPerTeam = round.form.card == .perTeam
             var countedTeams: Set<Int> = []
             let nineHoles = index == firstNine ? min(9, counting) : 0
+            // Hullene (i runden) som er banens 10–18.
+            let backHoles: Range<Int>? = secondNine.map { index == $0 ? 0..<min(9, counting) : nil }
+                ?? (index == firstNine && counting >= 18 ? 9..<18 : nil)
 
             for pid in round.holeScores.keys.sorted() {
                 guard let player = tr.roster.first(where: { $0.id == pid }) else { continue }
@@ -432,18 +596,27 @@ public enum Tips {
                 field.insert(pid)
                 stableford[pid, default: 0] += Scoring.points(from: scores, in: round, handicap: hcp, rules: rules)
                 parHoles[pid, default: 0] += done.filter { $0 <= 0 }.count
-                if done.contains(where: { $0 <= -1 }) { birdie = true }
+                let birdiesHere = done.filter { $0 <= -1 }.count
+                birdies[pid, default: 0] += birdiesHere
+                if birdiesHere > 0 { birdie = true }
 
                 let team = oneCardPerTeam ? round.teams[pid].flatMap { $0 == 0 ? nil : $0 } : nil
                 if team == nil || !countedTeams.contains(team!) {
                     if let team { countedTeams.insert(team) }
                     sumToPar += done.reduce(0, +)
                     ballHoles += done.count
+                    ballBirdies += birdiesHere
                 }
                 if nineHoles > 0 {
                     let nine = toPar.prefix(nineHoles)
                     if nine.allSatisfy({ $0 != nil }) {
                         frontNine[pid] = zip(nine, course).reduce(0) { $0 + $1.0! + $1.1.par }
+                    }
+                }
+                if let backHoles, backHoles.upperBound <= course.count {
+                    let nine = toPar[backHoles]
+                    if nine.allSatisfy({ $0 != nil }) {
+                        backNine[pid] = zip(nine, course[backHoles]).reduce(0) { $0 + $1.0! + $1.1.par }
                     }
                 }
             }
@@ -454,6 +627,11 @@ public enum Tips {
         let nine = best(frontNine, lowest: true, names: names)
         let pars = best(parHoles, lowest: false, names: names)
         let over: Bool? = average.flatMap { a in a > line ? true : (a < line ? false : nil) }
+        let back = best(backNine, lowest: true, names: names)
+        // Ingen birdier: alle står likt på 0, og spørsmålet strykes i stedet for at alle får rett.
+        let topBirdies = best(birdies, lowest: false, names: names).flatMap { birdies[$0[0]] == 0 ? nil : $0 }
+        let birdieTotal: Int? = field.isEmpty ? nil : ballBirdies
+        let winnerPoints = winner.flatMap { stableford[$0[0]] }
         return TipsAnswerKey(
             finished: !rounds.isEmpty && rounds.allSatisfy(\.round.locked),
             field: field.sorted(),
@@ -462,12 +640,26 @@ public enum Tips {
             mostPars: pars,
             birdie: field.isEmpty ? nil : birdie,
             over: over,
-            winnerPoints: winner.flatMap { stableford[$0[0]] },
+            winnerPoints: winnerPoints,
             frontNineNet: nine.flatMap { frontNine[$0[0]] },
             mostParsHoles: pars.flatMap { parHoles[$0[0]] },
             average: average,
-            line: line
+            line: line,
+            birdieCount: birdieTotal.flatMap { overUnder(Double($0), line: rules.tips.birdieCountLine) },
+            birdies: birdieTotal,
+            birdieCountLine: rules.tips.birdieCountLine,
+            mostBirdies: topBirdies,
+            mostBirdiesCount: topBirdies.flatMap { birdies[$0[0]] },
+            backNine: back,
+            backNineNet: back.flatMap { backNine[$0[0]] },
+            overWinnerPoints: winnerPoints.flatMap { overUnder(Double($0), line: rules.tips.winnerPointsLine) },
+            winnerPointsLine: rules.tips.winnerPointsLine
         )
+    }
+
+    /// Over (true) eller under (false) linja. Rett på linja: `nil` (strøket).
+    static func overUnder(_ x: Double, line: Double) -> Bool? {
+        x > line ? true : (x < line ? false : nil)
     }
 
     /// `tipsRiktig`: var tipset riktig? `nil` = spørsmålet er strøket.
@@ -529,7 +721,18 @@ public enum Tips {
     }
 
     /// `tipsSporsmaalTittel`: over/under har linja i tittelen («Over eller under +2,5?»).
+    /// `line` er spørsmålets linje (`line(for:eventLine:rules:)`).
     public static func title(_ q: TipsQuestion, line: Double) -> String {
-        q.kind == .overUnder ? "Over eller under " + formatSigned(line, decimals: 1) + "?" : q.title
+        switch q {
+        case .over: "Over eller under " + formatSigned(line, decimals: 1) + "?"
+        case .birdieCount: "Over eller under " + formatPlain(line) + " birdier?"
+        case .winnerPoints: "Vinneren: over eller under " + formatPlain(line) + " poeng?"
+        default: q.title
+        }
+    }
+
+    /// «14,5»: én desimal, norsk komma, uten fortegn.
+    public static func formatPlain(_ x: Double) -> String {
+        String(format: "%.1f", locale: Locale(identifier: "en_US_POSIX"), x).replacingOccurrences(of: ".", with: ",")
     }
 }

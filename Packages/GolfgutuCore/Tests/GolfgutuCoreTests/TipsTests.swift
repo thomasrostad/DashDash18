@@ -72,8 +72,9 @@ struct TipsTests {
     }
 
     @Test func sporsmaaleneErLikePWA() {
-        #expect(fil.sporsmaal.count == TipsQuestion.allCases.count)
-        for (q, js) in zip(TipsQuestion.allCases, fil.sporsmaal) {
+        // PWA-ens fem er Golfgutus spørsmål; de nye spørsmålene finnes ikke i PWA-en.
+        #expect(fil.sporsmaal.count == Ruleset.TipsRules.golfgutuQuestions.count)
+        for (q, js) in zip(Ruleset.TipsRules.golfgutuQuestions, fil.sporsmaal) {
             #expect(Self.felt[js.felt] == q)
             #expect(q.title == js.tittel)
             #expect(q.subtitle == js.under)
