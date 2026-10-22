@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import Testing
+import Supabase
 @testable import DashDash18
 
 // Invitasjon til klubb (fiks/invitasjon, 09.10.2026): lenken `dashdash://klubb/KODE`, det som limes
@@ -193,5 +194,59 @@ struct InviteQRTests {
         let invite = try #require(ClubInvite(code: "02E5172C87"))
         let image = try #require(QRCode.image(for: invite.shareURL(universal: true).absoluteString))
         #expect(image.size.width >= 200 && image.size.width == image.size.height)
+    }
+}
+
+// Deg › Klubb (fiks/flere-klubber, 22.10.2026): flere klubber og «Bli med i en annen klubb».
+
+struct MultiClubTests {
+    private func membership(_ name: String, _ status: MemberStatus, id: UUID = UUID()) -> Membership {
+        Membership(id: UUID(), clubID: id, displayName: "Ola", status: status, isOrganizer: false, isTreasurer: false,
+                   club: .init(name: name, joinCode: nil))
+    }
+
+    @Test func klubblistaViserAktiveFoerVentendeOgSkjulerArkiverte() {
+        let golf = membership("Golfklubben", .active)
+        let sim = membership("Simulator", .active)
+        let venter = membership("Ny klubb", .pending)
+        let gammel = membership("Gammel", .archived)
+        let rows = DegClubsLogic.rows([venter, sim, gammel, golf], currentClubID: sim.clubID)
+        #expect(rows.map(\.name) == ["Golfklubben", "Simulator", "Ny klubb"])
+        #expect(rows.map(\.isSelected) == [false, true, false])
+        #expect(rows.map(\.subtitle) == [nil, nil, "Venter på godkjenning"])
+    }
+
+    @MainActor
+    private func model(_ rows: [Membership], defaults: UserDefaults) -> ClubModel {
+        let client = SupabaseClient(supabaseURL: URL(string: "https://example.invalid")!, supabaseKey: "sb_publishable_test")
+        return ClubModel(client: client, cache: MembershipCache(defaults: defaults), fetchRows: { _ in rows })
+    }
+
+    @MainActor
+    @Test func aktivEtterBliMedByttetTilNyKlubb() async {
+        UserDefaults.standard.removeObject(forKey: "valgtKlubb")
+        defer { UserDefaults.standard.removeObject(forKey: "valgtKlubb") }
+        let golf = membership("Golfklubben", .active)
+        let sim = membership("Simulator", .active)
+        let defaults = UserDefaults(suiteName: "MultiClub.\(UUID().uuidString)")!
+        let club = model([golf, sim], defaults: defaults)
+        await club.load(userID: UUID())
+        let text = club.finishJoin(clubID: sim.clubID, clubName: "Simulator", status: .active)
+        #expect(club.current?.clubID == sim.clubID)
+        #expect(text == "Du er med i Simulator.")
+    }
+
+    @MainActor
+    @Test func ventendeEtterBliMedBlirIGjeldendeKlubb() async {
+        UserDefaults.standard.removeObject(forKey: "valgtKlubb")
+        defer { UserDefaults.standard.removeObject(forKey: "valgtKlubb") }
+        let golf = membership("Golfklubben", .active)
+        let sim = membership("Simulator", .pending)
+        let defaults = UserDefaults(suiteName: "MultiClub.\(UUID().uuidString)")!
+        let club = model([golf, sim], defaults: defaults)
+        await club.load(userID: UUID())
+        let text = club.finishJoin(clubID: sim.clubID, clubName: "Simulator", status: .pending)
+        #expect(club.current?.clubID == golf.clubID)
+        #expect(text.contains("Arrangøren må godkjenne"))
     }
 }
