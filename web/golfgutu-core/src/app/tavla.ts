@@ -6,7 +6,7 @@ import { courseHoles, numberOfHoles } from "../course.ts";
 import { capitalized, dayCount, dayMany, dayThe, dayTheMany, type DayTerm } from "../dayterm.ts";
 import { effectiveHandicap } from "../handicap.ts";
 import { norwegianLess, sortedBy } from "../jsmath.ts";
-import { makePlayer, type Player, type SideClaim } from "../models.ts";
+import { makePlayer, type Player, type PointAdjustment, type SideClaim } from "../models.ts";
 import { rulesetDay, type CountingUnit, type Ruleset } from "../ruleset.ts";
 import { netStrokes } from "../scoring.ts";
 import { eveningCount, formatPoints, Season } from "../season.ts";
@@ -34,6 +34,8 @@ export interface TavlaInput {
   rounds: RoundSnapshot[];
   /** Playoff-rundene om førsteplassen (`rounds.kind = playoff`). Avgjør `playoffWinner`. */
   playoffs?: RoundSnapshot[];
+  /** Tilleggspoeng gitt for hånd (sql/072), med kveldens dato når de hører til en. */
+  adjustments?: PointAdjustment[];
 }
 
 /** `TavlaData.input(season:)`: rundene som `RoundSnapshot`, med samme mapping som Kveld. */
@@ -59,6 +61,10 @@ export function tavlaInput(data: TavlaData, season: SeasonRow): TavlaInput {
     members: data.members,
     rounds: rounds.filter((r) => !isPlayoff(r.round)),
     playoffs: rounds.filter((r) => isPlayoff(r.round)),
+    adjustments: data.adjustments.map((a) => ({
+      id: a.id, playerId: a.memberID, points: a.points, reason: a.reason,
+      date: a.eventID !== null ? dates.get(a.eventID) ?? null : null,
+    })),
   };
 }
 
@@ -92,6 +98,8 @@ export interface TavlaRow {
   qualified: boolean;
   /** Delt førsteplass som skal avgjøres med playoff (`tieRule` `playoff`). */
   playoffPending: boolean;
+  /** Tilleggspoeng gitt for hånd (sql/072). 0 uten. */
+  adjustment: number;
 }
 
 /** Norske navn på enhetene «beste N» telles i (`RuleNames.nouns`). */
@@ -174,7 +182,7 @@ export class TavlaStandings {
     ).map((m) => makePlayer(m.id, m.displayName, m.handicapIndex, m.seedGroup));
 
     // Hver runde regnes med handicapet som ble frosset i den.
-    const season = new Season(roster, rounds, this.claims, input.season.rules, playingHandicaps(snapshots));
+    const season = new Season(roster, rounds, this.claims, input.season.rules, playingHandicaps(snapshots), input.adjustments ?? []);
     this.season = season;
 
     const withPoints = rounds.filter((_, i) => season.roundPoints(i).size > 0);
@@ -205,6 +213,7 @@ export class TavlaStandings {
         played: r.played,
         qualified: s.place !== null,
         playoffPending: s.playoffPending,
+        adjustment: r.adjustment,
       };
     });
   }
@@ -258,18 +267,23 @@ export class TavlaStandings {
     return this.countsStableford ? "plass · stableford" : "plass · duell · stableford";
   }
 
-  /** Hva poengene kommer fra: «4,5 fra 5 dueller · 1 fra sidepremier · +3 hull». `null` uten poeng. */
+  /**
+   * Hva poengene kommer fra: «4,5 fra 5 dueller · 1 fra sidepremier · 1 fra tilleggspoeng · +3 hull».
+   * Tilleggspoengene (sql/072) står bare når spilleren har dem. `null` uten poeng.
+   */
   basis(row: TavlaRow): string | null {
     const parts: string[] = [];
     if (this.countsStableford) {
-      if (!(row.played > 0 || row.side > 0)) return null;
+      if (!(row.played > 0 || row.side > 0 || row.adjustment !== 0)) return null;
       if (row.played > 0) parts.push(`${this.points(row.roundPoints)} fra ${row.played === 1 ? "én runde" : `${row.played} runder`}`);
       if (row.side > 0) parts.push(`${this.points(row.side)} fra sidepremier`);
+      if (row.adjustment !== 0) parts.push(`${this.points(row.adjustment)} fra tilleggspoeng`);
       return parts.join(" · ");
     }
-    if (!(row.matches > 0 || row.side > 0)) return null;
+    if (!(row.matches > 0 || row.side > 0 || row.adjustment !== 0)) return null;
     if (row.matches > 0) parts.push(`${this.points(row.duel)} fra ${row.matches === 1 ? "én duell" : `${row.matches} dueller`}`);
     if (row.side > 0) parts.push(`${this.points(row.side)} fra sidepremier`);
+    if (row.adjustment !== 0) parts.push(`${this.points(row.adjustment)} fra tilleggspoeng`);
     if (row.matches > 0) parts.push(`${row.holes > 0 ? "+" : ""}${row.holes} hull`);
     return parts.join(" · ");
   }

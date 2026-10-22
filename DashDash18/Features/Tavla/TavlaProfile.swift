@@ -39,6 +39,8 @@ nonisolated struct PlayerProfile: Sendable {
     let rounds: [RoundLine]
     /// Nil for deg selv, og når ingen runde skilte dere.
     let headToHead: HeadToHead?
+    /// Tilleggspoeng arrangøren har gitt (sql/072), med grunnen, eldste først.
+    var adjustments: [PointAdjustment] = []
 }
 
 nonisolated extension TavlaStandings {
@@ -80,7 +82,8 @@ nonisolated extension TavlaStandings {
 
         return PlayerProfile(row: row, stablefordTotal: season.stablefordTotal(for: pid), roundsPlayed: played.count,
                              average: average, best: points.max(), birdies: birdies(member),
-                             longestDrive: longestDrive(member), rounds: lines, headToHead: headToHead)
+                             longestDrive: longestDrive(member), rounds: lines, headToHead: headToHead,
+                             adjustments: season.adjustments(for: pid))
     }
 }
 
@@ -88,6 +91,11 @@ nonisolated extension PlayerProfile {
     /// «4,5 fra 5 dueller · 1 fra sidepremier · +3 hull» (`TavlaStandings.basis`).
     func basis(_ standings: TavlaStandings) -> String? {
         standings.basis(row)
+    }
+
+    /// Linja under grunnen: «22. oktober» når tillegget hører til en kveld, ellers nil.
+    static func adjustmentDate(_ adjustment: PointAdjustment) -> String? {
+        adjustment.date.map(EveningDates.dayMonthText)
     }
 
     /// «2–1 til Bjørn», «1–2 til deg», «1–1 · uavgjort».

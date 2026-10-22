@@ -498,3 +498,32 @@ nonisolated struct SideClaimRow: Codable, Equatable, Identifiable, Sendable {
         createdAt?.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true))
     }
 }
+
+// MARK: - Tilleggspoeng (sql/072)
+
+/// Poeng arrangøren gir en spiller for hånd i turneringstabellen, med en grunn. Negative er lov
+/// (straff eller rettelse). Legges på totalen av regelmotoren (`Season.adjustments`).
+nonisolated struct PointAdjustmentRow: Codable, Equatable, Identifiable, Sendable {
+    let id: UUID
+    let clubID: UUID
+    let seasonID: UUID
+    let memberID: UUID
+    /// Kvelden tilleggspoengene hører til, eller nil. Bare til visning.
+    var eventID: UUID?
+    var points: Double
+    var reason: String
+    var createdAt: Date? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case clubID = "club_id"
+        case seasonID = "season_id"
+        case memberID = "member_id"
+        case eventID = "event_id"
+        case points
+        case reason
+        case createdAt = "created_at"
+    }
+
+    static let columns = "id, club_id, season_id, member_id, event_id, points, reason, created_at"
+}

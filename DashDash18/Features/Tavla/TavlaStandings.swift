@@ -10,6 +10,8 @@ nonisolated struct TavlaInput: Equatable, Sendable {
     var rounds: [RoundSnapshot]
     /// Neste kveld i sesongen som ikke er spilt (`YYYY-MM-DD`), fra `events`. Nil uten en.
     var nextEventDate: String? = nil
+    /// Tilleggspoeng gitt for hånd (sql/072), med kveldens dato når de hører til en.
+    var adjustments: [PointAdjustment] = []
 }
 
 /// Tavla for én sesong: tabellen, spillerprofilene og oppsummeringen. Alle tall regnes av
@@ -22,7 +24,7 @@ nonisolated struct TavlaStandings: Sendable {
         /// Plassen fra `Season.standings`: delt plass har samme nummer (1, 1, 3). For en som ikke er
         /// kvalifisert (`table.minEvenings`): plassen i rekkefølgen, under de rangerte (vises som «–»).
         let place: Int
-        /// Duell (eller stablefordpoeng) + sidepremier, avrundet etter regelsettet.
+        /// Duell (eller stablefordpoeng) + sidepremier + tilleggspoeng, avrundet etter regelsettet.
         let total: Double
         let duel: Double
         let side: Double
@@ -43,6 +45,8 @@ nonisolated struct TavlaStandings: Sendable {
         var qualified: Bool = true
         /// Delt førsteplass som skal avgjøres med playoff (`tieRule` `playoff`).
         var playoffPending: Bool = false
+        /// Tilleggspoeng gitt for hånd (sql/072). 0 uten.
+        var adjustment: Double = 0
 
         var id: UUID { memberID }
     }
@@ -118,7 +122,8 @@ nonisolated struct TavlaStandings: Sendable {
 
         // Hver runde regnes med handicapet som ble frosset i den (som Kveld), ikke troppens tall i dag.
         let season = Season(players: roster, rounds: rounds, claims: claims, ruleset: input.season.rules,
-                            playingHandicaps: TavlaStandings.playingHandicaps(snapshots))
+                            playingHandicaps: TavlaStandings.playingHandicaps(snapshots),
+                            adjustments: input.adjustments)
         self.season = season
 
         let withPointsIndices = rounds.indices.filter { !season.roundPoints($0).isEmpty }
@@ -130,6 +135,8 @@ nonisolated struct TavlaStandings: Sendable {
            let last = withPointsIndices.compactMap({ snapshots[$0].eventDate }).max() {
             var before = input
             before.rounds = input.rounds.ordinary.filter { ($0.eventDate ?? "") < last }
+            // Tilleggspoeng fra siste kveld var ikke gitt før den; de uten kveld står i begge.
+            before.adjustments = input.adjustments.filter { ($0.date ?? "") < last }
             let earlier = TavlaStandings(before, me: me, viewer: viewer, comparesPrevious: false)
             previousPlaces = earlier.hasResults
                 ? Dictionary(earlier.rows.filter(\.qualified).map { ($0.memberID, $0.place) }, uniquingKeysWith: { a, _ in a })
@@ -156,7 +163,8 @@ nonisolated struct TavlaStandings: Sendable {
             return Row(memberID: id, name: r.player.name, place: s.place ?? i + 1, total: r.total, duel: r.duel,
                        side: r.side, matches: r.matches, holes: r.holes, stableford: r.stableford,
                        evenings: Season.eveningCount(played), isMe: id == me, roundPoints: r.roundPoints,
-                       played: r.played, qualified: s.place != nil, playoffPending: s.playoffPending)
+                       played: r.played, qualified: s.place != nil, playoffPending: s.playoffPending,
+                       adjustment: r.adjustment)
         }
         if let teams = TavlaTeams.fixedTeams(snapshots) {
             let merged = TavlaTeams.merge(rows, previous: previousPlaces, teams: teams, me: me)
@@ -223,23 +231,26 @@ nonisolated struct TavlaStandings: Sendable {
     /// Kolonnene i «Runde for runde» på profilen.
     var roundColumns: String { countsStableford ? "plass · stableford" : "plass · duell · stableford" }
 
-    /// Hva poengene kommer fra: «4,5 fra 5 dueller · 1 fra sidepremier · +3 hull», eller med
-    /// stableford «98 fra 5 runder · 1 fra sidepremier». Nil uten poeng.
+    /// Hva poengene kommer fra: «4,5 fra 5 dueller · 1 fra sidepremier · 1 fra tilleggspoeng · +3 hull», eller
+    /// med stableford «98 fra 5 runder · 1 fra sidepremier». Tilleggspoengene (sql/072) står bare når
+    /// spilleren har dem. Nil uten poeng.
     func basis(_ row: Row) -> String? {
         var parts: [String] = []
         if countsStableford {
-            guard row.played > 0 || row.side > 0 else { return nil }
+            guard row.played > 0 || row.side > 0 || row.adjustment != 0 else { return nil }
             if row.played > 0 {
                 parts.append("\(points(row.roundPoints)) fra \(row.played == 1 ? "én runde" : "\(row.played) runder")")
             }
             if row.side > 0 { parts.append("\(points(row.side)) fra sidepremier") }
+            if row.adjustment != 0 { parts.append("\(points(row.adjustment)) fra tilleggspoeng") }
             return parts.joined(separator: " · ")
         }
-        guard row.matches > 0 || row.side > 0 else { return nil }
+        guard row.matches > 0 || row.side > 0 || row.adjustment != 0 else { return nil }
         if row.matches > 0 {
             parts.append("\(points(row.duel)) fra \(row.matches == 1 ? "én duell" : "\(row.matches) dueller")")
         }
         if row.side > 0 { parts.append("\(points(row.side)) fra sidepremier") }
+        if row.adjustment != 0 { parts.append("\(points(row.adjustment)) fra tilleggspoeng") }
         if row.matches > 0 { parts.append("\(row.holes > 0 ? "+" : "")\(row.holes) hull") }
         return parts.joined(separator: " · ")
     }

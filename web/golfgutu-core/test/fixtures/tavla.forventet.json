@@ -14798,6 +14798,7 @@
       ],
       "rows" : [
         {
+          "adjustment" : 0,
           "basis" : "4,5 fra 7 dueller · 1 fra sidepremier · -2 hull",
           "detail" : "-2 hull · 170 stableford · 5 kvelder",
           "duel" : 4.5,
@@ -14821,6 +14822,7 @@
           "totalText" : "5,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "4 fra 4 dueller · 0,5 fra sidepremier · +20 hull",
           "detail" : "+20 hull · 153 stableford · 2 kvelder",
           "duel" : 4,
@@ -14844,6 +14846,7 @@
           "totalText" : "4,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "3 fra 5 dueller · 0,5 fra sidepremier · +8 hull",
           "detail" : "+8 hull · 161 stableford · 5 kvelder",
           "duel" : 3,
@@ -14867,6 +14870,7 @@
           "totalText" : "3,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "3,5 fra 7 dueller · +1 hull",
           "detail" : "+1 hull · 178 stableford · 5 kvelder",
           "duel" : 3.5,
@@ -14890,6 +14894,7 @@
           "totalText" : "3,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "3 fra 5 dueller · -7 hull",
           "detail" : "-7 hull · 172 stableford · 5 kvelder",
           "duel" : 3,
@@ -14913,6 +14918,7 @@
           "totalText" : "3"
         },
         {
+          "adjustment" : 0,
           "basis" : "2,5 fra 2 dueller · +3 hull",
           "detail" : "+3 hull · 150 stableford · 2 kvelder",
           "duel" : 2.5,
@@ -14936,6 +14942,7 @@
           "totalText" : "2,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "1 fra én duell · 1 fra sidepremier · 0 hull",
           "detail" : "0 hull · 53 stableford · 1 kveld",
           "duel" : 1,
@@ -14959,6 +14966,7 @@
           "totalText" : "2"
         },
         {
+          "adjustment" : 0,
           "basis" : "1,5 fra 3 dueller · -1 hull",
           "detail" : "-1 hull · 170 stableford · 3 kvelder",
           "duel" : 1.5,
@@ -14982,6 +14990,7 @@
           "totalText" : "1,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "0,5 fra 5 dueller · 1 fra sidepremier · -22 hull",
           "detail" : "-22 hull · 133 stableford · 3 kvelder",
           "duel" : 0.5,
@@ -15005,6 +15014,7 @@
           "totalText" : "1,5"
         },
         {
+          "adjustment" : 0,
           "basis" : null,
           "detail" : "0 hull · 13 stableford · 1 kveld",
           "duel" : 0,
@@ -15475,6 +15485,7 @@
       ],
       "rows" : [
         {
+          "adjustment" : 0,
           "basis" : "180 fra 4 runder",
           "detail" : "3 spilledager · beste 3 teller",
           "duel" : 0,
@@ -15498,6 +15509,7 @@
           "totalText" : "180"
         },
         {
+          "adjustment" : 0,
           "basis" : "179 fra 4 runder · 1 fra sidepremier",
           "detail" : "3 spilledager · beste 3 teller",
           "duel" : 0,
@@ -15521,6 +15533,7 @@
           "totalText" : "180"
         },
         {
+          "adjustment" : 0,
           "basis" : "158 fra 6 runder",
           "detail" : "5 spilledager · beste 3 teller",
           "duel" : 0,
@@ -15544,6 +15557,7 @@
           "totalText" : "158"
         },
         {
+          "adjustment" : 0,
           "basis" : "153 fra 3 runder",
           "detail" : "2 spilledager · beste 3 teller",
           "duel" : 0,
@@ -15567,6 +15581,7 @@
           "totalText" : "153"
         },
         {
+          "adjustment" : 0,
           "basis" : "152 fra 6 runder",
           "detail" : "5 spilledager · beste 3 teller",
           "duel" : 0,
@@ -15590,6 +15605,7 @@
           "totalText" : "152"
         },
         {
+          "adjustment" : 0,
           "basis" : "150 fra 6 runder · 1 fra sidepremier",
           "detail" : "5 spilledager · beste 3 teller",
           "duel" : 0,
@@ -15613,6 +15629,7 @@
           "totalText" : "151"
         },
         {
+          "adjustment" : 0,
           "basis" : "150 fra 3 runder",
           "detail" : "2 spilledager · beste 3 teller",
           "duel" : 0,
@@ -15636,6 +15653,7 @@
           "totalText" : "150"
         },
         {
+          "adjustment" : 0,
           "basis" : "149 fra 6 runder",
           "detail" : "5 spilledager · beste 3 teller",
           "duel" : 0,
@@ -15659,6 +15677,7 @@
           "totalText" : "149"
         },
         {
+          "adjustment" : 0,
           "basis" : "53 fra én runde · 1 fra sidepremier",
           "detail" : "1 spilledag · beste 3 teller",
           "duel" : 0,
@@ -15682,6 +15701,7 @@
           "totalText" : "54"
         },
         {
+          "adjustment" : 0,
           "basis" : "13 fra én runde",
           "detail" : "1 spilledag · beste 3 teller",
           "duel" : 0,
@@ -16152,6 +16172,7 @@
       ],
       "rows" : [
         {
+          "adjustment" : 0,
           "basis" : "6 fra 2 dueller · 1 fra sidepremier · +10 hull",
           "detail" : "+10 hull · 170 stableford · 5 kvelder",
           "duel" : 6,
@@ -16175,6 +16196,7 @@
           "totalText" : "7"
         },
         {
+          "adjustment" : 0,
           "basis" : "6 fra 2 dueller · 1 fra sidepremier · +18 hull",
           "detail" : "+18 hull · 153 stableford · 2 kvelder",
           "duel" : 6,
@@ -16198,6 +16220,7 @@
           "totalText" : "7"
         },
         {
+          "adjustment" : 0,
           "basis" : "6,5 fra 2 dueller · +3 hull",
           "detail" : "+3 hull · 150 stableford · 2 kvelder",
           "duel" : 6.5,
@@ -16221,6 +16244,7 @@
           "totalText" : "6,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "5 fra 2 dueller · 0 hull",
           "detail" : "0 hull · 178 stableford · 5 kvelder",
           "duel" : 5,
@@ -16244,6 +16268,7 @@
           "totalText" : "5"
         },
         {
+          "adjustment" : 0,
           "basis" : "3 fra én duell · +2 hull",
           "detail" : "+2 hull · 172 stableford · 5 kvelder",
           "duel" : 3,
@@ -16267,6 +16292,7 @@
           "totalText" : "3"
         },
         {
+          "adjustment" : 0,
           "basis" : "3 fra én duell · +3 hull",
           "detail" : "+3 hull · 170 stableford · 3 kvelder",
           "duel" : 3,
@@ -16290,6 +16316,7 @@
           "totalText" : "3"
         },
         {
+          "adjustment" : 0,
           "basis" : "3 fra én duell · +12 hull",
           "detail" : "+12 hull · 161 stableford · 5 kvelder",
           "duel" : 3,
@@ -16313,6 +16340,7 @@
           "totalText" : "3"
         },
         {
+          "adjustment" : 0,
           "basis" : "1 fra én duell · 1 fra sidepremier · 0 hull",
           "detail" : "0 hull · 53 stableford · 1 kveld",
           "duel" : 1,
@@ -16336,6 +16364,7 @@
           "totalText" : "2"
         },
         {
+          "adjustment" : 0,
           "basis" : "1 fra 2 dueller · -3 hull",
           "detail" : "-3 hull · 133 stableford · 3 kvelder",
           "duel" : 1,
@@ -16359,6 +16388,7 @@
           "totalText" : "1"
         },
         {
+          "adjustment" : 0,
           "basis" : null,
           "detail" : "0 hull · 13 stableford · 1 kveld",
           "duel" : 0,
@@ -16829,6 +16859,7 @@
       ],
       "rows" : [
         {
+          "adjustment" : 0,
           "basis" : "2 fra 2 dueller · 1 fra sidepremier · +9 hull",
           "detail" : "Playoff · +9 hull · 170 stableford · 5 kvelder",
           "duel" : 2,
@@ -16852,6 +16883,7 @@
           "totalText" : "3"
         },
         {
+          "adjustment" : 0,
           "basis" : "2 fra 2 dueller · 1 fra sidepremier · +17 hull",
           "detail" : "Playoff · +17 hull · 153 stableford · 2 kvelder",
           "duel" : 2,
@@ -16875,6 +16907,7 @@
           "totalText" : "3"
         },
         {
+          "adjustment" : 0,
           "basis" : "3 fra 2 dueller · +3 hull",
           "detail" : "Playoff · +3 hull · 150 stableford · 2 kvelder",
           "duel" : 3,
@@ -16898,6 +16931,7 @@
           "totalText" : "3"
         },
         {
+          "adjustment" : 0,
           "basis" : "2 fra 2 dueller · 0 hull",
           "detail" : "0 hull · 178 stableford · 5 kvelder",
           "duel" : 2,
@@ -16921,6 +16955,7 @@
           "totalText" : "2"
         },
         {
+          "adjustment" : 0,
           "basis" : "1 fra én duell · +3 hull",
           "detail" : "+3 hull · 172 stableford · 5 kvelder",
           "duel" : 1,
@@ -16944,6 +16979,7 @@
           "totalText" : "1"
         },
         {
+          "adjustment" : 0,
           "basis" : "1 fra én duell · +12 hull",
           "detail" : "+12 hull · 161 stableford · 5 kvelder",
           "duel" : 1,
@@ -16967,6 +17003,7 @@
           "totalText" : "1"
         },
         {
+          "adjustment" : 0,
           "basis" : "0 fra én duell · 1 fra sidepremier · -2 hull",
           "detail" : "-2 hull · 133 stableford · 3 kvelder",
           "duel" : 0,
@@ -16990,6 +17027,7 @@
           "totalText" : "1"
         },
         {
+          "adjustment" : 0,
           "basis" : "1 fra én duell · +2 hull",
           "detail" : "+2 hull · 170 stableford · 3 kvelder",
           "duel" : 1,
@@ -17013,6 +17051,7 @@
           "totalText" : "1"
         },
         {
+          "adjustment" : 0,
           "basis" : "1 fra én duell · 1 fra sidepremier · 0 hull",
           "detail" : "0 hull · 53 stableford · 1 kveld · minst 2 kvelder for plass",
           "duel" : 1,
@@ -17036,6 +17075,7 @@
           "totalText" : "2"
         },
         {
+          "adjustment" : 0,
           "basis" : null,
           "detail" : "0 hull · 13 stableford · 1 kveld · minst 2 kvelder for plass",
           "duel" : 0,
@@ -17506,6 +17546,7 @@
       ],
       "rows" : [
         {
+          "adjustment" : 0,
           "basis" : "4,5 fra 7 dueller · 1 fra sidepremier · -2 hull",
           "detail" : "-2 hull · 170 stableford · 5 spilledager",
           "duel" : 4.5,
@@ -17529,6 +17570,7 @@
           "totalText" : "1"
         },
         {
+          "adjustment" : 0,
           "basis" : "3 fra 5 dueller · 0,5 fra sidepremier · +8 hull",
           "detail" : "+8 hull · 161 stableford · 5 spilledager",
           "duel" : 3,
@@ -17552,6 +17594,7 @@
           "totalText" : "0,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "3,5 fra 7 dueller · +1 hull",
           "detail" : "+1 hull · 178 stableford · 5 spilledager",
           "duel" : 3.5,
@@ -17575,6 +17618,7 @@
           "totalText" : "0,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "1,5 fra 3 dueller · -1 hull",
           "detail" : "-1 hull · 170 stableford · 3 spilledager",
           "duel" : 1.5,
@@ -17598,6 +17642,7 @@
           "totalText" : "0,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "3 fra 5 dueller · -7 hull",
           "detail" : "-7 hull · 172 stableford · 5 spilledager",
           "duel" : 3,
@@ -17621,6 +17666,7 @@
           "totalText" : "0,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "0,5 fra 5 dueller · 1 fra sidepremier · -22 hull",
           "detail" : "-22 hull · 133 stableford · 3 spilledager",
           "duel" : 0.5,
@@ -17644,6 +17690,7 @@
           "totalText" : "0,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "4 fra 4 dueller · 0,5 fra sidepremier · +20 hull",
           "detail" : "+20 hull · 153 stableford · 2 spilledager · minst 3 spilledager for plass",
           "duel" : 4,
@@ -17667,6 +17714,7 @@
           "totalText" : "2,5"
         },
         {
+          "adjustment" : 0,
           "basis" : "1 fra én duell · 1 fra sidepremier · 0 hull",
           "detail" : "0 hull · 53 stableford · 1 spilledag · minst 3 spilledager for plass",
           "duel" : 1,
@@ -17690,6 +17738,7 @@
           "totalText" : "2"
         },
         {
+          "adjustment" : 0,
           "basis" : "2,5 fra 2 dueller · +3 hull",
           "detail" : "+3 hull · 150 stableford · 2 spilledager · minst 3 spilledager for plass",
           "duel" : 2.5,
@@ -17713,6 +17762,7 @@
           "totalText" : "1,5"
         },
         {
+          "adjustment" : 0,
           "basis" : null,
           "detail" : "0 hull · 13 stableford · 1 spilledag · minst 3 spilledager for plass",
           "duel" : 0,

@@ -439,3 +439,48 @@ struct TavlaClaimOrderTests {
         #expect(without.createdAt == nil && without.timestamp == nil)
     }
 }
+
+// MARK: - Tilleggspoeng (sql/072)
+
+struct TavlaTilleggspoengTests {
+    /// seier-test.js 2–3 (Anders 2, Bjørn 1, Cato 0, Dag 0) med tilleggspoeng til Cato og Dag.
+    static func standings() -> TavlaStandings {
+        var input = TavlaInput(season: T.season(), members: T.four,
+                               rounds: [T.teamRound(1, date: "2026-09-01",
+                                                    claims: [(T.anders, .drive, 250), (T.cato, .drive, 230)])])
+        input.adjustments = [
+            PointAdjustment(id: "t1", playerId: T.id(T.cato).uuidString, points: 1, reason: "CP knockout challenge",
+                            date: "2026-09-01"),
+            PointAdjustment(id: "t2", playerId: T.id(T.dag).uuidString, points: 0.5, reason: "Kom først"),
+        ]
+        return TavlaStandings(input, me: T.id(T.anders))
+    }
+
+    @Test func tilleggetLeggesPaaTotalen() {
+        let s = Self.standings()
+        let c = T.row(s, T.cato)
+        #expect(c.total == 1 && c.adjustment == 1 && c.duel == 0 && c.side == 0)
+        #expect(T.row(s, T.dag).total == 0.5 && T.row(s, T.anders).adjustment == 0)
+        // Bjørn og Cato har 1 hver: hulldifferansen skiller (+18 mot −18).
+        #expect(s.rows.map(\.memberID) == [T.anders, T.bjorn, T.cato, T.dag].map(T.id))
+        #expect(s.basis(c) == "0 fra én duell · 1 fra tilleggspoeng · -18 hull")
+    }
+
+    @Test func grunnenStaarPaaProfilen() throws {
+        let s = Self.standings()
+        let c = try #require(s.profile(T.id(T.cato)))
+        #expect(c.adjustments.map(\.reason) == ["CP knockout challenge"])
+        #expect(c.adjustments.first.flatMap(PlayerProfile.adjustmentDate) == "1. september")
+        let d = try #require(s.profile(T.id(T.dag)))
+        #expect(d.adjustments.first.flatMap(PlayerProfile.adjustmentDate) == nil)
+        #expect(try #require(s.profile(T.id(T.anders))).adjustments.isEmpty)
+    }
+
+    @Test func utenTilleggErTabellenSomFoer() {
+        let rounds = [T.teamRound(1, date: "2026-09-01", claims: [(T.anders, .drive, 250), (T.cato, .drive, 230)])]
+        let s = T.standings(rounds)
+        #expect(s.rows.allSatisfy { $0.adjustment == 0 })
+        #expect(T.row(s, T.anders).total == 2
+                && s.basis(T.row(s, T.anders)) == "1 fra én duell · 1 fra sidepremier · +18 hull")
+    }
+}

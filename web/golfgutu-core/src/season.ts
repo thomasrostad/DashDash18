@@ -7,7 +7,7 @@ import { cappingStrokes } from "./play.ts";
 import { jsRound, norwegianLess, norwegianString, sortedStrings } from "./jsmath.ts";
 import { avoidingRepeats, meetings } from "./draw.ts";
 import { matchInvolves, matchSides, matchStanding, outcomeForA, pointsForOutcome } from "./match.ts";
-import { copyRound, isTriangle, type Player, type Round, type SideClaim, type SideClaimKind } from "./models.ts";
+import { copyRound, isTriangle, type Player, type PointAdjustment, type Round, type SideClaim, type SideClaimKind } from "./models.ts";
 import { GOLFGUTU, roundTablePoints, sidePrizeFor, type CountingUnit, type Ruleset } from "./ruleset.ts";
 import { roundPoints as scoreRoundPoints } from "./scoring.ts";
 import { claimsFor, sidePrizeWinners } from "./sideprize.ts";
@@ -73,7 +73,7 @@ export interface MatchSum {
 /** En rad i jakketavla. */
 export interface JacketRow {
   player: Player;
-  /** Duell (eller stablefordpoeng) + sidepremier, avrundet etter regelsettet. */
+  /** Duell (eller stablefordpoeng) + sidepremier + tilleggspoeng, avrundet etter regelsettet. */
   total: number;
   /** Tellende matchpoeng. 0 når tabellen teller stableford. */
   duel: number;
@@ -92,6 +92,8 @@ export interface JacketRow {
   evenings: number;
   /** Har spilt nok kvelder til å rangeres (`table.minEvenings`). */
   qualified: boolean;
+  /** Tilleggspoeng gitt for hånd (`adjustmentPoints`). 0 uten. */
+  adjustment: number;
 }
 
 /** En rad i tabellen med plass (`Season.standings`). */
@@ -188,6 +190,8 @@ export class Season {
   /** Sesongens runder, i lagret rekkefølge. */
   readonly rounds: readonly Round[];
   readonly claims: readonly SideClaim[];
+  /** Tilleggspoeng gitt for hånd, i lagret rekkefølge. */
+  readonly adjustments: readonly PointAdjustment[];
   readonly ruleset: Ruleset;
   private readonly pointsByRound: Map<string, number>[];
   /** Rundepoengene i tabellen med `table.formPoints` (og `pointsSource` `stableford`). Tom ellers. */
@@ -195,7 +199,8 @@ export class Season {
 
   /**
    * `playingHandicaps`: rundens frosne spillehandicap, runde-id → spiller-id → slag. Legges på rundene
-   * (og vinner over det som står der fra før).
+   * (og vinner over det som står der fra før). `adjustments`: tilleggspoeng gitt for hånd; tom gir
+   * tabellen som før.
    */
   constructor(
     players: readonly Player[],
@@ -203,6 +208,7 @@ export class Season {
     claims: readonly SideClaim[] = [],
     ruleset: Ruleset = GOLFGUTU,
     playingHandicaps: ReadonlyMap<string, ReadonlyMap<string, number>> = new Map(),
+    adjustments: readonly PointAdjustment[] = [],
   ) {
     this.players = players;
     this.rounds = rounds.map((round) => {
@@ -216,6 +222,7 @@ export class Season {
       return cappingStrokes(r, players, ruleset);
     });
     this.claims = claims;
+    this.adjustments = adjustments;
     this.ruleset = ruleset;
     this.pointsByRound = this.rounds.map((r) => scoreRoundPoints(r, players, ruleset));
     this.formPointsByRound = ruleset.table.formPoints && ruleset.table.pointsSource === "stableford"
@@ -428,11 +435,24 @@ export class Season {
     return jsRound(this.countingRounds(playerID).counting.reduce((s, r) => s + r.points, 0));
   }
 
+  // MARK: Tilleggspoeng
+
+  /** Spillerens tilleggspoeng, i lagret rekkefølge. */
+  adjustmentsFor(playerID: string): PointAdjustment[] {
+    return this.adjustments.filter((a) => a.playerId === playerID);
+  }
+
+  /** Summen av spillerens tilleggspoeng. Uvektet, og strykes aldri av «beste N». */
+  adjustmentPoints(playerID: string): number {
+    return this.adjustmentsFor(playerID).reduce((sum, a) => sum + a.points, 0);
+  }
+
   // MARK: Tabellene
 
   /**
-   * `jakketavle`: duellpoeng (eller stablefordpoeng) pluss sidepremier, alle i troppen. Sortert på
-   * total, så regelsettets skilletegn, så navn (norsk).
+   * `jakketavle`: duellpoeng (eller stablefordpoeng) pluss sidepremier, alle i troppen. Tilleggspoeng
+   * legges på totalen før avrundingen; med snitt legges de på snittet. Sortert på total, så regelsettets
+   * skilletegn, så navn (norsk).
    */
   jacketBoard(): JacketRow[] {
     const rules = this.ruleset;
@@ -444,13 +464,14 @@ export class Season {
       const s = matchSum(d.counting, rules);
       const side = selection.sidePrizes.counting.reduce((sum, r) => sum + r.points, 0);
       const played = this.playedEvenings(p.id);
+      const extra = this.adjustmentPoints(p.id);
       let row: JacketRow;
       if (table.pointsSource === "stableford") {
         const r = selection.rounds;
         const points = r.counting.reduce((sum, x) => sum + x.points, 0);
         row = {
           player: p,
-          total: roundTablePoints(rules, points + side),
+          total: roundTablePoints(rules, points + side + extra),
           duel: 0,
           side,
           matches: 0,
@@ -460,11 +481,12 @@ export class Season {
           roundPoints: points,
           evenings: 0,
           qualified: true,
+          adjustment: extra,
         };
       } else {
         row = {
           player: p,
-          total: roundTablePoints(rules, s.points + side),
+          total: roundTablePoints(rules, s.points + side + extra),
           duel: s.points,
           side,
           matches: s.matches,
@@ -474,6 +496,7 @@ export class Season {
           roundPoints: 0,
           evenings: 0,
           qualified: true,
+          adjustment: extra,
         };
       }
       row.evenings = played.size;
@@ -486,7 +509,7 @@ export class Season {
         const droppedKeys = new Set(dropped.map((x) => eveningKey(this.rounds[x.roundIndex])).filter((k) => !countedKeys.has(k)));
         const divisor = [...played].filter((k) => !droppedKeys.has(k)).length;
         const raw = d.counting.reduce((sum, x) => sum + x.points, 0) + selection.rounds.counting.reduce((sum, x) => sum + x.points, 0) + side;
-        row.total = divisor > 0 ? roundTablePoints(rules, raw / divisor) : 0;
+        row.total = roundTablePoints(rules, (divisor > 0 ? raw / divisor : 0) + extra);
       }
       return row;
     });

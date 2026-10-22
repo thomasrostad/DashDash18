@@ -378,6 +378,31 @@ export function decodeSideClaimRow(x: unknown, path = "$"): SideClaimRow {
   };
 }
 
+/** Tilleggspoeng (sql/072): poeng arrangøren gir en spiller for hånd, med en grunn. */
+export interface PointAdjustmentRow {
+  id: UUID;
+  clubID: UUID;
+  seasonID: UUID;
+  memberID: UUID;
+  /** Kvelden tillegget hører til, eller `null`. Bare til visning. */
+  eventID: UUID | null;
+  points: number;
+  reason: string;
+}
+
+export function decodePointAdjustmentRow(x: unknown, path = "$"): PointAdjustmentRow {
+  const o = obj(x, path);
+  return {
+    id: uuid(o, "id", path),
+    clubID: uuid(o, "club_id", path),
+    seasonID: uuid(o, "season_id", path),
+    memberID: uuid(o, "member_id", path),
+    eventID: optUUID(o, "event_id", path),
+    points: reqNumber(o, "points", path),
+    reason: reqString(o, "reason", path),
+  };
+}
+
 /** Svaret fra RPC-en `tavla_data` (sql/036): rådata for én sesong. */
 export interface TavlaData {
   events: EventRow[];
@@ -390,6 +415,8 @@ export interface TavlaData {
   courses: CourseRow[];
   courseHoles: CourseHoleRecord[];
   scores: HoleScoreRow[];
+  /** Tilleggspoeng (sql/072). Tom før 072 er kjørt. */
+  adjustments: PointAdjustmentRow[];
 }
 
 /** `tavla_data`-JSON → `TavlaData`. Lister som mangler, er tomme. */
@@ -406,5 +433,6 @@ export function decodeTavlaData(x: unknown, path = "$"): TavlaData {
     courses: list(o, "courses", path, decodeCourseRow),
     courseHoles: list(o, "course_holes", path, decodeCourseHoleRecord),
     scores: list(o, "scores", path, decodeHoleScoreRow),
+    adjustments: list(o, "adjustments", path, decodePointAdjustmentRow),
   };
 }

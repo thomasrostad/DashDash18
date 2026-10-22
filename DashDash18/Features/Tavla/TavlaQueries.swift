@@ -51,7 +51,9 @@ enum TavlaQueries {
             .select(ClubMemberRow.columns)
             .eq("club_id", value: season.clubID)
             .execute().value
+        async let adjustmentRows = adjustments(client: client, seasonID: season.id)
         var data = TavlaData(events: try await eventRows, members: try await memberRows)
+        data.adjustments = await adjustmentRows
         guard !data.events.isEmpty else { return data }
 
         // Kladder ser bare arrangøren, og de teller ikke.
@@ -94,6 +96,16 @@ enum TavlaQueries {
         data.courseHoles = try await courseHoleRows
         data.scores = data.rounds.flatMap { scoreRows[$0.id] ?? [] }
         return data
+    }
+
+    /// Tilleggspoengene (sql/072). Tom liste når tabellen ikke finnes ennå eller lesingen feiler:
+    /// tabellen vises da uten dem, som før.
+    private static func adjustments(client: SupabaseClient, seasonID: UUID) async -> [PointAdjustmentRow] {
+        (try? await client.from("point_adjustments")
+            .select(PointAdjustmentRow.columns)
+            .eq("season_id", value: seasonID)
+            .order("created_at")
+            .execute().value) ?? []
     }
 
     private static func scores(client: SupabaseClient, roundIDs: [UUID]) async throws -> [UUID: [HoleScoreRow]] {
