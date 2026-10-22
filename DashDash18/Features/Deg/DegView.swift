@@ -46,6 +46,7 @@ struct DegView: View {
             if StatsFeature.isEnabled, let context {
                 StatsDegSection(context: context)
             }
+            DegAppearanceSection()
             DegAccountSection(user: user)
             DegOpenAppSections(client: context?.client, user: user)
             DDSection("Om appen") {
