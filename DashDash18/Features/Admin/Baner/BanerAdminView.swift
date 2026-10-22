@@ -1,7 +1,11 @@
+import GolfgutuCore
 import SwiftUI
 
-/// Banebiblioteket: klubbens baner, med import av Golfgutu-banene, ny bane og redigering.
+/// Banebiblioteket: klubbens baner, med import av Golfgutu-banene (bare for Golfgutu-klubben), ny bane
+/// og redigering.
 struct BanerAdminView: View {
+    /// Regelsettene til klubbens turneringer: kjenner igjen Golfgutu-klubben (`GolfgutuCourseSet.offersImport`).
+    var clubRules: [Ruleset] = []
     @Environment(\.clubContext) private var context
     @State private var model: CourseLibraryModel?
 
@@ -17,7 +21,7 @@ struct BanerAdminView: View {
         .ddNavigationChrome()
         .task {
             guard model == nil, let context else { return }
-            let model = CourseLibraryModel(context: context)
+            let model = CourseLibraryModel(context: context, clubRules: clubRules)
             self.model = model
             await model.load()
         }

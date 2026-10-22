@@ -310,13 +310,10 @@ struct BillSplitView: View {
         newName = ""
     }
 
-    /// Vipps-appen, ellers vipps.no (åpner appen når den finnes), ellers App Store.
+    /// Vipps-appen, ellers Vipps i App Store.
     private func openVipps() {
         openURL(VippsLink.app) { accepted in
-            guard !accepted else { return }
-            openURL(VippsLink.web) { accepted in
-                if !accepted { openURL(VippsLink.appStore) }
-            }
+            if !accepted { openURL(VippsLink.appStore) }
         }
     }
 

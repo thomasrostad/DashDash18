@@ -49,6 +49,9 @@ struct DegView: View {
             DegAccountSection(user: user)
             DegOpenAppSections(client: context?.client, user: user)
             DDSection("Om appen") {
+                if let version = AppVersion.text() {
+                    Text(version)
+                }
                 // Miljø og database vises bare i test-bygg.
                 if config.environment != .prod {
                     LabeledContent("Miljø", value: config.environment.displayName)
@@ -65,5 +68,14 @@ struct DegView: View {
 
     private var otherActiveClubs: [Membership] {
         club.memberships.filter { $0.status == .active && $0.clubID != membership.clubID }
+    }
+}
+
+/// «Versjon 1.0.2 (bygg 190)» fra bunten, i «Om appen» (også i App Store-bygget).
+nonisolated enum AppVersion {
+    static func text(_ info: [String: Any]? = Bundle.main.infoDictionary) -> String? {
+        guard let version = info?["CFBundleShortVersionString"] as? String, !version.isEmpty else { return nil }
+        guard let build = info?["CFBundleVersion"] as? String, !build.isEmpty else { return "Versjon \(version)" }
+        return "Versjon \(version) (bygg \(build))"
     }
 }

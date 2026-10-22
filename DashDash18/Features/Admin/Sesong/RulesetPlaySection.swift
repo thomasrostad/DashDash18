@@ -16,10 +16,12 @@ struct RulesetPlaySection: View {
             if draft.maxStrokesKind == .fixed {
                 RuleStepper("Høyst", value: $draft.fixedMaxStrokes, in: Ruleset.MaxStrokes.fixedRange)
             }
-            Toggle(isOn: $draft.rules.play.lockSubmittedCards) {
-                RuleFieldLabel(title: "Lås kortet når det er levert",
-                               help: CardLockFeature.isAvailable ? nil : "Virker når databasen er oppdatert (sql/057).",
-                               changeNote: draft.changeNote(.lockSubmittedCards))
+            // Uten sql/057 kan kortet ikke leveres, så bryteren er skjult (som de andre delene bak databasen).
+            if CardLockFeature.isAvailable {
+                Toggle(isOn: $draft.rules.play.lockSubmittedCards) {
+                    RuleFieldLabel(title: "Lås kortet når det er levert",
+                                   changeNote: draft.changeNote(.lockSubmittedCards))
+                }
             }
             RuleStepper("Skjul de siste hullene", value: $draft.rules.play.hiddenHoles,
                         in: Ruleset.PlayRules.hiddenHolesRange,
@@ -39,7 +41,7 @@ struct RulesetPlaySection: View {
         case .netDoubleBogey: parts.append("Netto dobbel bogey: par + 2 + slagene spilleren får på hullet.")
         case .fixed(let n): parts.append("Stepperen stopper på \(n).")
         }
-        if draft.rules.play.lockSubmittedCards {
+        if draft.rules.play.lockSubmittedCards, CardLockFeature.isAvailable {
             parts.append("Markøren leverer kortet når alle hullene er ført. Etterpå kan bare arrangøren endre det eller åpne det igjen.")
         }
         return parts.joined(separator: " ")

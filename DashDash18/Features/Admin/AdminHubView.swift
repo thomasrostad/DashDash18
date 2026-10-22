@@ -771,7 +771,7 @@ private struct AdminHubContent: View {
         switch item {
         case .season: SesongAdminView()
         case .roster: TroppAdminView()
-        case .courses: BanerAdminView()
+        case .courses: BanerAdminView(clubRules: model.seasons.map(\.rules))
         case .evening: EmptyView()
         }
     }
@@ -866,7 +866,7 @@ private struct AdminHubContent: View {
         switch destination {
         case .tournament: SesongAdminView()
         case .roster: TroppAdminView()
-        case .courses: BanerAdminView()
+        case .courses: BanerAdminView(clubRules: model.seasons.map(\.rules))
         case .club: KlubbView()
         case .roles: RollerView()
         case .rules:
