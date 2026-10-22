@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { saveRules, type Competition } from "./data.ts";
-import { decodeRuleset, encodeRuleset, matchingTemplate, templateTitle, validateRuleset, type Ruleset } from "./engine.ts";
+import {
+  decodeRuleset, encodeRuleset, matchingTemplate, templateTitle, TIPS_QUESTIONS, TIPS_TEMPLATES, validateRuleset,
+  type Ruleset, type TipsTemplate,
+} from "./engine.ts";
 import { errorText } from "./supabase.ts";
 import {
-  addPointsTable, aggregationOptions, DRAW_METHOD_OPTIONS, hasMinEvenings, minEveningsHelp, minEveningsLabel, pointsTableList,
-  removePointsTable, renamePointsTable, setPointsTableMultiplier, TIE_RULE_OPTIONS, toggleMinEvenings,
-  type Aggregation, type DrawMethod, type TieRule,
+  addPointsTable, aggregationOptions, applyTipsTemplate, DRAW_METHOD_OPTIONS, hasMinEvenings, minEveningsHelp, minEveningsLabel,
+  pointsTableList, removePointsTable, renamePointsTable, setPointsTableMultiplier, setTipsQuestion, TIE_RULE_OPTIONS,
+  TIPS_QUESTION_TITLES, tipsTemplateOf, toggleMinEvenings, type Aggregation, type DrawMethod, type TieRule,
 } from "./rulesform.ts";
 
 /** De vanligste reglene, som «Tilpass reglene» i appen. Lagres som hele regelsettet (samme JSON som appen). */
@@ -93,6 +96,27 @@ export function RulesEditor({ competition, onSaved }: { competition: Competition
             </div>
           ))}
           <button type="button" className="link" onClick={() => set((r) => { addPointsTable(r); })}>Ny poengtabell</button>
+          <h4>Tippekupongen</h4>
+          <label>Mal
+            <select value={tipsTemplateOf(rules) ?? ""} onChange={(e) => { if (e.target.value) set((r) => applyTipsTemplate(r, e.target.value as TipsTemplate)); }}>
+              {TIPS_TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+              {!tipsTemplateOf(rules) && <option value="">Tilpasset</option>}
+            </select>
+          </label>
+          {TIPS_QUESTIONS.map((q) => (
+            <label key={q} className="check"><input type="checkbox" checked={rules.tips.questions.includes(q)} onChange={(e) => set((r) => setTipsQuestion(r, q, e.target.checked))} />{TIPS_QUESTION_TITLES[q]}</label>
+          ))}
+          {rules.tips.questions.includes("birdieCount") && (
+            <label>Linje for antall birdier
+              <input type="number" min={0.5} max={99.5} step={1} value={rules.tips.birdieCountLine} onChange={(e) => set((r) => { r.tips.birdieCountLine = Number(e.target.value); })} />
+            </label>
+          )}
+          {rules.tips.questions.includes("winnerPoints") && (
+            <label>Linje for vinnerens poeng
+              <input type="number" min={0.5} max={149.5} step={1} value={rules.tips.winnerPointsLine} onChange={(e) => set((r) => { r.tips.winnerPointsLine = Number(e.target.value); })} />
+            </label>
+          )}
+          <p className="muted small">Linja for snittet settes per kveld i appen. Den som ikke har oppdatert appen, ser bare de fem klassiske spørsmålene.</p>
         </>}
         {league && <>
           <label>Hvor mange runder teller

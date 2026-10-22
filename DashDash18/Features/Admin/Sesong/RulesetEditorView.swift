@@ -137,6 +137,7 @@ struct RulesetForm<Bottom: View>: View {
                 || f.hasPrefix("table.tiebreaks") || f.hasPrefix("table.roundingStep") || f.hasPrefix("handicap.seedingGroups")
                 || f.hasPrefix("handicap.teamHandicap") || f.hasPrefix("formats")
                 || f.hasPrefix("table.minEvenings") || f.hasPrefix("table.pointsTables") || f.hasPrefix("play")
+                || f.hasPrefix("tips")
         }
     }
 
@@ -158,6 +159,7 @@ struct RulesetForm<Bottom: View>: View {
                     RulesetHandicapSection(draft: $draft)
                     RulesetFormatSection(draft: $draft)
                     RulesetPlaySection(draft: $draft)
+                    RulesetTipsSection(draft: $draft)
                 }
             }
             .disabled(isReadOnly)

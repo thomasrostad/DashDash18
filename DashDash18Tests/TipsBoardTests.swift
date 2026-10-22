@@ -312,8 +312,9 @@ struct TipsRowsTests {
         let coupon = TipsCoupon(playerID: T.id(T.bjorn).uuidString, winner: T.id(T.anders).uuidString, birdie: true)
         let row = TipsUpsert(eventID: T.eventID, memberID: T.id(T.bjorn), clubID: T.club, coupon: coupon)
         let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(row)) as? [String: Any]
-        #expect(Set(json.map { Array($0.keys) } ?? []) == ["event_id", "member_id", "club_id", "winner", "front_nine", "most_pars", "birdie", "over_line"])
+        #expect(Set(json.map { Array($0.keys) } ?? []) == ["event_id", "member_id", "club_id", "winner", "front_nine", "most_pars", "birdie", "over_line", "answers"])
         #expect(json?["front_nine"] is NSNull && json?["over_line"] is NSNull)
+        #expect((json?["answers"] as? [String: Any])?.isEmpty == true, "ingen nye svar: tomt objekt")
         let back = TipsRow(eventID: T.eventID, memberID: T.id(T.bjorn), clubID: T.club, winner: T.id(T.anders),
                            frontNine: nil, mostPars: nil, birdie: true, overLine: nil, updatedAt: nil)
         #expect(row.matches(back))
@@ -348,5 +349,124 @@ struct TipsRowsTests {
     @Test func laastFeilmelding() {
         #expect(TipsModel.mapLocked(.notAllowed) == TipsModel.locked)
         #expect(TipsModel.mapLocked(.offline) == .offline)
+    }
+}
+
+/// De nye spørsmålene (sql/070 `tips.answers`) og malene på kupongen.
+struct TipsNyeSporsmaalTests {
+    static func rules(_ template: TipsTemplate) -> Ruleset {
+        var r = Ruleset.golfgutu
+        r.tips.questions = template.questions
+        return r
+    }
+
+    @Test func svareneLagresIAnswers() throws {
+        var coupon = TipsCoupon(playerID: T.id(T.bjorn).uuidString, winner: T.id(T.anders).uuidString, birdie: true)
+        coupon.setPlayer(.mostBirdies, T.id(T.dag).uuidString)
+        coupon.setFlag(.winnerPoints, false)
+        let row = TipsUpsert(eventID: T.eventID, memberID: T.id(T.bjorn), clubID: T.club, coupon: coupon)
+        let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(row)) as? [String: Any]
+        let answers = try #require(json?["answers"] as? [String: Any])
+        #expect(Set(answers.keys) == ["mostBirdies", "winnerPoints"], "bare de nye, og bare de som er besvart")
+        #expect(answers["mostBirdies"] as? String == T.id(T.dag).uuidString)
+        #expect(answers["winnerPoints"] as? Bool == false)
+        // De fem gamle står i kolonnene som før (appen 1.0.1 leser dem).
+        #expect(json?["winner"] as? String == T.id(T.anders).uuidString && json?["birdie"] as? Bool == true)
+
+        let back = TipsRow(eventID: T.eventID, memberID: T.id(T.bjorn), clubID: T.club, winner: T.id(T.anders),
+                           frontNine: nil, mostPars: nil, birdie: true, overLine: nil, updatedAt: nil,
+                           answers: ["mostBirdies": .player(T.id(T.dag)), "winnerPoints": .flag(false)])
+        #expect(row.matches(back))
+        #expect(back.coupon == coupon)
+        var other = back
+        other.answers["winnerPoints"] = .flag(true)
+        #expect(!row.matches(other), "et nytt svar som ikke ble lagret, oppdages")
+    }
+
+    @Test func radenLesesOgTalerUkjent() throws {
+        let data = Data("""
+        {"event_id":"\(T.eventID)","member_id":"\(T.id(T.cato))","club_id":"\(T.club)","winner":null,
+         "front_nine":null,"most_pars":null,"birdie":null,"over_line":true,"updated_at":null,
+         "answers":{"backNine":"\(T.id(T.anders))","birdieCount":true,"nyttSporsmaal":42,"mostBirdies":"ikke-en-id"}}
+        """.utf8)
+        let row = try JSONDecoder().decode(TipsRow.self, from: data)
+        let c = row.coupon
+        #expect(c.backNine == T.id(T.anders).uuidString && c.birdieCount == true && c.over == true)
+        #expect(c.mostBirdies == nil, "en verdi appen ikke kan lese, hoppes over")
+        // Raden fra før sql/070 (uten kolonnen) leses også.
+        let gammel = try JSONDecoder().decode(TipsRow.self, from: Data("""
+        {"event_id":"\(T.eventID)","member_id":"\(T.id(T.cato))","club_id":"\(T.club)","winner":null,
+         "front_nine":null,"most_pars":null,"birdie":true,"over_line":null,"updated_at":null}
+        """.utf8))
+        #expect(gammel.answers.isEmpty && gammel.coupon.birdie == true)
+    }
+
+    /// Kvelden i tippekupong-test.js: Bjørn og Dag har én netto birdie hver, Anders og Cato 36 på siste ni.
+    @Test func fasitTekstOgTitler() {
+        var input = TipsInput(event: T.event, rules: Self.rules(.full), members: T.four,
+                              rounds: T.evening(status: .locked), coupons: T.coupons)
+        input.serverOpen = false
+        let b = TipsBoard(input, me: T.id(T.anders), isOrganizer: false)
+        #expect(b.questions == TipsTemplate.full.questions)
+        #expect(b.title(.birdieCount) == "Over eller under 14,5 birdier?")
+        #expect(b.title(.winnerPoints) == "Vinneren: over eller under 37,5 poeng?")
+        #expect(b.title(.over) == "Over eller under +2,5?")
+        #expect(b.answerKeyText(.backNine) == "Anders og Cato · 36 netto")
+        #expect(b.answerKeyText(.mostBirdies) == "Bjørn og Dag · 1 birdie")
+        #expect(b.answerKeyText(.birdieCount) == "Under · 2 birdier mot 14,5")
+        #expect(b.answerKeyText(.winnerPoints) == "Under · vinneren fikk 36 poeng mot 37,5")
+        // Kupongene fra 1.0.1 har ikke svart på de nye: de teller som feil, ikke som strøket.
+        #expect(b.result.possible == 9)
+        #expect(b.result.rows.map(\.points) == [4, 4, 2, 1], "samme poeng som Klassisk")
+        #expect(b.asksAverage)
+    }
+
+    @Test func kveldensLinjeBareMedSnittet() {
+        var r = Ruleset.golfgutu
+        r.tips.questions = [.winner, .birdieCount]
+        let b = TipsBoard(TipsInput(event: T.event, rules: r, members: T.four), me: T.id(T.anders), isOrganizer: true)
+        #expect(!b.asksAverage)
+        let klassisk = TipsBoard(TipsInput(event: T.event, members: T.four), me: T.id(T.anders), isOrganizer: true)
+        #expect(klassisk.asksAverage)
+    }
+
+    @Test func utkastetMedNyeSporsmaal() {
+        var d = TipsDraft(me: T.id(T.anders), saved: nil)
+        let q = TipsTemplate.birdieHunt.questions
+        d.choose(.winner, player: T.id(T.dag))
+        d.set(.birdie, true)
+        d.set(.birdieCount, false)
+        d.set(.over, true)
+        #expect(!d.canSubmit(saved: nil, questions: q), "fire av fem")
+        d.choose(.mostBirdies, player: T.id(T.bjorn))
+        #expect(d.canSubmit(saved: nil, questions: q))
+        #expect(!d.canSubmit(saved: nil), "Klassisk mangler første ni og flest par")
+        let saved = d.coupon
+        d.choose(.mostBirdies, player: T.id(T.cato))
+        #expect(d.isChanged(from: saved), "endring i et nytt spørsmål gir «Lagre endringene»")
+    }
+}
+
+struct RulesetTipsDraftTests {
+    @Test func malOgSporsmaal() {
+        var d = RulesetDraft(.golfgutu)
+        #expect(d.tipsTemplate == .classic && d.tipsQuestionsNote == nil)
+        d.applyTipsTemplate(.birdieHunt)
+        #expect(d.rules.tips.questions == TipsTemplate.birdieHunt.questions)
+        #expect(d.tipsQuestionsNote == "Endret · standard Klassisk")
+        d.setTipsQuestion(.backNine, true)
+        #expect(d.tipsTemplate == nil && d.rules.tips.questions.firstIndex(of: .backNine) == 1, "kupongens rekkefølge")
+        d.setTipsQuestion(.backNine, false)
+        #expect(d.tipsTemplate == .birdieHunt)
+        #expect(d.changedFields.contains(.other) && d.changedAdvancedCount > 0)
+        d.rules.tips.birdieCountLine = 9.5
+        #expect(d.tipsLineNote(\.birdieCountLine) == "Endret · standard 14,5")
+        #expect(d.tipsLineNote(\.winnerPointsLine) == nil)
+        #expect(d.canSave)
+        for q in TipsQuestion.catalog { d.setTipsQuestion(q, false) }
+        #expect(d.issues(in: .tips).map(\.field) == ["tips.questions"])
+        #expect(RulesetSection.section(for: "tips.winnerPointsLine") == .tips)
+        d.resetToTemplate()
+        #expect(d.tipsTemplate == .classic && d.rules.tips == Ruleset.golfgutu.tips)
     }
 }

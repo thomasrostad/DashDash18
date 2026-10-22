@@ -8,8 +8,9 @@ import { avoidingRepeats, decodeRuleset, encodeRuleset, formById, GOLFGUTU, make
 import { tableCsv } from "../src/standings/csv.ts";
 import { seasonView } from "../src/standings/model.ts";
 import {
-  addPointsTable, aggregationOptions, hasMinEvenings, minEveningsHelp, minEveningsLabel, pointsTableList, removePointsTable,
-  renamePointsTable, setPointsTableMultiplier, toggleMinEvenings,
+  addPointsTable, aggregationOptions, applyTipsTemplate, hasMinEvenings, minEveningsHelp, minEveningsLabel, pointsTableList,
+  removePointsTable, renamePointsTable, setPointsTableMultiplier, setTipsQuestion, TIPS_QUESTION_TITLES, tipsTemplateOf,
+  toggleMinEvenings,
 } from "../src/rulesform.ts";
 import {
   drawByPlan, drawFooter, drawIndividual, drawPlan, meetingsFromRows, newDraft, randomTeamsFor, redrawMatches,
@@ -158,4 +159,31 @@ test("tilfeldige lag går opp, og to spillere kan bytte", () => {
   assert.equal(swapped[a], 2);
   assert.equal(swapped[b], 1);
   assert.deepEqual(swapTwo(teams, a, a), teams);
+});
+
+// MARK: Tippekupongen
+
+test("tippekupongen: mal, spørsmål av og på, og JSON-en appen leser", () => {
+  const r = clone(GOLFGUTU);
+  assert.equal(tipsTemplateOf(r), "classic");
+  applyTipsTemplate(r, "birdieHunt");
+  assert.deepEqual(r.tips.questions, ["winner", "birdie", "birdieCount", "mostBirdies", "over"]);
+  assert.equal(tipsTemplateOf(r), "birdieHunt");
+  setTipsQuestion(r, "backNine", true);
+  assert.deepEqual(r.tips.questions, ["winner", "backNine", "birdie", "birdieCount", "mostBirdies", "over"], "kupongens rekkefølge");
+  assert.equal(tipsTemplateOf(r), null);
+  setTipsQuestion(r, "backNine", false);
+  assert.equal(tipsTemplateOf(r), "birdieHunt", "tilbake til malen");
+  r.tips.birdieCountLine = 9.5;
+  const tips = (encodeRuleset(r) as { tips: Record<string, unknown> }).tips;
+  assert.deepEqual(tips.questions, r.tips.questions);
+  assert.equal(tips.birdieCountLine, 9.5);
+  assert.equal(tips.winnerPointsLine, undefined, "standard skrives ikke");
+  assert.deepEqual(decodeRuleset(JSON.parse(JSON.stringify(encodeRuleset(r)))).tips, r.tips);
+  applyTipsTemplate(r, "full");
+  assert.equal(r.tips.questions.length, 9);
+  assert.ok(r.tips.questions.every((q) => TIPS_QUESTION_TITLES[q].endsWith("?")));
+  for (const q of [...r.tips.questions]) setTipsQuestion(r, q, false);
+  assert.deepEqual(validateRuleset(r).map((i) => i.field), ["tips.questions"]);
+  assert.deepEqual((encodeRuleset(GOLFGUTU) as { tips: Record<string, unknown> }).tips.questions, undefined);
 });

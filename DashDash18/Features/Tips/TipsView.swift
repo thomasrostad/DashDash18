@@ -62,7 +62,10 @@ private struct TipsContent: View {
                     case .open:
                         TipsFormSections(model: model, board: board)
                         TipsSubmittedSection(board: board)
-                        if board.isOrganizer { TipsSettingsSection(model: model, board: board) }
+                        // Uten snittet på kupongen og uten innsats er det ingenting å stille på kvelden.
+                        if board.isOrganizer && (board.allowsStakes || board.asksAverage) {
+                            TipsSettingsSection(model: model, board: board)
+                        }
                     case .locked:
                         TipsAllSections(board: board)
                     case .finished:
@@ -289,36 +292,39 @@ private struct TipsSettingsSection: View {
                 }
                 .padding(.vertical, 4)
             }
-            HStack(spacing: 10) {
-                Text("Linja")
-                    .font(.ddBodyEmphasis)
-                    .foregroundStyle(Color.ddForestInk)
-                Spacer()
-                Button {
-                    save(stake: stakeToSave, line: board.line - board.rules.tips.lineStep)
-                } label: { Image(systemName: "minus") }
-                    .buttonStyle(DDStepperButtonStyle(kind: .minus, size: 44))
-                    .disabled(fixed || !Tips.isValidLine(board.line - board.rules.tips.lineStep))
-                    .accessibilityLabel("Senk linja")
-                Text(Tips.formatSigned(board.line, decimals: 1))
-                    .font(.ddNumberLarge)
-                    .monospacedDigit()
-                    .frame(minWidth: 56)
-                Button {
-                    save(stake: stakeToSave, line: board.line + board.rules.tips.lineStep)
-                } label: { Image(systemName: "plus") }
-                    .buttonStyle(DDStepperButtonStyle(kind: .plus, size: 44))
-                    .disabled(fixed || !Tips.isValidLine(board.line + board.rules.tips.lineStep))
-                    .accessibilityLabel("Hev linja")
+            if board.asksAverage {
+                HStack(spacing: 10) {
+                    Text("Linja")
+                        .font(.ddBodyEmphasis)
+                        .foregroundStyle(Color.ddForestInk)
+                    Spacer()
+                    Button {
+                        save(stake: stakeToSave, line: board.line - board.rules.tips.lineStep)
+                    } label: { Image(systemName: "minus") }
+                        .buttonStyle(DDStepperButtonStyle(kind: .minus, size: 44))
+                        .disabled(fixed || !Tips.isValidLine(board.line - board.rules.tips.lineStep))
+                        .accessibilityLabel("Senk linja")
+                    Text(Tips.formatSigned(board.line, decimals: 1))
+                        .font(.ddNumberLarge)
+                        .monospacedDigit()
+                        .frame(minWidth: 56)
+                    Button {
+                        save(stake: stakeToSave, line: board.line + board.rules.tips.lineStep)
+                    } label: { Image(systemName: "plus") }
+                        .buttonStyle(DDStepperButtonStyle(kind: .plus, size: 44))
+                        .disabled(fixed || !Tips.isValidLine(board.line + board.rules.tips.lineStep))
+                        .accessibilityLabel("Hev linja")
+                }
+                .padding(.vertical, 4)
             }
-            .padding(.vertical, 4)
         } header: {
             DDHeader("Arrangør")
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 if let error { Text(error).ddErrorStyle() }
                 DDFooter(fixed ? "Står fast nå som noen har levert – de tippet på det som sto."
-                         : "Netto slag over par per ni hull. Kan endres til første kupong er levert.")
+                         : (board.asksAverage ? "Netto slag over par per ni hull. " : "")
+                            + "Kan endres til første kupong er levert.")
             }
         }
         .disabled(fixed || model.isSaving)

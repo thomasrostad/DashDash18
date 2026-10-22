@@ -4,7 +4,7 @@ import GolfgutuCore
 /// Delene av regelsett-skjermen. Hver melding fra `Ruleset.validate()` hører til én del,
 /// etter feltstien (`table.counting.best` → `.table`).
 nonisolated enum RulesetSection: CaseIterable, Sendable {
-    case season, scoring, table, sidePrizes, handicap, formats, play
+    case season, scoring, table, sidePrizes, handicap, formats, play, tips
 
     var title: String {
         switch self {
@@ -15,6 +15,7 @@ nonisolated enum RulesetSection: CaseIterable, Sendable {
         case .handicap: "Handicap"
         case .formats: "Former"
         case .play: "Føring og visning"
+        case .tips: "Tippekupongen"
         }
     }
 
@@ -27,6 +28,7 @@ nonisolated enum RulesetSection: CaseIterable, Sendable {
         case "handicap": return .handicap
         case "formats": return .formats
         case "play": return .play
+        case "tips": return .tips
         default: return .season
         }
     }
@@ -431,6 +433,38 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
             return Self.defaultFixedMaxStrokes
         }
         set { rules.play.maxStrokes = .fixed(newValue) }
+    }
+
+    // MARK: Tippekupongen
+
+    /// Malen spørsmålene er som, eller `nil` (tilpasset).
+    var tipsTemplate: TipsTemplate? { TipsTemplate.matching(rules.tips.questions) }
+
+    /// Velger en mal: spørsmålene byttes, linjene står.
+    mutating func applyTipsTemplate(_ template: TipsTemplate) {
+        rules.tips.questions = template.questions
+    }
+
+    func asksTips(_ q: TipsQuestion) -> Bool { rules.tips.questions.contains(q) }
+
+    /// Slår et spørsmål av eller på. Lista holdes i kupongens rekkefølge, så malene kjennes igjen.
+    mutating func setTipsQuestion(_ q: TipsQuestion, _ on: Bool) {
+        var chosen = Set(rules.tips.questions)
+        if on { chosen.insert(q) } else { chosen.remove(q) }
+        rules.tips.questions = TipsQuestion.catalog.filter(chosen.contains)
+    }
+
+    /// «Endret · standard Klassisk» når spørsmålene ikke er som i oppsettet.
+    var tipsQuestionsNote: String? {
+        let base = base.rules.tips.questions
+        guard rules.tips.questions != base else { return nil }
+        return "Endret · standard " + (TipsTemplate.matching(base)?.title ?? "\(base.count) spørsmål")
+    }
+
+    /// «Endret · standard 14,5» ved en linje som ikke er som i oppsettet.
+    func tipsLineNote(_ line: KeyPath<Ruleset.TipsRules, Double>) -> String? {
+        let standard = base.rules.tips[keyPath: line]
+        return rules.tips[keyPath: line] == standard ? nil : "Endret · standard " + Tips.formatPlain(standard)
     }
 
     // MARK: JSON

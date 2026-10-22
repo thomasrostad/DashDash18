@@ -210,7 +210,12 @@ nonisolated struct TipsBoard: Sendable {
         return "\(n) levert" + (stake > 0 && n > 0 ? " · \(stake * n) poeng i potten" : "")
     }
 
-    func title(_ q: TipsQuestion) -> String { Tips.title(q, line: line) }
+    func title(_ q: TipsQuestion) -> String {
+        Tips.title(q, line: Tips.line(for: q, eventLine: line, rules: rules) ?? line)
+    }
+
+    /// Spør kupongen om snittet? Ellers har kveldens linje ingenting å si.
+    var asksAverage: Bool { questions.contains(.over) }
 
     // MARK: Svar og fasit
 
@@ -235,7 +240,11 @@ nonisolated struct TipsBoard: Sendable {
         if f.isVoid(q) {
             switch q {
             case .frontNine: return "Strøket – ingen førte alle de ni første hullene"
+            case .backNine: return "Strøket – ingen førte alle de ni siste hullene"
             case .over: return f.average == nil ? "Strøket – ingen scorer" : "Strøket – snittet traff linja"
+            case .mostBirdies: return f.field.isEmpty ? "Strøket – ingen scorer" : "Strøket – ingen birdier"
+            case .birdieCount, .winnerPoints:
+                return f.figure(q) == nil ? "Strøket – ingen scorer" : "Strøket – traff linja"
             default: return "Strøket – ingen scorer"
             }
         }
@@ -247,6 +256,17 @@ nonisolated struct TipsBoard: Sendable {
         case .over:
             return (f.over == true ? "Over" : "Under") + " · snittet ble "
                 + Tips.formatSigned(f.average ?? 0, decimals: 2) + " mot " + Tips.formatSigned(f.line, decimals: 1)
+        case .backNine: return nameList(f.backNine ?? []) + " · \(f.backNineNet ?? 0) netto"
+        case .mostBirdies:
+            let n = f.mostBirdiesCount ?? 0
+            return nameList(f.mostBirdies ?? []) + " · \(n) " + (n == 1 ? "birdie" : "birdier")
+        case .birdieCount:
+            let n = f.birdies ?? 0
+            return (f.birdieCount == true ? "Over" : "Under") + " · \(n) " + (n == 1 ? "birdie" : "birdier") + " mot "
+                + Tips.formatPlain(f.birdieCountLine ?? rules.tips.birdieCountLine)
+        case .winnerPoints:
+            return (f.overWinnerPoints == true ? "Over" : "Under") + " · vinneren fikk \(f.winnerPoints ?? 0) poeng mot "
+                + Tips.formatPlain(f.winnerPointsLine ?? rules.tips.winnerPointsLine)
         }
     }
 
@@ -311,21 +331,11 @@ nonisolated struct TipsDraft: Equatable, Sendable {
     }
 
     mutating func choose(_ q: TipsQuestion, player: UUID) {
-        let id = player.uuidString
-        switch q {
-        case .winner: coupon.winner = id
-        case .frontNine: coupon.frontNine = id
-        case .mostPars: coupon.mostPars = id
-        case .birdie, .over: break
-        }
+        coupon.setPlayer(q, player.uuidString)
     }
 
     mutating func set(_ q: TipsQuestion, _ value: Bool) {
-        switch q {
-        case .birdie: coupon.birdie = value
-        case .over: coupon.over = value
-        case .winner, .frontNine, .mostPars: break
-        }
+        coupon.setFlag(q, value)
     }
 
     /// `tipsEndret`: noe er annerledes enn den leverte (eller ingenting er levert).
