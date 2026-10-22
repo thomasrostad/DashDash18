@@ -118,4 +118,17 @@ struct StepperTilgjengelighetTests {
                                     points: nil)
         #expect(StrokeAccessibility.value(forvalgt) == "forvalgt par")
     }
+
+    /// Tallet på en rad som ikke kan føres, og radene på scorekortet, leses som setninger.
+    @Test func lagretTallOgScorekortet() {
+        #expect(StrokeAccessibility.saved(4) == "4 slag")
+        #expect(StrokeAccessibility.saved(nil) == "ikke ført")
+        let line = Scorecard.Line(index: 6, number: 7, par: 4, strokes: 5, points: 2, scoreName: .par)
+        #expect(StrokeAccessibility.scorecardLine(line) == "Hull 7, par 4, 5 slag, 2 poeng")
+        let blank = Scorecard.Line(index: 2, number: 3, par: 3, strokes: nil, points: nil, scoreName: nil)
+        #expect(StrokeAccessibility.scorecardLine(blank) == "Hull 3, par 3, ikke ført")
+        let parBogey = Scorecard.Line(index: 0, number: 1, par: 4, strokes: 3, points: nil, scoreName: .birdie,
+                                      parBogey: "+")
+        #expect(StrokeAccessibility.scorecardLine(parBogey) == "Hull 1, par 4, 3 slag, hullet vunnet")
+    }
 }

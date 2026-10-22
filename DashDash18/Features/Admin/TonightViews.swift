@@ -41,7 +41,7 @@ struct TonightRoundCard: View {
                     .foregroundStyle(Color.ddInkSecondary)
             }
             ForEach(bays) { bay in
-                Divider()
+                DDDivider()
                 BayLiveRow(bay: bay)
             }
             if let conflictText {

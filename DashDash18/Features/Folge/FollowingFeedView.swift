@@ -20,11 +20,9 @@ struct HjemFeedTabPicker: View {
     @Binding var tab: HjemFeedTab
 
     var body: some View {
-        Picker("Feed", selection: $tab) {
-            ForEach(HjemFeedTab.allCases) { Text($0.title).tag($0) }
-        }
-        .pickerStyle(.segmented)
-        .padding(.horizontal, DDSpacing.gutter)
+        DDSegmentedControl(HjemFeedTab.allCases.map { ($0, $0.title) }, selection: $tab)
+            .accessibilityLabel("Feed")
+            .padding(.horizontal, DDSpacing.gutter)
         .padding(.vertical, DDSpacing.s)
     }
 }
@@ -52,29 +50,22 @@ struct FollowingFeedView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 40)
                 case .failed(let message) where model.cards.isEmpty:
-                    VStack(spacing: 12) {
+                    ContentUnavailableView {
                         Label("Fikk ikke hentet rundene", systemImage: "wifi.exclamationmark")
-                            .font(.ddBodyEmphasis)
-                        Text(message).font(.ddCallout).foregroundStyle(Color.ddInkSecondary)
+                    } description: {
+                        Text(message)
+                    } actions: {
                         Button("Prøv igjen") { Task { await model.load() } }
                             .buttonStyle(.dd(.secondary, compact: true))
                     }
-                    .frame(maxWidth: .infinity)
-                    .ddCard(.empty)
+                    .padding(.top, DDSpacing.l)
                 default:
                     if let addFriends {
                         FollowAddFriendsCard(model: addFriends, feedIsEmpty: model.cards.isEmpty)
                     } else if model.cards.isEmpty {
-                        VStack(spacing: 6) {
-                            Text("Ingenting her ennå").font(.ddBodyEmphasis).foregroundStyle(Color.ddInk)
-                            Text("Følg andre spillere, så kommer de ferdige rundene deres her.")
-                                .font(.ddCallout)
-                                .foregroundStyle(Color.ddInkSecondary)
-                                .multilineTextAlignment(.center)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .ddCard(.empty)
+                        ContentUnavailableView("Ingenting her ennå", systemImage: "person.2",
+                                               description: Text("Følg andre spillere, så kommer de ferdige rundene deres her."))
+                            .padding(.top, DDSpacing.l)
                     }
                     ForEach(model.cards) { card in
                         FollowingCardView(card: card, client: model.client,

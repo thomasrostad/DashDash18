@@ -2,6 +2,7 @@
 // (BetsSwitchRow). Ren logikk her; kallene står i betsApi.ts.
 
 import { isMissing } from "./signups.ts";
+import { plainErrorText } from "./text.ts";
 
 /** Under bryteren. Samme tekst som appen (BetTexts.toggleFooter). */
 export const BETS_TOGGLE_HELP =
@@ -30,5 +31,5 @@ export function toggledText(on: boolean): string {
 export function betsErrorText(error: { code?: string; message?: string }): string {
   if (error.code === "42501") return "Bare arrangøren slår veddemål av og på.";
   if (isMissing(error.code)) return "Veddemål kan ikke slås på før databasen er oppdatert.";
-  return error.message ?? "Noe gikk galt.";
+  return plainErrorText(error);
 }

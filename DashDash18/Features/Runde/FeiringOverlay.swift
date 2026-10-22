@@ -1,17 +1,19 @@
 import SwiftUI
 
 /// Feiringen etter et hull: birdie, eagle, albatross eller hole in one. Står i
-/// `level.duration`, eller til den trykkes bort. Med Reduce Motion: ingen konfetti.
+/// `level.duration`, eller til den trykkes bort. Med Reduce Motion: ingen konfetti. Med VoiceOver
+/// lukkes den ikke av seg selv, så den rekker å bli lest opp; «Videre» lukker.
 struct FeiringOverlay: View {
     let celebration: Celebration
     let onDismiss: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
 
     var body: some View {
         ZStack {
             // Skoggrønn grunn med lys bak tittelen, som `.gg-celebrate`.
             Rectangle()
-                .fill(celebration.level == .ace ? Color(uiColor: DDRGBA(0x0B1F18).uiColor) : Color.ddForestDeep)
+                .fill(celebration.level == .ace ? Color.ddCelebrateAce : Color.ddForestDeep)
                 .opacity(0.96)
                 .ignoresSafeArea()
             RadialGradient(colors: [accent.opacity(celebration.level == .birdie ? 0.14 : 0.24), .clear],
@@ -32,7 +34,7 @@ struct FeiringOverlay: View {
                     .multilineTextAlignment(.center)
                 Text(celebration.text)
                     .font(.ddBody)
-                    .foregroundStyle(Color.ddOnDark.opacity(0.85))
+                    .foregroundStyle(Color.ddHeroSecondary)
                     .multilineTextAlignment(.center)
                 HStack(spacing: 8) {
                     if let match = celebration.matchText { pill(match) }
@@ -51,6 +53,7 @@ struct FeiringOverlay: View {
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
         .task(id: celebration.id) {
+            guard !voiceOver else { return }
             try? await Task.sleep(for: celebration.level.duration)
             if !Task.isCancelled { onDismiss() }
         }

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { plainErrorText } from "./text.ts";
 
 // Samme Supabase og samme tilgangsregler (RLS og RPC-ene) som appen. Bare publishable key.
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
@@ -16,5 +17,6 @@ export function errorText(e: unknown): string {
   if (/Token has expired|invalid/i.test(m)) return "Koden er feil eller utløpt. Be om en ny kode.";
   if (/Signups not allowed|User not found/i.test(m)) return "Fant ingen bruker med den e-posten. Logg inn i appen først.";
   if (/Failed to fetch|NetworkError/i.test(m)) return "Får ikke kontakt med serveren. Sjekk nettet.";
-  return m;
+  if (/rate limit|too many/i.test(m)) return "For mange forsøk. Vent litt og prøv igjen.";
+  return plainErrorText(e);
 }

@@ -74,7 +74,8 @@ struct HullHeroView: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
-        .opacity(enabled ? 1 : 0.3)
+        // Deaktivert: dempet som de andre knappene (planen 1.3).
+        .opacity(enabled ? 1 : 0.4)
         .accessibilityLabel(label)
     }
 }
@@ -100,6 +101,8 @@ struct HullkortView: View {
                 Text(card.strokesLabel)
             }
             .ddEyebrow()
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 DDDivider()
@@ -256,12 +259,13 @@ struct HullRadView: View {
                     .monospacedDigit()
                     .foregroundStyle(row.saved == nil ? Color.ddHairline : Color.ddForestInk)
                     .frame(minWidth: 46, alignment: .trailing)
+                    .accessibilityLabel(StrokeAccessibility.saved(row.saved))
             }
         }
         .padding(.vertical, 12)
         .padding(.horizontal, row.isMe ? 10 : 0)
         // Din rad har en svak gulltone, som i PWA-en.
-        .background(row.isMe ? Color.ddYouRow : Color.clear, in: .rect(cornerRadius: 16))
+        .background(row.isMe ? Color.ddYouRow : Color.clear, in: .rect(cornerRadius: DDRadius.row, style: .continuous))
         .padding(.horizontal, row.isMe ? -10 : 0)
     }
 
@@ -383,6 +387,23 @@ nonisolated enum StrokeAccessibility {
         if row.isDefault { parts.append("forvalgt par") }
         if row.editable, let max = row.maxStrokes { parts.append("maks \(max)") }
         return parts.joined(separator: " · ")
+    }
+
+    /// Tallet på en rad som ikke kan føres: «4 slag» eller «ikke ført» (ikke «tankestrek»).
+    static func saved(_ strokes: Int?) -> String {
+        strokes.map { "\($0) slag" } ?? "ikke ført"
+    }
+
+    /// En rad på scorekortet: «Hull 7, par 4, 5 slag, 2 poeng», «Hull 3, par 3, ikke ført»
+    /// eller «…, hullet vunnet» i par/bogey.
+    static func scorecardLine(_ line: Scorecard.Line) -> String {
+        var parts = ["Hull \(line.number)", "par \(line.par)", saved(line.strokes)]
+        if let mark = line.parBogey {
+            parts.append(parBogey(mark))
+        } else if let points = line.points {
+            parts.append("\(points) poeng")
+        }
+        return parts.joined(separator: ", ")
     }
 
     /// «Kåre, 4 slag».

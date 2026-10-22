@@ -50,7 +50,7 @@ final class StaffModel {
         StaffList.candidates(people.filter { $0.profileID != me }, staff: staff)
     }
 
-    func name(_ profileID: UUID) -> String { names[profileID] ?? "Uten navn" }
+    func name(_ profileID: UUID) -> String { names[profileID] ?? "Ukjent" }
 
     func load() async {
         guard let client else { return }

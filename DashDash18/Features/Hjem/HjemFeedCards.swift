@@ -136,6 +136,7 @@ struct HjemMyRoundCardView: View {
     let feedCard: HomeFeedCard
     let share: ResultShare?
     let reactionsRow: HjemReactionsRow?
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -150,6 +151,7 @@ struct HjemMyRoundCardView: View {
                 Text(card.title)
                     .font(.ddTitleSmall)
                     .foregroundStyle(Color.ddForestInk)
+                    .accessibilityAddTraits(.isHeader)
                 if let subtitle = card.subtitle {
                     Text(subtitle)
                         .font(.ddCaption)
@@ -157,7 +159,11 @@ struct HjemMyRoundCardView: View {
                 }
             }
             .accessibilityElement(children: .combine)
-            HStack(alignment: .bottom) {
+            // Store tekststørrelser: plassen under poengene, ikke klemt ved siden av.
+            let layout = typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
+                : AnyLayout(HStackLayout(alignment: .bottom))
+            layout {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(card.points.map(String.init) ?? card.value)
                         .font(.dd(.sans, size: 52, weight: .light, relativeTo: .largeTitle))
@@ -169,8 +175,8 @@ struct HjemMyRoundCardView: View {
                             .foregroundStyle(Color.ddInkSecondary)
                     }
                 }
-                Spacer(minLength: 8)
-                VStack(alignment: .trailing, spacing: 2) {
+                if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
+                VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 2) {
                     if let place = card.placeText {
                         Text(place)
                             .font(.ddNumberLarge)
@@ -277,6 +283,7 @@ struct HjemTableCardView: View {
                 HjemTimeLabel(time: feedCard.time)
                     .padding(.top, 9)
             }
+            .accessibilityElement(children: .combine)
             VStack(spacing: 0) {
                 ForEach(card.rows) { row in
                     HjemMiniTableRow(row: row)
@@ -308,6 +315,7 @@ struct HjemTableCardView: View {
 /// En rad i minitabellen: plass, navn, ▲/▼ og poeng. Du har «Deg»-merket og er uthevet (`youRow`).
 struct HjemMiniTableRow: View {
     let row: HomeTableRow
+    @ScaledMetric(relativeTo: .caption) private var placeMetric: CGFloat = 22
 
     var body: some View {
         HStack(spacing: 10) {
@@ -315,7 +323,7 @@ struct HjemMiniTableRow: View {
                 .font(.ddCaption)
                 .monospacedDigit()
                 .foregroundStyle(Color.ddInkSecondary)
-                .frame(width: 22, alignment: .leading)
+                .frame(width: min(placeMetric, 40), alignment: .leading)
             HStack(spacing: 6) {
                 Text(row.name)
                     .font(row.isMe ? .dd(.sans, size: 16, weight: .semibold, relativeTo: .body) : .ddBody)
@@ -344,7 +352,7 @@ struct HjemMiniTableRow: View {
         .padding(.horizontal, 10)
         .background {
             if row.isMe {
-                RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.ddYouRow)
+                RoundedRectangle(cornerRadius: DDRadius.row, style: .continuous).fill(Color.ddYouRow)
             }
         }
         .padding(.horizontal, -10)
@@ -368,14 +376,19 @@ struct HjemLinesCardView: View {
                 HStack(alignment: .top, spacing: 12) {
                     DDIconTile(systemImage: line.symbol)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(line.text)
-                            .font(.ddBody)
-                            .foregroundStyle(Color.ddInk)
-                            .lineSpacing(3)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text(line.context)
-                            .font(.ddCaption)
-                            .foregroundStyle(Color.ddInkSecondary)
+                        // Tekst, kontekst og tid leses som én linje; reaksjonene og knappen står for seg.
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(line.text)
+                                .font(.ddBody)
+                                .foregroundStyle(Color.ddInk)
+                                .lineSpacing(3)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(line.context)
+                                .font(.ddCaption)
+                                .foregroundStyle(Color.ddInkSecondary)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityValue(line.time)
                         if let reactions = line.reactions, let row = reactionsRow(reactions) {
                             row.padding(.top, 4)
                         }
@@ -391,6 +404,7 @@ struct HjemLinesCardView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     HjemTimeLabel(time: line.time)
                         .padding(.top, 9)
+                        .accessibilityHidden(true)
                 }
                 .padding(.vertical, 12)
                 .contentShape(Rectangle())

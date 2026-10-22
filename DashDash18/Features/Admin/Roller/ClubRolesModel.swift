@@ -8,9 +8,17 @@ import Supabase
 /// og troppen viser bryterne for arrangør og kasserer som før.
 @Observable
 final class ClubRolesModel {
+    enum LoadState: Equatable {
+        case loading
+        /// Hentet, eller tabellene finnes ikke (044 ikke kjørt): da er det ingen roller å vise.
+        case loaded
+        /// Hentingen feilet av en annen grunn (nettet borte): «Prøv igjen».
+        case failed(String)
+    }
+
     private(set) var roles: [ClubRoleRow] = []
     private(set) var assignments: [ClubMemberRoleRow] = []
-    private(set) var hasLoaded = false
+    private(set) var state: LoadState = .loading
     private(set) var isSaving = false
     var error: String?
 
@@ -64,12 +72,20 @@ final class ClubRolesModel {
                 .value
             self.roles = ClubRoleOrder.sorted(try await roles)
             self.assignments = try await assignments
+            state = .loaded
         } catch {
-            // 044 ikke kjørt (tabellen finnes ikke) eller uten nett: ingen roller å vise.
+            // 044 ikke kjørt (tabellen finnes ikke) eller uten nett: ingen roller å vise. Troppen viser da
+            // bryterne for arrangør og kasserer; Roller skiller de to.
             roles = []
             assignments = []
+            state = Self.isMissing(error) ? .loaded : .failed(DataError.from(error).message)
         }
-        hasLoaded = true
+    }
+
+    /// Mangler 044 (ukjent tabell eller kolonne)?
+    static func isMissing(_ error: any Error) -> Bool {
+        guard let postgrest = error as? PostgrestError else { return false }
+        return EveningSignupService.isMissing(postgrest) || postgrest.code == "PGRST205"
     }
 
     // MARK: Skriving

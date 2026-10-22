@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { RoundPlayerRow } from "../../../golfgutu-core/src/index.ts";
 import { loadStartList, saveStartList, type ListRound, type StaffOption } from "./api.ts";
 import { fillTimes, namesText, shotgun, startGroups, startListIssues, type StartGroupDraft } from "./startlist.ts";
+import { dataErrorText } from "./logic.ts";
 
 interface RoundStart {
   round: ListRound;
@@ -34,7 +35,7 @@ export function StartListEditor({ eventID, rounds, names, onSaved }: {
           groups: startGroups(r.players, saved.filter((s) => s.round_id === r.round.id), r.round.venue),
         })));
       })
-      .catch((e) => setError((e as Error).message));
+      .catch((e) => setError(dataErrorText(e)));
   }, [eventID, key]);
 
   if (!state) return error ? <p className="error">{error}</p> : <p className="muted">Henter startlista …</p>;
@@ -54,7 +55,7 @@ export function StartListEditor({ eventID, rounds, names, onSaved }: {
     try {
       for (const r of state) await saveStartList(r.round.id, r.wave, r.groups);
       onSaved();
-    } catch (e) { setError((e as Error).message); }
+    } catch (e) { setError(dataErrorText(e)); }
     finally { setBusy(false); }
   }
 

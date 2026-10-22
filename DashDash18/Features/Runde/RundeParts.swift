@@ -64,6 +64,11 @@ struct ScorekortSheet: View {
     let memberID: UUID
     @State private var inward = false
     @Environment(\.dismiss) private var dismiss
+    // Kolonnene vokser med teksten, med tak så poengkolonnen får plass ved de største størrelsene.
+    @ScaledMetric(relativeTo: .body) private var holeMetric: CGFloat = 44
+    @ScaledMetric(relativeTo: .body) private var parMetric: CGFloat = 40
+    private var holeWidth: CGFloat { min(holeMetric, 72) }
+    private var parWidth: CGFloat { min(parMetric, 64) }
 
     var body: some View {
         let card = game.scorecard(for: memberID, inward: inward)
@@ -81,13 +86,19 @@ struct ScorekortSheet: View {
                         .padding(.top, DDSpacing.s)
                     VStack(spacing: 0) {
                         row("Hull", "Par", "Slag", nil, header: true)
+                            // Hver rad leses som en hel setning, så overskriftsraden trengs ikke.
+                            .accessibilityHidden(true)
                         ForEach(card.lines) { line in
                             rule
                             row("\(line.number)", "\(line.par)", line.strokes.map(String.init) ?? "—", line)
+                                .accessibilityLabel(StrokeAccessibility.scorecardLine(line))
                         }
                         rule
-                        row("Sum", "\(card.sumPar)", card.sumStrokes > 0 ? "\(card.sumStrokes)" : "—", nil,
-                            sum: card.parBogeySum.map(RoundCompetitionBoard.signedText) ?? "\(card.sumPoints)")
+                        let sum = card.parBogeySum.map(RoundCompetitionBoard.signedText) ?? "\(card.sumPoints)"
+                        row("Sum", "\(card.sumPar)", card.sumStrokes > 0 ? "\(card.sumStrokes)" : "—", nil, sum: sum)
+                            .accessibilityLabel("Sum, par \(card.sumPar), "
+                                                + (card.sumStrokes > 0 ? "\(card.sumStrokes) slag" : "ikke ført")
+                                                + (card.parBogeySum != nil ? ", par/bogey \(sum)" : ", \(sum) poeng"))
                     }
                     .padding(.horizontal, 18)
                     .padding(.vertical, 8)
@@ -126,11 +137,11 @@ struct ScorekortSheet: View {
     private func row(_ hole: String, _ par: String, _ strokes: String, _ line: Scorecard.Line?,
                      header: Bool = false, sum: String? = nil) -> some View {
         HStack {
-            Text(hole).frame(width: 44, alignment: .leading)
+            Text(hole).frame(width: holeWidth, alignment: .leading)
                 .font(header ? .ddEyebrow : .ddNumber)
-            Text(par).frame(width: 40)
+            Text(par).frame(width: parWidth)
                 .foregroundStyle(header ? Color.ddStatSecondary : Color.ddStatSecondary)
-            Text(strokes).frame(width: 44)
+            Text(strokes).frame(width: holeWidth)
             Spacer()
             if header {
                 Text(game.round.form.axes.scoring == .parBogey ? "Par/bogey" : "Poeng")
@@ -174,6 +185,7 @@ struct ParBekreftelseCard: View {
             Text("Stemmer dette med skjermen?")
                 .font(.ddTitle)
                 .foregroundStyle(Color.ddForestInk)
+                .accessibilityAddTraits(.isHeader)
             Text(summary(holes))
                 .font(.dd(.sans, size: 14, relativeTo: .subheadline))
                 .foregroundStyle(Color.ddInkSecondary)

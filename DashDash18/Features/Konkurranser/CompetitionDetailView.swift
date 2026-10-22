@@ -251,7 +251,7 @@ struct CompetitionDetailView: View {
             .accessibilityElement(children: .combine)
         } else if let next = cup.myNext {
             DDInfoStripe(tone: .sun) {
-                Text(LocalizedStringKey(nextText(next, cup: cup)))
+                nextText(next, cup: cup)
             }
         }
 
@@ -281,12 +281,14 @@ struct CompetitionDetailView: View {
         }
     }
 
-    private func nextText(_ game: CupStandings.Game, cup: CupStandings) -> String {
-        let round = CompetitionText.cupRound(game.round, of: cup.rounds.count)
+    /// Runden i fet skrift. Navnet settes inn som det er (ikke som Markdown), så tegn som * og _ i et navn
+    /// vises som de står.
+    private func nextText(_ game: CupStandings.Game, cup: CupStandings) -> Text {
+        let round = Text(verbatim: CompetitionText.cupRound(game.round, of: cup.rounds.count)).bold()
         guard let opponent = game.a?.isMe == true ? game.b : game.a else {
-            return "**\(round)**: motstanderen din er ikke klar ennå."
+            return Text("\(round): motstanderen din er ikke klar ennå.")
         }
-        return "**\(round)**: du møter \(opponent.name)."
+        return Text("\(round): du møter \(Text(verbatim: opponent.name)).")
     }
 }
 
@@ -477,7 +479,7 @@ struct CupGameCard: View {
         VStack(alignment: .leading, spacing: 6) {
             line(game.a)
             if game.isBye {
-                Text("Walkover (bye)")
+                Text("Walkover")
                     .font(.ddCaption)
                     .foregroundStyle(Color.ddInkSecondary)
             } else {
@@ -496,13 +498,13 @@ struct CupGameCard: View {
                 }
             }
         }
-        .padding(DDSpacing.m + 2)
+        .padding(DDSpacing.m)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(Color.ddCard, in: .rect(cornerRadius: 18))
-        .clipShape(.rect(cornerRadius: 18))
+        .background(Color.ddCard, in: .rect(cornerRadius: DDRadius.input))
+        .clipShape(.rect(cornerRadius: DDRadius.input))
         .overlay {
             if game.a?.isMe == true || game.b?.isMe == true {
-                RoundedRectangle(cornerRadius: 18).stroke(Color.ddForestInk.opacity(0.5), lineWidth: 1.5)
+                RoundedRectangle(cornerRadius: DDRadius.input).stroke(Color.ddForestInk.opacity(0.5), lineWidth: 1.5)
             }
         }
         .accessibilityElement(children: .combine)

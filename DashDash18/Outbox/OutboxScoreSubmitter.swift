@@ -338,7 +338,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         switch dataError {
         case .notAllowed, .invalid, .duplicate:
             return .rejected(dataError)
-        case .offline, .unknown:
+        case .offline, .serverDown, .sessionExpired, .unknown:
             return .transient(dataError.message)
         }
     }

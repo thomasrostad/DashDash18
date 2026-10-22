@@ -13,8 +13,13 @@ struct StatsView: View {
                 case .loading where model.rounds.isEmpty:
                     ProgressView().frame(maxWidth: .infinity).padding(.top, 60)
                 case .failed(let message):
-                    ContentUnavailableView("Fikk ikke hentet statistikken", systemImage: "exclamationmark.triangle",
-                                           description: Text(message))
+                    ContentUnavailableView {
+                        Label("Fikk ikke hentet statistikken", systemImage: "wifi.exclamationmark")
+                    } description: {
+                        Text(message)
+                    } actions: {
+                        Button("Prøv igjen") { Task { await model.load() } }.buttonStyle(.dd(.primary))
+                    }
                 default:
                     content
                 }

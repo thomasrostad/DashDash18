@@ -20,6 +20,8 @@ enum DDRadius {
     static let card: CGFloat = 24
     static let cardLarge: CGFloat = 30
     static let sheet: CGFloat = 32
+    /// «Din rad» i tabeller og lister (gulltonen bak raden).
+    static let row: CGFloat = 14
 }
 
 /// Korttyper: `.gg-card`, `.gg-card.pad-lg` og det grønne hero-kortet `.gg-green`.

@@ -272,7 +272,7 @@ nonisolated enum PurchaseError: Error, Equatable {
         case .notVerified: "App Store kunne ikke bekrefte kjøpet. Du er ikke belastet for noe som ikke ble bekreftet."
         case .serverRejected(let detail): "Kjøpet ble ikke registrert: \(detail). Trykk «Gjenopprett kjøp» for å prøve igjen."
         case .offline: "Ingen kontakt med serveren. Kjøpet er tatt vare på og registreres når du har nett."
-        case .unknown(let detail): "Noe gikk galt: \(detail)"
+        case .unknown: "Det oppsto en ukjent feil med kjøpet. Prøv igjen litt senere."
         }
     }
 }

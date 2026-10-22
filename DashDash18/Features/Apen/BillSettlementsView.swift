@@ -23,7 +23,7 @@ struct BillSettlementsView: View {
 
     var body: some View {
         DDList {
-            if let error {
+            if let error, settlements != nil {
                 Section { Label(error, systemImage: "exclamationmark.triangle").ddErrorStyle() }
             }
             if let settlements, settlements.isEmpty {
@@ -42,7 +42,25 @@ struct BillSettlementsView: View {
                 payeeSection(settlement)
             }
         }
-        .overlay { if settlements == nil && error == nil { ProgressView() } }
+        .overlay {
+            if settlements == nil {
+                if let error {
+                    ContentUnavailableView {
+                        Label("Fikk ikke hentet oppgjørene", systemImage: "wifi.exclamationmark")
+                    } description: {
+                        Text(error)
+                    } actions: {
+                        Button("Prøv igjen") {
+                            self.error = nil
+                            Task { await load() }
+                        }
+                        .buttonStyle(.dd(.primary))
+                    }
+                } else {
+                    ProgressView("Henter oppgjørene …")
+                }
+            }
+        }
         .navigationTitle("Mine oppgjør")
         .ddNavigationChrome()
         .refreshable { await load() }
@@ -168,23 +186,20 @@ struct BillSettlementsView: View {
             settlements = try await BillService.settlements(client: client)
             error = nil
         } catch {
+            // Uten data vises feilen med «Prøv igjen», ikke «Ingen oppgjør ennå».
             self.error = error.message
-            settlements = settlements ?? []
         }
     }
 
-    /// Kopier beløpet, åpne Vipps (ellers vipps.no, ellers App Store) og husk delen til du er tilbake.
+    /// Kopier beløpet, åpne Vipps (ellers Vipps i App Store) og husk delen til du er tilbake.
     private func pay(_ share: BillShareRow) {
         UIPasteboard.general.string = share.amount.plain
         copied = share.id
         tracker.opened(share: share.id)
         openURL(VippsLink.app) { accepted in
             guard !accepted else { return }
-            openURL(VippsLink.web) { accepted in
-                guard !accepted else { return }
-                openURL(VippsLink.appStore) { accepted in
-                    if !accepted { tracker.openFailed() }
-                }
+            openURL(VippsLink.appStore) { accepted in
+                if !accepted { tracker.openFailed() }
             }
         }
     }

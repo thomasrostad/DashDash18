@@ -134,8 +134,18 @@ struct RoundsLeaderboardView: View {
     @State private var mode: Mode = .points
     @State private var scorecard: RoundScorecardTarget?
 
-    private let rowHeight: CGFloat = 44
-    private let cellWidth: CGFloat = 50
+    // Radene og kolonnene vokser med teksten, med tak som i TavlaRowView, så tabellen ikke sprenger
+    // skjermen ved de største størrelsene.
+    @ScaledMetric(relativeTo: .body) private var rowMetric: CGFloat = 44
+    @ScaledMetric(relativeTo: .body) private var cellMetric: CGFloat = 50
+    @ScaledMetric(relativeTo: .body) private var nameMetric: CGFloat = 112
+    @ScaledMetric(relativeTo: .caption) private var placeMetric: CGFloat = 28
+    @ScaledMetric(relativeTo: .body) private var sumMetric: CGFloat = 56
+    private var rowHeight: CGFloat { min(rowMetric, 64) }
+    private var cellWidth: CGFloat { min(cellMetric, 68) }
+    private var nameWidth: CGFloat { min(nameMetric, 150) }
+    private var placeWidth: CGFloat { min(placeMetric, 40) }
+    private var sumWidth: CGFloat { min(sumMetric, 76) }
 
     var body: some View {
         ScrollView {
@@ -150,6 +160,8 @@ struct RoundsLeaderboardView: View {
                         .ddCard(.empty)
                 } else {
                     table
+                        // Tallene i rutenettet er låst til xxxL, som i TavlaRowView (radene må stå likt i alle tre kolonnene).
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .ddCard(padding: DDSpacing.m)
                     DDFooter(footer)
                 }
@@ -179,13 +191,14 @@ struct RoundsLeaderboardView: View {
                 Text("Spiller")
                     .ddEyebrow()
                     .frame(maxWidth: .infinity, minHeight: rowHeight, alignment: .leading)
+                    .accessibilityAddTraits(.isHeader)
                 ForEach(grid.rows) { row in
                     HStack(spacing: 6) {
                         Text(row.place)
                             .font(.ddMonoSmall)
                             .monospacedDigit()
                             .foregroundStyle(Color.ddInkSecondary)
-                            .frame(width: 28, alignment: .trailing)
+                            .frame(width: placeWidth, alignment: .trailing)
                         Text(row.name)
                             .font(row.isMe ? .ddBodyEmphasis : .ddBody)
                             .lineLimit(1)
@@ -195,7 +208,7 @@ struct RoundsLeaderboardView: View {
                     .background(row.isMe ? Color.ddYouRow : .clear)
                 }
             }
-            .frame(width: 112, alignment: .leading)
+            .frame(width: nameWidth, alignment: .leading)
             ScrollView(.horizontal, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 0) {
@@ -229,13 +242,17 @@ struct RoundsLeaderboardView: View {
             VStack(spacing: 0) {
                 Text("Sum")
                     .ddEyebrow()
-                    .frame(width: 56, height: rowHeight)
+                    .frame(width: sumWidth, height: rowHeight)
+                    .accessibilityAddTraits(.isHeader)
                 ForEach(grid.rows) { row in
                     Text(total(row))
                         .font(.ddBodyEmphasis)
                         .monospacedDigit()
-                        .frame(width: 56, height: rowHeight)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(width: sumWidth, height: rowHeight)
                         .background(row.isMe ? Color.ddYouRow : .clear)
+                        .accessibilityLabel("\(row.name), sum \(total(row))")
                 }
             }
             .overlay(alignment: .leading) {

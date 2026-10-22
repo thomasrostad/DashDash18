@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 import Observation
 import Supabase
 
@@ -18,6 +19,9 @@ final class CourseLibraryModel {
     /// til klubben.
     private let context: ClubContext?
     private let courseSet: GolfgutuCourseSet?
+    /// Regelsettene til klubbens turneringer, så importen bare tilbys Golfgutu-klubben
+    /// (`GolfgutuCourseSet.offersImport`).
+    private let clubRules: [Ruleset]
     /// Det felles biblioteket (sql/017–018, løse runder): baner uten klubb, som alle leser og den som
     /// la dem inn, retter. nil for klubbens bibliotek.
     private let shared: SharedLibrary?
@@ -52,9 +56,10 @@ final class CourseLibraryModel {
         for id in roundIDs { try await RoundFormatsQueries.refreshSnapshot(client: context.client, roundID: id) }
     }
 
-    init(context: ClubContext, courseSet: GolfgutuCourseSet? = try? GolfgutuCourseSet.load()) {
+    init(context: ClubContext, clubRules: [Ruleset] = [], courseSet: GolfgutuCourseSet? = try? GolfgutuCourseSet.load()) {
         self.context = context
         self.courseSet = courseSet
+        self.clubRules = clubRules
         shared = nil
         slopeCatalog = SlopeNoFeature.isEnabled ? SlopeCatalogModel(client: context.client) : nil
     }
@@ -63,6 +68,7 @@ final class CourseLibraryModel {
     init(shared client: SupabaseClient, userID: UUID) {
         context = nil
         courseSet = nil
+        clubRules = []
         shared = SharedLibrary(client: client, userID: userID)
         slopeCatalog = SlopeNoFeature.isEnabled ? SlopeCatalogModel(client: client) : nil
     }
@@ -101,6 +107,7 @@ final class CourseLibraryModel {
          slopeCatalog: SlopeCatalogModel? = nil) {
         context = nil
         courseSet = nil
+        clubRules = []
         shared = SharedLibrary(client: client, userID: userID)
         self.slopeCatalog = slopeCatalog
         self.items = CourseListItem.sorted(items)
@@ -111,6 +118,7 @@ final class CourseLibraryModel {
     init(preview items: [CourseListItem], slopeCatalog: SlopeCatalogModel? = nil) {
         context = nil
         courseSet = nil
+        clubRules = []
         shared = nil
         self.slopeCatalog = slopeCatalog
         self.items = CourseListItem.sorted(items)
@@ -124,9 +132,11 @@ final class CourseLibraryModel {
         return (context.client, context.clubID)
     }
 
-    /// Banene fra Golfgutu-settet som klubben ikke har ennå.
+    /// Banene fra Golfgutu-settet som klubben ikke har ennå. Tom for andre klubber enn Golfgutu.
     var missingFromSet: [GolfgutuCourseSet.CourseEntry] {
-        courseSet?.missing(existingNames: items.map(\.course.name)) ?? []
+        let names = items.map(\.course.name)
+        guard let courseSet, courseSet.offersImport(existingNames: names, clubRules: clubRules) else { return [] }
+        return courseSet.missing(existingNames: names)
     }
 
     func load() async {

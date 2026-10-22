@@ -313,6 +313,23 @@ struct BanerImportTests {
         }
     }
 
+    /// Importen er bare for Golfgutu-klubben, ikke for nye klubber fra App Store.
+    @Test func importenBareForGolfgutuKlubben() throws {
+        let set = try Self.loadResource()
+        // Ny klubb med stableford-serie og egne baner: ingen import.
+        #expect(!set.offersImport(existingNames: ["Bossmo"], clubRules: [RulesetTemplate.stablefordSeries.rules]))
+        #expect(!set.offersImport(existingNames: [], clubRules: []))
+        // Matchspill-serie med endringer er ikke Golfgutu-oppsettet.
+        var changed = Ruleset.golfgutu
+        changed.table.counting = Ruleset.Counting(unit: .evening, best: 3)
+        #expect(!set.offersImport(existingNames: [], clubRules: [changed]))
+        // Golfgutu-oppsettet (også med eget ord for dagen), eller noen av banene alt lagt inn.
+        var golfgutu = Ruleset.golfgutu
+        golfgutu.dayTerm = .playingDay
+        #expect(set.offersImport(existingNames: [], clubRules: [golfgutu]))
+        #expect(set.offersImport(existingNames: [" adare manor"], clubRules: []))
+    }
+
     /// Stikkprøver mot SQL-filene i kjørerekkefølgen.
     @Test func stikkproeverMotReferansen() throws {
         let set = try Self.loadResource()

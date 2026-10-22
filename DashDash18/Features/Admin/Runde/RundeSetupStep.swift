@@ -66,7 +66,7 @@ struct RundeSetupStep: View {
                 set: { draft.setForm($0, rules: rules, roster: model.members, plan: plan) }
             )) {
                 ForEach(formChoices) { f in
-                    Text(f.name + supportNote(f)).tag(f.id)
+                    Text(f.name + RundeSetupStep.supportNote(f)).tag(f.id)
                 }
             }
             // Bare når formen ikke går opp med de som er med.
@@ -100,14 +100,16 @@ struct RundeSetupStep: View {
         return forms
     }
 
-    /// Formene som er ferdige i appen etter PWA-en, selv om PWA-katalogen (`CompetitionForm.all`) sier
-    /// «delvis»: par/bogey regnes av motoren i konkurransene, stillingen og tabellen.
-    nonisolated static let completedForms: Set<String> = ["par-bogey"]
+    /// Formene som er ferdige i appen etter PWA-en, selv om katalogen sier «delvis»: par/bogey regnes av
+    /// motoren i konkurransene, stillingen og tabellen, og Amerikaner og Københavner gir poengene per hull
+    /// (NGF-tabellene) og tabellpoengene (`FormPlay.tablePoints`, `table.formPoints`).
+    nonisolated static let completedForms: Set<String> = ["par-bogey", "amerikaner", "kobenhavner"]
 
-    private func supportNote(_ form: CompetitionForm) -> String {
+    /// Merket bak navnet i velgeren. En form som mangler, står bare der når kladden alt har den.
+    nonisolated static func supportNote(_ form: CompetitionForm) -> String {
         switch form.support {
         case .full: ""
-        case .partial: RundeSetupStep.completedForms.contains(form.id) ? "" : " · ikke ferdig"
+        case .partial: completedForms.contains(form.id) ? "" : " · ikke ferdig"
         case .missing: " · kan ikke føres i appen"
         }
     }
@@ -175,7 +177,7 @@ struct RundeSetupStep: View {
                     editingMatch = MatchEditItem(index: index, match: match)
                 } label: {
                     LabeledContent("Match \(index + 1)", value: matchText(match))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(Color.ddInk)
                 }
             }
             .onDelete { draft.matches.remove(atOffsets: $0) }
@@ -206,9 +208,15 @@ struct RundeSetupStep: View {
         }
     }
 
+    /// «Lag 1 – lag 2», med «velg lag» for et lag som ikke er valgt ennå.
+    nonisolated static func teamMatchText(_ a: Int?, _ b: Int?) -> String {
+        let first = a.map { "Lag \($0)" } ?? "Velg lag"
+        return "\(first) – \(b.map { "lag \($0)" } ?? "velg lag")"
+    }
+
     private func matchText(_ match: MatchDraft) -> String {
         if match.isTeamMatch {
-            return "Lag \(match.teamA.map(String.init) ?? "?") – lag \(match.teamB.map(String.init) ?? "?")"
+            return RundeSetupStep.teamMatchText(match.teamA, match.teamB)
         }
         let names = [match.playerA, match.playerB, match.playerC].compactMap { $0 }.map(model.memberName)
         return names.joined(separator: " – ") + (match.isTriangle ? " (trekant)" : "")

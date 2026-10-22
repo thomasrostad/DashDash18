@@ -111,7 +111,7 @@ struct TVCodeSheet: View {
                                 .accessibilityLabel("QR-kode til TV-visningen")
                         }
                         Text(TVCode.spaced(code))
-                            .font(.system(size: 30, weight: .semibold, design: .monospaced))
+                            .font(.dd(.sans, size: 30, weight: .semibold, relativeTo: .title).monospacedDigit())
                             .textSelection(.enabled)
                         Text("Åpn \(UniversalLink.domain)/tv på skjermen og skriv koden, eller skann QR-koden.")
                             .font(.ddCallout)

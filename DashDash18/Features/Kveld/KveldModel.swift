@@ -208,6 +208,7 @@ final class KveldModel {
                 await EveningSignupService.markSeen(client: client, eventID: next.id)
             }
         } catch {
+            guard !DataError.isCancellation(error) else { return }
             if case .loaded = state { return }  // behold det som vises ved en feilet oppfrisking
             state = .failed(DataError.from(error).message)
         }
