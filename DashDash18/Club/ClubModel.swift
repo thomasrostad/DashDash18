@@ -263,6 +263,29 @@ final class ClubModel {
         return result.status
     }
 
+    /// Gå ut av klubben, eller trekk forespørselen (`leave_club`, sql/069). Klubben forsvinner med en
+    /// gang, og appen viser neste aktive klubb, en som venter, eller klubbvalget. Så hentes
+    /// medlemskapene på nytt.
+    func leave(clubID: UUID, userID: UUID) async throws(ClubError) {
+        struct Params: Encodable { let p_club_id: UUID }
+        do {
+            try await client.rpc("leave_club", params: Params(p_club_id: clubID)).execute()
+        } catch {
+            if let postgrest = error as? PostgrestError {
+                throw LeaveClub.error(sqlState: postgrest.code, message: postgrest.message)
+            }
+            throw Self.clubError(from: error)
+        }
+        let remembered = UserDefaults.standard.string(forKey: Self.rememberedKey).flatMap(UUID.init(uuidString:))
+        if LeaveClub.remembered(remembered, afterLeaving: clubID) == nil {
+            UserDefaults.standard.removeObject(forKey: Self.rememberedKey)
+        }
+        let remaining = LeaveClub.remaining(memberships, afterLeaving: clubID)
+        cache.save(remaining, userID: userID)
+        apply(remaining)
+        await load(userID: userID)
+    }
+
     private func apply(_ rows: [Membership]) {
         if memberships != rows { memberships = rows }
         let remembered = UserDefaults.standard.string(forKey: Self.rememberedKey).flatMap(UUID.init(uuidString:))

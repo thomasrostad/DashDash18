@@ -22,6 +22,8 @@ struct DegView: View {
                 LabeledContent("Klubb", value: membership.club.name)
                 LabeledContent("Navn i troppen", value: membership.displayName)
                 LabeledContent("Rolle", value: membership.roleText)
+                // sql/069: gå ut av klubben. Den siste eieren stoppes av serveren med en forklaring.
+                LeaveClubButton(membership: membership, user: user)
             }
             DegClubsSection(user: user, current: membership)
             if let context {

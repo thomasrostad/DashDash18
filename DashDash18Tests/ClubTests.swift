@@ -122,6 +122,69 @@ struct MembershipTests {
     }
 }
 
+/// Forlat klubben (sql/069): hva appen viser etterpå, tekstene og feilene.
+struct LeaveClubTests {
+    private func medlem(_ klubb: UUID, _ status: MemberStatus, navn: String = "K") -> Membership {
+        Membership(id: UUID(), clubID: klubb, displayName: "T", status: status,
+                   isOrganizer: false, isTreasurer: false, club: .init(name: navn, joinCode: nil))
+    }
+
+    /// Etter forlat: tilstanden for radene som er igjen, med den huskede klubben glemt hvis det var den.
+    private func etter(_ rader: [Membership], forlater klubb: UUID, husket: UUID?) -> ClubState {
+        Membership.state(for: LeaveClub.remaining(rader, afterLeaving: klubb),
+                         remembered: LeaveClub.remembered(husket, afterLeaving: klubb))
+    }
+
+    @Test func nesteAktiveKlubbEtterForlat() {
+        let a = UUID(), b = UUID(), c = UUID()
+        let nesteAktive = medlem(b, .active)
+        let rader = [medlem(a, .active), medlem(c, .pending), nesteAktive]
+        #expect(etter(rader, forlater: a, husket: a) == .active(nesteAktive))
+    }
+
+    @Test func husketAnnenKlubbBeholdes() {
+        let a = UUID(), b = UUID(), c = UUID()
+        let husket = medlem(c, .active)
+        let rader = [medlem(a, .active), medlem(b, .active), husket]
+        #expect(etter(rader, forlater: a, husket: c) == .active(husket))
+        #expect(LeaveClub.remembered(c, afterLeaving: a) == c)
+        #expect(LeaveClub.remembered(a, afterLeaving: a) == nil)
+    }
+
+    @Test func venterNaarBareForesporselErIgjen() {
+        let a = UUID(), b = UUID()
+        let venter = medlem(b, .pending)
+        #expect(etter([medlem(a, .active), venter], forlater: a, husket: a) == .pending(venter))
+    }
+
+    @Test func klubbvalgNaarIngenErIgjen() {
+        let a = UUID(), b = UUID()
+        #expect(etter([medlem(a, .active)], forlater: a, husket: a) == .noClub)
+        #expect(etter([medlem(a, .active), medlem(b, .archived)], forlater: a, husket: nil) == .noClub)
+    }
+
+    @Test func trekkForesporselenViserAktivKlubb() {
+        let a = UUID(), b = UUID()
+        let aktiv = medlem(b, .active)
+        #expect(etter([medlem(a, .pending), aktiv], forlater: a, husket: nil) == .active(aktiv))
+        #expect(etter([medlem(a, .pending)], forlater: a, husket: nil) == .noClub)
+    }
+
+    @Test func tekster() {
+        let a = UUID()
+        #expect(LeaveClub.buttonTitle(medlem(a, .active, navn: "Golfgutu")) == "Forlat Golfgutu")
+        #expect(LeaveClub.buttonTitle(medlem(a, .pending, navn: "Golfgutu")) == "Trekk forespørselen")
+        #expect(LeaveClub.confirmTitle(medlem(a, .active, navn: "Golfgutu")) == "Forlate Golfgutu?")
+    }
+
+    @Test func sisteEierFaarTekstenFraServeren() {
+        let tekst = "Du er den siste eieren av klubben. Gi eierskapet til en annen under Arrangør → Troppen før du går ut."
+        #expect(LeaveClub.error(sqlState: "55000", message: tekst) == .invalidInput(tekst))
+        #expect(LeaveClub.error(sqlState: "P0002", message: "Du er ikke med i klubben") == .invalidInput("Du er ikke med i klubben"))
+        #expect(LeaveClub.error(sqlState: "42501", message: "") == .notAllowed)
+    }
+}
+
 /// Sist kjente medlemskap, så appen starter uten nett.
 struct MembershipCacheTests {
     private func lager() -> (MembershipCache, UserDefaults) {
