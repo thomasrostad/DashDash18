@@ -197,3 +197,105 @@ struct ForingHullkortTests {
         #expect(laast.bayStripe(currentHole: 3, viewer: viewer) == nil)
     }
 }
+
+/// sql/071: i en form med ett kort per lag fører alle på laget lagets kort, også med markør i båsen.
+struct ForingLagkameratTests {
+    /// Scramble-4 med markør: Anders, Bjørn, Cato og Dag er lag 1 i bås 1, resten lag 2 i bås 2.
+    static func players(team: (Int) -> Int?) -> [F.P] {
+        F.markorPlayers().map { p in
+            var p = p
+            p.team = team(p.n)
+            return p
+        }
+    }
+
+    let game = RoundGame(F.snapshot(ForingLagkameratTests.players { $0 <= 4 ? 1 : 2 },
+                                    round: F.round(format: "scramble-4")))
+
+    @Test func lagkameratenFoererHeleLaget() {
+        for p in [F.anders, F.bjorn, F.cato, F.dag] {
+            #expect(game.canScore(F.viewer(F.bjorn), for: id(p)))
+        }
+        for p in [F.erik, F.frode, F.halvor] {
+            #expect(!game.canScore(F.viewer(F.bjorn), for: id(p)))
+        }
+        #expect(game.isOnTeamCard(id(F.bjorn), with: id(F.anders)))
+        #expect(!game.isOnTeamCard(id(F.bjorn), with: id(F.erik)))
+    }
+
+    @Test func kortetErRedigerbartForLagkameraten() {
+        let viewer = F.viewer(F.bjorn)
+        #expect(game.cardRows(for: viewer) == [id(F.bjorn)])
+        let card = game.card(hole: 0, drafts: HoleDrafts(), viewer: viewer)
+        #expect(card.rows.map(\.name) == ["Anders, Bjørn, Cato og Dag"])
+        #expect(card.rows.allSatisfy { $0.editable })
+        #expect(!card.mustConfirm)
+        #expect(game.scoringTitle(viewer: viewer).subtitle == "Du fører for laget ditt")
+        // Markøren fører fortsatt for båsen.
+        #expect(game.scoringTitle(viewer: F.viewer(F.anders)).subtitle == "Du fører for bås 1")
+    }
+
+    @Test func lagreHullSkriverPaaHeleLaget() {
+        var drafts = HoleDrafts()
+        drafts[0, id(F.bjorn)] = 3
+        let sub = game.submission(hole: 0, drafts: drafts, viewer: F.viewer(F.bjorn), recordedAt: Date())
+        #expect(Set(sub?.entries.map(\.memberID) ?? []) == Set([F.anders, F.bjorn, F.cato, F.dag].map(id)))
+        #expect(sub?.entries.allSatisfy { $0.strokes == 3 } == true)
+    }
+
+    /// To lag i samme bås: du fører ditt eget lag, ikke det andre.
+    @Test func detAndreLagetIBaasenFoererDuIkke() {
+        let g = RoundGame(F.snapshot(Self.players { ($0 + 1) / 2 }, round: F.round(format: "scramble-2")))
+        let viewer = F.viewer(F.bjorn)
+        #expect(g.cardRows(for: viewer) == [id(F.bjorn), id(F.cato)])
+        #expect(g.cardRowEditable(id(F.bjorn), for: viewer))
+        #expect(!g.cardRowEditable(id(F.cato), for: viewer))
+        #expect(!g.canScore(viewer, for: id(F.cato)))
+
+        var drafts = HoleDrafts()
+        drafts[0, id(F.bjorn)] = 4
+        drafts[0, id(F.cato)] = 5
+        let sub = g.submission(hole: 0, drafts: drafts, viewer: viewer, recordedAt: Date())
+        #expect(Set(sub?.entries.map(\.memberID) ?? []) == Set([F.anders, F.bjorn].map(id)))
+    }
+
+    /// Ett kort per spiller (fourball): markøren fører som før, lagkameraten ikke.
+    @Test func ettKortPerSpillerSomFoer() {
+        let g = RoundGame(F.snapshot(Self.players { ($0 + 1) / 2 }, round: F.round(format: "fourball")))
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.anders)))
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.bjorn)))
+        #expect(!g.isOnTeamCard(id(F.bjorn), with: id(F.anders)))
+        #expect(g.scoringTitle(viewer: F.viewer(F.bjorn)).subtitle == "Bås 1 · Anders fører")
+    }
+
+    /// Scramble uten lag (team_no mangler): markøren som før.
+    @Test func utenLagMarkoerenSomFoer() {
+        let g = RoundGame(F.snapshot(F.markorPlayers(), round: F.round(format: "scramble-2")))
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.bjorn)))
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.anders)))
+    }
+
+    /// Runden går ikke: bare arrangøren, også for laget.
+    @Test(arguments: [RoundStatus.draft, .locked])
+    func kladdOgLaastSomFoer(status: RoundStatus) {
+        let g = RoundGame(F.snapshot(Self.players { $0 <= 4 ? 1 : 2 },
+                                     round: F.round(status: status, format: "scramble-4")))
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.anders)))
+        #expect(!g.cardRowEditable(id(F.bjorn), for: F.viewer(F.bjorn)))
+    }
+
+    /// Levert kort (sql/057) går foran: bare arrangøren.
+    @Test func levertKortGaarForan() {
+        var s = game.snapshot
+        s.players = s.players.map { p in
+            var p = p
+            if p.teamNo == 1 { p.cardSubmittedAt = Date(timeIntervalSince1970: 1) }
+            return p
+        }
+        let g = RoundGame(s)
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.anders)))
+        #expect(!g.cardRowEditable(id(F.bjorn), for: F.viewer(F.bjorn)))
+        #expect(g.canScore(F.viewer(F.bjorn), for: id(F.anders), ignoringSubmission: true))
+        #expect(g.canScore(F.viewer(F.gunnar), for: id(F.anders)))
+    }
+}
