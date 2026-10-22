@@ -170,6 +170,7 @@ final class TradModel {
             await refreshAvatarURLs()
             await startRealtime()
         } catch {
+            guard !DataError.isCancellation(error) else { return }
             // Behold det som vises når en oppfrisking feiler.
             if state == .loaded { return }
             state = .failed(DataError.from(error).message)

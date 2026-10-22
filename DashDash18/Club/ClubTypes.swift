@@ -226,7 +226,7 @@ nonisolated enum ClubError: Error, Equatable {
         case .invalidInput(let text): text
         case .notAllowed: "Du har ikke tilgang til dette."
         case .offline: "Ingen kontakt med serveren. Sjekk nettet og prøv igjen."
-        case .unknown(let detail): "Noe gikk galt: \(detail)"
+        case .unknown: "Det oppsto en ukjent feil. Prøv igjen."
         }
     }
 

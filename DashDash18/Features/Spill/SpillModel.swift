@@ -18,6 +18,8 @@ final class SpillModel {
     private(set) var finished: [MyRoundItem] = []
     /// «Turneringsrunder»: klubbrundene som går, der du er deltaker (ikke medlem).
     private(set) var tournamentRounds: [MyRoundItem] = []
+    /// Satt når turneringsrundene ikke kunne hentes (da vet vi ikke om noen går).
+    private(set) var tournamentRoundsError: String?
     private var participantRounds: [UUID: ParticipantRound] = [:]
 
     let client: SupabaseClient?
@@ -68,15 +70,28 @@ final class SpillModel {
             await loadTournamentRounds(client: client)
             state = .loaded
         } catch {
+            guard !DataError.isCancellation(error) else { return }
             if state != .loaded { state = .failed(DataError.from(error).message) }
         }
     }
 
-    /// Deltakerrundene. Feiler det, står lista som sist (de løse rundene er det viktigste her).
+    /// Deltakerrundene. Feiler det, står lista som sist (de løse rundene er det viktigste her),
+    /// og en feillinje sier fra i stedet for «Ingen runder går nå».
     private func loadTournamentRounds(client: SupabaseClient) async {
-        guard let participations = try? await ParticipationQueries.mine(client: client, userID: userID),
-              let rounds = try? await ParticipationQueries.activeRounds(client: client, participations: participations)
-        else { return }
+        let participations: [Participation]
+        let rounds: [RoundSnapshot]
+        do {
+            participations = try await ParticipationQueries.mine(client: client, userID: userID)
+            rounds = try await ParticipationQueries.activeRounds(client: client, participations: participations)
+            tournamentRoundsError = nil
+        } catch {
+            // Uten sql/059 (`club_members.kind`) finnes ingen deltakerrunder: ingen feil å vise.
+            let missing = EveningSignupService.isMissing(code: (error as? PostgrestError)?.code)
+            if !DataError.isCancellation(error), !missing {
+                tournamentRoundsError = "Fikk ikke hentet turneringsrundene. " + DataError.from(error).message
+            }
+            return
+        }
         let items = ParticipantRounds.items(rounds, participations: participations,
                                             referenceYear: EveningDates.year(of: EveningDates.today()))
         tournamentRounds = items.map(\.item)

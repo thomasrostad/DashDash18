@@ -89,7 +89,7 @@ struct FollowHubView: View {
                 }
             }
             Section {
-                if model.lists.following.isEmpty {
+                if model.lists.following.isEmpty, model.state == .loaded {
                     Text("Du følger ingen ennå.").font(.ddCallout).foregroundStyle(Color.ddInkSecondary)
                 }
                 ForEach(model.lists.following) { row in
@@ -104,7 +104,7 @@ struct FollowHubView: View {
                 DDHeader("Du følger")
             }
             Section {
-                if model.lists.followers.isEmpty {
+                if model.lists.followers.isEmpty, model.state == .loaded {
                     Text("Ingen følger deg ennå.").font(.ddCallout).foregroundStyle(Color.ddInkSecondary)
                 }
                 ForEach(model.lists.followers) { row in

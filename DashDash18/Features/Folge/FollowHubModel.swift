@@ -45,9 +45,11 @@ final class FollowHubModel {
             async let rows = service.myFollows()
             async let mine = service.settings(userID: userID)
             lists = FollowLists(try await rows)
-            settings = (try? await mine) ?? settings ?? FollowService.Settings(followApproval: true, searchable: true)
+            // Personvern vises først når innstillingene faktisk er hentet, ikke med gjettede standardverdier.
+            settings = (try? await mine) ?? settings
             state = .loaded
         } catch {
+            guard !DataError.isCancellation(error) else { return }
             if state == .loaded { return }
             state = .failed(FollowService.message(error))
         }

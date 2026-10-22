@@ -49,6 +49,7 @@ final class FollowingFeedModel {
             state = .loaded
             if names.isEmpty { names = await service.knownNames(userID: userID) }
         } catch {
+            guard !DataError.isCancellation(error) else { return }
             if state == .loaded { return }
             state = .failed(FollowService.message(error))
         }
@@ -76,7 +77,7 @@ final class FollowingFeedModel {
             try await SocialService(client: client).react(emoji, on: target(card), on)
         } catch {
             pages.replace(card)
-            errorMessage = "Klarte ikke å lagre reaksjonen: " + DataError.from(error).message
+            errorMessage = "Klarte ikke å lagre reaksjonen. " + DataError.from(error).message
         }
     }
 

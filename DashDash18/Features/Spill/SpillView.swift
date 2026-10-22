@@ -45,8 +45,14 @@ struct SpillView: View {
             }
 
             roundsSection("Pågår", items: model.ongoing,
-                          empty: model.state == .loaded && model.tournamentRounds.isEmpty ? "Ingen runder går nå." : nil)
+                          empty: model.state == .loaded && model.tournamentRounds.isEmpty
+                              && model.tournamentRoundsError == nil ? "Ingen runder går nå." : nil)
             roundsSection("Turneringsrunder", items: model.tournamentRounds, empty: nil) { openTournamentRound = $0 }
+            if let error = model.tournamentRoundsError {
+                Section {
+                    Label(error, systemImage: "wifi.exclamationmark").ddErrorStyle()
+                }
+            }
             roundsSection("Ferdige", items: model.finished,
                           empty: model.state == .loaded ? "Rundene du avslutter, havner her med resultatet." : nil)
 
