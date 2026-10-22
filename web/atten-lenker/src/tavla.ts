@@ -7,6 +7,7 @@ import {
   type RoundsGrid, type RoundSnapshot, type ScoreName,
 } from "../../golfgutu-core/src/index.ts";
 import { buildTVPayload, leagueStandings, seasonStandings, type TVEnv, type TVPayload } from "./tv.ts";
+import { ICON_LINKS, shareMeta } from "./html.ts";
 
 /**
  * App Store-lenken i «Få Atten-appen». null til appen er publisert: da står det «Kommer snart i App Store»
@@ -172,11 +173,11 @@ button { font:inherit; color:inherit; }
 .live i { width:8px; height:8px; border-radius:50%; background:#6BE07A; box-shadow:0 0 0 3px rgba(107,224,122,.25); }
 .live.stale i { background:var(--ink2); box-shadow:none; }
 .hero { background:var(--forest); color:var(--ondark); border-radius:22px; padding:20px; }
-.hero .club { font:600 12px/1.2 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--gold); margin:0 0 6px; }
-.hero h1 { margin:0; font-size:26px; line-height:1.15; font-weight:600; }
+.hero .club { font:600 12px/1.2 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--gold); margin:0 0 6px; overflow-wrap:anywhere; }
+.hero h1 { margin:0; font-size:26px; line-height:1.15; font-weight:600; overflow-wrap:anywhere; }
 .hero p { margin:6px 0 0; color:var(--hero2); font-size:14px; }
 .app { display:flex; align-items:center; gap:12px; margin:12px 0 0; padding:12px 14px; background:var(--card); border:1px solid var(--border); border-radius:18px; }
-.app b { display:block; font-weight:600; } .app span { font-size:13px; color:var(--ink2); }
+.app > div { min-width:0; } .app b { display:block; font-weight:600; } .app span { font-size:13px; color:var(--ink2); }
 .app a, .app em { margin-left:auto; flex:none; padding:9px 14px; border-radius:999px; background:var(--yellow); color:var(--yellowink);
   font-weight:600; font-size:14px; text-decoration:none; font-style:normal; }
 .app em { background:var(--chip); color:var(--ink2); font-weight:500; }
@@ -193,7 +194,7 @@ button { font:inherit; color:inherit; }
 .first .total { color:var(--yellowtext); }
 .chev { color:var(--ink2); flex:none; }
 .note { margin:10px 2px 0; font-size:13px; color:var(--ink2); }
-.label { margin:22px 2px 8px; font:600 12px/1.2 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink2); }
+.label { margin:22px 2px 8px; overflow-wrap:anywhere; font:600 12px/1.2 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink2); }
 .panel .row { padding:9px 14px; } .panel .total { font-size:16px; }
 .modes { display:flex; gap:6px; margin:0 0 10px; }
 .modes button { border:0; padding:6px 12px; border-radius:999px; background:var(--chip); font-size:14px; cursor:pointer; }
@@ -210,7 +211,7 @@ table { border-collapse:separate; border-spacing:0; font-variant-numeric:tabular
 .grid td.c { cursor:pointer; } .grid td.best { background:var(--you); color:var(--yellowtext); font-weight:700; }
 .grid td.out { color:var(--ink2); opacity:.55; text-decoration:line-through; }
 .dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--rust); margin-left:3px; vertical-align:middle; }
-.msg { text-align:center; padding:60px 8px; } .msg h1 { font-size:24px; margin:0 0 8px; } .msg p { color:var(--ink2); margin:0 0 8px; }
+.msg { text-align:center; padding:60px 8px; } .msg h1 { font-size:24px; margin:0 0 8px; overflow-wrap:break-word; } .msg p { color:var(--ink2); margin:0 0 8px; }
 footer { margin:28px 2px 0; font-size:13px; color:var(--ink2); text-align:center; }
 footer a { color:var(--forestink); }
 dialog { border:0; padding:0; overflow:auto; overscroll-behavior:contain; width:100%; max-width:560px; max-height:88vh; margin:auto auto 0; border-radius:22px 22px 0 0;
@@ -218,8 +219,8 @@ dialog { border:0; padding:0; overflow:auto; overscroll-behavior:contain; width:
 @media (min-width:600px) { dialog { margin:auto; border-radius:22px; } }
 dialog::backdrop { background:rgba(12,31,24,.55); }
 .sheet { padding:18px 16px 28px; }
-.sheet header { display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
-.sheet h2 { margin:0; font-size:22px; font-weight:600; } .sheet header p { margin:2px 0 0; color:var(--ink2); font-size:14px; }
+.sheet header { display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; } .sheet header > div { min-width:0; }
+.sheet h2 { margin:0; font-size:22px; font-weight:600; overflow-wrap:anywhere; } .sheet header p { margin:2px 0 0; color:var(--ink2); font-size:14px; }
 .close { margin-left:auto; border:0; background:var(--chip); width:34px; height:34px; border-radius:50%; font-size:18px; cursor:pointer; flex:none; }
 .back { border:0; background:none; color:var(--forestink); padding:0 0 10px; font-weight:600; cursor:pointer; }
 .sc { width:100%; table-layout:fixed; margin-bottom:12px; }
@@ -256,7 +257,7 @@ function setLive(){ const el = $("live"); if (!last) return; const old = Date.no
   el.className = "live" + (old ? " stale" : ""); el.innerHTML = "<i></i>" + (old ? "Sist oppdatert " : "Live · ") + time(new Date(last)); }
 function render(){
   if (!data) return;
-  document.title = data.name + " · Atten";
+  document.title = data.name + " – Atten";
   $("club").textContent = data.club || ""; $("club").hidden = !data.club;
   $("name").textContent = data.name; $("played").textContent = data.played;
   const hasRounds = !!(data.rounds && data.rounds.columns.length);
@@ -272,7 +273,7 @@ function render(){
   }).join("") : '<div class="row"><span class="who"><small>Ingen resultater ennå.</small></span></div>';
   $("note").textContent = data.note || ""; $("note").hidden = !data.note;
   const panels = (data.teams ? [data.teams] : []).concat(data.extras || []);
-  $("panels").innerHTML = panels.map(p => '<div class="label">' + esc(p.title) + '</div><div class="card panel">'
+  $("panels").innerHTML = panels.map(p => '<h2 class="label">' + esc(p.title) + '</h2><div class="card panel">'
     + p.lines.map(x => '<div class="row"><span class="who"><b>' + esc(x.name) + '</b></span><span class="total">' + esc(x.score) + '</span></div>').join("") + '</div>').join("");
   if (hasRounds) renderRounds();
   const open = $("sheet").dataset; if ($("sheet").open && open.player) showPlayer(open.player, open.round || null, true);
@@ -288,7 +289,7 @@ function cell(r, n){
 function renderRounds(){
   const g = data.rounds;
   for (const b of $("modes").children) b.setAttribute("aria-pressed", b.dataset.mode === mode);
-  const head = '<tr><th class="nm"></th>' + g.columns.map(c => '<th><b>' + esc(c.label) + (c.ongoing ? '<span class="dot" title="Pågår"></span>' : "") + '</b>' + esc(c.date || "") + '</th>').join("") + '<th class="sum"><b>Sum</b></th></tr>';
+  const head = '<tr><th class="nm">Spiller</th>' + g.columns.map(c => '<th><b>' + esc(c.label) + (c.ongoing ? '<span class="dot" title="Pågår"></span>' : "") + '</b>' + esc(c.date || "") + '</th>').join("") + '<th class="sum"><b>Sum</b></th></tr>';
   const body = g.rows.map(r => '<tr><td class="nm">' + esc(r.name) + '</td>' + g.columns.map((_, n) => cell(r, n)).join("")
     + '<td class="sum">' + (mode === "points" ? r.pointsTotal : mode === "strokes" ? r.strokesTotal : toPar(r.toParTotal)) + '</td></tr>').join("");
   $("grid").innerHTML = '<table><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
@@ -325,7 +326,7 @@ function showPlayer(player, round, keep){
     html = '<header><div><h2>' + esc(r.name) + '</h2><p>' + esc(t ? t.place + " · " + t.total + (t.detail ? " · " + t.detail : "") : "") + '</p></div><button class="close" data-close aria-label="Lukk">×</button></header>'
       + '<div class="card">' + g.columns.map((c, n) => r.points[n] === null ? "" : '<button type="button" class="row" data-player="' + esc(player) + '" data-round="' + esc(c.id) + '">'
         + '<span class="who"><b>' + esc(c.title) + (c.ongoing ? '<span class="dot"></span>' : "") + '</b><small>' + (r.strokes[n] ?? "–") + ' slag · ' + (r.toPar[n] === null ? "–" : toPar(r.toPar[n])) + (r.counted && !r.counted[n] ? " · teller ikke" : "") + '</small></span>'
-        + '<span class="total">' + r.points[n] + '</span><span class="chev">›</span></button>').reverse().join("") + '</div>';
+        + '<span class="total">' + r.points[n] + '</span><span class="chev" aria-hidden="true">›</span></button>').reverse().join("") + '</div>';
   }
   $("sheetbody").innerHTML = html;
   if (!s.open) { s.showModal(); if (!keep) history.pushState({sheet:1}, ""); }
@@ -365,15 +366,15 @@ ${appBanner()}
 
   return `<!doctype html><html lang="nb"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex"><meta name="theme-color" content="#1C483A" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0C1F18" media="(prefers-color-scheme: dark)">
-<meta property="og:title" content="Tavla i Atten"><meta property="og:description" content="Tabellen og scorekortene, live.">
-<title>Tavla · Atten</title><link rel="preload" href="/fonts/Figtree.woff2" as="font" type="font/woff2" crossorigin><style>${STYLE}</style></head><body>${body}
+${shareMeta("Tavla i Atten", "Tabellen og scorekortene, live.", `/tavla/${code}`)}
+<title>Tavla – Atten</title>${ICON_LINKS}<link rel="preload" href="/fonts/Figtree.woff2" as="font" type="font/woff2" crossorigin><style>${STYLE}</style></head><body>${body}
 <script nonce="${nonce}">${script}</script></body></html>`;
 }
 
 /** Ugyldig kode i adressen. */
 export function shareInvalidPage(): string {
   return `<!doctype html><html lang="nb"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex"><title>Tavla · Atten</title><style>${STYLE}</style></head><body><main>
+<meta name="robots" content="noindex"><title>Tavla – Atten</title>${ICON_LINKS}<style>${STYLE}</style></head><body><main>
 <div class="top"><span class="brand">Atten</span></div><div class="msg"><h1>Lenken virker ikke</h1><p>Lenken er ufullstendig eller feil. Be om lenken på nytt i gruppa.</p></div>
 ${appBanner()}</main></body></html>`;
 }

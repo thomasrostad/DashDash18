@@ -1,17 +1,16 @@
 import { fetchTVPayload, normalizeTVCode, tvBoardPage, tvCodePage, type TVEnv } from "./tv.ts";
 import { calendarResponse } from "./kalender.ts";
 import { fetchSharePayload, REFRESH_SECONDS, shareInvalidPage, sharePage, type SharePayload } from "./tavla.ts";
-import { escapeHTML } from "./html.ts";
+import { escapeHTML, ICON_LINKS, shareMeta, SITE } from "./html.ts";
 import { legalPage } from "./juridisk.ts";
 import { captchaResponse } from "./captcha.ts";
 // Atten på https://dashdash18.com: filen som kobler domenet til appen (universelle lenker),
 // og en enkel side for invitasjonslenker når appen ikke er installert.
 //
 // Ingen sporing, ingen cookies, ingen eksterne skript eller fonter. Unntaket er /captcha, som laster
-// Cloudflare Turnstile (src/captcha.ts).
+// Cloudflare Turnstile (src/captcha.ts). Skrift, ikoner og del-bildet ligger i public/.
 
-/// Teksten til den som ikke har appen. Bytt til App Store-lenken når appen er ute,
-/// f.eks. `Last ned Atten fra <a href="https://apps.apple.com/…">App Store</a>.` (HTML er lov her).
+/// Teksten til den som ikke har appen, nederst på invitasjonssidene (HTML er lov her).
 export const GET_THE_APP_HTML =
   'Har du ikke appen? Last ned Atten fra <a href="https://apps.apple.com/no/app/atten/id6820031728" rel="noopener">App Store</a>.';
 
@@ -20,7 +19,6 @@ export const APP_ID = "JNMQJPCV24.com.dashdash18.app";
 /// App Store-id-en til Atten (apps.apple.com/no/app/atten/id6820031728).
 export const APP_STORE_ID = "6820031728";
 export const APP_STORE_URL = `https://apps.apple.com/no/app/atten/id${APP_STORE_ID}`;
-const SITE = "https://dashdash18.com";
 
 /// Smart App Banner i Safari: «Hent» eller «Åpne» øverst på siden. `appArgument` sendes til appen når
 /// den åpnes fra banneret (samme https-adresse som de universelle lenkene).
@@ -107,8 +105,9 @@ const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "DENY",
 };
 
+/// Alle sidene kan hente skrift og ikoner fra /fonts og public/ (samme domene), ingenting annet.
 function htmlResponse(body: string, status: number, nonce: string, cache: string, isHead: boolean,
-                      connectSelf = false, fontSelf = false): Response {
+                      connectSelf = false): Response {
   return new Response(isHead ? null : body, {
     status,
     headers: {
@@ -118,21 +117,24 @@ function htmlResponse(body: string, status: number, nonce: string, cache: string
       "Content-Security-Policy":
         `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; ` +
         (connectSelf ? "connect-src 'self'; " : "") +
-        (fontSelf ? "font-src 'self'; " : "") +
+        "font-src 'self'; img-src 'self'; " +
         "base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     },
   });
 }
 
+// Skriften er appens Figtree (public/fonts, som Tavla-siden i src/tavla.ts).
 const STYLE = `
+  @font-face { font-family: "Figtree"; src: url("/fonts/Figtree.woff2") format("woff2"); font-weight: 300 900; font-display: swap; }
   :root { color-scheme: light; --skog: #1C483A; --krem: #FFF9DF; --gul: #F5C842; }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
     padding: 24px 16px; background: var(--skog); color: var(--krem);
-    font: 17px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    font: 17px/1.5 "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   main { width: 100%; max-width: 420px; text-align: center; }
   .merke { font-weight: 800; letter-spacing: .02em; font-size: 15px; text-transform: uppercase; color: var(--gul); margin: 0 0 24px; }
-  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; overflow-wrap: break-word; text-wrap: balance; }
   p { margin: 0 0 16px; }
   .kode { display: block; margin: 24px 0 8px; padding: 16px; border-radius: 16px; background: var(--krem); color: var(--skog);
     font: 700 32px/1.2 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .06em; user-select: all; -webkit-user-select: all;
@@ -141,11 +143,12 @@ const STYLE = `
     text-decoration: underline; cursor: pointer; padding: 8px; }
   .knapp { display: block; margin: 24px 0 16px; padding: 16px; border-radius: 999px; background: var(--gul); color: var(--skog);
     font-weight: 700; text-decoration: none; }
+  .knapp:focus-visible, .kopier:focus-visible { outline: 3px solid var(--krem); outline-offset: 3px; }
   .liten { font-size: 15px; opacity: .85; }
   .steg { text-align: left; margin: 0 0 16px; padding-left: 24px; }
   .steg li { margin: 0 0 8px; }
   a { color: var(--gul); }
-  .lenker a { margin: 0 8px; }
+  .lenker a { display: inline-block; margin: 0 8px; padding: 4px 0; }
   /* Personvern, vilkår og support (src/juridisk.ts): lengre tekst, venstrestilt. */
   main.dok { max-width: 680px; text-align: left; }
   .dok h2 { font-size: 21px; line-height: 1.3; margin: 32px 0 8px; }
@@ -158,7 +161,7 @@ const STYLE = `
   .tabell th { color: var(--gul); }
 `;
 
-/// `index`: siden skal vises i Google (bare forsiden). `head`: ekstra meta-tagger (allerede escapet).
+/// `index`: siden skal vises i Google (forsiden, personvern, vilkår og support). `head`: ekstra meta-tagger (allerede escapet).
 function page(title: string, content: string, nonce: string, script = "", mainClass = "",
               options: { index?: boolean; head?: string } = {}): string {
   return `<!doctype html>
@@ -169,6 +172,8 @@ function page(title: string, content: string, nonce: string, script = "", mainCl
 ${options.index ? "" : '<meta name="robots" content="noindex">\n'}${options.head ?? ""}
 <meta name="theme-color" content="#1C483A">
 <title>${escapeHTML(title)}</title>
+${ICON_LINKS}
+<link rel="preload" href="/fonts/Figtree.woff2" as="font" type="font/woff2" crossorigin>
 <style>${STYLE}</style>
 </head>
 <body>
@@ -209,8 +214,10 @@ function invitePage(kind: InviteKind, code: string, nonce: string): string {
 ${info.steps ? `<ol class="steg">${info.steps.map((step) => `<li>${escapeHTML(step)}</li>`).join("")}</ol>` : ""}
 <p class="liten">${escapeHTML(info.joinHint)}</p>
 <p class="liten">${GET_THE_APP_HTML}</p>`;
-  return page("Invitasjon til Atten", content, nonce, COPY_SCRIPT, "",
-              { head: smartBanner(`${SITE}/${kind}/${code}`) + "\n" });
+  const title = `Invitasjon til ${info.what} – Atten`;
+  const description = `Du er invitert til ${info.what} i Atten. Åpne invitasjonen i appen, eller bruk koden.`;
+  return page(title, content, nonce, COPY_SCRIPT, "",
+              { head: [smartBanner(`${SITE}/${kind}/${code}`), shareMeta(title, description, `/${kind}/${code}`), ""].join("\n") });
 }
 
 /// `/folg/KODE`: QR-koden for å følge noen. Appen åpner lenken selv; uten appen vises denne.
@@ -223,7 +230,9 @@ function followPage(code: string, nonce: string): string {
 <a class="knapp" href="${escapeHTML(appLink)}">Åpne i Atten</a>
 <p class="liten">Eller skriv inn koden under Deg → Følger → Skann kode.</p>
 <p class="liten">${GET_THE_APP_HTML}</p>`;
-  return page("Følg i Atten", content, nonce);
+  const title = "Følg i Atten";
+  return page(title, content, nonce, "", "",
+              { head: [smartBanner(`${SITE}/folg/${code}`), shareMeta(title, "Noen vil at du skal følge dem i Atten.", `/folg/${code}`), ""].join("\n") });
 }
 
 function invalidInvitePage(nonce: string): string {
@@ -234,24 +243,27 @@ function invalidInvitePage(nonce: string): string {
   return page("Ugyldig invitasjon – Atten", content, nonce);
 }
 
+const FOOTER_LINKS =
+  `<p class="liten lenker"><a href="/personvern">Personvern</a> <a href="/vilkar">Vilkår</a> <a href="/support">Support</a></p>`;
+
 const HOME_TITLE = "Atten – golfapp for golfgjengen: turnering, scorekort og tavle";
 const HOME_DESCRIPTION =
   "Atten samler golfkvelden med gjengen: påmelding, båser, scorekort hull for hull og en tavle som oppdateres mens dere spiller. Liga og cup hele sesongen.";
 
-/// Forsiden er den eneste siden Google skal finne. Ordene her er de samme som i App Store
-/// (golfturnering, scorekort, tavle, liga, golfgjeng), så nettsøk og App Store-søk peker samme vei.
-function homePage(nonce: string): string {
-  const head = [
-    `<meta name="description" content="${escapeHTML(HOME_DESCRIPTION)}">`,
-    `<link rel="canonical" href="${SITE}/">`,
-    `<meta property="og:type" content="website">`,
-    `<meta property="og:url" content="${SITE}/">`,
-    `<meta property="og:title" content="${escapeHTML(HOME_TITLE)}">`,
-    `<meta property="og:description" content="${escapeHTML(HOME_DESCRIPTION)}">`,
-    `<meta property="og:locale" content="nb_NO">`,
-    smartBanner(),
+/// Beskrivelse, kanonisk adresse og del-kort for sidene Google skal finne (forsiden og sidene i sitemap.xml).
+function indexedHead(path: string, title: string, description: string): string {
+  return [
+    `<meta name="description" content="${escapeHTML(description)}">`,
+    `<link rel="canonical" href="${SITE}${path}">`,
+    shareMeta(title, description, path),
     "",
   ].join("\n");
+}
+
+/// Ordene på forsiden er de samme som i App Store (golfturnering, scorekort, tavle, liga, golfgjeng),
+/// så nettsøk og App Store-søk peker samme vei.
+function homePage(nonce: string): string {
+  const head = indexedHead("/", HOME_TITLE, HOME_DESCRIPTION) + smartBanner() + "\n";
   const content = `
 <h1>Golfkvelden med gjengen, samlet i én app</h1>
 <p>Atten er golfappen for gjengen som spiller sammen hele sesongen. Påmelding, båser, scorekort og tavle, uten regneark.</p>
@@ -264,7 +276,7 @@ function homePage(nonce: string): string {
 <li><strong>Gjengen:</strong> inviter med lenke og start en ny golfgjeng på et minutt.</li>
 </ul>
 <p class="liten">Gratis for iPhone. Ingen reklame og ingen sporing.</p>
-<p class="liten lenker"><a href="/personvern">Personvern</a> <a href="/vilkar">Vilkår</a> <a href="/support">Support</a></p>`;
+${FOOTER_LINKS}`;
   return page(HOME_TITLE, content, nonce, "", "", { index: true, head });
 }
 
@@ -281,6 +293,9 @@ Sitemap: ${SITE}/sitemap.xml
 const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url><loc>${SITE}/</loc></url>
+<url><loc>${SITE}/personvern</loc></url>
+<url><loc>${SITE}/vilkar</loc></url>
+<url><loc>${SITE}/support</loc></url>
 </urlset>
 `;
 
@@ -294,7 +309,10 @@ function textResponse(body: string, contentType: string, isHead: boolean): Respo
 function notFoundPage(nonce: string): string {
   const content = `
 <h1>Fant ikke siden</h1>
-<p><a href="/">Til forsiden</a></p>`;
+<p>Adressen er feil, eller siden finnes ikke lenger. Fikk du en lenke til en invitasjon eller Tavla, be om den på nytt.</p>
+<a class="knapp" href="/">Til forsiden</a>
+<p class="liten">Atten er gratis for iPhone. <a href="${APP_STORE_URL}" rel="noopener">Last ned fra App Store</a>.</p>
+${FOOTER_LINKS}`;
   return page("Fant ikke siden – Atten", content, nonce);
 }
 
@@ -333,7 +351,7 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
     });
   }
 
-  // For søkemotorer: bare forsiden skal indekseres.
+  // For søkemotorer: forsiden, personvern, vilkår og support indekseres. Resten er noindex.
   if (pathname === "/robots.txt") return textResponse(ROBOTS_TXT, "text/plain; charset=utf-8", isHead);
   if (pathname === "/sitemap.xml") return textResponse(SITEMAP_XML, "application/xml; charset=utf-8", isHead);
 
@@ -357,7 +375,9 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
   // Personvern, vilkår og support (App Store). Teksten kommer fra docs/*.md via `npm run juridisk`.
   const legal = legalPage(pathname);
   if (legal) {
-    return htmlResponse(page(legal.title, legal.content, nonce, "", "dok"), 200, nonce, "public, max-age=3600", isHead);
+    const html = page(legal.title, legal.content, nonce, "", "dok",
+                      { index: true, head: indexedHead(legal.path, legal.title, legal.description) });
+    return htmlResponse(html, 200, nonce, "public, max-age=3600", isHead);
   }
 
   // TV-visning med kode (fase 26, sql/041).
@@ -390,9 +410,9 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
     try { raw = decodeURIComponent(share[1]); } catch { raw = ""; }
     const code = normalizeTVCode(raw);
     if (share[2]) return shareJSON(code, env, isHead);
-    if (!code) return htmlResponse(shareInvalidPage(), 404, nonce, "public, max-age=300", isHead, false, true);
+    if (!code) return htmlResponse(shareInvalidPage(), 404, nonce, "public, max-age=300", isHead);
     if (code !== share[1]) return Response.redirect(new URL(`/tavla/${code}`, request.url).toString(), 302);
-    return htmlResponse(sharePage(code, nonce), 200, nonce, "no-store", isHead, true, true);
+    return htmlResponse(sharePage(code, nonce), 200, nonce, "no-store", isHead, true);
   }
 
   const follow = /^\/folg\/([^/]*)\/?$/.exec(pathname);

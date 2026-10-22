@@ -15,13 +15,17 @@ Cloudflare Worker for https://dashdash18.com. Den gjør to ting:
 
 - **CAPTCHA ved innlogging** (1.0.1, `CaptchaFeature` i appen). `/captcha?sitekey=…` viser Cloudflare Turnstile (`appearance: interaction-only`, så ruta bare vises når Turnstile vil ha et trykk) og sender svaret til appen med `window.webkit.messageHandlers.atten.postMessage`: `{type: "token", token}`, `{type: "error", code}`, `expired`, `timeout` og `interactive`. Site key-en kommer fra appen i adressen (den er offentlig), så samme side virker for test og prod. Ugyldig eller manglende nøkkel gir 400. CSP slipper bare inn `https://challenges.cloudflare.com` (skript og ramme), `Cache-Control: no-store`, og `Referrer-Policy: strict-origin` så Turnstile ser domenet. Domenet `dashdash18.com` må stå på widgeten i Cloudflare. Siden må være deployet før appen får en site key.
 
-`/` er en kort side om Atten med lenker til personvern, vilkår og support. Alt annet gir 404. Sidene har ingen sporing, ingen cookies og ingen eksterne skript, med unntak av Turnstile på `/captcha`.
+`/` er en kort side om Atten med lenker til personvern, vilkår og support. Alt annet gir en 404-side i samme stil, med lenke til forsiden og App Store. Sidene har ingen sporing, ingen cookies og ingen eksterne skript, med unntak av Turnstile på `/captcha`.
+
+- **Søk og deling.** `/`, `/personvern`, `/vilkar` og `/support` indekseres: egen tittel og beskrivelse, kanonisk adresse og del-kort (Open Graph og `twitter:card`). Bare de står i `/sitemap.xml`. Alt annet er `noindex`, og invitasjonene, følgekoden og Tavla har del-kort uten kanonisk adresse. Alle sidene bruker Figtree fra `public/fonts`.
+- **Ikoner og del-bilde** i `public/`: `favicon.svg` (app-ikonet fra `DashDash18/AppIcon.icon` med avrundede hjørner), `favicon.ico` (16, 32 og 48 px fra SVG-en), `apple-touch-icon.png` (180 px fra `AppIcon.png`) og `og.png` (1200 × 630, Figtree og appens farger). Endres app-ikonet, må de lages på nytt.
 
 ## Endre tekst
 
 Øverst i `src/index.ts`:
 
-- `GET_THE_APP_HTML`: teksten til den som ikke har appen. Bytt til App Store-lenken når appen er ute.
+- `GET_THE_APP_HTML`: teksten til den som ikke har appen, med App Store-lenken.
+- `HOME_TITLE` og `HOME_DESCRIPTION`: tittel og beskrivelse for forsiden i søk og del-kort. Beskrivelsene til personvern, vilkår og support står i `src/juridisk.ts`.
 - `APP_STORE_URL` (i `src/tavla.ts`): App Store-lenken i «Få Atten-appen» på Tavla-siden. `null` gir «Kommer snart».
 - Personvern og vilkår: endre `docs/personvern.md` eller `docs/vilkar.md` og kjør `npm run juridisk`. Skriptet advarer om uutfylte hakeparenteser (f.eks. `[Oslo tingrett]`). **Før publisering:** `npm run juridisk -- --strict`, som avslutter med kode 1 så lenge noen står igjen. Adressene (`https://dashdash18.com/personvern` og `/vilkar`) settes i `LegalLinks` i appen.
 
