@@ -1,4 +1,5 @@
 import GolfgutuCore
+import StoreKit
 import Supabase
 import SwiftUI
 
@@ -24,6 +25,7 @@ struct RundeView: View {
     @State private var isEnding = false
     @State private var endError: String?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.requestReview) private var requestReview
 
     var body: some View {
         ScrollView {
@@ -117,6 +119,12 @@ struct RundeView: View {
             }
         }
         .animation(reduceMotion ? nil : .smooth(duration: 0.32), value: model.celebration?.id)
+        // Vurdering etter en levert runde (`ReviewPrompt`), når feiringen er lukket.
+        .onChange(of: model.isReadyForReview) { _, ready in
+            guard ready else { return }
+            model.reviewRequested()
+            requestReview()
+        }
         .task(id: model.game?.roundID) { await loadGames() }
         // Nye scorer og låsing: hent markeringene og oppgjøret på nytt.
         .task(id: gamesReloadKey) { await games?.load() }

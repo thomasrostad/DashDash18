@@ -9,6 +9,7 @@ final class DashDash18UITests: XCTestCase {
     @MainActor
     func testStarterPaaInnlogging() throws {
         let app = XCUIApplication()
+        app.launchArguments.append("-DDUITest")  // Ingen forespørsel om vurdering (`ReviewPromptStore`).
         app.launch()
 
         XCTAssertTrue(app.navigationBars["Logg inn"].waitForExistence(timeout: 10))
@@ -20,6 +21,7 @@ final class DashDash18UITests: XCTestCase {
     @MainActor
     func testUgyldigEpostGirMelding() throws {
         let app = XCUIApplication()
+        app.launchArguments.append("-DDUITest")  // Ingen forespørsel om vurdering (`ReviewPromptStore`).
         app.launch()
 
         let felt = app.textFields["deg@epost.no"]

@@ -68,6 +68,10 @@ final class RundeModel {
     private(set) var isSaving = false
     var saveError: String?
     var celebration: Celebration?
+    /// Runden er levert og vilkårene for å be om vurdering er oppfylt (`ReviewPrompt`). Skjermen
+    /// spør når feiringen er lukket.
+    private(set) var wantsReview = false
+    private let reviewStore = ReviewPromptStore()
     /// Realtime-kanalen er oppe. Når den ikke er det, henter skjermen hvert 30. sekund.
     private(set) var isLive = false
     /// To markører førte ulikt (sql/055, K6/6.3): de åpne konfliktene i runden, nyeste per spiller og hull.
@@ -576,7 +580,20 @@ final class RundeModel {
         } catch {
             throw DataError.from(error)
         }
+        // Gjest: ikke på kortet med egen profil (eieren som ikke spiller selv).
+        let isGuest = snapshot?.loose?.participant(profile: loose.userID) == nil
+        reviewStore.roundFinished()
+        wantsReview = reviewStore.prompt(isGuest: isGuest).shouldAsk
         await load()
+    }
+
+    /// Klar til å be om vurdering: runden er levert og ingen feiring står.
+    var isReadyForReview: Bool { wantsReview && celebration == nil }
+
+    /// Forespørselen er vist (eller iOS valgte å la være): ikke spør igjen i denne versjonen.
+    func reviewRequested() {
+        wantsReview = false
+        reviewStore.markAsked()
     }
 
     // MARK: Longest drive og nærmest pinnen

@@ -97,7 +97,7 @@ Disse krever innlogging som agentene ikke har.
 ## Status
 
 - [ ] A1 nettside merget
-- [ ] A2 vurdering
+- [x] A2 vurdering
 - [ ] A3 del-kort
 - [ ] A4 metadata
 - [ ] A5 skjermbilder
