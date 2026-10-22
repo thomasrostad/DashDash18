@@ -15,6 +15,7 @@ Status 20.10.2026. **Atten 1.0 er sendt til App Review** (build 181, gratis, bar
 | Område | Hva |
 |---|---|
 | Innlogging og start | Apple eller engangskode på e-post (med hint om å sjekke søppelpost når koden er sendt, og norske feilmeldinger, f.eks. «For mange forsøk – vent litt og prøv igjen»). Ny bruker kan spille med venner med en gang, eller bli med i/lage en klubb. Google er av til OAuth er satt opp |
+| Flere klubber | Under Deg › Klubb ser du alle klubbene dine (valgt klubb er merket, nye med «Venter på godkjenning»), trykker for å bytte, og kan «Bli med i en annen klubb» (kode eller lenke) eller «Lage ny klubb». Blir du godkjent med en gang, bytter appen til klubben; ellers blir du i nåværende klubb og ser at forespørselen venter |
 | Invitasjon | Klubblenke `https://dashdash18.com/klubb/KODE` (universell lenke, åpner appen) og QR-kode. Lenker til klubb, løs runde, konkurranse og følging huskes på telefonen gjennom innloggingen (også om iOS lukker appen mens koden hentes i Mail) til de er brukt, eller i et døgn. Siden på dashdash18.com er Workeren i `web/atten-lenker/` |
 | Hjem | Feed med aktivitet, «Pågår nå» (ett kort per runde du spiller i eller arrangerer, også når flere går samtidig), neste kveld/spilledag med svar, tråd og tippekupong, og arrangørens knapp for neste steg |
 | Spill | Løse runder på slope.no-baner, bli med med kode, spill i runden, «Del regningen» (Vipps), «Turneringer» for å se og lage turneringer (også uten klubb: private liga, cup og morro), og «Finn turneringer» med åpne turneringer å melde seg på |
