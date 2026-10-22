@@ -2,7 +2,8 @@ import Foundation
 import Observation
 import Supabase
 
-/// Deg → Følger (sql/054): forespørsler, dem du følger, dine følgere og innstillingene.
+/// «Følger» (sql/054): navnesøket, forespørsler, folk du kjenner, dem du følger, dine følgere og
+/// innstillingene. Én modell for skjermen og lista bak den.
 @Observable
 final class FollowHubModel {
     enum LoadState: Equatable {
@@ -14,24 +15,29 @@ final class FollowHubModel {
     private(set) var state: LoadState = .loading
     private(set) var lists = FollowLists.empty
     private(set) var settings: FollowService.Settings?
+    /// Folk du kjenner (klubb, runder, turneringer) som du ikke følger ennå.
+    var suggestions: [FollowSuggestion] = []
     /// Personen som noe skjer med akkurat nå (knappene er av).
     private(set) var working: Set<UUID> = []
     var errorMessage: String?
 
     let client: SupabaseClient?
     let userID: UUID
+    let search: FollowSearchModel
     private var channel: RealtimeChannelV2?
     private var listenTask: Task<Void, Never>?
 
     init(client: SupabaseClient, userID: UUID) {
         self.client = client
         self.userID = userID
+        search = FollowSearchModel(client: client)
     }
 
     /// Skjermprøve og tester: faste rader, ingen nettverk.
     init(preview rows: [FollowRow], settings: FollowService.Settings, userID: UUID) {
         client = nil
         self.userID = userID
+        search = FollowSearchModel(client: nil)
         lists = FollowLists(rows)
         self.settings = settings
         state = .loaded
@@ -40,11 +46,13 @@ final class FollowHubModel {
     private var service: FollowService? { client.map(FollowService.init) }
 
     func load() async {
-        guard let service else { return }
+        guard let service, let client else { return }
         do {
             async let rows = service.myFollows()
             async let mine = service.settings(userID: userID)
+            async let known = try? LooseRoundQueries.friends(client: client, userID: userID)
             lists = FollowLists(try await rows)
+            suggestions = FollowSuggestions.people(await known ?? [], me: userID, lists: lists)
             // Personvern vises først når innstillingene faktisk er hentet, ikke med gjettede standardverdier.
             settings = (try? await mine) ?? settings
             state = .loaded

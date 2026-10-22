@@ -1,68 +1,6 @@
 import Supabase
 import SwiftUI
 
-/// «Legg til venner»: søk på navn, skann eller vis koden, og folk du kjenner fra klubben,
-/// rundene og turneringene med Følg-knappen (sql/054). Åpnes fra «Følger» på Hjem og fra Deg → Følger.
-struct FollowAddFriendsView: View {
-    @State var model: FollowAddFriendsModel
-    @State private var scanning = false
-
-    var body: some View {
-        DDList {
-            Section {
-                NavigationLink { FollowSearchView(client: model.client, userID: model.userID) } label: {
-                    Label("Søk på navn", systemImage: "magnifyingglass").labelStyle(DDIconLabelStyle())
-                }
-                Button { scanning = true } label: {
-                    Label("Skann QR-kode", systemImage: "qrcode.viewfinder").labelStyle(DDIconLabelStyle())
-                }
-                NavigationLink { FollowCodeView(client: model.client) } label: {
-                    Label("Vis min kode og del lenken", systemImage: "qrcode").labelStyle(DDIconLabelStyle())
-                }
-            } footer: {
-                DDFooter("Følger dere hverandre, er dere venner og ser de ferdige rundene til hverandre under «Følger» på Hjem.")
-            }
-            Section {
-                if model.isLoaded, model.suggestions.isEmpty {
-                    Text("Ingen flere å foreslå. Folk fra klubben og rundene dine dukker opp her.")
-                        .font(.ddCallout)
-                        .foregroundStyle(Color.ddInkSecondary)
-                }
-                ForEach($model.suggestions) { $person in
-                    FollowSuggestionRow(client: model.client, userID: model.userID, person: $person)
-                }
-            } header: {
-                DDHeader("Folk du kjenner")
-            } footer: {
-                DDFooter("Fra klubben, rundene og turneringene dine. Godkjenner de nye følgere, står du som «Venter» til de har svart.")
-            }
-            Section {
-                NavigationLink {
-                    FollowHubView(model: FollowHubModel(client: model.client, userID: model.userID))
-                } label: {
-                    HStack {
-                        Label("Forespørsler og dem du følger", systemImage: "person.2")
-                            .labelStyle(DDIconLabelStyle())
-                        Spacer()
-                        if model.requests > 0 {
-                            DDCountBadge(HomeBell.label(model.requests) ?? "")
-                                .accessibilityLabel("\(model.requests) forespørsler")
-                        }
-                    }
-                }
-            }
-        }
-        .overlay { if !model.isLoaded { ProgressView() } }
-        .navigationTitle("Legg til venner")
-        .ddNavigationChrome()
-        .task { await model.load() }
-        .refreshable { await model.load() }
-        .sheet(isPresented: $scanning, onDismiss: { Task { await model.load() } }) {
-            FollowScanSheet(client: model.client)
-        }
-    }
-}
-
 /// Én du kjenner: portrett og navn (åpner profilen) og Følg / Venter / Følger.
 struct FollowSuggestionRow: View {
     let client: SupabaseClient
@@ -113,7 +51,7 @@ struct FollowAddFriendsCard: View {
                 }
             }
             NavigationLink {
-                FollowAddFriendsView(model: FollowAddFriendsModel(client: model.client, userID: model.userID))
+                FollowHubView(model: FollowHubModel(client: model.client, userID: model.userID))
             } label: {
                 Label(preview.isEmpty ? "Legg til venner" : "Søk, skann kode eller se flere",
                       systemImage: "person.badge.plus")

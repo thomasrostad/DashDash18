@@ -130,3 +130,24 @@ struct FollowPersonLabel: View {
         .accessibilityElement(children: .combine)
     }
 }
+
+/// En person som åpner profilen (uten klient, i skjermprøver: bare navnet).
+struct FollowPersonLink: View {
+    let client: SupabaseClient?
+    let userID: UUID
+    let row: FollowRow
+    var subtitle: String?
+
+    var body: some View {
+        if let client {
+            NavigationLink {
+                PersonProfileView(client: client, userID: userID, profileID: row.profileID,
+                                  name: row.displayName, avatarPath: row.avatarPath)
+            } label: {
+                FollowPersonLabel(client: client, name: row.displayName, avatarPath: row.avatarPath, subtitle: subtitle)
+            }
+        } else {
+            FollowPersonLabel(client: nil, name: row.displayName, avatarPath: row.avatarPath, subtitle: subtitle)
+        }
+    }
+}
