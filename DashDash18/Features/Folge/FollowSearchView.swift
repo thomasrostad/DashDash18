@@ -90,7 +90,7 @@ struct FollowSearchResults: View {
                                               subtitle: row.subtitle)
                         }
                         FollowStatusButton(client: client, profileID: row.id, name: row.displayName,
-                                           status: $row.myStatus, source: .search)
+                                           status: $row.myStatus, source: .search, followsMe: row.followsMe)
                             .fixedSize()
                     }
                 }

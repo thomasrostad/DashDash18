@@ -131,9 +131,10 @@ struct FollowHubView: View {
         } footer: {
             DDFooter("Skann koden til den du vil følge, eller vis din egen. Den som skanner koden din, følger deg med en gang.")
         }
-        if !model.lists.requests.isEmpty {
+        if !model.lists.requests.isEmpty || !model.accepted.isEmpty {
             Section {
                 ForEach(model.lists.requests) { row in requestRow(row) }
+                ForEach(model.accepted) { row in acceptedRow(row) }
             } header: {
                 DDHeader("Forespørsler")
             } footer: {
@@ -143,9 +144,16 @@ struct FollowHubView: View {
         if let client = model.client {
             Section {
                 if model.state == .loaded, model.suggestions.isEmpty {
-                    Text("Ingen flere å foreslå. Folk fra klubben og rundene dine dukker opp her.")
-                        .font(.ddCallout)
-                        .foregroundStyle(Color.ddInkSecondary)
+                    VStack(alignment: .leading, spacing: DDSpacing.s) {
+                        Text("Ingen forslag nå. Folk fra klubben og rundene dine dukker opp her. Vis koden din, så kan andre følge deg.")
+                            .font(.ddCallout)
+                            .foregroundStyle(Color.ddInkSecondary)
+                        Button { showsCode = true } label: {
+                            Label("Vis koden min", systemImage: "qrcode")
+                        }
+                        .buttonStyle(.dd(.secondary, compact: true))
+                    }
+                    .padding(.vertical, 4)
                 }
                 ForEach($model.suggestions) { $person in
                     FollowSuggestionRow(client: client, userID: model.userID, person: $person)
@@ -213,6 +221,16 @@ struct FollowHubView: View {
         .padding(.vertical, 4)
     }
 
+    /// Godtatt: «Følger deg nå» og «Følg tilbake» (eller Venter / Følger).
+    private func acceptedRow(_ row: FollowRow) -> some View {
+        HStack(spacing: DDSpacing.s) {
+            FollowPersonLink(client: model.client, userID: model.userID, row: row, subtitle: "Følger deg nå")
+            if let client = model.client {
+                FollowBackButton(model: model, client: client, row: row)
+            }
+        }
+    }
+
     private func block(_ row: FollowRow) {
         guard let client = model.client else { return }
         Task {
@@ -253,10 +271,15 @@ struct FollowListsView: View {
                     Text("Ingen følger deg ennå.").font(.ddCallout).foregroundStyle(Color.ddInkSecondary)
                 }
                 ForEach(model.lists.followers) { row in
-                    FollowPersonLink(client: model.client, userID: model.userID, row: row)
-                        .swipeActions {
-                            Button("Fjern", role: .destructive) { Task { await model.removeFollower(row.profileID) } }
+                    HStack(spacing: DDSpacing.s) {
+                        FollowPersonLink(client: model.client, userID: model.userID, row: row)
+                        if let client = model.client, model.lists.followBackStatus(row.profileID) != nil {
+                            FollowBackButton(model: model, client: client, row: row)
                         }
+                    }
+                    .swipeActions {
+                        Button("Fjern", role: .destructive) { Task { await model.removeFollower(row.profileID) } }
+                    }
                 }
             } header: {
                 DDHeader("Følger deg")
@@ -276,7 +299,7 @@ struct FollowListsView: View {
                 } header: {
                     DDHeader("Personvern")
                 } footer: {
-                    DDFooter("Med godkjenning av kan alle som finner deg, følge deg med en gang. Skjult i søk finner andre deg bare via klubb, runde eller koden din.")
+                    DDFooter("Slår du av godkjenning, kan alle som finner deg, følge deg med en gang. Skjult i søk finner andre deg bare via klubb, runde eller koden din.")
                 }
             }
         }
@@ -290,5 +313,20 @@ struct FollowListsView: View {
         } message: {
             Text(model.errorMessage ?? "")
         }
+    }
+}
+
+/// «Følg tilbake» for en som følger deg (Venter / Følger når du har trykket).
+struct FollowBackButton: View {
+    let model: FollowHubModel
+    let client: SupabaseClient
+    let row: FollowRow
+
+    var body: some View {
+        FollowStatusButton(client: client, profileID: row.profileID, name: row.displayName,
+                           status: Binding(get: { model.followBackStatus(row.profileID) },
+                                           set: { model.followBack[row.profileID] = $0 }),
+                           source: .suggestion, followsMe: true)
+            .fixedSize()
     }
 }

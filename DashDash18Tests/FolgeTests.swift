@@ -24,6 +24,10 @@ struct FolgeKnappTests {
         #expect(FollowButton.action(.none) == .request)
         #expect(FollowButton.action(.pending) == .cancel)
         #expect(FollowButton.action(.accepted) == .unfollow)
+        // Følger personen deg, heter Følg «Følg tilbake»; Venter og Følger er like.
+        #expect(FollowButton.title(.none, followsMe: true) == "Følg tilbake")
+        #expect(FollowButton.title(.pending, followsMe: true) == "Venter")
+        #expect(FollowButton.title(.accepted, followsMe: true) == "Følger")
     }
 
     @Test func statusEtterSvaret() {
@@ -85,7 +89,7 @@ struct FolgeListerTests {
         #expect(lists.followers.map(\.displayName) == ["Anders", "Ådne"])
         #expect(lists.followingCount == 1)
         #expect(lists.followerCount == 2)
-        #expect(lists.countsText == "1 følger · 2 følgere")
+        #expect(lists.countsText == "Du følger 1 · 2 følgere")
         #expect(lists.followingIDs == [anders])
     }
 
@@ -101,7 +105,7 @@ struct FolgeListerTests {
 
     @Test func énFølger() {
         let row = FollowRow(profileID: anders, displayName: "Anders", direction: .follower, status: .accepted)
-        #expect(FollowLists([row]).countsText == "0 følger · 1 følger")
+        #expect(FollowLists([row]).countsText == "Du følger 0 · 1 følger")
     }
 }
 
@@ -339,9 +343,23 @@ struct FolgeRekkefolgeTests {
         #expect(candidates.map(\.profileID) == [bjorn, cato])
         #expect(candidates.map(\.status) == [.pending, .none])
     }
+
+    @Test func følgAlleBareDemDuIkkeHarSpurt() {
+        let candidates = [
+            FollowCandidate(profileID: anders, name: "Anders", status: .none),
+            FollowCandidate(profileID: bjorn, name: "Bjørn", status: .pending),
+            FollowCandidate(profileID: cato, name: "Cato", status: .none),
+            FollowCandidate(profileID: dag, name: "Ådne", status: .accepted),
+        ]
+        // Én forespørsel per person, i rekkefølgen på lista; Bjørn venter og Ådne følger du alt.
+        #expect(FollowCoPlayers.followAll(candidates) == [anders, cato])
+        #expect(FollowCoPlayers.followAll([]).isEmpty)
+        #expect(FollowCoPlayers.followAll(candidates).count >= FollowCoPlayers.followAllMinimum)
+        #expect(FollowCoPlayers.followAll(Array(candidates.prefix(2))).count < FollowCoPlayers.followAllMinimum)
+    }
 }
 
-/// «Legg til venner» fra Hjem: folk du kjenner som du ikke følger ennå.
+/// «Folk du kjenner» i «Følger» og kortet på Hjem: folk du kjenner som du ikke følger ennå.
 struct FolgeForslagTests {
     private let lists = FollowLists([
         FollowRow(profileID: anders, displayName: "Anders", direction: .following, status: .accepted),
@@ -381,5 +399,50 @@ struct FolgeForslagTests {
         // Anders: begge veier. Bjørn venter, Ådne følger bare meg.
         #expect(lists.friendIDs == [anders])
         #expect(FollowLists.empty.friendIDs.isEmpty)
+    }
+}
+
+/// Hvem som får «Følg tilbake»: de som følger meg, og som jeg ikke følger ennå.
+struct FolgeTilbakeTests {
+    private let erik = id(5)
+    private let lists = FollowLists([
+        // Anders: vi følger hverandre.
+        FollowRow(profileID: anders, displayName: "Anders", direction: .following, status: .accepted),
+        FollowRow(profileID: anders, displayName: "Anders", direction: .follower, status: .accepted),
+        // Bjørn: jeg venter på svar, han følger ikke meg.
+        FollowRow(profileID: bjorn, displayName: "Bjørn", direction: .following, status: .pending),
+        // Cato: forespørsel til meg som ikke er besvart.
+        FollowRow(profileID: cato, displayName: "Cato", direction: .follower, status: .pending),
+        // Ådne: følger meg, jeg følger ikke.
+        FollowRow(profileID: dag, displayName: "Ådne", direction: .follower, status: .accepted),
+        // Erik: følger meg, og jeg har bedt om å følge tilbake.
+        FollowRow(profileID: id(5), displayName: "Erik", direction: .follower, status: .accepted),
+        FollowRow(profileID: id(5), displayName: "Erik", direction: .following, status: .pending),
+    ])
+
+    @Test func bareDeSomFølgerMegUtenAtJegFølgerTilbake() {
+        #expect(lists.followBackStatus(dag) == FollowStatus.none)
+        #expect(lists.followBackStatus(erik) == .pending)
+        #expect(lists.followBackStatus(anders) == nil)
+        #expect(lists.followBackStatus(bjorn) == nil)
+        // En forespørsel som venter, får Godta og Avslå, ikke «Følg tilbake».
+        #expect(lists.followBackStatus(cato) == nil)
+        #expect(lists.followBackStatus(me) == nil)
+    }
+
+    @Test func iVarslene() {
+        func row(_ kind: String, _ actor: UUID?) -> PersonalActivity {
+            PersonalActivity(id: id(50), kind: kind, actorProfileID: actor, recipients: [me], createdAt: t0)
+        }
+        // Godtatt forespørsel og «X følger deg nå».
+        #expect(PersonalActivityText.followBack(row("follow_requested", dag), lists: lists) == dag)
+        #expect(PersonalActivityText.followBack(row("followed", erik), lists: lists) == erik)
+        // Forespørselen venter fortsatt, eller jeg følger alt.
+        #expect(PersonalActivityText.followBack(row("follow_requested", cato), lists: lists) == nil)
+        #expect(PersonalActivityText.followBack(row("followed", anders), lists: lists) == nil)
+        // Andre varsler, og uten avsender.
+        #expect(PersonalActivityText.followBack(row("follow_accepted", dag), lists: lists) == nil)
+        #expect(PersonalActivityText.followBack(row("comment_added", dag), lists: lists) == nil)
+        #expect(PersonalActivityText.followBack(row("followed", nil), lists: lists) == nil)
     }
 }

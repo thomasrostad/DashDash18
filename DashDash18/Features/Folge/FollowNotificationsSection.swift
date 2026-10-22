@@ -2,7 +2,7 @@ import Supabase
 import SwiftUI
 
 /// Øverst i Varsler (sql/054): følging og kommentarer på kort i «Følger». En forespørsel som
-/// fortsatt venter, har Godta og Avslå.
+/// fortsatt venter, har Godta og Avslå; etter Godta, og på «X følger deg nå», står «Følg tilbake».
 struct FollowNotificationsSection: View {
     let rows: [PersonalActivity]
     let client: SupabaseClient
@@ -11,6 +11,9 @@ struct FollowNotificationsSection: View {
     /// Etter Godta eller Avslå: hent varslene på nytt.
     var onChange: () async -> Void = {}
     @State private var pending: Set<UUID> = []
+    @State private var lists = FollowLists.empty
+    /// «Følg tilbake» trykket her.
+    @State private var followBack: [UUID: FollowStatus] = [:]
     @State private var working: Set<UUID> = []
     @State private var comments: CommentsModel?
     @State private var error: String?
@@ -50,6 +53,14 @@ struct FollowNotificationsSection: View {
                     }
                     .disabled(working.contains(actor))
                 }
+                if let actor = PersonalActivityText.followBack(row, lists: lists) {
+                    FollowStatusButton(client: client, profileID: actor,
+                                       name: followTrimmed(row.data.actorName) ?? "personen",
+                                       status: Binding(get: { followBack[actor] ?? lists.status(of: actor) },
+                                                       set: { followBack[actor] = $0 }),
+                                       source: .suggestion, followsMe: true)
+                        .fixedSize()
+                }
                 if let card = row.cardID {
                     Button("Se kommentarene") { comments = commentsModel(card) }
                         .font(.ddCaption)
@@ -77,10 +88,12 @@ struct FollowNotificationsSection: View {
                       isTargetAuthor: false, people: [], names: [:], client: client)
     }
 
-    /// Forespørslene som fortsatt venter (et varsel står igjen etter at du har godtatt).
+    /// Forespørslene som fortsatt venter (et varsel står igjen etter at du har godtatt), og listene
+    /// for «Følg tilbake».
     private func loadPending() async {
         let rows = (try? await FollowService(client: client).myFollows()) ?? []
-        pending = Set(FollowLists(rows).requests.map(\.profileID))
+        lists = FollowLists(rows)
+        pending = Set(lists.requests.map(\.profileID))
     }
 
     private func respond(_ follower: UUID, accept: Bool) {
@@ -91,6 +104,7 @@ struct FollowNotificationsSection: View {
                 try await FollowService(client: client).respond(to: follower, accept: accept)
                 pending.remove(follower)
                 error = nil
+                if accept { await loadPending() }
                 await onChange()
             } catch {
                 self.error = FollowService.message(error)

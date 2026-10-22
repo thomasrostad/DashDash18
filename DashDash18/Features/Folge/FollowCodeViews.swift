@@ -116,7 +116,7 @@ struct FollowScanSheet: View {
                     .listRowInsets(EdgeInsets())
                     .accessibilityLabel("Kamera. Pek på QR-koden.")
                 } footer: {
-                    DDFooter("Pek kameraet på koden under Deg → Følger → Min kode på telefonen til den du vil følge.")
+                    DDFooter("Be den du vil følge åpne «Min kode» i Følger, og pek kameraet på koden.")
                 }
             }
             Section {

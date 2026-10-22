@@ -39,9 +39,10 @@ nonisolated enum FollowButton {
         case unfollow
     }
 
-    static func title(_ status: FollowStatus) -> String {
+    /// `followsMe`: personen følger deg, så «Følg» blir «Følg tilbake».
+    static func title(_ status: FollowStatus, followsMe: Bool = false) -> String {
         switch status {
-        case .none: "Følg"
+        case .none: followsMe ? "Følg tilbake" : "Følg"
         case .pending: "Venter"
         case .accepted: "Følger"
         }
@@ -134,12 +135,20 @@ nonisolated struct FollowLists: Equatable, Sendable {
         followers.contains { $0.profileID == profile }
     }
 
+    /// Status for «Følg tilbake»: personen følger meg, og jeg følger ikke tilbake ennå (`none`) eller
+    /// venter på svar (`pending`). nil: de følger meg ikke, eller jeg følger dem alt.
+    func followBackStatus(_ profile: UUID) -> FollowStatus? {
+        guard followsMe(profile) else { return nil }
+        let mine = status(of: profile)
+        return mine == .accepted ? nil : mine
+    }
+
     /// Dem jeg følger (godtatt), for «Ny runde» og turneringer.
     var followingIDs: Set<UUID> { Set(following.filter { $0.status == .accepted }.map(\.profileID)) }
 
-    /// «12 følger · 30 følgere».
+    /// «Du følger 12 · 30 følgere».
     var countsText: String {
-        "\(followingCount) følger · \(followerCount) " + (followerCount == 1 ? "følger" : "følgere")
+        "Du følger \(followingCount) · \(followerCount) " + (followerCount == 1 ? "følger" : "følgere")
     }
 }
 
@@ -601,6 +610,14 @@ nonisolated enum PersonalActivityText {
         default:
             return nil
         }
+    }
+
+    /// Personen som kan få «Følg tilbake» i varselet: «X vil følge deg» når du har godtatt, og
+    /// «X følger deg nå». nil: forespørselen venter fortsatt, eller du følger dem alt.
+    static func followBack(_ row: PersonalActivity, lists: FollowLists) -> UUID? {
+        guard row.kind == "follow_requested" || row.kind == "followed", let actor = row.actorProfileID,
+              lists.followBackStatus(actor) != nil else { return nil }
+        return actor
     }
 
     /// Linjene som vises (nyeste først), uten mine egne og uten `round_finished`.

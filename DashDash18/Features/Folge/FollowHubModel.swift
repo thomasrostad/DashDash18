@@ -17,6 +17,10 @@ final class FollowHubModel {
     private(set) var settings: FollowService.Settings?
     /// Folk du kjenner (klubb, runder, turneringer) som du ikke følger ennå.
     var suggestions: [FollowSuggestion] = []
+    /// Forespørslene du har godtatt mens skjermen er åpen: de står igjen øverst med «Følg tilbake».
+    private(set) var accepted: [FollowRow] = []
+    /// «Følg tilbake» trykket her (statusen vises med en gang, før listene er hentet på nytt).
+    var followBack: [UUID: FollowStatus] = [:]
     /// Personen som noe skjer med akkurat nå (knappene er av).
     private(set) var working: Set<UUID> = []
     var errorMessage: String?
@@ -66,7 +70,13 @@ final class FollowHubModel {
     // MARK: Handlinger
 
     func respond(to row: FollowRow, accept: Bool) async {
-        await run(row.profileID) { try await $0.respond(to: row.profileID, accept: accept) }
+        let done = await run(row.profileID) { try await $0.respond(to: row.profileID, accept: accept) }
+        if done, accept, !accepted.contains(where: { $0.profileID == row.profileID }) { accepted.append(row) }
+    }
+
+    /// Statusen bak «Følg tilbake» for en som følger deg.
+    func followBackStatus(_ profileID: UUID) -> FollowStatus {
+        followBack[profileID] ?? lists.status(of: profileID)
     }
 
     func unfollow(_ profileID: UUID) async {
@@ -100,15 +110,18 @@ final class FollowHubModel {
         }
     }
 
-    private func run(_ id: UUID, _ action: (FollowService) async throws -> Void) async {
-        guard let service, !working.contains(id) else { return }
+    @discardableResult
+    private func run(_ id: UUID, _ action: (FollowService) async throws -> Void) async -> Bool {
+        guard let service, !working.contains(id) else { return false }
         working.insert(id)
         defer { working.remove(id) }
         do {
             try await action(service)
             await load()
+            return true
         } catch {
             errorMessage = FollowService.message(error)
+            return false
         }
     }
 

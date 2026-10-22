@@ -17,13 +17,13 @@ struct FollowSuggestionRow: View {
                                   subtitle: person.subtitle)
             }
             FollowStatusButton(client: client, profileID: person.profileID, name: person.name,
-                               status: $person.status, source: .suggestion)
+                               status: $person.status, source: .suggestion, followsMe: person.followsMe)
                 .fixedSize()
         }
     }
 }
 
-/// Kortet øverst i «Følger» på Hjem: «Legg til venner» med noen du kjenner og en vei videre til
+/// Kortet øverst i «Følger» på Hjem: «Finn folk å følge» med noen du kjenner og en vei videre til
 /// søk og QR-kode. Uten forslag står bare knappen.
 struct FollowAddFriendsCard: View {
     let model: FollowAddFriendsModel
@@ -34,9 +34,9 @@ struct FollowAddFriendsCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DDSpacing.m) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Legg til venner").font(.ddBodyEmphasis).foregroundStyle(Color.ddInk)
+                Text("Finn folk å følge").font(.ddBodyEmphasis).foregroundStyle(Color.ddInk)
                 Text(feedIsEmpty
-                     ? "Følg vennene dine, så kommer de ferdige rundene deres her."
+                     ? "Følg dem du spiller med, så kommer de ferdige rundene deres her."
                      : "Finn flere å følge med navn eller QR-kode.")
                     .font(.ddCallout)
                     .foregroundStyle(Color.ddInkSecondary)
@@ -53,7 +53,7 @@ struct FollowAddFriendsCard: View {
             NavigationLink {
                 FollowHubView(model: FollowHubModel(client: model.client, userID: model.userID))
             } label: {
-                Label(preview.isEmpty ? "Legg til venner" : "Søk, skann kode eller se flere",
+                Label(preview.isEmpty ? "Finn folk å følge" : "Søk, skann kode eller se flere",
                       systemImage: "person.badge.plus")
                     .frame(maxWidth: .infinity)
             }

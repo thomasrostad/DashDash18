@@ -21,7 +21,7 @@ nonisolated struct FollowSuggestion: Equatable, Identifiable, Sendable {
     }
 }
 
-/// «Legg til venner»: folk du kjenner som du ikke følger ennå. Venn = dere følger hverandre;
+/// «Folk du kjenner» i «Følger»: folk du kjenner som du ikke følger ennå. Venn = dere følger hverandre;
 /// det finnes ingen egen vennemodell, bare følging (sql/054).
 nonisolated enum FollowSuggestions {
     /// Så mange vises på kortet i «Følger» på Hjem.
