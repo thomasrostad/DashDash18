@@ -101,6 +101,25 @@ struct TavlaDataTests {
         #expect(Set(first.scores.map(\.holeIndex)) == [0, 1])
     }
 
+    /// Tilleggspoeng (sql/072): feltet mangler før 072 er kjørt, og da står tabellen som før.
+    @Test func tilleggspoengErValgfrie() throws {
+        let before = try Self.decoded()
+        #expect(before.adjustments == nil && before.input(season: Self.seasonRow()).adjustments.isEmpty)
+
+        let id = "00000000-0000-0000-0000-0000000000f1"
+        let json = Self.json.replacingOccurrences(of: "\"matches\": [],", with: """
+            "adjustments": [{"id": "\(id)", "club_id": "\(Self.club)", "season_id": "\(Self.season)",
+              "member_id": "\(Self.bo)", "event_id": "\(Self.event)", "points": 0.5,
+              "reason": "CP knockout challenge"}],
+            "matches": [],
+            """)
+        let data = try JSONDecoder().decode(TavlaData.self, from: Data(json.utf8))
+        let input = data.input(season: Self.seasonRow())
+        #expect(input.adjustments == [PointAdjustment(id: UUID(uuidString: id)!.uuidString,
+                                                      playerId: UUID(uuidString: Self.bo)!.uuidString, points: 0.5,
+                                                      reason: "CP knockout challenge", date: "2026-10-08")])
+    }
+
     @Test func tomSesong() {
         let input = TavlaData().input(season: Self.seasonRow())
         #expect(input.rounds.isEmpty && input.members.isEmpty)

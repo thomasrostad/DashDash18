@@ -64,6 +64,16 @@ struct SesongContentView<Bottom: View>: View {
                     Text("Turneringen er ferdig. Reglene kan ikke endres.")
                 }
             }
+            // sql/072: poeng gitt for hånd, med en grunn.
+            Section {
+                NavigationLink {
+                    TilleggspoengView(season: season)
+                } label: {
+                    Label("Tilleggspoeng", systemImage: "plus.forwardslash.minus")
+                }
+            } footer: {
+                Text("Gi en spiller poeng for hånd, med en grunn. De legges på totalen i tabellen.")
+            }
             Section {
                 if showsName {
                     LabeledContent("Turnering", value: season.name)

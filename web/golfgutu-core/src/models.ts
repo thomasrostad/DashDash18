@@ -222,6 +222,20 @@ export interface SideClaim {
   ts: string | null;
 }
 
+/**
+ * Tilleggspoeng: poeng arrangøren gir en spiller for hånd, med en grunn (sql/072). Legges på totalen i
+ * tabellen ved siden av sidepremiene, uvektet, og strykes aldri av «beste N». Kan være negative.
+ */
+export interface PointAdjustment {
+  id: string | null;
+  playerId: string;
+  points: number;
+  /** Kort grunn, vist for spillerne. */
+  reason: string;
+  /** Kvelden (`YYYY-MM-DD`) tillegget hører til, eller `null`. Bare til visning. */
+  date: string | null;
+}
+
 /** `SIDE_CLAIM_LABEL`. */
 export function sideClaimLabel(kind: SideClaimKind): string {
   return kind === "drive" ? "Longest drive" : "Nærmest pinnen";
@@ -325,6 +339,17 @@ export function decodeRound(x: unknown, path = "$"): Round {
     counts: optBool(o, "counts", path) ?? true,
     pointsTable: optString(o, "pointsTable", path),
     hideLastHoles: optInt(o, "hideLastHoles", path) ?? 0,
+  };
+}
+
+export function decodePointAdjustment(x: unknown, path = "$"): PointAdjustment {
+  const o: JSONObject = obj(x, path);
+  return {
+    id: optString(o, "id", path),
+    playerId: reqString(o, "playerId", path),
+    points: reqNumber(o, "points", path),
+    reason: reqString(o, "reason", path),
+    date: optString(o, "date", path),
   };
 }
 

@@ -28,9 +28,11 @@ nonisolated struct TavlaData: Decodable, Equatable, Sendable {
     var courses: [CourseRow] = []
     var courseHoles: [CourseHoleRecord] = []
     var scores: [HoleScoreRow] = []
+    /// Tilleggspoeng (sql/072). nil når databasen ikke har dem ennå (feltet mangler i svaret).
+    var adjustments: [PointAdjustmentRow]? = nil
 
     enum CodingKeys: String, CodingKey {
-        case events, members, rounds, players, matches, claims, courses, scores
+        case events, members, rounds, players, matches, claims, courses, scores, adjustments
         case roundHoles = "round_holes"
         case courseHoles = "course_holes"
     }
@@ -55,8 +57,13 @@ nonisolated struct TavlaData: Decodable, Equatable, Sendable {
             s.names = names
             return s
         }
+        let adjustments = (adjustments ?? []).map {
+            PointAdjustment(id: $0.id.uuidString, playerId: $0.memberID.uuidString, points: $0.points,
+                            reason: $0.reason, date: $0.eventID.flatMap { dates[$0] })
+        }
         return TavlaInput(season: season, members: members, rounds: snapshots,
-                          nextEventDate: TavlaData.nextEventDate(events: events, rounds: rounds, today: today))
+                          nextEventDate: TavlaData.nextEventDate(events: events, rounds: rounds, today: today),
+                          adjustments: adjustments)
     }
 
     /// Neste kveld som ikke er spilt: den første fra i dag uten en runde som går eller er låst.

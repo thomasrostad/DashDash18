@@ -54,7 +54,7 @@ nonisolated enum TavlaTeams {
                 stableford: r.stableford, evenings: r.evenings,
                 isMe: me.map { me in group.contains { $0.memberID == me } } ?? false,
                 roundPoints: r.roundPoints, played: r.played, qualified: r.qualified,
-                playoffPending: r.playoffPending)
+                playoffPending: r.playoffPending, adjustment: r.adjustment)
         }
 
         let before = previous.map { previous -> [UUID: Int] in

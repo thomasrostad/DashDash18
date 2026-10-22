@@ -76,6 +76,31 @@ test("standingsFromTavlaData gir det samme i ett kall", () => {
   assert.deepEqual(grid(j.rounds), want.tavla[0].rounds);
 });
 
+// Tilleggspoeng (sql/072) i svaret: totalen er den gamle pluss tillegget (avrundet), grunnlaget nevner
+// dem, og kvelden blir datoen. Uten feltet er alt som før (fasiten over).
+test("tilleggspoeng fra tavla_data legges på totalen", () => {
+  const uid = (n: number) => `00000000-0000-0000-0000-${String(n).padStart(12, "0")}`;
+  const withAdj = {
+    ...fx.tavlaData,
+    adjustments: [
+      { id: uid(400), club_id: uid(9000), season_id: uid(9002), member_id: uid(2), event_id: uid(206), points: 1, reason: "CP knockout challenge" },
+      { id: uid(401), club_id: uid(9000), season_id: uid(9002), member_id: uid(4), event_id: null, points: -0.5, reason: "Kom for sent" },
+    ],
+  };
+  const season = decodeSeasonRow(fx.sesonger[0]);
+  const input = tavlaInput(decodeTavlaData(withAdj), season);
+  assert.deepEqual(input.adjustments?.map((a) => [a.playerId, a.date]), [[uid(2), "2026-06-11"], [uid(4), null]]);
+  const before = new TavlaStandings(tavlaInput(data, season), fx.me);
+  const after = new TavlaStandings(input, fx.me);
+  for (const old of before.rows) {
+    const row = after.rows.find((r) => r.memberID === old.memberID)!;
+    const extra = old.memberID === uid(2) ? 1 : old.memberID === uid(4) ? -0.5 : 0;
+    assert.equal(row.adjustment, extra, old.name);
+    assert.equal(row.total, Math.floor((old.total + extra) * 2 + 0.5) / 2, old.name);
+    assert.equal(after.basis(row)?.includes("fra tilleggspoeng") ?? false, extra !== 0, old.name);
+  }
+});
+
 function competition(kind: "league" | "fun", clubID: string | null, entry: "club" | "open", rules: CompetitionRow["rules"]): CompetitionRow {
   return { id: "00000000-0000-0000-0000-000000009100", kind, name: "Konkurranse", clubID, ownerID: null, seasonID: null, status: "active", entry, rules, startsOn: null, endsOn: null, isMain: false };
 }

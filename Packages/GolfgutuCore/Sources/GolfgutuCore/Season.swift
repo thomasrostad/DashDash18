@@ -12,6 +12,8 @@ public struct Season: Sendable {
     public let rounds: [Round]
     /// Innmeldinger til longest drive og nærmest pinnen.
     public let claims: [SideClaim]
+    /// Tilleggspoeng gitt for hånd (`PointAdjustment`), i lagret rekkefølge.
+    public let adjustments: [PointAdjustment]
     public let ruleset: Ruleset
     /// `round_points` per runde, regnet én gang.
     private let pointsByRound: [[String: Int]]
@@ -22,8 +24,9 @@ public struct Season: Sendable {
     ///   i hele slag. Legges på rundene (`Round.playingHandicaps`, og vinner over det som står der fra før)
     ///   og er fasit for poeng og matcher i den runden. Endrer en spiller handicap midt i sesongen,
     ///   regnes hver runde med det spilleren hadde da. Tom (standard): alt regnes fra troppen.
+    /// - Parameter adjustments: tilleggspoeng gitt for hånd. Tom (standard): tabellen er som før.
     public init(players: [Player], rounds: [Round], claims: [SideClaim] = [], ruleset: Ruleset = .golfgutu,
-                playingHandicaps: [String: [String: Double]] = [:]) {
+                playingHandicaps: [String: [String: Double]] = [:], adjustments: [PointAdjustment] = []) {
         self.players = players
         let rounds = rounds.map { round -> Round in
             var r = round
@@ -35,6 +38,7 @@ public struct Season: Sendable {
         }
         self.rounds = rounds
         self.claims = claims
+        self.adjustments = adjustments
         self.ruleset = ruleset
         pointsByRound = rounds.map { Scoring.roundPoints($0, roster: players, rules: ruleset) }
         formPointsByRound = ruleset.table.formPoints && ruleset.table.pointsSource == .stableford
@@ -111,7 +115,8 @@ public struct Season: Sendable {
     /// En rad i jakketavla.
     public struct JacketRow: Hashable, Sendable {
         public var player: Player
-        /// Duell (eller stablefordpoeng) + sidepremier, avrundet etter regelsettet (Golfgutu: nærmeste halve).
+        /// Duell (eller stablefordpoeng) + sidepremier + tilleggspoeng, avrundet etter regelsettet
+        /// (Golfgutu: nærmeste halve).
         public var total: Double
         /// Tellende matchpoeng. 0 når tabellen teller stableford.
         public var duel: Double
@@ -131,6 +136,8 @@ public struct Season: Sendable {
         public var evenings: Int = 0
         /// Har spilt nok kvelder til å rangeres (`table.minEvenings`). Alltid sann uten grense.
         public var qualified: Bool = true
+        /// Tilleggspoeng gitt for hånd (`adjustmentPoints`). 0 uten.
+        public var adjustment: Double = 0
     }
 
     /// En rad i tabellen med plass (`standings(playoffWinner:)`).
@@ -321,6 +328,18 @@ public struct Season: Sendable {
         sidePrizeResults(for: playerID).reduce(0) { $0 + $1.points }
     }
 
+    // MARK: Tilleggspoeng
+
+    /// Spillerens tilleggspoeng, i lagret rekkefølge.
+    public func adjustments(for playerID: String) -> [PointAdjustment] {
+        adjustments.filter { $0.playerId == playerID }
+    }
+
+    /// Summen av spillerens tilleggspoeng. Uvektet, og strykes aldri av «beste N».
+    public func adjustmentPoints(for playerID: String) -> Double {
+        adjustments(for: playerID).reduce(0) { $0 + $1.points }
+    }
+
     // MARK: Stablefordsummen
 
     /// Rundens poeng (`round.points`), regnet fra scorene.
@@ -372,7 +391,8 @@ public struct Season: Sendable {
     // MARK: Tabellene
 
     /// `jakketavle`: duellpoeng (eller stablefordpoeng, etter `table.pointsSource`) pluss sidepremier,
-    /// alle i troppen, med det som teller etter regelsettet.
+    /// alle i troppen, med det som teller etter regelsettet. Tilleggspoeng (`adjustments`) legges på
+    /// totalen før avrundingen; med snitt legges de på snittet. Uten tilleggspoeng: som PWA-en.
     /// Sortert på total, så regelsettets skilletegn (Golfgutu: hulldifferanse, stablefordsum), så navn (norsk).
     public func jacketBoard() -> [JacketRow] {
         let table = ruleset.table
@@ -383,18 +403,20 @@ public struct Season: Sendable {
             let s = Self.matchSum(d.counting, rules: ruleset)
             let side = selection.sidePrizes.counting.reduce(0) { $0 + $1.points }
             let played = playedEvenings(for: p.id)
+            let extra = adjustmentPoints(for: p.id)
             var row: JacketRow
             if table.pointsSource == .stableford {
                 let r = selection.rounds
                 let points = r.counting.reduce(0) { $0 + $1.points }
-                row = JacketRow(player: p, total: ruleset.roundTablePoints(points + side), duel: 0, side: side,
+                row = JacketRow(player: p, total: ruleset.roundTablePoints(points + side + extra), duel: 0, side: side,
                                 matches: 0, holes: 0, played: r.counting.count + r.dropped.count,
                                 stableford: stablefordTotal(for: p.id), roundPoints: points)
             } else {
-                row = JacketRow(player: p, total: ruleset.roundTablePoints(s.points + side), duel: s.points, side: side,
+                row = JacketRow(player: p, total: ruleset.roundTablePoints(s.points + side + extra), duel: s.points, side: side,
                                 matches: s.matches, holes: s.holes, played: d.counting.count + d.dropped.count,
                                 stableford: stablefordTotal(for: p.id))
             }
+            row.adjustment = extra
             row.evenings = played.count
             row.qualified = minEvenings <= 0 || played.count >= minEvenings
             if table.aggregation == .average {
@@ -407,7 +429,8 @@ public struct Season: Sendable {
                     .subtracting(counted.map { Self.eveningKey(rounds[$0]) })
                 let divisor = played.subtracting(droppedEvenings).count
                 let raw = d.counting.reduce(0) { $0 + $1.points } + selection.rounds.counting.reduce(0) { $0 + $1.points } + side
-                row.total = divisor > 0 ? ruleset.roundTablePoints(raw / Double(divisor)) : 0
+                let average = divisor > 0 ? raw / Double(divisor) : 0
+                row.total = ruleset.roundTablePoints(average + extra)
             }
             return row
         }

@@ -50,6 +50,17 @@ struct PlayerProfileView: View {
                         DDStatItem("Longest drive", value: p.longestDrive.map(SidePrizes.formatMeters)),
                     ])
                 }
+                if !p.adjustments.isEmpty {
+                    DDSectionLabel("Tilleggspoeng")
+                        .padding(.top, DDSpacing.m)
+                    VStack(spacing: 0) {
+                        ForEach(Array(p.adjustments.enumerated()), id: \.offset) { i, adjustment in
+                            AdjustmentLineView(adjustment: adjustment, standings: standings)
+                            if i < p.adjustments.count - 1 { DDDivider() }
+                        }
+                    }
+                    .ddCard(padding: DDSpacing.l)
+                }
                 if StatsFeature.isEnabled {
                     StatsProfileLink(memberID: memberID, name: p.row.name)
                 }
@@ -134,6 +145,33 @@ private struct ProfileHeader: View {
                     .fixedSize()
             }
         }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Ett tilleggspoeng: grunnen, kvelden og poengene.
+private struct AdjustmentLineView: View {
+    let adjustment: PointAdjustment
+    let standings: TavlaStandings
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(adjustment.reason)
+                    .font(.ddBody)
+                    .foregroundStyle(Color.ddInk)
+                if let date = PlayerProfile.adjustmentDate(adjustment) {
+                    Text(date)
+                        .font(.ddCaption)
+                        .foregroundStyle(Color.ddInkSecondary)
+                }
+            }
+            Spacer(minLength: 8)
+            Text(Tilleggspoeng.pointsText(adjustment.points, rules: standings.rules))
+                .font(.ddNumber)
+                .monospacedDigit()
+        }
+        .padding(.vertical, 12)
         .accessibilityElement(children: .combine)
     }
 }

@@ -1,0 +1,47 @@
+{
+  "_kilde": "Regnet for hånd (1.0.2, tilleggspoeng; finnes ikke i PWA-en). Tilleggspoeng er poeng arrangøren gir en spiller for hånd, med en grunn (sql/072). De legges på spillerens total i tabellen ved siden av sidepremiene, uvektet, og strykes aldri av «beste N». Totalen avrundes etter table.roundingStep etter at tillegget er lagt på. Med snitt (table.aggregation = average) legges tillegget på snittet. Kvelden («date») er bare til visning. Runder, poeng og sidepremier er de i sesong-stableford.json; tavla uten tillegg står der.",
+  "_regning": {
+    "alle runder teller": "Uten tillegg: Bjørn 158,5, Anne 157, Cato 134,5, Dag 0. Med tillegg: Bjørn 158,5 + 0,5 = 159, Anne 157 + 1 = 158, Cato 134,5 − 2 = 132,5, Dag 0 + 0,5 = 0,5.",
+    "beste 1 kveld": "Uten tillegg: Cato 66, Bjørn 50, Anne 50, Dag 0. Tillegget strykes ikke: Cato 66 − 2 = 64, Anne 50 + 1 = 51, Bjørn 50 + 0,5 = 50,5, Dag 0,5. Anne går forbi Bjørn.",
+    "snitt": "Anne (157 over 4 kvelder) 39,25 + 1 = 40,25 → 40,5. Bjørn (158,5 over 4) 39,625 + 0,5 = 40,125 → 40. Cato (134,5 over 3) 44,833 − 2 = 42,833 → 43. Dag (ingen kvelder) 0 + 0,5 = 0,5."
+  },
+  "tillegg": [
+    { "id": "t1", "playerId": "a", "points": 1, "reason": "CP knockout challenge", "date": "2026-05-29" },
+    { "id": "t2", "playerId": "b", "points": 0.5, "reason": "CP knockout challenge", "date": "2026-05-29" },
+    { "id": "t3", "playerId": "c", "points": -2, "reason": "Kom for sent" },
+    { "id": "t4", "playerId": "d", "points": 0.5, "reason": "CP knockout challenge", "date": "2026-05-29" },
+    { "id": "t5", "playerId": "ukjent", "points": 5, "reason": "Ikke i troppen: teller ikke" }
+  ],
+  "saker": [
+    {
+      "navn": "alle runder teller, sidepremier på",
+      "regelsett": { "version": 2, "table": { "pointsSource": "stableford", "counting": { "unit": "round", "best": null }, "stablefordCounting": { "unit": "round", "best": null }, "tiebreaks": ["stableford"] } },
+      "tavle": [
+        { "id": "b", "total": 159, "tillegg": 0.5 },
+        { "id": "a", "total": 158, "tillegg": 1 },
+        { "id": "c", "total": 132.5, "tillegg": -2 },
+        { "id": "d", "total": 0.5, "tillegg": 0.5 }
+      ]
+    },
+    {
+      "navn": "beste 1 kveld: tillegget strykes aldri",
+      "regelsett": { "version": 2, "table": { "pointsSource": "stableford", "counting": { "unit": "evening", "best": 1 }, "stablefordCounting": { "unit": "round", "best": null }, "tiebreaks": ["stableford"] }, "sidePrizes": { "longestDrive": { "enabled": false, "points": 1 }, "closestToPin": { "enabled": false, "points": 1 } } },
+      "tavle": [
+        { "id": "c", "total": 64, "tillegg": -2 },
+        { "id": "a", "total": 51, "tillegg": 1 },
+        { "id": "b", "total": 50.5, "tillegg": 0.5 },
+        { "id": "d", "total": 0.5, "tillegg": 0.5 }
+      ]
+    },
+    {
+      "navn": "snitt per kveld: tillegget legges på snittet",
+      "regelsett": { "version": 2, "table": { "pointsSource": "stableford", "aggregation": "average", "counting": { "unit": "round", "best": null }, "stablefordCounting": { "unit": "round", "best": null }, "tiebreaks": ["stableford"] } },
+      "tavle": [
+        { "id": "c", "total": 43, "tillegg": -2 },
+        { "id": "a", "total": 40.5, "tillegg": 1 },
+        { "id": "b", "total": 40, "tillegg": 0.5 },
+        { "id": "d", "total": 0.5, "tillegg": 0.5 }
+      ]
+    }
+  ]
+}
