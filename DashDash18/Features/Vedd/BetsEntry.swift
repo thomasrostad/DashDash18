@@ -339,8 +339,13 @@ private struct BetsTableContent: View {
                 ContentUnavailableView("Veddemål kommer", systemImage: "die.face.5",
                                        description: Text("Veddemål med poeng slås på når databasen er klar."))
             } else if case .failed(let message) = model.state {
-                ContentUnavailableView("Fikk ikke hentet tabellen", systemImage: "wifi.exclamationmark",
-                                       description: Text(message))
+                ContentUnavailableView {
+                    Label("Fikk ikke hentet tabellen", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Prøv igjen") { Task { await model.load() } }.buttonStyle(.dd(.primary))
+                }
             } else {
                 ProgressView("Henter tabellen …")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

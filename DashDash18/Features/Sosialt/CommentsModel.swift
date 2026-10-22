@@ -109,6 +109,7 @@ final class CommentsModel {
             onCountChange?(CommentList.count(comments))
             await startRealtime()
         } catch {
+            guard !DataError.isCancellation(error) else { return }
             if state == .loaded { return }
             state = .failed(DataError.from(error).message)
         }

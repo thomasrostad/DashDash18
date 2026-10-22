@@ -49,6 +49,9 @@ final class PushRegistrar {
         case failed(String)
     }
 
+    /// iOS eller APNs sa nei. Apples egen feiltekst er engelsk og sier brukeren lite.
+    static let systemFailure = "Telefonen fikk ikke koblet til varseltjenesten. Sjekk nettet og prøv igjen."
+
     private(set) var status: Status = .disabled
     private let client: SupabaseClient
     private var userID: UUID?
@@ -119,7 +122,7 @@ final class PushRegistrar {
             status = granted ? .registering : .denied
             if granted { UIApplication.shared.registerForRemoteNotifications() }
         } catch {
-            status = .failed(error.localizedDescription)
+            status = .failed(Self.systemFailure)
         }
     }
 
@@ -161,8 +164,8 @@ final class PushRegistrar {
 
     private func receive(_ result: Result<Data, any Error>) async {
         switch result {
-        case .failure(let error):
-            status = .failed(error.localizedDescription)
+        case .failure:
+            status = .failed(Self.systemFailure)
         case .success(let data):
             await send(token: PushToken.hex(data))
         }

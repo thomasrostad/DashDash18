@@ -268,8 +268,13 @@ struct ReactionWhoSheet: View {
                         }
                     }
                 } else if let error {
-                    ContentUnavailableView("Fikk ikke hentet reaksjonene", systemImage: "wifi.exclamationmark",
-                                           description: Text(error))
+                    ContentUnavailableView {
+                        Label("Fikk ikke hentet reaksjonene", systemImage: "wifi.exclamationmark")
+                    } description: {
+                        Text(error)
+                    } actions: {
+                        Button("Prøv igjen") { Task { await reload() } }.buttonStyle(.dd(.primary))
+                    }
                 } else {
                     ProgressView("Henter …")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -287,12 +292,16 @@ struct ReactionWhoSheet: View {
             .ddScreenBackground()
         }
         .presentationDetents([.medium, .large])
-        .task {
-            do {
-                groups = try await load()
-            } catch {
-                self.error = DataError.from(error).message
-            }
+        .task { await reload() }
+    }
+
+    private func reload() async {
+        error = nil
+        do {
+            groups = try await load()
+        } catch {
+            guard !DataError.isCancellation(error) else { return }
+            self.error = DataError.from(error).message
         }
     }
 }

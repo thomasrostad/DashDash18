@@ -137,6 +137,7 @@ final class VarslerModel {
             seen.markSeen(newRows)
             await startRealtime()
         } catch {
+            guard !DataError.isCancellation(error) else { return }
             if state == .loaded { return }  // behold det som vises
             state = .failed(DataError.from(error).message)
         }

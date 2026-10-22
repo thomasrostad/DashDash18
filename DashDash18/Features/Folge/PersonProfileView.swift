@@ -17,6 +17,7 @@ struct PersonProfileView: View {
     @State private var confirmsBlock = false
     @State private var blocked = false
     @State private var error: String?
+    @State private var loadError: String?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -56,6 +57,12 @@ struct PersonProfileView: View {
                     Label("\(name) er blokkert.", systemImage: "hand.raised").foregroundStyle(Color.ddInkSecondary)
                 }
             }
+            if let loadError {
+                Section {
+                    Label(loadError, systemImage: "wifi.exclamationmark").ddErrorStyle()
+                    Button("Prøv igjen") { Task { await load() } }
+                }
+            }
             if let error {
                 Section { Label(error, systemImage: "exclamationmark.triangle").ddErrorStyle() }
             }
@@ -87,12 +94,18 @@ struct PersonProfileView: View {
         }
     }
 
+    /// «Følg» er av til statusen er kjent, så du ikke kan trykke Følg på en du allerede følger.
     private func load() async {
-        let rows = (try? await FollowService(client: client).myFollows()) ?? []
-        let lists = FollowLists(rows)
-        status = lists.status(of: profileID)
-        followsMe = lists.followsMe(profileID)
-        loaded = true
+        do {
+            let lists = FollowLists(try await FollowService(client: client).myFollows())
+            status = lists.status(of: profileID)
+            followsMe = lists.followsMe(profileID)
+            loadError = nil
+            loaded = true
+        } catch {
+            guard !DataError.isCancellation(error) else { return }
+            loadError = FollowService.message(error)
+        }
     }
 
     private func block() {

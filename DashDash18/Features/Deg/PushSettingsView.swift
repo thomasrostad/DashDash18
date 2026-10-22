@@ -228,7 +228,7 @@ private struct PushPermissionRow: View {
             }
         case .failed(let message):
             VStack(alignment: .leading, spacing: 6) {
-                Text("Fikk ikke slått på varsler: \(message)")
+                Text("Fikk ikke slått på varsler. \(message)")
                 Button("Prøv igjen", action: enable)
                     .fontWeight(.medium)
             }

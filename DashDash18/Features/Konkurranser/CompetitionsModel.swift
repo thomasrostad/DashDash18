@@ -62,8 +62,8 @@ final class CompetitionsModel {
             overview = try await CompetitionQueries.overview(client: client)
             if let participations = await participations { access = access.with(participations: participations) }
             state = .loaded
-        } catch is CancellationError {
         } catch {
+            guard !DataError.isCancellation(error) else { return }
             if case .loaded = state { return }
             state = .failed(DataError.from(error).message)
         }
