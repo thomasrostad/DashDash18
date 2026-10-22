@@ -43,6 +43,8 @@ struct AppRoot: View {
                 .task(id: user.id) { await CardLockFeature.detect(client: services.client) }
                 // Følge andre spillere (sql/054): finnes funksjonene?
                 .task(id: user.id) { await FollowFeature.detect(client: services.client) }
+                // Forlat klubben (sql/069): finnes leave_club?
+                .task(id: user.id) { await LeaveClubFeature.detect(client: services.client) }
                 .task(id: user.id) { await services.club.load(userID: user.id) }
                 .task(id: user.id) { services.outbox.start(userID: user.id) }
                 .task(id: user.id) { await services.push.start(userID: user.id) }

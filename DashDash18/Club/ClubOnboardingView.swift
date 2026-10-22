@@ -101,6 +101,8 @@ struct PendingMembershipView: View {
                     Button("Spill med venner mens du venter", action: onPlayWithoutClub)
                         .buttonStyle(.dd(.secondary))
                 }
+                // sql/069: «Trekk forespørselen».
+                LeaveClubButton(membership: membership, user: user)
             }
             .ddScreenBackground()
             .toolbar {
