@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 
 /// Tavla-data i én RPC (fase 24, `sql/036_tavla_data.sql`).
 nonisolated enum TavlaRPCFeature {
