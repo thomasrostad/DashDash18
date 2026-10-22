@@ -15,6 +15,7 @@ struct NextEveningCard: View {
                 Text(EveningDates.longText(event.eventDate, referenceYear: referenceYear, capitalized: true))
                     .font(.ddTitle)
                     .foregroundStyle(Color.ddForestInk)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
                 if let daysUntil {
                     // Nedtellingen i sol-gult, som «12 DAGER» i PWA-en.
