@@ -49,7 +49,6 @@ private let samples: [ActivityEvent] = [
     .photoPrompt(eventDate: "2026-10-08", roundNo: 3, courseName: "Losby"),
     .memberPending(member: id(600), name: "Ola Nordmann", clubName: "Golfgutu Invitational"),
     .quietScore(member: anders, hole: 3, holeIndex: 2, name: .birdie, strokes: 2, par: 3),
-    .quietScore(member: bjorn, hole: 4, holeIndex: 3, name: .shank, strokes: 8, par: 4),
 ]
 
 /// Veddemål (012): PWA-ens ordlyd fra handleUtfordring og markets, med poeng for kroner.
