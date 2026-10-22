@@ -25,8 +25,17 @@ nonisolated enum TournamentSetup {
     }
 
     /// Oppsettene i steg 1. Uten klubb er matchspill-serien borte: den trenger kvelder og båser i en klubb.
+    /// Oppsett med en standardform appen ikke kan føre (skins), tilbys ikke (`isOffered`).
     static func templates(inClub: Bool) -> [RulesetTemplate] {
-        inClub ? RulesetTemplate.allCases : RulesetTemplate.allCases.filter(allowsPrivate)
+        let offered = RulesetTemplate.allCases.filter(isOffered)
+        return inClub ? offered : offered.filter(allowsPrivate)
+    }
+
+    /// Kan første runde føres med oppsettets standardform? Ellers stopper runde-oppsettet den
+    /// (`RoundSetupIssue.formNotSupported`). Turneringer som alt bruker oppsettet, kjennes igjen som før
+    /// (`RulesetSummary.candidates`).
+    static func isOffered(_ template: RulesetTemplate) -> Bool {
+        CompetitionForm.form(id: template.rules.formats.defaultFormID).support != .missing
     }
 
     /// Kan oppsettet lages uten klubb?

@@ -213,9 +213,11 @@ struct EnvironmentBadge: View {
     }
 }
 
+#if DEBUG
 #Preview {
     RootView(config: .preview, user: .preview, membership: .preview)
 }
+#endif
 
 extension AuthUser {
     static let preview = AuthUser(id: UUID(), email: "deg@epost.no")
@@ -229,6 +231,8 @@ extension Membership {
     )
 }
 
+#if DEBUG
+/// Bare for skjermprøvene, som `*Samples.swift`.
 extension AppConfig {
     static let preview = try! AppConfig(
         plistData: try! PropertyListSerialization.data(
@@ -243,6 +247,7 @@ extension AppConfig {
         expecting: .test
     )
 }
+#endif
 
 /// Ordet for en dag i klubbens hovedturnering (`DayTerm`).
 enum DayTermQueries {

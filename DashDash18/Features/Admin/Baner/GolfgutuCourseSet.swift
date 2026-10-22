@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 
 /// PWA-ens 18 baner, lest fra `Resources/golfgutu-baner.json`.
 ///
@@ -88,6 +89,14 @@ nonisolated struct GolfgutuCourseSet: Decodable, Equatable, Sendable {
     func missing(existingNames: [String]) -> [CourseEntry] {
         let existing = Set(existingNames.map(Self.nameKey))
         return courses.filter { !existing.contains(Self.nameKey($0.name)) }
+    }
+
+    /// «Importer Golfgutu-banene» er for Golfgutu-klubben (gjengen fra PWA-en): en av klubbens turneringer
+    /// har Golfgutu-oppsettet (`Ruleset.golfgutu`; dagens ord teller ikke), eller klubben har alt noen av
+    /// banene. Nye klubber ser den ikke.
+    func offersImport(existingNames: [String], clubRules: [Ruleset]) -> Bool {
+        clubRules.contains { RulesetTemplate.matching($0, among: [.matchSeries]) != nil }
+            || missing(existingNames: existingNames).count < courses.count
     }
 
     static func nameKey(_ name: String) -> String {

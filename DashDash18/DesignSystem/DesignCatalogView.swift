@@ -1,3 +1,4 @@
+#if DEBUG
 import GolfgutuCore
 import SwiftUI
 
@@ -340,3 +341,4 @@ struct DDListSample: View {
     NavigationStack { DesignCatalogView() }
         .dynamicTypeSize(.accessibility2)
 }
+#endif

@@ -182,6 +182,9 @@ struct FriendsDegView: View {
             DegAccountSection(user: user)
             DegOpenAppSections(client: client, user: user)
             DDSection("Om appen") {
+                if let version = AppVersion.text() {
+                    Text(version)
+                }
                 // Miljø og database vises bare i test-bygg.
                 if config.environment != .prod {
                     LabeledContent("Miljø", value: config.environment.displayName)

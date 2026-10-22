@@ -39,12 +39,24 @@ private struct RollerList: View {
 
     var body: some View {
         DDList {
-            if model.hasLoaded && !model.isAvailable {
+            if model.state == .loaded && !model.isAvailable {
                 ContentUnavailableView("Ingen roller ennå", systemImage: "person.badge.key",
                                        description: Text("Rollene kommer når klubben er oppdatert."))
             }
             ForEach(model.roles) { role in
                 section(role)
+            }
+        }
+        .overlay {
+            if case .failed(let message) = model.state {
+                ContentUnavailableView {
+                    Label("Fikk ikke hentet rollene", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Prøv igjen") { Task { await model.load() } }
+                        .buttonStyle(.dd(.primary))
+                }
             }
         }
         .disabled(model.isSaving)
@@ -154,10 +166,10 @@ private struct NewRoleView: View {
         .navigationBarTitleDisplayMode(.inline)
         .disabled(model.isSaving)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt") { dismiss() }
             }
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 Button("Lagre") {
                     Task {
                         if await model.save(id: nil, name: name, rights: rights) { dismiss() }

@@ -159,7 +159,7 @@ struct PlayoffStartView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        Form {
+        DDForm {
             Section {
                 ForEach(model.candidates) { c in
                     Toggle(c.name, isOn: Binding(
@@ -197,10 +197,10 @@ struct PlayoffStartView: View {
         .navigationTitle("Start playoff")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            DDCancelToolbarItem {
                 Button("Avbryt") { dismiss() }
             }
-            ToolbarItem(placement: .confirmationAction) {
+            DDConfirmToolbarItem {
                 Button("Start") {
                     Task { if let id = await model.start() { started(id) } }
                 }
@@ -344,7 +344,7 @@ struct PlayoffScreen: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if showsClose {
-                    ToolbarItem(placement: .cancellationAction) {
+                    DDCancelToolbarItem {
                         Button("Lukk") { dismiss() }
                     }
                 }
@@ -367,7 +367,7 @@ struct PlayoffScreen: View {
     }
 
     private func list(_ playoff: PlayoffState) -> some View {
-        List {
+        DDList {
             Section {
                 Text(playoff.statusText(name: model.name))
                     .font(.ddBodyEmphasis)

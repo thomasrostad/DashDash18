@@ -54,10 +54,10 @@ struct OwnProfileEditSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .ddNavigationChrome()
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                DDCancelToolbarItem {
                     Button("Avbryt") { dismiss() }
                 }
-                ToolbarItem(placement: .confirmationAction) {
+                DDConfirmToolbarItem {
                     if model.isSaving {
                         ProgressView()
                     } else {

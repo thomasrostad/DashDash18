@@ -65,7 +65,7 @@ final class StartListModel {
     /// Funksjonærene og arrangørene i staben, etter navn.
     var scorers: [(id: UUID, name: String)] {
         StaffList.sorted(staff) { self.staffNames[$0] ?? "" }
-            .map { (id: $0.profileID, name: staffNames[$0.profileID] ?? "Uten navn") }
+            .map { (id: $0.profileID, name: staffNames[$0.profileID] ?? "Ukjent") }
     }
 
     func load() async {

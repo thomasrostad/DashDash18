@@ -227,6 +227,7 @@ struct AnnouncementSheet: View {
 
 // MARK: - Forhåndsvisning
 
+#if DEBUG
 private enum VarslerPreviewData {
     static let club = UUID()
     static let anders = UUID(), bjorn = UUID(), thomas = UUID()
@@ -264,7 +265,6 @@ private enum VarslerPreviewData {
     }
 }
 
-#if DEBUG
 /// Varsler i klubben med oppdiktede linjer (`-DDDesignScreen varsler`).
 struct VarslerSampleScreen: View {
     var body: some View {

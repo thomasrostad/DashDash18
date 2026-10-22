@@ -107,6 +107,37 @@ struct IkkeStottetTekstTests {
         // En kladd som alt står på skins, beholder valget sitt (og stoppes ved lagring).
         #expect(RundeSetupStep.formChoices(allowed: CompetitionForm.all, current: skins).first?.id == "skins")
     }
+
+    /// App Review 2.1: ingen mal i «Ny turnering» skal gi en første runde som ikke kan føres.
+    @Test func ingenTilbudtMalHarEnFormSomMangler() {
+        for inClub in [true, false] {
+            for template in TournamentSetup.templates(inClub: inClub) {
+                let form = CompetitionForm.form(id: template.rules.formats.defaultFormID)
+                #expect(form.support != .missing, "\(template.title): \(form.name)")
+                // Standardformen står heller ikke som «ikke ferdig» i formvelgeren.
+                #expect(RundeSetupStep.supportNote(form).isEmpty, "\(template.title): \(form.name)")
+            }
+        }
+        // Skins-malen finnes fortsatt, så turneringer som bruker den, kjennes igjen.
+        #expect(!TournamentSetup.isOffered(.skinsSeries))
+        #expect(RulesetSummary.template(for: RulesetTemplate.skinsSeries.rules) == .skinsSeries)
+    }
+
+    /// «Ikke ferdig» står bare på former motoren ikke regner som hovedform.
+    @Test func ikkeFerdigBareDerMotorenMangler() {
+        for id in ["par-bogey", "amerikaner", "kobenhavner", "stableford", "fourball"] {
+            #expect(RundeSetupStep.supportNote(CompetitionForm.form(id: id)).isEmpty, "\(id)")
+        }
+        for id in ["slag-netto", "slag-brutto", "stableford-brutto", "maks-score"] {
+            #expect(RundeSetupStep.supportNote(CompetitionForm.form(id: id)) == " · ikke ferdig", "\(id)")
+        }
+    }
+
+    @Test func lagmatchUtenValgtLag() {
+        #expect(RundeSetupStep.teamMatchText(1, 2) == "Lag 1 – lag 2")
+        #expect(RundeSetupStep.teamMatchText(nil, 2) == "Velg lag – lag 2")
+        #expect(RundeSetupStep.teamMatchText(1, nil) == "Lag 1 – velg lag")
+    }
 }
 
 struct IngenVeddemalUtenBetsTests {

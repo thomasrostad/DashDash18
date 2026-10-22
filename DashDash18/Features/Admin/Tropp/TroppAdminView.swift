@@ -47,7 +47,7 @@ private struct TroppListView: View {
                     ForEach(sections.pending) { row in
                         memberLink(row)
                             .swipeActions(edge: .leading) {
-                                Button("Godkjenn") { run(.approve, row) }.tint(.green)
+                                Button("Godkjenn") { run(.approve, row) }.tint(Color.ddForest)
                             }
                             .swipeActions(edge: .trailing) {
                                 Button("Avvis", role: .destructive) { rejecting = row }
@@ -82,7 +82,22 @@ private struct TroppListView: View {
             }
         }
         .overlay {
-            if model.isLoading && !model.hasLoaded { ProgressView() }
+            if !model.hasLoaded, let error = model.error {
+                // Første henting feilet: én handling, som i Banene.
+                ContentUnavailableView {
+                    Label("Fikk ikke hentet troppen", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(error.message)
+                } actions: {
+                    Button("Prøv igjen") {
+                        model.error = nil
+                        Task { await model.load() }
+                    }
+                    .buttonStyle(.dd(.primary))
+                }
+            } else if model.isLoading && !model.hasLoaded {
+                ProgressView()
+            }
         }
         .refreshable { await model.load() }
         .toolbar {
@@ -105,7 +120,8 @@ private struct TroppListView: View {
         .sheet(isPresented: $isImporting) {
             TroppImportView(model: model)
         }
-        .troppErrorAlert(model: model, isActive: !isAdding && !isImporting)
+        // Før første henting står feilen i tomtilstanden over, ikke i en dialog.
+        .troppErrorAlert(model: model, isActive: !isAdding && !isImporting && model.hasLoaded)
         .confirmationDialog(
             rejecting.map { "Avvise \($0.displayName)?" } ?? "",
             isPresented: Binding(get: { rejecting != nil }, set: { if !$0 { rejecting = nil } }),

@@ -173,18 +173,15 @@ struct BillSettlementsView: View {
         }
     }
 
-    /// Kopier beløpet, åpne Vipps (ellers vipps.no, ellers App Store) og husk delen til du er tilbake.
+    /// Kopier beløpet, åpne Vipps (ellers Vipps i App Store) og husk delen til du er tilbake.
     private func pay(_ share: BillShareRow) {
         UIPasteboard.general.string = share.amount.plain
         copied = share.id
         tracker.opened(share: share.id)
         openURL(VippsLink.app) { accepted in
             guard !accepted else { return }
-            openURL(VippsLink.web) { accepted in
-                guard !accepted else { return }
-                openURL(VippsLink.appStore) { accepted in
-                    if !accepted { tracker.openFailed() }
-                }
+            openURL(VippsLink.appStore) { accepted in
+                if !accepted { tracker.openFailed() }
             }
         }
     }
