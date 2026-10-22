@@ -21,7 +21,7 @@ nonisolated struct FollowSuggestion: Equatable, Identifiable, Sendable {
     }
 }
 
-/// «Legg til venner»: folk du kjenner som du ikke følger ennå. Venn = dere følger hverandre;
+/// «Folk du kjenner» i «Følger»: folk du kjenner som du ikke følger ennå. Venn = dere følger hverandre;
 /// det finnes ingen egen vennemodell, bare følging (sql/054).
 nonisolated enum FollowSuggestions {
     /// Så mange vises på kortet i «Følger» på Hjem.
@@ -58,11 +58,10 @@ nonisolated extension FollowLists {
     var friendIDs: Set<UUID> { followingIDs.intersection(followers.map(\.profileID)) }
 }
 
-/// Forslagene og antallet forespørsler, for «Legg til venner» og kortet på Hjem.
+/// Forslagene til kortet øverst i «Følger» på Hjem.
 @Observable
 final class FollowAddFriendsModel {
     var suggestions: [FollowSuggestion] = []
-    private(set) var requests = 0
     private(set) var friends = 0
     private(set) var isLoaded = false
 
@@ -80,7 +79,6 @@ final class FollowAddFriendsModel {
         async let rows = try? service.myFollows()
         let lists = FollowLists(await rows ?? [])
         suggestions = FollowSuggestions.people(await known ?? [], me: userID, lists: lists)
-        requests = lists.requests.count
         friends = lists.friendIDs.count
         isLoaded = true
     }

@@ -46,6 +46,8 @@ struct FollowStatusButton: View {
     @Binding var status: FollowStatus
     var source: FollowSource = .search
     var compact = true
+    /// Personen følger deg: knappen heter «Følg tilbake».
+    var followsMe = false
     @State private var isWorking = false
     @State private var confirmsUnfollow = false
     @State private var error: String?
@@ -58,7 +60,7 @@ struct FollowStatusButton: View {
             }
         } label: {
             HStack(spacing: 6) {
-                Text(FollowButton.title(status))
+                Text(FollowButton.title(status, followsMe: followsMe))
                 if isWorking { ProgressView().controlSize(.mini) }
             }
         }
@@ -78,7 +80,7 @@ struct FollowStatusButton: View {
 
     private var hint: String {
         switch status {
-        case .none: "Ber om å følge \(name)."
+        case .none: followsMe ? "Følger \(name) tilbake." : "Ber om å følge \(name)."
         case .pending: "Trekker forespørselen."
         case .accepted: "Slutter å følge \(name)."
         }
@@ -128,5 +130,26 @@ struct FollowPersonLabel: View {
             }
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// En person som åpner profilen (uten klient, i skjermprøver: bare navnet).
+struct FollowPersonLink: View {
+    let client: SupabaseClient?
+    let userID: UUID
+    let row: FollowRow
+    var subtitle: String?
+
+    var body: some View {
+        if let client {
+            NavigationLink {
+                PersonProfileView(client: client, userID: userID, profileID: row.profileID,
+                                  name: row.displayName, avatarPath: row.avatarPath)
+            } label: {
+                FollowPersonLabel(client: client, name: row.displayName, avatarPath: row.avatarPath, subtitle: subtitle)
+            }
+        } else {
+            FollowPersonLabel(client: nil, name: row.displayName, avatarPath: row.avatarPath, subtitle: subtitle)
+        }
     }
 }

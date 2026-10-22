@@ -32,7 +32,7 @@ struct FollowingFeedView: View {
     @State var model: FollowingFeedModel
     /// «Klubben/Følger» øverst i innholdet, som på Hjem. nil: ingen velger.
     var tabPicker: Binding<HjemFeedTab>?
-    /// Kortet «Legg til venner» øverst (Hjem). Av der lista åpnes fra Deg → Følger.
+    /// Kortet «Finn folk å følge» øverst (Hjem). Av der lista åpnes fra Deg → Følger.
     var showsAddFriends = true
     @State private var addFriends: FollowAddFriendsModel?
     @State private var comments: CommentsModel?
@@ -68,7 +68,7 @@ struct FollowingFeedView: View {
                             .padding(.top, DDSpacing.l)
                     }
                     ForEach(model.cards) { card in
-                        FollowingCardView(card: card, client: model.client,
+                        FollowingCardView(card: card, client: model.client, userID: model.userID,
                                           toggle: { emoji in Task { await model.toggle(emoji, on: card) } },
                                           pickOther: { emojiTarget = card },
                                           openComments: { comments = model.comments(for: card) })
@@ -111,10 +111,11 @@ struct FollowingFeedView: View {
     }
 }
 
-/// Ett kort: hvem, når og hvor, slagene og til par, hullene, og reaksjonene.
+/// Ett kort: hvem (navnet åpner profilen), når og hvor, slagene og til par, hullene, og reaksjonene.
 struct FollowingCardView: View {
     let card: FollowingCard
     let client: SupabaseClient?
+    var userID: UUID?
     let toggle: (String) -> Void
     var pickOther: (() -> Void)?
     var openComments: (() -> Void)?
@@ -122,19 +123,18 @@ struct FollowingCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DDSpacing.m) {
-            HStack(spacing: DDSpacing.m) {
-                FollowAvatar(client: client, name: card.name, path: card.avatarPath, size: 36)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(card.isMine ? "Din runde" : card.name)
-                        .font(.ddBodyEmphasis)
-                        .foregroundStyle(Color.ddInk)
-                    Text(card.subtitle)
-                        .font(.ddCaption)
-                        .foregroundStyle(Color.ddInkSecondary)
+            if !card.isMine, let client, let userID {
+                NavigationLink {
+                    PersonProfileView(client: client, userID: userID, profileID: card.profileID,
+                                      name: card.name, avatarPath: card.avatarPath)
+                } label: {
+                    header.contentShape(.rect)
                 }
-                Spacer(minLength: 8)
+                .buttonStyle(.plain)
+                .accessibilityHint("Åpner profilen.")
+            } else {
+                header
             }
-            .accessibilityElement(children: .combine)
             HStack(alignment: .firstTextBaseline, spacing: DDSpacing.l) {
                 stat("Slag", card.strokes.map(String.init) ?? "–")
                 stat("Til par", card.toParText ?? "–")
@@ -154,6 +154,22 @@ struct FollowingCardView: View {
                         comments: openComments.map { ReactionBarComments(count: card.commentCount, open: $0) })
         }
         .ddCard()
+    }
+
+    private var header: some View {
+        HStack(spacing: DDSpacing.m) {
+            FollowAvatar(client: client, name: card.name, path: card.avatarPath, size: 36)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(card.isMine ? "Din runde" : card.name)
+                    .font(.ddBodyEmphasis)
+                    .foregroundStyle(Color.ddInk)
+                Text(card.subtitle)
+                    .font(.ddCaption)
+                    .foregroundStyle(Color.ddInkSecondary)
+            }
+            Spacer(minLength: 8)
+        }
+        .accessibilityElement(children: .combine)
     }
 
     private func stat(_ label: String, _ value: String) -> some View {

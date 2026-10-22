@@ -39,111 +39,41 @@ struct DegFollowSection: View {
     }
 }
 
-/// Deg → Følger: forespørsler øverst, så dem du følger og dem som følger deg, og innstillingene.
+/// «Følger»: én skjerm for å finne folk. Søkefeltet øverst, «Skann kode» og «Min kode», forespørslene,
+/// folk du kjenner, og én lenke til lista over dem du følger og dine følgere (med personvern).
+/// Åpnes fra Deg → Følger og fra kortet i «Følger» på Hjem.
 struct FollowHubView: View {
     @State var model: FollowHubModel
     @State private var scanning = false
+    @State private var showsCode = false
+    @State private var showsLists = false
     @State private var report: FollowRow?
     @State private var confirmsBlock: FollowRow?
     @State private var moderationError: String?
 
     var body: some View {
         DDList {
-            Section {
-                Text(model.lists.countsText)
-                    .font(.ddCallout)
-                    .foregroundStyle(Color.ddInkSecondary)
-                    .monospacedDigit()
-                if let client = model.client {
-                    NavigationLink {
-                        FollowAddFriendsView(model: FollowAddFriendsModel(client: client, userID: model.userID))
-                    } label: {
-                        Label("Legg til venner", systemImage: "person.badge.plus").labelStyle(DDIconLabelStyle())
-                    }
-                    NavigationLink { FollowSearchView(client: client, userID: model.userID) } label: {
-                        Label("Finn spillere", systemImage: "magnifyingglass").labelStyle(DDIconLabelStyle())
-                    }
-                    NavigationLink { FollowCodeView(client: client) } label: {
-                        Label("Min kode", systemImage: "qrcode").labelStyle(DDIconLabelStyle())
-                    }
-                    NavigationLink {
-                        FollowingFeedView(model: FollowingFeedModel(client: client, userID: model.userID),
-                                          showsAddFriends: false)
-                            .navigationTitle("Runder")
-                            .ddNavigationChrome()
-                    } label: {
-                        Label("Runder fra dem du følger", systemImage: "figure.golf").labelStyle(DDIconLabelStyle())
-                    }
-                }
-                Button { scanning = true } label: {
-                    Label("Skann kode", systemImage: "qrcode.viewfinder").labelStyle(DDIconLabelStyle())
-                }
-            }
-            if !model.lists.requests.isEmpty {
-                Section {
-                    ForEach(model.lists.requests) { row in requestRow(row) }
-                } header: {
-                    DDHeader("Forespørsler")
-                } footer: {
-                    DDFooter("Godtar du, ser de profilen din og de ferdige rundene dine.")
-                }
-            }
-            Section {
-                if model.lists.following.isEmpty, model.state == .loaded {
-                    Text("Du følger ingen ennå.").font(.ddCallout).foregroundStyle(Color.ddInkSecondary)
-                }
-                ForEach(model.lists.following) { row in
-                    personLink(row, subtitle: row.status == .pending ? "Venter på svar" : nil)
-                        .swipeActions {
-                            Button(row.status == .pending ? "Trekk" : "Slutt å følge", role: .destructive) {
-                                Task { await model.unfollow(row.profileID) }
-                            }
-                        }
-                }
-            } header: {
-                DDHeader("Du følger")
-            }
-            Section {
-                if model.lists.followers.isEmpty, model.state == .loaded {
-                    Text("Ingen følger deg ennå.").font(.ddCallout).foregroundStyle(Color.ddInkSecondary)
-                }
-                ForEach(model.lists.followers) { row in
-                    personLink(row, subtitle: nil)
-                        .swipeActions {
-                            Button("Fjern", role: .destructive) { Task { await model.removeFollower(row.profileID) } }
-                        }
-                }
-            } header: {
-                DDHeader("Følger deg")
-            } footer: {
-                DDFooter("Sveip for å slutte å følge eller fjerne en følger. De får ikke beskjed.")
-            }
-            if let settings = model.settings {
-                Section {
-                    Toggle("Godkjenn nye følgere", isOn: Binding(
-                        get: { settings.followApproval },
-                        set: { on in Task { await model.setApproval(on) } }))
-                        .tint(Color.ddForestInk)
-                    Toggle("Kan finnes i søk", isOn: Binding(
-                        get: { settings.searchable },
-                        set: { on in Task { await model.setSearchable(on) } }))
-                        .tint(Color.ddForestInk)
-                } header: {
-                    DDHeader("Personvern")
-                } footer: {
-                    DDFooter("Med godkjenning av kan alle som finner deg, følge deg med en gang. Skjult i søk finner andre deg bare via klubb, runde eller koden din.")
-                }
+            if model.search.isActive, let client = model.client {
+                FollowSearchResults(search: model.search, client: client, userID: model.userID)
+            } else {
+                content
             }
         }
+        .searchable(text: Bindable(model.search).text, placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: "Søk på navn")
+        .autocorrectionDisabled()
+        .task(id: model.search.text) { await model.search.search() }
         .overlay {
-            if model.state == .loading { ProgressView() }
-            if case .failed(let message) = model.state {
-                ContentUnavailableView {
-                    Label("Fikk ikke hentet følgingen", systemImage: "wifi.exclamationmark")
-                } description: {
-                    Text(message)
-                } actions: {
-                    Button("Prøv igjen") { Task { await model.load() } }.buttonStyle(.dd(.primary))
+            if !model.search.isActive {
+                if model.state == .loading { ProgressView() }
+                if case .failed(let message) = model.state {
+                    ContentUnavailableView {
+                        Label("Fikk ikke hentet følgingen", systemImage: "wifi.exclamationmark")
+                    } description: {
+                        Text(message)
+                    } actions: {
+                        Button("Prøv igjen") { Task { await model.load() } }.buttonStyle(.dd(.primary))
+                    }
                 }
             }
         }
@@ -153,6 +83,10 @@ struct FollowHubView: View {
         .task { await model.startRealtime() }
         .onDisappear { Task { await model.stopRealtime() } }
         .refreshable { await model.load() }
+        .navigationDestination(isPresented: $showsCode) {
+            if let client = model.client { FollowCodeView(client: client) }
+        }
+        .navigationDestination(isPresented: $showsLists) { FollowListsView(model: model) }
         .sheet(isPresented: $scanning, onDismiss: { Task { await model.load() } }) {
             if let client = model.client { FollowScanSheet(client: client) }
         }
@@ -171,12 +105,96 @@ struct FollowHubView: View {
         } message: {
             Text("Følgingen fjernes begge veier, og dere finner ikke hverandre i søket.")
         }
+        // Lista bak lenken viser sine egne feil.
         .alert("Noe gikk galt", isPresented: Binding(
-            get: { model.errorMessage != nil || moderationError != nil },
+            get: { !showsLists && (model.errorMessage != nil || moderationError != nil) },
             set: { if !$0 { model.errorMessage = nil; moderationError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(model.errorMessage ?? moderationError ?? "")
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        Section {
+            HStack(spacing: DDSpacing.s) {
+                Button { scanning = true } label: {
+                    Label("Skann kode", systemImage: "qrcode.viewfinder").frame(maxWidth: .infinity)
+                }
+                Button { showsCode = true } label: {
+                    Label("Min kode", systemImage: "qrcode").frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(.dd(.secondary, compact: true))
+            .disabled(model.client == nil)
+        } footer: {
+            DDFooter("Skann koden til den du vil følge, eller vis din egen. Den som skanner koden din, følger deg med en gang.")
+        }
+        if !model.lists.requests.isEmpty || !model.accepted.isEmpty {
+            Section {
+                ForEach(model.lists.requests) { row in requestRow(row) }
+                ForEach(model.accepted) { row in acceptedRow(row) }
+            } header: {
+                DDHeader("Forespørsler")
+            } footer: {
+                DDFooter("Godtar du, ser de profilen din og de ferdige rundene dine.")
+            }
+        }
+        if let client = model.client {
+            Section {
+                if model.state == .loaded, model.suggestions.isEmpty {
+                    VStack(alignment: .leading, spacing: DDSpacing.s) {
+                        Text("Ingen forslag nå. Folk fra klubben og rundene dine dukker opp her. Vis koden din, så kan andre følge deg.")
+                            .font(.ddCallout)
+                            .foregroundStyle(Color.ddInkSecondary)
+                        Button { showsCode = true } label: {
+                            Label("Vis koden min", systemImage: "qrcode")
+                        }
+                        .buttonStyle(.dd(.secondary, compact: true))
+                    }
+                    .padding(.vertical, 4)
+                }
+                ForEach($model.suggestions) { $person in
+                    FollowSuggestionRow(client: client, userID: model.userID, person: $person)
+                }
+            } header: {
+                DDHeader("Folk du kjenner")
+            } footer: {
+                DDFooter("Fra klubben, rundene og turneringene dine. Godkjenner de nye følgere, står du som «Venter» til de har svart.")
+            }
+        }
+        Section {
+            Button { showsLists = true } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Du følger og følgere").font(.ddBody).foregroundStyle(Color.ddInk)
+                        Text(model.lists.countsText)
+                            .font(.ddCaption)
+                            .foregroundStyle(Color.ddInkSecondary)
+                            .monospacedDigit()
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.ddCaption.weight(.semibold))
+                        .foregroundStyle(Color.ddInkSecondary)
+                        .accessibilityHidden(true)
+                }
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            if let client = model.client {
+                NavigationLink {
+                    FollowingFeedView(model: FollowingFeedModel(client: client, userID: model.userID),
+                                      showsAddFriends: false)
+                        .navigationTitle("Runder")
+                        .ddNavigationChrome()
+                } label: {
+                    Label("Runder fra dem du følger", systemImage: "figure.golf").labelStyle(DDIconLabelStyle())
+                }
+            }
+        } footer: {
+            DDFooter("Under «Du følger og følgere» bestemmer du også om nye følgere må godkjennes, og om du kan finnes i søk.")
         }
     }
 
@@ -203,17 +221,13 @@ struct FollowHubView: View {
         .padding(.vertical, 4)
     }
 
-    @ViewBuilder
-    private func personLink(_ row: FollowRow, subtitle: String?) -> some View {
-        if let client = model.client {
-            NavigationLink {
-                PersonProfileView(client: client, userID: model.userID, profileID: row.profileID,
-                                  name: row.displayName, avatarPath: row.avatarPath)
-            } label: {
-                FollowPersonLabel(client: client, name: row.displayName, avatarPath: row.avatarPath, subtitle: subtitle)
+    /// Godtatt: «Følger deg nå» og «Følg tilbake» (eller Venter / Følger).
+    private func acceptedRow(_ row: FollowRow) -> some View {
+        HStack(spacing: DDSpacing.s) {
+            FollowPersonLink(client: model.client, userID: model.userID, row: row, subtitle: "Følger deg nå")
+            if let client = model.client {
+                FollowBackButton(model: model, client: client, row: row)
             }
-        } else {
-            FollowPersonLabel(client: nil, name: row.displayName, avatarPath: row.avatarPath, subtitle: subtitle)
         }
     }
 
@@ -227,5 +241,92 @@ struct FollowHubView: View {
                 moderationError = DataError.from(error).message
             }
         }
+    }
+}
+
+/// «Du følger og følgere»: begge listene (sveip for å slutte å følge eller fjerne), og personvernet.
+struct FollowListsView: View {
+    @Bindable var model: FollowHubModel
+
+    var body: some View {
+        DDList {
+            Section {
+                if model.lists.following.isEmpty, model.state == .loaded {
+                    Text("Du følger ingen ennå.").font(.ddCallout).foregroundStyle(Color.ddInkSecondary)
+                }
+                ForEach(model.lists.following) { row in
+                    FollowPersonLink(client: model.client, userID: model.userID, row: row,
+                                     subtitle: row.status == .pending ? "Venter på svar" : nil)
+                        .swipeActions {
+                            Button(row.status == .pending ? "Trekk" : "Slutt å følge", role: .destructive) {
+                                Task { await model.unfollow(row.profileID) }
+                            }
+                        }
+                }
+            } header: {
+                DDHeader("Du følger")
+            }
+            Section {
+                if model.lists.followers.isEmpty, model.state == .loaded {
+                    Text("Ingen følger deg ennå.").font(.ddCallout).foregroundStyle(Color.ddInkSecondary)
+                }
+                ForEach(model.lists.followers) { row in
+                    HStack(spacing: DDSpacing.s) {
+                        FollowPersonLink(client: model.client, userID: model.userID, row: row)
+                        if let client = model.client, model.lists.followBackStatus(row.profileID) != nil {
+                            FollowBackButton(model: model, client: client, row: row)
+                        }
+                    }
+                    .swipeActions {
+                        Button("Fjern", role: .destructive) { Task { await model.removeFollower(row.profileID) } }
+                    }
+                }
+            } header: {
+                DDHeader("Følger deg")
+            } footer: {
+                DDFooter("Sveip for å slutte å følge eller fjerne en følger. De får ikke beskjed.")
+            }
+            if let settings = model.settings {
+                Section {
+                    Toggle("Godkjenn nye følgere", isOn: Binding(
+                        get: { settings.followApproval },
+                        set: { on in Task { await model.setApproval(on) } }))
+                        .tint(Color.ddForestInk)
+                    Toggle("Kan finnes i søk", isOn: Binding(
+                        get: { settings.searchable },
+                        set: { on in Task { await model.setSearchable(on) } }))
+                        .tint(Color.ddForestInk)
+                } header: {
+                    DDHeader("Personvern")
+                } footer: {
+                    DDFooter("Slår du av godkjenning, kan alle som finner deg, følge deg med en gang. Skjult i søk finner andre deg bare via klubb, runde eller koden din.")
+                }
+            }
+        }
+        .navigationTitle("Du følger og følgere")
+        .navigationBarTitleDisplayMode(.inline)
+        .ddNavigationChrome()
+        .refreshable { await model.load() }
+        .alert("Noe gikk galt", isPresented: Binding(
+            get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(model.errorMessage ?? "")
+        }
+    }
+}
+
+/// «Følg tilbake» for en som følger deg (Venter / Følger når du har trykket).
+struct FollowBackButton: View {
+    let model: FollowHubModel
+    let client: SupabaseClient
+    let row: FollowRow
+
+    var body: some View {
+        FollowStatusButton(client: client, profileID: row.profileID, name: row.displayName,
+                           status: Binding(get: { model.followBackStatus(row.profileID) },
+                                           set: { model.followBack[row.profileID] = $0 }),
+                           source: .suggestion, followsMe: true)
+            .fixedSize()
     }
 }

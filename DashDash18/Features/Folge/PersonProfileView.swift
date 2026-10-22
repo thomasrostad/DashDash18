@@ -37,7 +37,7 @@ struct PersonProfileView: View {
                 .padding(.vertical, 6)
                 if profileID != userID, !blocked {
                     FollowStatusButton(client: client, profileID: profileID, name: name, status: $status,
-                                       source: source, compact: false)
+                                       source: source, compact: false, followsMe: followsMe)
                         .disabled(!loaded)
                 }
             } footer: {

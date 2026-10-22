@@ -282,6 +282,11 @@ struct RundeView: View {
 
     @ViewBuilder
     private func standing(_ game: RoundGame) -> some View {
+        // «Følg medspillerne» øverst når runden er ferdig (sql/054).
+        if game.status == .locked, let follow = followAccess {
+            FollowCoPlayersSection(client: follow.client, userID: follow.userID, snapshot: game.snapshot)
+                .id(game.snapshot.round.id)
+        }
         if game.isDecidedHoleByHole, let matches = game.matchCard(viewer: model.viewer) {
             MatchkortSection(card: matches)
         }
@@ -297,11 +302,6 @@ struct RundeView: View {
         }
         if model.looseContext != nil {
             LooseRoundActions(model: model)
-        }
-        // «Følg medspillerne» når runden er ferdig (sql/054).
-        if game.status == .locked, let follow = followAccess {
-            FollowCoPlayersSection(client: follow.client, userID: follow.userID, snapshot: game.snapshot)
-                .id(game.snapshot.round.id)
         }
     }
 
