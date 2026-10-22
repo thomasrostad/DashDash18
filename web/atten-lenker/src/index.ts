@@ -246,7 +246,7 @@ function invalidInvitePage(nonce: string): string {
 const FOOTER_LINKS =
   `<p class="liten lenker"><a href="/personvern">Personvern</a> <a href="/vilkar">Vilkår</a> <a href="/support">Support</a></p>`;
 
-const HOME_TITLE = "Atten – golfapp for golfgjengen: turnering, scorekort og tavle";
+const HOME_TITLE = "Atten – golfapp for turnering, liga og golfgjeng";
 const HOME_DESCRIPTION =
   "Atten samler golfkvelden med gjengen: påmelding, båser, scorekort hull for hull og en tavle som oppdateres mens dere spiller. Liga og cup hele sesongen.";
 
@@ -260,24 +260,58 @@ function indexedHead(path: string, title: string, description: string): string {
   ].join("\n");
 }
 
+/// Strukturerte data for Google (schema.org). Ingen aggregateRating: appen har ingen vurderinger å vise.
+/// `<` skrives som \u003c, så ingenting i dataene kan lukke script-taggen.
+function homeJsonLd(nonce: string): string {
+  const data = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "MobileApplication",
+        name: "Atten",
+        operatingSystem: "iOS",
+        applicationCategory: "SportsApplication",
+        description: HOME_DESCRIPTION,
+        inLanguage: "nb",
+        url: `${SITE}/`,
+        downloadUrl: APP_STORE_URL,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "NOK" },
+      },
+      {
+        "@type": "Organization",
+        name: "Atten",
+        url: `${SITE}/`,
+        logo: `${SITE}/apple-touch-icon.png`,
+      },
+      {
+        "@type": "WebSite",
+        name: "Atten",
+        url: `${SITE}/`,
+        inLanguage: "nb",
+      },
+    ],
+  };
+  const json = JSON.stringify(data).replace(/</g, "\\u003c");
+  return `<script type="application/ld+json" nonce="${nonce}">${json}</script>\n`;
+}
+
 /// Ordene på forsiden er de samme som i App Store (golfturnering, scorekort, tavle, liga, golfgjeng),
-/// så nettsøk og App Store-søk peker samme vei.
+/// så nettsøk og App Store-søk peker samme vei. Teksten beskriver bare det appen faktisk gjør.
 function homePage(nonce: string): string {
-  const head = indexedHead("/", HOME_TITLE, HOME_DESCRIPTION) + smartBanner() + "\n";
+  const head = indexedHead("/", HOME_TITLE, HOME_DESCRIPTION) + smartBanner() + "\n" + homeJsonLd(nonce);
   const content = `
 <h1>Golfkvelden med gjengen, samlet i én app</h1>
 <p>Atten er golfappen for gjengen som spiller sammen hele sesongen. Påmelding, båser, scorekort og tavle, uten regneark.</p>
 <a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>
-<ul class="steg">
-<li><strong>Påmelding og båser:</strong> meld deg på kvelden og se hvem du spiller med.</li>
-<li><strong>Scorekort hull for hull:</strong> stableford, slagspill og matchspill med handicap.</li>
-<li><strong>Tavla:</strong> resultatene oppdateres mens dere spiller.</li>
-<li><strong>Liga og cup:</strong> golfturnering over hele sesongen, med vinnerjakke til slutt.</li>
-<li><strong>Gjengen:</strong> inviter med lenke og start en ny golfgjeng på et minutt.</li>
-</ul>
+<h2>Golfapp for turnering og liga</h2>
+<p>Atten er en golfapp for deg som arrangerer eller er med i en fast golfturnering. Lag en liga eller cup som går hele sesongen, eller en enkel turnering for én kveld. Spillerne melder seg på i appen, og arrangøren trekker båser og flighter. Du slipper regneark og meldinger på kryss og tvers.</p>
+<h2>Stableford, slagspill og matchspill</h2>
+<p>Før scoren hull for hull rett på telefonen. Atten regner med handicap og støtter stableford, slagspill og matchspill. Tavla oppdateres mens dere spiller, så alle ser hvem som leder, og tilskuere kan følge med i nettleseren uten å laste ned noe.</p>
+<h2>For golfgjengen, klubben og simulatorkvelden</h2>
+<p>Spiller dere på bane eller i simulator, fungerer det likt. Inviter golfgjengen med en lenke, og gjester kan være med uten egen konto. En klubb kan ha flere turneringer, og alle får bilder og reaksjoner fra kvelden i en egen feed. Når sesongen er over, går vinnerjakka til den som ligger øverst.</p>
 <p class="liten">Gratis for iPhone. Ingen reklame og ingen sporing.</p>
 ${FOOTER_LINKS}`;
-  return page(HOME_TITLE, content, nonce, "", "", { index: true, head });
+  return page(HOME_TITLE, content, nonce, "", "dok", { index: true, head });
 }
 
 const ROBOTS_TXT = `User-agent: *
@@ -290,12 +324,15 @@ Disallow: /captcha
 Sitemap: ${SITE}/sitemap.xml
 `;
 
+/// Dato for siste innholdsendring av sidene i sitemap.xml (ÅÅÅÅ-MM-DD). Settes til dagens dato når teksten på en av dem endres.
+const SITEMAP_LASTMOD = "2026-10-22";
+
 const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>${SITE}/</loc></url>
-<url><loc>${SITE}/personvern</loc></url>
-<url><loc>${SITE}/vilkar</loc></url>
-<url><loc>${SITE}/support</loc></url>
+<url><loc>${SITE}/</loc><lastmod>${SITEMAP_LASTMOD}</lastmod></url>
+<url><loc>${SITE}/personvern</loc><lastmod>${SITEMAP_LASTMOD}</lastmod></url>
+<url><loc>${SITE}/vilkar</loc><lastmod>${SITEMAP_LASTMOD}</lastmod></url>
+<url><loc>${SITE}/support</loc><lastmod>${SITEMAP_LASTMOD}</lastmod></url>
 </urlset>
 `;
 

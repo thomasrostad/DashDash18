@@ -101,6 +101,7 @@ Disse krever innlogging som agentene ikke har.
 - [x] A3 del-kort (#192)
 - [x] A4 metadata (#189), `node docs/app-store/sjekk.mjs` uten brudd
 - [x] A5 skjermbilder (#191). Bilde 5 viser $-ikon ved Skins: bytt ikon eller skjerm før opplasting (jf. avvisning 2.3.6)
+- [x] SEO/ASO-finpuss 22.10 (denne PR-en): JSON-LD og brødtekst på forsiden, kortere tittel, undertittel «Turnering, liga og scorekort», nye nøkkelord, engelsk reklametekst i en-GB, `lastmod` i sitemap. Tabellen i A4 viser teksten slik den var før; filene i `docs/app-store/metadata/` gjelder
 - [ ] T1 deploy og Search Console
 - [ ] T2 reklametekst
 - [ ] T3 innsending med ny metadata
