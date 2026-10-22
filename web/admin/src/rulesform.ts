@@ -1,8 +1,11 @@
 // Tabellreglene fra steg 6 i «Reglene» (som RulesetDraft i appen): minste antall kvelder, sum eller snitt,
-// navngitte poengtabeller, likt på første plass og trekning av matcher. Rene funksjoner på et regelsett som
+// navngitte poengtabeller, likt på første plass og trekning av matcher. Og tippekupongen: mal, spørsmål og linjer. Rene funksjoner på et regelsett som
 // endres på stedet (RulesEditor kloner først), så de kan testes uten React.
 
-import { dayCount, dayMany, dayOne, rulesetDay, type Ruleset } from "../../golfgutu-core/src/index.ts";
+import {
+  dayCount, dayMany, dayOne, matchingTipsTemplate, rulesetDay, TIPS_QUESTIONS, TIPS_TEMPLATES,
+  type Ruleset, type TipsQuestion, type TipsTemplate,
+} from "../../golfgutu-core/src/index.ts";
 
 export type DrawMethod = Ruleset["formats"]["drawMethod"];
 export type TieRule = Ruleset["table"]["tieRule"];
@@ -88,4 +91,37 @@ export function setPointsTableMultiplier(r: Ruleset, name: string, multiplier: n
 
 export function removePointsTable(r: Ruleset, name: string): void {
   if (r.table.pointsTables) delete r.table.pointsTables[name];
+}
+
+// MARK: Tippekupongen
+
+/** Spørsmålene slik arrangøren ser dem (`TipsQuestion.title` i appen). */
+export const TIPS_QUESTION_TITLES: Readonly<Record<TipsQuestion, string>> = {
+  winner: "Hvem vinner kvelden?",
+  frontNine: "Lavest netto på første ni?",
+  backNine: "Lavest netto på siste ni?",
+  mostPars: "Flest par eller bedre?",
+  birdie: "Blir det slått en birdie?",
+  birdieCount: "Antall birdier: over eller under?",
+  mostBirdies: "Hvem får flest birdier?",
+  over: "Over eller under linja?",
+  winnerPoints: "Vinnerens poeng: over eller under?",
+};
+
+/** Malen kupongen er på, eller `null` (tilpasset). */
+export function tipsTemplateOf(r: Ruleset): TipsTemplate | null {
+  return matchingTipsTemplate(r.tips.questions);
+}
+
+/** Velger en mal: spørsmålene byttes, linjene står. */
+export function applyTipsTemplate(r: Ruleset, id: TipsTemplate): void {
+  const t = TIPS_TEMPLATES.find((t) => t.id === id);
+  if (t) r.tips.questions = [...t.questions];
+}
+
+/** Slår et spørsmål av eller på. Lista holdes i kupongens rekkefølge, så malene kjennes igjen. */
+export function setTipsQuestion(r: Ruleset, q: TipsQuestion, on: boolean): void {
+  const chosen = new Set(r.tips.questions);
+  if (on) chosen.add(q); else chosen.delete(q);
+  r.tips.questions = TIPS_QUESTIONS.filter((x) => chosen.has(x));
 }

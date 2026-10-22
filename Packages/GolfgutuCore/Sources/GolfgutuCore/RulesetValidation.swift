@@ -171,6 +171,15 @@ extension Ruleset {
         if !(tips.lineStep > 0) || tips.lineStep != tips.lineStep.rounded() {
             add("tips.lineStep", "Linja må flyttes i hele slag, så den blir stående på et halvt.")
         }
+        if tips.questions.isEmpty || Set(tips.questions).count != tips.questions.count {
+            add("tips.questions", "Kupongen må ha minst ett spørsmål, hvert bare én gang.")
+        }
+        if !Tips.isHalf(tips.birdieCountLine, in: Tips.birdieCountLineLimits) {
+            add("tips.birdieCountLine", "Linja for antall birdier må være et halvt tall (som 14,5) mellom 0,5 og 99,5.")
+        }
+        if !Tips.isHalf(tips.winnerPointsLine, in: Tips.winnerPointsLineLimits) {
+            add("tips.winnerPointsLine", "Linja for vinnerens poeng må være et halvt tall (som 37,5) mellom 0,5 og 149,5.")
+        }
 
         // Veddemål. Grensene er databasens (bet_stakes.points, sql/012_veddemaal.sql).
         if !(1...17).contains(bets.lockAheadHoles) {
