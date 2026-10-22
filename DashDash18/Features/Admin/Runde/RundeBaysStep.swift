@@ -111,7 +111,7 @@ struct RundeBaysStep: View {
         } label: {
             HStack {
                 Text(model.memberName(id))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.ddInk)
                 Spacer()
                 if seat?.isMarker == true {
                     Label("Markør", systemImage: "pencil.and.list.clipboard")
