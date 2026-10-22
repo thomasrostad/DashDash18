@@ -84,7 +84,7 @@ function captchaPage(siteKey: string, nonce: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Sjekk – Atten</title>
+<title>Sikkerhetssjekk – Atten</title>
 <style>${STYLE}</style>
 </head>
 <body>
@@ -104,7 +104,7 @@ function missingKeyPage(): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Sjekk – Atten</title>
+<title>Sikkerhetssjekk – Atten</title>
 <style>${STYLE}</style>
 </head>
 <body>

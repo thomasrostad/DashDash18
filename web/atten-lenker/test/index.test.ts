@@ -1,6 +1,7 @@
 // Kjøres med Node 24 uten Cloudflare: `npm test` (eller `node --test test/`).
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
 import worker, { normalizeCode, normalizeFollowCode, APP_ID, APP_STORE_URL } from "../src/index.ts";
 
 const BASE = "https://dashdash18.com";
@@ -55,9 +56,8 @@ test("invitasjonsside for klubb, runde og konkurranse", async () => {
     assert.equal(html.includes("Velg navnet ditt på lista"), path.startsWith("/konkurranse/"), `${path}: stegene`);
     // Ingen eksterne skript eller ressurser.
     assert.doesNotMatch(html, /<script[^>]*src=/);
-    // Eneste lenke ut er App Store (Smart App Banner peker tilbake til samme adresse).
-    const withoutBanner = html.replace(/<meta name="apple-itunes-app" [^>]*>/, "");
-    assert.doesNotMatch(withoutBanner.replaceAll("https://apps.apple.com/no/app/atten/id6820031728", ""), /https?:\/\//);
+    // Eneste lenke ut er App Store. Smart App Banner og del-kortet peker tilbake til dashdash18.com.
+    assert.doesNotMatch(html.replaceAll("https://apps.apple.com/no/app/atten/id6820031728", "").replaceAll(BASE, ""), /https?:\/\//);
     // Det innebygde skriptet har nonce-en fra CSP-en.
     const nonce = /'nonce-([0-9a-f]+)'/.exec(csp)?.[1];
     assert.ok(nonce && html.includes(`<script nonce="${nonce}">`));
@@ -113,11 +113,17 @@ test("forsiden", async () => {
   }
 });
 
-test("alt annet er 404", async () => {
-  for (const path of ["/klubb", "/runde/ABCDE12345/mer", "/Runde/ABCDE12345", "/favicon.ico", "/index.html", "/.well-known/"]) {
+test("alt annet er 404, med egen side i samme stil", async () => {
+  for (const path of ["/klubb", "/runde/ABCDE12345/mer", "/Runde/ABCDE12345", "/index.html", "/.well-known/", "/kart.js.map"]) {
     const res = await get(path);
     assert.equal(res.status, 404, path);
-    assert.match(await res.text(), /Fant ikke siden/, path);
+    assert.equal(res.headers.get("content-type"), "text/html; charset=utf-8", path);
+    const html = await res.text();
+    assert.match(html, /<title>Fant ikke siden – Atten<\/title>/, path);
+    assert.equal((html.match(/<h1>/g) ?? []).length, 1, path);
+    assert.match(html, /<a class="knapp" href="\/">Til forsiden<\/a>/, path);
+    assert.ok(html.includes(`href="${APP_STORE_URL}"`), `${path}: lenke til App Store`);
+    assert.match(html, /<meta name="robots" content="noindex">/, path);
   }
 });
 
@@ -138,8 +144,8 @@ test("følgekoden (sql/054): side med lenke til appen, ugyldig kode gir 404", as
   assert.match(html, /Åpne Atten for å følge/);
   assert.ok(html.includes('<span class="kode">ABCD-EFGH</span>'));
   assert.ok(html.includes('href="dashdash://folg/ABCDEFGH"'));
-  // Eneste lenke ut er App Store.
-  assert.doesNotMatch(html.replaceAll("https://apps.apple.com/no/app/atten/id6820031728", ""), /https?:\/\//);
+  // Eneste lenke ut er App Store (resten er dashdash18.com i Smart App Banner og del-kortet).
+  assert.doesNotMatch(html.replaceAll("https://apps.apple.com/no/app/atten/id6820031728", "").replaceAll(BASE, ""), /https?:\/\//);
   assert.equal((await get("/folg/ABCDEFG1")).status, 404);
   assert.equal((await get("/folg/")).status, 404);
   assert.equal(normalizeFollowCode(" abcd efgh "), "ABCDEFGH");
@@ -147,7 +153,7 @@ test("følgekoden (sql/054): side med lenke til appen, ugyldig kode gir 404", as
   assert.equal(normalizeFollowCode("ABCDEFGHJ"), null);
 });
 
-test("robots.txt og sitemap.xml: bare forsiden indekseres", async () => {
+test("robots.txt og sitemap.xml: forsiden, personvern, vilkår og support indekseres", async () => {
   const robots = await get("/robots.txt");
   assert.equal(robots.status, 200);
   assert.match(robots.headers.get("content-type") ?? "", /^text\/plain/);
@@ -158,8 +164,16 @@ test("robots.txt og sitemap.xml: bare forsiden indekseres", async () => {
   assert.equal(sitemap.status, 200);
   assert.match(sitemap.headers.get("content-type") ?? "", /^application\/xml/);
   const xml = await sitemap.text();
-  assert.equal((xml.match(/<loc>/g) ?? []).length, 1);
-  assert.match(xml, /<loc>https:\/\/dashdash18\.com\/<\/loc>/);
+  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  assert.deepEqual(locs, INDEXED.map((path) => BASE + path));
+  // Hver side i sitemap.xml svarer 200, kan indekseres og har seg selv som kanonisk adresse.
+  for (const path of INDEXED) {
+    const res = await get(path);
+    assert.equal(res.status, 200, path);
+    const html = await res.text();
+    assert.doesNotMatch(html, /noindex/, path);
+    assert.ok(html.includes(`<link rel="canonical" href="${BASE + path}">`), `${path}: kanonisk adresse`);
+  }
 });
 
 test("invitasjoner: noindex og Smart App Banner som åpner riktig lenke", async () => {
@@ -169,9 +183,75 @@ test("invitasjoner: noindex og Smart App Banner som åpner riktig lenke", async 
   assert.match(html, /<meta name="apple-itunes-app" content="app-id=6820031728, app-argument=https:\/\/dashdash18\.com\/runde\/ABCDE12345">/);
 });
 
-test("andre sider er fortsatt noindex", async () => {
-  for (const path of ["/personvern", "/support", "/finnes-ikke"]) {
+test("andre sider er fortsatt noindex, og står ikke i sitemap.xml", async () => {
+  for (const path of ["/finnes-ikke", "/runde/ABCDE12345", "/folg/ABCDEFGH", "/tv", "/tavla/ABCDE12345"]) {
     const html = await (await get(path)).text();
     assert.match(html, /<meta name="robots" content="noindex">/, path);
+    assert.doesNotMatch(html, /rel="canonical"/, path);
+  }
+});
+
+const INDEXED = ["/", "/personvern", "/vilkar", "/support"];
+
+test("indekserte sider: egen tittel, beskrivelse og del-kort med bilde", async () => {
+  const titles = new Set<string>();
+  const descriptions = new Set<string>();
+  for (const path of INDEXED) {
+    const html = await (await get(path)).text();
+    const title = /<title>([^<]+)<\/title>/.exec(html)?.[1] ?? "";
+    const description = /<meta name="description" content="([^"]+)">/.exec(html)?.[1] ?? "";
+    assert.ok(title.length >= 10 && title.length <= 70, `${path}: tittel «${title}»`);
+    assert.ok(description.length >= 50 && description.length <= 160, `${path}: beskrivelse (${description.length} tegn)`);
+    titles.add(title);
+    descriptions.add(description);
+    assert.equal((html.match(/<h1>/g) ?? []).length, 1, `${path}: én h1`);
+    assert.ok(html.includes(`<meta property="og:url" content="${BASE + path}">`), `${path}: og:url`);
+    assert.ok(html.includes(`<meta property="og:title" content="${title}">`), `${path}: og:title`);
+    assert.ok(html.includes(`<meta property="og:description" content="${description}">`), `${path}: og:description`);
+    assert.match(html, /<meta property="og:type" content="website">/, path);
+    assert.match(html, /<meta property="og:image" content="https:\/\/dashdash18\.com\/og\.png">/, path);
+    assert.match(html, /<meta name="twitter:card" content="summary_large_image">/, path);
+  }
+  assert.equal(titles.size, INDEXED.length, "titlene er unike");
+  assert.equal(descriptions.size, INDEXED.length, "beskrivelsene er unike");
+});
+
+test("alle HTML-sider: lang=nb, tittel og ikoner som finnes i public/", async () => {
+  for (const path of ["/", "/personvern", "/vilkar", "/support", "/runde/ABCDE12345", "/folg/ABCDEFGH",
+                      "/runde/FEIL", "/finnes-ikke", "/tv", "/tv/ABCDE12345", "/tavla/ABCDE12345", "/tavla/x"]) {
+    const res = await get(path);
+    const html = await res.text();
+    assert.match(html, /<html lang="nb">/, path);
+    assert.match(html, /<title>[^<]*Atten[^<]*<\/title>/, path);
+    assert.match(html, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml">/, path);
+    assert.match(html, /<link rel="apple-touch-icon" href="\/apple-touch-icon\.png">/, path);
+    assert.match(res.headers.get("content-security-policy") ?? "", /img-src 'self'/, path);
+  }
+  for (const file of ["favicon.ico", "favicon.svg", "apple-touch-icon.png", "og.png"]) {
+    assert.ok(existsSync(new URL(`../public/${file}`, import.meta.url)), `public/${file}`);
+  }
+  // og.png er 1200 × 630 (bredde og høyde står i PNG-hodet).
+  const png = readFileSync(new URL("../public/og.png", import.meta.url));
+  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1200, 630]);
+});
+
+test("invitasjoner og følgekoden: egen tittel og del-kort", async () => {
+  const cases: [string, string][] = [
+    ["/klubb/ABCDEF123456", "Invitasjon til en klubb – Atten"],
+    ["/runde/ABCDE12345", "Invitasjon til en runde – Atten"],
+    ["/konkurranse/ABCDE12345", "Invitasjon til en turnering – Atten"],
+    ["/folg/ABCDEFGH", "Følg i Atten"],
+  ];
+  for (const [path, title] of cases) {
+    const html = await (await get(path)).text();
+    assert.ok(html.includes(`<title>${title}</title>`), path);
+    assert.ok(html.includes(`<meta property="og:title" content="${title}">`), path);
+    assert.ok(html.includes(`<meta property="og:url" content="${BASE + path}">`), path);
+  }
+});
+
+test("ingen ord om pengespill på sidene", async () => {
+  for (const path of ["/", "/support", "/runde/ABCDE12345", "/finnes-ikke"]) {
+    assert.doesNotMatch(await (await get(path)).text(), /tipping|veddemål|betting/i, path);
   }
 });

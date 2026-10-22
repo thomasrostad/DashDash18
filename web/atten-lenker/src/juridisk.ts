@@ -117,10 +117,12 @@ const SUPPORT_HTML = `
 <li><a href="/vilkar">Vilkår for bruk</a></li>
 </ul>`;
 
-export type LegalPage = { title: string; content: string };
+/// `path`: den kanoniske adressen (uten / til slutt). `description`: teksten i søkeresultatet og del-kortet.
+export type LegalPage = { path: string; title: string; description: string; content: string };
 
-function fromMarkdown(markdown: string): LegalPage {
-  return { title: firstHeading(markdown), content: markdownToHTML(markdown) + `\n<p class="liten"><a href="/">Til forsiden</a></p>` };
+function fromMarkdown(path: string, markdown: string, description: string): LegalPage {
+  return { path, title: firstHeading(markdown), description,
+           content: markdownToHTML(markdown) + `\n<p class="liten"><a href="/">Til forsiden</a></p>` };
 }
 
 let pages: Record<string, LegalPage> | null = null;
@@ -130,9 +132,15 @@ export function legalPage(pathname: string): LegalPage | null {
   const match = /^\/(personvern|vilkar|support)\/?$/.exec(pathname);
   if (!match) return null;
   pages ??= {
-    personvern: fromMarkdown(PERSONVERN_MD),
-    vilkar: fromMarkdown(VILKAR_MD),
-    support: { title: "Support – Atten", content: SUPPORT_HTML + `\n<p class="liten"><a href="/">Til forsiden</a></p>` },
+    personvern: fromMarkdown("/personvern", PERSONVERN_MD,
+      "Hvilke opplysninger golfappen Atten lagrer, hvorfor, hvor de ligger og hvordan du sletter kontoen. Ingen reklame og ingen sporing."),
+    vilkar: fromMarkdown("/vilkar", VILKAR_MD,
+      "Vilkårene for å bruke golfappen Atten: kontoen din, regler for innhold, poeng uten penger, ansvar og kontakt."),
+    support: {
+      path: "/support", title: "Support – Atten",
+      description: "Kontakt Atten, slett kontoen din, eller rapporter og blokker innhold i golfappen.",
+      content: SUPPORT_HTML + `\n<p class="liten"><a href="/">Til forsiden</a></p>`,
+    },
   };
   return pages[match[1]];
 }
