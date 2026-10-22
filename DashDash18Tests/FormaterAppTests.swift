@@ -404,7 +404,8 @@ struct FormaterGjenbrukTests {
         for t in [RulesetTemplate.amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam] {
             #expect(!TournamentSetup.allowsPrivate(t))
             #expect(TournamentSetup.target(t, clubID: F.club) == .season)
-            #expect(TournamentSetup.templates(inClub: true).contains(t))
+            // Skins kan ikke føres i appen ennå, så malen tilbys ikke (`TournamentSetup.isOffered`).
+            #expect(TournamentSetup.templates(inClub: true).contains(t) == (t != .skinsSeries))
             #expect(!TournamentSetup.templates(inClub: false).contains(t))
         }
         #expect(RulesetTemplate.skinsSeries.rules.table.formPoints)

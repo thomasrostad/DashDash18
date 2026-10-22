@@ -21,9 +21,10 @@ struct NyTurneringTests {
     // MARK: Hvilke oppsett
 
     @Test func fireIKlubbTreUtenKlubb() {
-        // Med formene fra steg 7 (Amerikaner, Københavner, skins og lag mot lag), bare i en klubb.
+        // Med formene fra steg 7 (Amerikaner, Københavner og lag mot lag), bare i en klubb. Skins tilbys
+        // ikke før formen kan føres i appen.
         #expect(TournamentSetup.templates(inClub: true) == [.stablefordSeries, .matchSeries, .cup, .fun,
-                                                            .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam])
+                                                            .amerikanerSeries, .kobenhavnerSeries, .teamVsTeam])
         #expect(TournamentSetup.templates(inClub: false) == [.stablefordSeries, .cup, .fun])
     }
 
