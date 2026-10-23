@@ -1,20 +1,30 @@
 import { useState } from "react";
-import { errorText, supabase } from "./supabase.ts";
+import { canSendCode, otpOptions } from "./captcha.ts";
+import { config, errorText, supabase } from "./supabase.ts";
+import { Turnstile } from "./Turnstile.tsx";
 
-/** E-postkode, som i appen. Bare brukere som finnes (logg inn i appen første gang). */
+/** E-postkode, som i appen. Bare brukere som finnes (logg inn i appen første gang).
+ *  Med site key for Turnstile kommer sjekken før koden sendes (`CaptchaFeature`). */
 export function Login() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const siteKey = config?.turnstileSiteKey ?? null;
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState<string | null>(null);
+  // Et token kan bare brukes én gang: ny widget etter hvert forsøk.
+  const [captchaRound, setCaptchaRound] = useState(0);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } });
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: otpOptions(captchaToken) });
     setBusy(false);
+    setCaptchaToken(null);
+    setCaptchaRound((n) => n + 1);
     if (error) setError(errorText(error));
     else setSent(true);
   }
@@ -36,7 +46,11 @@ export function Login() {
         {!sent ? (
           <form onSubmit={send}>
             <label>E-post<input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-            <button className="primary" disabled={busy || !email.includes("@")}>Send kode</button>
+            {siteKey && (
+              <Turnstile key={captchaRound} siteKey={siteKey} onToken={setCaptchaToken} onError={setCaptchaError} />
+            )}
+            {captchaError && <p className="error">{captchaError}</p>}
+            <button className="primary" disabled={busy || !canSendCode(email, !!siteKey, captchaToken)}>Send kode</button>
           </form>
         ) : (
           <form onSubmit={verify}>

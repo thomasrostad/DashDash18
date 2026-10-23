@@ -30,17 +30,36 @@ Plan: `docs/fase-26-tv-tidsvindu-web.md`.
   desimalkomma, UTF-8 med BOM) og «Skriv ut» med eget utskriftsoppsett. Regelmotoren importeres direkte fra
   `../golfgutu-core/src` (tsconfig `include` og `server.fs.allow` i `vite.config.ts`). `test/standings.test.ts`
   sjekker tabellene, «Alle runder», scorekortene og cupen mot appens fasit (`tavla.forventet.json`).
+- [x] Pakke 1, gå live (23.10.2026): egne bygg for test og prod med vakter, veddemål skjult i prod og Turnstile ved
+  innlogging med e-postkode (se «Miljø» under). Plan: `docs/oppdrag-web-admin-sentre.md`.
 
 ## Kom i gang
 
 ```sh
 cd web/admin
-cp .env.example .env.local   # fyll inn URL og publishable key for test
+mkdir -p env/test && cp .env.example env/test/.env   # URL og publishable key for test
 npm install
-npm run dev                  # http://localhost:5178
+npm run dev                  # http://localhost:5178, mot test
 npm test                     # node --test
-npm run deploy               # bygger og legger ut på admin.dashdash18.com (Cloudflare, wrangler)
+npm run build:test           # bygg mot test (npm run build gjør det samme)
+npm run build:prod           # bygg mot prod, fra env/prod/.env
+npm run deploy               # build:prod og legger ut på admin.dashdash18.com (Cloudflare, wrangler)
 ```
+
+## Miljø: test og prod
+
+Miljøet er byggemodusen (`--mode test` eller `--mode prod`, `src/env.ts`). Hvert miljø har sin egen fil utenfor git,
+`env/test/.env` og `env/prod/.env` (mal: `.env.example`), og Vite leser bare fila for modusen, så verdier fra test
+aldri blandes inn i prod. Bygget stopper hvis URL eller nøkkel mangler, hvis prod-adressen (`wxabhadvuzyrmndxpuza`)
+står i test eller en annen adresse i prod, eller hvis nøkkelen er den hemmelige. Samme regler som `AppConfig` i appen.
+
+- **Veddemål** vises bare i test, som `BetsFeature` i appen (av i prod etter App Review 2.3.6). Slettevarselet
+  nevner dem heller ikke i prod.
+- **CAPTCHA:** Med `VITE_TURNSTILE_SITE_KEY` viser innloggingen Cloudflare Turnstile før koden sendes, og tokenet
+  følger med `signInWithOtp` (som `CaptchaFeature` i appen, #169). Samme skript og nøkkelregel som `/captcha` i
+  `web/atten-lenker`. Tom verdi: ingen sjekk. Når CAPTCHA er slått på i Supabase, må site key-en være satt, ellers
+  virker ikke innloggingen på web. Domenet (`admin.dashdash18.com`, og `localhost` for utvikling) må være godkjent
+  på widgeten i Cloudflare.
 
 Teknikk: Vite, React 18, TypeScript, `@supabase/supabase-js` (godkjent av Thomas 10.10.2026). Faste versjoner i
 `package.json`. Statiske filer fra Cloudflare Workers (`wrangler.toml`, `not_found_handling = single-page-application`).

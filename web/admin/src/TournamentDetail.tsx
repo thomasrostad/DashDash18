@@ -3,11 +3,12 @@ import {
   addStaff, deleteTournament, participants, removeStaff, saveSignupSettings, setPlaysWhenItSuits, signupSettings, staff,
   waitlist, type Competition, type Member, type Participant, type SignupSettings, type StaffRow, type WaitlistEntry,
 } from "./data.ts";
-import { errorText } from "./supabase.ts";
+import { config, errorText } from "./supabase.ts";
 import { kindText, longDate, statusText } from "./text.ts";
 import { RulesEditor } from "./RulesEditor.tsx";
-import { BETS_TOGGLE_HELP, toggledText } from "./bets.ts";
+import { BETS_TOGGLE_HELP, deleteWarning, toggledText } from "./bets.ts";
 import { betsEnabled, setBetsEnabled } from "./betsApi.ts";
+import { betsVisible } from "./env.ts";
 
 /** Én turnering: påmeldte, påmelding og venteliste, stab, «Spill når det passer» og sletting. */
 export function TournamentDetail({ competition, roster, onBack, onChanged }: {
@@ -142,7 +143,7 @@ export function TournamentDetail({ competition, roster, onBack, onChanged }: {
               </label>
             </>
           )}
-          <BetsSwitch competitionID={competition.id} busy={busy} run={run} />
+          {showBets && <BetsSwitch competitionID={competition.id} busy={busy} run={run} />}
           <DeleteTournament competition={competition} busy={busy} onDelete={(typed) => run(async () => {
             const r = await deleteTournament(competition.id, typed);
             setNotice(`${r.name} er slettet.`);
@@ -153,6 +154,9 @@ export function TournamentDetail({ competition, roster, onBack, onChanged }: {
     </section>
   );
 }
+
+/** Veddemål vises bare i test, som i appen (`BetsFeature`). */
+const showBets = config !== null && betsVisible(config.env);
 
 /** «Veddemål» (sql/052): av som standard. Skjult uten 052. */
 function BetsSwitch({ competitionID, busy, run }: {
@@ -187,7 +191,7 @@ function DeleteTournament({ competition, busy, onDelete }: { competition: Compet
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (matches) onDelete(typed); }}>
       <h3>Slett turneringen</h3>
-      <p className="muted">Kveldene, rundene, resultatene, påmeldingene og veddemålene slettes for godt. Runder som bare teller også her, blir stående. Skriv navnet for å bekrefte.</p>
+      <p className="muted">{deleteWarning(showBets)}</p>
       <input placeholder={competition.name} value={typed} onChange={(e) => setTyped(e.target.value)} />
       <button className="danger" disabled={busy || !matches}>Slett for godt</button>
     </form>
