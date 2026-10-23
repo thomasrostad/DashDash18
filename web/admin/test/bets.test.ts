@@ -1,7 +1,7 @@
 // Veddemål på og av (steg 11, sql/052). Samme bryter som appens BetsSwitchRow (DashDash18Tests/VeddOverallTests.swift).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { BETS_TOGGLE_HELP, betsErrorText, enabledFromRow, setEnabledParams, toggledText } from "../src/bets.ts";
+import { BETS_TOGGLE_HELP, betsErrorText, deleteWarning, enabledFromRow, setEnabledParams, toggledText } from "../src/bets.ts";
 
 test("bets_set_enabled får turneringen, tom runde og på/av", () => {
   assert.deepEqual(setEnabledParams("c1", true), { p_competition_id: "c1", p_round_id: null, p_enabled: true });
@@ -25,4 +25,10 @@ test("tekstene", () => {
   assert.equal(betsErrorText({ code: "PGRST202" }), "Veddemål kan ikke slås på før databasen er oppdatert.");
   assert.equal(betsErrorText({ code: "P0002", message: "Fant ikke turneringen" }), "Fant ikke turneringen");
   assert.ok(!BETS_TOGGLE_HELP.includes("—"));
+});
+
+test("slettevarselet nevner bare veddemål når de vises (TournamentDeletion.warning)", () => {
+  assert.match(deleteWarning(true), /^Kveldene, rundene, resultatene, påmeldingene og veddemålene i turneringen slettes for godt\./);
+  assert.match(deleteWarning(false), /^Kveldene, rundene, resultatene og påmeldingene i turneringen slettes for godt\./);
+  assert.ok(!deleteWarning(false).includes("vedd"));
 });

@@ -1,13 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
+import { readConfig, type WebConfig } from "./env.ts";
 import { plainErrorText } from "./text.ts";
 
 // Samme Supabase og samme tilgangsregler (RLS og RPC-ene) som appen. Bare publishable key.
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const key = import.meta.env.VITE_SUPABASE_KEY as string | undefined;
+// Miljøet er byggemodusen (test eller prod), se env.ts.
+const read = readConfig(import.meta.env.MODE, import.meta.env);
+export const config: WebConfig | null = "error" in read ? null : read;
+export const configError = "error" in read ? read.error : null;
 
-export const configError = !url || !key ? "Mangler VITE_SUPABASE_URL eller VITE_SUPABASE_KEY (se .env.example)." : null;
-
-export const supabase = createClient(url ?? "http://localhost", key ?? "x", {
+export const supabase = createClient(config?.url ?? "http://localhost", config?.key ?? "x", {
   auth: { persistSession: true, autoRefreshToken: true },
 });
 

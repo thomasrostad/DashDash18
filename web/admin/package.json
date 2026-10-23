@@ -4,11 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "dev": "vite --mode test",
+    "dev:prod": "vite --mode prod",
+    "build": "npm run build:test",
+    "build:test": "tsc --noEmit && vite build --mode test",
+    "build:prod": "tsc --noEmit && vite build --mode prod",
     "test": "node --test test/*.test.ts",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build:prod && wrangler deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.45.4",

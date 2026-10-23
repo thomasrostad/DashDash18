@@ -22,6 +22,12 @@ export function enabledFromRow(row: { bets_enabled?: boolean | null } | null, er
   return row?.bets_enabled === true;
 }
 
+/** Spørsmålet før sletting. Uten veddemål nevnes de ikke (appens TournamentDeletion.warning). */
+export function deleteWarning(betsShown: boolean): string {
+  return (betsShown ? "Kveldene, rundene, resultatene, påmeldingene og veddemålene" : "Kveldene, rundene, resultatene og påmeldingene")
+    + " i turneringen slettes for godt. Runder som bare teller også her, blir stående. Skriv navnet for å bekrefte.";
+}
+
 /** Meldingen etter at bryteren er flyttet. */
 export function toggledText(on: boolean): string {
   return on ? "Veddemål er slått på." : "Veddemål er slått av. De som finnes, gjøres opp som før.";
