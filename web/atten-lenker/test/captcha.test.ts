@@ -31,6 +31,13 @@ test("captcha-siden laster Turnstile med nøkkelen fra adressen", async () => {
     }
     // Funksjonen onload peker på, er definert før Turnstile-skriptet lastes.
     assert.ok(html.indexOf("window.attenTurnstile") < html.indexOf(TURNSTILE_SCRIPT));
+    // «Kunne ikke laste» kobles på dokumentet, ikke på skriptlinja: den finnes ikke ennå når koden kjører
+    // (23.10.2026: TypeError på null, så appen fikk aldri «load»-feilen).
+    const inline = html.slice(html.indexOf("<script nonce"), html.indexOf("id=\"turnstile-script\""));
+    assert.ok(!inline.includes('getElementById("turnstile-script")'), "ingen oppslag på skriptlinja før den finnes");
+    assert.match(inline, /document\.addEventListener\("error", function \(event\) \{/);
+    assert.match(inline, /event\.target && event\.target\.id === "turnstile-script"/);
+    assert.match(inline, /\}, true\);/);
   }
 });
 

@@ -72,9 +72,11 @@ const SCRIPT = `
       send({ type: "error", code: "render" });
     }
   };
-  document.getElementById("turnstile-script").addEventListener("error", function () {
-    send({ type: "error", code: "load" });
-  });
+  // Skriptlinja kommer etter denne koden, så feilen fanges på dokumentet (error bobler ikke, men fanges
+  // på vei ned med «true»).
+  document.addEventListener("error", function (event) {
+    if (event.target && event.target.id === "turnstile-script") send({ type: "error", code: "load" });
+  }, true);
 `;
 
 function captchaPage(siteKey: string, nonce: string): string {
