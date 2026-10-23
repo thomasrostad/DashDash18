@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { addMember, updateMember, type Member, type MemberPatch } from "./data.ts";
+import { addMember, addMembers, updateMember, type Member, type MemberPatch } from "./data.ts";
+import { ListImport } from "./ListImport.tsx";
+import { ROSTER_IMPORT_HELP, parseRosterList, rosterRows } from "./listImport.ts";
 import { errorText } from "./supabase.ts";
 import { memberStatusText } from "./text.ts";
 import { canGrant, type Rights } from "./roles.ts";
@@ -74,6 +76,8 @@ export function Roster({ clubID, roster, joinCode, onChanged, roleData, viewer, 
   }
 
   const order = { pending: 0, active: 1, archived: 2 } as Record<string, number>;
+  // Navnene som er tatt: medlemmer som ikke er arkivert (unik-indeksen). Deltakere kan hete det samme (sql/059).
+  const takenNames = roster.filter((m) => m.status !== "archived" && m.kind !== "participant").map((m) => m.display_name);
   const sorted = [...roster].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3) || a.display_name.localeCompare(b.display_name, "nb"));
 
   return (
@@ -98,6 +102,7 @@ export function Roster({ clubID, roster, joinCode, onChanged, roleData, viewer, 
                 <input className="cell" defaultValue={m.display_name} maxLength={40}
                   onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== m.display_name) patch(m, { display_name: v }); }} />
                 {!m.user_id && <span className="pill">Ledig navn</span>}
+                {m.kind === "participant" && <span className="pill">Deltaker</span>}
               </td>
               <td>
                 <input className="cell num" defaultValue={m.handicap_index ?? ""} inputMode="decimal"
@@ -137,6 +142,14 @@ export function Roster({ clubID, roster, joinCode, onChanged, roleData, viewer, 
           <button className="primary" disabled={busy === "new" || !name.trim()}>Legg til</button>
         </div>
       </form>
+      <ListImport title="Legg til mange (lim inn liste)"
+        intro="Fra et regneark, en e-post eller påmeldingslista. Navnene står ledige i troppen til spillerne logger inn."
+        help={ROSTER_IMPORT_HELP} parse={(text) => parseRosterList(text, takenNames)}
+        onAdd={async (lines) => {
+          const n = await addMembers(rosterRows(clubID, lines));
+          onChanged();
+          return n === 1 ? "1 navn er lagt til i troppen." : `${n} navn er lagt til i troppen.`;
+        }} />
     </section>
   );
 }

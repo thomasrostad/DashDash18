@@ -47,13 +47,13 @@ test("eier først, så malene, så egne", () => {
 
 test("fanene følger rettighetene", () => {
   assert.deepEqual(visibleTabs(rightsOf(all, [treasurer.id]), true), ["tabeller", "klubb"]);
-  assert.deepEqual(visibleTabs(rightsOf(all, [banemester.id]), true), ["terminliste", "tabeller", "klubb"]);
+  assert.deepEqual(visibleTabs(rightsOf(all, [banemester.id]), true), ["terminliste", "baner", "tabeller", "klubb"]);
   assert.deepEqual(visibleTabs(rightsOf(all, [porter.id]), true), ["tropp", "tabeller", "klubb"]);
   assert.deepEqual(visibleTabs(rightsOf(all, [committee.id]), true), []);
-  assert.deepEqual(visibleTabs(rightsOf(all, [owner.id]), true), ["turneringer", "terminliste", "tropp", "tabeller", "klubb", "roller"]);
+  assert.deepEqual(visibleTabs(rightsOf(all, [owner.id]), true), ["turneringer", "terminliste", "baner", "tropp", "tabeller", "klubb", "roller"]);
   // Uten 044: dagens arrangør ser det samme som før, pluss Klubb, men ikke Roller.
-  assert.deepEqual(visibleTabs(legacyRights(true, false), false), ["turneringer", "terminliste", "tropp", "tabeller", "klubb"]);
-  assert.deepEqual(visibleTabs(rightsOf(all, [owner.id]), false), ["turneringer", "terminliste", "tropp", "tabeller", "klubb"]);
+  assert.deepEqual(visibleTabs(legacyRights(true, false), false), ["turneringer", "terminliste", "baner", "tropp", "tabeller", "klubb"]);
+  assert.deepEqual(visibleTabs(rightsOf(all, [owner.id]), false), ["turneringer", "terminliste", "baner", "tropp", "tabeller", "klubb"]);
 });
 
 test("navn og rettigheter til club_role_save", () => {

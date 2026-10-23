@@ -72,3 +72,14 @@ fieldset:disabled { opacity: .6; }
 /* Poengtabellene i «Reglene»: navn, ganger og «Fjern» på én linje. */
 .inline-fields { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 .inline-fields input { flex: 1; min-width: 0; }
+
+.big-code { font-size: 30px; font-weight: 600; letter-spacing: .08em; font-variant-numeric: tabular-nums; margin: 8px 0; user-select: all; }
+textarea { font: inherit; padding: 12px 14px; border-radius: 12px; border: 1px solid #D5D5D5; background: var(--card); color: var(--ink); resize: vertical; }
+.import-lines { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; max-height: 320px; overflow: auto; }
+.import-lines li { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: baseline; }
+.import-lines li.skipped .name { text-decoration: line-through; color: var(--ink2); }
+table.holes td { padding: 4px 8px; vertical-align: middle; }
+table.holes input.cell { min-width: 56px; width: 72px; }
+.par-buttons { display: inline-flex; gap: 4px; }
+button.par { width: 34px; height: 30px; border-radius: 8px; border: 1px solid var(--rule); background: none; color: var(--ink); }
+button.par.on { background: var(--forest); color: var(--on-dark); border-color: var(--forest); }

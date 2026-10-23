@@ -6,13 +6,16 @@ import {
 import { config, errorText } from "./supabase.ts";
 import { kindText, longDate, statusText } from "./text.ts";
 import { RulesEditor } from "./RulesEditor.tsx";
+import { ScreenShare } from "./ScreenShare.tsx";
+import { Participants } from "./Participants.tsx";
+import { canAddParticipants } from "./participants.ts";
 import { BETS_TOGGLE_HELP, deleteWarning, toggledText } from "./bets.ts";
 import { betsEnabled, setBetsEnabled } from "./betsApi.ts";
 import { betsVisible } from "./env.ts";
 
 /** Én turnering: påmeldte, påmelding og venteliste, stab, «Spill når det passer» og sletting. */
-export function TournamentDetail({ competition, roster, onBack, onChanged }: {
-  competition: Competition; roster: Member[]; onBack: () => void; onChanged: () => void;
+export function TournamentDetail({ competition, clubName, roster, onBack, onChanged }: {
+  competition: Competition; clubName: string; roster: Member[]; onBack: () => void; onChanged: () => void;
 }) {
   const [people, setPeople] = useState<Participant[] | null>(null);
   const [settings, setSettings] = useState<SignupSettings | null>(null);
@@ -99,6 +102,10 @@ export function TournamentDetail({ competition, roster, onBack, onChanged }: {
       </div>
 
       {competition.kind !== "cup" && <div className="grid2"><RulesEditor competition={competition} onSaved={onChanged} /></div>}
+
+      {canAddParticipants(competition) && <Participants competition={competition} clubName={clubName} onChanged={() => { load(); onChanged(); }} />}
+
+      <ScreenShare competition={competition} />
 
       <div className="grid2">
         <div className="card">

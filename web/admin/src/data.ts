@@ -17,6 +17,8 @@ export type EventRow = {
 export type Member = {
   id: string; club_id: string; user_id: string | null; display_name: string; handicap_index: number | null;
   seed_group: number | null; is_organizer: boolean; is_treasurer: boolean; status: string;
+  /** sql/059: medlem eller deltaker i en turnering (ikke medlem). */
+  kind: "member" | "participant";
 };
 
 /** Klubbene der du er arrangør (aktiv). */
@@ -56,7 +58,7 @@ export async function events(clubID: string): Promise<EventRow[]> {
 export async function members(clubID: string): Promise<Member[]> {
   const { data, error } = await supabase
     .from("club_members")
-    .select("id, club_id, user_id, display_name, handicap_index, seed_group, is_organizer, is_treasurer, status")
+    .select("id, club_id, user_id, display_name, handicap_index, seed_group, is_organizer, is_treasurer, status, kind")
     .eq("club_id", clubID);
   if (error) throw error;
   return (data as Member[]).sort((a, b) => a.display_name.localeCompare(b.display_name, "nb"));
@@ -199,6 +201,14 @@ export async function updateMember(clubID: string, id: string, patch: MemberPatc
 export async function addMember(clubID: string, name: string, handicap: number | null): Promise<void> {
   const { error } = await supabase.from("club_members").insert({ club_id: clubID, display_name: name.trim(), handicap_index: handicap });
   if (error) throw error;
+}
+
+/** Mange ledige navn i én skriving (alt eller ingenting), som «Legg til mange» i appen. Gir antallet. */
+export async function addMembers(rows: { club_id: string; display_name: string; handicap_index: number | null }[]): Promise<number> {
+  if (rows.length === 0) return 0;
+  const { data, error } = await supabase.from("club_members").insert(rows).select("id");
+  if (error) throw error;
+  return (data ?? []).length;
 }
 
 // ===== Del 2b: ny turnering og regler =====

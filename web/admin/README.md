@@ -32,6 +32,17 @@ Plan: `docs/fase-26-tv-tidsvindu-web.md`.
   sjekker tabellene, «Alle runder», scorekortene og cupen mot appens fasit (`tavla.forventet.json`).
 - [x] Pakke 1, gå live (23.10.2026): egne bygg for test og prod med vakter, veddemål skjult i prod og Turnstile ved
   innlogging med e-postkode (se «Miljø» under). Plan: `docs/oppdrag-web-admin-sentre.md`.
+- [x] Pakke 2, det et senter trenger (23.10.2026):
+  - Fanen «Baner» (retten «Runder og føring», `src/courses.ts`): lage, endre og slette klubbens baner, simulator
+    eller ekte, med navn i simulatoren, 9 eller 18 hull, par per hull, valgfri indeks og lengde, rating, «I bruk»
+    og «Fyll standard par 72». Samme sjekker og tekster som `CourseDraft.swift`; lagres med `save_course`. Ikke med:
+    tees og slope.no, og «Bekreft mot skjermen».
+  - Deltakere uten innlogging på turneringssiden (klubbturneringer med påmelding, sql/059–061): lim inn lista
+    (navn, handicap, NGF-nummer, høyst 300, `add_competition_participants`) og del lenken til turneringen
+    (`competition_invite`, «Ny kode», «Trekk tilbake»). Troppen merker deltakere med «Deltaker».
+  - Troppen: «Legg til mange (lim inn liste)», høyst 200 navn i én skriving, som #145.
+  - TV-kode og «Del tavla» på turneringssiden (sql/041, 056): koden, lenken, «Ny kode»/«Ny lenke» og «Trekk tilbake».
+  - Innlimingen deler logikk (`src/listImport.ts`) og testes mot appens tilfeller og `DashDash18Tests/DegFixtures.json`.
 
 ## Kom i gang
 
