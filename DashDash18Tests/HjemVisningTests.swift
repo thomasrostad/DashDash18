@@ -33,6 +33,27 @@ struct HjemVisningTests {
                 == .competition(H.id(5)))
     }
 
+    /// «Se tabellen» når turneringen ikke var i lista (23.10.2026: «Fant ikke tabellen» på jakkeracet).
+    @Test func tabellsidenHenterTurneringenSelvOgSierFraOmFeil() {
+        // Funnet i lista eller hentet rett: jakkeracet går til Tavla, ligaen får sin side.
+        #expect(HjemDisplay.tableScreen(listed: nil, fetched: H.jakke, isLoading: false, error: nil, currentClub: H.clubA)
+                == .tavla)
+        #expect(HjemDisplay.tableScreen(listed: H.liga, fetched: nil, isLoading: false, error: nil, currentClub: H.clubA)
+                == .detail(H.liga))
+        #expect(HjemDisplay.tableScreen(listed: nil, fetched: H.jakke, isLoading: false, error: nil, currentClub: H.clubB)
+                == .detail(H.jakke))
+        // Det som er funnet, vinner over en feil i lista.
+        #expect(HjemDisplay.tableScreen(listed: nil, fetched: H.liga, isLoading: false, error: "Nettet", currentClub: H.clubA)
+                == .detail(H.liga))
+        // Ikke funnet: venter, feilen med «Prøv igjen», eller borte.
+        #expect(HjemDisplay.tableScreen(listed: nil, fetched: nil, isLoading: true, error: nil, currentClub: H.clubA)
+                == .loading)
+        #expect(HjemDisplay.tableScreen(listed: nil, fetched: nil, isLoading: false, error: "Ingen kontakt",
+                                        currentClub: H.clubA) == .failed("Ingen kontakt"))
+        #expect(HjemDisplay.tableScreen(listed: nil, fetched: nil, isLoading: false, error: nil, currentClub: H.clubA)
+                == .missing)
+    }
+
     @Test func tomTilstandSierHvaSomKommer() {
         #expect(HjemDisplay.emptyTitle == "Ingenting her ennå")
         #expect(HjemDisplay.emptyLine(.all).contains("eagle"))
