@@ -83,3 +83,4 @@ table.holes input.cell { min-width: 56px; width: 72px; }
 .par-buttons { display: inline-flex; gap: 4px; }
 button.par { width: 34px; height: 30px; border-radius: 8px; border: 1px solid var(--rule); background: none; color: var(--ink); }
 button.par.on { background: var(--forest); color: var(--on-dark); border-color: var(--forest); }
+.qr { display: block; margin: 8px 0; border-radius: 12px; max-width: 100%; height: auto; }

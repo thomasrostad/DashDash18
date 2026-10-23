@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SHARE_TEXT, TV_TEXT, displayURL, spacedCode, tavlaMessage, tavlaURL, tvURL } from "./sharing.ts";
 import { tavlaShareCode, tavlaShareCurrent, tavlaShareRevoke, tvCode, tvCodeRevoke } from "./sharingApi.ts";
+import { QRCode } from "./QRCode.tsx";
 import { errorText } from "./supabase.ts";
 import type { Competition } from "./data.ts";
 
@@ -50,6 +51,7 @@ function TVCodeCard({ competition }: { competition: Competition }) {
       <p className="muted">{TV_TEXT.footer(competition.name)}</p>
       {code ? (
         <div>
+          <QRCode value={tvURL(code)} label="QR-kode til TV-visningen" />
           <p className="big-code">{spacedCode(code)}</p>
           <p className="muted">{TV_TEXT.howTo}</p>
           <p><a href={tvURL(code)} target="_blank" rel="noreferrer">{displayURL(tvURL(code))}</a></p>

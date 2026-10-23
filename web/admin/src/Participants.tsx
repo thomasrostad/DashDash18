@@ -4,6 +4,7 @@ import { PARTICIPANT_IMPORT_HELP, parseParticipantList, participantEntries, part
 import { AFTER_IMPORT_HELP, INVITE_HELP, inviteDisplay, inviteShareText, inviteURL } from "./participants.ts";
 import { addParticipants, competitionInvite, enteredNames, revokeCompetitionInvite } from "./participantsApi.ts";
 import { displayURL } from "./sharing.ts";
+import { QRCode } from "./QRCode.tsx";
 import { errorText } from "./supabase.ts";
 import type { Competition } from "./data.ts";
 
@@ -60,6 +61,7 @@ function InviteCard({ competition, clubName }: { competition: Competition; clubN
       <p className="muted">Deltakerne tar plassen sin og lager en bruker i Atten.</p>
       {code && (
         <>
+          <QRCode value={inviteURL(code)} label="QR-kode til turneringen" />
           <p className="big-code">{inviteDisplay(code)}</p>
           <p><a href={inviteURL(code)} target="_blank" rel="noreferrer"><code>{displayURL(inviteURL(code))}</code></a></p>
           <p className="muted">{INVITE_HELP}</p>
