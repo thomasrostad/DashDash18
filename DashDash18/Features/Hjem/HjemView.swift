@@ -1,5 +1,6 @@
 import GolfgutuCore
 import SwiftUI
+import Supabase
 
 /// Hvor Hjem kan gå videre.
 enum HjemRoute: Hashable {
@@ -387,7 +388,10 @@ private struct HjemClubContent: View {
         case .kvelden(let id):
             KveldenView(eventID: id, terminliste: TerminlisteModel(context: context), admin: admin)
         case .competition(let id):
-            HjemCompetitionScreen(context: context, competitionID: id)
+            HjemCompetitionScreen(context: context, competitionID: id) {
+                self.route = nil
+                selectTab(.tavla)
+            }
         case .thread(let eventID, let camera):
             TradView(eventID: eventID, startsWithCamera: camera)
         case .looseRound(let id):
@@ -404,31 +408,76 @@ private struct HjemClubContent: View {
     }
 }
 
-/// Turneringen bak «Se tabellen →»: henter lista og viser siden når den er funnet.
+/// Turneringen bak «Se tabellen →»: henter lista og viser siden når den er funnet. Er turneringen ikke i
+/// lista, hentes den rett (23.10.2026: jakkeracet manglet i lista og ga «Fant ikke tabellen»). Klubbens
+/// hovedturnering går til Tavla. Feiler hentingen, vises feilen med «Prøv igjen».
 private struct HjemCompetitionScreen: View {
     @State private var model: CompetitionsModel
+    @State private var fetched: CompetitionRow?
+    @State private var fetchError: String?
+    @State private var isFetching = true
     let competitionID: UUID
+    let currentClub: UUID
+    let client: SupabaseClient
+    /// Lukker siden og åpner Tavla-fanen.
+    let openTavla: () -> Void
 
-    init(context: ClubContext, competitionID: UUID) {
+    init(context: ClubContext, competitionID: UUID, openTavla: @escaping () -> Void) {
         _model = State(initialValue: CompetitionsModel(context: context))
         self.competitionID = competitionID
+        self.currentClub = context.clubID
+        self.client = context.client
+        self.openTavla = openTavla
+    }
+
+    private var screen: HjemTableScreen {
+        let listError: String? = if case .failed(let message) = model.state { message } else { nil }
+        return HjemDisplay.tableScreen(listed: model.all.first { $0.id == competitionID }, fetched: fetched,
+                                       isLoading: model.state == .loading || isFetching,
+                                       error: fetchError ?? listError, currentClub: currentClub)
     }
 
     var body: some View {
         Group {
-            if let competition = model.all.first(where: { $0.id == competitionID }) {
+            switch screen {
+            case .detail(let competition):
                 CompetitionDetailScreen(list: model, competition: competition)
-            } else if model.state == .loading {
+            case .loading, .tavla:
                 ProgressView("Henter tabellen …")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
+            case .failed(let message):
+                ContentUnavailableView {
+                    Label("Fikk ikke hentet tabellen", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Prøv igjen") { Task { await load() } }
+                        .buttonStyle(.dd(.primary))
+                }
+            case .missing:
                 ContentUnavailableView("Fant ikke tabellen", systemImage: "trophy",
                                        description: Text("Turneringen er ikke tilgjengelig lenger."))
             }
         }
         .navigationTitle("Tabellen")
         .ddNavigationChrome()
-        .task { await model.load() }
+        .task { await load() }
+        .onChange(of: screen) { _, screen in if screen == .tavla { openTavla() } }
+    }
+
+    private func load() async {
+        isFetching = true
+        fetchError = nil
+        await model.load()
+        if fetched == nil, !model.all.contains(where: { $0.id == competitionID }) {
+            do {
+                fetched = try await CompetitionQueries.competition(client: client, id: competitionID)
+            } catch {
+                guard !DataError.isCancellation(error) else { return }
+                fetchError = DataError.from(error).message
+            }
+        }
+        isFetching = false
     }
 }
 

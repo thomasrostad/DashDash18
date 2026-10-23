@@ -7,6 +7,18 @@ nonisolated enum HjemTableLink: Equatable, Sendable {
     case competition(UUID)
 }
 
+/// Hva siden bak «Se tabellen →» viser, når turneringen ikke var kjent på Hjem.
+nonisolated enum HjemTableScreen: Equatable, Sendable {
+    case loading
+    /// Klubbens hovedturnering: Tavla-fanen.
+    case tavla
+    case detail(CompetitionRow)
+    /// Hentingen feilet: feilen og «Prøv igjen».
+    case failed(String)
+    /// Hentet uten feil, men turneringen finnes ikke (slettet, eller du har ikke tilgang).
+    case missing
+}
+
 /// Det lille Hjem-viewene trenger utover feeden: tekster og valg som ikke hører hjemme i
 /// `HomeFeed`. Ren, med tester (HjemVisningTests).
 nonisolated enum HjemDisplay {
@@ -53,6 +65,19 @@ nonisolated enum HjemDisplay {
             return .tavla
         }
         return .competition(competitionID)
+    }
+
+    /// Siden bak «Se tabellen →»: turneringen fra lista eller hentet rett (`fetched`). Det som er funnet,
+    /// vinner over en feil; jakkeracet i klubben går til Tavla som `tableLink`.
+    static func tableScreen(listed: CompetitionRow?, fetched: CompetitionRow?, isLoading: Bool, error: String?,
+                            currentClub: UUID?) -> HjemTableScreen {
+        if let competition = listed ?? fetched {
+            return tableLink(competitionID: competition.id, competition: competition, currentClub: currentClub) == .tavla
+                ? .tavla : .detail(competition)
+        }
+        if isLoading { return .loading }
+        if let error { return .failed(error) }
+        return .missing
     }
 
     /// Opp er grønt, ned er blush.

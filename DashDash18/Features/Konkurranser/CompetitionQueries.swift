@@ -49,6 +49,16 @@ enum CompetitionQueries {
     // MARK: Én konkurranse
 
     /// Påmeldingene i én konkurranse (samme RLS som i oversikten: `can_read_competition`).
+    /// Én turnering rett fra tabellen (RLS), når den ikke er i `overview`. Tom når den ikke finnes.
+    static func competition(client: SupabaseClient, id: UUID) async throws -> CompetitionRow? {
+        let rows: [CompetitionRow] = try await client.from("competitions")
+            .select(CompetitionRow.columnsWithSignup)
+            .eq("id", value: id)
+            .limit(1)
+            .execute().value
+        return rows.first
+    }
+
     static func participants(client: SupabaseClient, competitionID: UUID) async throws -> [CompetitionParticipantRow] {
         try await client.from("competition_participants")
             .select(participantColumns)
