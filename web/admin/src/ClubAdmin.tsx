@@ -11,9 +11,10 @@ import { legacyRights, rightsOf, visibleTabs, type Tab } from "./roles.ts";
 import { clubRoles, type RoleData } from "./rolesApi.ts";
 import { Roles } from "./Roles.tsx";
 import { ClubSettings } from "./ClubSettings.tsx";
+import { Courses } from "./Courses.tsx";
 
 const TAB_TITLES: Record<Tab, string> = {
-  turneringer: "Turneringer", terminliste: "Terminliste", tropp: "Tropp", tabeller: "Tabeller", roller: "Roller", klubb: "Klubb",
+  turneringer: "Turneringer", terminliste: "Terminliste", baner: "Baner", tropp: "Tropp", tabeller: "Tabeller", roller: "Roller", klubb: "Klubb",
 };
 
 /** Arrangørsiden for én klubb. Del 1: oversikt over turneringer, terminliste og tropp. */
@@ -64,7 +65,7 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
       {error && <p className="error">{error}</p>}
 
       {tab === "turneringer" && openID && comps && roster && comps.find((c) => c.id === openID) && (
-        <TournamentDetail competition={comps.find((c) => c.id === openID)!} roster={roster}
+        <TournamentDetail competition={comps.find((c) => c.id === openID)!} clubName={membership.clubs.name} roster={roster}
           onBack={() => setOpenID(null)} onChanged={load} />
       )}
 
@@ -99,6 +100,8 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
         <Schedule clubID={clubID} days={days} comps={comps} roster={roster} committees={committees} onChanged={load}
           canTournaments={viewer.rights.has("tournaments")} canRounds={viewer.rights.has("rounds")} />
       ))}
+
+      {tab === "baner" && <Courses clubID={clubID} />}
 
       {tab === "tropp" && (!roster ? <p className="muted">Henter …</p> : (
         <Roster clubID={clubID} roster={roster} joinCode={membership.clubs.join_code} onChanged={load}

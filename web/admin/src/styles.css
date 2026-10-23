@@ -2,11 +2,13 @@
 :root {
   --bg: #FFF9DF; --card: #FFFFFF; --forest: #1C483A; --forest-deep: #123026; --ink: #21292B;
   --ink2: #727065; --rule: #F0EADB; --gold: #E4C767; --rust: #A84A10; --lime: #D9EBD0; --on-dark: #FFF9DF;
+  /* Grønn tekst på bakgrunnen (lenker, «Lagret.», tekstknapper). Lysere i mørk modus. */
+  --accent: #1C483A;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--ink); background: var(--bg);
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #0C1F18; --card: #132B23; --ink: #E8EFE7; --ink2: #8FA398; --rule: #1F3B31; --lime: rgba(217,235,208,.16); }
+  :root { --bg: #0C1F18; --card: #132B23; --ink: #E8EFE7; --ink2: #8FA398; --rule: #1F3B31; --lime: rgba(217,235,208,.16); --accent: #9FD4B4; }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); }
@@ -23,7 +25,10 @@ input { font: inherit; padding: 12px 14px; border-radius: 12px; border: 1px soli
 button { font: inherit; cursor: pointer; }
 button.primary { background: #F4C84B; color: #21292B; border: 0; border-radius: 999px; padding: 12px 18px; font-weight: 600; }
 button.primary:disabled { opacity: .5; cursor: default; }
-button.link { background: none; border: 0; color: var(--forest); padding: 6px 8px; }
+button.link { background: none; border: 0; color: var(--accent); padding: 6px 8px; }
+button.link:disabled { opacity: .5; cursor: default; }
+a { color: var(--accent); }
+a code { color: inherit; }
 button.link.onDark, .onDark { color: var(--on-dark); }
 .topbar { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: var(--forest-deep); color: var(--on-dark); position: sticky; top: 0; }
 .brand { font-weight: 600; }
@@ -42,7 +47,7 @@ tr.past td { color: var(--ink2); }
 code { background: var(--rule); padding: 2px 6px; border-radius: 6px; }
 @media (max-width: 700px) { th:nth-child(5), td:nth-child(5) { display: none; } }
 
-.ok { color: var(--forest); }
+.ok { color: var(--accent); }
 .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 16px; }
 .card h3 { margin: 0 0 8px; } .card h4 { margin: 16px 0 6px; }
 .plain { padding-left: 18px; margin: 8px 0; } .plain li { margin: 4px 0; }
@@ -72,3 +77,15 @@ fieldset:disabled { opacity: .6; }
 /* Poengtabellene i «Reglene»: navn, ganger og «Fjern» på én linje. */
 .inline-fields { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 .inline-fields input { flex: 1; min-width: 0; }
+
+.big-code { font-size: 30px; font-weight: 600; letter-spacing: .08em; font-variant-numeric: tabular-nums; margin: 8px 0; user-select: all; }
+textarea { font: inherit; padding: 12px 14px; border-radius: 12px; border: 1px solid #D5D5D5; background: var(--card); color: var(--ink); resize: vertical; }
+.import-lines { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; max-height: 320px; overflow: auto; }
+.import-lines li { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: baseline; }
+.import-lines li.skipped .name { text-decoration: line-through; color: var(--ink2); }
+table.holes td { padding: 4px 8px; vertical-align: middle; }
+table.holes input.cell { min-width: 56px; width: 72px; border-color: var(--rule); background: var(--card); }
+.par-buttons { display: inline-flex; gap: 4px; }
+button.par { width: 34px; height: 30px; border-radius: 8px; border: 1px solid var(--rule); background: none; color: var(--ink); }
+button.par.on { background: var(--forest); color: var(--on-dark); border-color: var(--forest); }
+.qr { display: block; margin: 8px 0; border-radius: 12px; max-width: 100%; height: auto; }

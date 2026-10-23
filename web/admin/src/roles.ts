@@ -76,13 +76,15 @@ export function rightsParam(rights: Iterable<string>): Right[] {
   return RIGHTS.filter((r) => s.has(r));
 }
 
-export type Tab = "turneringer" | "terminliste" | "tropp" | "tabeller" | "roller" | "klubb";
+export type Tab = "turneringer" | "terminliste" | "baner" | "tropp" | "tabeller" | "roller" | "klubb";
 
 /** Fanene i web-admin for rettighetene. Roller bare for eieren, og bare når klubben har roller. */
 export function visibleTabs(r: Rights, hasRoles: boolean): Tab[] {
   const tabs: Tab[] = [];
   if (r.rights.has("tournaments")) tabs.push("turneringer");
   if (r.rights.has("tournaments") || r.rights.has("rounds")) tabs.push("terminliste");
+  // Banene følger «Runder og føring», som i appen (courses_*-policyene, sql/044).
+  if (r.rights.has("rounds")) tabs.push("baner");
   if (r.rights.has("members")) tabs.push("tropp");
   if (hasAny(r)) tabs.push("tabeller", "klubb");
   if (r.isOwner && hasRoles) tabs.push("roller");
