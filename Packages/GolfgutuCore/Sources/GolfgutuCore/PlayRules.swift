@@ -38,18 +38,14 @@ extension Ruleset {
         public var lockSubmittedCards: Bool
         /// Hvor mange av de siste hullene «Skjul de siste hullene» skjuler i en ny runde (1–9).
         public var hiddenHoles: Int
-        /// Shank (brutto firedobbel bogey eller verre) står i feeden, uten push (sql/073).
-        public var shankPosts: Bool
 
-        public init(maxStrokes: MaxStrokes = .off, lockSubmittedCards: Bool = false, hiddenHoles: Int = 3,
-                    shankPosts: Bool = false) {
+        public init(maxStrokes: MaxStrokes = .off, lockSubmittedCards: Bool = false, hiddenHoles: Int = 3) {
             self.maxStrokes = maxStrokes
             self.lockSubmittedCards = lockSubmittedCards
             self.hiddenHoles = hiddenHoles
-            self.shankPosts = shankPosts
         }
 
-        /// Golfgutu og alle regelsett fra før: ingen grense, ingen levering, tre skjulte hull, ingen shank.
+        /// Golfgutu og alle regelsett fra før: ingen grense, ingen levering, tre skjulte hull.
         public static let standard = PlayRules()
 
         /// Lovlige antall skjulte hull (`rounds.hide_last_holes` tar 0–9, og 0 er «av»).
@@ -136,7 +132,7 @@ extension Ruleset.MaxStrokes: Codable {
 }
 
 extension Ruleset.PlayRules: Codable {
-    private enum CodingKeys: String, CodingKey { case maxStrokes, lockSubmittedCards, hiddenHoles, shankPosts }
+    private enum CodingKeys: String, CodingKey { case maxStrokes, lockSubmittedCards, hiddenHoles }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -144,6 +140,5 @@ extension Ruleset.PlayRules: Codable {
         maxStrokes = try c.decodeIfPresent(Ruleset.MaxStrokes.self, forKey: .maxStrokes) ?? s.maxStrokes
         lockSubmittedCards = try c.decodeIfPresent(Bool.self, forKey: .lockSubmittedCards) ?? s.lockSubmittedCards
         hiddenHoles = try c.decodeIfPresent(Int.self, forKey: .hiddenHoles) ?? s.hiddenHoles
-        shankPosts = try c.decodeIfPresent(Bool.self, forKey: .shankPosts) ?? s.shankPosts
     }
 }

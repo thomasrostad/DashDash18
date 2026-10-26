@@ -51,10 +51,9 @@
     }
   ],
   "json": [
-    { "inn": { "maxStrokes": { "type": "netDoubleBogey" } }, "maxStrokes": { "type": "netDoubleBogey" }, "lockSubmittedCards": false, "hiddenHoles": 3, "shankPosts": false },
-    { "inn": { "maxStrokes": { "type": "fixed", "strokes": 10 }, "lockSubmittedCards": true, "hiddenHoles": 5 }, "maxStrokes": { "type": "fixed", "strokes": 10 }, "lockSubmittedCards": true, "hiddenHoles": 5, "shankPosts": false },
-    { "inn": { "maxStrokes": { "type": "off" }, "shankPosts": true }, "maxStrokes": { "type": "off" }, "lockSubmittedCards": false, "hiddenHoles": 3, "shankPosts": true },
-    { "inn": {}, "maxStrokes": { "type": "off" }, "lockSubmittedCards": false, "hiddenHoles": 3, "shankPosts": false }
+    { "inn": { "maxStrokes": { "type": "netDoubleBogey" } }, "maxStrokes": { "type": "netDoubleBogey" }, "lockSubmittedCards": false, "hiddenHoles": 3 },
+    { "inn": { "maxStrokes": { "type": "fixed", "strokes": 10 }, "lockSubmittedCards": true, "hiddenHoles": 5 }, "maxStrokes": { "type": "fixed", "strokes": 10 }, "lockSubmittedCards": true, "hiddenHoles": 5 },
+    { "inn": {}, "maxStrokes": { "type": "off" }, "lockSubmittedCards": false, "hiddenHoles": 3 }
   ],
   "ugyldig": [
     { "play": { "maxStrokes": { "type": "fixed", "strokes": 2 } }, "felt": "play.maxStrokes.strokes" },

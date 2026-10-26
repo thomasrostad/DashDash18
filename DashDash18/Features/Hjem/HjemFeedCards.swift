@@ -233,8 +233,8 @@ struct HjemFeatCardView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Slagtallet med form (dobbel sirkel for eagle og bedre), som på scorekortet (planen 1.2, 4.1).
             HStack(alignment: .top, spacing: 12) {
-                // Fargen følger bragden (eagle og bedre, birdie, shank); formen regnes fra brutto mot par.
-                ScoreBadge(strokes: card.strokes, par: card.par, name: HjemDisplay.featScoreName(card.kind), size: 44)
+                // Fargen er eagle (bragdene er eagle og bedre); formen regnes fra brutto mot par.
+                ScoreBadge(strokes: card.strokes, par: card.par, name: .eagle, size: 44)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(HjemDisplay.featTitle(card))
                         .font(.ddBodyEmphasis)

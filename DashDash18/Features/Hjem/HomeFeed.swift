@@ -347,24 +347,20 @@ nonisolated enum HomeFeedText {
         return parts.compactMap { $0.first.map { String($0).uppercased() } }.joined()
     }
 
-    static func featHeadline(_ kind: HomeFeatKind, hole: Int) -> String {
+    static func featHeadline(_ kind: BigScoreName, hole: Int) -> String {
         switch kind {
         case .holeInOne: "Hole in one på hull \(hole)!"
         case .albatross: "Albatross på hull \(hole)"
         case .eagle: "Eagle på hull \(hole)"
-        case .birdie: "Birdie på hull \(hole)"
-        case .shank: "Shank på hull \(hole)"
         }
     }
 
-    /// «slo eagle», «fikk hole in one», «slo birdie», «fikk en shank» (oppsummeringen).
-    static func featVerb(_ kind: HomeFeatKind) -> String {
+    /// «slo eagle», «fikk hole in one» (oppsummeringen).
+    static func featVerb(_ kind: BigScoreName) -> String {
         switch kind {
         case .holeInOne: "fikk hole in one"
         case .albatross: "slo albatross"
         case .eagle: "slo eagle"
-        case .birdie: "slo birdie"
-        case .shank: "fikk en shank"
         }
     }
 

@@ -1,8 +1,7 @@
 import Foundation
 
 // Forespørselen om vurdering i App Store (A2 i docs/aso-plan.md). Spørres etter at en runde er
-// levert og feiringen er lukket, aldri ved oppstart eller midt i føringen. Løs runde: «Avslutt
-// runden» (`RundeModel.finish()`). Klubbrunde: når kortet ditt er ferdig ført (`RundeModel.saveCurrentHole()`).
+// levert (`RundeModel.finish()`) og feiringen er lukket, aldri ved oppstart eller midt i føringen.
 
 /// Skal appen be om en vurdering nå? Ren logikk, så den kan testes uten telefonens lagre.
 nonisolated struct ReviewPrompt: Equatable, Sendable {
@@ -28,9 +27,6 @@ nonisolated struct ReviewPrompt: Equatable, Sendable {
 nonisolated struct ReviewPromptStore {
     static let roundsKey = "vurdering.leverteRunder"
     static let askedVersionKey = "vurdering.spurtVersjon"
-    static let countedRoundsKey = "vurdering.telteRunder"
-    /// Så mange runde-ID-er huskes, så samme runde ikke telles to ganger.
-    static let rememberedRounds = 20
     /// Launch-argumentet UI-testene starter appen med.
     static let uiTestArgument = "-DDUITest"
 
@@ -40,11 +36,8 @@ nonisolated struct ReviewPromptStore {
 
     var completedRounds: Int { defaults.integer(forKey: Self.roundsKey) }
 
-    /// En runde er levert. Samme runde telles bare én gang (kortet kan bli ferdig igjen etter en retting).
-    func roundFinished(_ roundID: UUID) {
-        let counted = defaults.stringArray(forKey: Self.countedRoundsKey) ?? []
-        guard !counted.contains(roundID.uuidString) else { return }
-        defaults.set(Array((counted + [roundID.uuidString]).suffix(Self.rememberedRounds)), forKey: Self.countedRoundsKey)
+    /// En runde er levert.
+    func roundFinished() {
         defaults.set(completedRounds + 1, forKey: Self.roundsKey)
     }
 
