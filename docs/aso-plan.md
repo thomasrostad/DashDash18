@@ -97,12 +97,12 @@ Disse krever innlogging som agentene ikke har.
 ## Status
 
 - [x] A1 nettside merget (#186, 22.10). Ikke deployet ennå, se T1
-- [x] A2 vurdering (#190). Teller bare løse runder; klubbrunder bør telles i en senere PR
+- [x] A2 vurdering (#190). Klubbrunder teller fra 1.0.3: når kortet ditt er ferdig ført, én gang per runde
 - [x] A3 del-kort (#192)
 - [x] A4 metadata (#189), `node docs/app-store/sjekk.mjs` uten brudd
 - [x] A5 skjermbilder (#191). Bilde 5 viser $-ikon ved Skins: bytt ikon eller skjerm før opplasting (jf. avvisning 2.3.6)
 - [x] SEO/ASO-finpuss 22.10 (denne PR-en): JSON-LD og brødtekst på forsiden, kortere tittel, undertittel «Turnering, liga og scorekort», nye nøkkelord, engelsk reklametekst i en-GB, `lastmod` i sitemap. Tabellen i A4 viser teksten slik den var før; filene i `docs/app-store/metadata/` gjelder
-- [ ] T1 deploy og Search Console
-- [ ] T2 reklametekst
-- [ ] T3 innsending med ny metadata
+- [x] T1 deploy og Search Console (22.10)
+- [x] T2 reklametekst (22.10)
+- [ ] T3 innsending med ny metadata *(26.10: tekst og en-GB er ute med 1.0.2. Skjermbildene fra A5 er laget på nytt uten $ (#214) og lastes opp med 1.0.3)*
 - [ ] A6 første måling 9.11

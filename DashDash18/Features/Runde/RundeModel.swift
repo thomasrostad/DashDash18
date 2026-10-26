@@ -435,6 +435,7 @@ final class RundeModel {
                 celebration = updated.celebration(hole: hole, saved: fresh, viewer: viewer)
                 if case .saved = outcome {
                     logAfterSaving(hole: hole, fresh: fresh, in: updated)
+                    countFinishedClubCard(in: updated)
                 }
             }
             advance(from: hole)
@@ -582,9 +583,17 @@ final class RundeModel {
         }
         // Gjest: ikke på kortet med egen profil (eieren som ikke spiller selv).
         let isGuest = snapshot?.loose?.participant(profile: loose.userID) == nil
-        reviewStore.roundFinished()
+        reviewStore.roundFinished(loose.roundID)
         wantsReview = reviewStore.prompt(isGuest: isGuest).shouldAsk
         await load()
+    }
+
+    /// Klubbrunde: kortet ditt er ferdig ført, så runden teller som levert for vurderingen. En løs
+    /// runde teller først ved «Avslutt runden» (`finish()`).
+    private func countFinishedClubCard(in game: RoundGame) {
+        guard looseContext == nil, game.status == .active, game.isCardFinished(for: viewer) else { return }
+        reviewStore.roundFinished(game.roundID)
+        wantsReview = reviewStore.prompt(isGuest: false).shouldAsk
     }
 
     /// Klar til å be om vurdering: runden er levert og ingen feiring står.

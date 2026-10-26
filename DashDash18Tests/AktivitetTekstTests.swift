@@ -48,6 +48,7 @@ private let samples: [ActivityEvent] = [
                              authorProfile: id(100))),
     .photoPrompt(eventDate: "2026-10-08", roundNo: 3, courseName: "Losby"),
     .memberPending(member: id(600), name: "Ola Nordmann", clubName: "Golfgutu Invitational"),
+    .quietScore(member: anders, hole: 3, holeIndex: 2, name: .birdie, strokes: 2, par: 3),
 ]
 
 /// Veddemål (012): PWA-ens ordlyd fra handleUtfordring og markets, med poeng for kroner.
@@ -161,6 +162,18 @@ struct AktivitetTekstTests {
                 == "Anders eagle på hull 5 — 3 slag på par 5")
         #expect(text(.bigScore(member: anders, hole: 5, holeIndex: 4, name: .albatross, strokes: 2, par: 5))
                 == "Anders albatross på hull 5 — 2 slag på par 5")
+    }
+
+    /// Birdie og shank (sql/073): kategori score, egen kind, samme tekstform som de store.
+    @Test func stilleScorer() {
+        let birdie = ActivityEvent.quietScore(member: anders, hole: 3, holeIndex: 2, name: .birdie, strokes: 2, par: 3)
+        #expect(birdie.kind == "quiet_score")
+        #expect(birdie.category == .score)
+        #expect(text(birdie) == "Anders birdie på hull 3 — 2 slag på par 3")
+        #expect(text(.quietScore(member: anders, hole: 4, holeIndex: 3, name: .shank, strokes: 8, par: 4))
+                == "Anders shank på hull 4 — 8 slag på par 4")
+        #expect(ActivityEvent(kind: "quiet_score", data: birdie.data) == birdie)
+        #expect(ActivityEvent(kind: "quiet_score", data: ActivityData(member: anders)) == .unknown(kind: "quiet_score"))
     }
 
     @Test func ledelsen() {

@@ -50,19 +50,29 @@ struct VurderingTests {
 
     @Test func andreLeverteRundeSporer() {
         let store = store()
-        store.roundFinished()
+        store.roundFinished(UUID())
         #expect(!store.prompt(isGuest: false).shouldAsk)
-        store.roundFinished()
+        store.roundFinished(UUID())
         #expect(store.completedRounds == 2)
         #expect(store.prompt(isGuest: false).shouldAsk)
     }
 
     @Test func sporsIkkeIgjenEtterAtDetErSpurt() {
         let store = store()
-        store.roundFinished()
-        store.roundFinished()
+        store.roundFinished(UUID())
+        store.roundFinished(UUID())
         store.markAsked()
-        store.roundFinished()
+        store.roundFinished(UUID())
         #expect(!store.prompt(isGuest: false).shouldAsk)
+    }
+
+    @Test func sammeRundeTellesEnGang() {
+        let store = store()
+        let round = UUID()
+        store.roundFinished(round)
+        store.roundFinished(round)
+        #expect(store.completedRounds == 1)
+        store.roundFinished(UUID())
+        #expect(store.completedRounds == 2)
     }
 }

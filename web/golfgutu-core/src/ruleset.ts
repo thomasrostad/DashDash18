@@ -385,6 +385,8 @@ export interface PlayRules {
   lockSubmittedCards: boolean;
   /** Hvor mange av de siste hullene «Skjul de siste hullene» skjuler i en ny runde (1–9). */
   hiddenHoles: number;
+  /** Shank (brutto firedobbel bogey eller verre) står i feeden, uten push (sql/073). */
+  shankPosts: boolean;
 }
 
 export const MAX_STROKES_FIXED: readonly [number, number] = [3, 20];
@@ -394,6 +396,7 @@ export const STANDARD_PLAY: Readonly<PlayRules> = deepFreeze({
   maxStrokes: { type: "off" },
   lockSubmittedCards: false,
   hiddenHoles: 3,
+  shankPosts: false,
 } as PlayRules);
 
 /** Det høyeste en spiller kan føre på et hull med `par` og `strokesReceived` slag. `null`: ingen grense. */
@@ -423,6 +426,7 @@ export function decodePlay(x: unknown, path = "$"): PlayRules {
     maxStrokes: m ? decodeMaxStrokes(m, `${path}.maxStrokes`) : { ...STANDARD_PLAY.maxStrokes },
     lockSubmittedCards: optBool(o, "lockSubmittedCards", path) ?? STANDARD_PLAY.lockSubmittedCards,
     hiddenHoles: optInt(o, "hiddenHoles", path) ?? STANDARD_PLAY.hiddenHoles,
+    shankPosts: optBool(o, "shankPosts", path) ?? STANDARD_PLAY.shankPosts,
   };
 }
 
@@ -433,6 +437,7 @@ export function encodePlay(p: PlayRules): JSONObject {
     maxStrokes: m.type === "fixed" ? { type: m.type, strokes: m.strokes } : { type: m.type },
     lockSubmittedCards: p.lockSubmittedCards,
     hiddenHoles: p.hiddenHoles,
+    shankPosts: p.shankPosts,
   };
 }
 

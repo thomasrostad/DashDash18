@@ -1,4 +1,5 @@
 import Foundation
+import GolfgutuCore
 
 /// Hvor «Se tabellen →» skal: Tavla-fanen for klubbens hovedturnering (jakkeracet), ellers
 /// turneringens egen side.
@@ -97,6 +98,15 @@ nonisolated enum HjemDisplay {
     /// «Anders Berg slo eagle», «Du fikk hole in one» (planen 4.1).
     static func featTitle(_ card: HomeFeatCard) -> String {
         (card.isMe ? "Du" : card.name) + " " + HomeFeedText.featVerb(card.kind)
+    }
+
+    /// Fargen på slagtallet: eagle for eagle og bedre, birdie, og blowup for shank.
+    static func featScoreName(_ kind: HomeFeatKind) -> ScoreName {
+        switch kind {
+        case .holeInOne, .albatross, .eagle: .eagle
+        case .birdie: .birdie
+        case .shank: .blowup
+        }
     }
 
     /// «Hull 5, par 5 · Losby · runde 4».

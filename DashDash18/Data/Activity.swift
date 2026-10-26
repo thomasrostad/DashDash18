@@ -81,7 +81,7 @@ nonisolated struct ActivityData: Codable, Equatable, Sendable {
     var hole: Int?
     /// Rundens 0-baserte hull.
     var holeIndex: Int?
-    /// `big_score`: `eagle`, `albatross` eller `hole_in_one`.
+    /// `big_score`: `eagle`, `albatross` eller `hole_in_one`. `quiet_score`: `birdie` eller `shank`.
     var name: String?
     var strokes: Int?
     var par: Int?
@@ -415,6 +415,13 @@ nonisolated enum BigScoreName: String, Codable, Sendable {
     case holeInOne = "hole_in_one"
 }
 
+/// `quiet_score`: brutto birdie, eller shank (brutto firedobbel bogey eller verre, valg i
+/// regelsettet). Står i feeden, men går aldri som push (sql/073).
+nonisolated enum QuietScoreName: String, Codable, Sendable {
+    case birdie
+    case shank
+}
+
 /// `lead_changed`: hva som skjedde ved sjekkpunktet (`loggLedelseHvisEndret`).
 nonisolated enum LeadOutcome: String, Codable, Sendable {
     /// Første sjekkpunkt: «leder».
@@ -440,6 +447,8 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     case roundDeleted(roundNo: Int, courseName: String?)
     /// `hole` er hullnummeret på kortet, `holeIndex` rundens 0-baserte hull.
     case bigScore(member: UUID, hole: Int, holeIndex: Int?, name: BigScoreName, strokes: Int, par: Int)
+    /// Birdie eller shank: som `bigScore`, men bare i feeden (sql/073).
+    case quietScore(member: UUID, hole: Int, holeIndex: Int?, name: QuietScoreName, strokes: Int, par: Int)
     case leadChanged(afterHole: Int, leaders: [UUID], points: Int, outcome: LeadOutcome)
     /// Ny leder på longest drive eller nærmest pinnen. `hole` er hullnummeret på kortet.
     case sidePrize(kind: SideClaimKind, member: UUID, hole: Int, meters: Double, passed: UUID?, passedMeters: Double?)
@@ -493,7 +502,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         "score_corrected", "signup", "nudge", "reminder", "announcement", "committee_drawn",
         "member_joined", "tips_king", "bet_created", "bet_challenge", "bet_resolved", "table_changed",
         "waitlist_promoted", "signup_dropped", "evening_started", "comment_added", "mentioned", "photo_prompt",
-        "bill_share_sent", "bill_share_disputed", "member_pending",
+        "bill_share_sent", "bill_share_disputed", "member_pending", "quiet_score",
     ]
 
     var kind: String {
@@ -502,6 +511,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case .roundLocked: "round_locked"
         case .roundDeleted: "round_deleted"
         case .bigScore: "big_score"
+        case .quietScore: "quiet_score"
         case .leadChanged: "lead_changed"
         case .sidePrize: "side_prize"
         case .scoreCorrected: "score_corrected"
@@ -532,7 +542,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     var category: ActivityCategory {
         switch self {
         case .roundStarted, .roundLocked, .roundDeleted, .tableChanged, .eveningStarted: .round
-        case .bigScore: .score
+        case .bigScore, .quietScore: .score
         case .leadChanged: .lead
         case .sidePrize: .sidePrize
         case .scoreCorrected: .setup
@@ -560,6 +570,8 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
         case let .roundLocked(roundNo, courseName), let .roundDeleted(roundNo, courseName):
             ActivityData(roundNo: roundNo, courseName: courseName)
         case let .bigScore(member, hole, holeIndex, name, strokes, par):
+            ActivityData(member: member, hole: hole, holeIndex: holeIndex, name: name.rawValue, strokes: strokes, par: par)
+        case let .quietScore(member, hole, holeIndex, name, strokes, par):
             ActivityData(member: member, hole: hole, holeIndex: holeIndex, name: name.rawValue, strokes: strokes, par: par)
         case let .leadChanged(afterHole, leaders, points, outcome):
             ActivityData(afterHole: afterHole, leaders: leaders, points: points, outcome: outcome.rawValue)
@@ -631,6 +643,10 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
             guard let member = d.member, let hole = d.hole, let name = d.name.flatMap(BigScoreName.init),
                   let strokes = d.strokes, let par = d.par else { self = .unknown(kind: kind); return }
             self = .bigScore(member: member, hole: hole, holeIndex: d.holeIndex, name: name, strokes: strokes, par: par)
+        case "quiet_score":
+            guard let member = d.member, let hole = d.hole, let name = d.name.flatMap(QuietScoreName.init),
+                  let strokes = d.strokes, let par = d.par else { self = .unknown(kind: kind); return }
+            self = .quietScore(member: member, hole: hole, holeIndex: d.holeIndex, name: name, strokes: strokes, par: par)
         case "lead_changed":
             guard let after = d.afterHole, let leaders = d.leaders, !leaders.isEmpty, let points = d.points,
                   let outcome = d.outcome.flatMap(LeadOutcome.init) else { self = .unknown(kind: kind); return }
@@ -821,6 +837,16 @@ nonisolated enum ActivityText {
             case .eagle:
                 return ActivityDisplay(symbol: "bird.fill", emoji: "🦅",
                                        text: "\(who(member)) eagle på hull \(hole) — \(strokes) slag på par \(par)")
+            }
+
+        case let .quietScore(member, hole, _, name, strokes, par):
+            switch name {
+            case .birdie:
+                return ActivityDisplay(symbol: "bird", emoji: "🐦",
+                                       text: "\(who(member)) birdie på hull \(hole) — \(strokes) slag på par \(par)")
+            case .shank:
+                return ActivityDisplay(symbol: "tornado", emoji: "🌪️",
+                                       text: "\(who(member)) shank på hull \(hole) — \(strokes) slag på par \(par)")
             }
 
         case let .leadChanged(afterHole, leaders, points, outcome):

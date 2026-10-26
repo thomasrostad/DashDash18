@@ -91,6 +91,12 @@ nonisolated extension RoundGame {
         return (0..<endCountingHoles).allSatisfy { s[$0] != nil }
     }
 
+    /// Alle tellende hull er ført for kortet ditt. Usant når du ikke har et kort (arrangøren ser på).
+    func isCardFinished(for viewer: Viewer) -> Bool {
+        let card = cardPlayers(for: viewer)
+        return !card.isEmpty && (0..<endCountingHoles).allSatisfy { isComplete(hole: $0, for: card) }
+    }
+
     /// Avslutningen for den som kan avslutte (også fra ⋯-menyen, før kortet er ferdig).
     /// nil når runden ikke går, eller du ikke kan avslutte.
     func endOffer(viewer: Viewer, canEnd: Bool, isLoose: Bool) -> RoundEndOffer? {
