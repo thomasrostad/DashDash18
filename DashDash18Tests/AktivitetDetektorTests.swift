@@ -51,7 +51,7 @@ struct AktivitetStorScoreTests {
         #expect(g.bigScoreEvents(hole: 99, saved: [(anders, 1)]).isEmpty)
     }
 
-    /// Birdie og shank (sql/068): brutto, og shank bare når regelsettet slår det på.
+    /// Birdie og shank (sql/073): brutto, og shank bare når regelsettet slår det på.
     @Test func stilleScorerErBrutto() {
         #expect(QuietScore.detect(gross: 3, par: 4, shankPosts: false) == .birdie)
         #expect(QuietScore.detect(gross: 2, par: 3, shankPosts: false) == .birdie)

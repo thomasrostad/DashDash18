@@ -416,7 +416,7 @@ nonisolated enum BigScoreName: String, Codable, Sendable {
 }
 
 /// `quiet_score`: brutto birdie, eller shank (brutto firedobbel bogey eller verre, valg i
-/// regelsettet). Står i feeden, men går aldri som push (sql/068).
+/// regelsettet). Står i feeden, men går aldri som push (sql/073).
 nonisolated enum QuietScoreName: String, Codable, Sendable {
     case birdie
     case shank
@@ -447,7 +447,7 @@ nonisolated enum ActivityEvent: Equatable, Sendable {
     case roundDeleted(roundNo: Int, courseName: String?)
     /// `hole` er hullnummeret på kortet, `holeIndex` rundens 0-baserte hull.
     case bigScore(member: UUID, hole: Int, holeIndex: Int?, name: BigScoreName, strokes: Int, par: Int)
-    /// Birdie eller shank: som `bigScore`, men bare i feeden (sql/068).
+    /// Birdie eller shank: som `bigScore`, men bare i feeden (sql/073).
     case quietScore(member: UUID, hole: Int, holeIndex: Int?, name: QuietScoreName, strokes: Int, par: Int)
     case leadChanged(afterHole: Int, leaders: [UUID], points: Int, outcome: LeadOutcome)
     /// Ny leder på longest drive eller nærmest pinnen. `hole` er hullnummeret på kortet.

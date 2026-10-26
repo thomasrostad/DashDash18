@@ -345,7 +345,7 @@ struct HjemFeedKortTests {
         input.rounds = [H.myLooseRound()]
         let feed = HomeFeed.build(input)
         let cards = feed.sections.flatMap(\.cards)
-        // Din runde, Pers hole in one og din birdie på hull 1 (sql/068), nyeste først.
+        // Din runde, Pers hole in one og din birdie på hull 1 (sql/073), nyeste først.
         #expect(cards.count == 3)
         #expect(feed.sections.map(\.title) == ["I går"])
         guard case .myRound(let r) = cards[0].content, case .feat(let f) = cards[1].content,
@@ -369,7 +369,7 @@ struct HjemFeedKortTests {
         #expect(feed.pills.last?.tone == .earth)
     }
 
-    /// Birdie og shank (sql/068) står som bragd i feeden, med egen overskrift og farge.
+    /// Birdie og shank (sql/073) står som bragd i feeden, med egen overskrift og farge.
     @Test func birdieOgShankFraAktiviteten() throws {
         let input = H.input([
             H.row(1, .quietScore(member: H.anders, hole: 3, holeIndex: 2, name: .birdie, strokes: 2, par: 3),

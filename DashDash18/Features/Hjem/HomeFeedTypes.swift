@@ -252,7 +252,7 @@ nonisolated struct HomeMyRoundCard: Equatable, Sendable {
 
 /// Bragd: eagle, albatross eller hole in one (brutto).
 /// Hva bragden er: eagle og bedre (`big_score`, push), eller birdie og shank (`quiet_score`, bare
-/// i feeden, sql/068).
+/// i feeden, sql/073).
 nonisolated enum HomeFeatKind: Equatable, Sendable {
     case holeInOne, albatross, eagle, birdie, shank
 

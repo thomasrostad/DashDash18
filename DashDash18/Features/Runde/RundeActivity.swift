@@ -70,7 +70,7 @@ nonisolated extension RoundGame {
     }
 
     /// Store scorer blant hullene som ble ført for første gang (`loggStorScore`), og birdie og shank
-    /// til feeden (sql/068). En retting (spilleren er ikke i `fresh`) gir ingen.
+    /// til feeden (sql/073). En retting (spilleren er ikke i `fresh`) gir ingen.
     /// Ingen på et skjult hull (sql/047, «skjul de tre siste hullene»): varselet ville vist scoren.
     func bigScoreEventsAfterSaving(hole: Int, fresh: [FreshScore]) -> [ActivityEvent] {
         guard status == .active, !round.hiddenHoleIndices.contains(hole) else { return [] }

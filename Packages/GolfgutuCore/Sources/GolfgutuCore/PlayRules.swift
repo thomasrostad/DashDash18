@@ -38,7 +38,7 @@ extension Ruleset {
         public var lockSubmittedCards: Bool
         /// Hvor mange av de siste hullene «Skjul de siste hullene» skjuler i en ny runde (1–9).
         public var hiddenHoles: Int
-        /// Shank (brutto firedobbel bogey eller verre) står i feeden, uten push (sql/068).
+        /// Shank (brutto firedobbel bogey eller verre) står i feeden, uten push (sql/073).
         public var shankPosts: Bool
 
         public init(maxStrokes: MaxStrokes = .off, lockSubmittedCards: Bool = false, hiddenHoles: Int = 3,

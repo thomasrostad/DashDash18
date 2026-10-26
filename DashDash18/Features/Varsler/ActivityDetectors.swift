@@ -17,7 +17,7 @@ nonisolated enum BigScore {
     }
 }
 
-/// `quiet_score` (sql/068): brutto birdie, og shank (brutto firedobbel bogey eller verre) når
+/// `quiet_score` (sql/073): brutto birdie, og shank (brutto firedobbel bogey eller verre) når
 /// regelsettet slår det på. Hole in one er en `BigScore`, ikke en birdie.
 nonisolated enum QuietScore {
     /// Så mange slag over par en shank er (firedobbel bogey).

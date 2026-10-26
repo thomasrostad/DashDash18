@@ -164,7 +164,7 @@ struct AktivitetTekstTests {
                 == "Anders albatross på hull 5 — 2 slag på par 5")
     }
 
-    /// Birdie og shank (sql/068): kategori score, egen kind, samme tekstform som de store.
+    /// Birdie og shank (sql/073): kategori score, egen kind, samme tekstform som de store.
     @Test func stilleScorer() {
         let birdie = ActivityEvent.quietScore(member: anders, hole: 3, holeIndex: 2, name: .birdie, strokes: 2, par: 3)
         #expect(birdie.kind == "quiet_score")
