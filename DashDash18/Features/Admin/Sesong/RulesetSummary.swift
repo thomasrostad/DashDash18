@@ -258,14 +258,13 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
 /// Valgene under «Føring og visning» (regelvern). De telles som en del av `RulesetField.other` i
 /// sammenligningen med oppsettet, og har egne «Endret · standard …»-merker i skjemaet.
 nonisolated enum PlayField: CaseIterable, Hashable, Sendable {
-    case maxStrokes, lockSubmittedCards, hiddenHoles, shankPosts
+    case maxStrokes, lockSubmittedCards, hiddenHoles
 
     var title: String {
         switch self {
         case .maxStrokes: "Maks slag per hull"
         case .lockSubmittedCards: "Lås kortet når det er levert"
         case .hiddenHoles: "Skjul de siste hullene"
-        case .shankPosts: "Shank i feeden"
         }
     }
 
@@ -274,7 +273,6 @@ nonisolated enum PlayField: CaseIterable, Hashable, Sendable {
         case .maxStrokes: a.play.maxStrokes != b.play.maxStrokes
         case .lockSubmittedCards: a.play.lockSubmittedCards != b.play.lockSubmittedCards
         case .hiddenHoles: a.play.hiddenHoles != b.play.hiddenHoles
-        case .shankPosts: a.play.shankPosts != b.play.shankPosts
         }
     }
 
@@ -283,7 +281,6 @@ nonisolated enum PlayField: CaseIterable, Hashable, Sendable {
         case .maxStrokes: RulesetExplanation.maxStrokesText(rules.play.maxStrokes)
         case .lockSubmittedCards: rules.play.lockSubmittedCards ? "på" : "av"
         case .hiddenHoles: "\(rules.play.hiddenHoles) hull"
-        case .shankPosts: rules.play.shankPosts ? "på" : "av"
         }
     }
 
