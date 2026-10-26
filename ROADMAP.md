@@ -465,7 +465,7 @@ Gjennomgang 08.10.2026 mot beste praksis (`docs/arrangorsiden-vurdering.md`), i 
 - [x] Kontrast: knappene i verktøylinja («Lagre», «Lag», «Ferdig», «Avbryt») er lys tekst på lys mintgrønn pille i lys modus (verktøylinja står i mørk modus, så `ddForestInk` blir mint). Besluttet 11.10 (Thomas): gul med mørk tekst. Fikset 11.10: `DDConfirmToolbarItem` gir gul pille med mørk tekst (11,0:1), `DDCancelToolbarItem` gir krem tekst rett på den grønne linja uten glasspille (9,8:1 lys, 13,5:1 mørk). Alle `.confirmationAction`/`.cancellationAction` bruker dem.
 - [x] «Sign in with Apple» og «Paste» følger telefonens språk. *(21.10: lar vi være (Thomas). iOS tegner disse på telefonens språk uansett hva appen er satt til; prøvd i simulatoren med norsk som utgangsspråk og uten engelsk språkpakke, knappen var fortsatt engelsk.)*
 - [x] «Vilkår/Personvern (publiseres før lansering)» må byttes med lenker før App Store (gjøremål 12). *(20.10: lenker til dashdash18.com, #158 og #159.)*
-- [ ] Små ting: cup-treet kuttes i høyre kant (konkcup), ord som brytes inne i piller («ETTER HULL 7 · / 7 SKINS STÅR»), «Kommer ikke» krymper på Hjem-kortet, «Gjenopprett kjøp» brytes, slopeklubb uten tittellinje.
+- [x] Små ting: cup-treet kuttes i høyre kant (konkcup), ord som brytes inne i piller («ETTER HULL 7 · / 7 SKINS STÅR»), «Kommer ikke» krymper på Hjem-kortet, «Gjenopprett kjøp» brytes, slopeklubb uten tittellinje. *(26.10: sjekket i simulatoren (konkcup, hjem, spill, slopeklubb): rettet i UI-utbedringen (V2, V6, V9). «Gjenopprett kjøp» venter på kjøp i 1.1.)*
 
 ### Kodegjennomgang 08.10.2026: åpne funn
 
