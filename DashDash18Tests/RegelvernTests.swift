@@ -149,11 +149,13 @@ struct RegelvernTests {
         draft.fixedMaxStrokes = 8
         draft.rules.play.lockSubmittedCards = true
         draft.rules.play.hiddenHoles = 4
+        draft.rules.play.shankPosts = true
         #expect(draft.changedFields == [.other])
         #expect(PlayField.allCases.allSatisfy { draft.changeNote($0) != nil })
         #expect(draft.changeNote(.maxStrokes) == "Endret · standard av")
         let sentences = RulesetExplanation.playSentences(draft.rules.play)
-        #expect(sentences.count == 3)
+        #expect(sentences.count == 4)
+        #expect(sentences.contains { $0.contains("shank") })
         #expect(sentences[0].contains("8 slag"))
         draft.maxStrokesKind = .netDoubleBogey
         #expect(RulesetExplanation.playSentences(draft.rules.play)[0].contains("netto dobbel bogey"))
