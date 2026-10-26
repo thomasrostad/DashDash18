@@ -130,7 +130,7 @@ nonisolated enum CompetitionRecipe: String, CaseIterable, Identifiable, Sendable
         case .parBogey: "plusminus"
         case .maximumScore: "arrow.down.to.line"
         case .matchPlay: "person.line.dotted.person"
-        case .skins: "dollarsign.circle"
+        case .skins: "flag.circle"
         case .frontNine: "1.circle"
         case .backNine: "10.circle"
         case .amerikaner: "square.grid.2x2"
