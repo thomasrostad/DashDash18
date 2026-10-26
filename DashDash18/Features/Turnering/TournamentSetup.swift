@@ -56,7 +56,7 @@ nonisolated enum TournamentSetup {
         case .fun: "party.popper"
         case .amerikanerSeries: "square.grid.2x2"
         case .kobenhavnerSeries: "triangle"
-        case .skinsSeries: "dollarsign.circle"
+        case .skinsSeries: "flag.circle"
         case .teamVsTeam: "flag.2.crossed"
         }
     }
