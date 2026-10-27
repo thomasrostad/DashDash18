@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Den grønne jakka som strektegning (`ICON_JACKET2` i PWA-en): to jakkehalvdeler med V-krage.
-struct DDJacketIcon: Shape {
+nonisolated struct DDJacketIcon: Shape {
     func path(in rect: CGRect) -> Path {
         let w = rect.width, h = rect.height
         func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: rect.minX + x * w, y: rect.minY + y * h) }

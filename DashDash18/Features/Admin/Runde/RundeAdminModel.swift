@@ -420,7 +420,7 @@ final class RundeAdminModel {
         let params = RoundSetupParams.make(roundID: id, draft: draft, roster: members,
                                            course: coreCourse(for: draft), rules: rules,
                                            withPlayingHandicap: true)
-        struct Started: Decodable { let players: Int; let matches: Int; let status: RoundStatus }
+        nonisolated struct Started: Decodable { let players: Int; let matches: Int; let status: RoundStatus }
         do {
             // Oppsett og status i én transaksjon. Går en annen runde (23505), ruller alt tilbake.
             let started: Started = try await client.rpc("start_round", params: params).execute().value
@@ -535,7 +535,7 @@ final class RundeAdminModel {
         let params = RoundSetupParams.make(roundID: roundID, draft: draft, roster: members,
                                            course: coreCourse(for: draft), rules: rules,
                                            withPlayingHandicap: withPlayingHandicap)
-        struct Counts: Decodable { let players: Int; let matches: Int }
+        nonisolated struct Counts: Decodable { let players: Int; let matches: Int }
         do {
             let counts: Counts = try await client.rpc("set_round_setup", params: params).execute().value
             guard counts.players == params.players.count, counts.matches == params.matches.count else {
