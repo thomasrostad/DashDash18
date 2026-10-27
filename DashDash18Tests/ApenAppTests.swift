@@ -6,6 +6,7 @@ import Testing
 // Fase 17, åpent for alle: onboarding uten klubb, sletting av konto, rapporter og blokker,
 // kjøp for å kjøre turnering og «Del regningen».
 
+@MainActor
 struct ApenOnboardingTests {
     private let membership = Membership.preview
     private let pending = Membership(id: UUID(), clubID: UUID(), displayName: "Dag", status: .pending, isOrganizer: false,
