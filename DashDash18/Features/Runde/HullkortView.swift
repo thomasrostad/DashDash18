@@ -363,6 +363,7 @@ struct HullRadView: View {
             .disabled(row.isAtMax)
         }
         .sensoryFeedback(trigger: row.value) { old, new in new > old ? .increase : .decrease }
+        .sensoryFeedback(trigger: row.confirmed) { _, new in new ? .impact(weight: .light) : nil }
         // VoiceOver (V7): «Kåre, 4 slag», «2 poeng», og sveip opp/ned som + og −.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(StrokeAccessibility.label(row))
