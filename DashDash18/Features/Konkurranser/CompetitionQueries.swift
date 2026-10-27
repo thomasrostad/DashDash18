@@ -18,9 +18,10 @@ enum CompetitionQueries {
     }
 
     static func overview(client: SupabaseClient) async throws -> Overview {
+        // Fra en RPC kan PostgREST bare sortere på kolonner som er valgt, derfor `created_at`.
         let competitions: [CompetitionRow] = try await (SetQueriesFeature.isEnabled
             ? client.rpc("my_competitions").neq("kind", value: CompetitionKind.game.rawValue)
-                .select(CompetitionRow.columnsWithSignup)
+                .select(CompetitionRow.columnsWithSignup + ", created_at")
             : client.from("competitions")
                 .select(CompetitionRow.columnsWithSignup)
                 .neq("kind", value: CompetitionKind.game.rawValue))
