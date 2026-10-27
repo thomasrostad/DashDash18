@@ -25,7 +25,7 @@ enum PlayoffQueries {
             let p_holes: [Int]
             let p_course_id: UUID?
         }
-        struct Result: Decodable {
+        nonisolated struct Result: Decodable {
             let roundID: UUID
             enum CodingKeys: String, CodingKey { case roundID = "round_id" }
         }

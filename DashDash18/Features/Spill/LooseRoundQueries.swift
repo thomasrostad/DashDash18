@@ -35,7 +35,7 @@ enum LooseRoundQueries {
     /// Ny runde med alt oppsettet, startet (`start_loose_round`). Gir rundens id.
     static func start(client: SupabaseClient, _ setup: LooseRoundStart) async throws -> UUID {
         struct Params: Encodable { let p_setup: LooseRoundStart }
-        struct Answer: Decodable {
+        nonisolated struct Answer: Decodable {
             let roundID: UUID
             enum CodingKeys: String, CodingKey { case roundID = "round_id" }
         }
@@ -82,7 +82,7 @@ enum LooseRoundQueries {
 
     // MARK: Invitasjon
 
-    struct Invite: Decodable, Equatable, Sendable {
+    nonisolated struct Invite: Decodable, Equatable, Sendable {
         let code: String
         let expiresAt: Date
 

@@ -226,6 +226,7 @@ struct DeltakerForhandsvisningTests {
 }
 
 /// Etter at du er med: en ny bruker uten klubb skal se turneringen, ikke valgskjermen.
+@MainActor
 struct DeltakerHjemTests {
     @Test func deltakerUtenValgFårVennemodus() {
         #expect(OpenAppGate.automaticChoice(club: .noClub, choice: nil, hasParticipations: true, openApp: true) == .friends)
