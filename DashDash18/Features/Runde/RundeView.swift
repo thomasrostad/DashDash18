@@ -52,6 +52,7 @@ struct RundeView: View {
                 .padding(.horizontal, DDSpacing.gutter)
                 .padding(.vertical, DDSpacing.l)
                 .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: model.currentHole)
+                .sensoryFeedback(.selection, trigger: model.currentHole)
             }
         }
         .refreshable { await model.load() }

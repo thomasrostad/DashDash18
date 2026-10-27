@@ -77,6 +77,13 @@ struct CardSubmissionSection: View {
                 Text(error).font(.ddCaption).foregroundStyle(Color.ddError)
             }
         }
+        .sensoryFeedback(trigger: isSubmitted) { _, new in new ? .success : nil }
+        .sensoryFeedback(trigger: error) { _, new in new == nil ? nil : .error }
+    }
+
+    private var isSubmitted: Bool {
+        if case .submitted = submission { return true }
+        return false
     }
 
     private func run(_ action: @escaping () async throws -> Void) {
