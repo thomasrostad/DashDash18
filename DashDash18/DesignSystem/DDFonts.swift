@@ -116,6 +116,8 @@ extension Font {
     static let ddDisplay = dd(.sans, size: 34, weight: .medium, relativeTo: .largeTitle)
     /// Display i feiring og hero (lett 44).
     static let ddHeroDisplay = dd(.sans, size: 44, weight: .light, relativeTo: .largeTitle)
+    /// Appnavnet ved merket, på innloggingen (medium 48).
+    static let ddBrandDisplay = dd(.sans, size: 48, weight: .medium, relativeTo: .largeTitle)
     /// Overskrift på skjerm og ark (medium 24).
     static let ddTitle = dd(.sans, size: 24, weight: .medium, relativeTo: .title2)
     /// Kortoverskrift (medium 20), f.eks. «Ingen runde på gang» og datoen for kvelden.

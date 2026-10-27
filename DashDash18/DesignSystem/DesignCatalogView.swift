@@ -87,6 +87,10 @@ struct DesignCatalogView: View {
         VStack(alignment: .leading, spacing: 10) {
             DDSectionLabel("Typografi")
             VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 12) {
+                    AttenMark().frame(width: 36, height: 36)
+                    Text("Atten").font(.ddBrandDisplay).foregroundStyle(Color.ddForestInk)
+                }
                 Text("Atten").font(.ddDisplay).foregroundStyle(Color.ddForestInk)
                 Text("Ingen runde på gang").font(.ddTitle).foregroundStyle(Color.ddForestInk)
                 Text("Thomas").font(.ddName).foregroundStyle(Color.ddForestInk)
