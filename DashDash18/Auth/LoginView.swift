@@ -47,10 +47,12 @@ struct LoginView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         // Logoen tar plassen som blir til overs, så kortet ligger nede som et ark.
-                        LoginHero()
-                            .padding(.vertical, 48)
+                        // Små skjermer (SE): mindre merke, så Apple-knappen synes uten å rulle.
+                        LoginHero(markSize: proxy.size.height < 700 ? 80 : 112)
                             .frame(maxHeight: .infinity)
-                        VStack(alignment: .leading, spacing: DDSpacing.l) {
+                            // Følger innholdet når store tekststørrelser gjør at det ruller.
+                            .background(Color.ddForestDeep)
+                        VStack(alignment: .leading, spacing: 14) {
                             if hasClubInvite {
                                 DDInfoStripe(tone: .earth) {
                                     Label("Invitasjonen er tatt vare på. Logg inn, så går du rett videre til klubben.",
@@ -65,13 +67,14 @@ struct LoginView: View {
                             switch step {
                             case .email:
                                 appleSection
+                                orDivider
                                 emailSection
                             case .code(let email):
                                 codeSection(email: email)
-                            }
-                            if showsLegal {
-                                LegalLinksRow()
-                                    .padding(.top, DDSpacing.s)
+                                if showsLegal {
+                                    LegalLinksRow()
+                                        .padding(.top, DDSpacing.s)
+                                }
                             }
                             if let error {
                                 Label(error.message, systemImage: "exclamationmark.triangle")
@@ -84,13 +87,19 @@ struct LoginView: View {
                             }
                         }
                         .padding(.horizontal, DDSpacing.xxl)
-                        .padding(.top, DDSpacing.xxl)
+                        .padding(.top, 28)
                         .padding(.bottom, 40)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        // Arket får høyden det trenger; heroen krymper (ellers kuttes tekst i arket).
+                        .fixedSize(horizontal: false, vertical: true)
                         .background(
                             UnevenRoundedRectangle(topLeadingRadius: DDRadius.sheet, topTrailingRadius: DDRadius.sheet)
                                 .fill(Color.ddCard)
                                 .ignoresSafeArea(edges: .bottom)
+                                // Skoggrønt bak de runde hjørnene, også når innholdet ruller.
+                                .background(alignment: .top) {
+                                    Color.ddForestDeep.frame(height: DDRadius.sheet)
+                                }
                         )
                     }
                     .frame(maxWidth: 480)
@@ -100,17 +109,16 @@ struct LoginView: View {
                 .scrollBounceBehavior(.basedOnSize)
             }
             // Skoggrønt bak logoen og kortets farge nederst (bak kortet), så arket går helt ned
-            // under hjemindikatoren.
-            .background {
+            // under hjemindikatoren. I stedet for `ddNavigationChrome`: den la `ddBackground` bak
+            // alt og ga en mørk stripe nederst.
+            .containerBackground(for: .navigation) {
                 VStack(spacing: 0) {
                     Color.ddForestDeep
                     Color.ddCard.frame(height: 300)
                 }
-                .ignoresSafeArea()
             }
-            .navigationTitle("Logg inn")
-            .navigationBarTitleDisplayMode(.inline)
-            .ddNavigationChrome()
+            // Ingen navigasjonslinje: «Atten» i heroen er overskriften.
+            .toolbar(.hidden, for: .navigationBar)
             .disabled(isBusy)
             .sheet(item: $captcha) { request in
                 CaptchaSheet(siteKey: request.siteKey) { token in
@@ -124,11 +132,7 @@ struct LoginView: View {
     }
 
     private var appleSection: some View {
-        VStack(alignment: .leading, spacing: DDSpacing.m) {
-            Text("Logg inn")
-                .font(.ddTitle)
-                .foregroundStyle(Color.ddForestInk)
-                .accessibilityAddTraits(.isHeader)
+        VStack(alignment: .leading, spacing: 14) {
             SignInWithAppleButton(.signIn) { request in
                 appleNonce = AppleNonce.random()
                 request.requestedScopes = [.fullName, .email]
@@ -137,16 +141,25 @@ struct LoginView: View {
                 handleApple(result)
             }
             .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+            // Stilen settes bare når knappen lages: ny knapp når modusen byttes.
+            .id(colorScheme)
             .frame(height: 56)
             .clipShape(.capsule)
             if showsGoogle {
                 GoogleSignInButton { run { try await auth.signInWithGoogle() } }
             }
-            Text("Eller logg inn med en kode på e-post:")
-                .font(.ddCallout)
-                .foregroundStyle(Color.ddInkSecondary)
-                .padding(.top, DDSpacing.s)
         }
+    }
+
+    /// Tynn linje, «ELLER», tynn linje mellom knappene og e-posten.
+    private var orDivider: some View {
+        HStack(spacing: DDSpacing.m) {
+            Rectangle().fill(Color.ddHairline).frame(height: 1)
+            Text("Eller").ddEyebrow()
+                .fixedSize()
+            Rectangle().fill(Color.ddHairline).frame(height: 1)
+        }
+        .accessibilityHidden(true)
     }
 
     private var emailSection: some View {
@@ -166,14 +179,33 @@ struct LoginView: View {
                 .submitLabel(.send)
                 .onSubmit(sendCode)
                 .ddField()
-            Text("Vi sender en engangskode til e-posten din. Ingen passord å huske.")
-                .font(.ddCaption)
-                .foregroundStyle(Color.ddInkSecondary)
             Button(action: sendCode) {
-                busyLabel("Send kode")
+                busyLabel("Send engangskode")
             }
             .buttonStyle(.ddPrimary)
             .padding(.top, DDSpacing.s)
+            if showsLegal {
+                legalLine
+                    .padding(.top, DDSpacing.xs)
+            }
+        }
+    }
+
+    /// «Ingen passord. Ved å fortsette godtar du vilkårene og personvernerklæringen.» Uten begge
+    /// lenkene: lenkeraden som før.
+    @ViewBuilder
+    private var legalLine: some View {
+        if let terms = LegalLinks.terms, let privacy = LegalLinks.privacy,
+           let text = try? AttributedString(markdown: "Ingen passord. Ved å fortsette godtar du "
+               + "[vilkårene](\(terms.absoluteString)) og [personvernerklæringen](\(privacy.absoluteString)).") {
+            Text(text)
+                .font(.ddCaption)
+                .foregroundStyle(Color.ddInkSecondary)
+                .tint(Color.ddForestInk)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+        } else {
+            LegalLinksRow()
         }
     }
 
@@ -340,22 +372,30 @@ struct LoginView: View {
     }
 }
 
-/// Jakka, appnavnet og undertittelen på grønn grunn, som innloggingen i PWA-en.
+/// Attens merke, appnavnet og hva appen er for, på grønn grunn (`docs/design/innlogging/SPEC.md`).
 private struct LoginHero: View {
+    var markSize: CGFloat = 112
+
     var body: some View {
-        VStack(spacing: DDSpacing.m) {
-            DDJacketIcon()
-                .stroke(Color.ddGold, style: StrokeStyle(lineWidth: 1.6, lineJoin: .round))
-                .frame(width: 44, height: 52)
-                .accessibilityHidden(true)
+        VStack(spacing: 18) {
+            AttenMark()
+                .frame(width: markSize, height: markSize)
             Text("Atten")
-                .font(.ddDisplay)
+                .font(.ddBrandDisplay)
+                .tracking(-0.5)
                 .foregroundStyle(Color.ddOnDark)
-            Text("Golf med gjengen")
-                .ddEyebrow(color: Color.ddOnDark.opacity(0.55))
+                .padding(.top, DDSpacing.s)
+                .accessibilityAddTraits(.isHeader)
+            Text("Turnering, liga og scorekort for golfgjengen.")
+                .font(.ddBody)
+                .foregroundStyle(Color.ddHeroSecondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 280)
         }
         .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .combine)
+        .padding(.top, 56)
+        .padding(.horizontal, 32)
+        .padding(.bottom, DDSpacing.xxl)
     }
 }
 

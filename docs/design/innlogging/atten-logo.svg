@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 20 60 60" width="240" height="240">
+  <!-- Attens merke: golfball med 18 groper (ett per hull) og to skråstreker (DashDash). Samme geometri som app-ikonet (1024-rutenettet / 10.24). -->
+  <circle cx="50" cy="50" r="29.3" fill="#FFF9DF"/>
+  <g fill="#E4DBBB">
+    <circle cx="50.00" cy="28.50" r="1.95"/><circle cx="57.35" cy="29.80" r="1.95"/><circle cx="63.82" cy="33.53" r="1.95"/><circle cx="68.62" cy="39.25" r="1.95"/><circle cx="71.17" cy="46.27" r="1.95"/><circle cx="71.17" cy="53.73" r="1.95"/><circle cx="68.62" cy="60.75" r="1.95"/><circle cx="63.82" cy="66.47" r="1.95"/><circle cx="57.35" cy="70.20" r="1.95"/><circle cx="50.00" cy="71.50" r="1.95"/><circle cx="42.65" cy="70.20" r="1.95"/><circle cx="36.18" cy="66.47" r="1.95"/><circle cx="31.38" cy="60.75" r="1.95"/><circle cx="28.83" cy="53.73" r="1.95"/><circle cx="28.83" cy="46.27" r="1.95"/><circle cx="31.38" cy="39.25" r="1.95"/><circle cx="36.18" cy="33.53" r="1.95"/><circle cx="42.65" cy="29.80" r="1.95"/>
+  </g>
+  <g stroke="#E4762F" stroke-width="3.6" stroke-linecap="round">
+    <line x1="47.1" y1="40.6" x2="42.2" y2="58.6"/><line x1="56.9" y1="40.6" x2="52" y2="58.6"/>
+  </g>
+</svg>
