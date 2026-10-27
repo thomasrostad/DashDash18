@@ -181,7 +181,8 @@ struct FollowingCardView: View {
     }
 }
 
-/// Hull, par og slag i rader på ni.
+/// Hull, par og slag i rader på ni. Kolonnene deler bredden likt, så hull 1–9 og 10–18 står rett under
+/// hverandre selv om tallene har ett eller to sifre.
 struct FollowingHolesGrid: View {
     let holes: [FollowingCard.Hole]
 
@@ -191,19 +192,24 @@ struct FollowingHolesGrid: View {
                 let chunk = Array(holes[start..<min(start + 9, holes.count)])
                 Grid(horizontalSpacing: 4, verticalSpacing: 2) {
                     GridRow {
-                        Text("Hull").ddEyebrow()
-                        ForEach(chunk, id: \.hole) { Text("\($0.hole)").font(.ddCaption).monospacedDigit() }
+                        Text("Hull").ddEyebrow().fixedSize()
+                        ForEach(chunk, id: \.hole) { hole in
+                            Text("\(hole.hole)").font(.ddCaption).monospacedDigit().frame(maxWidth: .infinity)
+                        }
                     }
                     GridRow {
-                        Text("Par").ddEyebrow()
-                        ForEach(chunk, id: \.hole) { Text($0.par.map(String.init) ?? "–").font(.ddCaption) }
+                        Text("Par").ddEyebrow().fixedSize()
+                        ForEach(chunk, id: \.hole) { hole in
+                            Text(hole.par.map(String.init) ?? "–").font(.ddCaption).frame(maxWidth: .infinity)
+                        }
                     }
                     GridRow {
-                        Text("Slag").ddEyebrow()
+                        Text("Slag").ddEyebrow().fixedSize()
                         ForEach(chunk, id: \.hole) { hole in
                             Text(hole.strokes.map(String.init) ?? "–")
                                 .font(.ddCaption.weight(.semibold))
                                 .monospacedDigit()
+                                .frame(maxWidth: .infinity)
                         }
                     }
                 }
