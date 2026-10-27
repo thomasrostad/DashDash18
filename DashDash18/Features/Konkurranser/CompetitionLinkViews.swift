@@ -188,6 +188,7 @@ private struct CompetitionTitle<Items: View>: ViewModifier {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, DDSpacing.gutter)
                 .padding(.top, DDSpacing.s)
+                .ddReadableFrame()
             }
         }
     }

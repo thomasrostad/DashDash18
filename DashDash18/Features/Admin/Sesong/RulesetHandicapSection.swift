@@ -128,6 +128,7 @@ private struct TeamHandicapView: View {
                 .padding()
                 .glassEffect(.regular, in: .rect(cornerRadius: DDRadius.card))
                 .padding(.horizontal, DDSpacing.s)
+                .ddReadableFrame()
         }
     }
 }

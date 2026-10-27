@@ -58,6 +58,7 @@ struct RootView: View {
                     // Knapper og lenker i innholdet er skoggrønne; gult er bare aktiv fane.
                     .tint(Color.ddForestInk)
                     .environment(\.currentTab, tab)
+                    .ddReadableWidth()
                     .ddScreenBackground()
                 }
                 .badge(tab == .arrangor ? pendingMembers?.badge ?? 0 : 0)

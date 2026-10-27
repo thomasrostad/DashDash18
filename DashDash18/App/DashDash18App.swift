@@ -24,7 +24,9 @@ struct DashDash18App: App {
                 } else if let i = ProcessInfo.processInfo.arguments.firstIndex(of: "-DDDesignScreen"),
                           i + 1 < ProcessInfo.processInfo.arguments.count,
                           let screen = DesignScreenSamples.Screen(rawValue: ProcessInfo.processInfo.arguments[i + 1]) {
+                    // Lesbar bredde som i fanene (RootView), så skjermbildene på iPhone Duo stemmer.
                     DesignScreenSamples(screen: screen)
+                        .ddReadableWidth()
                 } else {
                     content
                 }

@@ -508,6 +508,7 @@ private struct TradComposer: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
+        .ddReadableFrame()
         .padding(.horizontal, DDSpacing.l)
         .padding(.top, 10)
         .padding(.bottom, 8)
