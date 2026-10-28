@@ -514,7 +514,7 @@ Tre regelinnstillinger under «Føring og visning» i reglene (`play` i regelset
 
 **Totalt:** ca. 76–111 økter. Usikkerheten er størst i fase 2 (paritet), 5 (offline) og 9 (import).
 
-Etter v1: Android (B13), Apple Watch, GPS.
+Etter v1: Android (B13), Apple Watch, GPS. Planer: [`docs/plan-apple-watch.md`](docs/plan-apple-watch.md) og [`docs/plan-android.md`](docs/plan-android.md) (28.10.2026).
 
 ---
 
