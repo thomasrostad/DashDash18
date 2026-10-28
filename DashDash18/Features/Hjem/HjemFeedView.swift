@@ -55,7 +55,9 @@ struct HjemFeedView: View {
     @Environment(\.liveBarInFeed) private var liveBarInFeed
 
     var body: some View {
-        ScrollView {
+        // Aldri bredere enn skjermen: ble ett kort for bredt (sett etter en avsluttet runde 16.10),
+        // kunne hele feeden dras sideveis.
+        DDFeedScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 if let tabPicker {
                     HjemFeedTabPicker(tab: tabPicker)
@@ -71,9 +73,6 @@ struct HjemFeedView: View {
                 .padding(.top, 12)
                 .padding(.bottom, DDSpacing.xxl)
             }
-            // Aldri bredere enn skjermen: ble ett kort for bredt (sett etter en avsluttet runde 16.10),
-            // kunne hele feeden dras sideveis.
-            .containerRelativeFrame(.horizontal)
         }
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         .defaultScrollAnchor(scrollAnchor)
