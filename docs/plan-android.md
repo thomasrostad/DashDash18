@@ -2,7 +2,7 @@
 
 28.10.2026. Grunnlag: ønske fra Thomas om Atten på Android (B13: «iPhone først, Android senere»). Kartlagt mot iOS-appen (`DashDash18/`, ca. 80 000 linjer Swift i 387 filer), regelmotoren (`Packages/GolfgutuCore`, ca. 9 000 linjer, 35 JSON-fixtures), TypeScript-motoren (`web/golfgutu-core`, ca. 9 000 linjer, brukt av web-admin og `bet-settle`), Supabase-funksjonene (`supabase/functions/`) og lenkeworkeren (`web/atten-lenker`).
 
-**Status:** plan, ingen kode skrevet. Klokkeplanen står i [`plan-apple-watch.md`](plan-apple-watch.md) og deler steg 0 med denne.
+**Status:** plan, ingen kode skrevet. **28.10.2026 (Thomas): foreløpig ingen på Android, så klokka kommer først og Android venter.** Planen tas opp igjen når det kommer Android-brukere. Klokkeplanen står i [`plan-apple-watch.md`](plan-apple-watch.md) og deler steg 0 med denne.
 
 ## Mål
 
