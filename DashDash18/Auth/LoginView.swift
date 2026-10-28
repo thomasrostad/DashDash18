@@ -111,10 +111,15 @@ struct LoginView: View {
             // Skoggrønt bak logoen og kortets farge nederst (bak kortet), så arket går helt ned
             // under hjemindikatoren. I stedet for `ddNavigationChrome`: den la `ddBackground` bak
             // alt og ga en mørk stripe nederst.
+            // Bredere enn arket (høyst 480, iPhone Duo): bare skog, for arket står midt på og går selv ned
+            // under hjemindikatoren. Kortets farge i full bredde ville stikke ut på sidene.
             .containerBackground(for: .navigation) {
                 VStack(spacing: 0) {
                     Color.ddForestDeep
-                    Color.ddCard.frame(height: 300)
+                    GeometryReader { g in
+                        g.size.width > 480 ? Color.ddForestDeep : Color.ddCard
+                    }
+                    .frame(height: 300)
                 }
             }
             // Ingen navigasjonslinje: «Atten» i heroen er overskriften.
@@ -133,7 +138,7 @@ struct LoginView: View {
 
     private var appleSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SignInWithAppleButton(.signIn) { request in
+            SignInWithAppleButton(.continue) { request in
                 appleNonce = AppleNonce.random()
                 request.requestedScopes = [.fullName, .email]
                 request.nonce = AppleNonce.sha256(appleNonce)
@@ -399,28 +404,94 @@ private struct LoginHero: View {
     }
 }
 
-/// «Fortsett med Google» i samme form som Apple-knappen. Googles retningslinjer: hvit flate,
-/// tydelig navn. Ingen logo-fil (ingen nye ressurser); teksten er nok.
+/// «Fortsett med Google» i samme form som Apple-knappen, etter Googles retningslinjer for knappen
+/// (developers.google.com/identity/branding-guidelines): den offisielle G-en i fire farger, lys knapp
+/// (hvit, kant #747775, tekst #1F1F1F) og mørk knapp (#131314, kant #8E918F, tekst #E3E3E3).
 private struct GoogleSignInButton: View {
     let action: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
+        let dark = colorScheme == .dark
         Button(action: action) {
-            HStack(spacing: 8) {
-                Text("G")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+            HStack(spacing: 10) {
+                GoogleGLogo()
+                    .frame(width: 22, height: 22)
                     .accessibilityHidden(true)
                 Text("Fortsett med Google")
                     .font(.system(size: 19, weight: .medium))
             }
             .frame(maxWidth: .infinity, minHeight: 56)
-            .foregroundStyle(colorScheme == .dark ? Color.black : Color(white: 0.12))
-            .background(Capsule().fill(Color.white))
-            .overlay(Capsule().strokeBorder(Color(white: 0.75), lineWidth: 1))
+            .foregroundStyle(dark ? Color(red: 0xE3 / 255, green: 0xE3 / 255, blue: 0xE3 / 255)
+                                  : Color(red: 0x1F / 255, green: 0x1F / 255, blue: 0x1F / 255))
+            .background(Capsule().fill(dark ? Color(red: 0x13 / 255, green: 0x13 / 255, blue: 0x14 / 255) : .white))
+            .overlay(Capsule().strokeBorder(dark ? Color(red: 0x8E / 255, green: 0x91 / 255, blue: 0x8F / 255)
+                                                 : Color(red: 0x74 / 255, green: 0x77 / 255, blue: 0x75 / 255),
+                                            lineWidth: 1))
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Fortsett med Google")
+    }
+}
+
+/// Googles G i de fire fargene, tegnet fra Googles egen SVG (48 × 48) og skalert til rammen.
+/// Retningslinjene: ikke endre form eller farger.
+private struct GoogleGLogo: View {
+    var body: some View {
+        ZStack {
+            GooglePart(part: .red).fill(Color(red: 0xEA / 255, green: 0x43 / 255, blue: 0x35 / 255))
+            GooglePart(part: .blue).fill(Color(red: 0x42 / 255, green: 0x85 / 255, blue: 0xF4 / 255))
+            GooglePart(part: .yellow).fill(Color(red: 0xFB / 255, green: 0xBC / 255, blue: 0x05 / 255))
+            GooglePart(part: .green).fill(Color(red: 0x34 / 255, green: 0xA8 / 255, blue: 0x53 / 255))
+        }
+    }
+}
+
+private nonisolated struct GooglePart: Shape {
+    enum Part { case red, blue, yellow, green }
+    let part: Part
+
+    func path(in rect: CGRect) -> Path {
+        let s = min(rect.width, rect.height) / 48
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: rect.minX + x * s, y: rect.minY + y * s) }
+        var p = Path()
+        switch part {
+        case .red:
+            p.move(to: pt(24, 9.5))
+            p.addCurve(to: pt(33.21, 13.1), control1: pt(27.54, 9.5), control2: pt(30.71, 10.72))
+            p.addLine(to: pt(40.06, 6.25))
+            p.addCurve(to: pt(24, 0), control1: pt(35.9, 2.38), control2: pt(30.47, 0))
+            p.addCurve(to: pt(2.56, 13.22), control1: pt(14.62, 0), control2: pt(6.51, 5.38))
+            p.addLine(to: pt(10.54, 19.41))
+            p.addCurve(to: pt(24, 9.5), control1: pt(12.43, 13.72), control2: pt(17.74, 9.5))
+        case .blue:
+            p.move(to: pt(46.98, 24.55))
+            p.addCurve(to: pt(46.6, 20), control1: pt(46.98, 22.98), control2: pt(46.83, 21.46))
+            p.addLine(to: pt(24, 20))
+            p.addLine(to: pt(24, 29.02))
+            p.addLine(to: pt(36.94, 29.02))
+            p.addCurve(to: pt(32.16, 36.2), control1: pt(36.36, 31.98), control2: pt(34.68, 34.5))
+            p.addLine(to: pt(39.89, 42.2))
+            p.addCurve(to: pt(46.98, 24.55), control1: pt(44.4, 38.02), control2: pt(46.98, 31.84))
+        case .yellow:
+            p.move(to: pt(10.53, 28.59))
+            p.addCurve(to: pt(9.77, 24), control1: pt(10.05, 27.14), control2: pt(9.77, 25.6))
+            p.addCurve(to: pt(10.53, 19.41), control1: pt(9.77, 22.4), control2: pt(10.04, 20.86))
+            p.addLine(to: pt(2.55, 13.22))
+            p.addCurve(to: pt(0, 24), control1: pt(0.92, 16.46), control2: pt(0, 20.12))
+            p.addCurve(to: pt(2.56, 34.78), control1: pt(0, 27.88), control2: pt(0.92, 31.54))
+            p.addLine(to: pt(10.53, 28.59))
+        case .green:
+            p.move(to: pt(24, 48))
+            p.addCurve(to: pt(39.89, 42.19), control1: pt(30.48, 48), control2: pt(35.93, 45.87))
+            p.addLine(to: pt(32.16, 36.19))
+            p.addCurve(to: pt(24, 38.49), control1: pt(30.01, 37.64), control2: pt(27.24, 38.49))
+            p.addCurve(to: pt(10.53, 28.58), control1: pt(17.74, 38.49), control2: pt(12.43, 34.27))
+            p.addLine(to: pt(2.55, 34.77))
+            p.addCurve(to: pt(24, 48), control1: pt(6.51, 42.62), control2: pt(14.62, 48))
+        }
+        p.closeSubpath()
+        return p
     }
 }

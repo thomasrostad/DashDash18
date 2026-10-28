@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 import Security
 
-/// Engangsverdi for Logg inn med Apple. Apple får SHA-256 av verdien, Supabase får råverdien,
+/// Engangsverdi for Logg inn med Apple og Google. Apple/Google får SHA-256 av verdien, Supabase får råverdien,
 /// og Supabase sjekker at de hører sammen. Det hindrer at et stjålet ID-token spilles av på nytt.
 nonisolated enum AppleNonce {
     private static let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")

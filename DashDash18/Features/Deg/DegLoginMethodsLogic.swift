@@ -33,7 +33,7 @@ nonisolated enum LoginMethod: String, CaseIterable, Sendable {
         }
     }
 
-    /// Google er ikke satt opp i Supabase ennå (B9). Slås på med `GoogleLoginFeature`.
+    /// Google styres av `GoogleLoginFeature` (på fra 28.10.2026).
     var isAvailable: Bool { self != .google || GoogleLoginFeature.isEnabled }
 }
 

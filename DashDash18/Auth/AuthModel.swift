@@ -1,7 +1,9 @@
 import AuthenticationServices
 import Foundation
+import GoogleSignIn
 import Observation
 import Supabase
+import UIKit
 
 struct AuthUser: Equatable, Sendable {
     let id: UUID
@@ -83,21 +85,30 @@ final class AuthModel {
         }
     }
 
-    /// Logg inn med Google (B9, `GoogleLoginFeature`): Supabase OAuth i et
-    /// `ASWebAuthenticationSession`-vindu, som kommer tilbake til `GoogleLogin.redirectURL`.
+    /// Logg inn med Google (B9, `GoogleLoginFeature`) med Googles egen pakke (GoogleSignIn, 28.10.2026):
+    /// Google viser «Atten», ikke supabase.co. ID-tokenet byttes mot en Supabase-økt som med Apple, med
+    /// nonce (Google får SHA-256, Supabase råverdien). iOS-klienten står i Info.plist (`GIDClientID`) og
+    /// under «Client IDs» for Google i Supabase (test og prod).
     func signInWithGoogle() async throws(LoginError) {
+        guard let presenter = GoogleLogin.presenter() else { throw .googleFailed }
+        let rawNonce = AppleNonce.random()
+        let result: GIDSignInResult
         do {
-            try await auth.signInWithOAuth(provider: .google, redirectTo: GoogleLogin.redirectURL) { session in
-                // Delt Safari-økt: er du alt logget inn på Google, slipper du å skrive passordet.
-                session.prefersEphemeralWebBrowserSession = false
-            }
+            result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenter, hint: nil, additionalScopes: nil,
+                                                               nonce: AppleNonce.sha256(rawNonce))
         } catch {
             if GoogleLogin.isCancellation(error) { return }
-            if let authError = error as? AuthError {
-                throw LoginError.from(errorCode: authError.errorCode.rawValue, fallback: authError.localizedDescription)
-            }
             if error is URLError { throw .offline }
             throw .googleFailed
+        }
+        guard let idToken = result.user.idToken?.tokenString else { throw .googleFailed }
+        do {
+            try await auth.signInWithIdToken(
+                credentials: OpenIDConnectCredentials(provider: .google, idToken: idToken,
+                                                      accessToken: result.user.accessToken.tokenString, nonce: rawNonce)
+            )
+        } catch {
+            throw Self.loginError(from: error)
         }
     }
 
@@ -153,17 +164,21 @@ final class AuthModel {
     }
 }
 
-/// Google-innlogging via Supabase OAuth (B9).
+/// Google-innlogging med GoogleSignIn (B9).
 nonisolated enum GoogleLogin {
-    /// Hit sender Supabase deg tilbake etter Google. Må stå i Supabase → Auth → URL Configuration →
-    /// Redirect URLs. `ASWebAuthenticationSession` fanger adressen selv, så den trenger ikke å
-    /// registreres som URL-skjema i appen.
-    static let redirectURL = URL(string: "dashdash://login-callback")!
+    /// Skjermen Google-vinduet vises over: det øverste som står framme i vinduet som har fokus.
+    @MainActor static func presenter() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let windows = scenes.flatMap(\.windows)
+        var top = (windows.first(where: \.isKeyWindow) ?? windows.first)?.rootViewController
+        while let presented = top?.presentedViewController { top = presented }
+        return top
+    }
 
     /// Brukeren lukket vinduet: ikke en feil.
     static func isCancellation(_ error: any Error) -> Bool {
-        if let web = error as? ASWebAuthenticationSessionError, web.code == .canceledLogin { return true }
         let ns = error as NSError
+        if ns.domain == kGIDSignInErrorDomain, ns.code == GIDSignInError.Code.canceled.rawValue { return true }
         return ns.domain == ASWebAuthenticationSessionError.errorDomain
             && ns.code == ASWebAuthenticationSessionError.Code.canceledLogin.rawValue
     }

@@ -12,6 +12,7 @@
 		2C5FD70F3076319E00BC864C /* DashDash18WidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2C5FD6FE3076319C00BC864C /* DashDash18WidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2CB42A133074F81B007ECDFB /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 2CB42A123074F81B007ECDFB /* Supabase */; };
 		2CB42A2D30750875007ECDFB /* GolfgutuCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2CB42A2C30750875007ECDFB /* GolfgutuCore */; };
+		2CED96F230923CAD006095B0 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 2CED96F130923CAD006095B0 /* GoogleSignIn */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -134,6 +135,7 @@
 			files = (
 				2CB42A2D30750875007ECDFB /* GolfgutuCore in Frameworks */,
 				2CB42A133074F81B007ECDFB /* Supabase in Frameworks */,
+				2CED96F230923CAD006095B0 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -233,6 +235,7 @@
 			packageProductDependencies = (
 				2CB42A123074F81B007ECDFB /* Supabase */,
 				2CB42A2C30750875007ECDFB /* GolfgutuCore */,
+				2CED96F130923CAD006095B0 /* GoogleSignIn */,
 			);
 			productName = DashDash18;
 			productReference = 2CB429E13074DA5D007ECDFB /* DashDash18.app */;
@@ -323,6 +326,7 @@
 			packageReferences = (
 				2CB42A103074F759007ECDFB /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				2CB42A2B30750875007ECDFB /* XCLocalSwiftPackageReference "Packages/GolfgutuCore" */,
+				2CED96F030923CAD006095B0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2CB429E23074DA5D007ECDFB /* Products */;
@@ -847,6 +851,14 @@
 			traits = (
 			);
 		};
+		2CED96F030923CAD006095B0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -858,6 +870,11 @@
 		2CB42A2C30750875007ECDFB /* GolfgutuCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = GolfgutuCore;
+		};
+		2CED96F130923CAD006095B0 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2CED96F030923CAD006095B0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,3 +1,4 @@
+import GoogleSignIn
 import SwiftUI
 
 /// Velger mellom oppstart, innlogging, klubbvalg og selve appen. Ingenting hentes før du er
@@ -57,7 +58,8 @@ struct AppRoot: View {
         .environment(services.outbox.status)
         .environment(services.push)
         .environment(purchases)
-        .onOpenURL { url in open(url) }
+        // Googles svar til innloggingen (`com.googleusercontent.apps.…`) går til GoogleSignIn, ikke til lenkene.
+        .onOpenURL { url in if !GIDSignIn.sharedInstance.handle(url) { open(url) } }
         // Universelle lenker (`https://dashdash18.com/…`) går samme vei som `dashdash://`.
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
             if let url = activity.webpageURL { open(url) }
