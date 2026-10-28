@@ -34,6 +34,10 @@ struct RundeFollow: ViewModifier {
                     Task { await model.load() }
                 }
             }
+            // Et hull fra klokka er lagt i utboksen: vis det, og send klokka runden med hullet.
+            .onReceive(NotificationCenter.default.publisher(for: WatchRoundController.received)) { _ in
+                Task { await model.load() }
+            }
             // Et hull i køen ble avvist (runden ble låst før køen kom fram): stripa i føringen sier fra.
             .onChange(of: outbox?.rejectedCount) { _, _ in
                 model.queueChanged()

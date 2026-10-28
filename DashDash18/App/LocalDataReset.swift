@@ -43,6 +43,8 @@ enum SignedOutCleanup {
         WidgetSnapshotStore.shared.clear()
         // Live Activity på låseskjermen viser runden og navnet.
         RoundActivityController.shared.endAll()
+        // Klokka viser runden og navnene.
+        WatchRoundController.shared.clear()
         // Varsler som er levert, står ellers i varselsenteret med meldinger fra tråden.
         let center = UNUserNotificationCenter.current()
         center.removeAllDeliveredNotifications()

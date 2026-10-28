@@ -2,7 +2,7 @@
 
 28.10.2026. Grunnlag: ønske fra Thomas om Atten på Android (B13: «iPhone først, Android senere»). Kartlagt mot iOS-appen (`DashDash18/`, ca. 80 000 linjer Swift i 387 filer), regelmotoren (`Packages/GolfgutuCore`, ca. 9 000 linjer, 35 JSON-fixtures), TypeScript-motoren (`web/golfgutu-core`, ca. 9 000 linjer, brukt av web-admin og `bet-settle`), Supabase-funksjonene (`supabase/functions/`) og lenkeworkeren (`web/atten-lenker`).
 
-**Status:** plan, ingen kode skrevet. **28.10.2026 (Thomas): foreløpig ingen på Android, så klokka kommer først og Android venter.** Planen tas opp igjen når det kommer Android-brukere. Klokkeplanen står i [`plan-apple-watch.md`](plan-apple-watch.md) og deler steg 0 med denne.
+**Status:** plan, ingen kode skrevet. **28.10.2026 (Thomas): foreløpig ingen på Android, så klokka kommer først og Android venter.** Planen tas opp igjen når det kommer Android-brukere. Klokkeplanen står i [`plan-apple-watch.md`](plan-apple-watch.md).
 
 ## Mål
 
@@ -72,9 +72,9 @@ Hvorfor anbefalingen: motoren endres oftere enn noe annet i Atten, og pariteten 
 
 ## Steg
 
-### Steg 0 – Flytt rundelogikken ut av iPhone-appen *(felles med klokka)*
+### Steg 0 – Flytt rundelogikken ut av iPhone-appen
 
-Se [klokkeplanen](plan-apple-watch.md#steg-0--flytt-rundelogikken-ut-av-appen-felles-med-android). Hullkort, `RoundGame`, `RoundSnapshot`, scorekort, «Bayen nå», markørkonflikter, match og sidepremier flyttes fra iPhone-appen til pakken `AttenRound`. **2–4 økter.** Gjøres én gang for begge.
+Se [klokkeplanen](plan-apple-watch.md) («Endret 28.10.2026»): prøvd, og større enn først anslått (radtypene henger sammen med baneadmin, banesøk og klubbtyper), så regn med 4–6 økter. Klokka trenger det ikke lenger. Hullkort, `RoundGame`, `RoundSnapshot`, scorekort, «Bayen nå», markørkonflikter, match og sidepremier flyttes fra iPhone-appen til pakken `AttenRound`. 
 
 ### Steg 1 – Prøve: regelmotoren på Android
 
@@ -128,7 +128,7 @@ Se [klokkeplanen](plan-apple-watch.md#steg-0--flytt-rundelogikken-ut-av-appen-fe
 - Feilrapporter: Android vitals i Play Console. Ingen ny tredjepart.
 - **Omfang:** 2 økter, pluss 14 dager kalendertid.
 
-**Totalt: 30–44 økter, pluss 14 dager lukket test.** Steg 0 deles med klokka.
+**Totalt: 32–46 økter, pluss 14 dager lukket test.**
 
 ## Det du må avgjøre eller gjøre
 
@@ -147,8 +147,8 @@ Se [klokkeplanen](plan-apple-watch.md#steg-0--flytt-rundelogikken-ut-av-appen-fe
 
 ## Rekkefølge med klokka
 
-1. Steg 0 (felles): flytt rundelogikken til `AttenRound`.
-2. Klokka, steg 1–5. Liten jobb, bruker steg 0 med en gang, og gir noe til iPhone-brukerne.
+1. Klokka, steg 1–5 (startet 28.10.2026). Telefonen regner, så klokka trenger ikke steg 0.
+2. Android, steg 0: flytt rundelogikken til `AttenRound`.
 3. Android, steg 1 (prøven). Gir svaret på motoren før det store arbeidet starter.
 4. Android, steg 2–7.
 

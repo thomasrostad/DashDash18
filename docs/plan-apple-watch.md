@@ -2,7 +2,9 @@
 
 28.10.2026. Grunnlag: ønske fra Thomas om en egen klokkeapp. Kartlagt mot appen (`DashDash18/`, ca. 80 000 linjer Swift), regelmotoren (`Packages/GolfgutuCore`, ca. 9 000 linjer), widgetene og Live Activity (`DashDash18Widgets/`) og utboksen (`DashDash18/Outbox/`).
 
-**Status:** plan, ingen kode skrevet. Står i ROADMAP som «etter v1». Android-planen står i [`plan-android.md`](plan-android.md) og deler steg 0 med denne.
+**Status:** steg 1–3 bygget 28.10.2026 (klokkemålet «Atten Watch App», synk og føring). Gjenstår: test på ekte klokke via TestFlight, komplikasjoner (steg 4) og skjermbilder til App Store (steg 5). Android-planen står i [`plan-android.md`](plan-android.md).
+
+**Endret 28.10.2026:** steg 0 (flytte rundelogikken til en egen pakke) ble prøvd og er større enn anslått. Radtypene henger sammen med baneadmin, banesøk, klubbtyper og statistikk (over 4 700 linjer uten å bygge). Klokka trenger det ikke: telefonen regner ut hullkortene og sender dem ferdige, med teksten for hvert mulig slagantall. Steg 0 flyttes til Android-planen og gjøres når Android kommer.
 
 ## Mål
 
@@ -32,10 +34,11 @@ Ikke med i første versjon: oppsett av runder, påmelding, admin, veddemål og t
 
 ## Hvordan klokka får og sender data
 
-**Anbefaling: klokka snakker med telefonen (WatchConnectivity), og telefonen sender til Supabase gjennom utboksen som i dag.**
+**Anbefaling: telefonen regner, klokka viser. Klokka snakker med telefonen (WatchConnectivity), og telefonen sender til Supabase gjennom utboksen som i dag.**
 
-- Telefonen sender runden (`RoundSnapshot`: spillere, hull, handicap, form og ført score) til klokka når runden starter og når noe endres.
-- Klokka sender hvert ført hull til telefonen. Telefonen legger det i utboksen, og da gjelder alt utboksen allerede gjør: lagring før sending, nye forsøk uten nett, avvisning og markørkonflikter.
+- Telefonen lager `WatchRound` med `RoundGame.card` for hvert hull: navn, par, indeks, slag mottatt, taket, det som er ført, og teksten for hvert mulig slagantall («2 p · netto par», «brutto bogey», «tak 6 slag»). Den sendes når runden åpnes og når noe endres. Klokka regner ingenting selv, så den kan ikke regne annerledes enn telefonen.
+- «Bayen nå» kommer ferdig fra telefonen, og oppdateres når telefonen har tatt imot hullet.
+- Klokka sender hvert ført hull til telefonen som en `HoleSubmission`, samme form som hullkortet bruker. Telefonen legger det i utboksen (`AppServices.outbox`), også når runde-skjermen ikke er åpen. Da gjelder alt utboksen allerede gjør: lagring før sending, nye forsøk uten nett, avvisning og markørkonflikter.
 - Når klokka sender et hull, vekker iOS appen på telefonen i bakgrunnen, også når den ikke er åpen.
 - Når telefonen ikke er i nærheten, legger klokka hullene i sin egen kø og sender dem når telefonen er tilbake. Klokka viser «venter på telefonen».
 
@@ -43,7 +46,7 @@ Hvorfor ikke la klokka snakke med Supabase selv: da trenger klokka egen innloggi
 
 ## Steg
 
-### Steg 0 – Flytt rundelogikken ut av appen *(felles med Android)*
+### Steg 0 – Flytt rundelogikken ut av appen *(utsatt til Android, se «Endret 28.10.2026»)*
 
 Flytt den rene rundelogikken fra appmålet til en egen pakke ved siden av GolfgutuCore, for eksempel `Packages/AttenRound`: hullkortet (`HoleCard`), `RoundGame`, `RoundSnapshot`, scorekortet, «Bayen nå», markørkonflikter, match og sidepremier. Visningene blir igjen i appen.
 
@@ -57,7 +60,7 @@ Flytt den rene rundelogikken fra appmålet til en egen pakke ved siden av Golfgu
 - Nytt watchOS-mål i Xcode med Xcode MCP (`XcodeNewTarget`) eller av Thomas i Xcode. `project.pbxproj` redigeres ikke for hånd.
 - Bundle-id `com.dashdash18.app.watchkitapp`. Følger med iOS-appen, i samme App Store-post.
 - watchOS 26 som minimum, i takt med iOS 26.
-- Kobler GolfgutuCore og AttenRound til målet. Fargene og typografien fra `DesignSystem` deles der det går (farger og navn), ellers egne klokkevarianter.
+- Delte filer følger mønsteret fra widgetene (`WidgetSnapshot.swift`): «DELT FIL» i appmappa, bare Foundation, medlem av både appen og klokka. Fargene fra `DesignSystem` får egne klokkevarianter.
 - Xcode Cloud: begge workflowene må arkivere med klokkemålet. Sjekk at bygget går gjennom «Prepare Build for App Store Connect».
 - **Ferdig når:** en tom klokkeapp installeres med appen fra TestFlight.
 - **Omfang:** 1 økt.
@@ -74,7 +77,7 @@ Flytt den rene rundelogikken fra appmålet til en egen pakke ved siden av Golfgu
 ### Steg 3 – Føring og stilling
 
 - Skjermene i tabellen over: Runden nå, Føre hullet, Neste hull, Bayen nå, Ikke sendt.
-- Tekst og tall kommer fra AttenRound, de samme som hullkortet på telefonen: `formText`, `maxStrokes`, slag mottatt og `resultText`.
+- Tekst og tall kommer ferdige fra telefonen, de samme som hullkortet: `formText`, `maxStrokes`, slag mottatt og `resultText`.
 - Digital Crown, dobbelttrykk med fingrene for «send og neste», og vibrasjon ved sendt og feil.
 - Alltid-på-skjerm: dempet visning som viser hull og score uten animasjon.
 - Tilgjengelighet: VoiceOver-tekst som på telefonen (`StrokeAccessibility`), og store tekststørrelser.
@@ -96,7 +99,7 @@ Flytt den rene rundelogikken fra appmålet til en egen pakke ved siden av Golfgu
 - TestFlight med gjengen én kveld før innsending.
 - **Omfang:** 1 økt.
 
-**Totalt: 10–15 økter, inkludert steg 0.**
+**Totalt: 8–11 økter** (steg 0 er flyttet til Android).
 
 ## Det du må gjøre
 
@@ -107,7 +110,7 @@ Ingen endringer i Supabase. Ingen nye avhengigheter (WatchConnectivity og Widget
 
 ## Risiko
 
-- **Steg 0 tar lengre tid enn anslått** hvis rundelogikken henger tettere sammen med visningene enn den ser ut til. Da sier jeg fra før jeg fortsetter.
+- **Utregningen for alle hull og slagantall** tar tid på telefonen (18 hull × 4 spillere × ca. 12 slagantall). Måles i steg 2. Er den treg, regnes bare hullene rundt det gjeldende.
 - **Klokka mister forbindelsen** midt i en runde. Køen på klokka tar seg av det, og «venter på telefonen» sier hva som skjer.
 - **Små skjermer.** Markøren fører for opptil fire spillere. Det må testes på 41 mm, ikke bare på den største klokka.
 

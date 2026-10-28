@@ -208,6 +208,7 @@ final class RundeModel {
                 conflicts = []
                 state = .none
                 RoundActivityController.shared.sync(game: nil, viewer: viewer)
+                WatchRoundController.shared.sync(game: nil, viewer: viewer)
                 await stopRealtime()
                 return
             }
@@ -253,8 +254,11 @@ final class RundeModel {
     }
 
     private func rebuild() {
-        // Live Activity følger runden slik den vises (med hull i kø).
-        defer { RoundActivityController.shared.sync(game: game, viewer: viewer) }
+        // Live Activity og klokka følger runden slik den vises (med hull i kø).
+        defer {
+            RoundActivityController.shared.sync(game: game, viewer: viewer)
+            WatchRoundController.shared.sync(game: game, viewer: viewer)
+        }
         guard let snapshot else { game = nil; return }
         // Køen leses fra utboksen hver gang, ikke fra minnet: hull som ble lagt i kø før appen
         // ble startet på nytt, skal fortsatt stå (ellers står hullet tomt med par, og «Lagre»
