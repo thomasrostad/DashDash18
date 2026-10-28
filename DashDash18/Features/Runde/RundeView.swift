@@ -28,7 +28,9 @@ struct RundeView: View {
     @State private var savingHole: Int?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.requestReview) private var requestReview
-    /// `regular` på iPhone Duo åpen: hullet og hullkortet side om side (eller over hverandre).
+    /// Kolonnen fra fanen (`ddReadableWidth`) når skjermen er bred, eller `regular` (iPhone Duo åpen
+    /// og stående): hullet og hullkortet deles, så ingen knapper havner i bretten.
+    @Environment(\.ddReadableMaxWidth) private var readableMaxWidth
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
@@ -320,7 +322,8 @@ struct RundeView: View {
     /// når den står eller er halvåpen (bordstilling). Ellers én liste som før.
     @ViewBuilder
     private var roundContent: some View {
-        if #available(iOS 27.1, *), sizeClass == .regular, let game = model.game, segment(game) == .scoring,
+        if #available(iOS 27.1, *), readableMaxWidth != nil || sizeClass == .regular, let game = model.game,
+           segment(game) == .scoring,
            !model.showsLockedResult, !model.needsParConfirmation {
             ArrangementView {
                 ScrollView {

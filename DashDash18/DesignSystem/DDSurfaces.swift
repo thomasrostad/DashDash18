@@ -118,7 +118,7 @@ extension View {
     }
 
     /// Lister og rullbart innhold holder seg til `DDSpacing.readableWidth` midt på når skjermen er
-    /// bred (`regular`, iPhone Duo åpen). Settes én gang per fane; smal skjerm er urørt.
+    /// bredere enn det (iPhone Duo åpen eller halvåpen). Settes én gang per fane; iPhone er urørt.
     func ddReadableWidth() -> some View {
         modifier(DDReadableWidthModifier())
     }
@@ -143,9 +143,9 @@ struct DDReadableFrameModifier: ViewModifier {
 }
 
 /// Margene til `ddReadableWidth()`. `nil` på smal skjerm, så listene beholder sine egne marger og
-/// visningen ikke byttes ut (og mister rulleposisjonen) når telefonen brettes.
+/// visningen ikke byttes ut (og mister rulleposisjonen) når telefonen brettes. Styres av bredden,
+/// ikke `horizontalSizeClass`: halvåpen iPhone Duo er 951 pt bred, men `compact` (28.10.2026).
 struct DDReadableWidthModifier: ViewModifier {
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var width: CGFloat = 0
 
     func body(content: Content) -> some View {
@@ -156,7 +156,7 @@ struct DDReadableWidthModifier: ViewModifier {
     }
 
     private var margin: CGFloat? {
-        guard sizeClass == .regular, width > DDSpacing.readableWidth else { return nil }
+        guard width > DDSpacing.readableWidth else { return nil }
         return (width - DDSpacing.readableWidth) / 2
     }
 }
