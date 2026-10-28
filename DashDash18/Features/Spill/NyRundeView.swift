@@ -296,6 +296,7 @@ struct FriendsPickerView: View {
 struct BottomActionBar: ViewModifier {
     func body(content: Content) -> some View {
         content
+            .ddReadableFrame()
             .padding(.horizontal, DDSpacing.gutter)
             .padding(.top, DDSpacing.m)
             .padding(.bottom, DDSpacing.s)

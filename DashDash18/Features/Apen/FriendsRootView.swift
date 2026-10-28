@@ -47,6 +47,7 @@ struct FriendsRootView: View {
                             }
                     }
                     .tint(Color.ddForestInk)
+                    .ddReadableWidth()
                     .ddScreenBackground()
                 }
             }

@@ -461,6 +461,7 @@ struct NyTurneringDetailsView: View {
                     .padding()
                     .glassEffect(.regular, in: .rect(cornerRadius: DDRadius.cardLarge))
                     .padding(.horizontal, DDSpacing.s)
+                    .ddReadableFrame()
             }
         }
         .sheet(isPresented: $showsPaywall) {

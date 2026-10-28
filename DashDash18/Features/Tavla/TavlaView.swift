@@ -172,6 +172,7 @@ struct TavlaList: View {
                 .accessibilityLabel("Vis")
                 .padding(.horizontal, DDSpacing.gutter)
                 .padding(.vertical, DDSpacing.s)
+                .ddReadableFrame()
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

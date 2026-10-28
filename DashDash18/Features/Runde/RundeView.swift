@@ -28,57 +28,13 @@ struct RundeView: View {
     @State private var savingHole: Int?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.requestReview) private var requestReview
+    /// Kolonnen fra fanen (`ddReadableWidth`) når skjermen er bred, eller `regular` (iPhone Duo åpen
+    /// og stående): hullet og hullkortet deles, så ingen knapper havner i bretten.
+    @Environment(\.ddReadableMaxWidth) private var readableMaxWidth
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        ScrollView {
-            if let game = model.game {
-                VStack(alignment: .leading, spacing: 14) {
-                    if model.showsLockedResult {
-                        DDInfoStripe("Runden er avsluttet. Resultatet står under, og du kan dele det.")
-                    }
-                    DDSegmentedControl([
-                        (RundeSegment.scoring, "Føring"),
-                        (RundeSegment.standing, "Stilling"),
-                        (RundeSegment.extras, RundeSegment.extrasTitle(count: extrasCount(game))),
-                    ], selection: segmentBinding(game))
-                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                    .accessibilityLabel("Visning")
-                    switch segment(game) {
-                    case .scoring: scoring(game)
-                    case .standing: standing(game)
-                    case .extras: extras(game)
-                    }
-                }
-                .padding(.horizontal, DDSpacing.gutter)
-                .padding(.vertical, DDSpacing.l)
-                .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: model.currentHole)
-                .sensoryFeedback(.selection, trigger: model.currentHole)
-            }
-        }
-        .refreshable { await model.load() }
-        .safeAreaInset(edge: .bottom) {
-            if let game = model.game, segment(game) == .scoring, !model.needsParConfirmation,
-               let prompt = endLinePrompt {
-                RundeAvslutningLinje(
-                    prompt: prompt,
-                    isEnding: isEnding,
-                    onScorecard: game.isPlaying(model.viewer.memberID)
-                        ? { scorecardFor = ScorecardTarget(memberID: model.viewer.memberID) } : nil,
-                    onEnd: { confirmsEnd = true }
-                )
-            } else if let game = model.game, segment(game) == .scoring, !model.needsParConfirmation,
-               let card = model.card, card.action != .none {
-                FoeringBunnlinje(
-                    card: card,
-                    isSaving: model.isSaving,
-                    error: model.saveError,
-                    sync: game.syncStatus(viewer: model.viewer, pending: model.pendingHoles),
-                    onSave: { Task { await model.saveCurrentHole() } },
-                    onGoTo: { model.goTo(hole: $0) },
-                    onScorecard: { scorecardFor = ScorecardTarget(memberID: model.viewer.memberID) }
-                )
-            }
-        }
+        roundContent
         .navigationTitle(scoringTitle.title)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
@@ -359,6 +315,103 @@ struct RundeView: View {
         return model.statsAccess
     }
 
+    // MARK: Skjermen
+
+    /// Føringen på bred skjerm (iPhone Duo åpen, iOS 27.1) er delt: hullet i den ene halvdelen og
+    /// hullkortet med «Lagre hull» i den andre. Side om side når skjermen er liggende, over hverandre
+    /// når den står eller er halvåpen (bordstilling). Ellers én liste som før.
+    @ViewBuilder
+    private var roundContent: some View {
+        if #available(iOS 27.1, *), readableMaxWidth != nil || sizeClass == .regular, let game = model.game,
+           segment(game) == .scoring,
+           !model.showsLockedResult, !model.needsParConfirmation {
+            ArrangementView {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        segmentPicker(game)
+                        playingHole(game)
+                    }
+                    .padding(.horizontal, DDSpacing.gutter)
+                    .padding(.vertical, DDSpacing.l)
+                }
+            } secondary: {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        playingCard(game)
+                    }
+                    .padding(.horizontal, DDSpacing.gutter)
+                    .padding(.vertical, DDSpacing.l)
+                }
+                .safeAreaInset(edge: .bottom) { bottomBar }
+            }
+            .arrangementViewStyle(.split)
+            // Halvdelene har sin egen luft; ikke kolonnen fra fanen (`ddReadableWidth`).
+            .contentMargins(.horizontal, 0, for: .scrollContent)
+            .environment(\.ddReadableMaxWidth, nil)
+            .refreshable { await model.load() }
+            .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: model.currentHole)
+            .sensoryFeedback(.selection, trigger: model.currentHole)
+        } else {
+            ScrollView {
+                if let game = model.game {
+                    VStack(alignment: .leading, spacing: 14) {
+                        if model.showsLockedResult {
+                            DDInfoStripe("Runden er avsluttet. Resultatet står under, og du kan dele det.")
+                        }
+                        segmentPicker(game)
+                        switch segment(game) {
+                        case .scoring: scoring(game)
+                        case .standing: standing(game)
+                        case .extras: extras(game)
+                        }
+                    }
+                    .padding(.horizontal, DDSpacing.gutter)
+                    .padding(.vertical, DDSpacing.l)
+                    .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: model.currentHole)
+                    .sensoryFeedback(.selection, trigger: model.currentHole)
+                }
+            }
+            .refreshable { await model.load() }
+            .safeAreaInset(edge: .bottom) { bottomBar.ddReadableFrame() }
+        }
+    }
+
+    private func segmentPicker(_ game: RoundGame) -> some View {
+        DDSegmentedControl([
+            (RundeSegment.scoring, "Føring"),
+            (RundeSegment.standing, "Stilling"),
+            (RundeSegment.extras, RundeSegment.extrasTitle(count: extrasCount(game))),
+        ], selection: segmentBinding(game))
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .accessibilityLabel("Visning")
+    }
+
+    /// «Lagre hull …» eller «Ferdig? Avslutt runden» under føringen.
+    @ViewBuilder
+    private var bottomBar: some View {
+        if let game = model.game, segment(game) == .scoring, !model.needsParConfirmation,
+           let prompt = endLinePrompt {
+            RundeAvslutningLinje(
+                prompt: prompt,
+                isEnding: isEnding,
+                onScorecard: game.isPlaying(model.viewer.memberID)
+                    ? { scorecardFor = ScorecardTarget(memberID: model.viewer.memberID) } : nil,
+                onEnd: { confirmsEnd = true }
+            )
+        } else if let game = model.game, segment(game) == .scoring, !model.needsParConfirmation,
+           let card = model.card, card.action != .none {
+            FoeringBunnlinje(
+                card: card,
+                isSaving: model.isSaving,
+                error: model.saveError,
+                sync: game.syncStatus(viewer: model.viewer, pending: model.pendingHoles),
+                onSave: { Task { await model.saveCurrentHole() } },
+                onGoTo: { model.goTo(hole: $0) },
+                onScorecard: { scorecardFor = ScorecardTarget(memberID: model.viewer.memberID) }
+            )
+        }
+    }
+
     // MARK: Føringen
 
     private func hullkort(_ card: HoleCard) -> some View {
@@ -377,6 +430,13 @@ struct RundeView: View {
 
     @ViewBuilder
     private func playing(_ game: RoundGame) -> some View {
+        playingHole(game)
+        playingCard(game)
+    }
+
+    /// Stripene, hero for hullet og hullvelgeren: venstre (eller øvre) halvdel på iPhone Duo åpen.
+    @ViewBuilder
+    private func playingHole(_ game: RoundGame) -> some View {
         if game.hasBays, game.bay(of: model.viewer.memberID) == nil, let line = game.markerLine(for: model.viewer) {
             // «Du står ikke i noen bås …»: resten av markørlinja står i verktøylinja.
             DDInfoStripe(line)
@@ -407,6 +467,11 @@ struct RundeView: View {
         }
         HullprikkerView(dots: game.dots(currentHole: model.currentHole, viewer: model.viewer,
                                         pending: model.pendingHoles)) { model.goTo(hole: $0) }
+    }
+
+    /// Hullkortet og det som hører til hullet: høyre (eller nedre) halvdel på iPhone Duo åpen.
+    @ViewBuilder
+    private func playingCard(_ game: RoundGame) -> some View {
         if let card = model.card {
             hullkort(card)
             // Låst kort etter levering (sql/057).

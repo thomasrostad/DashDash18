@@ -12,6 +12,8 @@ enum DDSpacing {
     static let gutter: CGFloat = 20
     /// Mellom kort.
     static let cardGap: CGFloat = 10
+    /// Største bredde på innholdet når skjermen er bred (iPhone Duo åpen). Som UIKits `readableContentGuide`.
+    static let readableWidth: CGFloat = 672
 }
 
 /// Store, myke hjørner (golfee) i stedet for PWA-ens 16/20.
@@ -113,6 +115,49 @@ extension View {
     /// Store titler på fanenes rot, og de krymper ved rulling (`automatic`).
     func ddNavigationChrome() -> some View {
         containerBackground(Color.ddBackground, for: .navigation)
+    }
+
+    /// Lister og rullbart innhold holder seg til `DDSpacing.readableWidth` midt på når skjermen er
+    /// bredere enn det (iPhone Duo åpen eller halvåpen). Settes én gang per fane; iPhone er urørt.
+    func ddReadableWidth() -> some View {
+        modifier(DDReadableWidthModifier())
+    }
+
+    /// Faste felt over og under lista (`safeAreaInset`) følger samme kolonne som innholdet.
+    func ddReadableFrame() -> some View {
+        modifier(DDReadableFrameModifier())
+    }
+}
+
+extension EnvironmentValues {
+    /// Bredden på kolonnen fra `ddReadableWidth()`, eller nil på smal skjerm.
+    @Entry var ddReadableMaxWidth: CGFloat?
+}
+
+struct DDReadableFrameModifier: ViewModifier {
+    @Environment(\.ddReadableMaxWidth) private var maxWidth
+
+    func body(content: Content) -> some View {
+        content.frame(maxWidth: maxWidth ?? .infinity)
+    }
+}
+
+/// Margene til `ddReadableWidth()`. `nil` på smal skjerm, så listene beholder sine egne marger og
+/// visningen ikke byttes ut (og mister rulleposisjonen) når telefonen brettes. Styres av bredden,
+/// ikke `horizontalSizeClass`: halvåpen iPhone Duo er 951 pt bred, men `compact` (28.10.2026).
+struct DDReadableWidthModifier: ViewModifier {
+    @State private var width: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .contentMargins(.horizontal, margin, for: .scrollContent)
+            .environment(\.ddReadableMaxWidth, margin == nil ? nil : DDSpacing.readableWidth)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+    }
+
+    private var margin: CGFloat? {
+        guard width > DDSpacing.readableWidth else { return nil }
+        return (width - DDSpacing.readableWidth) / 2
     }
 }
 
