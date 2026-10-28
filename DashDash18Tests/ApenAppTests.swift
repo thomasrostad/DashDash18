@@ -53,14 +53,14 @@ struct ApenOnboardingTests {
     /// «Del regningen» er på. 09.10: onboarding uten klubb på. Google og kjøp venter på oppsett.
     @Test func flaggeneEtterGodkjenning() {
         #expect(OpenAppFeature.isEnabled)
-        #expect(!GoogleLoginFeature.isEnabled)
+        #expect(GoogleLoginFeature.isEnabled)
         #expect(!PurchaseFeature.isEnabled)
         #expect(BillSplitFeature.isEnabled)
         // Personvern og vilkår lenkes til dashdash18.com.
         #expect(LegalLinks.isVisible)
         #expect(LegalLinks.privacy?.absoluteString == "https://dashdash18.com/personvern")
         #expect(LegalLinks.terms?.absoluteString == "https://dashdash18.com/vilkar")
-        #expect(!LoginMethod.google.isAvailable)
+        #expect(LoginMethod.google.isAvailable)
     }
 }
 

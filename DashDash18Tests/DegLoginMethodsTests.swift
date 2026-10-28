@@ -6,11 +6,12 @@ struct DegLoginMethodsTests {
     @Test func ePostkontoViserEPostKobletOgAppleIkkeKoblet() {
         let rows = LoginMethods.rows(identities: [LinkedIdentity(provider: "email", email: "thomas@example.com")],
                                      appleLinkingEnabled: false)
-        // Google er av (GoogleLoginFeature) og ikke koblet: ingen rad, ingen «Kommer».
-        #expect(rows.map(\.method) == [.apple, .email])
+        // Google er på (GoogleLoginFeature), men kobles ved å logge inn med Google, ikke med en knapp her.
+        #expect(rows.map(\.method) == [.apple, .email, .google])
         #expect(rows[0].status == .notLinked(canLink: false))
         #expect(rows[1].status == .linked(detail: "thomas@example.com"))
-        #expect(rows.map(\.trailingText) == ["Ikke koblet", "Koblet"])
+        #expect(rows[2].status == .notLinked(canLink: false))
+        #expect(rows.map(\.trailingText) == ["Ikke koblet", "Koblet", "Ikke koblet"])
     }
 
     @Test func appleKanKoblesNaarDetErSlaattPaa() {
@@ -43,7 +44,7 @@ struct DegLoginMethodsTests {
 
     @Test func ukjenteMaaterVisesIkke() {
         let rows = LoginMethods.rows(identities: [LinkedIdentity(provider: "github")])
-        #expect(rows.map(\.method) == [.apple, .email])
+        #expect(rows.map(\.method) == [.apple, .email, .google])
         #expect(!rows.contains { if case .linked = $0.status { true } else { false } })
     }
 

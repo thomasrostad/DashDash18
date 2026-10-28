@@ -23,10 +23,10 @@ nonisolated enum PublicContentReportFeature {
     static let isEnabled = flag
 }
 
-/// Logg inn med Google (B9). Krever OAuth-klient i Google Cloud og Google slått på i Supabase Auth,
-/// med `dashdash://login-callback` i «Redirect URLs».
+/// Logg inn med Google (B9) med GoogleSignIn. På fra 28.10.2026: iOS-klienten «Atten iOS» står i Info.plist
+/// og under «Client IDs» for Google i Supabase (test og prod), sammen med webklienten «Atten Supabase».
 nonisolated enum GoogleLoginFeature {
-    static let isEnabled = false
+    static let isEnabled = true
 }
 
 /// Kjøp for å kjøre turnering (StoreKit 2). Krever `sql/023_kjop.sql`, Edge Function
