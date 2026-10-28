@@ -343,14 +343,28 @@ public enum FormPlay {
             return out
         case .parBogey:
             // Par/bogey-summen (regel 21.3) med fullt spillehandicap i runden, som hovedkonkurransen.
-            let axes = round.form.axes
-            let comp = RoundCompetition(id: "form", teamForm: axes.teamForm, scoring: .parBogey)
-            let result = RoundCompetitions.evaluate(round, roster: roster, competitions: [comp], rules: rules)[0]
             var out: [String: Double] = [:]
-            for row in result.rows { for p in row.players { out[p] = row.score } }
+            for row in formResult(round, roster: roster, rules: rules)?.rows ?? [] {
+                for p in row.players { out[p] = row.score }
+            }
             return out
         default:
             return Scoring.roundPoints(round, roster: roster, rules: rules).mapValues(Double.init)
         }
+    }
+
+    /// Rundens resultat etter formen når den ikke er netto stableford: slagspill (netto eller brutto),
+    /// stableford brutto, maksimumscore (regel 21.2) og par/bogey (21.3), regnet som hovedkonkurransen
+    /// med fullt spillehandicap i runden (`RoundCompetitions`). Brutto ser bort fra handicap uansett andel.
+    /// `nil` for netto stableford (Golfgutu-veien, `Scoring.roundPoints`) og formene som har sin egen vei
+    /// (match, skins, poengspill).
+    public static func formResult(_ round: Round, roster: [Player], rules: Ruleset) -> RoundCompetitionResult? {
+        let axes = round.form.axes
+        switch axes.scoring {
+        case .strokePlay, .maximumScore, .parBogey, .stableford(net: false): break
+        default: return nil
+        }
+        let comp = RoundCompetition(id: "form", teamForm: axes.teamForm, scoring: axes.scoring)
+        return RoundCompetitions.evaluate(round, roster: roster, competitions: [comp], rules: rules)[0]
     }
 }

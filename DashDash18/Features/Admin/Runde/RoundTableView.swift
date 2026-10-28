@@ -232,7 +232,7 @@ private struct RoundTableContent: View {
                             cellText("\(col.number)", bold: true).opacity(col.outside ? 0.4 : 1)
                         }
                         cellText("Slag", bold: true, width: 44)
-                        cellText("Poeng", bold: true, width: 48)
+                        cellText(table.valueTitle, bold: true, width: 48)
                     }
                     HStack(spacing: 0) {
                         ForEach(table.columns) { col in

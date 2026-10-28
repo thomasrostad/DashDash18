@@ -338,6 +338,9 @@ nonisolated struct HoleCard: Equatable, Sendable {
         var parBogey: String? = nil
         /// Regelsettets maks slag på hullet for spilleren (`play.maxStrokes`). Nil: ingen grense.
         var maxStrokes: Int? = nil
+        /// Hva hullet teller i formen, i scorefargen: «2 p · netto par», «2 p · brutto par», «netto birdie»
+        /// (slagspill), «tak 7 slag» (maksimumscore), «+ · netto birdie» (par/bogey). Nil: bare navnet (match).
+        var formText: String? = nil
         var id: UUID { memberID }
         /// Stepperen står på grensen (+ er av).
         var isAtMax: Bool { maxStrokes.map { value >= $0 } ?? false }
@@ -391,7 +394,17 @@ nonisolated extension RoundGame {
         let editable = players.filter { cardRowEditable($0, for: viewer) }
         let canEdit = !editable.isEmpty
         let mustConfirm = editable.count > 1
-        let isParBogey = round.form.axes.scoring == .parBogey
+        let scoring = round.form.axes.scoring
+        let isParBogey = scoring == .parBogey
+        // Brutto (stableford, slagspill, maksimumscore): ingen slag fått, uansett andel i runden.
+        let isGross: Bool = switch scoring {
+        case .stableford(let net), .strokePlay(let net), .maximumScore(let net, _): !net
+        default: false
+        }
+        // Maksimumscore (regel 21.2): taket per hull, formens eget eller regelsettets.
+        let formCap: Ruleset.MaxStrokes? = if case .maximumScore(_, let own) = scoring {
+            own ?? rules.formPlay.maximumScore
+        } else { nil }
 
         func isConfirmed(_ member: UUID) -> Bool {
             !mustConfirm || drafts[index, member] != nil || scores(member)[index] != nil
@@ -401,15 +414,42 @@ nonisolated extension RoundGame {
             let saved = scores(member)[index]
             let isEditable = editable.contains(member)
             let confirmed = isEditable ? isConfirmed(member) : saved != nil
-            let hcp = handicap(member)
-            let received = round.hcpExtern ? 0
-                : Scoring.handicapStrokes(handicap: hcp, strokeIndex: hole.strokeIndex, holes: count)
+            let fullHcp = handicap(member)
+            let hcp = isGross ? 0 : fullHcp
+            let fullReceived = round.hcpExtern ? 0
+                : Scoring.handicapStrokes(handicap: fullHcp, strokeIndex: hole.strokeIndex, holes: count)
+            let received = isGross ? 0 : fullReceived
             // Maks slag per hull (`play.maxStrokes`): stepperen stopper der, og forvalget går ikke over.
-            let limit = rules.play.maxStrokes.limit(par: hole.par, strokesReceived: received)
+            // Maksimumscore: også ved formens tak (netto dobbel bogey regnes med slagene, også i brutto).
+            let limits = [rules.play.maxStrokes.limit(par: hole.par, strokesReceived: fullReceived),
+                          formCap?.limit(par: hole.par, strokesReceived: fullReceived)].compactMap { $0 }
+            let limit = limits.min()
             let value = StrokeInput.clamp(drafts[index, member] ?? saved ?? hole.par, max: limit)
             let show = isEditable || saved != nil
             let inMatch = MatchPlay.holeMatch(for: member.uuidString, in: round) != nil
             let parBogey = isParBogey && show ? HoleMath.parBogeyMark(net: value - received, par: hole.par) : nil
+            let name = show ? Scoring.scoreName(par: hole.par, gross: value, handicap: hcp,
+                                                strokeIndex: hole.strokeIndex, holes: count) : nil
+            // Stablefordpoeng på hullet; ikke i match, par/bogey, slagspill og maksimumscore.
+            let points: Int? = switch scoring {
+            case .parBogey, .strokePlay, .maximumScore: nil
+            default: (show && !inMatch) ? Scoring.points(par: hole.par, gross: value, handicap: hcp,
+                                                        strokeIndex: hole.strokeIndex, holes: count, rules: rules) : nil
+            }
+            let label = name?.label.lowercased() ?? ""
+            let kind = isGross ? "brutto" : "netto"
+            let formText: String? = switch scoring {
+            case _ where name == nil || inMatch: nil
+            case .parBogey: parBogey.map { "\($0) · netto \(label)" }
+            case .strokePlay: "\(kind) \(label)"
+            case .maximumScore:
+                if let cap = formCap?.limit(par: hole.par, strokesReceived: fullReceived), value >= cap {
+                    "tak \(cap) slag"
+                } else {
+                    "\(kind) \(label)"
+                }
+            default: points.map { "\($0) p · \(kind) \(label)" }
+            }
             return HoleCard.Row(
                 memberID: member,
                 name: rowName(member),
@@ -419,14 +459,13 @@ nonisolated extension RoundGame {
                 saved: saved,
                 value: value,
                 strokesReceived: received,
-                calculation: (isEditable && !round.hcpExtern)
+                calculation: (isEditable && !round.hcpExtern && !isGross)
                     ? HoleMath.calculation(gross: value, received: received) : nil,
-                scoreName: show ? Scoring.scoreName(par: hole.par, gross: value, handicap: hcp,
-                                                    strokeIndex: hole.strokeIndex, holes: count) : nil,
-                points: (show && !inMatch && !isParBogey) ? Scoring.points(par: hole.par, gross: value, handicap: hcp,
-                                                            strokeIndex: hole.strokeIndex, holes: count, rules: rules) : nil,
+                scoreName: name,
+                points: points,
                 parBogey: parBogey,
-                maxStrokes: limit
+                maxStrokes: limit,
+                formText: formText
             )
         }
 
@@ -734,6 +773,8 @@ nonisolated struct Scorecard: Equatable, Sendable {
         let scoreName: ScoreName?
         /// Par/bogey (regel 21.3): «+», «0» eller «−» mot banen. Nil i andre former.
         var parBogey: String? = nil
+        /// Slagspill og maksimumscore: slagene hullet teller med (netto, brutto eller etter taket).
+        var formValue: Int? = nil
         var id: Int { index }
     }
 
@@ -742,6 +783,23 @@ nonisolated struct Scorecard: Equatable, Sendable {
     let lines: [Line]
     /// Par/bogey: summen for siden med regelsettets verdier (`formPlay.parBogey`). Nil i andre former.
     var parBogeySum: Double? = nil
+    /// Overskriften på siste kolonne: «Poeng», «Par/bogey», «Netto», «Brutto» eller «Teller».
+    var valueTitle = "Poeng"
+    /// Slagspill og maksimumscore: summen av `formValue` for siden. Nil i andre former.
+    var formSum: Int? {
+        let values = lines.compactMap(\.formValue)
+        return values.isEmpty ? nil : values.reduce(0, +)
+    }
+
+    /// Hva sumkolonnen teller i formen (scorekortet og rundens tabell).
+    static func valueTitle(_ scoring: ScoringMethod) -> String {
+        switch scoring {
+        case .parBogey: "Par/bogey"
+        case .strokePlay(let net): net ? "Netto" : "Brutto"
+        case .maximumScore: "Teller"
+        default: "Poeng"
+        }
+    }
     var sumPar: Int { lines.reduce(0) { $0 + $1.par } }
     var sumStrokes: Int { lines.reduce(0) { $0 + ($1.strokes ?? 0) } }
     var sumPoints: Int { lines.reduce(0) { $0 + ($1.points ?? 0) } }
@@ -754,9 +812,20 @@ nonisolated extension RoundGame {
     /// `renderScorekort`: Ut (1–9) eller Inn (10–18), par, slag og poeng per hull.
     func scorecard(for member: UUID, inward: Bool) -> Scorecard {
         let from = (hasInward && inward) ? 9 : 0
-        let hcp = handicap(member)
+        let scoring = round.form.axes.scoring
+        let isParBogey = scoring == .parBogey
+        let isGross: Bool = switch scoring {
+        case .stableford(let net), .strokePlay(let net), .maximumScore(let net, _): !net
+        default: false
+        }
+        let hcp = isGross ? 0 : handicap(member)
         let mine = scores(member)
-        let isParBogey = round.form.axes.scoring == .parBogey
+        // Slagspill og maksimumscore: verdien per hull fra formens resultat (taket og handicapet som der).
+        let formRow: RoundCompetitionResult.Row? = switch scoring {
+        case .strokePlay, .maximumScore:
+            FormPlay.formResult(round, roster: roster, rules: rules)?.rows.first { $0.players.contains(member.uuidString) }
+        default: nil
+        }
         var parBogeySum = 0.0
         let lines = (from..<min(from + 9, holeCount)).map { i -> Scorecard.Line in
             let h = holes[i]
@@ -770,23 +839,31 @@ nonisolated extension RoundGame {
                 mark = HoleMath.parBogeyMark(net: gross - received, par: h.par)
                 parBogeySum += ParBogey.holeValue(net: gross - received, par: h.par, rules: rules.formPlay.parBogey)
             }
+            let points: Int? = (isParBogey || formRow != nil) ? nil
+                : Scoring.points(par: h.par, gross: gross, handicap: hcp, strokeIndex: h.strokeIndex,
+                                 holes: holeCount, rules: rules)
             return Scorecard.Line(
                 index: i, number: holeNumber(i), par: h.par, strokes: gross,
-                points: isParBogey ? nil : Scoring.points(par: h.par, gross: gross, handicap: hcp, strokeIndex: h.strokeIndex,
-                                                          holes: holeCount, rules: rules),
+                points: points,
                 scoreName: Scoring.scoreName(par: h.par, gross: gross, handicap: hcp, strokeIndex: h.strokeIndex,
                                              holes: holeCount),
-                parBogey: mark)
+                parBogey: mark,
+                formValue: formRow?.holeValues[i].map { Int($0.rounded()) })
         }
         return Scorecard(name: name(member), inward: from == 9, lines: lines,
-                         parBogeySum: isParBogey ? parBogeySum : nil)
+                         parBogeySum: isParBogey ? parBogeySum : nil, valueTitle: Scorecard.valueTitle(scoring))
     }
 
-    /// «Totalt i runden»: «24 poeng», eller par/bogey-summen med fortegn («+2 mot banen», som «Bayen nå»).
+    /// «Totalt i runden»: «24 poeng», «71 slag» (slagspill, maksimumscore), eller par/bogey-summen med
+    /// fortegn («+2 mot banen», som «Bayen nå»). Ikke netto stableford: formens resultat.
     func scorecardTotal(for member: UUID) -> String {
-        guard round.form.axes.scoring == .parBogey else { return "\(total(member)) poeng" }
-        let sum = FormPlay.tablePoints(round, roster: roster, rules: rules)[member.uuidString] ?? 0
-        return RoundCompetitionBoard.signedText(sum.rounded()) + " mot banen"
+        guard let form = FormPlay.formResult(round, roster: roster, rules: rules) else { return "\(total(member)) poeng" }
+        let sum = form.rows.first { $0.players.contains(member.uuidString) }?.score ?? 0
+        return switch round.form.axes.scoring {
+        case .parBogey: RoundCompetitionBoard.signedText(sum.rounded()) + " mot banen"
+        case .strokePlay, .maximumScore: "\(Int(sum.rounded())) slag"
+        default: "\(Int(sum.rounded())) poeng"
+        }
     }
 }
 

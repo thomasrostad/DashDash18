@@ -268,6 +268,8 @@ nonisolated struct RoundTable: Equatable, Sendable {
     let parTotal: Int
     let rows: [Row]
     let countingHoles: Int
+    /// Overskriften på sumkolonnen: «Poeng», «Netto», «Brutto», «Teller» eller «Par/bogey» (formen).
+    var valueTitle = "Poeng"
 
     var hasOutside: Bool { columns.contains(where: \.outside) }
 }
@@ -282,10 +284,21 @@ nonisolated extension RoundGame {
         }
         var members = snapshot.players.map(\.memberID).filter { !scores($0).isEmpty }
         if members.isEmpty { members = snapshot.players.map(\.memberID) }
+        // Ikke netto stableford: formens sum og, i slagspill og maksimumscore, rekkefølge (lavest først).
+        let scoring = round.form.axes.scoring
+        let form = FormPlay.formResult(round, roster: roster, rules: rules)
+        var formScore: [String: Double] = [:], formOrder: [String: Int] = [:]
+        for (i, row) in (form?.rows ?? []).enumerated() {
+            for p in row.players { formScore[p] = row.score; formOrder[p] = i }
+        }
+        let isGross: Bool = switch scoring {
+        case .stableford(let net), .strokePlay(let net), .maximumScore(let net, _): !net
+        default: false
+        }
 
         let rows = members.map { member -> RoundTable.Row in
             let s = scores(member)
-            let hcp = handicap(member)
+            let hcp = isGross ? 0 : handicap(member)
             let cells = holes.enumerated().map { i, hole in
                 RoundTable.Cell(index: i, strokes: s[i],
                                 scoreName: s[i].map { Scoring.scoreName(par: hole.par, gross: $0, handicap: hcp,
@@ -293,14 +306,19 @@ nonisolated extension RoundGame {
                                 outside: i >= counting)
             }
             let gross = s.filter { $0.key >= 0 && $0.key < holes.count }.values.reduce(0, +)
+            let points = form == nil ? total(member) : Int((formScore[member.uuidString] ?? 0).rounded())
             return RoundTable.Row(memberID: member, name: name(member), cells: cells,
-                                  strokes: s.isEmpty ? nil : gross, points: total(member))
+                                  strokes: s.isEmpty ? nil : gross, points: points)
         }
         .sorted { a, b in
-            a.points != b.points ? a.points > b.points : NorwegianSort.areInIncreasingOrder(a.name, b.name)
+            if form != nil, !scoring.higherIsBetter {
+                let oa = formOrder[a.memberID.uuidString] ?? .max, ob = formOrder[b.memberID.uuidString] ?? .max
+                return oa != ob ? oa < ob : NorwegianSort.areInIncreasingOrder(a.name, b.name)
+            }
+            return a.points != b.points ? a.points > b.points : NorwegianSort.areInIncreasingOrder(a.name, b.name)
         }
         return RoundTable(columns: columns, parTotal: columns.reduce(0) { $0 + $1.par },
-                          rows: rows, countingHoles: counting)
+                          rows: rows, countingHoles: counting, valueTitle: Scorecard.valueTitle(scoring))
     }
 }
 
