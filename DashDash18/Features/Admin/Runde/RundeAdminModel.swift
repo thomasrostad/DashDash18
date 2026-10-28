@@ -55,7 +55,7 @@ final class RundeAdminModel {
     /// Hentede baner (slope.no med hull, fase 20b) som er valgt i et oppsett eller brukt i klubbens
     /// runder. Står bak klubbens egne i `allCourses`.
     private(set) var sourceCourses: [CourseListItem] = []
-    /// Banene fra slope.no med hull, til «Fra slope.no» i bane-valget. nil når `usesHoles` er av.
+    /// Banene fra slope.no med hull, til «Fra slope.no» i bane-valget..
     let slopeCatalog: SlopeCatalogModel?
 
     private let context: ClubContext
@@ -71,8 +71,7 @@ final class RundeAdminModel {
         self.context = context
         self.tournamentID = tournamentID
         self.competition = competition
-        self.slopeCatalog = slopeCatalog
-            ?? (SlopeNoFeature.isEnabled && SlopeNoFeature.usesHoles ? SlopeCatalogModel(client: context.client) : nil)
+        self.slopeCatalog = slopeCatalog ?? SlopeCatalogModel(client: context.client)
     }
 
     private var client: SupabaseClient { context.client }
@@ -130,7 +129,6 @@ final class RundeAdminModel {
     /// Hentede baner som klubbens runder peker på, men som ikke er lastet. Feiler hentingen, vises
     /// rundene uten banenavn som før.
     private func loadSourceCourses() async {
-        guard SlopeNoFeature.usesHoles else { return }
         let known = Set(allCourses.map(\.id))
         let missing = Set(allRounds.compactMap(\.courseID)).subtracting(known)
         guard !missing.isEmpty,

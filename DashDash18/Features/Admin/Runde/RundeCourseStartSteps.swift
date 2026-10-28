@@ -40,7 +40,7 @@ struct RundeCourseStep: View {
             } header: {
                 DDHeader(showsVenue ? (draft.venue == .course ? "Ekte baner" : "Simulatorbaner") : "Baner")
             }
-            if let catalog = model.slopeCatalog, catalog.usesHoles, !showsVenue || draft.venue == .course {
+            if let catalog = model.slopeCatalog, !showsVenue || draft.venue == .course {
                 slopeSection(catalog)
             }
         }
@@ -65,7 +65,7 @@ struct RundeCourseStep: View {
         } footer: {
             VStack(alignment: .leading, spacing: 6) {
                 DDFooter("Nordiske baner med par, indeks og lengde per tee. De trenger ikke legges inn under «Banene».")
-                SlopeNoCreditLink(usesHoles: true)
+                SlopeNoCreditLink()
             }
         }
     }

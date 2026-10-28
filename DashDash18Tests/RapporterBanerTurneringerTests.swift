@@ -14,7 +14,6 @@ struct RapporterBanerTurneringerTests {
 
     @Test func flaggetErPaaEtter066() {
         #expect(PublicContentReportFeature.flag)
-        #expect(PublicContentReportFeature.isEnabled == ModerationFeature.isEnabled)
     }
 
     @Test func nyeTyperMedTekster() {

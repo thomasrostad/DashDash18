@@ -34,7 +34,7 @@ private struct TradContent: View {
     @State private var confirmingDelete: ThreadMessageRow?
     @State private var showsCamera = false
     @State private var cameraDenied = false
-    /// Rapporter og blokker (fase 17, `ModerationFeature`).
+    /// Rapporter og blokker (fase 17, sql/019).
     @State private var reportTarget: ReportTarget?
     @State private var confirmingBlock: TradModel.Item?
 
@@ -208,7 +208,7 @@ private struct TradContent: View {
                                         confirmingDelete = item.message
                                     }
                                 }
-                                if ModerationFeature.isEnabled, !item.isMine, !item.isPending {
+                                if !item.isMine, !item.isPending {
                                     moderationButtons(for: item)
                                 }
                             }

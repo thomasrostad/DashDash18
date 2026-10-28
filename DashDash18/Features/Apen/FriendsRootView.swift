@@ -193,9 +193,7 @@ struct FriendsDegView: View {
                         Text(config.projectRef).font(.ddMonoSmall)
                     }
                 }
-                if SlopeNoFeature.isEnabled {
-                    SlopeNoAboutRow()
-                }
+                SlopeNoAboutRow()
             }
         }
     }

@@ -36,7 +36,7 @@ nonisolated struct LooseRoundDraft: Equatable, Sendable {
     }
 
     var courseID: UUID?
-    /// Teen på en ekte bane (sql/029, `SlopeNoFeature`). nil = banens CR og slope gjelder.
+    /// Teen på en ekte bane (sql/029). nil = banens CR og slope gjelder.
     var teeID: UUID?
     var holeCount = 18
     /// 1, eller 10 for «siste ni» på en 18-hullsbane.
@@ -294,7 +294,7 @@ nonisolated struct LooseRoundStart: Encodable, Equatable, Sendable {
         }
         return LooseRoundStart(
             courseID: course.id,
-            teeID: SlopeNoFeature.isEnabled ? course.tee(draft.teeID)?.id : nil,
+            teeID: course.tee(draft.teeID)?.id,
             holeCount: draft.holeCount,
             firstHole: draft.firstHole,
             format: draft.formID,

@@ -40,7 +40,7 @@ final class KveldModel {
     private(set) var today = EveningDates.today()
     /// Kveldens nummer i sesongen (plassen i terminlista), når det kan hentes.
     private(set) var eveningNumber: Int?
-    /// Morroturneringene neste kveld hører til (fase 15). Tom når `CompetitionsFeature` er av.
+    /// Morroturneringene neste kveld hører til (fase 15)..
     private(set) var funCompetitions: [String] = []
     /// Telles opp for hver henting, så kortene for tråd og tips kan hente på nytt samtidig.
     private(set) var loadCount = 0
@@ -189,10 +189,8 @@ final class KveldModel {
             let guestList = await guestRows
             let views = await viewRows
 
-            if CompetitionsFeature.isActive {
-                // Bare et merke: feiler hentingen, vises kvelden uten.
-                funCompetitions = (try? await CompetitionQueries.funNames(client: client, event: next)) ?? []
-            }
+            // Bare et merke: feiler hentingen, vises kvelden uten.
+            funCompetitions = (try? await CompetitionQueries.funNames(client: client, event: next)) ?? []
             event = next
             committee = members.filter { committeeIDs.contains($0.id) }.map(\.displayName)
             savedSignup = signups.first { $0.memberID == memberID }

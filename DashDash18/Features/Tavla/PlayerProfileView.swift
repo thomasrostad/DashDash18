@@ -61,9 +61,7 @@ struct PlayerProfileView: View {
                     }
                     .ddCard(padding: DDSpacing.l)
                 }
-                if StatsFeature.isEnabled {
-                    StatsProfileLink(memberID: memberID, name: p.row.name)
-                }
+                StatsProfileLink(memberID: memberID, name: p.row.name)
 
                 if let text = p.headToHeadText(name: p.row.name) {
                     VStack(alignment: .leading, spacing: 6) {

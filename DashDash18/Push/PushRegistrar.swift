@@ -35,11 +35,11 @@ nonisolated private struct RegisteredDevice: Decodable, Sendable {
 }
 
 /// Ber om varseltillatelse, registrerer telefonen hos APNs og sender tokenet til
-/// `register_push_device` (sql/010_push.sql). Gjør ingenting når `PushFeature.isEnabled` er av.
+/// `register_push_device` (sql/010_push.sql).
 @Observable
 final class PushRegistrar {
     enum Status: Equatable {
-        /// Push er slått av i appen (bryteren), eller ikke startet.
+        /// Ikke startet ennå.
         case disabled
         case notDetermined
         case denied
@@ -68,7 +68,6 @@ final class PushRegistrar {
     /// seg). Spør ikke om tillatelse her; det gjør `askOnFirstLaunch()` ved oppstart og
     /// `requestAuthorization()` fra innstillingene.
     func start(userID: UUID) async {
-        guard PushFeature.isEnabled else { return }
         self.userID = userID
         PushTokenRelay.shared.connect { [weak self] result in
             guard let self else { return }
@@ -80,7 +79,7 @@ final class PushRegistrar {
     /// Leser tillatelsen på nytt, f.eks. når du kommer tilbake fra Innstillinger. Er den
     /// nettopp gitt, registreres telefonen hos APNs; er den tatt bort, vises det.
     func refreshAuthorization() async {
-        guard PushFeature.isEnabled, userID != nil else { return }
+        guard userID != nil else { return }
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         status = Self.nextStatus(Self.permission(settings.authorizationStatus), current: status)
         if status == .registering {
@@ -102,7 +101,6 @@ final class PushRegistrar {
     /// på dem. Tokenet sendes når noen er logget inn (`start`, via `PushTokenRelay`). Spør bare
     /// når ingenting er avgjort; et nei står til du slår det på under Deg → Varsler.
     func askOnFirstLaunch() async {
-        guard PushFeature.isEnabled else { return }
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         guard Self.shouldAskOnLaunch(settings.authorizationStatus) else { return }
         await requestAuthorization()
@@ -115,7 +113,6 @@ final class PushRegistrar {
 
     /// «Slå på varsler»: spør iOS, og registrer hos APNs hvis svaret er ja.
     func requestAuthorization() async {
-        guard PushFeature.isEnabled else { return }
         do {
             let granted = try await UNUserNotificationCenter.current()
                 .requestAuthorization(options: [.alert, .sound, .badge])
@@ -131,7 +128,7 @@ final class PushRegistrar {
     /// Uten nett gis det opp etter `unregisterTimeLimit`, så utloggingen ikke henger. Raden tas
     /// da over av neste som logger inn på telefonen (`register_push_device`).
     func unregister() async {
-        guard PushFeature.isEnabled, let deviceID else { return }
+        guard let deviceID else { return }
         let client = client
         let call = Task {
             _ = try? await client.rpc("unregister_push_device", params: DeviceParam(p_device_id: deviceID)).execute()
@@ -172,7 +169,7 @@ final class PushRegistrar {
     }
 
     private func send(token: String) async {
-        guard PushFeature.isEnabled, let userID, let deviceID, PushToken.isValid(token) else { return }
+        guard let userID, let deviceID, PushToken.isValid(token) else { return }
         // Samme token for samme innlogging er alt sendt i denne økten.
         if let lastSent, lastSent.userID == userID, lastSent.token == token {
             status = .registered
@@ -200,13 +197,12 @@ final class PushRegistrar {
 }
 
 /// Tar imot svaret fra APNs. Koblet inn med `@UIApplicationDelegateAdaptor` i `DashDash18App`.
-/// iOS kaller disse bare etter `registerForRemoteNotifications()`, som bare skjer når
-/// `PushFeature.isEnabled` er på.
+/// iOS kaller disse bare etter `registerForRemoteNotifications()`.
 final class PushAppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // Må settes før oppstarten er ferdig, ellers går et trykk på pushen tapt.
-        if PushFeature.isEnabled { UNUserNotificationCenter.current().delegate = self }
+        UNUserNotificationCenter.current().delegate = self
         return true
     }
 

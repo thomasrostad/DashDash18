@@ -2,7 +2,7 @@ import Foundation
 import GolfgutuCore
 import Supabase
 
-/// Nettverket for konkurransene (sql/017 og 022). Brukes bare når `CompetitionsFeature` er på.
+/// Nettverket for konkurransene (sql/017 og 022).
 /// Alt som skriver flere rader, går gjennom én RPC.
 enum CompetitionQueries {
     static let participantColumns = "id, competition_id, member_id, profile_id, status"

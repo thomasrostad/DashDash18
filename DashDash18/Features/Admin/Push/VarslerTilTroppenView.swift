@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Logikk
 
 /// Hvilke rader arrangøren ser for klubbverktøyene: på huben og i «Varsler til troppen».
-/// Ren logikk, så flaggene kan testes uten SwiftUI.
+/// Ren logikk, så radene kan testes uten SwiftUI.
 nonisolated enum ClubTools {
     /// Radene i «Varsler til troppen».
     enum NoticeRow: Equatable, Sendable {
@@ -21,20 +21,12 @@ nonisolated enum ClubTools {
         case reports
     }
 
-    static func noticeRows(pushEnabled: Bool) -> [NoticeRow] {
-        pushEnabled ? [.announcement, .pushSettings, .pushStatus] : [.announcement]
-    }
+    static let noticeRows: [NoticeRow] = [.announcement, .pushSettings, .pushStatus]
 
-    static func hubRows(moderationEnabled: Bool) -> [HubRow] {
-        moderationEnabled ? [.notices, .reports] : [.notices]
-    }
+    static let hubRows: [HubRow] = [.notices, .reports]
 
     /// Underteksten til «Varsler til troppen» på huben.
-    static func noticesSubtitle(pushEnabled: Bool) -> String {
-        pushEnabled
-            ? "Melding til alle, hva som blir push og hvem som får varsler."
-            : "Send en melding til alle i klubben."
-    }
+    static let noticesSubtitle = "Melding til alle, hva som blir push og hvem som får varsler."
 }
 
 // MARK: - Skjerm
@@ -61,7 +53,7 @@ private struct VarslerTilTroppenList: View {
     @State private var showsAnnouncement = false
 
     var body: some View {
-        let rows = ClubTools.noticeRows(pushEnabled: PushFeature.isEnabled)
+        let rows = ClubTools.noticeRows
         DDList {
             if rows.contains(.announcement) {
                 Section {

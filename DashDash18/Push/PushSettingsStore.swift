@@ -2,8 +2,8 @@ import Foundation
 import Supabase
 
 /// Leser og lagrer spillerens push-valg (`push_preferences`) og leser klubbens
-/// (`clubs.push_disabled_categories`). Brukes bare når `PushFeature.isEnabled` er på,
-/// fordi tabellen og kolonnen først finnes etter `sql/010_push.sql`.
+/// (`clubs.push_disabled_categories`). Tabellen og kolonnen
+/// kom med `sql/010_push.sql`.
 nonisolated struct PushSettingsStore: Sendable {
     let client: SupabaseClient
     let memberID: UUID

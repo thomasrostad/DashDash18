@@ -88,7 +88,7 @@ struct NyRundeView: View {
                     DDFooter(course.isFromSource
                              ? "Fra slope.no: teens hull, course rating og slope gjelder i runden."
                              : "Teens course rating og slope gir banehandicapet.")
-                    SlopeNoCreditLink(usesHoles: course.isFromSource || SlopeNoFeature.usesHoles)
+                    SlopeNoCreditLink()
                 }
             } else {
                 DDFooter("Fra det felles biblioteket. Mangler banen, legger du den inn med «Ny bane».")

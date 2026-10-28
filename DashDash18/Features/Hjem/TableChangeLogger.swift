@@ -20,7 +20,7 @@ enum TableChangeLogger {
 
     static func logAfterLocking(client: SupabaseClient, clubID: UUID, roundIDs: [UUID], eventID: UUID?,
                                 enabled: Bool = HomeFeedFeature.logsTableChanges) async {
-        guard enabled, CompetitionsFeature.isActive, let last = roundIDs.last else { return }
+        guard enabled, let last = roundIDs.last else { return }
         let log = ActivityLog(client: client, clubID: clubID)
         let locked = Set(roundIDs)
         do {

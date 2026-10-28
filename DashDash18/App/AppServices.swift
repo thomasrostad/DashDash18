@@ -10,9 +10,9 @@ final class AppServices {
     let club: ClubModel
     /// Utboksen for hull (fase 5). Startes når brukeren er innlogget.
     let outbox: OutboxScoreSubmitter
-    /// Push (fase 8). Gjør ingenting når `PushFeature` er av.
+    /// Push (fase 8).
     let push: PushRegistrar
-    /// Feilsporing med MetricKit (fase 17, sql/064). Gjør ingenting når `DiagnosticsFeature` er av.
+    /// Feilsporing med MetricKit (fase 17, sql/064).
     let diagnostics: DiagnosticsReporter
     /// Lagring av hull: utboksen utenpå `DirectScoreSubmitter`.
     var scoreSubmitter: any ScoreSubmitting { outbox }

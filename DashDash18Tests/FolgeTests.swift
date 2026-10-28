@@ -177,7 +177,7 @@ struct FolgeLenkeTests {
         #expect(UniversalLink.appURL(url)?.absoluteString == "dashdash://folg/ABCD2345")
         // Klubb, runde og konkurranse tolker ikke følgelenken.
         #expect(ClubInvite(url: url) == nil)
-        #expect(AppLink.parse(url, rounds: true, competitions: true) == nil)
+        #expect(AppLink.parse(url, rounds: true) == nil)
     }
 
     @Test func svaretFraKoden() throws {

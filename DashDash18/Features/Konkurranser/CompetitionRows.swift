@@ -1,7 +1,7 @@
 import Foundation
 import GolfgutuCore
 
-// Radtypene fra sql/022_konkurranser.sql. Hentes og skrives bare når `CompetitionsFeature` er på.
+// Radtypene fra sql/022_konkurranser.sql.
 
 /// En cupkamp (`competition_matches`). Spillerne er påmeldte (`competition_participants.id`).
 nonisolated struct CompetitionMatchRow: Codable, Equatable, Identifiable, Sendable {

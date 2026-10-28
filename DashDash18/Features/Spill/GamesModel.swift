@@ -3,18 +3,16 @@ import GolfgutuCore
 import Observation
 import Supabase
 
-/// Spillene i én runde: henter, lager, markerer og gjør opp. Gjør ingenting mens
-/// `GamesFeature.isEnabled` er av.
+/// Spillene i én runde: henter, lager, markerer og gjør opp.
 @Observable
 final class GamesModel {
     enum LoadState: Equatable {
         case loading
         case loaded
-        case disabled
         case failed(String)
     }
 
-    private(set) var state: LoadState = GamesFeature.isEnabled ? .loading : .disabled
+    private(set) var state: LoadState = .loading
     private(set) var input = GamesInput()
     private(set) var isSaving = false
 
@@ -35,7 +33,7 @@ final class GamesModel {
     }
 
     func load() async {
-        guard GamesFeature.isEnabled, let client else { return }
+        guard let client else { return }
         do {
             input = try await GamesQueries.load(client: client, roundID: roundID)
             state = .loaded
@@ -76,7 +74,7 @@ final class GamesModel {
 
     /// Ett kall om gangen, så henting på nytt. Feilen fra RPC-en på norsk (`GameErrors`).
     private func write(_ call: @escaping (SupabaseClient) async throws -> Void) async throws(DataError) {
-        guard GamesFeature.isEnabled, let client, !isSaving else { return }
+        guard let client, !isSaving else { return }
         isSaving = true
         defer { isSaving = false }
         do {

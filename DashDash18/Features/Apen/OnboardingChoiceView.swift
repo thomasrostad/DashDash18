@@ -3,7 +3,7 @@ import SwiftUI
 /// Første gang etter innlogging (med `OpenAppFeature`): spill med venner med en gang, eller bli
 /// med i eller lag en klubb (dagens flyt). Valget kan endres under Deg.
 struct OnboardingChoiceView: View {
-    /// Kalles med valget. Godtar vilkårene på serveren først når `ModerationFeature` er på (019).
+    /// Kalles med valget. Godtar vilkårene på serveren først (019).
     let onChoose: (AppHomeChoice) -> Void
 
     var body: some View {

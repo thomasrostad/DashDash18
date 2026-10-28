@@ -3,8 +3,7 @@ import Supabase
 import SwiftUI
 
 // Spill på runden (fase 14): segmentet «Spill» i føringen (`RundeView` henter spillene), ett lite kort per spill med stillingen,
-// markeringene (Wolf-valg på tee, bingo-bango-bongo) og oppgjøret i poeng. Vises bare med
-// `GamesFeature.isEnabled`.
+// markeringene (Wolf-valg på tee, bingo-bango-bongo) og oppgjøret i poeng.
 
 /// Kortene for spillene i runden, og «Legg til spill».
 struct SpillSeksjon: View {

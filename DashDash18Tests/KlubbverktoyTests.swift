@@ -5,22 +5,16 @@ import Testing
 // Klubbverktøyene på arrangørsiden (fase 11): «Varsler til troppen», «Rapporter» og invitasjonskoden i Troppen.
 
 struct ClubToolsTests {
-    @Test func meldingTilAlleVirkerOgsaaUtenPush() {
-        #expect(ClubTools.noticeRows(pushEnabled: false) == [.announcement])
+    @Test func pushRadeneIVarslerTilTroppen() {
+        #expect(ClubTools.noticeRows == [.announcement, .pushSettings, .pushStatus])
     }
 
-    @Test func pushRadeneKommerNaarFlaggetErPaa() {
-        #expect(ClubTools.noticeRows(pushEnabled: true) == [.announcement, .pushSettings, .pushStatus])
+    @Test func rapporterPaaHuben() {
+        #expect(ClubTools.hubRows == [.notices, .reports])
     }
 
-    @Test func rapporterBakModereringsflagget() {
-        #expect(ClubTools.hubRows(moderationEnabled: true) == [.notices, .reports])
-        #expect(ClubTools.hubRows(moderationEnabled: false) == [.notices])
-    }
-
-    @Test func underteksterNevnerBarePushNaarDetErPaa() {
-        #expect(ClubTools.noticesSubtitle(pushEnabled: true).contains("push"))
-        #expect(!ClubTools.noticesSubtitle(pushEnabled: false).contains("push"))
+    @Test func undertekstenNevnerPush() {
+        #expect(ClubTools.noticesSubtitle.contains("push"))
     }
 }
 

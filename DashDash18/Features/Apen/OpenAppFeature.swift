@@ -2,7 +2,8 @@ import Foundation
 
 // Fase 17, åpent for alle (docs/visjon-apen-app.md): onboarding uten klubb, sletting av konto,
 // rapporter og blokker, Google-innlogging, kjøp for å kjøre turnering og «Del regningen».
-// Hver del har sitt eget flagg. Med et flagg av oppfører den delen av appen seg som før.
+// Sletting av konto og rapporter og blokker (sql/019) er alltid på (flaggene ryddet 28.10.2026).
+// De andre delene har sitt eget flagg. Med et flagg av oppfører den delen av appen seg som før.
 
 /// Onboarding uten klubb: «Spill med venner» eller «Bli med i/lag en klubb» etter innlogging,
 /// og en app med bare Spill og Deg for den som ikke er i en klubb. Krever løse runder (017, 018).
@@ -12,18 +13,6 @@ nonisolated enum OpenAppFeature {
     static let isEnabled = flag && LooseRoundsFeature.isEnabled
 }
 
-/// «Slett konto» under Deg. Krever `sql/019_konto_og_moderering.sql` og at Edge Function
-/// `delete-account` er deployet.
-nonisolated enum AccountDeletionFeature {
-    static let isEnabled = true
-}
-
-/// Rapporter og blokker i tråden, «Blokkerte» under Deg, rapportene for arrangøren og godkjenning
-/// av vilkårene. Krever `sql/019_konto_og_moderering.sql`.
-nonisolated enum ModerationFeature {
-    static let isEnabled = true
-}
-
 /// «Rapporter» på baner i det felles biblioteket (en annen har lagt dem inn) og på turneringer i
 /// «Finn turneringer» (1.0.1, App Review 1.2). Det du har rapportert, skjules for deg. Krever
 /// `sql/066_rapporter_baner_turneringer.sql` (typene `course` og `competition` i `report_content`
@@ -31,7 +20,7 @@ nonisolated enum ModerationFeature {
 nonisolated enum PublicContentReportFeature {
     /// På 21.10.2026: 066 er kjørt på test og prod, og report-alert er deployet begge steder.
     static let flag = true
-    static let isEnabled = flag && ModerationFeature.isEnabled
+    static let isEnabled = flag
 }
 
 /// Logg inn med Google (B9). Krever OAuth-klient i Google Cloud og Google slått på i Supabase Auth,

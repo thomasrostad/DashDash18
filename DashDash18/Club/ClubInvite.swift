@@ -52,18 +52,15 @@ nonisolated struct ClubInvite: Equatable, Hashable, Sendable {
 
     var url: URL { URL(string: "\(InviteCode.scheme)://\(Self.host)/\(code)")! }
 
-    /// Lenken som deles: `https://dashdash18.com/klubb/KODE` med universelle lenker, ellers `url`.
-    func shareURL(universal: Bool = UniversalLinksFeature.isEnabled) -> URL {
-        universal ? UniversalLink.url(path: Self.host, code: code) : url
+    /// Lenken som deles: `https://dashdash18.com/klubb/KODE`.
+    func shareURL() -> URL {
+        UniversalLink.url(path: Self.host, code: code)
     }
 
-    /// Teksten som deles: hva det er og lenken. Med https-lenken (universelle lenker) står koden i
-    /// lenken og kan leses av der; med `dashdash://` står den også for seg, siden den lenken ikke kan
-    /// trykkes overalt (09.10.2026: kortere tekst).
-    func shareText(clubName: String, universal: Bool = UniversalLinksFeature.isEnabled) -> String {
-        let link = shareURL(universal: universal).absoluteString
-        return universal ? "Bli med i \(clubName) i Atten: \(link)"
-                         : "Bli med i \(clubName) i Atten: \(link) · Koden er \(code)"
+    /// Teksten som deles: hva det er og lenken. Koden står i https-lenken og kan leses av der
+    /// (09.10.2026: kortere tekst).
+    func shareText(clubName: String) -> String {
+        "Bli med i \(clubName) i Atten: \(shareURL().absoluteString)"
     }
 
     /// Hvor man får koden, til den som står uten.

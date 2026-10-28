@@ -475,7 +475,7 @@ Hele appen er gjennomgått (død kode fjernet, kommentarer rettet, småfeil rett
 - [x] **Kjøp:** «Ny turnering» sier fra når koblingen av en ledig kreditt feiler. *(08.10.)*
 - [x] **Google (før `GoogleLoginFeature` slås på):** utloggingsteksten nevner Google når kontoen har det. *(08.10.)*
 - [x] **Veddemål i Varsler:** egne tekster i appen og i `push-send` (PWA-ens ordlyd, poeng for kroner). *(08.10. push-send versjon 3 deployet på test.)*
-- [ ] **Flagg som står permanent på** (fjernes når skjemaet er i prod): Foundation, Push, LiveActivity, Widget, Venue, CourseKind, Stats, Bets, Games, Competitions, LooseRounds, AccountDeletion, Moderation, BillSplit. *(21.10: skjemaet er i prod, så flaggene kan ryddes.)*
+- [x] **Flagg som står permanent på** (fjernes når skjemaet er i prod): Foundation, Push, LiveActivity, Widget, Venue, CourseKind, Stats, Bets, Games, Competitions, LooseRounds, AccountDeletion, Moderation, BillSplit. *(21.10: skjemaet er i prod, så flaggene kan ryddes.)* *(28.10: ryddet. Fjernet: AccountDeletion, Competitions, CourseKind, Diagnostics, Foundation, Games, Moderation, Push, SlopeNo (med `usesHoles`), Stats, UniversalLinks, Venue og Widget, med grenene som bare gjaldt når de var av. Står igjen: LiveActivity og BillSplit (styres fra serveren, `ios_flags`), Bets (avhenger av miljøet) og LooseRounds (ikke med i denne ryddingen; `schemaReady` er fortsatt på).)*
 - [x] **Små ting:** kolonnelistene samlet, konkurransesiden henter bare sine egne påmeldinger, og utboksen kan ikke få to retry-løkker. `EveningDates` ligger også i widget-targetet (08.10), og kopiene i widgeten er fjernet. *(08.10.)*
 
 ---

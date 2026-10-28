@@ -30,7 +30,7 @@ struct DegView: View {
                 OwnProfileNGFSection(context: context)
                     .id(context.user.id)
             }
-            if PushFeature.isEnabled, let context {
+            if let context {
                 Section {
                     NavigationLink { PushSettingsView(context: context) } label: {
                         Label("Varsler", systemImage: "bell.badge")
@@ -38,7 +38,7 @@ struct DegView: View {
                     }
                 }
             }
-            if StatsFeature.isEnabled, let context {
+            if let context {
                 StatsDegSection(context: context)
             }
             DegAppearanceSection()
@@ -55,9 +55,7 @@ struct DegView: View {
                         Text(config.projectRef).font(.ddMonoSmall)
                     }
                 }
-                if SlopeNoFeature.isEnabled {
-                    SlopeNoAboutRow()
-                }
+                SlopeNoAboutRow()
             }
         }
     }

@@ -10,11 +10,6 @@ nonisolated enum MemberStatus: String, Codable, Sendable {
     case archived
 }
 
-nonisolated enum SlopeNoFeature {
-    static let isEnabled = true
-    static let usesHoles = true
-}
-
 nonisolated struct LooseRoundInfo: Equatable, Sendable {
     var ownerID: UUID?
     var roster: [RoundRosterRow]

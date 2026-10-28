@@ -3,7 +3,7 @@ import Supabase
 import SwiftUI
 
 /// Banene fra slope.no i det felles biblioteket (sql/029, fylt av synken): hentes én gang og søkes i
-/// lokalt. Teene hentes for banen som velges. Med hull (sql/030, `usesHoles`) vet lista hvilke baner som
+/// lokalt. Teene hentes for banen som velges. Med hull (sql/030) vet lista hvilke baner som
 /// har hull og kan spilles direkte, og en slik bane hentes med hull og tees (`item(for:)`).
 @Observable
 final class SlopeCatalogModel {
@@ -11,8 +11,6 @@ final class SlopeCatalogModel {
     private(set) var isLoading = false
     private(set) var hasLoaded = false
     var error: DataError?
-    /// Hullene brukes (`SlopeNoFeature.usesHoles`; skjermprøvene setter den selv).
-    let usesHoles: Bool
 
     private let client: SupabaseClient?
     /// Teene i skjermprøvene, per bane.
@@ -20,27 +18,24 @@ final class SlopeCatalogModel {
     /// Banene med hull i skjermprøvene, per bane.
     private var previewItems: [UUID: CourseListItem] = [:]
 
-    init(client: SupabaseClient, usesHoles: Bool = SlopeNoFeature.usesHoles) {
+    init(client: SupabaseClient) {
         self.client = client
-        self.usesHoles = usesHoles
     }
 
     #if DEBUG
     /// Skjermprøve uten nett.
-    init(preview courses: [SlopeCourseRow], tees: [UUID: [CourseTeeRow]], items: [CourseListItem] = [],
-         usesHoles: Bool = false) {
+    init(preview courses: [SlopeCourseRow], tees: [UUID: [CourseTeeRow]], items: [CourseListItem] = []) {
         client = nil
         self.courses = SlopeCourseSearch.sorted(courses)
         previewTees = tees
         previewItems = Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        self.usesHoles = usesHoles
         hasLoaded = true
     }
     #endif
 
-    /// Banene som kan spilles direkte: de med hull (bare når hullene brukes).
+    /// Banene som kan spilles direkte: de med hull.
     var playable: [SlopeCourseRow] {
-        usesHoles ? courses.filter(\.hasHoles) : []
+        courses.filter(\.hasHoles)
     }
 
     /// Banen med hull og tees, klar til å velges i en runde (fase 20b).
@@ -70,14 +65,12 @@ final class SlopeCatalogModel {
             var all: [SlopeCourseRow] = []
             for start in stride(from: 0, to: 20 * page, by: page) {
                 var query = client.from("courses")
-                    .select(usesHoles ? SlopeCourseRow.holeColumns : SlopeCourseRow.columns)
+                    .select(SlopeCourseRow.holeColumns)
                     .eq("source", value: "slope")
                     .is("club_id", value: nil)
                     .is("missing_at", value: nil)
-                if usesHoles {
-                    // Bare hull 1 som innebygd rad: tom liste = banen har ingen hull.
-                    query = query.eq("course_holes.hole_number", value: 1)
-                }
+                // Bare hull 1 som innebygd rad: tom liste = banen har ingen hull.
+                query = query.eq("course_holes.hole_number", value: 1)
                 let rows: [SlopeCourseRow] = try await query
                     .order("id")
                     .range(from: start, to: start + page - 1)
@@ -109,14 +102,11 @@ final class SlopeCatalogModel {
     }
 }
 
-/// «Slope og course rating fra slope.no» med lenke. Eieren av slope.no ber om dette der tee-data vises.
-/// Med hullene (fase 20b): «Hull, slope og course rating fra slope.no».
+/// «Hull, slope og course rating fra slope.no» med lenke. Eieren av slope.no ber om dette der tee-data vises.
 struct SlopeNoCreditLink: View {
-    var usesHoles = SlopeNoFeature.usesHoles
-
     var body: some View {
         Link(destination: SlopeNoCredit.url) {
-            Label(SlopeNoCredit.text(usesHoles: usesHoles), systemImage: "arrow.up.right.square")
+            Label(SlopeNoCredit.text, systemImage: "arrow.up.right.square")
                 .font(.ddCaption)
         }
         .foregroundStyle(Color.ddForestInk)
@@ -184,8 +174,8 @@ struct SlopeCourseSearchView: View {
                     if matching.count > shownLimit {
                         DDFooter("Viser de første \(shownLimit). Skriv mer av navnet eller stedet.")
                     }
-                    DDFooter(SlopeCourseSearch.footer(playing: isPlaying, usesHoles: model.usesHoles))
-                    SlopeNoCreditLink(usesHoles: model.usesHoles)
+                    DDFooter(SlopeCourseSearch.footer(playing: isPlaying))
+                    SlopeNoCreditLink()
                 }
             }
         }
@@ -222,7 +212,7 @@ struct SlopeCourseSearchView: View {
                             .font(.ddCaption)
                             .foregroundStyle(Color.ddInkSecondary)
                     }
-                    if !isPlaying, model.usesHoles, course.hasHoles {
+                    if !isPlaying, course.hasHoles {
                         Label("Har hull: kan spilles direkte", systemImage: "flag")
                             .font(.ddCaption)
                             .foregroundStyle(Color.ddForestInk)
@@ -333,7 +323,7 @@ struct TeePickerView: View {
             } footer: {
                 VStack(alignment: .leading, spacing: 6) {
                     DDFooter(TeeChoice.pickerFooter(hasHoles: tees.contains { TeeHoles.hasOwnHoles($0) }))
-                    SlopeNoCreditLink(usesHoles: SlopeNoFeature.usesHoles || tees.contains { !$0.holes.isEmpty })
+                    SlopeNoCreditLink()
                 }
             }
         }

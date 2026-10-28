@@ -25,7 +25,7 @@ final class CourseLibraryModel {
     /// Det felles biblioteket (sql/017–018, løse runder): baner uten klubb, som alle leser og den som
     /// la dem inn, retter. nil for klubbens bibliotek.
     private let shared: SharedLibrary?
-    /// Banene fra slope.no til «Ny bane» (sql/029). nil når `SlopeNoFeature` er av.
+    /// Banene fra slope.no til «Ny bane» (sql/029).
     let slopeCatalog: SlopeCatalogModel?
 
     struct SharedLibrary {
@@ -61,7 +61,7 @@ final class CourseLibraryModel {
         self.courseSet = courseSet
         self.clubRules = clubRules
         shared = nil
-        slopeCatalog = SlopeNoFeature.isEnabled ? SlopeCatalogModel(client: context.client) : nil
+        slopeCatalog = SlopeCatalogModel(client: context.client)
     }
 
     /// Det felles biblioteket (løse runder, `LooseRoundsFeature`).
@@ -70,7 +70,7 @@ final class CourseLibraryModel {
         courseSet = nil
         clubRules = []
         shared = SharedLibrary(client: client, userID: userID)
-        slopeCatalog = SlopeNoFeature.isEnabled ? SlopeCatalogModel(client: client) : nil
+        slopeCatalog = SlopeCatalogModel(client: client)
     }
 
     /// Det felles biblioteket, ikke klubbens.
@@ -285,16 +285,15 @@ final class CourseLibraryModel {
 
     // MARK: Tees (sql/029)
 
-    /// Teene til banene, uten dem som er borte fra kilden. Tom så lenge `SlopeNoFeature` er av. Med
-    /// `usesHoles` (sql/030) får teene sine egne hull festet på.
+    /// Teene til banene, uten dem som er borte fra kilden, med sine egne hull (sql/030) festet på.
     static func loadTees(client: SupabaseClient, courseIDs: [UUID]) async throws -> [CourseTeeRow] {
-        guard SlopeNoFeature.isEnabled, !courseIDs.isEmpty else { return [] }
+        guard !courseIDs.isEmpty else { return [] }
         let tees: [CourseTeeRow] = try await client.from("course_tees")
             .select(CourseTeeRow.columns)
             .in("course_id", values: courseIDs.map(\.uuidString))
             .is("missing_at", value: nil)
             .execute().value
-        guard SlopeNoFeature.usesHoles, !tees.isEmpty else { return tees }
+        guard !tees.isEmpty else { return tees }
         return TeeHoles.attach(try await loadTeeHoles(client: client, teeIDs: tees.map(\.id)), to: tees)
     }
 
@@ -314,7 +313,7 @@ final class CourseLibraryModel {
     /// Hentede baner (slope.no, sql/029–030) med hull og tees, slik de spilles direkte: ekte baner med
     /// kilde-merke. Brukes når en hentet bane velges, og for runder som alt peker på en.
     static func loadSourceItems(client: SupabaseClient, ids: [UUID]) async throws -> [CourseListItem] {
-        guard SlopeNoFeature.usesHoles, !ids.isEmpty else { return [] }
+        guard !ids.isEmpty else { return [] }
         let rows: [SharedCourseRow] = try await client.from("courses")
             .select(sharedColumns)
             .in("id", values: ids.map(\.uuidString))
@@ -340,7 +339,7 @@ final class CourseLibraryModel {
 
     /// Banens egne tees i én transaksjon (`save_course_tees`). nil = teene røres ikke.
     static func saveTees(_ tees: [TeeInput]?, id: UUID, client: SupabaseClient) async throws {
-        guard SlopeNoFeature.isEnabled, let tees else { return }
+        guard let tees else { return }
         struct Params: Encodable {
             let p_course_id: UUID
             let p_tees: [TeeInput]
@@ -352,9 +351,8 @@ final class CourseLibraryModel {
 
     // MARK: Banetype (sql/016)
 
-    /// `courses.kind` per bane. Tom så lenge `CourseKindFeature` er av (kolonnen finnes ikke før 016).
+    /// `courses.kind` per bane.
     static func loadKinds(client: SupabaseClient, clubID: UUID, courseID: UUID? = nil) async throws -> [UUID: CourseKind] {
-        guard CourseKindFeature.isEnabled else { return [:] }
         struct Row: Decodable { let id: UUID; let kind: CourseKind }
         var query = client.from("courses").select("id, kind").eq("club_id", value: clubID)
         if let courseID { query = query.eq("id", value: courseID) }
@@ -364,7 +362,6 @@ final class CourseLibraryModel {
 
     /// Skriver typen etter `save_course` (som ikke kjenner den). Sjekker at raden kom tilbake.
     private func saveKind(_ kind: CourseKind, id: UUID, client: SupabaseClient) async throws {
-        guard CourseKindFeature.isEnabled else { return }
         struct Patch: Encodable { let kind: CourseKind }
         struct Updated: Decodable { let id: UUID }
         let rows: [Updated] = try await client.from("courses").update(Patch(kind: kind))
@@ -415,7 +412,7 @@ final class CourseLibraryModel {
         defer { isLoading = false }
         do {
             // Bare baner brukerne har lagt inn. Hentede baner (slope.no, sql/029) søkes opp for seg:
-            // uten hull under «Ny bane» (kopi og scorekort), med hull (sql/030, `usesHoles`) i velgeren
+            // uten hull under «Ny bane» (kopi og scorekort), med hull (sql/030) i velgeren
             // under «Fra slope.no», og legges hit når de velges (`adopt`). Over tusen baner med hull og
             // tees lastes ikke på forhånd.
             let rows: [SharedCourseRow] = try await shared.client.from("courses")

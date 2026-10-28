@@ -24,7 +24,7 @@ struct TavlaStatsSection: View {
                         .frame(maxWidth: .infinity)
                         .ddCard(.empty)
                 }
-                if StatsFeature.isEnabled, context != nil, let me = standings.me, let row = standings.row(me) {
+                if context != nil, let me = standings.me, let row = standings.row(me) {
                     DDSectionLabel("Din statistikk").padding(.top, DDSpacing.m)
                     StatsProfileLink(memberID: me, name: row.name)
                 }

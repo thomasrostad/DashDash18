@@ -1,12 +1,7 @@
 import Foundation
 
-/// Bryter for widget-dataene. Krever widget-targetet (DashDash18Widgets) og App Group-en.
-/// Se docs/widgets-oppsett.md.
-nonisolated enum WidgetFeature {
-    static let isEnabled = true
-}
-
-// Kveld og Tavla → widget-data. Bare oppslag og formatering av det modellene allerede har.
+// Kveld og Tavla → widget-data. Krever widget-targetet (DashDash18Widgets) og App Group-en
+// (docs/widgets-oppsett.md). Bare oppslag og formatering av det modellene allerede har.
 
 nonisolated extension WidgetSnapshot.NextEvening {
     /// Kvelden slik Kveld viser den. `referenceYear` gir året i teksten når det er et annet.
@@ -37,18 +32,16 @@ nonisolated extension WidgetSnapshot {
     }
 }
 
-/// Skriver widget-data når Kveld og Tavla har lastet (når `WidgetFeature.isEnabled`).
+/// Skriver widget-data når Kveld og Tavla har lastet.
 enum WidgetSnapshotPublisher {
     /// Neste kveld fra Kveld (nil: ingen kveld satt opp).
     static func publish(nextEvening event: EventRow?, today: String) {
-        guard WidgetFeature.isEnabled else { return }
         let next = event.map { WidgetSnapshot.NextEvening(event: $0, referenceYear: EveningDates.year(of: today)) }
         WidgetSnapshotStore.shared.update { $0.nextEvening = next }
     }
 
     /// Topp 3 fra Tavla (nil: ingen sesong).
     static func publish(standings: TavlaStandings?) {
-        guard WidgetFeature.isEnabled else { return }
         WidgetSnapshotStore.shared.update { snapshot in
             snapshot.tavlaLoaded = true
             snapshot.seasonName = standings?.seasonName

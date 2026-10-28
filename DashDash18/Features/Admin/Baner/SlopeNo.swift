@@ -6,29 +6,11 @@ import GolfgutuCore
 // biblioteket (`courses.source = 'slope'`, fylt av Edge Function `slope-sync`). Ren logikk her, uten
 // nettverk og SwiftUI.
 
-/// Baner og tees fra slope.no. På siden 08.10.2026: sql/029 er kjørt på test, og `slope-sync` har hentet
-/// 1306 baner (synk hver natt kl. 03:17 UTC). Slås det av, leser og skriver appen ingen av de nye
-/// kolonnene og tabellene, og alt ser ut som før fase 20.
-nonisolated enum SlopeNoFeature {
-    static let isEnabled = true
-
-    /// Hull per tee fra slope.no (fase 20b, sql/030_slope_hull.sql). På siden 08.10.2026: 030 er kjørt
-    /// på test, og slope-sync v2 har skrevet hull for 937 baner og 6146 tees. Av: appen leser verken `course_tee_holes` eller
-    /// `rounds.tee_par`, hentede baner vises bare under «Hent fra slope.no» (kopi og scorekort), og alt
-    /// er som i fase 20. På: hentede baner med hull kan velges direkte i runde-oppsettet og i løse
-    /// runder, og runden spilles med teens hull.
-    static let usesHoles = true
-}
-
 /// Krediteringen eieren av slope.no ber om: tekst og lenke der tee-data vises eller velges.
 nonisolated enum SlopeNoCredit {
-    static var text: String { text(usesHoles: SlopeNoFeature.usesHoles) }
-    static let url = URL(string: "https://slope.no")!
-
     /// Med hullene (fase 20b) kommer også par, indeks og lengde fra slope.no.
-    static func text(usesHoles: Bool) -> String {
-        usesHoles ? "Hull, slope og course rating fra slope.no" : "Slope og course rating fra slope.no"
-    }
+    static let text = "Hull, slope og course rating fra slope.no"
+    static let url = URL(string: "https://slope.no")!
 }
 
 /// Herre, dame eller begge (`course_tees.gender`).
@@ -162,8 +144,8 @@ nonisolated struct SlopeCourseRow: Decodable, Equatable, Identifiable, Sendable 
     var city: String?
     /// ISO-kode (NO, SE, DK, FI, IS).
     var country: String?
-    /// Banen har hull fra kilden (sql/030): den kan spilles direkte, uten kopi. Leses bare med
-    /// `SlopeNoFeature.usesHoles` (`holeColumns`), ellers false.
+    /// Banen har hull fra kilden (sql/030): den kan spilles direkte, uten kopi. Leses med
+    /// `holeColumns`.
     var hasHoles: Bool
 
     init(id: UUID, name: String, city: String? = nil, country: String? = nil, hasHoles: Bool = false) {
@@ -229,14 +211,11 @@ nonisolated enum SlopeCourseSearch {
     static let playableNotice = "Banen har par, indeks og lengde per tee fra slope.no, så den trenger ikke legges inn. Velg den under «Fra slope.no» når du setter opp runden, og velg tee."
 
     /// Teksten under søket. `playing`: bare baner med hull, valgt i runden (fase 20b).
-    static func footer(playing: Bool, usesHoles: Bool) -> String {
+    static func footer(playing: Bool) -> String {
         if playing {
             return "Banene med par, indeks og lengde per hull. Velg tee etterpå: teens hull, course rating og slope gjelder i runden."
         }
-        if usesHoles {
-            return "Har banen hull, kan den spilles direkte: velg den når runden settes opp. Ellers fylles navn, tees, course rating og slope inn, og par og indeks leser du av scorekortet."
-        }
-        return "Navn, tees, course rating og slope fylles inn. Par og indeks per hull står ikke her: de leser du av scorekortet."
+        return "Har banen hull, kan den spilles direkte: velg den når runden settes opp. Ellers fylles navn, tees, course rating og slope inn, og par og indeks leser du av scorekortet."
     }
 
     /// «Oslo, Norge».

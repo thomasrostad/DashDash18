@@ -49,9 +49,7 @@ final class NewTournamentModel {
     var canCreateInClub: Bool { seasons != nil && list.canCreateInClub }
 
     var templates: [RulesetTemplate] {
-        let all = TournamentSetup.templates(inClub: canCreateInClub)
-        // Uten konkurranser (flagget av) er det bare seriene i klubben.
-        return CompetitionsFeature.isActive ? all : all.filter { TournamentSetup.target($0, clubID: list.clubID) == .season }
+        TournamentSetup.templates(inClub: canCreateInClub)
     }
 
     func showsOwnerChoice(_ template: RulesetTemplate) -> Bool {
@@ -80,7 +78,7 @@ final class NewTournamentModel {
 
     func load() async {
         await seasons?.load()
-        if CompetitionsFeature.isActive { await list.load() }
+        await list.load()
         guard let client = list.client else { return }
         if templateStore == nil {
             let store = SetupTemplateStore(client: client, clubID: canCreateInClub ? list.clubID : nil, kind: .tournament)
@@ -120,7 +118,7 @@ final class NewTournamentModel {
                     createdCompetitionID = await ReuseService.competitionID(client: client, seasonID: season.id)
                 }
                 if draft.betsEnabled, let id = createdCompetitionID { await enableBets(competitionID: id) }
-                if CompetitionsFeature.isActive { await list.load() }
+                await list.load()
                 return true
             } catch {
                 self.error = error.message

@@ -103,7 +103,7 @@ struct CommentsSheet: View {
         if item.canDelete {
             Button("Slett", systemImage: "trash", role: .destructive) { confirmingDelete = item.comment }
         }
-        if item.canReport, ModerationFeature.isEnabled {
+        if item.canReport {
             Button("Rapporter kommentaren", systemImage: "flag") {
                 reportTarget = CommentReport(comment: item.comment, author: item.author,
                                              canBlock: model.canBlock(item.comment))

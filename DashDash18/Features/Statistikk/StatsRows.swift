@@ -3,12 +3,6 @@ import GolfgutuCore
 
 // Statistikk (fase 16, `sql/021_statistikk.sql`).
 
-/// Statistikk under Deg og fra spillerprofilen, og den valgfrie føringen per hull. Krever 021
-/// (kjørt på test).
-nonisolated enum StatsFeature {
-    static let isEnabled = true
-}
-
 /// Om spilleren vil føre fairway, green og putter. Av som standard, én bryter per innlogging på
 /// telefonen (ikke i databasen).
 nonisolated struct HoleStatsSetting: @unchecked Sendable {
@@ -124,15 +118,14 @@ nonisolated struct StatsRoundRow: Codable, Equatable, Identifiable, Sendable {
         case teePar = "tee_par"
     }
 
-    /// Rundens CR og slope (sql/029) bare når `SlopeNoFeature` er på, teens par (sql/030) bare med `usesHoles`.
+    /// Med rundens CR og slope (sql/029) og teens par (sql/030).
     /// `kind` (sql/047) bare når kolonnen finnes (`RoundRulesFeature`).
     static var columns: String { baseColumns + (RoundRulesFeature.isAvailable ? ", kind" : "") }
 
     static let baseColumns = """
         id, club_id, event_id, course_id, name, status, hole_count, first_hole, format, \
-        handicap_allowance, external_handicap, started_at
-        """ + (SlopeNoFeature.isEnabled ? ", course_rating, slope_rating" : "")
-        + (SlopeNoFeature.isEnabled && SlopeNoFeature.usesHoles ? ", tee_par" : "")
+        handicap_allowance, external_handicap, started_at, course_rating, slope_rating, tee_par
+        """
 
     var isPlayoff: Bool { kind == "playoff" }
 }

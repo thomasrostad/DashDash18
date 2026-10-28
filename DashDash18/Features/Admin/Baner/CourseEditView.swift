@@ -134,7 +134,7 @@ struct CourseEditView: View {
         Section {
             NavigationLink {
                 SlopeCourseSearchView(model: catalog, onPick: { course, tees in
-                    if catalog.usesHoles, course.hasHoles {
+                    if course.hasHoles {
                         playable = (course, tees)
                     } else {
                         draft.prefill(from: course, tees: tees)
@@ -146,10 +146,8 @@ struct CourseEditView: View {
             }
         } footer: {
             VStack(alignment: .leading, spacing: 6) {
-                DDFooter(catalog.usesHoles
-                         ? "Søk blant de nordiske banene. Har banen hull hos slope.no, spilles den direkte. Ellers fylles navn, tees, course rating og slope inn, og par og indeks leser du av scorekortet."
-                         : "Søk blant de nordiske banene. Navn, tees, course rating og slope fylles inn. Par og indeks per hull står på scorekortet.")
-                SlopeNoCreditLink(usesHoles: catalog.usesHoles)
+                DDFooter("Søk blant de nordiske banene. Har banen hull hos slope.no, spilles den direkte. Ellers fylles navn, tees, course rating og slope inn, og par og indeks leser du av scorekortet.")
+                SlopeNoCreditLink()
             }
         }
     }
@@ -159,12 +157,10 @@ struct CourseEditView: View {
         Section {
             TextField("Navn", text: $draft.name)
                 .textInputAutocapitalization(.words)
-            if CourseKindFeature.isEnabled {
-                Picker("Type", selection: $draft.kind) {
-                    ForEach(CourseKind.allCases, id: \.self) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
+            Picker("Type", selection: $draft.kind) {
+                ForEach(CourseKind.allCases, id: \.self) { Text($0.title).tag($0) }
             }
+            .pickerStyle(.segmented)
             Picker("Antall hull", selection: Binding(get: { draft.holeCount }, set: { draft.setHoleCount($0) })) {
                 ForEach(CourseDraft.holeCounts, id: \.self) { Text("\($0) hull").tag($0) }
             }

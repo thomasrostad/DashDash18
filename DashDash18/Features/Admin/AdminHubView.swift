@@ -781,12 +781,12 @@ private struct AdminHubContent: View {
     @ViewBuilder
     private var rareSections: some View {
         DDSection("Varsler og rapporter") {
-            ForEach(ClubTools.hubRows(moderationEnabled: ModerationFeature.isEnabled)
+            ForEach(ClubTools.hubRows
                 .filter { $0 != .reports || shows(.reports) }, id: \.self) { row in
                 switch row {
                 case .notices:
                     NavigationLink { VarslerTilTroppenView() } label: {
-                        AdminHubRow("Varsler til troppen", ClubTools.noticesSubtitle(pushEnabled: PushFeature.isEnabled),
+                        AdminHubRow("Varsler til troppen", ClubTools.noticesSubtitle,
                                     systemImage: "megaphone")
                     }
                 case .reports:

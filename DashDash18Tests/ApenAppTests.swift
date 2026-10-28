@@ -53,8 +53,6 @@ struct ApenOnboardingTests {
     /// «Del regningen» er på. 09.10: onboarding uten klubb på. Google og kjøp venter på oppsett.
     @Test func flaggeneEtterGodkjenning() {
         #expect(OpenAppFeature.isEnabled)
-        #expect(AccountDeletionFeature.isEnabled)
-        #expect(ModerationFeature.isEnabled)
         #expect(!GoogleLoginFeature.isEnabled)
         #expect(!PurchaseFeature.isEnabled)
         #expect(BillSplitFeature.isEnabled)

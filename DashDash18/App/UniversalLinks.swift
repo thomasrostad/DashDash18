@@ -1,14 +1,9 @@
 import Foundation
 
-/// Universelle lenker: `https://dashdash18.com/klubb/KODE`, `/runde/KODE` og `/konkurranse/KODE`
-/// åpner appen (eller invitasjonssiden i `web/atten-lenker` for den som ikke har den).
-///
-/// På siden 09.10.2026: AASA-filen er ute på dashdash18.com (Worker `atten-lenker`) og «Associated
-/// Domains» (`applinks:dashdash18.com`) er slått på. Med flagget av deles `dashdash://`-lenker som før,
-/// og appen tar ikke imot universelle lenker. Lenkene tolkes uansett når de limes inn.
-nonisolated enum UniversalLinksFeature {
-    static let isEnabled = true
-}
+// Universelle lenker: `https://dashdash18.com/klubb/KODE`, `/runde/KODE` og `/konkurranse/KODE`
+// åpner appen (eller invitasjonssiden i `web/atten-lenker` for den som ikke har den). AASA-filen er
+// ute på dashdash18.com (Worker `atten-lenker`) og «Associated Domains» (`applinks:dashdash18.com`)
+// er slått på (09.10.2026). Det er https-lenkene som deles.
 
 /// Oversetter mellom `https://dashdash18.com/<type>/KODE` og `dashdash://<type>/KODE`, slik at
 /// begge går gjennom de samme parserne (`InviteCode`, `ClubInvite`).

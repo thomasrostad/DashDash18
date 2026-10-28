@@ -24,10 +24,10 @@ nonisolated struct CourseDraft: Equatable, Sendable {
     var courseRatingText: String = ""
     var slopeText: String = ""
     var inUse: Bool = true
-    /// Simulator eller ekte bane. Lagres bare når `CourseKindFeature.isEnabled` (sql/016).
+    /// Simulator eller ekte bane. Lagres i `courses.kind` (sql/016).
     var kind: CourseKind = .simulator
     var holes: [HoleDraft]
-    /// Teene (sql/029, `SlopeNoFeature`), i rekkefølge. nil = banen har ingen tees, og ingenting
+    /// Teene (sql/029), i rekkefølge. nil = banen har ingen tees, og ingenting
     /// sendes; tom liste = alle teene fjernes ved lagring.
     var tees: [TeeInput]? = nil
 

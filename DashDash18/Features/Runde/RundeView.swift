@@ -268,7 +268,7 @@ struct RundeView: View {
             MatchkortSection(card: matches)
         }
         CompetitionBoardsSection(game: game)
-        if GamesFeature.isEnabled, let games, games.roundID == game.roundID {
+        if let games, games.roundID == game.roundID {
             SpillSeksjon(model: games, game: game, hole: model.currentHole, viewer: model.viewer,
                          me: model.statsAccess?.userID)
         }
@@ -288,7 +288,7 @@ struct RundeView: View {
     // MARK: Spillene
 
     private func loadGames() async {
-        guard GamesFeature.isEnabled, let game = model.game, let access = model.statsAccess else { return }
+        guard let game = model.game, let access = model.statsAccess else { return }
         if games?.roundID == game.roundID { return }
         let fresh = GamesModel(client: access.client, roundID: game.roundID)
         games = fresh
@@ -478,7 +478,7 @@ struct RundeView: View {
             if let submission = model.cardSubmission {
                 CardSubmissionSection(model: model, submission: submission)
             }
-            if StatsFeature.isEnabled, game.isPlaying(model.viewer.memberID), let par = game.statsPar(card.holeIndex),
+            if game.isPlaying(model.viewer.memberID), let par = game.statsPar(card.holeIndex),
                let access = model.statsAccess {
                 HoleStatsSlot(client: access.client, userID: access.userID, roundID: game.roundID,
                               memberID: model.viewer.memberID, holeIndex: card.holeIndex, par: par)

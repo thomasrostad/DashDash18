@@ -2,7 +2,7 @@ import GolfgutuCore
 import SwiftUI
 
 /// Deg → Varsler: slå på push, velg gruppene og hva du får push om, hvordan tråden varsler, og
-/// e-post når du ikke har varsler på. Vises bare når `PushFeature.isEnabled` er på (se `DegView`).
+/// e-post når du ikke har varsler på. Åpnes fra `DegView`.
 /// Uten sql/046 (ingen grupper) vises kategoriene som før.
 struct PushSettingsView: View {
     @Environment(\.dayTerm) private var dayTerm
