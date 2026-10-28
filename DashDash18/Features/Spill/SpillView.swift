@@ -58,7 +58,7 @@ struct SpillView: View {
 
             // Turneringene du kan se, og «Ny turnering» (09.10.2026: før bare bak et ikon på Tavla).
             // Med klubb: klubbens og dine private. Uten klubb: bare dine private.
-            if CompetitionsFeature.isActive, let client = model.client {
+            if let client = model.client {
                 Section {
                     NavigationLink {
                         SpillCompetitions(context: clubContext, client: client, userID: model.userID)

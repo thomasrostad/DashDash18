@@ -1,11 +1,8 @@
 import Foundation
 import Supabase
 
-/// Feilsporing med MetricKit (fase 17, lanseringssjekken 7.1). Krever `sql/064_feilrapporter.sql`.
-/// Uten 064 feiler sendingen, radene blir liggende i køen på telefonen, og appen virker som før.
-nonisolated enum DiagnosticsFeature {
-    static let isEnabled = true
-}
+// Feilsporing med MetricKit (fase 17, lanseringssjekken 7.1). Krever `sql/064_feilrapporter.sql`.
+// Uten 064 feiler sendingen, radene blir liggende i køen på telefonen, og appen virker som før.
 
 /// Hva MetricKit meldte. Samme verdier som `kind` i `public.app_diagnostics`.
 nonisolated enum DiagnosticKind: String, Codable, Sendable, CaseIterable {

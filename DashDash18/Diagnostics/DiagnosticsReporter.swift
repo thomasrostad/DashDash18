@@ -41,7 +41,6 @@ nonisolated final class MetricKitSubscriber: NSObject, MXMetricManagerSubscriber
 /// - Køen sendes med `submit_diagnostics` når noen er innlogget: ved oppstart, når appen blir
 ///   aktiv og når det kommer nye diagnoser. Rader fjernes bare når serveren har tatt imot dem.
 /// - Feiler sendingen (f.eks. uten 064 eller uten nett), blir radene liggende. Ingen feilmelding.
-/// - Gjør ingenting når `DiagnosticsFeature` er av.
 final class DiagnosticsReporter {
     static let batchSize = 20
 
@@ -65,7 +64,7 @@ final class DiagnosticsReporter {
 
     /// Abonnerer på MetricKit. Kalles én gang ved oppstart, så diagnosene fra forrige kjøring kommer.
     func subscribe() {
-        guard DiagnosticsFeature.isEnabled, subscriber == nil else { return }
+        guard subscriber == nil else { return }
         let subscriber = MetricKitSubscriber { [weak self] payloads in
             Task { @MainActor in await self?.receive(payloadJSON: payloads) }
         }
@@ -75,7 +74,6 @@ final class DiagnosticsReporter {
 
     /// Etter innlogging: send det som ligger i køen.
     func start(userID: UUID) async {
-        guard DiagnosticsFeature.isEnabled else { return }
         self.userID = userID
         await flush()
     }
@@ -86,7 +84,6 @@ final class DiagnosticsReporter {
 
     /// JSON fra `MXDiagnosticPayload.jsonRepresentation()`: inn i køen, og send hvis noen er innlogget.
     func receive(payloadJSON payloads: [Data]) async {
-        guard DiagnosticsFeature.isEnabled else { return }
         let records = payloads.flatMap {
             DiagnosticsMapping.records(payloadJSON: $0, appBinaryName: appBinaryName, environment: environment)
         }
@@ -96,7 +93,7 @@ final class DiagnosticsReporter {
 
     /// Sender køen i bolker på `batchSize`. Stopper ved første feil; resten venter til neste gang.
     func flush() async {
-        guard DiagnosticsFeature.isEnabled, userID != nil, !isSending else { return }
+        guard userID != nil, !isSending else { return }
         isSending = true
         defer { isSending = false }
         let pending = await queue.load()

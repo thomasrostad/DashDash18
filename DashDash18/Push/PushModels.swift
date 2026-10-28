@@ -4,13 +4,6 @@ import GolfgutuCore
 // Push (fase 8, `sql/010_push.sql`): rene typer uten UIKit og nettverk, så de kan testes
 // isolert. Tjenesten som snakker med iOS og Supabase ligger i `PushRegistrar`.
 
-/// Bryteren for hele push-delen (`sql/010_push.sql` og `push-send`, docs/push-oppsett.md).
-/// Når den er av, spør appen ikke om varseltillatelse, registrerer seg ikke hos APNs, kaller
-/// ingen push-RPC-er og viser ikke innstillingene under Deg.
-nonisolated enum PushFeature {
-    static let isEnabled = true
-}
-
 // MARK: - Token og miljø
 
 nonisolated enum PushToken {

@@ -23,7 +23,7 @@ struct RundeQuickStartView: View {
     @State private var original: RoundDraft?
     /// «Teller også i …» slik det var da valget var hentet.
     @State private var originalLinks: Set<UUID>?
-    /// «Teller også i …» (fase 15). Nil når `CompetitionsFeature` er av.
+    /// «Teller også i …» (fase 15). Nil til de er hentet.
     @State var links: CompetitionLinkModel?
     /// «Samme som sist» fra serveren (sql/049). nil: ingen, eller 049 mangler (da står forslaget fra
     /// `QuickStart.previousRound`).
@@ -113,7 +113,7 @@ struct RundeQuickStartView: View {
             if originalLinks == nil, let links, links.isLoaded { originalLinks = links.selected }
         }
         .task {
-            guard CompetitionsFeature.isActive, links == nil else { return }
+            guard links == nil else { return }
             let context = model.clubContext
             let links = CompetitionLinkModel(client: context.client, access: context.competitionAccess)
             self.links = links
@@ -185,7 +185,7 @@ struct RundeQuickStartView: View {
                                                   showsVenue: showsVenue)) {
                 showsCourse = true
             }
-            // Teene finnes bare når sql/029 er kjørt og `SlopeNoFeature` er på (lastes ellers ikke).
+            // Teene finnes bare på ekte baner (sql/029).
             if let course = selectedCourse, !course.tees.isEmpty {
                 summaryRow("Tee", value: TeeChoice.value(course.tee(draft.teeID))) {
                     showsTee = true

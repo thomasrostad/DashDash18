@@ -37,7 +37,7 @@ final class CompetitionLinkModel {
     /// Henter konkurransene, troppen i klubben (for å kjenne igjen profilene) og koblingene runden
     /// har fra før (en kladd som redigeres).
     func load(clubID: UUID?, roundID: UUID?) async {
-        guard let client, CompetitionsFeature.isActive, !isLoaded else { return }
+        guard let client, !isLoaded else { return }
         do {
             overview = try await CompetitionQueries.overview(client: client)
             if let clubID {

@@ -10,7 +10,7 @@ nonisolated struct RoundDraft: Equatable, Sendable {
     var eventID: UUID
     var roundNo: Int
     var courseID: UUID?
-    /// Teen på en ekte bane (sql/029, `SlopeNoFeature`). nil = banens CR og slope gjelder.
+    /// Teen på en ekte bane (sql/029). nil = banens CR og slope gjelder.
     var teeID: UUID? = nil
     var holeCount: Int
     /// 1, eller 10 for siste ni på en 18-hullsbane.
@@ -33,7 +33,7 @@ nonisolated struct RoundDraft: Equatable, Sendable {
     var weight: Double
     var externalHandicap: Bool
     var allowance: Double
-    /// Simulator eller ekte bane. Lagres bare når `VenueFeature` er på.
+    /// Simulator eller ekte bane (sql/015).
     var venue: Venue = .simulator
     /// Tabellreglene på runden (sql/047). Lagres bare når kolonnene finnes (`RoundRulesFeature`).
     /// `counts == false`: «Teller ikke i tabellen».
@@ -343,11 +343,10 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
     let ldHoleIndex: Int
     let kpEnabled: Bool
     let kpHoleIndex: Int
-    /// `simulator` / `course`, eller nil når `VenueFeature` er av.
-    let venue: String?
-    /// Teen (sql/029). Sendes bare når `SlopeNoFeature` er på; da også som null, så den tømmes.
+    /// `simulator` / `course` (sql/015).
+    let venue: String
+    /// Teen (sql/029). Sendes også som null, så den tømmes.
     let teeID: UUID?
-    let includesTee: Bool
     /// Tabellreglene (sql/047). Sendes bare når kolonnene finnes; da også som null, så de tømmes.
     let counts: Bool
     let pointsTable: String?
@@ -378,8 +377,7 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         case hideLastHoles = "hide_last_holes"
     }
 
-    init(draft: RoundDraft, clubID: UUID, course: Course?, includeVenue: Bool = VenueFeature.isEnabled,
-         includeTee: Bool = SlopeNoFeature.isEnabled, includeRules: Bool = RoundRulesFeature.isAvailable) {
+    init(draft: RoundDraft, clubID: UUID, course: Course?, includeRules: Bool = RoundRulesFeature.isAvailable) {
         id = draft.roundID
         self.clubID = clubID
         eventID = draft.eventID
@@ -398,9 +396,8 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         ldHoleIndex = draft.ldHole(course: course)
         kpEnabled = draft.kpEnabled
         kpHoleIndex = draft.kpHole(course: course)
-        venue = includeVenue ? draft.venue.rawValue : nil
-        includesTee = includeTee
-        teeID = includeTee ? draft.teeID : nil
+        venue = draft.venue.rawValue
+        teeID = draft.teeID
         includesRules = includeRules
         counts = draft.counts
         pointsTable = draft.pointsTable.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }
@@ -425,10 +422,8 @@ nonisolated struct RoundWrite: Encodable, Equatable, Sendable {
         try c.encode(ldHoleIndex, forKey: .ldHoleIndex)
         try c.encode(kpEnabled, forKey: .kpEnabled)
         try c.encode(kpHoleIndex, forKey: .kpHoleIndex)
-        // Kolonnen finnes først etter sql/015. Uten flagget sendes den ikke.
-        try c.encodeIfPresent(venue, forKey: .venue)
-        // Kolonnen finnes først etter sql/029. Uten flagget sendes den ikke.
-        if includesTee { try c.encode(teeID, forKey: .teeID) }
+        try c.encode(venue, forKey: .venue)
+        try c.encode(teeID, forKey: .teeID)
         // Kolonnene finnes først etter sql/047. Uten dem sendes de ikke.
         if includesRules {
             try c.encode(counts, forKey: .counts)

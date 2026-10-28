@@ -144,7 +144,7 @@ struct DeltakerLenkeTests {
     @Test func klubbturneringensTekster() {
         let target = InviteTarget.competition(name: "Klubbmesterskapet", clubName: "Hauger GK")
         let code = InviteCode("ABCDEFGH23")!
-        let text = target.shareText(code, universal: true)
+        let text = target.shareText(code)
         #expect(text.contains("Klubbmesterskapet"))
         #expect(text.contains("https://dashdash18.com/konkurranse/ABCDEFGH23"))
         #expect(target.help.contains("60 dager"))

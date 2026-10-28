@@ -9,7 +9,7 @@ struct AppRoot: View {
     /// konkurranse (`dashdash://konkurranse/KODE`, fase 15). Venter til du er logget inn, og huskes
     /// på telefonen til den er brukt (`PendingLinkStore`), også om iOS lukker appen imens.
     @State private var pendingLink: AppLink? = PendingLinkStore.appLinks.load().flatMap {
-        AppLink.parse($0, rounds: LooseRoundsFeature.isEnabled, competitions: CompetitionsFeature.isActive)
+        AppLink.parse($0, rounds: LooseRoundsFeature.isEnabled)
     }
     /// Kjøp i appen (fase 17). Lages per innlogging når `PurchaseFeature` er på; ellers nil.
     @State private var purchases: PurchaseService?
@@ -130,9 +130,8 @@ extension AppRoot {
         Task { await service.refreshEntitlements() }
     }
 
-    /// En invitasjonslenke: `dashdash://…`, eller `https://dashdash18.com/…` når universelle lenker er på.
+    /// En invitasjonslenke: `dashdash://…` eller `https://dashdash18.com/…` (universelle lenker).
     private func open(_ url: URL) {
-        if UniversalLink.appURL(url) != nil, !UniversalLinksFeature.isEnabled { return }
         if let invite = ClubInvite(url: url) {
             PendingClubInviteStore().save(invite)
             pendingClubInvite = invite
@@ -143,8 +142,7 @@ extension AppRoot {
             pendingFollow = follow
             return
         }
-        guard let link = AppLink.parse(url, rounds: LooseRoundsFeature.isEnabled,
-                                       competitions: CompetitionsFeature.isActive) else { return }
+        guard let link = AppLink.parse(url, rounds: LooseRoundsFeature.isEnabled) else { return }
         PendingLinkStore.appLinks.save(url)
         pendingLink = link
     }
@@ -282,13 +280,11 @@ struct ClubGate: View {
         }
     }
 
-    /// Lagrer valget på telefonen og godtar vilkårene på serveren (019, når moderering er på).
+    /// Lagrer valget på telefonen og godtar vilkårene på serveren (019).
     private func choose(_ next: AppHomeChoice) {
         choices.save(next, userID: user.id)
         choice = next
-        if ModerationFeature.isEnabled {
-            let service = ModerationService(client: services.client)
-            Task { try? await service.acceptTerms() }
-        }
+        let service = ModerationService(client: services.client)
+        Task { try? await service.acceptTerms() }
     }
 }

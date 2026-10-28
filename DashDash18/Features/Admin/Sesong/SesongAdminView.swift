@@ -51,7 +51,7 @@ struct SesongLandingView: View {
 
     private func reload() async {
         await model.load()
-        if CompetitionsFeature.isActive { await competitions.load() }
+        await competitions.load()
     }
 
     @ViewBuilder private var content: some View {
@@ -131,7 +131,7 @@ struct AlleTurneringerView: View {
             .newTournamentSheet(isPresented: $showsNew, seasons: model, competitions: competitions)
             .refreshable {
                 await model.load()
-                if CompetitionsFeature.isActive { await competitions.load() }
+                await competitions.load()
             }
     }
 }

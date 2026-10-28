@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct DashDash18App: App {
-    /// Tar imot APNs-tokenet (fase 8). Gjør ingenting når `PushFeature` er av.
+    /// Tar imot APNs-tokenet (fase 8).
     @UIApplicationDelegateAdaptor(PushAppDelegate.self) private var pushDelegate
     private let services = Result { () throws(AppConfig.LoadError) -> AppServices in
         AppServices(config: try AppConfig.load())

@@ -6,9 +6,9 @@ nonisolated struct CourseListItem: Equatable, Identifiable, Sendable {
     var course: CourseRow
     /// Sortert på hullnummer.
     var holes: [CourseHoleRecord]
-    /// `courses.kind` når den leses (sql/016, `CourseKindFeature`), ellers nil.
+    /// `courses.kind` når den leses (sql/016), ellers nil.
     var storedKind: CourseKind?
-    /// Teene som vises (sql/029, `SlopeNoFeature`), i rekkefølge. Tom før 029, og på simulatorbaner.
+    /// Teene som vises (sql/029), i rekkefølge. Tom før 029, og på simulatorbaner.
     var tees: [CourseTeeRow]
     /// Hentet fra slope.no (`courses.source`) og spilt direkte (fase 20b, sql/030): ingen kan rette den
     /// i appen, og den vises med kilde-merke og kreditering.

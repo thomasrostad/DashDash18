@@ -14,7 +14,6 @@ struct AppTabTests {
             == ["Hjem", "Spill", "Tavla", "Arrangør", "Deg"])
         #expect(!AppTab.tabs(looseRounds: true, isOrganizer: false).contains(.arrangor))
         #expect(AppTab.tabs() == AppTab.tabs(looseRounds: LooseRoundsFeature.isEnabled))
-        #expect(!LooseRoundsFeature.isEnabled || FoundationFeature.isEnabled)
     }
 
     @Test func hverFaneHarIkon() {

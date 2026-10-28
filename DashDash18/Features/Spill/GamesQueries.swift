@@ -3,7 +3,7 @@ import GolfgutuCore
 import Supabase
 
 /// Spørringene for spill på runden (`sql/020_spill.sql`). Lesing direkte (RLS via deltakelse),
-/// skriving bare via RPC-ene. Kalles ikke før `GamesFeature.isEnabled` er på.
+/// skriving bare via RPC-ene.
 enum GamesQueries {
     /// Spillene i runden med deltakere, markeringer og oppgjør.
     static func load(client: SupabaseClient, roundID: UUID) async throws -> GamesInput {

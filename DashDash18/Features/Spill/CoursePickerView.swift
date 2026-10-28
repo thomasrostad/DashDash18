@@ -22,7 +22,7 @@ struct CoursePickerView: View {
 
     /// Hentede baner med hull (fase 20b), bare når en bane velges til en runde.
     private var catalog: SlopeCatalogModel? {
-        guard onSelect != nil, let catalog = model.slopeCatalog, catalog.usesHoles else { return nil }
+        guard onSelect != nil, let catalog = model.slopeCatalog else { return nil }
         return catalog
     }
 
@@ -121,7 +121,7 @@ struct CoursePickerView: View {
                          ? "Viser de første \(SlopeCourseSearch.pickerLimit) av \(matching.count). Skriv navnet eller stedet for å finne flere."
                          : matching.isEmpty ? "Ingen baner med hull fra slope.no passer søket."
                          : "Ekte baner med par, indeks og lengde per tee. Du velger tee etterpå.")
-                SlopeNoCreditLink(usesHoles: true)
+                SlopeNoCreditLink()
             }
         }
     }

@@ -1,16 +1,5 @@
 import Foundation
 
-/// Flere konkurranser samtidig (fase 15): liga, cup og morroturnering ved siden av jakkeracet,
-/// «Teller også i …» i hurtigstarten og ny løs runde, konkurransevelger på Tavla og morrokvelder
-/// på Kveld. Krever `sql/022_konkurranser.sql` (kjørt på test) og `FoundationFeature` (017). Med
-/// flagget av er appen som før fase 15.
-nonisolated enum CompetitionsFeature {
-    static let isEnabled = true
-
-    /// Begge flaggene må være på.
-    static var isActive: Bool { isEnabled && FoundationFeature.isEnabled }
-}
-
 /// Betaling for å kjøre en turnering (besluttet 07.10.2026): liga og cup krever kjøp i appen
 /// (sql/023, `competitions_require_purchase`). Morroturneringer, sesongen og spill på runden er
 /// gratis. Med `PurchaseFeature` av er alt låst opp, som før. Ren logikk; StoreKit ligger i

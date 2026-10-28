@@ -11,8 +11,8 @@ import GolfgutuCore
 nonisolated enum LooseRoundsFeature {
     /// `sql/018_lose_runder.sql` er kjørt på test.
     static let schemaReady = true
-    /// Krever fundamentet (017) og 018.
-    static let isEnabled = FoundationFeature.isEnabled && schemaReady
+    /// Krever 018 (fundamentet, 017, er alltid på).
+    static let isEnabled = schemaReady
 }
 
 /// Regelsettet for en løs runde. Den hører ikke til en sesong, så malen gjelder (Golfgutu-oppsettet),

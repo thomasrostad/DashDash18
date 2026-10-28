@@ -37,7 +37,7 @@ struct ClubInviteLinkTests {
 
     @Test func klubblenkerErIkkeRundelenker() throws {
         let link = try #require(URL(string: "dashdash://klubb/02E5172C87"))
-        #expect(AppLink.parse(link, rounds: true, competitions: true) == nil)
+        #expect(AppLink.parse(link, rounds: true) == nil)
     }
 }
 
@@ -192,7 +192,7 @@ struct PendingClubInviteStoreTests {
 struct InviteQRTests {
     @Test func qrKodeForLenken() throws {
         let invite = try #require(ClubInvite(code: "02E5172C87"))
-        let image = try #require(QRCode.image(for: invite.shareURL(universal: true).absoluteString))
+        let image = try #require(QRCode.image(for: invite.shareURL().absoluteString))
         #expect(image.size.width >= 200 && image.size.width == image.size.height)
     }
 }

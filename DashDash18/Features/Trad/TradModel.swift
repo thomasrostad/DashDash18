@@ -48,7 +48,7 @@ final class TradModel {
     private(set) var avatarURLs = TradSignedURLCache()
     /// Medlem → innlogging, så en blokkering (fase 17) treffer alle meldingene til personen.
     private(set) var userForMember: [UUID: UUID] = [:]
-    /// Det som er skjult for deg: blokkerte og meldinger du har rapportert (`ModerationFeature`).
+    /// Det som er skjult for deg: blokkerte og meldinger du har rapportert (sql/019).
     private(set) var moderation = ModerationFilter()
     /// Realtime-kanalen er oppe.
     private(set) var isLive = false

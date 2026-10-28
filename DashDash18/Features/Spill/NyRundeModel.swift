@@ -75,12 +75,12 @@ final class NyRundeModel {
 
     // MARK: «Teller også i …» (fase 15)
 
-    /// Konkurransene runden kan telle i. Nil når `CompetitionsFeature` er av.
+    /// Konkurransene runden kan telle i. Nil til de er hentet.
     private(set) var links: CompetitionLinkModel?
 
     /// Henter konkurransene du styrer. `access` har klubbmedlemskapet ditt når appen har en klubb.
     func prepareLinks(access: CompetitionAccess?, clubID: UUID?) async {
-        guard CompetitionsFeature.isActive, let client, links == nil else { return }
+        guard let client, links == nil else { return }
         let model = CompetitionLinkModel(client: client,
                                          access: access ?? CompetitionAccess(profileID: userID, memberships: []))
         links = model

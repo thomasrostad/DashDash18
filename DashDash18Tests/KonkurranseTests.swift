@@ -333,11 +333,6 @@ import Testing
 // MARK: - Radene mot kolonnenavnene i 017
 
 @MainActor struct FundamentRaderTests {
-    /// 017 er kjørt på test (07.10.2026, kontrollen 14 av 14).
-    @Test func flaggetErPaa() {
-        #expect(FoundationFeature.isEnabled)
-    }
-
     @Test func konkurranseDekodesFraDatabasen() throws {
         let json = """
         {"id": "00000000-0000-0000-0000-000000007000", "kind": "season", "name": "Jakkeracet 2026",

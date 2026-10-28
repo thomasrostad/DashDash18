@@ -5,8 +5,7 @@ import SwiftUI
 
 /// Baner, tees og hull fra slope.no uten nett (`-DDDesignScreen slopesok`, `slopebane`, `teevalg`,
 /// `losnytee`, `hurtigstarttee`, og fra fase 20b `slopevelg` og `slopeklubb`). Navn, steder, tees og hull
-/// er ekte, fra slope.no-eksporten 08.10.2026. Skjermprøvene viser hullene (fase 20b) selv om
-/// `SlopeNoFeature.usesHoles` står av.
+/// er ekte, fra slope.no-eksporten 08.10.2026. Skjermprøvene viser hullene (fase 20b).
 enum SlopeNoSamples {
     static let losbyID = UUID()
     static let helsinkiID = UUID()
@@ -85,7 +84,7 @@ enum SlopeNoSamples {
     /// Søket med hullene i bruk (fase 20b).
     static var catalog: SlopeCatalogModel {
         SlopeCatalogModel(preview: courses, tees: [losbyID: losbyTees(holes: true), helsinkiID: helsinkiTees()],
-                          items: [losbySourceItem()], usesHoles: true)
+                          items: [losbySourceItem()])
     }
 
     /// «Ny bane» etter at Helsingin Golfklubi (uten hull) er hentet fra slope.no: navn, tees og rating,

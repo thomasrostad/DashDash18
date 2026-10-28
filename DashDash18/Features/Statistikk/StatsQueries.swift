@@ -10,7 +10,7 @@ nonisolated enum StatsScope: Equatable, Hashable, Sendable {
     case member(memberID: UUID, clubID: UUID, clubName: String)
 
     var includesLoose: Bool {
-        if case .me = self { return FoundationFeature.isEnabled }
+        if case .me = self { return true }
         return false
     }
 }

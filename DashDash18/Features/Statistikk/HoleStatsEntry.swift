@@ -119,7 +119,7 @@ struct HoleStatsSlot: View {
     @State private var model: HoleStatsEntryModel?
 
     var body: some View {
-        if StatsFeature.isEnabled, HoleStatsSetting().isOn(for: userID) {
+        if HoleStatsSetting().isOn(for: userID) {
             Group {
                 if let model {
                     HoleStatsEntryRow(par: par, holeNumberText: nil,

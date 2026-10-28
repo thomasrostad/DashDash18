@@ -486,9 +486,8 @@ import Testing
         #expect(q.p_club_id == nil && q.p_member_ids.isEmpty && !q.p_signup_open && q.p_starts_on == "2026-10-07")
     }
 
-    /// 022 og 023 er kjørt på test (08.10.2026); kjøp er fortsatt av.
+    /// 023 er kjørt på test (08.10.2026); kjøp er fortsatt av.
     @Test func flaggene() {
-        #expect(CompetitionsFeature.isEnabled)
         #expect(!PurchaseFeature.isEnabled)
         // Med kjøp av er alt låst opp, som før.
         #expect(CompetitionPurchase.isUnlocked(kind: .cup, clubID: nil, userID: F.me, entitlements: []))
@@ -671,12 +670,11 @@ nonisolated private struct FakePurchaseBackend: PurchaseBackend {
         let code = try #require(InviteCode("ABCDEFGH23"))
         let round = try #require(URL(string: "dashdash://runde/ABCDEFGH23"))
         let competition = try #require(URL(string: "dashdash://konkurranse/ABCDEFGH23"))
-        #expect(AppLink.parse(round, rounds: true, competitions: true) == .round(code))
-        #expect(AppLink.parse(competition, rounds: true, competitions: true) == .competition(code))
-        // Hver lenke virker bare med flagget sitt.
-        #expect(AppLink.parse(round, rounds: false, competitions: true) == nil)
-        #expect(AppLink.parse(competition, rounds: true, competitions: false) == nil)
-        #expect(AppLink.parse(try #require(URL(string: "dashdash://login-callback")), rounds: true, competitions: true) == nil)
+        #expect(AppLink.parse(round, rounds: true) == .round(code))
+        #expect(AppLink.parse(competition, rounds: true) == .competition(code))
+        // Rundelenken virker bare med flagget sitt.
+        #expect(AppLink.parse(round, rounds: false) == nil)
+        #expect(AppLink.parse(try #require(URL(string: "dashdash://login-callback")), rounds: true) == nil)
         #expect(AppLink.round(code).id != AppLink.competition(code).id)
     }
 

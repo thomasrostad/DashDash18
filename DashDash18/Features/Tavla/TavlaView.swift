@@ -7,12 +7,8 @@ struct TavlaView: View {
 
     var body: some View {
         if let context {
-            if CompetitionsFeature.isActive {
-                // Fase 15: velger mellom jakkeracet og de andre konkurransene, og lista over dem.
-                TavlaCompetitions(model: CompetitionsModel(context: context)) {
-                    TavlaContent(model: TavlaModel(context: context))
-                }
-            } else {
+            // Fase 15: velger mellom jakkeracet og de andre konkurransene, og lista over dem.
+            TavlaCompetitions(model: CompetitionsModel(context: context)) {
                 TavlaContent(model: TavlaModel(context: context))
             }
         } else {

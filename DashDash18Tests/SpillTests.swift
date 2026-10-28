@@ -42,11 +42,6 @@ struct SpillTests {
             marks: marks, results: results)
     }
 
-    /// 020 er kjørt på test (07.10.2026).
-    @Test func flagget() {
-        #expect(GamesFeature.isEnabled)
-    }
-
     // MARK: Kortene
 
     @Test func skinsUnderveis() throws {

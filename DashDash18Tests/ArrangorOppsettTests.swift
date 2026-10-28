@@ -101,11 +101,6 @@ struct BanetypeTests {
         #expect(BanerFixtures.item(pars: [], external: nil).kind == .simulator)
     }
 
-    /// 016 er kjørt på test (07.10.2026).
-    @Test func flaggetErPaaEtter016() {
-        #expect(CourseKindFeature.isEnabled)
-    }
-
     /// Hurtigstarten viser banene som passer stedet, og beholder valgt bane.
     @Test func hurtigstartenFiltrererBaneneEtterSted() {
         func bane(_ kind: CourseKind) -> CourseListItem {

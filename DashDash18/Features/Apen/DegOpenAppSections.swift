@@ -19,7 +19,7 @@ struct DegOpenAppSections: View {
             DegCalendarBillsSections(client: client, user: user,
                                      showsCalendar: club?.memberships.contains { $0.status == .active } == true)
         }
-        if ModerationFeature.isEnabled, let client {
+        if let client {
             Section {
                 NavigationLink { BlockedUsersView(service: ModerationService(client: client)) } label: {
                     Label("Blokkerte", systemImage: "hand.raised")
@@ -39,7 +39,7 @@ struct DegOpenAppSections: View {
                 DDFooter("Ingen reklame og ingen sporing. Dataene ligger hos Supabase i EU.")
             }
         }
-        if AccountDeletionFeature.isEnabled, let client {
+        if let client {
             Section {
                 Button("Slett konto …", role: .destructive) { showsDeletion = true }
                     .foregroundStyle(Color.ddRustText)

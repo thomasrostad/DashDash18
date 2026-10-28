@@ -45,7 +45,6 @@ enum LooseRoundQueries {
 
     /// Teen du brukte sist på banen i en løs runde (sql/029), eller nil.
     static func previousTeeID(client: SupabaseClient, courseID: UUID, userID: UUID) async throws -> UUID? {
-        guard SlopeNoFeature.isEnabled else { return nil }
         struct Row: Decodable {
             let teeID: UUID?
             enum CodingKeys: String, CodingKey { case teeID = "tee_id" }

@@ -5,12 +5,6 @@ import GolfgutuCore
 // runder uten klubb, deltakere (profil eller gjest), konkurranser og hvilke runder som teller.
 // Kolonnenavnene fra databasen står i CodingKeys, som i `Rows.swift`.
 
-/// Fundamentet (sql/017, kjørt på test). Når det er på, hentes profiler, løse runder og
-/// konkurranser (fase 13 og 15). Av: appen oppfører seg som før 017.
-nonisolated enum FoundationFeature {
-    static let isEnabled = true
-}
-
 /// Én person per innlogging (`profiles`). `id` er innloggingens id (`auth.users.id`), den samme som
 /// `club_members.user_id`.
 nonisolated struct ProfileRow: Codable, Equatable, Identifiable, Sendable {
@@ -187,7 +181,7 @@ nonisolated struct CompetitionRow: Codable, Equatable, Identifiable, Sendable {
 
     static let columns = "id, kind, name, club_id, owner_id, season_id, status, entry, rules, starts_on, ends_on, "
         + "is_main, requires_purchase, entitlement_id"
-    /// Med åpen påmelding. Krever 022 (`CompetitionsFeature`). Med «Spill når det passer» når 042 er kjørt.
+    /// Med åpen påmelding. Krever 022. Med «Spill når det passer» når 042 er kjørt.
     static let columnsWithSignup = columns + ", signup_open" + (TimeWindowFeature.isEnabled ? ", auto_count" : "")
 
     /// Spilles når det passer i perioden (sql/042).

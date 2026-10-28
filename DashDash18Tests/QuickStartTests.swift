@@ -95,17 +95,12 @@ struct GroupTermTests {
         #expect(draft.externalHandicap)
     }
 
-    @Test func stedetSendesBareMedFlagget() throws {
+    @Test func stedetSendes() throws {
         var draft = newDraft()
         draft.setVenue(.course, rules: .golfgutu)
-        let off = try JSONSerialization.jsonObject(
-            with: JSONEncoder().encode(RoundWrite(draft: draft, clubID: club, course: nil, includeVenue: false))) as? [String: Any]
-        #expect(off?["venue"] == nil)
         let on = try JSONSerialization.jsonObject(
-            with: JSONEncoder().encode(RoundWrite(draft: draft, clubID: club, course: nil, includeVenue: true))) as? [String: Any]
+            with: JSONEncoder().encode(RoundWrite(draft: draft, clubID: club, course: nil))) as? [String: Any]
         #expect(on?["venue"] as? String == "course")
-        // Uten flagget er standarden av.
-        #expect(RoundWrite(draft: draft, clubID: club, course: nil).venue == (VenueFeature.isEnabled ? "course" : nil))
     }
 
     @Test func lagretKladdHuskerStedet() {

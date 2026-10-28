@@ -271,16 +271,16 @@ nonisolated struct RoundRow: Codable, Equatable, Identifiable, Sendable {
     var parConfirmedAt: Date?
     var startedAt: Date?
     var lockedAt: Date?
-    /// `simulator` eller `course` (sql/015). Hentes bare når `VenueFeature` er på; `nil` = simulator.
+    /// `simulator` eller `course` (sql/015). `nil` = simulator.
     var venue: String? = nil
     /// Teen runden spilles fra, med navnet og CR/slope slik de var ved start (sql/029,
-    /// `rounds_tee_snapshot`). Hentes bare når `SlopeNoFeature` er på; tomme = banens tall gjelder.
+    /// `rounds_tee_snapshot`). Tomme = banens tall gjelder.
     var teeID: UUID? = nil
     var teeName: String? = nil
     var courseRating: Double? = nil
     var slopeRating: Int? = nil
-    /// Teens par, frosset ved start når teen har egne hull (sql/030, `rounds_tee_snapshot`). Hentes bare
-    /// når `SlopeNoFeature.usesHoles` er på; tom = banens par (summen av hullene) gjelder.
+    /// Teens par, frosset ved start når teen har egne hull (sql/030, `rounds_tee_snapshot`). Tom = banens
+    /// par (summen av hullene) gjelder.
     var teePar: Int? = nil
     /// Tabellreglene på runden (sql/047). Hentes bare når kolonnene finnes (`RoundRulesFeature`);
     /// nil = standardverdien (teller, ingen poengtabell, ingen skjulte hull, vanlig runde).
@@ -335,18 +335,15 @@ nonisolated struct RoundRow: Codable, Equatable, Identifiable, Sendable {
         case playoffHoles = "playoff_holes"
     }
 
-    /// `venue` er med bare når sql/015 er kjørt (`VenueFeature`); før det finnes ikke kolonnen.
-    /// Teen og tallene (sql/029) bare når `SlopeNoFeature` er på, teens par (sql/030) bare med `usesHoles`.
+    /// Med `venue` (sql/015), teen og tallene (sql/029) og teens par (sql/030).
     /// Tabellreglene (sql/047) bare når `RoundRulesFeature.isAvailable` (kolonnene finnes).
     static var columns: String { baseColumns + (RoundRulesFeature.isAvailable ? ", " + rulesColumns : "") }
 
     static let baseColumns = """
         id, club_id, event_id, course_id, round_no, name, status, hole_count, first_hole, tee_time, format, \
         handicap_allowance, external_handicap, weight, ld_enabled, ld_hole_index, kp_enabled, kp_hole_index, \
-        cut_rule, cut_after, par_confirmed_by, par_confirmed_at, started_at, locked_at
-        """ + (VenueFeature.isEnabled ? ", venue" : "")
-        + (SlopeNoFeature.isEnabled ? ", " + teeColumns : "")
-        + (SlopeNoFeature.isEnabled && SlopeNoFeature.usesHoles ? ", " + teeParColumn : "")
+        cut_rule, cut_after, par_confirmed_by, par_confirmed_at, started_at, locked_at, venue
+        """ + ", " + teeColumns + ", " + teeParColumn
 
     /// sql/047.
     static let rulesColumns = "counts, points_table, hide_last_holes, kind, playoff_for, playoff_holes"

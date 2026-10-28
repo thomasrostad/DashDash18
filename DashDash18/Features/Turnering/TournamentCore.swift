@@ -9,8 +9,8 @@ nonisolated enum TournamentCoreFeature {
     /// På siden 09.10.2026: sql/032 er kjørt på test (kontrollen 10 av 10, paritet identisk).
     static let isEnabled = true
 
-    /// Krever også konkurransene (017/022).
-    static var isActive: Bool { isEnabled && CompetitionsFeature.isActive }
+    /// Samme som `isEnabled` (konkurransene, 017/022, er alltid på).
+    static var isActive: Bool { isEnabled }
 }
 
 // MARK: - Turneringsvelger

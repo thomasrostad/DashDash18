@@ -142,7 +142,7 @@ enum HomeFeedQueries {
         }
 
         // Turneringene, og tabellgrunnlaget for de private.
-        if CompetitionsFeature.isActive, let overview = try? await CompetitionQueries.overview(client: client) {
+        if let overview = try? await CompetitionQueries.overview(client: client) {
             // Deltakerradene (sql/059): turneringer i klubber du ikke er medlem i, men er påmeldt.
             var participations: [Participation] = []
             if let profile = viewer.profileID {
@@ -167,14 +167,12 @@ enum HomeFeedQueries {
 
         // Koblingene og rundenavnene for det som er hentet.
         let roundIDs = Array(Set(raw.activity.compactMap(\.roundID) + raw.rounds.map(\.round.id)))
-        if CompetitionsFeature.isActive {
-            raw.links = (try? await chunked(roundIDs) { ids in
-                try await client.from("competition_rounds")
-                    .select(CompetitionQueries.linkColumns)
-                    .in("round_id", values: ids)
-                    .execute().value
-            }) ?? []
-        }
+        raw.links = (try? await chunked(roundIDs) { ids in
+            try await client.from("competition_rounds")
+                .select(CompetitionQueries.linkColumns)
+                .in("round_id", values: ids)
+                .execute().value
+        }) ?? []
         raw.roundLabels = (try? await labels(client: client, activity: raw.activity, known: raw.rounds)) ?? [:]
         return raw
     }

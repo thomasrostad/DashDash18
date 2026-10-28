@@ -1,7 +1,7 @@
 import Foundation
 import GolfgutuCore
 
-// Hull per tee fra slope.no (fase 20b, sql/030_slope_hull.sql, bak `SlopeNoFeature.usesHoles`).
+// Hull per tee fra slope.no (fase 20b, sql/030_slope_hull.sql).
 //
 // slope.no har par, indeks og lengde per hull på rundt to av tre tees. Par og indeks kan variere mellom
 // tees på samme bane (Valdres GK: par 73, 72 og 66), og lengden varierer alltid. Synken lagrer hullene per

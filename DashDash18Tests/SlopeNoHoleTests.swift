@@ -3,7 +3,7 @@ import GolfgutuCore
 import Testing
 @testable import DashDash18
 
-// Fase 20b: hull per tee fra slope.no (sql/030, `SlopeNoFeature.usesHoles`). Tallene er fra slope.no-
+// Fase 20b: hull per tee fra slope.no (sql/030). Tallene er fra slope.no-
 // eksporten 08.10.2026: Valdres Golfklubb (id 154) har par 73 fra «Svart 73» og par 66 fra «Grønn 66»,
 // Losby Østmork (id 16) har like par og indeks på alle tees, men ulik lengde.
 
@@ -57,13 +57,10 @@ private enum V {
 }
 
 struct SlopeNoHoleFlagTests {
-    @Test func hulleneErPåNårSqlOgSynkenHarGått() {
-        #expect(SlopeNoFeature.usesHoles == true)
-        #expect(RoundRow.columns.contains("tee_par") == SlopeNoFeature.usesHoles, "kolonnen hentes bare med flagget")
-        #expect(StatsRoundRow.columns.contains("tee_par") == SlopeNoFeature.usesHoles)
-        #expect(SlopeNoCredit.text == SlopeNoCredit.text(usesHoles: SlopeNoFeature.usesHoles))
-        #expect(SlopeNoCredit.text(usesHoles: false) == "Slope og course rating fra slope.no")
-        #expect(SlopeNoCredit.text(usesHoles: true) == "Hull, slope og course rating fra slope.no")
+    @Test func teensParHentesOgKrediteringenNevnerHull() {
+        #expect(RoundRow.columns.contains("tee_par"))
+        #expect(StatsRoundRow.columns.contains("tee_par"))
+        #expect(SlopeNoCredit.text == "Hull, slope og course rating fra slope.no")
         #expect(RoundRow.teeParColumn == "tee_par")
     }
 }
@@ -293,12 +290,10 @@ struct SlopeNoCatalogHoleTests {
         #expect(SlopeCourseSearch.pickerDetail(rows[0]) == "Ekte bane · Aurdal, Norge")
     }
 
-    @Test func katalogenViserBareSpillbareNarHulleneBrukes() async throws {
+    @Test func katalogenViserBareSpillbare() async throws {
         let rows = [SlopeCourseRow(id: V.id(90), name: "Valdres Golfklubb", country: "NO", hasHoles: true),
                     SlopeCourseRow(id: V.id(91), name: "A6 Golfklubb", country: "SE", hasHoles: false)]
-        let off = SlopeCatalogModel(preview: rows, tees: [:])
-        #expect(off.playable.isEmpty, "uten hull: ingen spilles direkte")
-        let on = SlopeCatalogModel(preview: rows, tees: [:], items: [V.item], usesHoles: true)
+        let on = SlopeCatalogModel(preview: rows, tees: [:], items: [V.item])
         #expect(on.playable.map(\.id) == [V.id(90)])
         let item = try await on.item(for: SlopeCourseRow(id: V.course, name: "Valdres Golfklubb"))
         #expect(item.isFromSource)
@@ -306,10 +301,8 @@ struct SlopeNoCatalogHoleTests {
     }
 
     @Test func forklaringeneSierHvaSomSkjer() {
-        #expect(SlopeCourseSearch.footer(playing: false, usesHoles: false)
-                == "Navn, tees, course rating og slope fylles inn. Par og indeks per hull står ikke her: de leser du av scorekortet.")
-        #expect(SlopeCourseSearch.footer(playing: false, usesHoles: true).hasPrefix("Har banen hull"))
-        #expect(SlopeCourseSearch.footer(playing: true, usesHoles: true).hasPrefix("Banene med par"))
+        #expect(SlopeCourseSearch.footer(playing: false).hasPrefix("Har banen hull"))
+        #expect(SlopeCourseSearch.footer(playing: true).hasPrefix("Banene med par"))
         #expect(SlopeCourseSearch.playableNotice.contains("trenger ikke legges inn"))
     }
 }

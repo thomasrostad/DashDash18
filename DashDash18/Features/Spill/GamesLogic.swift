@@ -5,11 +5,6 @@ import GolfgutuCore
 // (`Games.evaluate`) og tekstene på kortene og i arket. Ren logikk, uten nettverk og SwiftUI.
 // Regnestykket (stilling, sluttresultat og oppgjør i hele poeng) ligger i GolfgutuCore.
 
-/// Spill på runden (krever 020, kjørt på test). Med flagget av kaller ingenting RPC-ene i 020.
-nonisolated enum GamesFeature {
-    static let isEnabled = true
-}
-
 // MARK: - Radene
 
 /// `round_games`. Innstillingene leses med malen for typen som grunnlag.
