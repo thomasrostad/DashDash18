@@ -259,13 +259,53 @@ struct ForingLagkameratTests {
         #expect(Set(sub?.entries.map(\.memberID) ?? []) == Set([F.anders, F.bjorn].map(id)))
     }
 
-    /// Ett kort per spiller (fourball): markøren fører som før, lagkameraten ikke.
-    @Test func ettKortPerSpillerSomFoer() {
+    /// Ett kort per spiller (fourball), sql/074: lagkameratene fører for hverandre, også med markør i
+    /// båsen. Lag 1 er Anders og Bjørn, lag 2 Cato og Dag, i bås 1 med Anders som markør.
+    @Test func fourballLagkameraterFoererForHverandre() {
         let g = RoundGame(F.snapshot(Self.players { ($0 + 1) / 2 }, round: F.round(format: "fourball")))
+        let viewer = F.viewer(F.bjorn)
+        #expect(g.canScore(viewer, for: id(F.anders)))
+        #expect(g.canScore(viewer, for: id(F.bjorn)))
+        #expect(!g.canScore(viewer, for: id(F.cato)))
+        #expect(!g.isOnTeamCard(id(F.bjorn), with: id(F.anders)))
+        #expect(g.isTeamScorer(id(F.bjorn), for: id(F.anders)))
+        #expect(g.scoringTitle(viewer: viewer).subtitle == "Du fører for laget ditt")
+        // Én rad per spiller i båsen; Bjørn fører sin egen og lagkameratens.
+        let card = g.card(hole: 0, drafts: HoleDrafts(), viewer: viewer)
+        #expect(card.rows.filter(\.editable).map(\.memberID) == [id(F.bjorn), id(F.anders)])
+        var drafts = HoleDrafts()
+        drafts[0, id(F.anders)] = 5
+        drafts[0, id(F.bjorn)] = 4
+        let sub = g.submission(hole: 0, drafts: drafts, viewer: viewer, recordedAt: Date())
+        #expect(Set(sub?.entries.map(\.memberID) ?? []) == Set([F.anders, F.bjorn].map(id)))
+        #expect(sub?.entries.first { $0.memberID == id(F.anders) }?.strokes == 5)
+        // Markøren fører fortsatt hele båsen.
+        #expect(g.canScore(F.viewer(F.anders), for: id(F.cato)))
+    }
+
+    /// `play.teammatesScore` av: markøren fører som før, lagkameraten ikke.
+    @Test func fourballUtenLagkameraterSomFoer() {
+        var s = F.snapshot(Self.players { ($0 + 1) / 2 }, round: F.round(format: "fourball"))
+        s.rules.play.teammatesScore = false
+        let g = RoundGame(s)
         #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.anders)))
         #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.bjorn)))
-        #expect(!g.isOnTeamCard(id(F.bjorn), with: id(F.anders)))
+        #expect(!g.isTeamScorer(id(F.bjorn), for: id(F.anders)))
         #expect(g.scoringTitle(viewer: F.viewer(F.bjorn)).subtitle == "Bås 1 · Anders fører")
+    }
+
+    /// En-mot-en (stableford med lagnummer, som Ryder Cup-singler): ingen lagkamerater, markøren som før.
+    @Test func enMotEnHarIngenLagkamerater() {
+        let g = RoundGame(F.snapshot(Self.players { ($0 + 1) / 2 }, round: F.round(format: "stableford")))
+        #expect(!g.isTeamScorer(id(F.bjorn), for: id(F.anders)))
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.anders)))
+    }
+
+    /// Lag med én ball (sql/071) fører lagets kort uansett valget.
+    @Test func lagkortetUansettValget() {
+        var s = F.snapshot(Self.players { $0 <= 4 ? 1 : 2 }, round: F.round(format: "scramble-4"))
+        s.rules.play.teammatesScore = false
+        #expect(RoundGame(s).canScore(F.viewer(F.bjorn), for: id(F.anders)))
     }
 
     /// Scramble uten lag (team_no mangler): markøren som før.

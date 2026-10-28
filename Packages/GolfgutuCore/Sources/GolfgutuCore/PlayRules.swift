@@ -1,9 +1,10 @@
 import Foundation
 
 // Føring og visning i runden (regelvern, inspirert av Golfify): maks slag per hull, låst kort etter
-// levering og hvor mange av de siste hullene som skjules. Golfgutu-oppsettet har standarden
-// (`PlayRules.standard`), som er slik PWA-en gjør det: ingen grense, ingen levering, og «skjul de
-// siste hullene» skjuler tre. Da skrives gruppen ikke, og JSON-en er som før. Se REGELSETT.md.
+// levering, hvor mange av de siste hullene som skjules, og om lagkamerater fører for hverandre.
+// Golfgutu-oppsettet har standarden (`PlayRules.standard`), som er slik PWA-en gjør det: ingen grense,
+// ingen levering, og «skjul de siste hullene» skjuler tre. Da skrives gruppen ikke, og JSON-en er som
+// før. Se REGELSETT.md.
 
 extension Ruleset {
     /// Høyeste antall slag som kan føres på et hull.
@@ -40,16 +41,22 @@ extension Ruleset {
         public var hiddenHoles: Int
         /// Shank (brutto firedobbel bogey eller verre) står i feeden, uten push (sql/073).
         public var shankPosts: Bool
+        /// I lagformer der hver spiller sin egen ball (fourball, sammenlagt lag), fører lagkameratene for
+        /// hverandre, også med markør i båsen (sql/074). Lag med én ball fører alltid lagets kort (sql/071).
+        /// En-mot-en: du fører ditt eget, eller markøren.
+        public var teammatesScore: Bool
 
         public init(maxStrokes: MaxStrokes = .off, lockSubmittedCards: Bool = false, hiddenHoles: Int = 3,
-                    shankPosts: Bool = false) {
+                    shankPosts: Bool = false, teammatesScore: Bool = true) {
             self.maxStrokes = maxStrokes
             self.lockSubmittedCards = lockSubmittedCards
             self.hiddenHoles = hiddenHoles
             self.shankPosts = shankPosts
+            self.teammatesScore = teammatesScore
         }
 
-        /// Golfgutu og alle regelsett fra før: ingen grense, ingen levering, tre skjulte hull, ingen shank.
+        /// Golfgutu og alle regelsett fra før: ingen grense, ingen levering, tre skjulte hull, ingen shank,
+        /// og lagkamerater fører for hverandre.
         public static let standard = PlayRules()
 
         /// Lovlige antall skjulte hull (`rounds.hide_last_holes` tar 0–9, og 0 er «av»).
@@ -136,7 +143,7 @@ extension Ruleset.MaxStrokes: Codable {
 }
 
 extension Ruleset.PlayRules: Codable {
-    private enum CodingKeys: String, CodingKey { case maxStrokes, lockSubmittedCards, hiddenHoles, shankPosts }
+    private enum CodingKeys: String, CodingKey { case maxStrokes, lockSubmittedCards, hiddenHoles, shankPosts, teammatesScore }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -145,5 +152,6 @@ extension Ruleset.PlayRules: Codable {
         lockSubmittedCards = try c.decodeIfPresent(Bool.self, forKey: .lockSubmittedCards) ?? s.lockSubmittedCards
         hiddenHoles = try c.decodeIfPresent(Int.self, forKey: .hiddenHoles) ?? s.hiddenHoles
         shankPosts = try c.decodeIfPresent(Bool.self, forKey: .shankPosts) ?? s.shankPosts
+        teammatesScore = try c.decodeIfPresent(Bool.self, forKey: .teammatesScore) ?? s.teammatesScore
     }
 }
