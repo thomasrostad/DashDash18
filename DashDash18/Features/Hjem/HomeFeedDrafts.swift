@@ -198,7 +198,7 @@ nonisolated struct HomeFeedDrafts: Sendable {
         let rows = game.bayenNaa(viewer: Viewer(memberID: me, isOrganizer: false))
         let mine = rows.first(where: \.isMe)
         var counts: [ScoreName: Int] = [:]
-        let handicap = game.handicap(me)
+        let handicap = game.isGrossForm ? 0 : game.handicap(me)
         for (index, gross) in game.scores(me) where game.holes.indices.contains(index) {
             let hole = game.holes[index]
             let name = Scoring.scoreName(par: hole.par, gross: gross, handicap: handicap, strokeIndex: hole.strokeIndex,
@@ -214,7 +214,9 @@ nonisolated struct HomeFeedDrafts: Sendable {
         return HomeMyRoundCard(
             roundID: s.round.id, isLoose: s.isLoose, title: s.course?.name ?? "Runde",
             subtitle: subtitle.isEmpty ? nil : subtitle,
-            points: mine.flatMap { $0.match == nil ? $0.total : nil },
+            // Par/bogey («+2») og match står som tekst; ellers tallet med enheten.
+            points: mine.flatMap { $0.match == nil && game.round.form.axes.scoring != .parBogey ? $0.total : nil },
+            unit: game.round.form.axes.scoring.higherIsBetter ? "poeng" : "slag",
             value: mine.map(MyRounds.value) ?? "–",
             place: mine?.place, placeText: mine?.place.map { "\($0). plass" }, ofText: of, marks: marks,
             insight: nil,

@@ -78,6 +78,22 @@ struct SpillformRundeTests {
         #expect(g.scorecardTotal(for: me) == "12 slag")
     }
 
+    /// Deling, «Mine runder», Hjem og Live Activity viser summen i formen («15 slag»), ikke stablefordpoeng.
+    @Test func flateneViserFormensSum() {
+        let g = game("slag-brutto", scores: [(F.anders, 0, 5), (F.anders, 1, 6), (F.anders, 2, 4),
+                                             (F.bjorn, 0, 4), (F.bjorn, 1, 5), (F.bjorn, 2, 3)])
+        let rows = g.bayenNaa(viewer: F.viewer(F.anders))
+        #expect(rows[0].resultText == "12 slag")
+        #expect(MyRounds.value(rows[1]) == "15 slag")
+        let live = g.liveActivityContent(for: F.viewer(F.anders))
+        #expect(live?.valueText == "15 slag")
+        #expect(live?.bayPlace == 2)
+        // Netto stableford: ingen egen tekst, poengene som før.
+        let stableford = game("stableford", scores: [(F.anders, 0, 5)])
+        #expect(stableford.liveActivityContent(for: F.viewer(F.anders))?.valueText == nil)
+        #expect(stableford.bayenNaa(viewer: F.viewer(F.anders)).first { $0.isMe }?.resultText.hasSuffix(" p") == true)
+    }
+
     /// «Bayen nå» i slagspill brutto: lavest sum først, og verdien i slag.
     @Test func bayenNaaLavestFoerst() {
         let g = game("slag-brutto", scores: [(F.anders, 0, 5), (F.anders, 1, 6), (F.anders, 2, 4),

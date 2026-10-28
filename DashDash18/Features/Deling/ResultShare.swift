@@ -74,10 +74,10 @@ nonisolated extension TavlaStandings {
 
 nonisolated extension ResultShare {
     /// Linjene fra «Bayen nå», i samme rekkefølge og med samme plass (ingen plass hull for hull).
-    /// Står raden i en hullmatch, deles stillingen; ellers poengsummen.
+    /// Står raden i en hullmatch, deles stillingen; ellers summen i formen (`BayenRow.resultText`).
     static func lines(from rows: [BayenRow]) -> [Line] {
         rows.map { row in
-            Line(place: row.place, name: row.name, value: row.match != nil ? row.value : "\(row.total) p",
+            Line(place: row.place, name: row.name, value: row.resultText,
                  isMe: row.isMe)
         }
     }

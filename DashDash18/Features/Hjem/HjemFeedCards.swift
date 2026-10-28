@@ -170,7 +170,7 @@ struct HjemMyRoundCardView: View {
                         .monospacedDigit()
                         .foregroundStyle(Color.ddInk)
                     if card.points != nil {
-                        Text("poeng")
+                        Text(card.unit)
                             .font(.ddCallout)
                             .foregroundStyle(Color.ddInkSecondary)
                     }

@@ -80,9 +80,12 @@ test("tabellen teller plasseringspoengene: to runder slagspill netto", () => {
   const rules = placementRules([10, 6, 4]);
   rules.table.counting = { unit: "round", best: null };
   const roster = ["a", "b", "c"].map((id) => makePlayer(id, id.toUpperCase()));
-  const board = new Season(roster, [round("slag-netto"), round("slag-netto", "slag-netto-2")], [], rules).jacketBoard();
+  const season = new Season(roster, [round("slag-netto"), round("slag-netto", "slag-netto-2")], [], rules);
+  const board = season.jacketBoard();
   assert.deepEqual(board.map((r) => r.player.id), ["b", "a", "c"]);
   assert.deepEqual(board.map((r) => r.total), [20, 12, 8]);
+  // Rundeoversikten på Tavla viser det runden ga i tabellen.
+  assert.deepEqual(asObject(season.tableRoundPoints(0)), { b: 10, a: 6, c: 4 });
 });
 
 test("Golfgutu skriver ikke de nye feltene, så JSON-en er som før", () => {

@@ -235,7 +235,8 @@ nonisolated struct BayenRow: Equatable, Identifiable, Sendable {
     let bay: Int?
     /// Plassen. Nil når runden avgjøres hull for hull: «1 opp» i match 1 og 3 er ikke 1. og 2. plass.
     let place: Int?
-    /// Stablefordsummen (laget: lagets sum). Par/bogey: hull vunnet minus hull tapt.
+    /// Stablefordsummen (laget: lagets sum). Par/bogey: hull vunnet minus hull tapt. Slagspill og
+    /// maksimumscore: slagene.
     let total: Int
     /// Stillingen i hullmatchen, eller nil når raden ikke står i en.
     let match: MatchStanding?
@@ -244,6 +245,11 @@ nonisolated struct BayenRow: Equatable, Identifiable, Sendable {
     let tone: MatchTone
     /// Poeng mot par så langt («2 p over par»), når runden går og rangeres på det. Ellers nil.
     var paceText: String? = nil
+    /// Summen i formen med enhet: «24 p», «72 slag», «+2» (par/bogey). Nil: poeng («\(total) p»).
+    var formTotal: String? = nil
+
+    /// Det som deles og står på Hjem: stillingen i en hullmatch, ellers summen i formen («24 p», «72 slag»).
+    var resultText: String { match != nil ? value : (formTotal ?? "\(total) p") }
     var id: UUID { members[0] }
     /// Den som åpnes i scorekortet.
     var memberID: UUID { members[0] }
@@ -375,7 +381,8 @@ nonisolated extension RoundGame {
                         : formText ? RoundCompetitionBoard.scoreText(Double(e.total), scoring: scoring)
                         : "\(e.total)" + (holeByHole ? " p" : ""),
                      tone: e.inMatch ? MatchTone(e.match) : .neutral,
-                     paceText: byPace ? Self.paceText(pace(total: e.total, thru: e.thru), thru: e.thru) : nil)
+                     paceText: byPace ? Self.paceText(pace(total: e.total, thru: e.thru), thru: e.thru) : nil,
+                     formTotal: formText ? RoundCompetitionBoard.scoreText(Double(e.total), scoring: scoring) : nil)
         }
     }
 }

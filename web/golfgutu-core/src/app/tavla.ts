@@ -449,7 +449,7 @@ export function makeRoundsGrid(
         toPar.push(total - par);
       }
     }
-    const points = order.map((i) => season.roundPoints(i).get(pid) ?? null);
+    const points = order.map((i) => season.tableRoundPoints(i).get(pid) ?? null);
     return {
       playerID: pid,
       name: row.name,

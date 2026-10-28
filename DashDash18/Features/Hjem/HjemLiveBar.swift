@@ -20,13 +20,13 @@ nonisolated enum HomeLiveBar {
         if let mine {
             if mine.thru > 0 { parts.append(standing(mine)) }
         } else if let leader, leader.thru > 0, leader.match == nil, leader.place != nil {
-            parts.append("\(leader.name) leder med \(leader.total) p")
+            parts.append("\(leader.name) leder med \(leader.resultText)")
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     private static func standing(_ row: BayenRow) -> String {
-        if row.match == nil, let place = row.place { return "du er \(place). med \(row.total) p" }
+        if row.match == nil, let place = row.place { return "du er \(place). med \(row.resultText)" }
         return "du står \(row.value.lowercased())"
     }
 

@@ -18,7 +18,8 @@ struct RoundLiveActivityWidget: Widget {
                         .padding(.leading, 4)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    RoundStat(label: "POENG", value: "\(state.points)", detail: "\(state.strokes) slag", alignment: .trailing)
+                    RoundStat(label: state.valueText == nil ? "POENG" : "SUM", value: state.valueText ?? "\(state.points)",
+                              detail: "\(state.strokes) slag", alignment: .trailing)
                         .padding(.trailing, 4)
                 }
                 DynamicIslandExpandedRegion(.center) {
@@ -48,7 +49,7 @@ struct RoundLiveActivityWidget: Widget {
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundStyle(WidgetPalette.gold)
             } compactTrailing: {
-                Text(state.matchText.map(RoundText.shortMatch) ?? "\(state.points) p")
+                Text(state.matchText.map(RoundText.shortMatch) ?? state.valueText ?? "\(state.points) p")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(state.matchText == nil ? WidgetPalette.onDark : RoundText.matchColor(state.matchTone))
@@ -100,7 +101,7 @@ struct RoundWatchView: View {
             }
             .font(.system(size: 12, weight: .semibold, design: .rounded))
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text("\(state.points)")
+                Text(state.valueText ?? "\(state.points)")
                     .font(.system(size: 30, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                 Text("p · \(state.strokes) slag")
@@ -146,7 +147,8 @@ struct RoundLockScreenView: View {
             }
             HStack(alignment: .bottom, spacing: 16) {
                 RoundStat(label: "HULL", value: "\(state.holeNumber)", detail: "\(state.holesPlayed)/\(state.holeCount) ført")
-                RoundStat(label: "POENG", value: "\(state.points)", detail: "\(state.strokes) slag")
+                RoundStat(label: state.valueText == nil ? "POENG" : "SUM", value: state.valueText ?? "\(state.points)",
+                          detail: "\(state.strokes) slag")
                 if let place = state.bayPlace, let count = state.bayCount {
                     RoundStat(label: state.bayNumber.map { "BÅS \($0)" } ?? "PLASS", value: "\(place)", detail: "av \(count)")
                 }
