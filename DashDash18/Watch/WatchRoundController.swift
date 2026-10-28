@@ -6,7 +6,8 @@ nonisolated enum WatchFeature {
     static var isEnabled: Bool { !KillSwitch.isOff("watch") }
 }
 
-/// Sender runden som går til klokka, og legger hull fra klokka i utboksen. `RundeModel` kaller
+/// Sender runden som går til klokka (Apple Watch, og Garmin via `GarminLink`), og legger hull fra
+/// klokka i utboksen. `RundeModel` kaller
 /// `sync` hver gang runden er bygd på nytt (henting, realtime, lagring), som for Live Activity.
 /// Feil tas stille: klokka er et tillegg, føringen på telefonen skal aldri stoppe av den.
 @MainActor
@@ -45,7 +46,7 @@ final class WatchRoundController {
         guard WatchFeature.isEnabled else { return }
         latest = (game, viewer)
         // Uten klokke med appen regnes ingenting (de fleste telefonene).
-        guard hasWatch else { return }
+        guard hasWatch || GarminLink.shared.isActive else { return }
         generation += 1
         let current = generation
         Task {
@@ -71,6 +72,7 @@ final class WatchRoundController {
         owesFreshRound = false
         lastRound = round
         send(round)
+        GarminLink.shared.publish(round)
     }
 
     /// Ved utlogging: klokka viser ingen runde.
@@ -79,6 +81,12 @@ final class WatchRoundController {
         generation += 1
         lastRound = nil
         send(nil)
+        GarminLink.shared.publish(nil)
+    }
+
+    /// En klokke er koblet til (Garmin): regn runden på nytt og send den.
+    func resync() {
+        activated()
     }
 
     /// Forbindelsen er klar (også etter bytte av klokke): send runden slik den er nå.

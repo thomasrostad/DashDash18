@@ -41,6 +41,9 @@ struct DegView: View {
             if let context {
                 StatsDegSection(context: context)
             }
+            if GarminFeature.isEnabled {
+                DegGarminSection()
+            }
             DegAppearanceSection()
             DegAccountSection(user: user)
             DegOpenAppSections(client: context?.client, user: user)

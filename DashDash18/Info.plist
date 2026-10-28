@@ -4,6 +4,8 @@
 <dict>
 	<key>AttenEnvironment</key>
 	<string>test</string>
+	<key>CFBundleDisplayName</key>
+	<string>Atten</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -22,8 +24,24 @@
 				<string>com.googleusercontent.apps.744774688757-54o064rp92konifkkhtt72n8ie8sfuqa</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>atten-garmin</string>
+			</array>
+		</dict>
 	</array>
 	<key>GIDClientID</key>
 	<string>744774688757-54o064rp92konifkkhtt72n8ie8sfuqa.apps.googleusercontent.com</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>gcm-ciq</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+	</array>
 </dict>
 </plist>

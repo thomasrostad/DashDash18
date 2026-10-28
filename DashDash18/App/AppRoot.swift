@@ -59,7 +59,10 @@ struct AppRoot: View {
         .environment(services.push)
         .environment(purchases)
         // Googles svar til innloggingen (`com.googleusercontent.apps.…`) går til GoogleSignIn, ikke til lenkene.
-        .onOpenURL { url in if !GIDSignIn.sharedInstance.handle(url) { open(url) } }
+        // Google-innlogging og Garmin Connect (klokkene som er valgt) svarer også med lenker.
+        .onOpenURL { url in
+            if !GIDSignIn.sharedInstance.handle(url), !GarminLink.shared.handle(url) { open(url) }
+        }
         // Universelle lenker (`https://dashdash18.com/…`) går samme vei som `dashdash://`.
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
             if let url = activity.webpageURL { open(url) }

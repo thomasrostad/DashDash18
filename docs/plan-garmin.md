@@ -2,7 +2,7 @@
 
 28.10.2026. Grunnlag: Thomas, 28.10.2026: «mange» i gjengen bruker Garmin. Bygger på klokkeappen for Apple Watch ([`plan-apple-watch.md`](plan-apple-watch.md), #235) og formatet `WatchRound` (`DashDash18/Watch/WatchRound.swift`).
 
-**Status:** plan, ingen kode skrevet. Kildene om Connect IQ er Garmins utviklersider og -forum (lenker nederst). Det som er usikkert, testes i steg 1 før noe annet bygges.
+**Status 29.10.2026:** steg 1 (prøven) er bygget, venter på test på ekte klokke. Garmin-appen ligger i [`garmin/`](../garmin/README.md) og bygger for 27 modeller (Fenix 6/7/8, Forerunner 945–970, Epix 2). Atten har Connect IQ Mobile SDK 1.8.0 (godkjent av Thomas 28.10.2026), `GarminLink` og «Garmin-klokke» under Deg, bare i test-bygg til appen er i Connect IQ Store. Bakgrunn: med bakgrunnsmodusen for Bluetooth kan iOS vekke Atten når klokka sender (Garmins SDK-dokumentasjon). Garmin-simulatoren viser bare hvitt på macOS 27.2 (også GolfFace), så designet er vist som skisser.
 
 ## Mål
 
