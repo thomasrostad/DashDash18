@@ -1,0 +1,4 @@
+project.manifest = manifest.xml
+
+# Vanlig utgave. demo.jungle bytter source-release med source-demo (prøvehull til skjermbilder).
+base.sourcePath = source;source-release

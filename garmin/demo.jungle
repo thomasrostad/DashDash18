@@ -1,0 +1,4 @@
+project.manifest = manifest.xml
+
+# Demoutgaven: et prøvehull i simulatoren, uten telefon. Bare til skjermbilder, aldri til butikken.
+base.sourcePath = source;source-demo

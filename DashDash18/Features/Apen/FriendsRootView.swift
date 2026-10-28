@@ -180,6 +180,9 @@ struct FriendsDegView: View {
             } footer: {
                 DDFooter("En klubb er en fast gjeng med terminliste, kvelder og en egen tavle. Rundene dine står uansett.")
             }
+            if GarminFeature.isEnabled {
+                DegGarminSection()
+            }
             DegAccountSection(user: user)
             DegOpenAppSections(client: client, user: user)
             DDSection("Om appen") {
