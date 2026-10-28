@@ -26,7 +26,11 @@ struct TurneringReglerTests {
     @Test func likAvstandGirOppsettetSomTellerDetSamme() {
         // Formene fra steg 7 kommer etter (bare som sesong i en klubb).
         #expect(RulesetSummary.candidates(for: .season, rules: .golfgutu)
-                == [.matchSeries, .stablefordSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam])
+                == [.matchSeries, .stablefordSeries, .strokeSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries,
+                    .teamVsTeam])
+        // Plassering: slagspill-serien først.
+        #expect(RulesetSummary.candidates(for: .season, rules: RulesetTemplate.strokeSeries.rules).first == .strokeSeries)
+        #expect(RulesetSummary.template(for: RulesetTemplate.strokeSeries.rules) == .strokeSeries)
         #expect(RulesetSummary.candidates(for: .league, rules: RulesetTemplate.stablefordSeries.rules)
                 == [.stablefordSeries, .matchSeries])
         #expect(RulesetSummary.candidates(for: .cup, rules: .golfgutu) == [.cup])

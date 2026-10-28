@@ -104,7 +104,7 @@ export interface ScheduleTemplate {
   venue: string | null;
 }
 
-export type SetupKind = "stablefordSeries" | "matchSeries" | "cup" | "fun" | "amerikanerSeries" | "kobenhavnerSeries" | "skinsSeries" | "teamVsTeam";
+export type SetupKind = "stablefordSeries" | "strokeSeries" | "matchSeries" | "cup" | "fun" | "amerikanerSeries" | "kobenhavnerSeries" | "skinsSeries" | "teamVsTeam";
 
 /** Turneringsmalen (kind = tournament). */
 export interface TournamentTemplate {
@@ -219,7 +219,7 @@ export function decodeTournamentTemplate(raw: unknown): TournamentTemplate {
     venue: str(s.venue),
   } : null;
   return {
-    template: oneOf(p.template, ["stablefordSeries", "matchSeries", "cup", "fun", "amerikanerSeries", "kobenhavnerSeries", "skinsSeries", "teamVsTeam"] as const),
+    template: oneOf(p.template, ["stablefordSeries", "strokeSeries", "matchSeries", "cup", "fun", "amerikanerSeries", "kobenhavnerSeries", "skinsSeries", "teamVsTeam"] as const),
     kind: oneOf(p.kind, ["season", "league", "cup", "fun"] as const),
     rules: obj(p.rules),
     schedule,

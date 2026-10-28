@@ -168,7 +168,17 @@ public struct Ruleset: Hashable, Sendable {
         /// Stablefordpoengene i runden (vektet), pluss sidepremiene. Matcher og trekanter gir ingen
         /// tabellpoeng.
         case stableford
+        /// Plasseringspoeng: plassen i runden etter formen (lavest slag i slagspill og maksimumscore,
+        /// flest poeng ellers) gir poeng etter `table.placementPoints` (vektet), pluss sidepremiene. Delt
+        /// plass deler poengene for plassene. Som `stableford` ellers: beste N, snitt og poengtabeller.
+        case placement
+
+        /// Tabellen teller runder (stableford eller plassering), ikke matcher.
+        public var countsRounds: Bool { self != .matches }
     }
+
+    /// Plasseringspoeng når regelsettet ikke har sin egen skala: 25, 20, 16, 13, 11, så 10 ned til 1.
+    public static let standardPlacementPoints: [Double] = [25, 20, 16, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 
     /// Tabellen (jakketavla).
     public struct TableRules: Hashable, Sendable {
@@ -201,12 +211,21 @@ public struct Ruleset: Hashable, Sendable {
         /// Amerikaner- og Københavnerpoeng; stableford for de andre formene, `FormPlay.tablePoints`).
         /// Av (Golfgutu): stablefordpoengene for alle former.
         public var formPoints: Bool
+        /// Med `pointsSource` `placement`: poengene for 1., 2., 3. plass osv. Plasser etter lista gir 0.
+        /// Tom: `Ruleset.standardPlacementPoints`.
+        public var placementPoints: [Double]
+
+        /// Skalaen som gjelder: regelsettets egen, ellers standarden.
+        public var effectivePlacementPoints: [Double] {
+            placementPoints.isEmpty ? Ruleset.standardPlacementPoints : placementPoints
+        }
 
         public init(matchPoints: MatchPoints, trianglePoints: [Double], counting: Counting,
                     stablefordCounting: Counting, tiebreaks: [Tiebreak], roundingStep: Double?,
                     pointsSource: TablePointsSource = .matches, minEvenings: Int? = nil,
                     aggregation: Aggregation = .sum, pointsTables: [String: PointsTable] = [:],
-                    tieRule: TieRule = .tiebreaks, formPoints: Bool = false) {
+                    tieRule: TieRule = .tiebreaks, formPoints: Bool = false, placementPoints: [Double] = []) {
+            self.placementPoints = placementPoints
             self.pointsSource = pointsSource
             self.matchPoints = matchPoints
             self.trianglePoints = trianglePoints
@@ -537,7 +556,7 @@ extension Ruleset: Codable {
 extension Ruleset.TableRules: Codable {
     private enum CodingKeys: String, CodingKey {
         case pointsSource, matchPoints, trianglePoints, counting, stablefordCounting, tiebreaks, roundingStep
-        case minEvenings, aggregation, pointsTables, tieRule, formPoints
+        case minEvenings, aggregation, pointsTables, tieRule, formPoints, placementPoints
     }
 
     public init(from decoder: Decoder) throws {
@@ -556,6 +575,7 @@ extension Ruleset.TableRules: Codable {
         pointsTables = try c.decodeIfPresent([String: Ruleset.PointsTable].self, forKey: .pointsTables) ?? g.pointsTables
         tieRule = try c.decodeIfPresent(Ruleset.TieRule.self, forKey: .tieRule) ?? g.tieRule
         formPoints = try c.decodeIfPresent(Bool.self, forKey: .formPoints) ?? g.formPoints
+        placementPoints = try c.decodeIfPresent([Double].self, forKey: .placementPoints) ?? g.placementPoints
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -574,6 +594,7 @@ extension Ruleset.TableRules: Codable {
         if !pointsTables.isEmpty { try c.encode(pointsTables, forKey: .pointsTables) }
         if tieRule != .tiebreaks { try c.encode(tieRule, forKey: .tieRule) }
         if formPoints { try c.encode(formPoints, forKey: .formPoints) }
+        if !placementPoints.isEmpty { try c.encode(placementPoints, forKey: .placementPoints) }
     }
 }
 

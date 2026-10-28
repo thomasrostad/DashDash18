@@ -13,6 +13,9 @@ struct RulesetCommonSections: View {
         if draft.countsMatches {
             pointsSection
         }
+        if draft.pointsSource == .placement {
+            placementSection
+        }
         allowanceSection
         sidePrizeSection
     }
@@ -42,10 +45,33 @@ struct RulesetCommonSections: View {
         } footer: {
             RuleSectionFooter(text: draft.countsMatches
                                   ? "Matcher gir poeng i tabellen. Sidepremiene teller alltid."
+                                  : draft.pointsSource == .placement
+                                  ? "Plassen i hver runde gir poeng i tabellen: lavest slag i slagspill, flest poeng ellers."
                                   : "Stablefordpoengene i hver runde gir poeng i tabellen.",
                               issues: draft.issues.filter {
                                   $0.field == "evenings" || $0.field.hasPrefix("table.counting") || $0.field == "table.pointsSource"
                               })
+        }
+    }
+
+    /// Poengene for 1., 2., 3. plass osv. med plassering. Plasser etter lista gir 0.
+    private var placementSection: some View {
+        Section {
+            ForEach(draft.placementPoints.indices, id: \.self) { i in
+                RuleNumberField("\(i + 1). plass", value: $draft.placementPoints[i])
+            }
+            HStack {
+                Button("Én plass til") { draft.addPlacement() }
+                Spacer()
+                Button("Fjern siste", role: .destructive) { draft.removePlacement() }
+                    .disabled(draft.placementPoints.count <= 1)
+            }
+            .buttonStyle(.borderless)
+        } header: {
+            DDHeader("Poeng for plassen")
+        } footer: {
+            RuleSectionFooter(text: "Delt plass deler poengene. Plasser etter lista gir 0.",
+                              issues: draft.issues.filter { $0.field.hasPrefix("table.placementPoints") })
         }
     }
 

@@ -201,8 +201,8 @@ nonisolated struct TavlaStandings: Sendable {
 
     var isEmpty: Bool { rows.isEmpty }
 
-    /// Teller tabellen stableford (en stableford-serie)? Da finnes ingen dueller, matcher eller hull.
-    var countsStableford: Bool { rules.table.pointsSource == .stableford }
+    /// Teller tabellen runder (stableford eller plassering)? Da finnes ingen dueller, matcher eller hull.
+    var countsStableford: Bool { rules.table.pointsSource.countsRounds }
 
     /// Linja under navnet: «+3 hull · 112 stableford · 4 kvelder» med matcher, og «6 kvelder · beste 5
     /// teller» med stableford. «Playoff · » foran ved delt førsteplass som avgjøres med playoff, og

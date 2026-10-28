@@ -19,6 +19,8 @@ nonisolated enum RulesetExplanation {
         let mp = table.matchPoints
         if table.pointsSource == .stableford {
             out.append("Stablefordpoengene i hver runde er tabellpoengene.")
+        } else if let source = RuleNames.tableSource(table) {
+            out.append(source + ".")
         } else if mp.loss == 0 {
             out.append("Seier gir \(RuleFormat.number(mp.win)) poeng, uavgjort \(RuleFormat.number(mp.draw)).")
         } else {
@@ -211,6 +213,20 @@ nonisolated enum RuleNames {
         switch source {
         case .matches: "Matcher"
         case .stableford: "Stableford"
+        case .placement: "Plassering"
+        }
+    }
+
+    /// Hva tabellpoengene er når tabellen teller runder: «Stablefordpoengene er tabellpoengene» eller
+    /// «Plassen i hver runde gir 25, 20, 16 … poeng». Nil når tabellen teller matcher.
+    static func tableSource(_ table: Ruleset.TableRules) -> String? {
+        switch table.pointsSource {
+        case .matches: return nil
+        case .stableford: return "Stablefordpoengene er tabellpoengene"
+        case .placement:
+            let scale = table.effectivePlacementPoints
+            let shown = scale.prefix(3).map(RuleFormat.number).joined(separator: ", ")
+            return "Plassen i hver runde gir \(shown)\(scale.count > 3 ? " …" : "") poeng"
         }
     }
 

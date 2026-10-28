@@ -3,13 +3,14 @@
 // endres på stedet (RulesEditor kloner først), så de kan testes uten React.
 
 import {
-  dayCount, dayMany, dayOne, matchingTipsTemplate, rulesetDay, TIPS_QUESTIONS, TIPS_TEMPLATES,
+  countsRounds, dayCount, dayMany, dayOne, effectivePlacementPoints, matchingTipsTemplate, rulesetDay, TIPS_QUESTIONS, TIPS_TEMPLATES,
   type Ruleset, type TipsQuestion, type TipsTemplate,
 } from "../../golfgutu-core/src/index.ts";
 
 export type DrawMethod = Ruleset["formats"]["drawMethod"];
 export type TieRule = Ruleset["table"]["tieRule"];
 export type Aggregation = Ruleset["table"]["aggregation"];
+export type PointsSource = Ruleset["table"]["pointsSource"];
 
 /** Valgene i rekkefølge, med teksten i skjemaet (som `RuleNames` i appen). */
 export const DRAW_METHOD_OPTIONS: readonly { value: DrawMethod; title: string }[] = [
@@ -91,6 +92,40 @@ export function setPointsTableMultiplier(r: Ruleset, name: string, multiplier: n
 
 export function removePointsTable(r: Ruleset, name: string): void {
   if (r.table.pointsTables) delete r.table.pointsTables[name];
+}
+
+// MARK: Hva tabellen teller
+
+/** «Tabellen teller: matcher / stableford / plassering». Uten matcher gir «matcher» som enhet ingen mening, så den byttes til kvelder. */
+export function setPointsSource(r: Ruleset, source: PointsSource): void {
+  r.table.pointsSource = source;
+  if (countsRounds(source) && r.table.counting.unit === "match") r.table.counting.unit = "evening";
+}
+
+/** Plasseringspoengene som redigeres: regelsettets egne, ellers standardskalaen (som da skrives inn ved første endring). */
+export function placementPointsOf(r: Ruleset): number[] {
+  return [...effectivePlacementPoints(r.table)];
+}
+
+/** Poengene for plassen (0-basert). */
+export function setPlacementPoint(r: Ruleset, index: number, points: number): void {
+  const list = placementPointsOf(r);
+  if (index < 0 || index >= list.length) return;
+  list[index] = points;
+  r.table.placementPoints = list;
+}
+
+/** Én plass til nederst (poengene til den siste minus 1, ikke under 0; 1 når lista er tom). */
+export function addPlacement(r: Ruleset): void {
+  const list = placementPointsOf(r);
+  list.push(Math.max(list.length > 0 ? list[list.length - 1] - 1 : 1, 0));
+  r.table.placementPoints = list;
+}
+
+/** Én plass færre (minst én plass). */
+export function removePlacement(r: Ruleset): void {
+  const list = placementPointsOf(r);
+  if (list.length > 1) { list.pop(); r.table.placementPoints = list; }
 }
 
 // MARK: Tippekupongen

@@ -353,6 +353,33 @@ public enum FormPlay {
         }
     }
 
+    /// Plasseringspoengene runden gir hver spiller (`table.pointsSource` `placement`): plassen etter formen
+    /// (`formResult`, ellers stablefordsummen) gir poeng fra `table.effectivePlacementPoints`. Delt plass deler
+    /// poengene for plassene (to på delt 1.: (25 + 20) / 2 hver). I lag får alle på laget lagets poeng.
+    /// Bare de med score er med. Uvektet; tabellen legger på rundevekten.
+    public static func placementPoints(_ round: Round, roster: [Player], rules: Ruleset) -> [String: Double] {
+        let scale = rules.table.effectivePlacementPoints
+        // Sidene i plassrekkefølge, med plassen (like deler plass).
+        var sides: [(players: [String], rank: Int)]
+        if let form = formResult(round, roster: roster, rules: rules) {
+            sides = form.rows.map { ($0.players, $0.rank) }
+        } else {
+            let points = Scoring.roundPoints(round, roster: roster, rules: rules)
+            let played = Set(scoredPlayers(round))
+            let sorted = points.filter { played.contains($0.key) }.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+            sides = sorted.enumerated().map { i, e in
+                ([e.key], (sorted.firstIndex { $0.value == e.value } ?? i) + 1)
+            }
+        }
+        var out: [String: Double] = [:]
+        for (rank, group) in Dictionary(grouping: sides, by: \.rank) {
+            let places = (rank - 1)..<(rank - 1 + group.count)
+            let share = places.reduce(0.0) { $0 + ($1 < scale.count ? scale[$1] : 0) } / Double(group.count)
+            for side in group { for p in side.players { out[p] = share } }
+        }
+        return out
+    }
+
     /// Rundens resultat etter formen når den ikke er netto stableford: slagspill (netto eller brutto),
     /// stableford brutto, maksimumscore (regel 21.2) og par/bogey (21.3), regnet som hovedkonkurransen
     /// med fullt spillehandicap i runden (`RoundCompetitions`). Brutto ser bort fra handicap uansett andel.

@@ -23,7 +23,8 @@ struct NyTurneringTests {
     @Test func fireIKlubbTreUtenKlubb() {
         // Med formene fra steg 7 (Amerikaner, Københavner og lag mot lag), bare i en klubb. Skins tilbys
         // ikke før formen kan føres i appen.
-        #expect(TournamentSetup.templates(inClub: true) == [.stablefordSeries, .matchSeries, .cup, .fun,
+        // Slagspill-serien (28.10.2026) også bare i en klubb.
+        #expect(TournamentSetup.templates(inClub: true) == [.stablefordSeries, .strokeSeries, .matchSeries, .cup, .fun,
                                                             .amerikanerSeries, .kobenhavnerSeries, .teamVsTeam])
         #expect(TournamentSetup.templates(inClub: false) == [.stablefordSeries, .cup, .fun])
     }

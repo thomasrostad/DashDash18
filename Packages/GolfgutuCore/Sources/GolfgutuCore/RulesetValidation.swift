@@ -33,8 +33,8 @@ extension Ruleset {
         }
         checkCounting(table.counting, "table.counting", "Tabellen")
         checkCounting(table.stablefordCounting, "table.stablefordCounting", "Stablefordsummen")
-        if table.pointsSource == .stableford, table.counting.unit == .match {
-            add("table.counting.unit", "Tabellen teller stableford, så den kan ikke telle matcher. Velg runder eller kvelder.")
+        if table.pointsSource.countsRounds, table.counting.unit == .match {
+            add("table.counting.unit", "Tabellen teller runder (stableford eller plassering), så den kan ikke telle matcher. Velg runder eller kvelder.")
         }
         if let min = table.minEvenings {
             if min < 0 {
@@ -51,6 +51,9 @@ extension Ruleset {
         }
         if table.formPoints, table.pointsSource != .stableford {
             add("table.formPoints", "Formpoeng i tabellen gjelder bare når tabellen teller rundepoeng (stableford), ikke matcher.")
+        }
+        if table.placementPoints.contains(where: { $0 < 0 || !$0.isFinite }) {
+            add("table.placementPoints", "Plasseringspoengene kan ikke være negative.")
         }
         if table.stablefordCounting.unit == .match {
             add("table.stablefordCounting.unit", "Stablefordsummen kan ikke telle matcher. Velg runder eller kvelder.")

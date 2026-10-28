@@ -75,8 +75,16 @@ export type DrawMethod = "standings" | "avoidRepeats" | "manual";
 export const DRAW_METHODS: readonly DrawMethod[] = ["standings", "avoidRepeats", "manual"];
 
 /** Hva tabellpoengene kommer fra. */
-export type TablePointsSource = "matches" | "stableford";
-export const TABLE_POINTS_SOURCES: readonly TablePointsSource[] = ["matches", "stableford"];
+export type TablePointsSource = "matches" | "stableford" | "placement";
+export const TABLE_POINTS_SOURCES: readonly TablePointsSource[] = ["matches", "stableford", "placement"];
+
+/** Tabellen teller runder (stableford eller plassering), ikke matcher. */
+export function countsRounds(source: TablePointsSource): boolean {
+  return source !== "matches";
+}
+
+/** Plasseringspoeng når regelsettet ikke har sin egen skala: 25, 20, 16, 13, 11, så 10 ned til 1. */
+export const STANDARD_PLACEMENT_POINTS: readonly number[] = Object.freeze([25, 20, 16, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
 
 /** Tabellen (jakketavla). */
 export interface TableRules {
@@ -97,6 +105,13 @@ export interface TableRules {
   tieRule: TieRule;
   /** Med `pointsSource` `stableford`: rundens poeng er formens egne (skins, Amerikaner, Københavner). */
   formPoints: boolean;
+  /** Med `pointsSource` `placement`: poengene for 1., 2., 3. plass osv. Plasser etter lista gir 0. Tom: standarden. */
+  placementPoints: number[];
+}
+
+/** Plasseringsskalaen som gjelder: regelsettets egen, ellers `STANDARD_PLACEMENT_POINTS`. */
+export function effectivePlacementPoints(t: TableRules): readonly number[] {
+  return (t.placementPoints ?? []).length === 0 ? STANDARD_PLACEMENT_POINTS : t.placementPoints;
 }
 
 export interface SidePrize {
@@ -547,6 +562,7 @@ export const GOLFGUTU: Readonly<Ruleset> = deepFreeze({
     pointsTables: {},
     tieRule: "tiebreaks",
     formPoints: false,
+    placementPoints: [],
   },
   sidePrizes: {
     longestDrive: { enabled: true, points: 1 },
@@ -697,6 +713,7 @@ function decodeTable(x: unknown, path: string): TableRules {
   const c = optObject(o, "counting", path);
   const sc = optObject(o, "stablefordCounting", path);
   const tb = optArray(o, "tiebreaks", path);
+  const pp = optArray(o, "placementPoints", path);
   return {
     pointsSource: optEnum(o, "pointsSource", TABLE_POINTS_SOURCES, path) ?? g.pointsSource,
     matchPoints: mp ? decodeMatchPoints(mp, `${path}.matchPoints`) : { ...g.matchPoints },
@@ -711,6 +728,7 @@ function decodeTable(x: unknown, path: string): TableRules {
     pointsTables: decodePointsTables(optObject(o, "pointsTables", path), `${path}.pointsTables`),
     tieRule: optEnum(o, "tieRule", TIE_RULES, path) ?? g.tieRule,
     formPoints: optBool(o, "formPoints", path) ?? g.formPoints,
+    placementPoints: pp ? numberArray(pp, `${path}.placementPoints`) : [...g.placementPoints],
   };
 }
 
@@ -1030,6 +1048,7 @@ export function encodeRuleset(r: Ruleset): JSONObject {
   }
   if (r.table.tieRule !== "tiebreaks") table.tieRule = r.table.tieRule;
   if (r.table.formPoints) table.formPoints = true;
+  if ((r.table.placementPoints ?? []).length > 0) table.placementPoints = [...r.table.placementPoints];
   const teamHandicap: JSONObject = {};
   for (const [k, v] of Object.entries(r.handicap.teamHandicap)) {
     teamHandicap[k] = v.weights !== undefined ? { method: v.method, weights: [...v.weights] } : { method: v.method };

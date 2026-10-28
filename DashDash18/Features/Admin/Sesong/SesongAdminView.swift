@@ -200,7 +200,7 @@ private struct TournamentListContent: View {
     private func icon(_ item: TournamentList.Item) -> String {
         switch item {
         case .season(let s):
-            TournamentSetup.icon(s.rules.table.pointsSource == .stableford ? .stablefordSeries : .matchSeries)
+            TournamentSetup.icon(TournamentSetup.seriesTemplate(s.rules.table.pointsSource))
         case .competition(let c):
             CompetitionListRow.icon(c.kind)
         }

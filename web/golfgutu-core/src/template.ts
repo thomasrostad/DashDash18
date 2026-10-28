@@ -13,6 +13,7 @@ import {
 
 export type RulesetTemplate =
   | "stablefordSeries"
+  | "strokeSeries"
   | "matchSeries"
   | "cup"
   | "fun"
@@ -22,6 +23,7 @@ export type RulesetTemplate =
   | "teamVsTeam";
 export const RULESET_TEMPLATES: readonly RulesetTemplate[] = [
   "stablefordSeries",
+  "strokeSeries",
   "matchSeries",
   "cup",
   "fun",
@@ -36,6 +38,8 @@ export function templateTitle(t: RulesetTemplate): string {
   switch (t) {
     case "stablefordSeries":
       return "Stableford-serie";
+    case "strokeSeries":
+      return "Slagspill-serie";
     case "matchSeries":
       return "Matchspill-serie";
     case "cup":
@@ -58,6 +62,8 @@ export function templateSummary(t: RulesetTemplate): string {
   switch (t) {
     case "stablefordSeries":
       return "Stableford-poeng hver kveld. De beste kveldene teller.";
+    case "strokeSeries":
+      return "Slagspill hver kveld. Plassen gir poeng i tabellen, og de beste kveldene teller.";
     case "matchSeries":
       return "Matcher hver kveld gir poeng i tabellen, med sidepremier og seeding.";
     case "cup":
@@ -93,6 +99,20 @@ function stablefordSeriesRules(): Ruleset {
   return r;
 }
 
+/**
+ * Slagspill-serie: stableford-serien der tabellen gir plasseringspoeng (standardskalaen) og standardformen
+ * er slagspill netto. Arrangøren kan bytte form (brutto, maksimumscore) og skala.
+ */
+function strokeSeriesRules(): Ruleset {
+  const r = stablefordSeriesRules();
+  r.table.pointsSource = "placement";
+  r.formats.defaultFormID = "slag-netto";
+  for (const form of ["slag-netto", "slag-brutto", "maks-score"]) {
+    if (!r.formats.allowedFormIDs.includes(form)) r.formats.allowedFormIDs.push(form);
+  }
+  return r;
+}
+
 /** Amerikaner, Københavner og skins: stableford-serien med formens poeng i tabellen (`table.formPoints`). */
 function formPointsRules(form: string): Ruleset {
   const r = stablefordSeriesRules();
@@ -121,6 +141,8 @@ export function templateRules(t: RulesetTemplate): Ruleset {
   switch (t) {
     case "stablefordSeries":
       return stablefordSeriesRules();
+    case "strokeSeries":
+      return strokeSeriesRules();
     case "matchSeries":
       return golfgutuRules();
     case "cup":

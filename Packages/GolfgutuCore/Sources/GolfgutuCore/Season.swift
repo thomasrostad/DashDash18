@@ -41,8 +41,12 @@ public struct Season: Sendable {
         self.adjustments = adjustments
         self.ruleset = ruleset
         pointsByRound = rounds.map { Scoring.roundPoints($0, roster: players, rules: ruleset) }
-        formPointsByRound = ruleset.table.formPoints && ruleset.table.pointsSource == .stableford
-            ? rounds.map { FormPlay.tablePoints($0, roster: players, rules: ruleset) } : []
+        formPointsByRound = switch ruleset.table.pointsSource {
+        case .placement: rounds.map { FormPlay.placementPoints($0, roster: players, rules: ruleset) }
+        case .stableford where ruleset.table.formPoints:
+            rounds.map { FormPlay.tablePoints($0, roster: players, rules: ruleset) }
+        default: []
+        }
     }
 
     // MARK: Typer
@@ -179,7 +183,7 @@ public struct Season: Sendable {
     /// Med `table.pointsSource` `stableford` teller rundenes stablefordpoeng i stedet for matchene
     /// (se `stablefordTableSelection`).
     public func tableSelection(for playerID: String) -> TableSelection {
-        if ruleset.table.pointsSource == .stableford { return stablefordTableSelection(for: playerID) }
+        if ruleset.table.pointsSource.countsRounds { return stablefordTableSelection(for: playerID) }
         let chronological = matchResultsInOrder(for: playerID)
         let all = chronological.enumerated().sorted { x, y in
             if x.element.points != y.element.points { return x.element.points > y.element.points }
@@ -405,7 +409,7 @@ public struct Season: Sendable {
             let played = playedEvenings(for: p.id)
             let extra = adjustmentPoints(for: p.id)
             var row: JacketRow
-            if table.pointsSource == .stableford {
+            if table.pointsSource.countsRounds {
                 let r = selection.rounds
                 let points = r.counting.reduce(0) { $0 + $1.points }
                 row = JacketRow(player: p, total: ruleset.roundTablePoints(points + side + extra), duel: 0, side: side,

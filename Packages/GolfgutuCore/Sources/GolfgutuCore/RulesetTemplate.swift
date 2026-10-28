@@ -10,6 +10,9 @@ import Foundation
 public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
     /// Stableford-poeng hver kveld, de beste kveldene teller. Ingen matcher, seeding eller sidepremier.
     case stablefordSeries
+    /// Slagspill hver kveld: plassen i runden gir plasseringspoeng i tabellen (`table.pointsSource`
+    /// `placement`), de beste kveldene teller.
+    case strokeSeries
     /// Golfgutu-oppsettet: matcher hver kveld, sidepremier og seeding.
     case matchSeries
     /// Utslag i matchspill (`CupRules`).
@@ -30,6 +33,7 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
     public var title: String {
         switch self {
         case .stablefordSeries: "Stableford-serie"
+        case .strokeSeries: "Slagspill-serie"
         case .matchSeries: "Matchspill-serie"
         case .cup: "Cup"
         case .fun: "Morroturnering"
@@ -44,6 +48,7 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
     public var summary: String {
         switch self {
         case .stablefordSeries: "Stableford-poeng hver kveld. De beste kveldene teller."
+        case .strokeSeries: "Slagspill hver kveld. Plassen gir poeng i tabellen, og de beste kveldene teller."
         case .matchSeries: "Matcher hver kveld gir poeng i tabellen, med sidepremier og seeding."
         case .cup: "Utslag i matchspill. Den som vinner, går videre."
         case .fun: "Stableford-poengene teller rett fram, runde for runde."
@@ -58,6 +63,7 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
     public var rules: Ruleset {
         switch self {
         case .stablefordSeries: Self.stablefordSeriesRules
+        case .strokeSeries: Self.strokeSeriesRules
         case .matchSeries: Ruleset.golfgutu
         case .cup, .fun: Self.competitionRules
         case .amerikanerSeries: Self.formPointsRules(form: "amerikaner")
@@ -87,6 +93,18 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
         r.sidePrizes.closestToPin.enabled = false
         r.handicap.seedingGroups = []
         r.formats.defaultFormID = "stableford"
+        return r
+    }()
+
+    /// Slagspill-serie: stableford-serien der tabellen gir plasseringspoeng (standardskalaen) og
+    /// standardformen er slagspill netto. Arrangøren kan bytte form (brutto, maksimumscore) og skala.
+    static let strokeSeriesRules: Ruleset = {
+        var r = stablefordSeriesRules
+        r.table.pointsSource = .placement
+        r.formats.defaultFormID = "slag-netto"
+        for form in ["slag-netto", "slag-brutto", "maks-score"] where !r.formats.allowedFormIDs.contains(form) {
+            r.formats.allowedFormIDs.append(form)
+        }
         return r
     }()
 

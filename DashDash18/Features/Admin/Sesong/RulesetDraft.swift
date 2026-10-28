@@ -119,16 +119,27 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
     /// Teller tabellen matcher (ellers stableford)? Da gjelder matchpoeng, trekant, seeding og lagshandicap.
     var countsMatches: Bool { rules.table.pointsSource == .matches }
 
-    /// «Tabellen teller: matcher / stableford». Med stableford gir «matcher» som enhet ingen mening,
-    /// så den byttes til kvelder.
+    /// «Tabellen teller: matcher / stableford / plassering». Uten matcher gir «matcher» som enhet ingen
+    /// mening, så den byttes til kvelder.
     var pointsSource: Ruleset.TablePointsSource {
         get { rules.table.pointsSource }
         set {
             rules.table.pointsSource = newValue
-            guard newValue == .stableford else { return }
+            guard newValue.countsRounds else { return }
             if rules.table.counting.unit == .match { rules.table.counting.unit = .evening }
         }
     }
+
+    /// Plasseringspoengene som redigeres: regelsettets egne, ellers standardskalaen (som da skrives inn
+    /// ved første endring).
+    var placementPoints: [Double] {
+        get { rules.table.effectivePlacementPoints }
+        set { rules.table.placementPoints = newValue }
+    }
+
+    /// Én plass til nederst (poengene til den siste, eller 1), eller én færre (minst én plass).
+    mutating func addPlacement() { placementPoints.append(max(placementPoints.last.map { $0 - 1 } ?? 1, 0)) }
+    mutating func removePlacement() { if placementPoints.count > 1 { placementPoints.removeLast() } }
 
     /// Enhetene tabellen kan telle: matcher bare når tabellen teller matcher.
     var tableUnits: [Ruleset.Counting.Unit] {

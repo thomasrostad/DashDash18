@@ -123,13 +123,12 @@ struct IkkeStottetTekstTests {
         #expect(RulesetSummary.template(for: RulesetTemplate.skinsSeries.rules) == .skinsSeries)
     }
 
-    /// «Ikke ferdig» står bare på former motoren ikke regner som hovedform.
+    /// «Ikke ferdig» står bare på former motoren ikke regner som hovedform. Slagspill, stableford brutto og
+    /// maksimumscore er ferdige fra 28.10.2026 (runden etter Golfreglene, plasseringspoeng i tabellen).
     @Test func ikkeFerdigBareDerMotorenMangler() {
-        for id in ["par-bogey", "amerikaner", "kobenhavner", "stableford", "fourball"] {
+        for id in ["par-bogey", "amerikaner", "kobenhavner", "stableford", "fourball",
+                   "slag-netto", "slag-brutto", "stableford-brutto", "maks-score"] {
             #expect(RundeSetupStep.supportNote(CompetitionForm.form(id: id)).isEmpty, "\(id)")
-        }
-        for id in ["slag-netto", "slag-brutto", "stableford-brutto", "maks-score"] {
-            #expect(RundeSetupStep.supportNote(CompetitionForm.form(id: id)) == " · ikke ferdig", "\(id)")
         }
     }
 
