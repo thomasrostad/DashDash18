@@ -43,7 +43,17 @@ nonisolated enum TournamentSetup {
         // Formene fra steg 7 trenger kvelder, båser og lag i en klubb, som matchspill-serien.
         switch template {
         case .stablefordSeries, .cup, .fun: true
-        case .matchSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam: false
+        // Slagspill-serien har plasseringspoeng, som ligaen uten klubb ikke regner.
+        case .strokeSeries, .matchSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam: false
+        }
+    }
+
+    /// Serien en sesong er, etter hva tabellen teller: stableford-, slagspill- eller matchspill-serie.
+    static func seriesTemplate(_ source: Ruleset.TablePointsSource) -> RulesetTemplate {
+        switch source {
+        case .stableford: .stablefordSeries
+        case .placement: .strokeSeries
+        case .matches: .matchSeries
         }
     }
 
@@ -51,6 +61,7 @@ nonisolated enum TournamentSetup {
     static func icon(_ template: RulesetTemplate) -> String {
         switch template {
         case .stablefordSeries: "list.number"
+        case .strokeSeries: "figure.golf"
         case .matchSeries: "person.2"
         case .cup: "point.3.connected.trianglepath.dotted"
         case .fun: "party.popper"
@@ -65,7 +76,7 @@ nonisolated enum TournamentSetup {
     static func target(_ template: RulesetTemplate, clubID: UUID?) -> Target {
         switch template {
         case .stablefordSeries: clubID == nil ? .competition(.league) : .season
-        case .matchSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam: .season
+        case .strokeSeries, .matchSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam: .season
         case .cup: .competition(.cup)
         case .fun: .competition(.fun)
         }
@@ -115,7 +126,7 @@ nonisolated enum TournamentSetup {
         let parts = calendar.dateComponents([.year, .month], from: now)
         let word = seasonWord(month: parts.month ?? 1)
         let base = switch template {
-        case .stablefordSeries, .matchSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam:
+        case .stablefordSeries, .strokeSeries, .matchSeries, .amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam:
             "\(word) \(parts.year ?? 2026)"
         case .cup: "\(word)cupen"
         case .fun: "\(word)morro"
@@ -134,8 +145,7 @@ nonisolated enum TournamentSetup {
     static func typeText(kind: CompetitionKind, rules: Ruleset) -> String {
         switch kind {
         case .season:
-            rules.table.pointsSource == .stableford
-                ? RulesetTemplate.stablefordSeries.title : RulesetTemplate.matchSeries.title
+            seriesTemplate(rules.table.pointsSource).title
         case .league: "Liga"
         case .cup: "Cup"
         case .fun: "Morro"
@@ -151,9 +161,8 @@ nonisolated enum TournamentSetup {
         switch draft.target {
         case .season:
             var lines = [RulesetSummary.eveningsAndCounting(draft.seasonRules)]
-            lines.append(rules.table.pointsSource == .stableford
-                         ? "Stablefordpoengene er tabellpoengene"
-                         : "Matcher hver \(draft.dayTerm.one), seier gir \(RuleFormat.number(rules.table.matchPoints.win)) poeng")
+            lines.append(RuleNames.tableSource(rules.table)
+                         ?? "Matcher hver \(draft.dayTerm.one), seier gir \(RuleFormat.number(rules.table.matchPoints.win)) poeng")
             lines.append(RulesetSummary.sidePrizes(rules.sidePrizes))
             return lines
         case .competition(.cup):

@@ -100,10 +100,13 @@ struct RundeSetupStep: View {
         return forms
     }
 
-    /// Formene som er ferdige i appen etter PWA-en, selv om katalogen sier «delvis»: par/bogey regnes av
-    /// motoren i konkurransene, stillingen og tabellen, og Amerikaner og Københavner gir poengene per hull
-    /// (NGF-tabellene) og tabellpoengene (`FormPlay.tablePoints`, `table.formPoints`).
-    nonisolated static let completedForms: Set<String> = ["par-bogey", "amerikaner", "kobenhavner"]
+    /// Formene som er ferdige i appen, selv om katalogen sier «delvis»: par/bogey regnes av motoren i
+    /// konkurransene, stillingen og tabellen, og Amerikaner og Københavner gir poengene per hull
+    /// (NGF-tabellene) og tabellpoengene (`FormPlay.tablePoints`, `table.formPoints`). Slagspill, stableford
+    /// brutto og maksimumscore regnes etter Golfreglene i runden (`FormPlay.formResult`), og tabellen kan
+    /// telle plassen (`table.pointsSource` `placement`) (28.10.2026).
+    nonisolated static let completedForms: Set<String> = ["par-bogey", "amerikaner", "kobenhavner",
+                                                          "slag-netto", "slag-brutto", "stableford-brutto", "maks-score"]
 
     /// Merket bak navnet i velgeren. En form som mangler, står bare der når kladden alt har den.
     nonisolated static func supportNote(_ form: CompetitionForm) -> String {

@@ -6,9 +6,10 @@ import {
 } from "./engine.ts";
 import { errorText } from "./supabase.ts";
 import {
-  addPointsTable, aggregationOptions, applyTipsTemplate, DRAW_METHOD_OPTIONS, hasMinEvenings, minEveningsHelp, minEveningsLabel,
-  pointsTableList, removePointsTable, renamePointsTable, setPointsTableMultiplier, setTipsQuestion, TIE_RULE_OPTIONS,
-  TIPS_QUESTION_TITLES, tipsTemplateOf, toggleMinEvenings, type Aggregation, type DrawMethod, type TieRule,
+  addPlacement, addPointsTable, aggregationOptions, applyTipsTemplate, DRAW_METHOD_OPTIONS, hasMinEvenings, minEveningsHelp, minEveningsLabel,
+  placementPointsOf, pointsTableList, removePlacement, removePointsTable, renamePointsTable, setPlacementPoint, setPointsSource,
+  setPointsTableMultiplier, setTipsQuestion, TIE_RULE_OPTIONS, TIPS_QUESTION_TITLES, tipsTemplateOf, toggleMinEvenings,
+  type Aggregation, type DrawMethod, type PointsSource, type TieRule,
 } from "./rulesform.ts";
 
 /** De vanligste reglene, som «Tilpass reglene» i appen. Lagres som hele regelsettet (samme JSON som appen). */
@@ -41,10 +42,23 @@ export function RulesEditor({ competition, onSaved }: { competition: Competition
         {isSeason && <>
           <label>Antall kvelder/spilledager<input type="number" min={1} max={40} value={rules.evenings} onChange={(e) => set((r) => { r.evenings = Number(e.target.value); })} /></label>
           <label>Tabellen teller
-            <select value={rules.table.pointsSource} onChange={(e) => set((r) => { r.table.pointsSource = e.target.value as Ruleset["table"]["pointsSource"]; })}>
-              <option value="matches">Matcher</option><option value="stableford">Stableford-poeng</option>
+            <select value={rules.table.pointsSource} onChange={(e) => set((r) => setPointsSource(r, e.target.value as PointsSource))}>
+              <option value="matches">Matcher</option><option value="stableford">Stableford-poeng</option><option value="placement">Plassering</option>
             </select>
           </label>
+          {rules.table.pointsSource === "placement" && <>
+            <h4>Poeng for plassen</h4>
+            {placementPointsOf(rules).map((p, i) => (
+              <label key={i}>{i + 1}. plass
+                <input type="number" min={0} step={0.5} value={p} onChange={(e) => set((r) => setPlacementPoint(r, i, Number(e.target.value)))} />
+              </label>
+            ))}
+            <div className="inline-fields">
+              <button type="button" className="link" onClick={() => set((r) => addPlacement(r))}>Én plass til</button>
+              <button type="button" className="link" disabled={placementPointsOf(rules).length <= 1} onClick={() => set((r) => removePlacement(r))}>Fjern siste</button>
+            </div>
+            <p className="muted small">Plassen i hver runde gir poeng: lavest slag i slagspill, flest poeng ellers. Delt plass deler poengene. Plasser etter lista gir 0.</p>
+          </>}
           <label>Hvor mange teller
             <select value={rules.table.counting.best ?? ""} onChange={(e) => set((r) => { r.table.counting.best = e.target.value ? Number(e.target.value) : null; })}>
               <option value="">Alle</option>{Array.from({ length: 20 }, (_, i) => i + 1).map((n) => <option key={n} value={n}>De beste {n}</option>)}

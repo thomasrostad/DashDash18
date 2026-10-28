@@ -2,13 +2,13 @@
 // 380–775, 1052–1095 og 2307–2342), styrt av regelsettet. Med Golfgutu-oppsettet gir alt samme svar
 // som PWA-en. Rundens poeng regnes fra scorene.
 
-import { formTablePoints } from "./formplay.ts";
+import { formTablePoints, placementPoints } from "./formplay.ts";
 import { cappingStrokes } from "./play.ts";
 import { jsRound, norwegianLess, norwegianString, sortedStrings } from "./jsmath.ts";
 import { avoidingRepeats, meetings } from "./draw.ts";
 import { matchInvolves, matchSides, matchStanding, outcomeForA, pointsForOutcome } from "./match.ts";
 import { copyRound, isTriangle, type Player, type PointAdjustment, type Round, type SideClaim, type SideClaimKind } from "./models.ts";
-import { GOLFGUTU, roundTablePoints, sidePrizeFor, type CountingUnit, type Ruleset } from "./ruleset.ts";
+import { countsRounds, GOLFGUTU, roundTablePoints, sidePrizeFor, type CountingUnit, type Ruleset } from "./ruleset.ts";
 import { roundPoints as scoreRoundPoints } from "./scoring.ts";
 import { claimsFor, sidePrizeWinners } from "./sideprize.ts";
 import { drawMatches as drawSwiss, trianglePoints } from "./triangle.ts";
@@ -194,7 +194,7 @@ export class Season {
   readonly adjustments: readonly PointAdjustment[];
   readonly ruleset: Ruleset;
   private readonly pointsByRound: Map<string, number>[];
-  /** Rundepoengene i tabellen med `table.formPoints` (og `pointsSource` `stableford`). Tom ellers. */
+  /** Rundepoengene i tabellen med `pointsSource` `placement`, eller `table.formPoints` (og `stableford`). Tom ellers. */
   private readonly formPointsByRound: Map<string, number>[];
 
   /**
@@ -225,8 +225,10 @@ export class Season {
     this.adjustments = adjustments;
     this.ruleset = ruleset;
     this.pointsByRound = this.rounds.map((r) => scoreRoundPoints(r, players, ruleset));
-    this.formPointsByRound = ruleset.table.formPoints && ruleset.table.pointsSource === "stableford"
-      ? this.rounds.map((r) => formTablePoints(r, players, ruleset)) : [];
+    this.formPointsByRound = ruleset.table.pointsSource === "placement"
+      ? this.rounds.map((r) => placementPoints(r, players, ruleset))
+      : ruleset.table.formPoints && ruleset.table.pointsSource === "stableford"
+        ? this.rounds.map((r) => formTablePoints(r, players, ruleset)) : [];
   }
 
   // MARK: Matcher
@@ -238,7 +240,7 @@ export class Season {
 
   /** Det som teller i tabellen for spilleren, etter `table.counting`. */
   tableSelection(playerID: string): TableSelection {
-    if (this.ruleset.table.pointsSource === "stableford") return this.stablefordTableSelection(playerID);
+    if (countsRounds(this.ruleset.table.pointsSource)) return this.stablefordTableSelection(playerID);
     const chronological = this.matchResultsInOrder(playerID);
     const all = chronological
       .map((element, offset) => ({ element, offset }))
@@ -466,7 +468,7 @@ export class Season {
       const played = this.playedEvenings(p.id);
       const extra = this.adjustmentPoints(p.id);
       let row: JacketRow;
-      if (table.pointsSource === "stableford") {
+      if (countsRounds(table.pointsSource)) {
         const r = selection.rounds;
         const points = r.counting.reduce((sum, x) => sum + x.points, 0);
         row = {

@@ -3,7 +3,7 @@
 
 import { FORM_CATALOG } from "./forms.ts";
 import type { CompetitionRules, Counting, LeagueRules, Ruleset } from "./ruleset.ts";
-import { HIDDEN_HOLES_RANGE, MAX_STROKES_FIXED, STANDARD_PLAY } from "./ruleset.ts";
+import { countsRounds, HIDDEN_HOLES_RANGE, MAX_STROKES_FIXED, STANDARD_PLAY } from "./ruleset.ts";
 
 /** Et problem i et regelsett, med feltet det gjelder og en norsk melding til arrangøren. */
 export interface RulesetIssue {
@@ -71,8 +71,8 @@ export function validateRuleset(r: Ruleset): RulesetIssue[] {
   };
   checkCounting(r.table.counting, "table.counting", "Tabellen");
   checkCounting(r.table.stablefordCounting, "table.stablefordCounting", "Stablefordsummen");
-  if (r.table.pointsSource === "stableford" && r.table.counting.unit === "match") {
-    add("table.counting.unit", "Tabellen teller stableford, så den kan ikke telle matcher. Velg runder eller kvelder.");
+  if (countsRounds(r.table.pointsSource) && r.table.counting.unit === "match") {
+    add("table.counting.unit", "Tabellen teller runder (stableford eller plassering), så den kan ikke telle matcher. Velg runder eller kvelder.");
   }
   const min = r.table.minEvenings ?? null;
   if (min !== null) {
@@ -90,6 +90,9 @@ export function validateRuleset(r: Ruleset): RulesetIssue[] {
   }
   if (r.table.formPoints && r.table.pointsSource !== "stableford") {
     add("table.formPoints", "Formpoeng i tabellen gjelder bare når tabellen teller rundepoeng (stableford), ikke matcher.");
+  }
+  if ((r.table.placementPoints ?? []).some((x) => x < 0 || !isFiniteNumber(x))) {
+    add("table.placementPoints", "Plasseringspoengene kan ikke være negative.");
   }
   if (r.table.stablefordCounting.unit === "match") {
     add("table.stablefordCounting.unit", "Stablefordsummen kan ikke telle matcher. Velg runder eller kvelder.");

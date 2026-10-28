@@ -1,6 +1,6 @@
 // Formene fra steg 7 (FormPlay.swift, GameSkins.swift og GameContext i Games.swift): skins som form,
 // poengspillene Amerikaner og Københavner (NGF «Spilleformer» 2023, side 3 og 4), og poengene en runde
-// gir i tabellen med `table.formPoints`. Bare det tabellen og konkurransene trenger av rundespillene;
+// gir i tabellen med `table.formPoints` eller plassering. Bare det tabellen og konkurransene trenger av rundespillene;
 // oppgjøret i poeng (`PointSplit`) er ikke portert.
 
 import { courseHoles, numberOfHoles } from "./course.ts";
@@ -8,7 +8,8 @@ import { formAxes, roundForm, type PointsGameKind } from "./forms.ts";
 import { effectiveHandicap } from "./handicap.ts";
 import { jsRound, sortedStrings, stringLess } from "./jsmath.ts";
 import { makePlayer, type PlayedHole, type Player, type Round } from "./models.ts";
-import { pointsGameRules, type GameHandicap, type ParBogeyRules, type PointsGameRules, type Ruleset, type SkinsRules } from "./ruleset.ts";
+import { effectivePlacementPoints, pointsGameRules, type GameHandicap, type ParBogeyRules, type PointsGameRules, type Ruleset, type SkinsRules } from "./ruleset.ts";
+import { evaluateRoundCompetitions, type RoundCompetition, type RoundCompetitionResult } from "./roundcompetitions.ts";
 import { handicapStrokes, roundPoints } from "./scoring.ts";
 import { isTruncated } from "./truncation.ts";
 
@@ -263,19 +264,10 @@ export function pointsGameGroups(round: Round): string[][] {
 export function formTablePoints(round: Round, roster: readonly Player[], rules: Ruleset): Map<string, number> {
   const scoring = formAxes(roundForm(round)).scoring;
   if (scoring.type === "parBogey") {
-    // Par/bogey-summen (regel 21.3) med fullt spillehandicap, hver spiller for seg (formen er individuell).
-    const players = scoredPlayers(round);
-    const ctx = new GameContext(players, round, roster, rules);
-    const hcp = ctx.handicaps({ net: true, allowance: 1, fromLowest: false });
+    // Par/bogey-summen (regel 21.3) med fullt spillehandicap i runden, som hovedkonkurransen.
     const out = new Map<string, number>();
-    for (const p of players) {
-      let total = 0;
-      for (let h = 0; h < ctx.count; h++) {
-        const n = ctx.net(p, h, hcp);
-        if (n === null && !ctx.isFinal) continue;
-        total += parBogeyHoleValue(n, ctx.holes[h].par, rules.formPlay.parBogey);
-      }
-      out.set(p, total);
+    for (const row of formResult(round, roster, rules)?.rows ?? []) {
+      for (const p of row.players) out.set(p, row.score);
     }
     return out;
   }
@@ -294,4 +286,53 @@ export function formTablePoints(round: Round, roster: readonly Player[], rules: 
     return out;
   }
   return new Map([...roundPoints(round, roster, rules)].map(([k, v]) => [k, v]));
+}
+
+/**
+ * Plasseringspoengene runden gir hver spiller (`table.pointsSource` `placement`, se
+ * `FormPlay.placementPoints`): plassen etter formen (`formResult`, ellers stablefordsummen) gir poeng fra
+ * `effectivePlacementPoints`. Delt plass deler poengene for plassene. I lag får alle på laget lagets poeng.
+ * Bare de med score er med. Uvektet; tabellen legger på rundevekten.
+ */
+export function placementPoints(round: Round, roster: readonly Player[], rules: Ruleset): Map<string, number> {
+  const scale = effectivePlacementPoints(rules.table);
+  // Sidene i plassrekkefølge, med plassen (like deler plass).
+  let sides: { players: string[]; rank: number }[];
+  const form = formResult(round, roster, rules);
+  if (form !== null) {
+    sides = form.rows.map((r) => ({ players: r.players, rank: r.rank }));
+  } else {
+    const played = new Set(scoredPlayers(round));
+    const sorted = [...roundPoints(round, roster, rules)]
+      .filter(([k]) => played.has(k))
+      .sort(([ka, va], [kb, vb]) => (va !== vb ? vb - va : stringLess(ka, kb) ? -1 : stringLess(kb, ka) ? 1 : 0));
+    sides = sorted.map(([k, v], i) => {
+      const first = sorted.findIndex(([, x]) => x === v);
+      return { players: [k], rank: (first >= 0 ? first : i) + 1 };
+    });
+  }
+  const groups = new Map<number, string[][]>();
+  for (const side of sides) groups.set(side.rank, [...(groups.get(side.rank) ?? []), side.players]);
+  const out = new Map<string, number>();
+  for (const [rank, group] of groups) {
+    let share = 0;
+    for (let k = rank - 1; k < rank - 1 + group.length; k++) share += k < scale.length ? scale[k] : 0;
+    share /= group.length;
+    for (const players of group) for (const p of players) out.set(p, share);
+  }
+  return out;
+}
+
+/**
+ * Rundens resultat etter formen når den ikke er netto stableford: slagspill (netto eller brutto),
+ * stableford brutto, maksimumscore (regel 21.2) og par/bogey (21.3), regnet som hovedkonkurransen med
+ * fullt spillehandicap i runden (se `FormPlay.formResult`). `null` for netto stableford (Golfgutu-veien,
+ * `roundPoints`) og formene som har sin egen vei (match, skins, poengspill).
+ */
+export function formResult(round: Round, roster: readonly Player[], rules: Ruleset): RoundCompetitionResult | null {
+  const axes = formAxes(roundForm(round));
+  const s = axes.scoring;
+  if (!(s.type === "strokePlay" || s.type === "maximumScore" || s.type === "parBogey" || (s.type === "stableford" && !s.net))) return null;
+  const comp: RoundCompetition = { id: "form", teamForm: axes.teamForm, scoring: s, entrants: null, holes: null, allowance: null };
+  return evaluateRoundCompetitions(round, roster, [comp], rules)[0];
 }

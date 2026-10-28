@@ -7,7 +7,7 @@ import { capitalized, dayCount, dayMany, dayThe, dayTheMany, type DayTerm } from
 import { effectiveHandicap } from "../handicap.ts";
 import { norwegianLess, sortedBy } from "../jsmath.ts";
 import { makePlayer, type Player, type PointAdjustment, type SideClaim } from "../models.ts";
-import { rulesetDay, type CountingUnit, type Ruleset } from "../ruleset.ts";
+import { countsRounds, rulesetDay, type CountingUnit, type Ruleset } from "../ruleset.ts";
 import { netStrokes } from "../scoring.ts";
 import { eveningCount, formatPoints, Season } from "../season.ts";
 import { makeRoundFromSnapshot, makeSnapshot, snapshotHandicap, snapshotRoster, type RoundSnapshot } from "./roundgame.ts";
@@ -227,9 +227,9 @@ export class TavlaStandings {
     return this.rows.length === 0;
   }
 
-  /** Teller tabellen stableford? Da finnes ingen dueller, matcher eller hull. */
+  /** Teller tabellen runder (stableford eller plassering)? Da finnes ingen dueller, matcher eller hull. */
   get countsStableford(): boolean {
-    return this.rules.table.pointsSource === "stableford";
+    return countsRounds(this.rules.table.pointsSource);
   }
 
   /** Minst én kveld har gitt poeng. Før det er tabellen bare troppen i navnerekkefølge. */

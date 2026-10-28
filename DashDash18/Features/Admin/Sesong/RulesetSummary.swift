@@ -10,8 +10,10 @@ nonisolated enum RulesetSummary {
     static func candidates(for kind: CompetitionKind, rules: Ruleset) -> [RulesetTemplate] {
         switch kind {
         case .season:
-            // Formene fra steg 7 lages bare som sesong i en klubb.
-            base(rules) + [.amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam]
+            // Slagspill-serien og formene fra steg 7 lages bare som sesong i en klubb. Slagspill-serien står
+            // først når tabellen teller plassering, som den.
+            (rules.table.pointsSource == .placement ? [.strokeSeries] + base(rules) : base(rules) + [.strokeSeries])
+                + [.amerikanerSeries, .kobenhavnerSeries, .skinsSeries, .teamVsTeam]
         case .league, .game:
             base(rules)
         case .cup: [.cup]
@@ -48,8 +50,8 @@ nonisolated enum RulesetSummary {
         out.append("\(form.name), høyst \(rules.formats.maxPerBay) per bås eller flight")
         out.append(eveningsAndCounting(rules))
         let mp = rules.table.matchPoints
-        if rules.table.pointsSource == .stableford {
-            out.append("Stablefordpoengene er tabellpoengene")
+        if let source = RuleNames.tableSource(rules.table) {
+            out.append(source)
         } else {
             out.append("Seier \(RuleFormat.number(mp.win)) poeng, uavgjort \(RuleFormat.number(mp.draw)), tap \(RuleFormat.number(mp.loss))")
         }
