@@ -35,6 +35,8 @@ final class AppServices {
         diagnostics = DiagnosticsReporter(sender: SupabaseDiagnosticsSender(client: client))
         // Tidlig, så diagnosene fra forrige kjøring (krasj, heng) kommer med en gang.
         diagnostics.subscribe()
+        // Før noe vises: klokka kan vekke appen i bakgrunnen med et hull som skal i utboksen.
+        WatchRoundController.shared.activate(submitter: outbox)
         // Telefonen fjernes mens økten finnes, så den forrige innloggingen ikke får push her.
         auth.willSignOut = { [push] in await push.unregister() }
         // Slettet konto: hullene som ikke ble sendt, og innstillingene for kontoen, fjernes også her.
