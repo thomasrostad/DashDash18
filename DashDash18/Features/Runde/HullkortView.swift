@@ -317,12 +317,10 @@ struct HullRadView: View {
     private var result: some View {
         if let name = row.scoreName {
             HStack(spacing: 8) {
-                if let mark = row.parBogey {
-                    // Par/bogey: «+ · netto birdie», «0 · netto par», «− · netto bogey».
-                    ScoreChip(name: name, text: "\(mark) · netto \(name.label.lowercased())")
-                } else if let points = row.points {
-                    // «2 p · netto par» i scorefargen (planen K1).
-                    ScoreChip(name: name, text: "\(points) p · netto \(name.label.lowercased())")
+                if let text = row.formText {
+                    // Hva hullet teller i formen, i scorefargen (planen K1): «2 p · netto par»,
+                    // «brutto birdie», «tak 7 slag», «+ · netto birdie» (`HoleCard.Row.formText`).
+                    ScoreChip(name: name, text: text)
                 } else {
                     ScoreChip(name: name)
                 }
@@ -403,6 +401,8 @@ nonisolated enum StrokeAccessibility {
             parts.append(parBogey(mark))
         } else if let points = line.points {
             parts.append("\(points) poeng")
+        } else if let value = line.formValue {
+            parts.append("\(value) teller")
         }
         return parts.joined(separator: ", ")
     }
@@ -418,6 +418,8 @@ nonisolated enum StrokeAccessibility {
         if row.isDefault { parts.append("forvalgt par") }
         if let points = row.points { parts.append("\(points) poeng") }
         if let mark = row.parBogey { parts.append(parBogey(mark)) }
+        // Slagspill og maksimumscore: «netto birdie», «tak 7 slag».
+        if row.points == nil, row.parBogey == nil, let text = row.formText { parts.append(text) }
         return parts.joined(separator: ", ")
     }
 

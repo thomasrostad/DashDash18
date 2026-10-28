@@ -1,0 +1,24 @@
+{
+  "kilde": "Regnet for hånd etter Golfreglene 2019 regel 21 (28.10.2026), ikke med motoren. Tre hull, par 4, indeks 1–3. Spillehandicap a 0, b 18 (ett slag per hull), c 36 (to slag per hull). Scorer a 4 5 3, b 4 5 5, c 6 7 9. Slagspill brutto: a 12, b 14, c 22. Slagspill netto: b 14−3 = 11, a 12, c 22−6 = 16. Stableford brutto (2 poeng for par, ett mer per slag under, ett mindre per slag over, ikke under 0): a 2+1+3 = 6, b 2+1+1 = 4, c 0+0+0 = 0. Maksimumscore med netto dobbel bogey som tak (par + 2 + slag fått), netto: a tak 6, 4+5+3 = 12; b tak 7, (4+5+5) − 3 = 11; c tak 8, (6+7+8) − 6 = 15. Stableford netto er Golfgutu-veien og gir ikke noe formresultat (null).",
+  "spillehandicap": { "a": 0, "b": 18, "c": 36 },
+  "scorer": { "a": [4, 5, 3], "b": [4, 5, 5], "c": [6, 7, 9] },
+  "former": [
+    { "gameType": "slag-brutto", "rader": [
+      { "spiller": "a", "score": 12, "hull": 3, "plass": 1 },
+      { "spiller": "b", "score": 14, "hull": 3, "plass": 2 },
+      { "spiller": "c", "score": 22, "hull": 3, "plass": 3 } ] },
+    { "gameType": "slag-netto", "rader": [
+      { "spiller": "b", "score": 11, "hull": 3, "plass": 1 },
+      { "spiller": "a", "score": 12, "hull": 3, "plass": 2 },
+      { "spiller": "c", "score": 16, "hull": 3, "plass": 3 } ] },
+    { "gameType": "stableford-brutto", "rader": [
+      { "spiller": "a", "score": 6, "hull": 3, "plass": 1 },
+      { "spiller": "b", "score": 4, "hull": 3, "plass": 2 },
+      { "spiller": "c", "score": 0, "hull": 3, "plass": 3 } ] },
+    { "gameType": "maks-score", "rader": [
+      { "spiller": "b", "score": 11, "hull": 3, "plass": 1 },
+      { "spiller": "a", "score": 12, "hull": 3, "plass": 2 },
+      { "spiller": "c", "score": 15, "hull": 3, "plass": 3 } ] },
+    { "gameType": "stableford", "rader": null }
+  ]
+}

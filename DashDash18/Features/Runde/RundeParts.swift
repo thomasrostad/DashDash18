@@ -85,7 +85,7 @@ struct ScorekortSheet: View {
                     DDSectionLabel((game.snapshot.course?.name ?? "Runden") + " · " + (card.inward ? "Inn" : "Ut"))
                         .padding(.top, DDSpacing.s)
                     VStack(spacing: 0) {
-                        row("Hull", "Par", "Slag", nil, header: true)
+                        row("Hull", "Par", "Slag", nil, header: true, title: card.valueTitle)
                             // Hver rad leses som en hel setning, så overskriftsraden trengs ikke.
                             .accessibilityHidden(true)
                         ForEach(card.lines) { line in
@@ -94,11 +94,14 @@ struct ScorekortSheet: View {
                                 .accessibilityLabel(StrokeAccessibility.scorecardLine(line))
                         }
                         rule
-                        let sum = card.parBogeySum.map(RoundCompetitionBoard.signedText) ?? "\(card.sumPoints)"
+                        let sum = card.parBogeySum.map(RoundCompetitionBoard.signedText)
+                            ?? card.formSum.map(String.init) ?? "\(card.sumPoints)"
                         row("Sum", "\(card.sumPar)", card.sumStrokes > 0 ? "\(card.sumStrokes)" : "—", nil, sum: sum)
                             .accessibilityLabel("Sum, par \(card.sumPar), "
                                                 + (card.sumStrokes > 0 ? "\(card.sumStrokes) slag" : "ikke ført")
-                                                + (card.parBogeySum != nil ? ", par/bogey \(sum)" : ", \(sum) poeng"))
+                                                + (card.parBogeySum != nil ? ", par/bogey \(sum)"
+                                                   : card.formSum != nil ? ", \(card.valueTitle.lowercased()) \(sum)"
+                                                   : ", \(sum) poeng"))
                     }
                     .padding(.horizontal, 18)
                     .padding(.vertical, 8)
@@ -135,7 +138,7 @@ struct ScorekortSheet: View {
     }
 
     private func row(_ hole: String, _ par: String, _ strokes: String, _ line: Scorecard.Line?,
-                     header: Bool = false, sum: String? = nil) -> some View {
+                     header: Bool = false, title: String = "", sum: String? = nil) -> some View {
         HStack {
             Text(hole).frame(width: holeWidth, alignment: .leading)
                 .font(header ? .ddEyebrow : .ddNumber)
@@ -144,7 +147,7 @@ struct ScorekortSheet: View {
             Text(strokes).frame(width: holeWidth)
             Spacer()
             if header {
-                Text(game.round.form.axes.scoring == .parBogey ? "Par/bogey" : "Poeng")
+                Text(title)
             } else if let sum {
                 Text(sum)
                     .font(.ddNumberLarge)
@@ -152,7 +155,7 @@ struct ScorekortSheet: View {
             } else if let line, let name = line.scoreName, let mark = line.parBogey {
                 DDPointsBadge(text: mark, name: name)
                     .accessibilityLabel(StrokeAccessibility.parBogey(mark))
-            } else if let line, let name = line.scoreName, let points = line.points {
+            } else if let line, let name = line.scoreName, let points = line.points ?? line.formValue {
                 DDPointsBadge(points: points, name: name)
             } else {
                 DDPointsBadge(points: nil, name: nil)

@@ -294,8 +294,25 @@ nonisolated extension RoundGame {
         let holeByHole = isDecidedHoleByHole
         let perTeam = round.form.card == .perTeam
         let teamPoints = perTeam ? Scoring.roundPoints(round, roster: roster, rules: rules) : [:]
-        let parBogey: [String: Double]? = round.form.axes.scoring == .parBogey
-            ? FormPlay.tablePoints(round, roster: roster, rules: rules) : nil
+        // Formens resultat når runden ikke er netto stableford (slagspill, stableford brutto,
+        // maksimumscore, par/bogey): summen per spiller, og i slagspill og maksimumscore rekkefølgen
+        // (flest hull først, så lavest sum).
+        let scoring = round.form.axes.scoring
+        let form = FormPlay.formResult(round, roster: roster, rules: rules)
+        var formScores: [String: Double]?
+        var formOrder: [String: Int]?
+        if let form {
+            var scores: [String: Double] = [:], order: [String: Int] = [:]
+            for (i, row) in form.rows.enumerated() {
+                for p in row.players { scores[p] = row.score; order[p] = i }
+            }
+            formScores = scores
+            if !scoring.higherIsBetter { formOrder = order }
+        }
+        let formText: Bool = switch scoring {
+        case .strokePlay, .maximumScore, .parBogey: true
+        default: false
+        }
 
         var seen: Set<UUID> = []
         var groups: [[UUID]] = []
@@ -320,8 +337,8 @@ nonisolated extension RoundGame {
         }
         let entries = groups.map { members -> Entry in
             let first = members[0]
-            let total = if let parBogey {
-                Int((parBogey[first.uuidString] ?? 0).rounded())
+            let total = if let formScores {
+                Int((formScores[first.uuidString] ?? 0).rounded())
             } else if members.count > 1 {
                 members.lazy.compactMap { teamPoints[$0.uuidString] }.first ?? 0
             } else {
@@ -340,6 +357,11 @@ nonisolated extension RoundGame {
                 if a.thru != b.thru { return a.thru > b.thru }
                 return NorwegianSort.areInIncreasingOrder(a.name, b.name)
             }
+            if let formOrder {
+                let oa = formOrder[a.members[0].uuidString] ?? .max, ob = formOrder[b.members[0].uuidString] ?? .max
+                if oa != ob { return oa < ob }
+                return NorwegianSort.areInIncreasingOrder(a.name, b.name)
+            }
             return standsBefore((a.name, a.total, a.thru), (b.name, b.total, b.thru))
         }
 
@@ -350,7 +372,7 @@ nonisolated extension RoundGame {
                      bay: snapshot.players.first { $0.memberID == e.members[0] }?.bayNo,
                      place: holeByHole ? nil : i + 1, total: e.total, match: e.match,
                      value: e.inMatch ? MatchPlay.shortText(e.match)
-                        : parBogey != nil ? RoundCompetitionBoard.signedText(Double(e.total))
+                        : formText ? RoundCompetitionBoard.scoreText(Double(e.total), scoring: scoring)
                         : "\(e.total)" + (holeByHole ? " p" : ""),
                      tone: e.inMatch ? MatchTone(e.match) : .neutral,
                      paceText: byPace ? Self.paceText(pace(total: e.total, thru: e.thru), thru: e.thru) : nil)
