@@ -92,9 +92,12 @@ struct RundensFormTests {
         var second = round("slag-netto")
         second.id = "slag-netto-2"
         let roster = ["a", "b", "c"].map { Player(id: $0, name: $0.uppercased()) }
-        let board = Season(players: roster, rounds: [round("slag-netto"), second], ruleset: rules).jacketBoard()
+        let season = Season(players: roster, rounds: [round("slag-netto"), second], ruleset: rules)
+        let board = season.jacketBoard()
         #expect(board.map(\.player.id) == ["b", "a", "c"])
         #expect(board.map(\.total) == [20, 12, 8])
+        // Rundeoversikten på Tavla viser det runden ga i tabellen.
+        #expect(season.tableRoundPoints(0) == ["b": 10, "a": 6, "c": 4])
     }
 
     /// Golfgutu skriver ikke de nye feltene, så JSON-en er som før.

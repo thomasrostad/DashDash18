@@ -397,10 +397,7 @@ nonisolated extension RoundGame {
         let scoring = round.form.axes.scoring
         let isParBogey = scoring == .parBogey
         // Brutto (stableford, slagspill, maksimumscore): ingen slag fått, uansett andel i runden.
-        let isGross: Bool = switch scoring {
-        case .stableford(let net), .strokePlay(let net), .maximumScore(let net, _): !net
-        default: false
-        }
+        let isGross = isGrossForm
         // Maksimumscore (regel 21.2): taket per hull, formens eget eller regelsettets.
         let formCap: Ruleset.MaxStrokes? = if case .maximumScore(_, let own) = scoring {
             own ?? rules.formPlay.maximumScore
@@ -745,6 +742,15 @@ nonisolated struct StandingRow: Equatable, Identifiable, Sendable {
 }
 
 nonisolated extension RoundGame {
+    /// Formen regnes brutto (stableford, slagspill eller maksimumscore uten slag fått): ingen handicap på
+    /// hullene, uansett andel i runden.
+    var isGrossForm: Bool {
+        switch round.form.axes.scoring {
+        case .stableford(let net), .strokePlay(let net), .maximumScore(let net, _): !net
+        default: false
+        }
+    }
+
     /// Stablefordsummen i runden for spilleren (`roundNetTotalForPlayer`), med rundens handicap.
     func total(_ member: UUID) -> Int {
         Scoring.points(from: scores(member), in: round, handicap: handicap(member), rules: rules)
@@ -814,10 +820,7 @@ nonisolated extension RoundGame {
         let from = (hasInward && inward) ? 9 : 0
         let scoring = round.form.axes.scoring
         let isParBogey = scoring == .parBogey
-        let isGross: Bool = switch scoring {
-        case .stableford(let net), .strokePlay(let net), .maximumScore(let net, _): !net
-        default: false
-        }
+        let isGross = isGrossForm
         let hcp = isGross ? 0 : handicap(member)
         let mine = scores(member)
         // Slagspill og maksimumscore: verdien per hull fra formens resultat (taket og handicapet som der).

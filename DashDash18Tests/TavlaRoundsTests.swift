@@ -16,7 +16,7 @@ import Testing
             // Samme poeng som regelmotoren gir for runden.
             for (n, column) in grid.columns.enumerated() {
                 let i = try #require(standings.snapshots.firstIndex { $0.round.id == column.roundID })
-                #expect(row.points[n] == standings.season.roundPoints(i)[row.playerID.uuidString])
+                #expect(row.points[n] == standings.season.tableRoundPoints(i)[row.playerID.uuidString])
             }
         }
         let first = try #require(grid.columns.first)
@@ -43,7 +43,7 @@ import Testing
         for row in grid.rows {
             for (n, column) in grid.columns.enumerated() {
                 let i = try #require(s.snapshots.firstIndex { $0.round.id == column.roundID })
-                #expect(row.points[n] == s.season.roundPoints(i)[row.playerID.uuidString])
+                #expect(row.points[n] == s.season.tableRoundPoints(i)[row.playerID.uuidString])
                 // Scorekortet finnes for den som spilte.
                 if row.points[n] != nil { #expect(s.game(column.roundID) != nil) }
             }
@@ -53,7 +53,7 @@ import Testing
     @Test func motParOgBeste() {
         #expect(RoundsGrid.toParText(0) == "E" && RoundsGrid.toParText(3) == "+3" && RoundsGrid.toParText(-2) == "−2")
         let col = RoundsGrid.Column(roundID: UUID(), label: "1", date: nil, title: "R1", isOngoing: false)
-        func row(_ p: Int?, _ s: Int?) -> RoundsGrid.Row {
+        func row(_ p: Double?, _ s: Int?) -> RoundsGrid.Row {
             RoundsGrid.Row(playerID: UUID(), name: "x", place: "1.", isMe: false, points: [p], strokes: [s],
                            toPar: [s.map { $0 - 72 }], counted: nil)
         }

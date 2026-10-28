@@ -34,6 +34,9 @@ nonisolated struct RoundActivityAttributes: ActivityAttributes, Sendable {
         var matchTone: MatchTone
         /// Når dataene ble regnet.
         var updatedAt: Date
+        /// Summen i formen når runden ikke er netto stableford: «72 slag», «+2», «28 p» (stableford brutto).
+        /// Nil: `points` som poeng. Valgfri, så eldre tilstander og push-innhold uten feltet virker.
+        var valueText: String? = nil
 
         /// Samme innhold, uansett tidspunkt. Brukes for å slippe oppdateringer som ikke endrer noe.
         func sameContent(as other: ContentState) -> Bool {

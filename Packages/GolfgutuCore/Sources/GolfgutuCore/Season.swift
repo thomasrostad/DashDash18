@@ -357,6 +357,12 @@ public struct Season: Sendable {
         return Double(p) * effectiveWeight(rounds[roundIndex])
     }
 
+    /// Rundens poeng i tabellen, uvektet: plasseringspoeng (`table.pointsSource` `placement`), formens poeng
+    /// (`table.formPoints`), ellers stablefordpoengene. Det rundeoversikten på Tavla viser.
+    public func tableRoundPoints(_ roundIndex: Int) -> [String: Double] {
+        formPointsByRound.isEmpty ? pointsByRound[roundIndex].mapValues(Double.init) : formPointsByRound[roundIndex]
+    }
+
     /// Rundens poeng i tabellen ganget med vekten: formens poeng med `table.formPoints`, ellers
     /// stablefordpoengene (`weightedRoundPoints`).
     func weightedTableRoundPoints(_ roundIndex: Int, playerID: String) -> Double? {

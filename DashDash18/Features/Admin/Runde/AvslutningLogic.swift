@@ -291,10 +291,7 @@ nonisolated extension RoundGame {
         for (i, row) in (form?.rows ?? []).enumerated() {
             for p in row.players { formScore[p] = row.score; formOrder[p] = i }
         }
-        let isGross: Bool = switch scoring {
-        case .stableford(let net), .strokePlay(let net), .maximumScore(let net, _): !net
-        default: false
-        }
+        let isGross = isGrossForm
 
         let rows = members.map { member -> RoundTable.Row in
             let s = scores(member)

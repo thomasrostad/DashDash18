@@ -12,7 +12,7 @@ nonisolated enum TavlaTV {
     }
 
     /// Siste runde (nyeste kolonne) med de beste først: navn og poeng. Tom uten runder.
-    static func latestRound(_ grid: RoundsGrid, limit: Int = 8) -> (title: String, isOngoing: Bool, lines: [(name: String, points: Int)])? {
+    static func latestRound(_ grid: RoundsGrid, limit: Int = 8) -> (title: String, isOngoing: Bool, lines: [(name: String, points: Double)])? {
         guard let n = grid.columns.indices.last else { return nil }
         let column = grid.columns[n]
         let lines = grid.rows.compactMap { row in row.points[n].map { (row.name, $0) } }
@@ -186,7 +186,7 @@ struct TavlaTVView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func latestPanel(_ latest: (title: String, isOngoing: Bool, lines: [(name: String, points: Int)]),
+    private func latestPanel(_ latest: (title: String, isOngoing: Bool, lines: [(name: String, points: Double)]),
                              scale: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 10 * scale) {
             HStack(spacing: 8 * scale) {
@@ -206,7 +206,7 @@ struct TavlaTVView: View {
                     Text("\(i + 1).").opacity(0.75).frame(width: 30 * scale, alignment: .trailing)
                     Text(line.name).lineLimit(1)
                     Spacer()
-                    Text("\(line.points)").font(.dd(.sans, fixedSize: 21 * scale, weight: .semibold)).monospacedDigit()
+                    Text(RuleFormat.number(line.points)).font(.dd(.sans, fixedSize: 21 * scale, weight: .semibold)).monospacedDigit()
                 }
                 .font(.dd(.sans, fixedSize: 21 * scale))
                 .foregroundStyle(Color.ddOnDark)

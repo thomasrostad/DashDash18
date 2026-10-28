@@ -88,7 +88,7 @@ nonisolated enum HjemDisplay {
     static func myRoundLabel(_ card: HomeMyRoundCard) -> String {
         var parts = ["Din runde", card.title]
         if let subtitle = card.subtitle { parts.append(subtitle) }
-        parts.append(card.points.map { "\($0) poeng" } ?? card.value)
+        parts.append(card.points.map { "\($0) \(card.unit)" } ?? card.value)
         if let place = card.placeText { parts.append("\(place) \(card.ofText)") }
         if !card.marks.isEmpty { parts.append(card.marks.map(\.label).joined(separator: ", ")) }
         if let winner = card.winner { parts.append(winner) }

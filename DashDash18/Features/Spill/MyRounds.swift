@@ -82,10 +82,8 @@ nonisolated enum MyRounds {
         )
     }
 
-    /// Verdien slik den deles (`ResultShare`): stillingen i en hullmatch, ellers poengene.
-    static func value(_ row: BayenRow) -> String {
-        row.match != nil ? row.value : "\(row.total) p"
-    }
+    /// Verdien slik den deles (`ResultShare`): stillingen i en hullmatch, ellers summen i formen.
+    static func value(_ row: BayenRow) -> String { row.resultText }
 
     private static func placeText(_ row: BayenRow) -> String {
         row.place.map { "\($0). plass · " } ?? ""

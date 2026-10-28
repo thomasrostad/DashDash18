@@ -22,8 +22,9 @@ nonisolated struct RoundsGrid: Equatable, Sendable {
         let name: String
         let place: String
         let isMe: Bool
-        /// Stablefordpoeng per kolonne, nil når spilleren ikke var med.
-        let points: [Int?]
+        /// Poengene runden ga i tabellen per kolonne (`Season.tableRoundPoints`: stableford, plassering
+        /// eller formens poeng), nil når spilleren ikke var med.
+        let points: [Double?]
         /// Slag per kolonne (bare førte hull).
         let strokes: [Int?]
         /// Slag i forhold til par på de førte hullene, per kolonne.
@@ -31,7 +32,7 @@ nonisolated struct RoundsGrid: Equatable, Sendable {
         /// Teller runden i tabellen? (Liga og morro med «beste N».) nil: alle teller.
         let counted: [Bool]?
         var id: UUID { playerID }
-        var pointsTotal: Int { points.compactMap(\.self).reduce(0, +) }
+        var pointsTotal: Double { points.compactMap(\.self).reduce(0, +) }
         var strokesTotal: Int { strokes.compactMap(\.self).reduce(0, +) }
         var toParTotal: Int { toPar.compactMap(\.self).reduce(0, +) }
     }
@@ -40,7 +41,7 @@ nonisolated struct RoundsGrid: Equatable, Sendable {
     let rows: [Row]
 
     /// Beste poeng og laveste slag per kolonne (uthevet i lista). nil uten verdier.
-    var bestPoints: [Int?] { columns.indices.map { n in rows.compactMap { $0.points[n] }.max() } }
+    var bestPoints: [Double?] { columns.indices.map { n in rows.compactMap { $0.points[n] }.max() } }
     var bestStrokes: [Int?] { columns.indices.map { n in rows.compactMap { $0.strokes[n] }.min() } }
 
     /// «+3», «E», «−2» (PGA-skrivemåten).
@@ -86,7 +87,7 @@ nonisolated struct RoundsGrid: Equatable, Sendable {
                 }
             }
             return Row(playerID: row.playerID, name: row.name, place: row.place, isMe: row.isMe,
-                       points: order.map { season.roundPoints($0)[pid] }, strokes: strokes, toPar: toPar,
+                       points: order.map { season.tableRoundPoints($0)[pid] }, strokes: strokes, toPar: toPar,
                        counted: row.counted.map { set in order.map { set.contains(snapshots[$0].round.id) } })
         }
         return RoundsGrid(columns: columns, rows: gridRows)
@@ -263,7 +264,7 @@ struct RoundsLeaderboardView: View {
 
     private func total(_ row: RoundsGrid.Row) -> String {
         switch mode {
-        case .points: "\(row.pointsTotal)"
+        case .points: RuleFormat.number(row.pointsTotal)
         case .strokes: row.strokes.contains { $0 != nil } ? "\(row.strokesTotal)" : "–"
         case .toPar: row.toPar.contains { $0 != nil } ? RoundsGrid.toParText(row.toParTotal) : "–"
         }
@@ -273,7 +274,7 @@ struct RoundsLeaderboardView: View {
         switch mode {
         case .points:
             guard let p = row.points[n] else { return nil }
-            return ("\(p)", p == grid.bestPoints[n])
+            return (RuleFormat.number(p), p == grid.bestPoints[n])
         case .strokes:
             guard let s = row.strokes[n] else { return nil }
             return ("\(s)", s == grid.bestStrokes[n])

@@ -397,6 +397,14 @@ export class Season {
     return this.pointsByRound[roundIndex];
   }
 
+  /**
+   * Rundens poeng i tabellen, uvektet: plasseringspoeng (`table.pointsSource` `placement`), formens poeng
+   * (`table.formPoints`), ellers stablefordpoengene. Det rundeoversikten på Tavla viser.
+   */
+  tableRoundPoints(roundIndex: number): Map<string, number> {
+    return this.formPointsByRound.length === 0 ? this.pointsByRound[roundIndex] : this.formPointsByRound[roundIndex];
+  }
+
   /** Rundens poeng i tabellen ganget med vekten: formens poeng med `table.formPoints`, ellers stablefordpoengene. */
   weightedTableRoundPoints(roundIndex: number, playerID: string): number | null {
     if (this.formPointsByRound.length === 0) return this.weightedRoundPoints(roundIndex, playerID);

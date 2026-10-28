@@ -24,9 +24,22 @@ nonisolated extension RoundGame {
         let mine = scores(me)
 
         // Stillingen i båsen: «Bayen nå» på poeng, avgrenset til båsen min. Uten bås: hele runden.
+        // Andre former enn netto stableford (slagspill, maksimumscore, par/bogey, stableford brutto):
+        // rekkefølgen og summen fra «Bayen nå», som regner etter formen.
         let myBay = bay(of: me)?.number
-        let rows = standings(viewer: viewer).filter { myBay == nil || $0.bay == myBay }
-        let place = rows.firstIndex { $0.memberID == me }.map { $0 + 1 }
+        let place: Int?, count: Int
+        var valueText: String?
+        if FormPlay.formResult(round, roster: roster, rules: rules) != nil {
+            let rows = bayenNaa(viewer: viewer).filter { myBay == nil || $0.bay == myBay }
+            let i = rows.firstIndex { $0.members.contains(me) }
+            place = i.map { $0 + 1 }
+            count = rows.count
+            valueText = i.map { rows[$0].formTotal ?? "\(rows[$0].total) p" }
+        } else {
+            let rows = standings(viewer: viewer).filter { myBay == nil || $0.bay == myBay }
+            place = rows.firstIndex { $0.memberID == me }.map { $0 + 1 }
+            count = rows.count
+        }
 
         let match = matchCard(viewer: viewer)?.mine.first
         let tone: RoundActivityAttributes.ContentState.MatchTone = switch match?.tone {
@@ -42,11 +55,12 @@ nonisolated extension RoundGame {
             strokes: mine.values.reduce(0, +),
             points: total(me),
             bayPlace: place,
-            bayCount: place == nil ? nil : rows.count,
+            bayCount: place == nil ? nil : count,
             bayNumber: myBay,
             matchText: match?.text,
             matchTone: tone,
-            updatedAt: now
+            updatedAt: now,
+            valueText: valueText
         )
     }
 }

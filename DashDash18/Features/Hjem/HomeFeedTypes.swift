@@ -233,8 +233,11 @@ nonisolated struct HomeMyRoundCard: Equatable, Sendable {
     let title: String
     /// «Runde 4 · med Anders og Bjørn», «med Per og Even».
     let subtitle: String?
-    /// Stablefordpoengene (52 lett). Nil når runden avgjøres hull for hull.
+    /// Summen i formen (52 lett): stablefordpoeng, eller slag i slagspill og maksimumscore. Nil når
+    /// runden avgjøres hull for hull, og i par/bogey («+2» står i `value`).
     let points: Int?
+    /// Enheten bak tallet: «poeng», eller «slag» i slagspill og maksimumscore.
+    var unit = "poeng"
     /// Det som står når det ikke er poeng: «1 opp», ellers «34 p».
     let value: String
     let place: Int?
