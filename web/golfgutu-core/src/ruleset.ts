@@ -402,6 +402,8 @@ export interface PlayRules {
   hiddenHoles: number;
   /** Shank (brutto firedobbel bogey eller verre) står i feeden, uten push (sql/073). */
   shankPosts: boolean;
+  /** Lagkamerater fører for hverandre i lagformer der hver spiller sin egen ball (sql/074). */
+  teammatesScore: boolean;
 }
 
 export const MAX_STROKES_FIXED: readonly [number, number] = [3, 20];
@@ -412,6 +414,7 @@ export const STANDARD_PLAY: Readonly<PlayRules> = deepFreeze({
   lockSubmittedCards: false,
   hiddenHoles: 3,
   shankPosts: false,
+  teammatesScore: true,
 } as PlayRules);
 
 /** Det høyeste en spiller kan føre på et hull med `par` og `strokesReceived` slag. `null`: ingen grense. */
@@ -442,6 +445,7 @@ export function decodePlay(x: unknown, path = "$"): PlayRules {
     lockSubmittedCards: optBool(o, "lockSubmittedCards", path) ?? STANDARD_PLAY.lockSubmittedCards,
     hiddenHoles: optInt(o, "hiddenHoles", path) ?? STANDARD_PLAY.hiddenHoles,
     shankPosts: optBool(o, "shankPosts", path) ?? STANDARD_PLAY.shankPosts,
+    teammatesScore: optBool(o, "teammatesScore", path) ?? STANDARD_PLAY.teammatesScore,
   };
 }
 
@@ -453,6 +457,7 @@ export function encodePlay(p: PlayRules): JSONObject {
     lockSubmittedCards: p.lockSubmittedCards,
     hiddenHoles: p.hiddenHoles,
     shankPosts: p.shankPosts,
+    teammatesScore: p.teammatesScore,
   };
 }
 

@@ -28,6 +28,7 @@ struct PlayRulesTests {
         let lockSubmittedCards: Bool
         let hiddenHoles: Int
         let shankPosts: Bool
+        let teammatesScore: Bool
     }
     struct Ugyldig: Decodable { let play: Ruleset.PlayRules; let felt: String }
     struct Skjul: Decodable { let navn: String; let holeCount: Int; let holeStart: Int; let hideLastHoles: Int; let skjulte: [Int] }
@@ -115,7 +116,8 @@ struct PlayRulesTests {
             let text = #"{"version":2,"play":"# + String(decoding: play, as: UTF8.self) + "}"
             let rules = try JSONDecoder().decode(Ruleset.self, from: Data(text.utf8))
             #expect(rules.play == Ruleset.PlayRules(maxStrokes: sak.maxStrokes, lockSubmittedCards: sak.lockSubmittedCards,
-                                                    hiddenHoles: sak.hiddenHoles, shankPosts: sak.shankPosts))
+                                                    hiddenHoles: sak.hiddenHoles, shankPosts: sak.shankPosts,
+                                                    teammatesScore: sak.teammatesScore))
             let back = try JSONDecoder().decode(Ruleset.self, from: JSONEncoder().encode(rules))
             #expect(back == rules)
             let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(rules)) as! [String: Any]

@@ -2,8 +2,8 @@ import GolfgutuCore
 import SwiftUI
 
 /// Føring og visning (regelvern, inspirert av Golfify): maks slag per hull, låst kort etter levering,
-/// hvor mange av de siste hullene «Skjul de siste hullene» skjuler, og shank i feeden. Alt er som i dag
-/// til arrangøren endrer det.
+/// hvor mange av de siste hullene «Skjul de siste hullene» skjuler, shank i feeden og om lagkamerater
+/// fører for hverandre. Alt er som i dag til arrangøren endrer det.
 struct RulesetPlaySection: View {
     @Binding var draft: RulesetDraft
 
@@ -32,6 +32,11 @@ struct RulesetPlaySection: View {
                 RuleFieldLabel(title: "Shank i feeden",
                                help: "Firedobbel bogey eller verre (brutto) står i feeden. Ingen varsel.",
                                changeNote: draft.changeNote(.shankPosts))
+            }
+            Toggle(isOn: $draft.rules.play.teammatesScore) {
+                RuleFieldLabel(title: "Lagkamerater fører for hverandre",
+                               help: "Fourball og sammenlagt lag. Av: bare markøren, eller hver for seg.",
+                               changeNote: draft.changeNote(.teammatesScore))
             }
         } header: {
             DDHeader(RulesetSection.play.title)

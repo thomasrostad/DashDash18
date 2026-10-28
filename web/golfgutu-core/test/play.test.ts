@@ -87,7 +87,7 @@ test("Golfgutu er uendret", () => {
 test("JSON leses og skrives", () => {
   for (const sak of fil.json as any[]) {
     const rules = decodeRuleset({ version: 2, play: sak.inn });
-    assert.deepEqual(rules.play, { maxStrokes: sak.maxStrokes, lockSubmittedCards: sak.lockSubmittedCards, hiddenHoles: sak.hiddenHoles, shankPosts: sak.shankPosts });
+    assert.deepEqual(rules.play, { maxStrokes: sak.maxStrokes, lockSubmittedCards: sak.lockSubmittedCards, hiddenHoles: sak.hiddenHoles, shankPosts: sak.shankPosts, teammatesScore: sak.teammatesScore });
     const out = encodeRuleset(rules);
     assert.deepEqual(decodeRuleset(out), rules);
     assert.equal("play" in out, sak.inn.maxStrokes !== undefined);
