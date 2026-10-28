@@ -594,7 +594,8 @@ Utenfor v1. Databasen har ingen banegeometri.
 
 ### B13 – Plattform · Tatt (deg)
 **iPhone først, Android senere.**
-**Åpent spørsmål:** har noen i gjengen Android? Etter byttet er PWA-en fryst, og da står de uten app til Android finnes. Alternativer: vente med byttet, la dem bruke appen via en annens telefon (markør fører for dem uansett), eller lage en enkel nettversjon senere.
+**28.10.2026 (Thomas): foreløpig ingen på Android.** Klokka kommer først, Android venter (se `docs/plan-android.md`).
+**Tidligere åpent spørsmål:** har noen i gjengen Android? Etter byttet er PWA-en fryst, og da står de uten app til Android finnes. Alternativer: vente med byttet, la dem bruke appen via en annens telefon (markør fører for dem uansett), eller lage en enkel nettversjon senere.
 
 ---
 
