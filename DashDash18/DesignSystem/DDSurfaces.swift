@@ -132,6 +132,9 @@ extension View {
 extension EnvironmentValues {
     /// Bredden på kolonnen fra `ddReadableWidth()`, eller nil på smal skjerm.
     @Entry var ddReadableMaxWidth: CGFloat?
+    /// Plassen innholdet har i fanen: fanens bredde, eller kolonnen når skjermen er bred. Fra
+    /// `ddReadableWidth()`, som måler fanen (den fyller alltid skjermen). nil før første måling.
+    @Entry var ddContentWidth: CGFloat?
 }
 
 struct DDReadableFrameModifier: ViewModifier {
@@ -152,12 +155,29 @@ struct DDReadableWidthModifier: ViewModifier {
         content
             .contentMargins(.horizontal, margin, for: .scrollContent)
             .environment(\.ddReadableMaxWidth, margin == nil ? nil : DDSpacing.readableWidth)
+            .environment(\.ddContentWidth, width > 0 ? min(width, DDSpacing.readableWidth) : nil)
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
     }
 
     private var margin: CGFloat? {
         guard width > DDSpacing.readableWidth else { return nil }
         return (width - DDSpacing.readableWidth) / 2
+    }
+}
+
+/// Loddrett feed der innholdet aldri er bredere enn plassen (ellers kan den dras sideveis, 16.10.2026),
+/// og som følger med når bredden endres. Erstatter `containerRelativeFrame(.horizontal)`, som beholdt
+/// den gamle bredden når iPhone Duo ble lukket med appen åpen (iOS 27.1, 28.10.2026). Bredden
+/// kommer fra fanen (`ddContentWidth`), ikke fra ScrollView-en, som får sin bredde fra innholdet.
+struct DDFeedScrollView<Content: View>: View {
+    @Environment(\.ddContentWidth) private var contentWidth
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        ScrollView {
+            content
+                .frame(width: contentWidth)
+        }
     }
 }
 

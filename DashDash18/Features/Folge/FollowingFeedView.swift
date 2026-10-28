@@ -39,7 +39,8 @@ struct FollowingFeedView: View {
     @State private var emojiTarget: FollowingCard?
 
     var body: some View {
-        ScrollView {
+        // Aldri bredere enn skjermen, som på Hjem (`HjemFeedView`): ellers kan lista dras sideveis.
+        DDFeedScrollView {
             if let tabPicker {
                 HjemFeedTabPicker(tab: tabPicker)
             }
@@ -81,8 +82,6 @@ struct FollowingFeedView: View {
             .padding(.horizontal, DDSpacing.gutter)
             .padding(.top, 12)
             .padding(.bottom, DDSpacing.xxl)
-            // Aldri bredere enn skjermen, som på Hjem (`HjemFeedView`): ellers kan lista dras sideveis.
-            .containerRelativeFrame(.horizontal)
         }
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         .task {
