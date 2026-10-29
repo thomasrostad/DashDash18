@@ -24,3 +24,13 @@ Workflowen **TestFlight fra main** bygger appen og sender den til TestFlight hve
 
 1. Åpne prosjektet og la Xcode løse pakkene. Commit `Package.resolved` hvis den endres.
 2. Endre Xcode-versjonen i workflowen til den samme.
+
+## Når det kommer et nytt mål (app, klokke, utvidelse)
+
+Xcode Cloud registrerer ikke selv bundle-id-en til et nytt mål. Arkiveringen går, men eksporten feiler med «Exporting for App Store Distribution failed» (28.10.2026: alle bygg etter klokkeappen, #235–#238).
+
+1. Arkiver og eksporter én gang på Mac-en med automatisk signering, så Xcode registrerer id-en og lager App Store-profilen:
+   `xcodebuild archive -project DashDash18.xcodeproj -scheme DashDash18 -destination "generic/platform=iOS" -archivePath ~/Library/Developer/Xcode/DerivedData/DashDash18-cli/Atten.xcarchive -allowProvisioningUpdates`, så `xcodebuild -exportArchive … -exportOptionsPlist <method app-store-connect, destination export> -allowProvisioningUpdates`. Ingenting lastes opp.
+2. Start bygget i Xcode Cloud på nytt.
+
+Klokkeappen (`com.dashdash18.app.watchkitapp`) ble registrert slik 29.10.2026.
