@@ -26,11 +26,16 @@ garmin/tools/build.sh           # alle modellene, streng typesjekk (-l 3) og adv
 garmin/tools/build.sh quick     # én per skjermtype
 garmin/tools/build.sh test      # testene i simulatoren (source/Tests.mc)
 garmin/tools/build.sh package   # garmin/build/Atten.iq til Connect IQ Store
+garmin/tools/build.sh beta      # garmin/build/Atten-beta.iq: beta med egen app-id
 ```
 
 `demo.jungle` bygger en utgave med et prøvehull (`source-demo/Demo.mc`), så simulatoren viser designet uten telefon. Den skal aldri til butikken.
 
 ## Prøve på egen klokke
+
+**Uten kabel (beta):** `garmin/tools/build.sh beta`, last opp `garmin/build/Atten-beta.iq` på [apps.garmin.com](https://apps.garmin.com) (utviklersiden, «Upload an app», merk den som beta), og installer fra Connect IQ-appen på telefonen. Betaen har egen app-id (Garmins krav), og Atten (`GarminLink.betaAppID`) snakker med begge. Deretter steg 4 og 5 under.
+
+**Med kabel:**
 
 1. `garmin/tools/build.sh` og finn `garmin/build/Atten-<modell>.prg` for klokka din.
 2. Koble klokka til Mac-en med kabel. Fenix 6 og Forerunner 945 vises som disk; nyere klokker trenger [OpenMTP](https://openmtp.ganeshrvel.com).
