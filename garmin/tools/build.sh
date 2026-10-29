@@ -5,6 +5,7 @@
 #   garmin/tools/build.sh quick      # én per skjermtype
 #   garmin/tools/build.sh test       # bygg og kjør testene i simulatoren
 #   garmin/tools/build.sh package    # garmin/build/Atten.iq til Connect IQ Store
+#   garmin/tools/build.sh beta       # garmin/build/Atten-beta.iq: beta i Connect IQ Store, egen app-id
 #
 # Utviklernøkkelen ligger utenfor repoet: GARMIN_DEVELOPER_KEY, ellers ~/Garmin klokkeskiver/developer_key.
 set -euo pipefail
@@ -53,6 +54,17 @@ case "${1:-all}" in
   package)
     "$MONKEYC" -f monkey.jungle -e -o build/Atten.iq -y "$KEY" -w -l 3 -r
     echo "Til butikken: garmin/build/Atten.iq"
+    ;;
+  beta)
+    # Garmin krever en egen app-id for en beta. Manifestet er det samme, bare med beta-id-en
+    # (GarminLink.betaAppID i Atten), så modellene står ett sted.
+    # Filene lages ved siden av manifest.xml (stiene i en jungle-fil gjelder fra mappa den ligger i)
+    # og holdes utenfor git (.gitignore).
+    sed 's/id="df4f21f2526649f4baac635fdd298301"/id="944279ed92854eb2b674f1b9b70a14c3"/' manifest.xml > manifest-beta.xml
+    grep -q 944279ed92854eb2b674f1b9b70a14c3 manifest-beta.xml || { echo "Fant ikke app-id-en i manifest.xml"; exit 1; }
+    printf 'project.manifest = manifest-beta.xml\nbase.sourcePath = source;source-release\n' > beta.jungle
+    "$MONKEYC" -f beta.jungle -e -o build/Atten-beta.iq -y "$KEY" -w -l 3 -r
+    echo "Beta til butikken: garmin/build/Atten-beta.iq"
     ;;
   *)       build_list "${ALL[@]}" ;;
 esac

@@ -20,6 +20,9 @@ final class GarminLink {
     static let urlScheme = "atten-garmin"
     /// Garmin-appens id (`garmin/manifest.xml`).
     static let appID = UUID(uuidString: "df4f21f2-5266-49f4-baac-635fdd298301")!
+    /// Betaen i Connect IQ Store har egen id (`garmin/tools/build.sh beta`). Atten snakker med begge,
+    /// så klokka virker uansett hvilken som er installert.
+    static let betaAppID = UUID(uuidString: "944279ed-9285-4eb2-b674-f1b9b70a14c3")!
 
     /// En klokke slik «Deg» viser den.
     struct Watch: Identifiable, Equatable {
@@ -91,7 +94,9 @@ final class GarminLink {
         lastSent = [:]
         for device in chosen {
             ConnectIQ.sharedInstance().register(forDeviceEvents: device, delegate: delegate)
-            ConnectIQ.sharedInstance().register(forAppMessages: app(device), delegate: delegate)
+            for app in apps(device) {
+                ConnectIQ.sharedInstance().register(forAppMessages: app, delegate: delegate)
+            }
         }
         watches = chosen.map { device in
             Watch(id: device.uuid, name: device.friendlyName ?? device.modelName ?? "Garmin",
@@ -111,8 +116,9 @@ final class GarminLink {
         }
     }
 
-    private func app(_ device: IQDevice) -> IQApp {
-        IQApp(uuid: Self.appID, store: Self.appID, device: device)
+    /// Appen og betaen på klokka. Den som ikke er installert, får bare en feil tilbake.
+    private func apps(_ device: IQDevice) -> [IQApp] {
+        [Self.appID, Self.betaAppID].map { IQApp(uuid: $0, store: $0, device: device) }
     }
 
     // MARK: Meldinger
@@ -148,10 +154,15 @@ final class GarminLink {
         let dictionary = message as NSDictionary
         guard lastSent[id] != dictionary else { return }
         lastSent[id] = dictionary
-        ConnectIQ.sharedInstance().sendMessage(message, to: app(device), progress: nil) { [weak self] result in
-            guard result != .success else { return }
-            // Kom ikke fram: prøv igjen neste gang runden endres eller klokka spør.
-            Task { @MainActor in self?.lastSent[id] = nil }
+        let targets = apps(device)
+        let tally = SendTally(count: targets.count)
+        for app in targets {
+            ConnectIQ.sharedInstance().sendMessage(message, to: app, progress: nil) { [weak self] result in
+                Task { @MainActor in
+                    // Kom den ikke fram til noen av dem: prøv igjen neste gang runden endres eller klokka spør.
+                    if tally.finish(success: result == .success) == false { self?.lastSent[id] = nil }
+                }
+            }
         }
     }
 
@@ -167,6 +178,22 @@ final class GarminLink {
     private static func save(_ devices: [IQDevice]) {
         let data = try? NSKeyedArchiver.archivedData(withRootObject: devices, requiringSecureCoding: true)
         UserDefaults.standard.set(data, forKey: devicesKey)
+    }
+}
+
+/// Sendingen til appen og betaen: den ene er som regel ikke installert.
+@MainActor
+private final class SendTally {
+    private var remaining: Int
+    private var delivered = false
+
+    init(count: Int) { remaining = count }
+
+    /// Nil til alle har svart, så om noen fikk meldingen.
+    func finish(success: Bool) -> Bool? {
+        remaining -= 1
+        delivered = delivered || success
+        return remaining == 0 ? delivered : nil
     }
 }
 
