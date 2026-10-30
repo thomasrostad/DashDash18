@@ -1,0 +1,943 @@
+{
+ "_kilde": "De morsomme tippespørsmålene (ikke i PWA-en, så ingen db-nytt.js-fasit). Hver forventet verdi er regnet for hånd fra hullscorene; se «utregning». Banen er Testbanen fra tips.json (par 4 5 3 4 4 3 5 4 4 | 4 3 5 4 4 3 4 5 4, indeks 1–18). Poeng: max(0, par − netto + 2). Linjer uten «linjer»: regelsettets standard (sistemann 25,5, margin 2,5, blanke 20,5, på par 2,5).",
+ "standard": {
+  "lastPlacePoints": 25.5,
+  "winningMargin": 2.5,
+  "blankHoles": 20.5,
+  "parOrBetterPlayers": 2.5
+ },
+ "maler": [
+  {
+   "mal": "classic",
+   "navn": "Klassisk",
+   "sporsmaal": [
+    "winner",
+    "frontNine",
+    "mostPars",
+    "birdie",
+    "over"
+   ]
+  },
+  {
+   "mal": "birdieHunt",
+   "navn": "Birdiejakt",
+   "sporsmaal": [
+    "winner",
+    "birdie",
+    "birdieCount",
+    "mostBirdies",
+    "over"
+   ]
+  },
+  {
+   "mal": "full",
+   "navn": "Full kupong",
+   "sporsmaal": [
+    "winner",
+    "frontNine",
+    "backNine",
+    "mostPars",
+    "birdie",
+    "birdieCount",
+    "mostBirdies",
+    "over",
+    "winnerPoints"
+   ]
+  },
+  {
+   "mal": "fun",
+   "navn": "Moro-kupong",
+   "sporsmaal": [
+    "winner",
+    "lastPlace",
+    "comeback",
+    "mostBlanks",
+    "eagle",
+    "grossBirdie",
+    "leaderWins",
+    "winningMargin"
+   ]
+  }
+ ],
+ "kvelder": [
+  {
+   "navn": "to runder",
+   "linjer": null,
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Anders",
+     "handicap": 0
+    },
+    {
+     "id": "b",
+     "name": "Bjørn",
+     "handicap": 0
+    },
+    {
+     "id": "c",
+     "name": "Cato",
+     "handicap": 0
+    },
+    {
+     "id": "d",
+     "name": "Dag",
+     "handicap": 0
+    }
+   ],
+   "runder": [
+    {
+     "round": {
+      "id": "r1",
+      "gameType": "fourball",
+      "holeCount": 9,
+      "holeStart": 0,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": true,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 4
+       },
+       "b": {
+        "0": 3,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 5,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 4
+       },
+       "c": {
+        "0": 5,
+        "1": 6,
+        "2": 4,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 6,
+        "7": 5,
+        "8": 5
+       },
+       "d": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 3
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true
+     },
+     "isDraft": false
+    },
+    {
+     "round": {
+      "id": "r2",
+      "gameType": "fourball",
+      "holeCount": 9,
+      "holeStart": 9,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": true,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 3,
+        "1": 3,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 4,
+        "7": 5,
+        "8": 5
+       },
+       "b": {
+        "0": 3,
+        "1": 2,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 6,
+        "8": 5
+       },
+       "c": {
+        "0": 5,
+        "1": 4,
+        "2": 6,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 5,
+        "7": 6,
+        "8": 5
+       },
+       "d": {
+        "0": 4,
+        "1": 3,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 4,
+        "7": 5,
+        "8": 3
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true
+     },
+     "isDraft": false
+    }
+   ],
+   "utregning": "Handicap 0, så netto = brutto. Poeng: a 18+18=36, b 18+17=35, c 9+9=18, d 19+19=38. Brutto: a 72, b 73, c 90, d 70. Siste ni minus første ni: a 0, b −1, c 0, d 0. Ingen hull under 1 poeng. Par 3 (hull 3, 6, 11, 15): a 8, b 2+2+3+2=9, c 4, d 8. Par 5 (hull 2, 7, 12, 17): a 8, b 2+2+2+1=7, c 4, d 8. Rekke: a 9+8=17, b 4+4+6=10, c 0, d 18. Leder etter ni: d (19). Margin 38−36=2. På par (≥36): a og d.",
+   "forventet": [
+    {
+     "sporsmaal": "lastPlace",
+     "spillere": [
+      "c"
+     ],
+     "tall": 18
+    },
+    {
+     "sporsmaal": "lowestGross",
+     "spillere": [
+      "d"
+     ],
+     "tall": 70
+    },
+    {
+     "sporsmaal": "comeback",
+     "spillere": [
+      "a",
+      "c",
+      "d"
+     ],
+     "tall": 0
+    },
+    {
+     "sporsmaal": "mostBlanks",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "bestParThrees",
+     "spillere": [
+      "b"
+     ],
+     "tall": 9
+    },
+    {
+     "sporsmaal": "bestParFives",
+     "spillere": [
+      "a",
+      "d"
+     ],
+     "tall": 8
+    },
+    {
+     "sporsmaal": "parStreak",
+     "spillere": [
+      "d"
+     ],
+     "tall": 18
+    },
+    {
+     "sporsmaal": "eagle",
+     "svar": false,
+     "tall": null,
+     "linje": null
+    },
+    {
+     "sporsmaal": "grossBirdie",
+     "svar": true,
+     "tall": null,
+     "linje": null
+    },
+    {
+     "sporsmaal": "leaderWins",
+     "svar": true,
+     "tall": 19,
+     "linje": null
+    },
+    {
+     "sporsmaal": "sharedWin",
+     "svar": false,
+     "tall": null,
+     "linje": null
+    },
+    {
+     "sporsmaal": "highHandicapWins",
+     "svar": false,
+     "tall": 0,
+     "linje": null
+    },
+    {
+     "sporsmaal": "lastPlacePoints",
+     "svar": false,
+     "tall": 18,
+     "linje": 25.5
+    },
+    {
+     "sporsmaal": "winningMargin",
+     "svar": false,
+     "tall": 2,
+     "linje": 2.5
+    },
+    {
+     "sporsmaal": "blankHoles",
+     "svar": false,
+     "tall": 0,
+     "linje": 20.5
+    },
+    {
+     "sporsmaal": "parOrBetterPlayers",
+     "svar": false,
+     "tall": 2,
+     "linje": 2.5
+    }
+   ]
+  },
+  {
+   "navn": "18 hull med handicap, egne linjer",
+   "linjer": {
+    "lastPlacePoints": 15.5,
+    "winningMargin": 0.5,
+    "blankHoles": 1.5,
+    "parOrBetterPlayers": 1.5
+   },
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Anders",
+     "handicap": 0
+    },
+    {
+     "id": "b",
+     "name": "Bjørn",
+     "handicap": 18
+    },
+    {
+     "id": "c",
+     "name": "Cato",
+     "handicap": 36
+    },
+    {
+     "id": "d",
+     "name": "Dag",
+     "handicap": 0
+    }
+   ],
+   "runder": [
+    {
+     "round": {
+      "id": "r18",
+      "gameType": "fourball",
+      "holeCount": 18,
+      "holeStart": 0,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": false,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 4,
+        "1": 3,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 7,
+        "9": 4,
+        "10": 3,
+        "11": 5,
+        "12": 4,
+        "13": 4,
+        "14": 3,
+        "15": 4,
+        "16": 5,
+        "17": 4
+       },
+       "b": {
+        "0": 6,
+        "1": 6,
+        "2": 4,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 6,
+        "7": 5,
+        "8": 5,
+        "9": 5,
+        "10": 4,
+        "11": 6,
+        "12": 5,
+        "13": 5,
+        "14": 4,
+        "15": 5,
+        "16": 5,
+        "17": 4
+       },
+       "c": {
+        "0": 6,
+        "1": 7,
+        "2": 5,
+        "3": 6,
+        "4": 6,
+        "5": 5,
+        "6": 7,
+        "7": 6,
+        "8": 6,
+        "9": 6,
+        "10": 5,
+        "11": 7,
+        "12": 9,
+        "13": 6,
+        "14": 5,
+        "15": 6,
+        "16": 7,
+        "17": 6
+       },
+       "d": {
+        "0": 5,
+        "1": 6,
+        "2": 4,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 6,
+        "7": 5,
+        "8": 5,
+        "9": 5,
+        "10": 4,
+        "11": 6,
+        "12": 5,
+        "13": 5,
+        "14": 4,
+        "15": 5,
+        "16": 6,
+        "17": 5
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true
+     },
+     "isDraft": false
+    }
+   ],
+   "utregning": "Handicap 0, 18 og 36 gir 0, 1 og 2 slag per hull. a: eagle på hull 2 (brutto 3 på par 5, 4 poeng), 7 på hull 9 (0 poeng); første ni 18, siste ni 18, sum 36, brutto 73. b: netto bogey på hull 1, ellers par, så 17; siste ni netto birdie på hull 17 og 18, så 20; sum 37, brutto 89. c: netto par overalt unntatt hull 13 (brutto 9, netto 7 på par 4, 0 poeng); 18 + 16 = 34, brutto 111. d: bogey overalt, 18 poeng, brutto 90. Comeback: a 0, b 3, c −2, d 0. Blanke: a 1, c 1. Par 3: a, b og c 8, d 4. Par 5: a 4+2+2+2=10, b 2+2+2+3=9, c 8, d 4. Rekke: a 8 så 9, b 8+9=17, c 9+3=12, d 0. Leder etter ni: a og c (18), vinneren er b. Handicap sortert 0, 0, 18, 36: median 9, b har 18. Margin 37−36=1. Blanke i feltet 2. På par (≥36): a og b.",
+   "forventet": [
+    {
+     "sporsmaal": "lastPlace",
+     "spillere": [
+      "d"
+     ],
+     "tall": 18
+    },
+    {
+     "sporsmaal": "lowestGross",
+     "spillere": [
+      "a"
+     ],
+     "tall": 73
+    },
+    {
+     "sporsmaal": "comeback",
+     "spillere": [
+      "b"
+     ],
+     "tall": 3
+    },
+    {
+     "sporsmaal": "mostBlanks",
+     "spillere": [
+      "a",
+      "c"
+     ],
+     "tall": 1
+    },
+    {
+     "sporsmaal": "bestParThrees",
+     "spillere": [
+      "a",
+      "b",
+      "c"
+     ],
+     "tall": 8
+    },
+    {
+     "sporsmaal": "bestParFives",
+     "spillere": [
+      "a"
+     ],
+     "tall": 10
+    },
+    {
+     "sporsmaal": "parStreak",
+     "spillere": [
+      "b"
+     ],
+     "tall": 17
+    },
+    {
+     "sporsmaal": "eagle",
+     "svar": true,
+     "tall": null,
+     "linje": null
+    },
+    {
+     "sporsmaal": "grossBirdie",
+     "svar": true,
+     "tall": null,
+     "linje": null
+    },
+    {
+     "sporsmaal": "leaderWins",
+     "svar": false,
+     "tall": 18,
+     "linje": null
+    },
+    {
+     "sporsmaal": "sharedWin",
+     "svar": false,
+     "tall": null,
+     "linje": null
+    },
+    {
+     "sporsmaal": "highHandicapWins",
+     "svar": true,
+     "tall": 9,
+     "linje": null
+    },
+    {
+     "sporsmaal": "lastPlacePoints",
+     "svar": true,
+     "tall": 18,
+     "linje": 15.5
+    },
+    {
+     "sporsmaal": "winningMargin",
+     "svar": true,
+     "tall": 1,
+     "linje": 0.5
+    },
+    {
+     "sporsmaal": "blankHoles",
+     "svar": true,
+     "tall": 2,
+     "linje": 1.5
+    },
+    {
+     "sporsmaal": "parOrBetterPlayers",
+     "svar": true,
+     "tall": 2,
+     "linje": 1.5
+    }
+   ]
+  },
+  {
+   "navn": "uten scorer",
+   "linjer": null,
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Anders",
+     "handicap": 0
+    },
+    {
+     "id": "b",
+     "name": "Bjørn",
+     "handicap": 18
+    }
+   ],
+   "runder": [],
+   "utregning": "Ingen scorer: alt er strøket.",
+   "forventet": [
+    {
+     "sporsmaal": "lastPlace",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "lowestGross",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "comeback",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "mostBlanks",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "bestParThrees",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "bestParFives",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "parStreak",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "eagle",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "grossBirdie",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "leaderWins",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "sharedWin",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "highHandicapWins",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "lastPlacePoints",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "winningMargin",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "blankHoles",
+     "strøket": true
+    },
+    {
+     "sporsmaal": "parOrBetterPlayers",
+     "strøket": true
+    }
+   ]
+  }
+ ]
+}

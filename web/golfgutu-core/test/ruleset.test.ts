@@ -19,10 +19,14 @@ import {
   roundTablePoints,
   rulesetDay,
   rulesetEquals,
+  setTipsLine,
   standardCompetitionRules,
   teamHandicapRule,
+  tipsLine,
+  TIPS_MAX_PER_COUPON,
   TIPS_QUESTIONS,
   TIPS_TEMPLATES,
+  type TipsQuestion,
 } from "../src/ruleset.ts";
 import { holePoints } from "../src/scoring.ts";
 import {
@@ -428,11 +432,12 @@ test("tips: spørsmål og linjer begge veier", () => {
   assert.deepEqual(GOLFGUTU.tips.questions, fixture("tips-sporsmaal").standard);
   assert.equal(GOLFGUTU.tips.birdieCountLine, nye.standard.birdieCountLine);
   assert.equal(GOLFGUTU.tips.winnerPointsLine, nye.standard.winnerPointsLine);
-  // Malene er de samme som i Swift.
-  assert.deepEqual(TIPS_TEMPLATES.map((t) => ({ mal: t.id, navn: t.title, sporsmaal: [...t.questions] })), nye.maler);
-  for (const m of nye.maler) assert.equal(matchingTipsTemplate(m.sporsmaal), m.mal);
+  // Malene er de samme som i Swift (Moro-kupongen står i tips-moro-sporsmaal.json).
+  const moro = fixture("tips-moro-sporsmaal");
+  assert.deepEqual(TIPS_TEMPLATES.map((t) => ({ mal: t.id, navn: t.title, sporsmaal: [...t.questions] })), moro.maler);
+  for (const m of moro.maler) assert.equal(matchingTipsTemplate(m.sporsmaal), m.mal);
   assert.equal(matchingTipsTemplate(["over", "winner"]), null);
-  assert.equal(new Set(TIPS_QUESTIONS).size, 9);
+  assert.equal(new Set(TIPS_QUESTIONS).size, 25);
 
   // Standard skrives ikke (Golfgutu-JSON-en er som før); noe annet skrives og leses tilbake.
   const golf = encodeRuleset(GOLFGUTU).tips as any;
@@ -456,6 +461,30 @@ test("tips: spørsmål og linjer begge veier", () => {
     assert.deepEqual(decodeRuleset({ version: 2, tips: sak.tips ?? {} }).tips.questions, sak.sporsmaal, sak.navn);
   }
   assert.deepEqual(decodeRuleset({ version: 2, tips: { questions: ["backNine", "nyttSporsmaal"] } }).tips.questions, ["backNine"]);
+});
+
+// De morsomme over/under-spørsmålene: linjene skrives bare når de er endret (TipsFunQuestionsTests).
+test("tips: linjene på de morsomme spørsmålene", () => {
+  const moro = fixture("tips-moro-sporsmaal");
+  for (const [q, v] of Object.entries(moro.standard)) assert.equal(tipsLine(GOLFGUTU.tips, q as TipsQuestion), v, q);
+  assert.equal(tipsLine(GOLFGUTU.tips, "lastPlace"), null);
+  assert.equal((encodeRuleset(GOLFGUTU).tips as any).lines, undefined);
+  const r = golfgutuRules();
+  r.tips.questions = ["winner", "lastPlace", "comeback", "mostBlanks", "eagle", "grossBirdie", "leaderWins", "winningMargin"];
+  setTipsLine(r.tips, "blankHoles", 9.5);
+  assert.deepEqual((encodeRuleset(r).tips as any).lines, { blankHoles: 9.5 });
+  assert.ok(rulesetEquals(roundtrip(r), r));
+  assert.deepEqual(validateRuleset(r), []);
+  setTipsLine(r.tips, "blankHoles", 20.5);
+  assert.deepEqual(r.tips.lines, {}, "tilbake på standarden");
+  setTipsLine(r.tips, "winningMargin", 3);
+  setTipsLine(r.tips, "lastPlacePoints", 200.5);
+  assert.deepEqual(new Set(validateRuleset(r).map((i) => i.field)), new Set(["tips.lines.winningMargin", "tips.lines.lastPlacePoints"]));
+  const full = golfgutuRules();
+  full.tips.questions = TIPS_QUESTIONS.slice(0, TIPS_MAX_PER_COUPON + 1);
+  assert.deepEqual(validateRuleset(full).map((i) => i.field), ["tips.questions"]);
+  // Ukjent spørsmål og spørsmål uten linje hoppes over, som i Swift.
+  assert.deepEqual(decodeRuleset({ version: 2, tips: { lines: { nyttSpm: 1.5, winner: 2.5, blankHoles: 3.5 } } }).tips.lines, { blankHoles: 3.5 });
 });
 
 test("tips: validering av spørsmål og linjer", () => {

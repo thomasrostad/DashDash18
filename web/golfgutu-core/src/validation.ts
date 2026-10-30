@@ -2,8 +2,8 @@
 // `CompetitionRules.validate` i Competitions.swift). Grensene for tips og veddemål er databasens.
 
 import { FORM_CATALOG } from "./forms.ts";
-import type { CompetitionRules, Counting, LeagueRules, Ruleset } from "./ruleset.ts";
-import { countsRounds, HIDDEN_HOLES_RANGE, MAX_STROKES_FIXED, STANDARD_PLAY } from "./ruleset.ts";
+import type { CompetitionRules, Counting, LeagueRules, Ruleset, TipsQuestion } from "./ruleset.ts";
+import { countsRounds, HIDDEN_HOLES_RANGE, MAX_STROKES_FIXED, STANDARD_PLAY, TIPS_MAX_PER_COUPON } from "./ruleset.ts";
 
 /** Et problem i et regelsett, med feltet det gjelder og en norsk melding til arrangøren. */
 export interface RulesetIssue {
@@ -18,6 +18,16 @@ const TIPS_LINE_LIMITS = [-9.5, 18.5] as const;
 /** Linjene på antall birdier og vinnerens poeng (`Tips.birdieCountLineLimits`, `winnerPointsLineLimits`). */
 export const TIPS_BIRDIE_COUNT_LINE_LIMITS = [0.5, 99.5] as const;
 export const TIPS_WINNER_POINTS_LINE_LIMITS = [0.5, 149.5] as const;
+
+/** Grensene for linja på et over/under-spørsmål i regelsettet (`Tips.lineLimits(for:)`). */
+export function tipsLineLimits(q: TipsQuestion): readonly [number, number] | null {
+  switch (q) {
+    case "birdieCount": case "winningMargin": case "parOrBetterPlayers": return TIPS_BIRDIE_COUNT_LINE_LIMITS;
+    case "winnerPoints": case "lastPlacePoints": return TIPS_WINNER_POINTS_LINE_LIMITS;
+    case "blankHoles": return [0.5, 499.5];
+    default: return null;
+  }
+}
 const BET_STAKE_LIMITS = [1, 10_000] as const;
 const BET_BANK_LIMIT = 1_000_000;
 const BET_PAYOUT_DECIMALS = [0, 2] as const;
@@ -208,12 +218,20 @@ export function validateRuleset(r: Ruleset): RulesetIssue[] {
   }
   if (t.questions.length === 0 || new Set(t.questions).size !== t.questions.length) {
     add("tips.questions", "Kupongen må ha minst ett spørsmål, hvert bare én gang.");
+  } else if (t.questions.length > TIPS_MAX_PER_COUPON) {
+    add("tips.questions", `Kupongen kan ha høyst ${TIPS_MAX_PER_COUPON} spørsmål.`);
   }
   if (!isHalfIn(t.birdieCountLine, TIPS_BIRDIE_COUNT_LINE_LIMITS)) {
     add("tips.birdieCountLine", "Linja for antall birdier må være et halvt tall (som 14,5) mellom 0,5 og 99,5.");
   }
   if (!isHalfIn(t.winnerPointsLine, TIPS_WINNER_POINTS_LINE_LIMITS)) {
     add("tips.winnerPointsLine", "Linja for vinnerens poeng må være et halvt tall (som 37,5) mellom 0,5 og 149,5.");
+  }
+  for (const q of (Object.keys(t.lines) as TipsQuestion[]).sort()) {
+    const limits = tipsLineLimits(q), line = t.lines[q];
+    if (!limits || line === undefined || isHalfIn(line, limits)) continue;
+    const f = (x: number) => x.toFixed(1).replace(".", ",");
+    add(`tips.lines.${q}`, `Linja må være et halvt tall mellom ${f(limits[0])} og ${f(limits[1])}.`);
   }
 
   // Veddemål.

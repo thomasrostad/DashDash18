@@ -141,6 +141,32 @@ export const TIPS_QUESTION_TITLES: Readonly<Record<TipsQuestion, string>> = {
   mostBirdies: "Hvem får flest birdier?",
   over: "Over eller under linja?",
   winnerPoints: "Vinnerens poeng: over eller under?",
+  lastPlace: "Hvem blir sist?",
+  lowestGross: "Lavest brutto?",
+  comeback: "Kveldens comeback?",
+  mostBlanks: "Hvem får flest blanke hull?",
+  bestParThrees: "Best på par 3-hullene?",
+  bestParFives: "Best på par 5-hullene?",
+  parStreak: "Lengst rekke med par eller bedre?",
+  eagle: "Blir det en eagle?",
+  grossBirdie: "Blir det en ekte birdie?",
+  leaderWins: "Vinner lederen etter ni hull?",
+  sharedWin: "Blir det delt seier?",
+  highHandicapWins: "Vinner en med høyt handicap?",
+  lastPlacePoints: "Sistemannens poeng: over eller under?",
+  winningMargin: "Seiersmarginen: over eller under?",
+  blankHoles: "Antall blanke hull: over eller under?",
+  parOrBetterPlayers: "Antall på par eller bedre: over eller under?",
+};
+
+/** Overskriften på linja for et over/under-spørsmål i regelsettet (`RulesetTipsSection.lineTitle` i appen). */
+export const TIPS_LINE_TITLES: Readonly<Partial<Record<TipsQuestion, string>>> = {
+  birdieCount: "Linje for antall birdier",
+  winnerPoints: "Linje for vinnerens poeng",
+  lastPlacePoints: "Linje for sistemannens poeng",
+  winningMargin: "Linje for seiersmarginen",
+  blankHoles: "Linje for blanke hull",
+  parOrBetterPlayers: "Linje for antall på par",
 };
 
 /** Malen kupongen er på, eller `null` (tilpasset). */

@@ -1,8 +1,8 @@
 import GolfgutuCore
 import SwiftUI
 
-/// Tippekupongen: mal (Klassisk, Birdiejakt, Full kupong), hvert spørsmål av eller på, og linjene for
-/// antall birdier og vinnerens poeng. Linja for snittet settes per kveld på kupongen, som før.
+/// Tippekupongen: mal (Klassisk, Birdiejakt, Full kupong, Moro-kupong), hvert spørsmål av eller på, og
+/// linjene for over/under-spørsmålene som er med. Linja for snittet settes per kveld på kupongen, som før.
 struct RulesetTipsSection: View {
     @Binding var draft: RulesetDraft
 
@@ -18,19 +18,16 @@ struct RulesetTipsSection: View {
             }
             ForEach(TipsQuestion.catalog) { q in
                 Toggle(q.title, isOn: Binding(get: { draft.asksTips(q) }, set: { draft.setTipsQuestion(q, $0) }))
+                    .disabled(draft.tipsCouponIsFull && !draft.asksTips(q))
             }
-            if draft.asksTips(.birdieCount) {
-                lineStepper("Linje for antall birdier", value: $draft.rules.tips.birdieCountLine,
-                            in: Tips.birdieCountLineLimits, changeNote: draft.tipsLineNote(\.birdieCountLine))
-            }
-            if draft.asksTips(.winnerPoints) {
-                lineStepper("Linje for vinnerens poeng", value: $draft.rules.tips.winnerPointsLine,
-                            in: Tips.winnerPointsLineLimits, changeNote: draft.tipsLineNote(\.winnerPointsLine))
+            ForEach(draft.rules.tips.questions.filter { Tips.lineLimits(for: $0) != nil }) { q in
+                lineStepper(q)
             }
         } header: {
             DDHeader(RulesetSection.tips.title)
         } footer: {
-            RuleSectionFooter(text: "Velg en mal og slå enkeltspørsmål av eller på. Linja for snittet settes per kveld på kupongen. "
+            RuleSectionFooter(text: "Velg en mal og slå enkeltspørsmål av eller på, høyst \(TipsQuestion.maxPerCoupon). "
+                                  + "Linja for snittet settes per kveld på kupongen. "
                                   + "Den som ikke har oppdatert appen, ser bare de fem klassiske spørsmålene.",
                               issues: draft.issues(in: .tips))
         }
@@ -42,14 +39,26 @@ struct RulesetTipsSection: View {
     }
 
     /// En linje i hele steg, så den blir stående på et halvt tall.
-    private func lineStepper(_ title: String, value: Binding<Double>, in range: ClosedRange<Double>,
-                             changeNote: String?) -> some View {
-        Stepper(value: value, in: range, step: draft.rules.tips.lineStep) {
+    private func lineStepper(_ q: TipsQuestion) -> some View {
+        let value = Binding(get: { draft.rules.tips.line(q) ?? 0 }, set: { draft.rules.tips.setLine(q, $0) })
+        return Stepper(value: value, in: Tips.lineLimits(for: q) ?? 0.5...0.5, step: draft.rules.tips.lineStep) {
             LabeledContent {
                 Text(Tips.formatPlain(value.wrappedValue)).monospacedDigit()
             } label: {
-                RuleFieldLabel(title: title, changeNote: changeNote)
+                RuleFieldLabel(title: Self.lineTitle(q), changeNote: draft.tipsLineNote(q))
             }
+        }
+    }
+
+    static func lineTitle(_ q: TipsQuestion) -> String {
+        switch q {
+        case .birdieCount: "Linje for antall birdier"
+        case .winnerPoints: "Linje for vinnerens poeng"
+        case .lastPlacePoints: "Linje for sistemannens poeng"
+        case .winningMargin: "Linje for seiersmarginen"
+        case .blankHoles: "Linje for blanke hull"
+        case .parOrBetterPlayers: "Linje for antall på par"
+        default: "Linje"
         }
     }
 }

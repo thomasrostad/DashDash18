@@ -245,7 +245,7 @@ nonisolated struct TipsBoard: Sendable {
             case .mostBirdies: return f.field.isEmpty ? "Strøket – ingen scorer" : "Strøket – ingen birdier"
             case .birdieCount, .winnerPoints:
                 return f.figure(q) == nil ? "Strøket – ingen scorer" : "Strøket – traff linja"
-            default: return "Strøket – ingen scorer"
+            default: return Self.voidText(q, outcome: f.outcomes[q], hasField: !f.field.isEmpty)
             }
         }
         switch q {
@@ -267,6 +267,39 @@ nonisolated struct TipsBoard: Sendable {
         case .winnerPoints:
             return (f.overWinnerPoints == true ? "Over" : "Under") + " · vinneren fikk \(f.winnerPoints ?? 0) poeng mot "
                 + Tips.formatPlain(f.winnerPointsLine ?? rules.tips.winnerPointsLine)
+        default:
+            let o = f.outcomes[q] ?? TipsOutcome()
+            switch q.kind {
+            case .player: return nameList(o.players ?? []) + " · " + Self.figureText(q, o.figure ?? 0)
+            case .yesNo: return o.flag == true ? "Ja" : "Nei"
+            case .overUnder:
+                return (o.flag == true ? "Over" : "Under") + " · " + Self.figureText(q, o.figure ?? 0)
+                    + " mot " + Tips.formatPlain(o.line ?? 0)
+            }
+        }
+    }
+
+    /// «3 poeng», «+3 poeng» (comeback), «17 hull», «2 spillere».
+    static func figureText(_ q: TipsQuestion, _ x: Double) -> String {
+        let n = Int(x.rounded())
+        let number = q == .comeback && n > 0 ? "+\(n)" : (n < 0 ? "−\(-n)" : "\(n)")
+        return number + " " + q.unit(x)
+    }
+
+    /// Hvorfor et av de morsomme spørsmålene er strøket.
+    static func voidText(_ q: TipsQuestion, outcome: TipsOutcome?, hasField: Bool) -> String {
+        guard hasField else { return "Strøket – ingen scorer" }
+        if q.kind == .overUnder { return outcome?.figure == nil ? "Strøket – for få spillere" : "Strøket – traff linja" }
+        switch q {
+        case .lowestGross: return "Strøket – ingen førte alle hullene"
+        case .comeback: return "Strøket – ingen førte alle de 18 hullene"
+        case .leaderWins: return "Strøket – ingen førte alle de ni første hullene"
+        case .mostBlanks: return "Strøket – ingen blanke hull"
+        case .parStreak: return "Strøket – ingen par eller bedre"
+        case .bestParThrees: return "Strøket – ingen par 3-hull"
+        case .bestParFives: return "Strøket – ingen par 5-hull"
+        case .highHandicapWins: return "Strøket – for få spillere"
+        default: return "Strøket – ingen scorer"
         }
     }
 

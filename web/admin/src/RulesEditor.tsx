@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { saveRules, type Competition } from "./data.ts";
 import {
-  decodeRuleset, encodeRuleset, matchingTemplate, templateTitle, TIPS_QUESTIONS, TIPS_TEMPLATES, validateRuleset,
+  decodeRuleset, encodeRuleset, matchingTemplate, setTipsLine, templateTitle, tipsLine, tipsLineLimits, TIPS_MAX_PER_COUPON,
+  TIPS_QUESTIONS, TIPS_TEMPLATES, validateRuleset,
   type Ruleset, type TipsTemplate,
 } from "./engine.ts";
 import { errorText } from "./supabase.ts";
 import {
   addPlacement, addPointsTable, aggregationOptions, applyTipsTemplate, DRAW_METHOD_OPTIONS, hasMinEvenings, minEveningsHelp, minEveningsLabel,
   placementPointsOf, pointsTableList, removePlacement, removePointsTable, renamePointsTable, setPlacementPoint, setPointsSource,
-  setPointsTableMultiplier, setTipsQuestion, TIE_RULE_OPTIONS, TIPS_QUESTION_TITLES, tipsTemplateOf, toggleMinEvenings,
+  setPointsTableMultiplier, setTipsQuestion, TIE_RULE_OPTIONS, TIPS_LINE_TITLES, TIPS_QUESTION_TITLES, tipsTemplateOf, toggleMinEvenings,
   type Aggregation, type DrawMethod, type PointsSource, type TieRule,
 } from "./rulesform.ts";
 
@@ -118,19 +119,17 @@ export function RulesEditor({ competition, onSaved }: { competition: Competition
             </select>
           </label>
           {TIPS_QUESTIONS.map((q) => (
-            <label key={q} className="check"><input type="checkbox" checked={rules.tips.questions.includes(q)} onChange={(e) => set((r) => setTipsQuestion(r, q, e.target.checked))} />{TIPS_QUESTION_TITLES[q]}</label>
+            <label key={q} className="check"><input type="checkbox" checked={rules.tips.questions.includes(q)} disabled={!rules.tips.questions.includes(q) && rules.tips.questions.length >= TIPS_MAX_PER_COUPON} onChange={(e) => set((r) => setTipsQuestion(r, q, e.target.checked))} />{TIPS_QUESTION_TITLES[q]}</label>
           ))}
-          {rules.tips.questions.includes("birdieCount") && (
-            <label>Linje for antall birdier
-              <input type="number" min={0.5} max={99.5} step={1} value={rules.tips.birdieCountLine} onChange={(e) => set((r) => { r.tips.birdieCountLine = Number(e.target.value); })} />
-            </label>
-          )}
-          {rules.tips.questions.includes("winnerPoints") && (
-            <label>Linje for vinnerens poeng
-              <input type="number" min={0.5} max={149.5} step={1} value={rules.tips.winnerPointsLine} onChange={(e) => set((r) => { r.tips.winnerPointsLine = Number(e.target.value); })} />
-            </label>
-          )}
-          <p className="muted small">Linja for snittet settes per kveld i appen. Den som ikke har oppdatert appen, ser bare de fem klassiske spørsmålene.</p>
+          {rules.tips.questions.map((q) => {
+            const limits = tipsLineLimits(q);
+            return limits && (
+              <label key={`linje-${q}`}>{TIPS_LINE_TITLES[q]}
+                <input type="number" min={limits[0]} max={limits[1]} step={1} value={tipsLine(rules.tips, q) ?? 0} onChange={(e) => set((r) => setTipsLine(r.tips, q, Number(e.target.value)))} />
+              </label>
+            );
+          })}
+          <p className="muted small">Høyst {TIPS_MAX_PER_COUPON} spørsmål. Linja for snittet settes per kveld i appen. Den som ikke har oppdatert appen, ser bare de fem klassiske spørsmålene.</p>
         </>}
         {league && <>
           <label>Hvor mange runder teller
