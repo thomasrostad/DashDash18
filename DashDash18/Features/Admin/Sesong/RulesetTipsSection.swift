@@ -20,6 +20,15 @@ struct RulesetTipsSection: View {
                 Toggle(q.title, isOn: Binding(get: { draft.asksTips(q) }, set: { draft.setTipsQuestion(q, $0) }))
                     .disabled(draft.tipsCouponIsFull && !draft.asksTips(q))
             }
+            if draft.asksTips(.featuredHole) {
+                Stepper(value: $draft.rules.tips.featuredHole, in: Ruleset.TipsRules.featuredHoleLimits) {
+                    LabeledContent {
+                        Text("Hull \(draft.rules.tips.featuredHole)").monospacedDigit()
+                    } label: {
+                        RuleFieldLabel(title: "Kveldens hull", changeNote: draft.tipsFeaturedHoleNote)
+                    }
+                }
+            }
             ForEach(draft.rules.tips.questions.filter { Tips.lineLimits(for: $0) != nil }) { q in
                 lineStepper(q)
             }

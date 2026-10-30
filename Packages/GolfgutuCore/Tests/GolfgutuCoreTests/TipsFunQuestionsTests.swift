@@ -202,4 +202,51 @@ struct TipsFunQuestionsTests {
         }
         #expect(Tips.title(.longestDriveMeters, line: 250.5) == "Longest drive: over eller under 250,5 m?")
     }
+
+    // MARK: Kveldens hull og forrige kvelds vinner (Fixtures/tips-kveldens-hull.json)
+
+    struct HullFil: Decodable {
+        let standardHull: Int
+        let hull: [HullKveld]
+        let forrige: [ForrigeSak]
+    }
+    struct HullSak: Decodable { let hull: Int; let spillere: [String]?; let tall: Double? }
+    struct HullKveld: Decodable { let kveld: String; let saker: [HullSak] }
+    struct ForrigeSak: Decodable { let kveld: String; let forrige: [String]?; let svar: Bool? }
+
+    @Test func kveldensHullOgForrigeVinner() throws {
+        let fil = try Fixture.load(HullFil.self, "tips-kveldens-hull")
+        #expect(Ruleset.golfgutu.tips.featuredHole == fil.standardHull)
+        func kveld(_ navn: String) throws -> Kveld { try #require(self.fil.kvelder.first { $0.navn == navn }) }
+        for k in fil.hull {
+            let kv = try kveld(k.kveld)
+            for sak in k.saker {
+                var rules = Self.rules(kv.linjer)
+                rules.tips.featuredHole = sak.hull
+                let f = Tips.answerKey(rounds: TipsTests.tipsRounds(kv.runder, kv.spillere), line: 2.5, rules: rules)
+                #expect(f.players(.featuredHole) == sak.spillere, "\(k.kveld): hull \(sak.hull)")
+                #expect(f.outcomes[.featuredHole]?.figure == sak.tall, "\(k.kveld): hull \(sak.hull)")
+                #expect(Tips.title(.featuredHole, line: 2.5, rules: rules) == "Lavest netto på hull \(sak.hull)?")
+            }
+        }
+        for sak in fil.forrige {
+            let kv = try kveld(sak.kveld)
+            let f = Tips.answerKey(rounds: TipsTests.tipsRounds(kv.runder, kv.spillere), line: 2.5, rules: Self.rules(nil),
+                                   previousWinners: sak.forrige)
+            #expect(f.flag(.previousWinnerWins) == sak.svar, "\(sak.kveld): forrige \(sak.forrige ?? [])")
+            #expect(f.isVoid(.previousWinnerWins) == (sak.svar == nil))
+        }
+        // Lagres bare når det ikke er standard, og valideres.
+        var r = Ruleset.golfgutu
+        #expect(try JSONSerialization.jsonObject(with: JSONEncoder().encode(r.tips)) as? [String: Any] != nil)
+        r.tips.featuredHole = 7
+        let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(r.tips)) as? [String: Any]
+        #expect(json?["featuredHole"] as? Int == 7)
+        #expect(try JSONDecoder().decode(Ruleset.self, from: JSONEncoder().encode(r)) == r)
+        #expect(r.validate().isEmpty)
+        r.tips.featuredHole = 19
+        #expect(r.validate().map(\.field) == ["tips.featuredHole"])
+        let golf = try JSONSerialization.jsonObject(with: JSONEncoder().encode(Ruleset.golfgutu.tips)) as? [String: Any]
+        #expect(golf?["featuredHole"] == nil)
+    }
 }

@@ -160,6 +160,8 @@ export const TIPS_QUESTION_TITLES: Readonly<Record<TipsQuestion, string>> = {
   longestDrive: "Hvem får longest drive?",
   closestToPin: "Hvem kommer nærmest pinnen?",
   longestDriveMeters: "Longest drive: over eller under?",
+  featuredHole: "Lavest netto på kveldens hull?",
+  previousWinnerWins: "Vinner forrige kvelds vinner igjen?",
 };
 
 /** Overskriften på linja for et over/under-spørsmål i regelsettet (`RulesetTipsSection.lineTitle` i appen). */

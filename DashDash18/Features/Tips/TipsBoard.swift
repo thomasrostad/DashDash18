@@ -19,6 +19,8 @@ nonisolated struct TipsInput: Equatable, Sendable {
     var serverDeadline: Date?
     /// `tips_open` fra databasen, som er låsen som gjelder. Mangler den, regnes det her.
     var serverOpen: Bool?
+    /// Forrige kvelds runder i sesongen, bare når kupongen spør om forrige kvelds vinner.
+    var previousRounds: [RoundSnapshot] = []
 }
 
 /// Tippekupongen for én kveld: tilstand, frist, kandidatene, hvem som har levert, fasit og
@@ -98,24 +100,17 @@ nonisolated struct TipsBoard: Sendable {
         let short = TipsBoard.shortNames(input.members)
         shortNames = short
 
-        // Rundene slik regelmotoren ser dem, med frosset handicap fra round_players.
-        let rounds = input.rounds.map { snapshot -> TipsRound in
-            var s = snapshot
-            s.rules = input.rules
-            for m in input.members where s.names[m.id] == nil { s.names[m.id] = m.displayName }
-            let game = RoundGame(s)
-            let handicaps = Dictionary(s.players.map { ($0.memberID.uuidString, game.handicap($0.memberID)) },
-                                       uniquingKeysWith: { a, _ in a })
-            return TipsRound(round: game.round, roster: game.roster, handicaps: handicaps,
-                             isDraft: snapshot.round.status == .draft, sideClaims: game.coreSideClaims)
-        }
+        let rounds = Self.tipsRounds(input.rounds, input)
 
         let computedDeadline = Tips.deadline(date: input.event.eventDate, startTime: input.event.startTime,
                                              rules: input.rules)
         deadline = input.serverDeadline ?? computedDeadline
         let open = input.serverOpen
             ?? Tips.isOpen(deadline: deadline, now: now, hasScore: Tips.hasScore(rounds))
-        let key = Tips.answerKey(rounds: rounds, line: line, rules: input.rules)
+        // Forrige kvelds vinner teller først når den kvelden er ferdig.
+        let previous = Tips.answerKey(rounds: Self.tipsRounds(input.previousRounds, input), line: line, rules: input.rules)
+        let key = Tips.answerKey(rounds: rounds, line: line, rules: input.rules,
+                                 previousWinners: previous.finished ? previous.winner : nil)
         answerKey = key
         phase = open ? .open : (key.finished ? .finished : .locked)
 
@@ -141,6 +136,20 @@ nonisolated struct TipsBoard: Sendable {
         firstCandidates = coming.isEmpty ? rest : coming
         otherCandidates = coming.isEmpty ? [] : rest
         missing = summary.yes.map(\.memberID).filter { !delivered.contains($0) }
+    }
+
+    /// Rundene slik regelmotoren ser dem, med frosset handicap fra round_players.
+    static func tipsRounds(_ snapshots: [RoundSnapshot], _ input: TipsInput) -> [TipsRound] {
+        snapshots.map { snapshot -> TipsRound in
+            var s = snapshot
+            s.rules = input.rules
+            for m in input.members where s.names[m.id] == nil { s.names[m.id] = m.displayName }
+            let game = RoundGame(s)
+            let handicaps = Dictionary(s.players.map { ($0.memberID.uuidString, game.handicap($0.memberID)) },
+                                       uniquingKeysWith: { a, _ in a })
+            return TipsRound(round: game.round, roster: game.roster, handicaps: handicaps,
+                             isDraft: snapshot.round.status == .draft, sideClaims: game.coreSideClaims)
+        }
     }
 
     // MARK: Navn
@@ -211,7 +220,7 @@ nonisolated struct TipsBoard: Sendable {
     }
 
     func title(_ q: TipsQuestion) -> String {
-        Tips.title(q, line: Tips.line(for: q, eventLine: line, rules: rules) ?? line)
+        Tips.title(q, line: Tips.line(for: q, eventLine: line, rules: rules) ?? line, rules: rules)
     }
 
     /// Spør kupongen om snittet? Ellers har kveldens linje ingenting å si.
@@ -271,7 +280,9 @@ nonisolated struct TipsBoard: Sendable {
             let o = f.outcomes[q] ?? TipsOutcome()
             switch q.kind {
             case .player: return nameList(o.players ?? []) + " · " + Self.figureText(q, o.figure ?? 0)
-            case .yesNo: return o.flag == true ? "Ja" : "Nei"
+            case .yesNo:
+                let answer = o.flag == true ? "Ja" : "Nei"
+                return q == .previousWinnerWins ? answer + " · " + nameList(o.players ?? []) + " vant forrige kveld" : answer
             case .overUnder:
                 return (o.flag == true ? "Over" : "Under") + " · " + Self.figureText(q, o.figure ?? 0)
                     + " mot " + Tips.formatPlain(o.line ?? 0)
@@ -302,6 +313,8 @@ nonisolated struct TipsBoard: Sendable {
         case .parStreak: return "Strøket – ingen par eller bedre"
         case .bestParThrees: return "Strøket – ingen par 3-hull"
         case .bestParFives: return "Strøket – ingen par 5-hull"
+        case .featuredHole: return "Strøket – ingen førte hullet"
+        case .previousWinnerWins: return "Strøket – ingen ferdig kveld før denne"
         case .highHandicapWins: return "Strøket – for få spillere"
         default: return "Strøket – ingen scorer"
         }

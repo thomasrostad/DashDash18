@@ -431,6 +431,7 @@ struct TipsNyeSporsmaalTests {
         #expect(TipsBoard.figureText(.longestDrive, 248.5) == "248,5 m")
         #expect(TipsBoard.voidText(.closestToPin, outcome: nil, hasField: true) == "Strøket – ingen innmeldt")
         #expect(TipsBoard.voidText(.longestDriveMeters, outcome: nil, hasField: false) == "Strøket – ingen innmeldt")
+        #expect(TipsBoard.voidText(.previousWinnerWins, outcome: nil, hasField: true) == "Strøket – ingen ferdig kveld før denne")
         #expect(TipsBoard.voidText(.mostBlanks, outcome: nil, hasField: true) == "Strøket – ingen blanke hull")
         #expect(TipsBoard.voidText(.mostBlanks, outcome: nil, hasField: false) == "Strøket – ingen scorer")
         #expect(TipsBoard.voidText(.blankHoles, outcome: TipsOutcome(figure: 20.5, line: 20.5), hasField: true)
@@ -446,6 +447,24 @@ struct TipsNyeSporsmaalTests {
         }
     }
 
+    /// Forrige kvelds vinner regnes fra forrige kvelds runder, men bare når den kvelden er ferdig.
+    @Test func forrigeKveldsVinner() {
+        var rules = Ruleset.golfgutu
+        rules.tips.questions = [.winner, .previousWinnerWins]
+        var input = TipsInput(event: T.event, rules: rules, members: T.four,
+                              rounds: T.evening(status: .locked), coupons: T.coupons)
+        input.serverOpen = false
+        #expect(TipsBoard(input, me: T.id(T.anders), isOrganizer: false).answerKey.isVoid(.previousWinnerWins),
+                "ingen forrige kveld")
+        input.previousRounds = T.evening(status: .active)
+        #expect(TipsBoard(input, me: T.id(T.anders), isOrganizer: false).answerKey.isVoid(.previousWinnerWins),
+                "forrige kveld er ikke ferdig")
+        input.previousRounds = T.evening(status: .locked)
+        let b = TipsBoard(input, me: T.id(T.anders), isOrganizer: false)
+        #expect(b.answerKey.flag(.previousWinnerWins) == true, "samme vinnere som forrige kveld")
+        #expect(b.answerKeyText(.previousWinnerWins) == "Ja · " + b.nameList(b.answerKey.winner ?? []) + " vant forrige kveld")
+    }
+
     /// Kupongen tar høyst et dusin spørsmål; da kan ingen flere slås på.
     @Test func kupongenErFull() {
         var d = RulesetDraft(.golfgutu)
@@ -457,6 +476,9 @@ struct TipsNyeSporsmaalTests {
         d.rules.tips.setLine(.blankHoles, 9.5)
         #expect(d.tipsLineNote(.blankHoles) == "Endret · standard 20,5")
         #expect(d.tipsLineNote(.lastPlace) == nil)
+        #expect(d.tipsFeaturedHoleNote == nil)
+        d.rules.tips.featuredHole = 7
+        #expect(d.tipsFeaturedHoleNote == "Endret · standard hull 18")
     }
 
     @Test func kveldensLinjeBareMedSnittet() {

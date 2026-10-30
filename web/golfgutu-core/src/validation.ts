@@ -227,6 +227,9 @@ export function validateRuleset(r: Ruleset): RulesetIssue[] {
   if (!isHalfIn(t.winnerPointsLine, TIPS_WINNER_POINTS_LINE_LIMITS)) {
     add("tips.winnerPointsLine", "Linja for vinnerens poeng må være et halvt tall (som 37,5) mellom 0,5 og 149,5.");
   }
+  if (!(Number.isInteger(t.featuredHole) && t.featuredHole >= 1 && t.featuredHole <= 18)) {
+    add("tips.featuredHole", "Kveldens hull må være fra 1 til 18.");
+  }
   for (const q of (Object.keys(t.lines) as TipsQuestion[]).sort()) {
     const limits = tipsLineLimits(q), line = t.lines[q];
     if (!limits || line === undefined || isHalfIn(line, limits)) continue;

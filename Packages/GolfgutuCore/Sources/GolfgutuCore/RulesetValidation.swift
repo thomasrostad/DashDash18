@@ -185,6 +185,9 @@ extension Ruleset {
         if !Tips.isHalf(tips.winnerPointsLine, in: Tips.winnerPointsLineLimits) {
             add("tips.winnerPointsLine", "Linja for vinnerens poeng må være et halvt tall (som 37,5) mellom 0,5 og 149,5.")
         }
+        if !Ruleset.TipsRules.featuredHoleLimits.contains(tips.featuredHole) {
+            add("tips.featuredHole", "Kveldens hull må være fra 1 til 18.")
+        }
         for (q, line) in tips.lines.sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
             guard let limits = Tips.lineLimits(for: q), !Tips.isHalf(line, in: limits) else { continue }
             add("tips.lines.\(q.rawValue)", "Linja må være et halvt tall mellom "
