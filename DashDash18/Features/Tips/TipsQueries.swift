@@ -75,6 +75,10 @@ enum TipsQueries {
         async let playerRows: [RoundPlayerRow] = client.from("round_players")
             .select(RoundPlayerRow.columns)
             .in("round_id", values: ids).execute().value
+        // Longest drive og nærmest pinnen, til spørsmålene om sidepremiene.
+        async let claimRows: [SideClaimRow] = client.from("side_claims")
+            .select(SideClaimRow.columns)
+            .in("round_id", values: ids).execute().value
         // Scorene per runde, så svaret aldri når PostgREST-grensen på 1000 rader.
         async let scoreRows = scores(client: client, roundIDs: rounds.map(\.id))
         async let courseRows: [CourseRow] = courseIDs.isEmpty ? [] : client.from("courses")
@@ -86,6 +90,7 @@ enum TipsQueries {
 
         let holes = try await holeRows
         let players = try await playerRows
+        let claims = try await claimRows
         let scores = try await scoreRows
         let courses = try await courseRows
         let courseHoles = try await courseHoleRows
@@ -93,6 +98,7 @@ enum TipsQueries {
             var s = RoundSnapshot(round: round)
             s.roundHoles = holes.filter { $0.roundID == round.id }
             s.players = players.filter { $0.roundID == round.id }
+            s.sideClaims = claims.filter { $0.roundID == round.id }
             s.scores = scores[round.id] ?? []
             s.course = courses.first { $0.id == round.courseID }
             s.courseHoles = courseHoles.filter { $0.courseID == round.courseID }

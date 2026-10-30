@@ -1,0 +1,1511 @@
+{
+ "_kilde": "Tippespørsmålene om sidepremiene (ikke i PWA-en). Kvelden er «to runder» fra tips-nye-sporsmaal.json; innmeldingene er lagt til. Lengst/nærmest over hele kvelden, bare runder der premien er på; likt øverst gir alle riktige. Standardlinja for lengste drive er 250,5 m.",
+ "standardLinje": 250.5,
+ "spillere": [
+  {
+   "id": "a",
+   "name": "Anders",
+   "handicap": 0
+  },
+  {
+   "id": "b",
+   "name": "Bjørn",
+   "handicap": 0
+  },
+  {
+   "id": "c",
+   "name": "Cato",
+   "handicap": 0
+  },
+  {
+   "id": "d",
+   "name": "Dag",
+   "handicap": 0
+  }
+ ],
+ "kvelder": [
+  {
+   "navn": "to runder, likt øverst",
+   "linje": null,
+   "runder": [
+    {
+     "round": {
+      "id": "r1",
+      "gameType": "fourball",
+      "holeCount": 9,
+      "holeStart": 0,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": true,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 4
+       },
+       "b": {
+        "0": 3,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 5,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 4
+       },
+       "c": {
+        "0": 5,
+        "1": 6,
+        "2": 4,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 6,
+        "7": 5,
+        "8": 5
+       },
+       "d": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 3
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true
+     },
+     "isDraft": false
+    },
+    {
+     "round": {
+      "id": "r2",
+      "gameType": "fourball",
+      "holeCount": 9,
+      "holeStart": 9,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": true,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 3,
+        "1": 3,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 4,
+        "7": 5,
+        "8": 5
+       },
+       "b": {
+        "0": 3,
+        "1": 2,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 6,
+        "8": 5
+       },
+       "c": {
+        "0": 5,
+        "1": 4,
+        "2": 6,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 5,
+        "7": 6,
+        "8": 5
+       },
+       "d": {
+        "0": 4,
+        "1": 3,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 4,
+        "7": 5,
+        "8": 3
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true
+     },
+     "isDraft": false
+    }
+   ],
+   "krav": [
+    {
+     "kind": "drive",
+     "playerId": "a",
+     "roundId": "r1",
+     "meters": 231.5
+    },
+    {
+     "kind": "drive",
+     "playerId": "b",
+     "roundId": "r1",
+     "meters": 248.0
+    },
+    {
+     "kind": "drive",
+     "playerId": "c",
+     "roundId": "r2",
+     "meters": 248.0
+    },
+    {
+     "kind": "kp",
+     "playerId": "d",
+     "roundId": "r1",
+     "meters": 1.8
+    },
+    {
+     "kind": "kp",
+     "playerId": "b",
+     "roundId": "r1",
+     "meters": 1.8
+    },
+    {
+     "kind": "kp",
+     "playerId": "a",
+     "roundId": "r2",
+     "meters": 3.2
+    }
+   ],
+   "utregning": "Lengst: Bjørn (r1) og Cato (r2) med 248,0; under 250,5. Nærmest: Bjørn og Dag med 1,8 (r1).",
+   "forventet": {
+    "longestDrive": [
+     "b",
+     "c"
+    ],
+    "closestToPin": [
+     "b",
+     "d"
+    ],
+    "lengste": 248.0,
+    "naermest": 1.8,
+    "over": false
+   }
+  },
+  {
+   "navn": "longest drive av i runde 2",
+   "linje": null,
+   "runder": [
+    {
+     "round": {
+      "id": "r1",
+      "gameType": "fourball",
+      "holeCount": 9,
+      "holeStart": 0,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": true,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 4
+       },
+       "b": {
+        "0": 3,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 5,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 4
+       },
+       "c": {
+        "0": 5,
+        "1": 6,
+        "2": 4,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 6,
+        "7": 5,
+        "8": 5
+       },
+       "d": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 3
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true
+     },
+     "isDraft": false
+    },
+    {
+     "round": {
+      "id": "r2",
+      "gameType": "fourball",
+      "holeCount": 9,
+      "holeStart": 9,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": true,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 3,
+        "1": 3,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 4,
+        "7": 5,
+        "8": 5
+       },
+       "b": {
+        "0": 3,
+        "1": 2,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 6,
+        "8": 5
+       },
+       "c": {
+        "0": 5,
+        "1": 4,
+        "2": 6,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 5,
+        "7": 6,
+        "8": 5
+       },
+       "d": {
+        "0": 4,
+        "1": 3,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 4,
+        "7": 5,
+        "8": 3
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true,
+      "ldEnabled": false
+     },
+     "isDraft": false
+    }
+   ],
+   "krav": [
+    {
+     "kind": "drive",
+     "playerId": "a",
+     "roundId": "r1",
+     "meters": 231.5
+    },
+    {
+     "kind": "drive",
+     "playerId": "b",
+     "roundId": "r1",
+     "meters": 248.0
+    },
+    {
+     "kind": "drive",
+     "playerId": "c",
+     "roundId": "r2",
+     "meters": 248.0
+    },
+    {
+     "kind": "kp",
+     "playerId": "d",
+     "roundId": "r1",
+     "meters": 1.8
+    },
+    {
+     "kind": "kp",
+     "playerId": "b",
+     "roundId": "r1",
+     "meters": 1.8
+    },
+    {
+     "kind": "kp",
+     "playerId": "a",
+     "roundId": "r2",
+     "meters": 3.2
+    },
+    {
+     "kind": "drive",
+     "playerId": "d",
+     "roundId": "r2",
+     "meters": 260.0
+    }
+   ],
+   "utregning": "Innmeldingene i r2 teller ikke for longest drive når premien er av der (også Dag med 260,0). Igjen: Bjørn 248,0.",
+   "forventet": {
+    "longestDrive": [
+     "b"
+    ],
+    "closestToPin": [
+     "b",
+     "d"
+    ],
+    "lengste": 248.0,
+    "naermest": 1.8,
+    "over": false
+   }
+  },
+  {
+   "navn": "egen linje",
+   "linje": 240.5,
+   "runder": [
+    {
+     "round": {
+      "id": "r1",
+      "gameType": "fourball",
+      "holeCount": 9,
+      "holeStart": 0,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": true,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 4
+       },
+       "b": {
+        "0": 3,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 5,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 4
+       },
+       "c": {
+        "0": 5,
+        "1": 6,
+        "2": 4,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 6,
+        "7": 5,
+        "8": 5
+       },
+       "d": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 3
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true
+     },
+     "isDraft": false
+    },
+    {
+     "round": {
+      "id": "r2",
+      "gameType": "fourball",
+      "holeCount": 9,
+      "holeStart": 9,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": true,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 3,
+        "1": 3,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 4,
+        "7": 5,
+        "8": 5
+       },
+       "b": {
+        "0": 3,
+        "1": 2,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 6,
+        "8": 5
+       },
+       "c": {
+        "0": 5,
+        "1": 4,
+        "2": 6,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 5,
+        "7": 6,
+        "8": 5
+       },
+       "d": {
+        "0": 4,
+        "1": 3,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 4,
+        "7": 5,
+        "8": 3
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true
+     },
+     "isDraft": false
+    }
+   ],
+   "krav": [
+    {
+     "kind": "drive",
+     "playerId": "a",
+     "roundId": "r1",
+     "meters": 231.5
+    },
+    {
+     "kind": "drive",
+     "playerId": "b",
+     "roundId": "r1",
+     "meters": 248.0
+    },
+    {
+     "kind": "drive",
+     "playerId": "c",
+     "roundId": "r2",
+     "meters": 248.0
+    },
+    {
+     "kind": "kp",
+     "playerId": "d",
+     "roundId": "r1",
+     "meters": 1.8
+    },
+    {
+     "kind": "kp",
+     "playerId": "b",
+     "roundId": "r1",
+     "meters": 1.8
+    },
+    {
+     "kind": "kp",
+     "playerId": "a",
+     "roundId": "r2",
+     "meters": 3.2
+    }
+   ],
+   "utregning": "248,0 er over 240,5.",
+   "forventet": {
+    "longestDrive": [
+     "b",
+     "c"
+    ],
+    "closestToPin": [
+     "b",
+     "d"
+    ],
+    "lengste": 248.0,
+    "naermest": 1.8,
+    "over": true
+   }
+  },
+  {
+   "navn": "ingen innmeldinger",
+   "linje": null,
+   "runder": [
+    {
+     "round": {
+      "id": "r1",
+      "gameType": "fourball",
+      "holeCount": 9,
+      "holeStart": 0,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": true,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 4
+       },
+       "b": {
+        "0": 3,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 5,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 4
+       },
+       "c": {
+        "0": 5,
+        "1": 6,
+        "2": 4,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 6,
+        "7": 5,
+        "8": 5
+       },
+       "d": {
+        "0": 4,
+        "1": 5,
+        "2": 3,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 4,
+        "8": 3
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true
+     },
+     "isDraft": false
+    },
+    {
+     "round": {
+      "id": "r2",
+      "gameType": "fourball",
+      "holeCount": 9,
+      "holeStart": 9,
+      "course": {
+       "id": "bane",
+       "name": "Testbanen",
+       "par": 72,
+       "courseRating": 72,
+       "slopeRating": 113,
+       "holes": [
+        {
+         "par": 4,
+         "si": 1,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 2,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 3,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 4,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 5,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 6,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 7,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 8,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 9,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 10,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 11,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 12,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 13,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 14,
+         "meters": null
+        },
+        {
+         "par": 3,
+         "si": 15,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 16,
+         "meters": null
+        },
+        {
+         "par": 5,
+         "si": 17,
+         "meters": null
+        },
+        {
+         "par": 4,
+         "si": 18,
+         "meters": null
+        }
+       ]
+      },
+      "hcpAllowance": 1,
+      "hcpExtern": true,
+      "teams": {},
+      "holeScores": {
+       "a": {
+        "0": 3,
+        "1": 3,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 4,
+        "7": 5,
+        "8": 5
+       },
+       "b": {
+        "0": 3,
+        "1": 2,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 5,
+        "7": 6,
+        "8": 5
+       },
+       "c": {
+        "0": 5,
+        "1": 4,
+        "2": 6,
+        "3": 5,
+        "4": 5,
+        "5": 4,
+        "6": 5,
+        "7": 6,
+        "8": 5
+       },
+       "d": {
+        "0": 4,
+        "1": 3,
+        "2": 5,
+        "3": 4,
+        "4": 4,
+        "5": 3,
+        "6": 4,
+        "7": 5,
+        "8": 3
+       }
+      },
+      "avkortRegel": null,
+      "avkortetEtter": null,
+      "date": "2026-10-22",
+      "locked": true
+     },
+     "isDraft": false
+    }
+   ],
+   "krav": [],
+   "utregning": "Ingen innmeldt: alle tre er strøket.",
+   "forventet": {
+    "longestDrive": null,
+    "closestToPin": null,
+    "lengste": null,
+    "naermest": null,
+    "over": null
+   }
+  }
+ ]
+}

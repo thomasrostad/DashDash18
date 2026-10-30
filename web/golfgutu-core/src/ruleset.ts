@@ -197,15 +197,17 @@ export type TipsQuestion =
   | "birdieCount" | "mostBirdies" | "backNine" | "winnerPoints"
   | "lastPlace" | "lowestGross" | "comeback" | "mostBlanks" | "bestParThrees" | "bestParFives" | "parStreak"
   | "eagle" | "grossBirdie" | "leaderWins" | "sharedWin" | "highHandicapWins"
-  | "lastPlacePoints" | "winningMargin" | "blankHoles" | "parOrBetterPlayers";
+  | "lastPlacePoints" | "winningMargin" | "blankHoles" | "parOrBetterPlayers"
+  | "longestDrive" | "closestToPin" | "longestDriveMeters";
 
 /** Alle spørsmålene i kupongens rekkefølge (`TipsQuestion.catalog`). */
 export const TIPS_QUESTIONS: readonly TipsQuestion[] = [
   "winner", "frontNine", "backNine", "mostPars",
   "lastPlace", "lowestGross", "comeback", "mostBlanks", "bestParThrees", "bestParFives", "parStreak",
+  "longestDrive", "closestToPin",
   "birdie", "eagle", "grossBirdie", "leaderWins", "sharedWin", "highHandicapWins",
   "birdieCount", "mostBirdies", "over", "winnerPoints",
-  "lastPlacePoints", "winningMargin", "blankHoles", "parOrBetterPlayers",
+  "lastPlacePoints", "winningMargin", "blankHoles", "parOrBetterPlayers", "longestDriveMeters",
 ];
 
 /** Flest spørsmål på én kupong (`TipsQuestion.maxPerCoupon`). */
@@ -213,7 +215,7 @@ export const TIPS_MAX_PER_COUPON = 12;
 
 /** Standardlinjene for de morsomme over/under-spørsmålene (`TipsRules.golfgutuLines`). */
 export const GOLFGUTU_TIPS_LINES: Readonly<Partial<Record<TipsQuestion, number>>> = {
-  lastPlacePoints: 25.5, winningMargin: 2.5, blankHoles: 20.5, parOrBetterPlayers: 2.5,
+  lastPlacePoints: 25.5, winningMargin: 2.5, blankHoles: 20.5, parOrBetterPlayers: 2.5, longestDriveMeters: 250.5,
 };
 
 /** Linja et over/under-spørsmål har i regelsettet (`TipsRules.line`). `null` for snittet og spørsmål uten linje. */

@@ -58,6 +58,7 @@ struct RulesetTipsSection: View {
         case .winningMargin: "Linje for seiersmarginen"
         case .blankHoles: "Linje for blanke hull"
         case .parOrBetterPlayers: "Linje for antall på par"
+        case .longestDriveMeters: "Linje for longest drive (m)"
         default: "Linje"
         }
     }

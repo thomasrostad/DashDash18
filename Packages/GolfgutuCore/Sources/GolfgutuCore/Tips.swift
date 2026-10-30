@@ -77,6 +77,7 @@ extension Ruleset {
         /// Standardlinjene for de morsomme over/under-spørsmålene. Et anslag; arrangøren kan endre dem.
         public static let golfgutuLines: [TipsQuestion: Double] = [
             .lastPlacePoints: 25.5, .winningMargin: 2.5, .blankHoles: 20.5, .parOrBetterPlayers: 2.5,
+            .longestDriveMeters: 250.5,
         ]
 
         /// Golfgutu: frist 17:00, 50 poeng (0/20/50/100), linje +2,5, ett slag per trykk, de fem spørsmålene.
@@ -184,15 +185,22 @@ public enum TipsQuestion: String, Codable, Hashable, Sendable, CaseIterable, Ide
     case blankHoles
     /// Spillere med netto par eller bedre i snitt (poeng for netto par per hull), over eller under en linje.
     case parOrBetterPlayers
+    /// Lengste innmeldte longest drive på kvelden (sidepremien).
+    case longestDrive
+    /// Nærmeste innmeldte nærmest pinnen på kvelden (sidepremien).
+    case closestToPin
+    /// Lengden på kveldens lengste drive i meter, over eller under en linje.
+    case longestDriveMeters
 
     /// Alle spørsmålene i rekkefølgen de står på kupongen når de er med. De ni fra før står i samme
     /// innbyrdes rekkefølge som før, så en lagret kupong får samme rekkefølge.
     public static let catalog: [TipsQuestion] = [
         .winner, .frontNine, .backNine, .mostPars,
         .lastPlace, .lowestGross, .comeback, .mostBlanks, .bestParThrees, .bestParFives, .parStreak,
+        .longestDrive, .closestToPin,
         .birdie, .eagle, .grossBirdie, .leaderWins, .sharedWin, .highHandicapWins,
         .birdieCount, .mostBirdies, .over, .winnerPoints,
-        .lastPlacePoints, .winningMargin, .blankHoles, .parOrBetterPlayers,
+        .lastPlacePoints, .winningMargin, .blankHoles, .parOrBetterPlayers, .longestDriveMeters,
     ]
 
     /// Flest spørsmål på én kupong. Databasen tar høyst 20 svar utenom de fem gamle (sql/070);
@@ -213,10 +221,10 @@ public enum TipsQuestion: String, Codable, Hashable, Sendable, CaseIterable, Ide
     public var kind: Kind {
         switch self {
         case .winner, .frontNine, .mostPars, .mostBirdies, .backNine, .lastPlace, .lowestGross, .comeback,
-             .mostBlanks, .bestParThrees, .bestParFives, .parStreak: .player
+             .mostBlanks, .bestParThrees, .bestParFives, .parStreak, .longestDrive, .closestToPin: .player
         case .birdie, .eagle, .grossBirdie, .leaderWins, .sharedWin, .highHandicapWins: .yesNo
         case .over, .birdieCount, .winnerPoints, .lastPlacePoints, .winningMargin, .blankHoles,
-             .parOrBetterPlayers: .overUnder
+             .parOrBetterPlayers, .longestDriveMeters: .overUnder
         }
     }
 
@@ -248,6 +256,9 @@ public enum TipsQuestion: String, Codable, Hashable, Sendable, CaseIterable, Ide
         case .winningMargin: "Seiersmarginen: over eller under?"
         case .blankHoles: "Antall blanke hull: over eller under?"
         case .parOrBetterPlayers: "Antall på par eller bedre: over eller under?"
+        case .longestDrive: "Hvem får longest drive?"
+        case .closestToPin: "Hvem kommer nærmest pinnen?"
+        case .longestDriveMeters: "Longest drive: over eller under?"
         }
     }
 
@@ -279,6 +290,9 @@ public enum TipsQuestion: String, Codable, Hashable, Sendable, CaseIterable, Ide
         case .winningMargin: "Poengene vinneren har mer enn nummer to. Delt seier: 0."
         case .blankHoles: "Hull uten poeng, alle til sammen, hele kvelden."
         case .parOrBetterPlayers: "Spillere med netto par i snitt eller bedre (36 poeng på 18 hull)."
+        case .longestDrive: "Lengste innmeldte drive i kveld. Ingen innmeldt: strøket."
+        case .closestToPin: "Nærmest pinnen i kveld, innmeldt i meter. Ingen innmeldt: strøket."
+        case .longestDriveMeters: "Kveldens lengste innmeldte drive, i meter."
         }
     }
 
@@ -294,6 +308,7 @@ public enum TipsQuestion: String, Codable, Hashable, Sendable, CaseIterable, Ide
         case .mostPars, .mostBlanks, .parStreak, .blankHoles: return "hull"
         case .mostBirdies, .birdieCount: return one ? "birdie" : "birdier"
         case .parOrBetterPlayers: return one ? "spiller" : "spillere"
+        case .longestDrive, .closestToPin, .longestDriveMeters: return "m"
         case .birdie, .over, .eagle, .grossBirdie, .leaderWins, .sharedWin, .highHandicapWins: return ""
         }
     }
@@ -492,12 +507,16 @@ public struct TipsRound: Hashable, Sendable {
     public var handicaps: [String: Double]
     /// Kladd: ikke spilt, teller ikke i fasiten (`erKladd`). Men en kladd gjør at kvelden ikke er ferdig.
     public var isDraft: Bool
+    /// Innmeldingene til longest drive og nærmest pinnen i runden. Teller bare når premien er på.
+    public var sideClaims: [SideClaim]
 
-    public init(round: Round, roster: [Player], handicaps: [String: Double] = [:], isDraft: Bool = false) {
+    public init(round: Round, roster: [Player], handicaps: [String: Double] = [:], isDraft: Bool = false,
+                sideClaims: [SideClaim] = []) {
         self.round = round
         self.roster = roster
         self.handicaps = handicaps
         self.isDraft = isDraft
+        self.sideClaims = sideClaims
     }
 }
 
@@ -666,7 +685,7 @@ public enum Tips {
         switch q {
         case .birdieCount, .winningMargin, .parOrBetterPlayers: birdieCountLineLimits
         case .winnerPoints, .lastPlacePoints: winnerPointsLineLimits
-        case .blankHoles: 0.5...499.5
+        case .blankHoles, .longestDriveMeters: 0.5...499.5
         default: nil
         }
     }
@@ -929,6 +948,19 @@ public enum Tips {
             (stableford[pid] ?? 0) >= rules.scoring.netParPoints * (countedHoles[pid] ?? 0)
         }.count)
 
+        // Sidepremiene over hele kvelden. Likt øverst: alle er riktige (tidspunktet teller ikke her).
+        let drives = played.flatMap { SidePrizes.longestDriveClaims($0.round, claims: $0.sideClaims) }
+        let pins = played.flatMap { SidePrizes.closestToPinClaims($0.round, claims: $0.sideClaims) }
+        if let top = drives.map(\.meters).max() {
+            outcomes[.longestDrive] = TipsOutcome(players: sidePrizePlayers(drives, at: top, names: names), figure: top)
+            if let l = rules.tips.line(.longestDriveMeters) {
+                outcomes[.longestDriveMeters] = TipsOutcome(flag: overUnder(top, line: l), figure: top, line: l)
+            }
+        }
+        if let top = pins.map(\.meters).min() {
+            outcomes[.closestToPin] = TipsOutcome(players: sidePrizePlayers(pins, at: top, names: names), figure: top)
+        }
+
         return TipsAnswerKey(
             finished: !rounds.isEmpty && rounds.allSatisfy(\.round.locked),
             field: field.sorted(),
@@ -953,6 +985,14 @@ public enum Tips {
             winnerPointsLine: rules.tips.winnerPointsLine,
             outcomes: outcomes
         )
+    }
+
+    /// De med innmeldingen `meters`, én gang hver, sortert på navn (norsk) som `best`.
+    static func sidePrizePlayers(_ claims: [SideClaim], at meters: Double, names: [String: String]) -> [String] {
+        Array(Set(claims.filter { $0.meters == meters }.map(\.playerId))).sorted { a, b in
+            let order = NorwegianSort.compare(names[a] ?? "", names[b] ?? "")
+            return order != .orderedSame ? order == .orderedAscending : a < b
+        }
     }
 
     /// Over (true) eller under (false) linja. Rett på linja: `nil` (strøket).
@@ -1029,6 +1069,7 @@ public enum Tips {
         case .winningMargin: "Seiersmarginen: over eller under " + formatPlain(line) + " poeng?"
         case .blankHoles: "Over eller under " + formatPlain(line) + " blanke hull?"
         case .parOrBetterPlayers: "Over eller under " + formatPlain(line) + " spillere på par?"
+        case .longestDriveMeters: "Longest drive: over eller under " + formatPlain(line) + " m?"
         default: q.title
         }
     }
