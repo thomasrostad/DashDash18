@@ -1,0 +1,113 @@
+{
+ "_kilde": "Kveldens hull og forrige kvelds vinner (ikke i PWA-en). Kveldene er fra tips-moro-sporsmaal.json. Kveldens hull er banens hull 1–18; lavest netto vinner, likt gir alle riktige. Forrige kvelds vinner: ja når en av forrige vinnere er blant kveldens vinnere.",
+ "standardHull": 18,
+ "hull": [
+  {
+   "kveld": "to runder",
+   "utregning": "Handicap 0. Hull 18 er hull 9 i r2: a 5, b 5, c 5, d 3 (par 4). Hull 2: a 5, b 5, c 6, d 5. Hull 10 er hull 1 i r2: a 3, b 3, c 5, d 4.",
+   "saker": [
+    {
+     "hull": 18,
+     "spillere": [
+      "d"
+     ],
+     "tall": 3
+    },
+    {
+     "hull": 2,
+     "spillere": [
+      "a",
+      "b",
+      "d"
+     ],
+     "tall": 5
+    },
+    {
+     "hull": 10,
+     "spillere": [
+      "a",
+      "b"
+     ],
+     "tall": 3
+    }
+   ]
+  },
+  {
+   "kveld": "18 hull med handicap, egne linjer",
+   "utregning": "Hull 13 (par 4): a brutto 4 (netto 4), b 5 (netto 4), c 9 (netto 7), d 5 (netto 5). Hull 2 (par 5): a 3, b 6−1=5, c 7−2=5, d 6.",
+   "saker": [
+    {
+     "hull": 13,
+     "spillere": [
+      "a",
+      "b"
+     ],
+     "tall": 4
+    },
+    {
+     "hull": 2,
+     "spillere": [
+      "a"
+     ],
+     "tall": 3
+    }
+   ]
+  },
+  {
+   "kveld": "uten scorer",
+   "utregning": "Ingen scorer.",
+   "saker": [
+    {
+     "hull": 18,
+     "spillere": null,
+     "tall": null
+    }
+   ]
+  }
+ ],
+ "forrige": [
+  {
+   "kveld": "to runder",
+   "forrige": [
+    "d"
+   ],
+   "svar": true,
+   "utregning": "Dag vant (38) og vant forrige kveld."
+  },
+  {
+   "kveld": "to runder",
+   "forrige": [
+    "a"
+   ],
+   "svar": false
+  },
+  {
+   "kveld": "to runder",
+   "forrige": [
+    "a",
+    "d"
+   ],
+   "svar": true,
+   "utregning": "Delt seier forrige kveld; Dag er en av dem."
+  },
+  {
+   "kveld": "to runder",
+   "forrige": null,
+   "svar": null,
+   "utregning": "Ingen forrige kveld: strøket."
+  },
+  {
+   "kveld": "to runder",
+   "forrige": [],
+   "svar": null
+  },
+  {
+   "kveld": "uten scorer",
+   "forrige": [
+    "d"
+   ],
+   "svar": null,
+   "utregning": "Ingen vinner i kveld ennå: strøket."
+  }
+ ]
+}

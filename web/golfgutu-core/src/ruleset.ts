@@ -198,14 +198,14 @@ export type TipsQuestion =
   | "lastPlace" | "lowestGross" | "comeback" | "mostBlanks" | "bestParThrees" | "bestParFives" | "parStreak"
   | "eagle" | "grossBirdie" | "leaderWins" | "sharedWin" | "highHandicapWins"
   | "lastPlacePoints" | "winningMargin" | "blankHoles" | "parOrBetterPlayers"
-  | "longestDrive" | "closestToPin" | "longestDriveMeters";
+  | "longestDrive" | "closestToPin" | "longestDriveMeters" | "featuredHole" | "previousWinnerWins";
 
 /** Alle spørsmålene i kupongens rekkefølge (`TipsQuestion.catalog`). */
 export const TIPS_QUESTIONS: readonly TipsQuestion[] = [
   "winner", "frontNine", "backNine", "mostPars",
   "lastPlace", "lowestGross", "comeback", "mostBlanks", "bestParThrees", "bestParFives", "parStreak",
-  "longestDrive", "closestToPin",
-  "birdie", "eagle", "grossBirdie", "leaderWins", "sharedWin", "highHandicapWins",
+  "longestDrive", "closestToPin", "featuredHole",
+  "birdie", "eagle", "grossBirdie", "leaderWins", "sharedWin", "highHandicapWins", "previousWinnerWins",
   "birdieCount", "mostBirdies", "over", "winnerPoints",
   "lastPlacePoints", "winningMargin", "blankHoles", "parOrBetterPlayers", "longestDriveMeters",
 ];
@@ -265,6 +265,8 @@ export interface TipsRules {
   winnerPointsLine: number;
   /** De andre linjene der arrangøren har endret dem; ellers `GOLFGUTU_TIPS_LINES`. Bruk `tipsLine`/`setTipsLine`. */
   lines: Partial<Record<TipsQuestion, number>>;
+  /** Kveldens hull: banens hull (1–18) i spørsmålet `featuredHole`. */
+  featuredHole: number;
 }
 
 /** Veddemål med poeng (bare reglene; veddemål-logikken er ikke portert). */
@@ -551,6 +553,7 @@ const GOLFGUTU_TIPS: TipsRules = {
   birdieCountLine: 14.5,
   winnerPointsLine: 37.5,
   lines: {},
+  featuredHole: 18,
 };
 
 /** Golfgutu: forsprang 1, tak 200, knappene 50/100/200, 100 valgt, 1000 i bank, hele poeng, annuller likt. */
@@ -919,6 +922,7 @@ function decodeTips(x: unknown, path: string): TipsRules {
     birdieCountLine: optNumber(o, "birdieCountLine", path) ?? g.birdieCountLine,
     winnerPointsLine: optNumber(o, "winnerPointsLine", path) ?? g.winnerPointsLine,
     lines: decodeTipsLines(optObject(o, "lines", path), `${path}.lines`),
+    featuredHole: optInt(o, "featuredHole", path) ?? g.featuredHole,
   };
 }
 
@@ -951,6 +955,7 @@ function encodeTips(t: TipsRules): JSONObject {
   if (t.winnerPointsLine !== g.winnerPointsLine) out.winnerPointsLine = t.winnerPointsLine;
   const lines = Object.entries(t.lines).filter(([, v]) => v !== undefined) as [string, number][];
   if (lines.length > 0) out.lines = Object.fromEntries(lines);
+  if (t.featuredHole !== g.featuredHole) out.featuredHole = t.featuredHole;
   return out;
 }
 

@@ -40,6 +40,9 @@ enum TipsQueries {
         let members = try await memberRows
         var input = TipsInput(event: event)
         input.rules = try await rules
+        // Forrige kveld bare når kupongen spør om forrige kvelds vinner.
+        let asksPrevious = input.rules.tips.questions.contains(.previousWinnerWins)
+        async let previousRounds: [RoundSnapshot] = asksPrevious ? previousEveningRounds(client: client, event: event) : []
         input.members = members
         input.signups = try await signupRows
         input.coupons = try await couponRows
@@ -53,7 +56,28 @@ enum TipsQueries {
             s.rules = input.rules
             return s
         }
+        input.previousRounds = try await previousRounds.map { s in
+            var s = s
+            s.names = names
+            s.rules = input.rules
+            return s
+        }
         return input
+    }
+
+    /// Rundene til forrige kveld i samme sesong (siste dato før denne). Ingen: tom.
+    private static func previousEveningRounds(client: SupabaseClient, event: TipsEventRow) async throws -> [RoundSnapshot] {
+        var query = client.from("events")
+            .select(TipsEventRow.columns)
+            .eq("club_id", value: event.clubID)
+            .lt("event_date", value: event.eventDate)
+        if let season = event.seasonID { query = query.eq("season_id", value: season) }
+        let rows: [TipsEventRow] = try await query
+            .order("event_date", ascending: false)
+            .limit(1)
+            .execute().value
+        guard let previous = rows.first else { return [] }
+        return try await snapshots(client: client, event: previous)
     }
 
     /// Kveldens runder (kladder bare for arrangøren, via RLS), i opprettelsesrekkefølge.

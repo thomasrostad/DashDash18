@@ -478,6 +478,12 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
         return line == standard ? nil : "Endret · standard " + Tips.formatPlain(standard)
     }
 
+    /// «Endret · standard hull 18» når kveldens hull ikke er som i oppsettet.
+    var tipsFeaturedHoleNote: String? {
+        let standard = base.rules.tips.featuredHole
+        return rules.tips.featuredHole == standard ? nil : "Endret · standard hull \(standard)"
+    }
+
     /// Kupongen er full (`TipsQuestion.maxPerCoupon`): flere spørsmål kan ikke slås på.
     var tipsCouponIsFull: Bool { rules.tips.questions.count >= TipsQuestion.maxPerCoupon }
 

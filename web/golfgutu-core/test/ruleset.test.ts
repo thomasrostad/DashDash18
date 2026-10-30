@@ -437,7 +437,7 @@ test("tips: spørsmål og linjer begge veier", () => {
   assert.deepEqual(TIPS_TEMPLATES.map((t) => ({ mal: t.id, navn: t.title, sporsmaal: [...t.questions] })), moro.maler);
   for (const m of moro.maler) assert.equal(matchingTipsTemplate(m.sporsmaal), m.mal);
   assert.equal(matchingTipsTemplate(["over", "winner"]), null);
-  assert.equal(new Set(TIPS_QUESTIONS).size, 28);
+  assert.equal(new Set(TIPS_QUESTIONS).size, 30);
 
   // Standard skrives ikke (Golfgutu-JSON-en er som før); noe annet skrives og leses tilbake.
   const golf = encodeRuleset(GOLFGUTU).tips as any;
@@ -468,6 +468,15 @@ test("tips: linjene på de morsomme spørsmålene", () => {
   const moro = fixture("tips-moro-sporsmaal");
   for (const [q, v] of Object.entries(moro.standard)) assert.equal(tipsLine(GOLFGUTU.tips, q as TipsQuestion), v, q);
   assert.equal(tipsLine(GOLFGUTU.tips, "longestDriveMeters"), fixture("tips-sidepremier").standardLinje);
+  // Kveldens hull: standard 18, skrives bare når det er endret, valideres 1–18.
+  assert.equal(GOLFGUTU.tips.featuredHole, fixture("tips-kveldens-hull").standardHull);
+  assert.equal((encodeRuleset(GOLFGUTU).tips as any).featuredHole, undefined);
+  const hull = golfgutuRules();
+  hull.tips.featuredHole = 7;
+  assert.equal((encodeRuleset(hull).tips as any).featuredHole, 7);
+  assert.ok(rulesetEquals(roundtrip(hull), hull));
+  hull.tips.featuredHole = 19;
+  assert.deepEqual(validateRuleset(hull).map((i) => i.field), ["tips.featuredHole"]);
   assert.equal(tipsLine(GOLFGUTU.tips, "lastPlace"), null);
   assert.equal((encodeRuleset(GOLFGUTU).tips as any).lines, undefined);
   const r = golfgutuRules();

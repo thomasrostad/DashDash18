@@ -121,6 +121,11 @@ export function RulesEditor({ competition, onSaved }: { competition: Competition
           {TIPS_QUESTIONS.map((q) => (
             <label key={q} className="check"><input type="checkbox" checked={rules.tips.questions.includes(q)} disabled={!rules.tips.questions.includes(q) && rules.tips.questions.length >= TIPS_MAX_PER_COUPON} onChange={(e) => set((r) => setTipsQuestion(r, q, e.target.checked))} />{TIPS_QUESTION_TITLES[q]}</label>
           ))}
+          {rules.tips.questions.includes("featuredHole") && (
+            <label>Kveldens hull
+              <input type="number" min={1} max={18} step={1} value={rules.tips.featuredHole} onChange={(e) => set((r) => { r.tips.featuredHole = Number(e.target.value); })} />
+            </label>
+          )}
           {rules.tips.questions.map((q) => {
             const limits = tipsLineLimits(q);
             return limits && (
