@@ -437,7 +437,7 @@ test("tips: spørsmål og linjer begge veier", () => {
   assert.deepEqual(TIPS_TEMPLATES.map((t) => ({ mal: t.id, navn: t.title, sporsmaal: [...t.questions] })), moro.maler);
   for (const m of moro.maler) assert.equal(matchingTipsTemplate(m.sporsmaal), m.mal);
   assert.equal(matchingTipsTemplate(["over", "winner"]), null);
-  assert.equal(new Set(TIPS_QUESTIONS).size, 25);
+  assert.equal(new Set(TIPS_QUESTIONS).size, 28);
 
   // Standard skrives ikke (Golfgutu-JSON-en er som før); noe annet skrives og leses tilbake.
   const golf = encodeRuleset(GOLFGUTU).tips as any;
@@ -467,6 +467,7 @@ test("tips: spørsmål og linjer begge veier", () => {
 test("tips: linjene på de morsomme spørsmålene", () => {
   const moro = fixture("tips-moro-sporsmaal");
   for (const [q, v] of Object.entries(moro.standard)) assert.equal(tipsLine(GOLFGUTU.tips, q as TipsQuestion), v, q);
+  assert.equal(tipsLine(GOLFGUTU.tips, "longestDriveMeters"), fixture("tips-sidepremier").standardLinje);
   assert.equal(tipsLine(GOLFGUTU.tips, "lastPlace"), null);
   assert.equal((encodeRuleset(GOLFGUTU).tips as any).lines, undefined);
   const r = golfgutuRules();

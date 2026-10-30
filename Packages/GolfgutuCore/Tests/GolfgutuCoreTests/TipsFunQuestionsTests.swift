@@ -43,7 +43,7 @@ struct TipsFunQuestionsTests {
     }
 
     @Test func standardlinjene() {
-        #expect(fil.standard.count == Ruleset.TipsRules.golfgutuLines.count)
+        #expect(fil.standard.count == Ruleset.TipsRules.golfgutuLines.count - 1, "pluss lengste drive (sidepremiene)")
         for (k, v) in fil.standard {
             let q = TipsQuestion(rawValue: k)
             #expect(q.flatMap { Ruleset.golfgutu.tips.line($0) } == v, "\(k)")
@@ -67,7 +67,7 @@ struct TipsFunQuestionsTests {
         #expect(fil.kvelder.count == 3)
         for k in fil.kvelder {
             let f = Tips.answerKey(rounds: TipsTests.tipsRounds(k.runder, k.spillere), line: 2.5, rules: Self.rules(k.linjer))
-            #expect(Set(k.forventet.map(\.sporsmaal)).count == 16, "\(k.navn): alle de morsomme")
+            #expect(Set(k.forventet.map(\.sporsmaal)).count == 16, "\(k.navn): alle fra hullscorene")
             for e in k.forventet {
                 let q = e.sporsmaal
                 if e.strøket == true {
@@ -157,5 +157,49 @@ struct TipsFunQuestionsTests {
         let ukjent = try JSONDecoder().decode(Ruleset.TipsRules.self,
                                               from: Data(#"{"lines": {"nyttSpm": 1.5, "winner": 2.5, "blankHoles": 3.5}}"#.utf8))
         #expect(ukjent.lines == [.blankHoles: 3.5], "ukjent spørsmål og spørsmål uten linje hoppes over")
+    }
+
+    // MARK: Sidepremiene (Fixtures/tips-sidepremier.json)
+
+    struct SideFil: Decodable {
+        let standardLinje: Double
+        let spillere: [Player]
+        let kvelder: [SideKveld]
+    }
+    struct SideForventet: Decodable {
+        let longestDrive, closestToPin: [String]?
+        let lengste, naermest: Double?
+        let over: Bool?
+    }
+    struct SideKveld: Decodable {
+        let navn: String
+        let linje: Double?
+        let runder: [TipsTests.Runde]
+        let krav: [SideClaim]
+        let forventet: SideForventet
+    }
+
+    @Test func sidepremiene() throws {
+        let fil = try Fixture.load(SideFil.self, "tips-sidepremier")
+        #expect(Ruleset.golfgutu.tips.line(.longestDriveMeters) == fil.standardLinje)
+        #expect(fil.kvelder.count == 4)
+        for k in fil.kvelder {
+            var rules = Self.rules(nil)
+            if let l = k.linje { rules.tips.setLine(.longestDriveMeters, l) }
+            let rounds = k.runder.map { r in
+                TipsRound(round: r.round, roster: fil.spillere, isDraft: r.isDraft,
+                          sideClaims: k.krav.filter { $0.roundId == r.round.id })
+            }
+            let f = Tips.answerKey(rounds: rounds, line: 2.5, rules: rules)
+            let e = k.forventet
+            #expect(f.players(.longestDrive) == e.longestDrive, "\(k.navn): longest drive")
+            #expect(f.players(.closestToPin) == e.closestToPin, "\(k.navn): nærmest pinnen")
+            #expect(f.outcomes[.longestDrive]?.figure == e.lengste, "\(k.navn): lengste")
+            #expect(f.outcomes[.closestToPin]?.figure == e.naermest, "\(k.navn): nærmest")
+            #expect(f.flag(.longestDriveMeters) == e.over, "\(k.navn): over/under")
+            #expect(f.isVoid(.longestDriveMeters) == (e.over == nil), "\(k.navn)")
+            #expect(f.outcomes[.longestDriveMeters]?.line == (e.over == nil ? nil : rules.tips.line(.longestDriveMeters)))
+        }
+        #expect(Tips.title(.longestDriveMeters, line: 250.5) == "Longest drive: over eller under 250,5 m?")
     }
 }

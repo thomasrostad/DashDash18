@@ -428,6 +428,9 @@ struct TipsNyeSporsmaalTests {
         #expect(TipsBoard.figureText(.parStreak, 17) == "17 hull")
         #expect(TipsBoard.figureText(.lowestGross, 73) == "73 brutto")
         #expect(TipsBoard.figureText(.parOrBetterPlayers, 1) == "1 spiller")
+        #expect(TipsBoard.figureText(.longestDrive, 248.5) == "248,5 m")
+        #expect(TipsBoard.voidText(.closestToPin, outcome: nil, hasField: true) == "Strøket – ingen innmeldt")
+        #expect(TipsBoard.voidText(.longestDriveMeters, outcome: nil, hasField: false) == "Strøket – ingen innmeldt")
         #expect(TipsBoard.voidText(.mostBlanks, outcome: nil, hasField: true) == "Strøket – ingen blanke hull")
         #expect(TipsBoard.voidText(.mostBlanks, outcome: nil, hasField: false) == "Strøket – ingen scorer")
         #expect(TipsBoard.voidText(.blankHoles, outcome: TipsOutcome(figure: 20.5, line: 20.5), hasField: true)
@@ -446,7 +449,9 @@ struct TipsNyeSporsmaalTests {
     /// Kupongen tar høyst et dusin spørsmål; da kan ingen flere slås på.
     @Test func kupongenErFull() {
         var d = RulesetDraft(.golfgutu)
-        for q in TipsQuestion.catalog.prefix(TipsQuestion.maxPerCoupon) { d.setTipsQuestion(q, true) }
+        d.rules.tips.questions = Array(TipsQuestion.catalog.prefix(TipsQuestion.maxPerCoupon - 1))
+        #expect(!d.tipsCouponIsFull)
+        d.setTipsQuestion(.over, true)
         #expect(d.tipsCouponIsFull && d.rules.tips.questions.count == TipsQuestion.maxPerCoupon)
         #expect(d.issues(in: .tips).isEmpty)
         d.rules.tips.setLine(.blankHoles, 9.5)

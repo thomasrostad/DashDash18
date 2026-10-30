@@ -157,6 +157,9 @@ export const TIPS_QUESTION_TITLES: Readonly<Record<TipsQuestion, string>> = {
   winningMargin: "Seiersmarginen: over eller under?",
   blankHoles: "Antall blanke hull: over eller under?",
   parOrBetterPlayers: "Antall på par eller bedre: over eller under?",
+  longestDrive: "Hvem får longest drive?",
+  closestToPin: "Hvem kommer nærmest pinnen?",
+  longestDriveMeters: "Longest drive: over eller under?",
 };
 
 /** Overskriften på linja for et over/under-spørsmål i regelsettet (`RulesetTipsSection.lineTitle` i appen). */
@@ -167,6 +170,7 @@ export const TIPS_LINE_TITLES: Readonly<Partial<Record<TipsQuestion, string>>> =
   winningMargin: "Linje for seiersmarginen",
   blankHoles: "Linje for blanke hull",
   parOrBetterPlayers: "Linje for antall på par",
+  longestDriveMeters: "Linje for longest drive (m)",
 };
 
 /** Malen kupongen er på, eller `null` (tilpasset). */

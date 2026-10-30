@@ -107,7 +107,7 @@ nonisolated struct TipsBoard: Sendable {
             let handicaps = Dictionary(s.players.map { ($0.memberID.uuidString, game.handicap($0.memberID)) },
                                        uniquingKeysWith: { a, _ in a })
             return TipsRound(round: game.round, roster: game.roster, handicaps: handicaps,
-                             isDraft: snapshot.round.status == .draft)
+                             isDraft: snapshot.round.status == .draft, sideClaims: game.coreSideClaims)
         }
 
         let computedDeadline = Tips.deadline(date: input.event.eventDate, startTime: input.event.startTime,
@@ -279,8 +279,9 @@ nonisolated struct TipsBoard: Sendable {
         }
     }
 
-    /// «3 poeng», «+3 poeng» (comeback), «17 hull», «2 spillere».
+    /// «3 poeng», «+3 poeng» (comeback), «17 hull», «2 spillere», «248,5 m».
     static func figureText(_ q: TipsQuestion, _ x: Double) -> String {
+        if q.unit(x) == "m" { return SidePrizes.formatMeters(x) }
         let n = Int(x.rounded())
         let number = q == .comeback && n > 0 ? "+\(n)" : (n < 0 ? "−\(-n)" : "\(n)")
         return number + " " + q.unit(x)
@@ -288,6 +289,9 @@ nonisolated struct TipsBoard: Sendable {
 
     /// Hvorfor et av de morsomme spørsmålene er strøket.
     static func voidText(_ q: TipsQuestion, outcome: TipsOutcome?, hasField: Bool) -> String {
+        if [.longestDrive, .closestToPin, .longestDriveMeters].contains(q), outcome == nil {
+            return "Strøket – ingen innmeldt"
+        }
         guard hasField else { return "Strøket – ingen scorer" }
         if q.kind == .overUnder { return outcome?.figure == nil ? "Strøket – for få spillere" : "Strøket – traff linja" }
         switch q {

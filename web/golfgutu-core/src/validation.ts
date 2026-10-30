@@ -24,7 +24,7 @@ export function tipsLineLimits(q: TipsQuestion): readonly [number, number] | nul
   switch (q) {
     case "birdieCount": case "winningMargin": case "parOrBetterPlayers": return TIPS_BIRDIE_COUNT_LINE_LIMITS;
     case "winnerPoints": case "lastPlacePoints": return TIPS_WINNER_POINTS_LINE_LIMITS;
-    case "blankHoles": return [0.5, 499.5];
+    case "blankHoles": case "longestDriveMeters": return [0.5, 499.5];
     default: return null;
   }
 }
