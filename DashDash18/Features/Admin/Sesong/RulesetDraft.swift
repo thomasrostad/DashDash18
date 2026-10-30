@@ -473,10 +473,13 @@ nonisolated struct RulesetDraft: Equatable, Sendable {
     }
 
     /// «Endret · standard 14,5» ved en linje som ikke er som i oppsettet.
-    func tipsLineNote(_ line: KeyPath<Ruleset.TipsRules, Double>) -> String? {
-        let standard = base.rules.tips[keyPath: line]
-        return rules.tips[keyPath: line] == standard ? nil : "Endret · standard " + Tips.formatPlain(standard)
+    func tipsLineNote(_ q: TipsQuestion) -> String? {
+        guard let standard = base.rules.tips.line(q), let line = rules.tips.line(q) else { return nil }
+        return line == standard ? nil : "Endret · standard " + Tips.formatPlain(standard)
     }
+
+    /// Kupongen er full (`TipsQuestion.maxPerCoupon`): flere spørsmål kan ikke slås på.
+    var tipsCouponIsFull: Bool { rules.tips.questions.count >= TipsQuestion.maxPerCoupon }
 
     // MARK: JSON
 

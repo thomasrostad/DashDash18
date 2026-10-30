@@ -65,9 +65,10 @@ struct TipsNewQuestionsTests {
         #expect(Ruleset.golfgutu.tips.winnerPointsLine == fil.standard.winnerPointsLine)
     }
 
-    /// Klassisk er Golfgutus fem; Full kupong er alle; hver mal kjennes igjen på spørsmålene.
+    /// Klassisk er Golfgutus fem; Full kupong er de ni; hver mal kjennes igjen på spørsmålene.
+    /// Moro-kupongen kom senere (TipsFunQuestionsTests).
     @Test func malene() throws {
-        #expect(fil.maler.count == TipsTemplate.allCases.count)
+        #expect(fil.maler.count == 3)
         for m in fil.maler {
             let t = try #require(TipsTemplate(rawValue: m.mal))
             #expect(t.title == m.navn)
@@ -75,7 +76,8 @@ struct TipsNewQuestionsTests {
             #expect(TipsTemplate.matching(m.sporsmaal) == t)
         }
         #expect(TipsTemplate.classic.questions == Ruleset.TipsRules.golfgutuQuestions)
-        #expect(Set(TipsTemplate.full.questions) == Set(TipsQuestion.allCases))
+        #expect(TipsTemplate.full.questions == TipsQuestion.catalog.filter { TipsTemplate.full.questions.contains($0) })
+        #expect(TipsTemplate.full.questions.count == 9)
         #expect(TipsTemplate.matching([.over, .winner]) == nil)
         for t in TipsTemplate.allCases {
             #expect(Self.rules(nil, questions: t.questions).validate().isEmpty, "\(t)")

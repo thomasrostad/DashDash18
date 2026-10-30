@@ -176,12 +176,19 @@ extension Ruleset {
         }
         if tips.questions.isEmpty || Set(tips.questions).count != tips.questions.count {
             add("tips.questions", "Kupongen må ha minst ett spørsmål, hvert bare én gang.")
+        } else if tips.questions.count > TipsQuestion.maxPerCoupon {
+            add("tips.questions", "Kupongen kan ha høyst \(TipsQuestion.maxPerCoupon) spørsmål.")
         }
         if !Tips.isHalf(tips.birdieCountLine, in: Tips.birdieCountLineLimits) {
             add("tips.birdieCountLine", "Linja for antall birdier må være et halvt tall (som 14,5) mellom 0,5 og 99,5.")
         }
         if !Tips.isHalf(tips.winnerPointsLine, in: Tips.winnerPointsLineLimits) {
             add("tips.winnerPointsLine", "Linja for vinnerens poeng må være et halvt tall (som 37,5) mellom 0,5 og 149,5.")
+        }
+        for (q, line) in tips.lines.sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
+            guard let limits = Tips.lineLimits(for: q), !Tips.isHalf(line, in: limits) else { continue }
+            add("tips.lines.\(q.rawValue)", "Linja må være et halvt tall mellom "
+                + Tips.formatPlain(limits.lowerBound) + " og " + Tips.formatPlain(limits.upperBound) + ".")
         }
 
         // Veddemål. Grensene er databasens (bet_stakes.points, sql/012_veddemaal.sql).

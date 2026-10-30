@@ -194,20 +194,52 @@ export interface FormatRules {
 /** Spørsmålene en kupong kan ha (`TipsQuestion`). De fem første er PWA-ens. */
 export type TipsQuestion =
   | "winner" | "frontNine" | "mostPars" | "birdie" | "over"
-  | "birdieCount" | "mostBirdies" | "backNine" | "winnerPoints";
+  | "birdieCount" | "mostBirdies" | "backNine" | "winnerPoints"
+  | "lastPlace" | "lowestGross" | "comeback" | "mostBlanks" | "bestParThrees" | "bestParFives" | "parStreak"
+  | "eagle" | "grossBirdie" | "leaderWins" | "sharedWin" | "highHandicapWins"
+  | "lastPlacePoints" | "winningMargin" | "blankHoles" | "parOrBetterPlayers";
 
 /** Alle spørsmålene i kupongens rekkefølge (`TipsQuestion.catalog`). */
 export const TIPS_QUESTIONS: readonly TipsQuestion[] = [
-  "winner", "frontNine", "backNine", "mostPars", "birdie", "birdieCount", "mostBirdies", "over", "winnerPoints",
+  "winner", "frontNine", "backNine", "mostPars",
+  "lastPlace", "lowestGross", "comeback", "mostBlanks", "bestParThrees", "bestParFives", "parStreak",
+  "birdie", "eagle", "grossBirdie", "leaderWins", "sharedWin", "highHandicapWins",
+  "birdieCount", "mostBirdies", "over", "winnerPoints",
+  "lastPlacePoints", "winningMargin", "blankHoles", "parOrBetterPlayers",
 ];
 
+/** Flest spørsmål på én kupong (`TipsQuestion.maxPerCoupon`). */
+export const TIPS_MAX_PER_COUPON = 12;
+
+/** Standardlinjene for de morsomme over/under-spørsmålene (`TipsRules.golfgutuLines`). */
+export const GOLFGUTU_TIPS_LINES: Readonly<Partial<Record<TipsQuestion, number>>> = {
+  lastPlacePoints: 25.5, winningMargin: 2.5, blankHoles: 20.5, parOrBetterPlayers: 2.5,
+};
+
+/** Linja et over/under-spørsmål har i regelsettet (`TipsRules.line`). `null` for snittet og spørsmål uten linje. */
+export function tipsLine(t: TipsRules, q: TipsQuestion): number | null {
+  if (q === "birdieCount") return t.birdieCountLine;
+  if (q === "winnerPoints") return t.winnerPointsLine;
+  return t.lines[q] ?? GOLFGUTU_TIPS_LINES[q] ?? null;
+}
+
+/** Endrer linja (`TipsRules.setLine`). Standarden lagres ikke. */
+export function setTipsLine(t: TipsRules, q: TipsQuestion, value: number): void {
+  if (q === "birdieCount") { t.birdieCountLine = value; return; }
+  if (q === "winnerPoints") { t.winnerPointsLine = value; return; }
+  const standard = GOLFGUTU_TIPS_LINES[q];
+  if (standard === undefined) return;
+  if (value === standard) delete t.lines[q]; else t.lines[q] = value;
+}
+
 /** Malene (`TipsTemplate`): ferdige utvalg av spørsmål. */
-export type TipsTemplate = "classic" | "birdieHunt" | "full";
+export type TipsTemplate = "classic" | "birdieHunt" | "full" | "fun";
 
 export const TIPS_TEMPLATES: readonly { id: TipsTemplate; title: string; questions: readonly TipsQuestion[] }[] = [
   { id: "classic", title: "Klassisk", questions: ["winner", "frontNine", "mostPars", "birdie", "over"] },
   { id: "birdieHunt", title: "Birdiejakt", questions: ["winner", "birdie", "birdieCount", "mostBirdies", "over"] },
-  { id: "full", title: "Full kupong", questions: TIPS_QUESTIONS },
+  { id: "full", title: "Full kupong", questions: ["winner", "frontNine", "backNine", "mostPars", "birdie", "birdieCount", "mostBirdies", "over", "winnerPoints"] },
+  { id: "fun", title: "Moro-kupong", questions: ["winner", "lastPlace", "comeback", "mostBlanks", "eagle", "grossBirdie", "leaderWins", "winningMargin"] },
 ];
 
 /** Malen med akkurat disse spørsmålene i denne rekkefølgen, ellers `null` (tilpasset). */
@@ -229,6 +261,8 @@ export interface TipsRules {
   birdieCountLine: number;
   /** Linja på vinnerens stablefordpoeng. */
   winnerPointsLine: number;
+  /** De andre linjene der arrangøren har endret dem; ellers `GOLFGUTU_TIPS_LINES`. Bruk `tipsLine`/`setTipsLine`. */
+  lines: Partial<Record<TipsQuestion, number>>;
 }
 
 /** Veddemål med poeng (bare reglene; veddemål-logikken er ikke portert). */
@@ -514,6 +548,7 @@ const GOLFGUTU_TIPS: TipsRules = {
   questions: ["winner", "frontNine", "mostPars", "birdie", "over"],
   birdieCountLine: 14.5,
   winnerPointsLine: 37.5,
+  lines: {},
 };
 
 /** Golfgutu: forsprang 1, tak 200, knappene 50/100/200, 100 valgt, 1000 i bank, hele poeng, annuller likt. */
@@ -881,7 +916,20 @@ function decodeTips(x: unknown, path: string): TipsRules {
       : [...g.questions],
     birdieCountLine: optNumber(o, "birdieCountLine", path) ?? g.birdieCountLine,
     winnerPointsLine: optNumber(o, "winnerPointsLine", path) ?? g.winnerPointsLine,
+    lines: decodeTipsLines(optObject(o, "lines", path), `${path}.lines`),
   };
+}
+
+/** Som i Swift: en linje på et spørsmål vi ikke kjenner, eller uten linje, hoppes over. */
+function decodeTipsLines(o: JSONObject | null, path: string): Partial<Record<TipsQuestion, number>> {
+  const out: Partial<Record<TipsQuestion, number>> = {};
+  if (!o) return out;
+  for (const k of Object.keys(o)) {
+    if (GOLFGUTU_TIPS_LINES[k as TipsQuestion] === undefined) continue;
+    const v = optNumber(o, k, path);
+    if (v !== null) out[k as TipsQuestion] = v;
+  }
+  return out;
 }
 
 /** `tips` slik Swift skriver det: spørsmålene og de nye linjene bare når de ikke er standard. */
@@ -899,6 +947,8 @@ function encodeTips(t: TipsRules): JSONObject {
   }
   if (t.birdieCountLine !== g.birdieCountLine) out.birdieCountLine = t.birdieCountLine;
   if (t.winnerPointsLine !== g.winnerPointsLine) out.winnerPointsLine = t.winnerPointsLine;
+  const lines = Object.entries(t.lines).filter(([, v]) => v !== undefined) as [string, number][];
+  if (lines.length > 0) out.lines = Object.fromEntries(lines);
   return out;
 }
 

@@ -421,6 +421,39 @@ struct TipsNyeSporsmaalTests {
         #expect(b.asksAverage)
     }
 
+    /// De morsomme spørsmålene: tallet med enhet, og hvorfor et spørsmål er strøket.
+    @Test func fasitTekstMorsomme() {
+        #expect(TipsBoard.figureText(.comeback, 3) == "+3 poeng")
+        #expect(TipsBoard.figureText(.comeback, -2) == "−2 poeng")
+        #expect(TipsBoard.figureText(.parStreak, 17) == "17 hull")
+        #expect(TipsBoard.figureText(.lowestGross, 73) == "73 brutto")
+        #expect(TipsBoard.figureText(.parOrBetterPlayers, 1) == "1 spiller")
+        #expect(TipsBoard.voidText(.mostBlanks, outcome: nil, hasField: true) == "Strøket – ingen blanke hull")
+        #expect(TipsBoard.voidText(.mostBlanks, outcome: nil, hasField: false) == "Strøket – ingen scorer")
+        #expect(TipsBoard.voidText(.blankHoles, outcome: TipsOutcome(figure: 20.5, line: 20.5), hasField: true)
+            == "Strøket – traff linja")
+        var input = TipsInput(event: T.event, rules: Self.rules(.fun), members: T.four,
+                              rounds: T.evening(status: .locked), coupons: T.coupons)
+        input.serverOpen = false
+        let b = TipsBoard(input, me: T.id(T.anders), isOrganizer: false)
+        #expect(b.questions == TipsTemplate.fun.questions)
+        #expect(b.title(.winningMargin) == "Seiersmarginen: over eller under 2,5 poeng?")
+        for q in b.questions where !b.answerKey.isVoid(q) {
+            #expect(!b.answerKeyText(q).hasPrefix("Strøket"), "\(q)")
+        }
+    }
+
+    /// Kupongen tar høyst et dusin spørsmål; da kan ingen flere slås på.
+    @Test func kupongenErFull() {
+        var d = RulesetDraft(.golfgutu)
+        for q in TipsQuestion.catalog.prefix(TipsQuestion.maxPerCoupon) { d.setTipsQuestion(q, true) }
+        #expect(d.tipsCouponIsFull && d.rules.tips.questions.count == TipsQuestion.maxPerCoupon)
+        #expect(d.issues(in: .tips).isEmpty)
+        d.rules.tips.setLine(.blankHoles, 9.5)
+        #expect(d.tipsLineNote(.blankHoles) == "Endret · standard 20,5")
+        #expect(d.tipsLineNote(.lastPlace) == nil)
+    }
+
     @Test func kveldensLinjeBareMedSnittet() {
         var r = Ruleset.golfgutu
         r.tips.questions = [.winner, .birdieCount]
@@ -460,8 +493,8 @@ struct RulesetTipsDraftTests {
         #expect(d.tipsTemplate == .birdieHunt)
         #expect(d.changedFields.contains(.other) && d.changedAdvancedCount > 0)
         d.rules.tips.birdieCountLine = 9.5
-        #expect(d.tipsLineNote(\.birdieCountLine) == "Endret · standard 14,5")
-        #expect(d.tipsLineNote(\.winnerPointsLine) == nil)
+        #expect(d.tipsLineNote(.birdieCount) == "Endret · standard 14,5")
+        #expect(d.tipsLineNote(.winnerPoints) == nil)
         #expect(d.canSave)
         for q in TipsQuestion.catalog { d.setTipsQuestion(q, false) }
         #expect(d.issues(in: .tips).map(\.field) == ["tips.questions"])
