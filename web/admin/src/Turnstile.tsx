@@ -27,8 +27,8 @@ function loadTurnstile(): Promise<TurnstileApi> {
 
 /** Cloudflare Turnstile før koden sendes. Nytt token: `onToken(token)`; utløpt eller feil: `onToken(null)`.
  *  Et token kan bare brukes én gang, så forelderen gir en ny `key` etter hvert forsøk. */
-export function Turnstile({ siteKey, onToken, onError }: {
-  siteKey: string; onToken: (token: string | null) => void; onError: (message: string | null) => void;
+export function Turnstile({ siteKey, theme = "auto", onToken, onError }: {
+  siteKey: string; theme?: "auto" | "light" | "dark"; onToken: (token: string | null) => void; onError: (message: string | null) => void;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const handlers = useRef({ onToken, onError });
@@ -42,6 +42,7 @@ export function Turnstile({ siteKey, onToken, onError }: {
       id = api.render(box.current, {
         sitekey: siteKey,
         language: "nb",
+        theme,
         callback: (token: string) => { handlers.current.onError(null); handlers.current.onToken(token); },
         "error-callback": (code: unknown) => { handlers.current.onToken(null); handlers.current.onError(captchaErrorText(String(code))); return true; },
         "expired-callback": () => handlers.current.onToken(null),
@@ -52,7 +53,7 @@ export function Turnstile({ siteKey, onToken, onError }: {
       live = false;
       if (id && window.turnstile) window.turnstile.remove(id);
     };
-  }, [siteKey]);
+  }, [siteKey, theme]);
 
   return <div ref={box} className="captcha" />;
 }
