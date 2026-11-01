@@ -12,15 +12,17 @@ import { clubRoles, type RoleData } from "./rolesApi.ts";
 import { Roles } from "./Roles.tsx";
 import { ClubSettings } from "./ClubSettings.tsx";
 import { Courses } from "./Courses.tsx";
+import { Kvelden } from "./kvelden/Kvelden.tsx";
 
 const TAB_TITLES: Record<Tab, string> = {
-  turneringer: "Turneringer", terminliste: "Terminliste", baner: "Baner", tropp: "Tropp", tabeller: "Tabeller", roller: "Roller", klubb: "Klubb",
+  kvelden: "Kvelden", turneringer: "Turneringer", terminliste: "Terminliste", baner: "Baner", tropp: "Tropp", tabeller: "Tabeller", roller: "Roller", klubb: "Klubb",
 };
 
-/** Arrangørsiden for én klubb. Del 1: oversikt over turneringer, terminliste og tropp. */
+/** Arrangørsiden for én klubb: Kvelden, turneringer, terminliste, tropp og resten. */
 export function ClubAdmin({ membership }: { membership: Membership }) {
   const clubID = membership.club_id;
-  const [tab, setTab] = useState<Tab>("turneringer");
+  // Kvelden er startsiden for dem som har den; ellers den første fanen.
+  const [tab, setTab] = useState<Tab>("kvelden");
   const [comps, setComps] = useState<Competition[] | null>(null);
   const [days, setDays] = useState<EventRow[] | null>(null);
   const [roster, setRoster] = useState<Member[] | null>(null);
@@ -63,6 +65,11 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
         <button className="link" onClick={load}>Oppdater</button>
       </nav>
       {error && <p className="error">{error}</p>}
+
+      {tab === "kvelden" && (!days || !comps || !roster ? <p className="muted">Henter …</p> : (
+        <Kvelden clubID={clubID} days={days} comps={comps} roster={roster} canMembers={viewer.rights.has("members")}
+          canRounds={viewer.rights.has("rounds")} onOpen={(t) => setTab(t === "tropp" ? "tropp" : "terminliste")} />
+      ))}
 
       {tab === "turneringer" && openID && comps && roster && comps.find((c) => c.id === openID) && (
         <TournamentDetail competition={comps.find((c) => c.id === openID)!} clubName={membership.clubs.name} roster={roster}

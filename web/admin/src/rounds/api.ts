@@ -160,7 +160,7 @@ export function competitionFor(e: EventRow, comps: readonly Competition[]): Comp
  * Regelsettet for dagen (`RoundListing.rules`, `RundeAdminModel.rules`): sesongens, eller turneringens egne
  * på en spilledag i liga, cup og morro, ellers den aktive sesongens, ellers Golfgutu-oppsettet.
  */
-async function rulesFor(clubID: string, e: EventRow, comps: readonly Competition[]): Promise<Ruleset> {
+export async function rulesFor(clubID: string, e: EventRow, comps: readonly Competition[]): Promise<Ruleset> {
   const { data, error } = await seasonRows("id:season_id, status, rules").eq("club_id", clubID);
   if (error) throw error;
   const seasons = (data ?? []) as unknown as { id: string; status: string; rules: unknown }[];
