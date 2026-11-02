@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { buildTVPayload, normalizeTVCode, tvBoardPage } from "../src/tv.ts";
+import { buildTVPayload, normalizeTVCode, tvBoardPage, tvCodePage } from "../src/tv.ts";
 import { handle } from "../src/index.ts";
 import { decodeSeasonRow, decodeTavlaData, tavlaInput, TavlaStandings } from "../../golfgutu-core/src/index.ts";
 
@@ -71,6 +71,7 @@ test("TV med playoff-runde (sql/047): vinneren først, og playoffen er ikke sist
   assert.ok(!tv.rows[0].detail.startsWith("Playoff"));
   assert.deepEqual(tv.latest, before.latest, "playoffen er ikke siste runde");
   assert.equal(tv.note, null, "playoffen skjuler ingen hull");
+  assert.ok(tv.moves.every((m) => m === null), "ingen bevegelse når sesongen har en playoff-runde");
 });
 
 test("TV med skjulte hull (sql/047): notis mens runden går, ingen når den er låst", () => {
@@ -119,6 +120,20 @@ test("TV for liga er appens ligatabell (sql/043)", () => {
                    want.rows.map((r) => [r.placeText, r.name, r.totalText, r.detail]));
   assert.equal(tv.latest?.title, want.rounds.columns.at(-1)?.title);
   assert.equal(tv.name, "Onsdagsligaen");
+  // Utseendet: tittel, regel og hvor langt den har kommet er de samme tekstene som før, og rutene følger tabellen.
+  assert.equal(tv.kind, "league");
+  assert.equal(tv.heading.title, "Onsdagsligaen");
+  assert.equal(tv.played, `${tv.heading.progress} · ${tv.heading.rule}`);
+  assert.equal(tv.rounds?.rows.length, tv.rows.length);
+  assert.deepEqual(tv.rounds?.labels, want.rounds.columns.map((_, i) => `${i + 1}`));
+  assert.equal(tv.heading.points, "Plasseringspoeng");
+  assert.equal(tv.heading.perRound, "Stableford per runde");
+  // Bevegelse: samme ligatabell uten siste runde.
+  assert.equal(tv.moves.length, tv.rows.length);
+  const last = board.links.at(-1)!.round_id;
+  const lastCol = board.rounds.find((r: { id: string }) => r.id === last);
+  assert.ok(lastCol);
+  assert.ok(tv.moves.some((m) => m !== null && m !== 0), "noen har flyttet seg");
 });
 
 test("TV for cup viser runden som pågår", () => {
@@ -139,6 +154,10 @@ test("TV for cup viser runden som pågår", () => {
   assert.equal(tv.rows.length, 2);
   assert.equal(tv.rows[0].detail, "3&2");
   assert.equal(tv.rows[0].total, d.members[0].display_name);
+  assert.equal(tv.kind, "cup");
+  assert.deepEqual(tv.heading, { title: "Klubbcupen", rule: null, progress: "Semifinale", points: "Vinner", perRound: null });
+  assert.equal(tv.rounds, null);
+  assert.deepEqual(tv.moves, [null, null], "ingen bevegelse i cupen");
 });
 
 test("TV med flere konkurranser og lag mot lag (sql/048): små paneler ved siden av hovedtabellen", () => {
@@ -239,4 +258,163 @@ test("TV-sidene", async () => {
   const bad = await handle(new Request("https://dashdash18.com/tv/xx.json"));
   assert.equal(bad.status, 404);
   assert.ok(tvBoardPage("ABCDEFGHJK", "n").includes('/tv/ABCDEFGHJK.json'));
+});
+
+// ---------- utseendet (02.11.2026): samme uttrykk som tavla på TV-en på forsiden ----------
+
+const seasonBoard = (i: number) => {
+  const s = fixture.sesonger[i];
+  return { ...fixture.tavlaData, competition: { name: s.name, season_id: s.id, club_id: s.club_id, status: s.status, rules: s.rules, club_name: "Golfgutu Invitational" } };
+};
+
+test("TV: undertittelen forklarer tabellen fra regelsettet, og kolonnen sier hva tallet er", () => {
+  const want: Record<string, [string, string]> = {
+    "Vår 2026": ["alle matcher teller · matchpoeng", "Matchpoeng"],
+    "Høst 2026": ["beste 3 av 7 spilledager · stableford", "Stableford"],
+    "Egen 2026": ["beste 1 av 6 kvelder · matchpoeng", "Matchpoeng"],
+    "Playoff 2026": ["beste 1 av 7 kvelder · matchpoeng · minst 2 kvelder for plass · playoff om førsteplassen", "Matchpoeng"],
+    "Snitt 2026": ["snitt per spilledag · alle matcher teller · matchpoeng · minst 3 spilledager for plass", "Snitt"],
+  };
+  fixture.sesonger.forEach((s: { name: string }, i: number) => {
+    const tv = buildTVPayload(seasonBoard(i));
+    assert.equal(tv.kind, "season");
+    assert.equal(tv.heading.title, s.name);
+    assert.equal(tv.heading.progress, tv.played);
+    assert.deepEqual([tv.heading.rule, tv.heading.points], want[s.name], s.name);
+    assert.equal(tv.heading.perRound, "Stableford per runde");
+    assert.doesNotMatch(JSON.stringify(tv.heading), /jakke/i);
+  });
+  // name i JSON-en er som før (appen og andre kan bruke den).
+  assert.equal(buildTVPayload(seasonBoard(0)).name, "Jakkeracet · Vår 2026");
+});
+
+/** Rundene i fixturen begrenset til kveldene (event_id-ene slutter på) `evenings`. */
+const onlyEvenings = (i: number, evenings: string[]) => {
+  const board = seasonBoard(i);
+  const keep = new Set(fixture.tavlaData.rounds.filter((r: { event_id: string }) => evenings.some((e) => r.event_id.endsWith(e))).map((r: { id: string }) => r.id));
+  const by = (xs: { round_id: string }[]) => xs.filter((x) => keep.has(x.round_id));
+  return { ...board, rounds: board.rounds.filter((r: { id: string }) => keep.has(r.id)), players: by(board.players), scores: by(board.scores),
+    matches: by(board.matches), claims: by(board.claims), round_holes: by(board.round_holes) };
+};
+
+test("TV: bevegelse siden forrige kveld, regnet med samme tabell uten siste kveld", () => {
+  const tv = buildTVPayload(seasonBoard(0));
+  assert.equal(tv.moves.length, tv.rows.length);
+  const move = (name: string) => tv.moves[tv.rows.findIndex((r) => r.name === name)];
+  assert.equal(move("Kåre"), 0, "uendret");
+  assert.equal(move("Lars"), 2, "opp");
+  assert.equal(move("Knut"), -2, "ned");
+  // Fasit: tabellen uten siste kveld (event 206) er den samme tabellen regnet på de fire første kveldene.
+  const before = buildTVPayload(onlyEvenings(0, ["201", "202", "204", "205"]));
+  tv.rows.forEach((r, k) => {
+    const b = before.rows.find((x) => x.name === r.name);
+    if (tv.moves[k] !== null) assert.equal(tv.moves[k], parseInt(b!.place) - parseInt(r.place), r.name);
+  });
+  // Ny spiller: Åse spilte første gang den andre kvelden.
+  const two = buildTVPayload(onlyEvenings(0, ["201", "202"]));
+  assert.equal(two.moves[two.rows.findIndex((r) => r.name === "Åse")], null);
+  assert.ok(two.moves.some((m) => m !== null));
+  // Første kveld: ingen forrige plass.
+  assert.ok(buildTVPayload(onlyEvenings(0, ["201"])).moves.every((m) => m === null));
+  // Uten plass («–») og med en playoff-runde: ingen bevegelse.
+  const snitt = buildTVPayload(seasonBoard(fixture.sesonger.findIndex((s: { name: string }) => s.name === "Snitt 2026")));
+  snitt.rows.forEach((r, k) => { if (r.place === "–") assert.equal(snitt.moves[k], null, r.name); });
+});
+
+test("TV: poengene per runde er rutenettet i «Alle runder», i tabellens rekkefølge", () => {
+  fixture.sesonger.forEach((_: unknown, i: number) => {
+    const board = seasonBoard(i);
+    const tv = buildTVPayload(board);
+    const grid = new TavlaStandings(tavlaInput(decodeTavlaData(board), decodeSeasonRow({ ...fixture.sesonger[i] }))).roundGrid();
+    assert.ok(tv.rounds);
+    assert.equal(tv.rounds.labels.length, grid.columns.length);
+    assert.equal(tv.rounds.rows.length, tv.rows.length);
+    const byName = new Map(grid.rows.map((r) => [r.name, r.points]));
+    tv.rows.forEach((r, k) => assert.deepEqual(tv.rounds!.rows[k]?.points, byName.get(r.name), r.name));
+    // Siste runde i kortet ved siden av er siste kolonne i rutene.
+    const n = tv.rounds.labels.length - 1;
+    for (const l of tv.latest!.lines) assert.equal(tv.rounds.rows[tv.rows.findIndex((r) => r.name === l.name)]?.points[n], l.points);
+  });
+});
+
+test("TV-sidene har uttrykket fra forsiden: skrifter, høydekurver, .tv-stilen og ingen eksterne ressurser", async () => {
+  const board = tvBoardPage("ABCDEFGHJK", "n");
+  assert.match(board, /<div class="landing tvflate"><svg class="kurver"/);
+  assert.match(board, /<div class="tv vegg">/);
+  assert.match(board, /<h1 class="ttl"><span class="loud" id="tittel">/);
+  assert.match(board, /<span class="soft" id="regel" hidden>/);
+  assert.match(board, /<b id="live" hidden>Live<\/b>/);
+  assert.match(board, /\.landing \.tv \.bar b::before/, "stilen er den samme som demoTavla på forsiden");
+  assert.match(board, /archivo-latin\.woff2/);
+  assert.match(board, /newsreader-latin\.woff2/);
+  assert.doesNotMatch(board, /<canvas|startTopo/, "høydekurvene står stille");
+  const code = tvCodePage("n");
+  assert.match(code, /<h1><span class="loud">Atten<\/span> <span class="soft">på TV<\/span><\/h1>/);
+  for (const html of [board, code]) assert.doesNotMatch(html, /(src|href)="https?:/);
+  const res = await handle(new Request("https://dashdash18.com/tv/ABCDEFGHJK"));
+  assert.match(res.headers.get("Content-Security-Policy") ?? "", /script-src 'nonce-/);
+});
+
+/** Kjører skriptet på TV-siden med en liten falsk DOM og svaret `payload`. Gir elementene og sidebyttet. */
+async function runBoard(payload: unknown, height = 1080) {
+  const els = new Map<string, Record<string, unknown>>();
+  const el = (id: string) => {
+    if (!els.has(id)) els.set(id, { innerHTML: "", textContent: "", hidden: false, clientHeight: height * 0.7, offsetHeight: 30, clientWidth: 1200,
+      rows: [], children: [], getBoundingClientRect: () => ({ bottom: height, height: 0 }) });
+    return els.get(id)!;
+  };
+  const timers: (() => void)[] = [];
+  const script = /<script nonce="n">([\s\S]*)<\/script>/.exec(tvBoardPage("ABCDEFGHJK", "n"))![1];
+  let loaded!: () => void;
+  const done = new Promise<void>((r) => { loaded = r; });
+  const run = new Function("document", "window", "fetch", "setInterval", "getComputedStyle", script);
+  run({ getElementById: el }, { innerHeight: height, addEventListener() {} },
+    async () => { setTimeout(loaded, 0); return { status: 200, json: async () => payload }; },
+    (f: () => void, ms: number) => { if (ms === 10000) timers.push(f); }, () => ({ fontSize: "36px" }));
+  await done;
+  return { el, nextPage: () => timers.forEach((f) => f()) };
+}
+
+test("TV-siden viser alle radene over sidene, tittelen, regelen og Live når runden går", async () => {
+  const tv = buildTVPayload(seasonBoard(0));
+  const many = { ...tv, rows: Array.from({ length: 31 }, (_, i) => ({ place: `${i + 1}.`, name: `Spiller ${i + 1}`, total: `${40 - i}`, detail: "3 kvelder" })),
+    rounds: null, latest: tv.latest && { ...tv.latest, ongoing: true } };
+  const { el, nextPage } = await runBoard(many);
+  assert.equal(el("tittel").textContent, "Vår 2026");
+  assert.equal(el("regel").textContent, "alle matcher teller · matchpoeng");
+  assert.equal(el("regel").hidden, false);
+  assert.equal(el("live").hidden, false);
+  assert.equal(el("played").textContent, "Golfgutu Invitational · 5 av 7 kvelder spilt");
+  const pages = (String(el("dots").innerHTML).match(/<i/g) ?? []).length;
+  assert.ok(pages > 1);
+  const seen = new Set<string>();
+  for (let p = 0; p < pages; p++) {
+    for (const m of String(el("rows").innerHTML).matchAll(/<span class="n">([^<]*)<\/span>/g)) seen.add(m[1]);
+    nextPage();
+  }
+  assert.deepEqual([...seen].sort(), many.rows.map((r) => r.name).sort());
+  assert.match(String(el("latest").innerHTML), /<b>Pågår nå<\/b>/);
+});
+
+test("TV-siden: lederen i gull, playoff-merket, ruter per runde og Siste runde uten Live; cup uten ruter og kort", async () => {
+  const playoff = fixture.sesonger.findIndex((s: { name: string }) => s.name === "Playoff 2026");
+  const tv = buildTVPayload(seasonBoard(playoff));
+  const { el } = await runBoard(tv);
+  const rows = String(el("rows").innerHTML);
+  assert.match(rows, /^<tr class="lead"/);
+  assert.match(rows, /<span class="n">Kåre <b class="po">Playoff<\/b><\/span>/);
+  assert.doesNotMatch(rows, /class="dt"|hull ·|stableford ·/, "detaljlinja står ikke på TV-en");
+  assert.match(rows, /<td class="mv"><span class="lik">–<\/span><\/td>/);
+  assert.match(rows, /<span class="rd"><i>/);
+  assert.match(String(el("thead").innerHTML),
+    /<th><\/th><th><\/th><th>Spiller<\/th><th class="rdc"><span class="rdt">Stableford per runde<\/span><span class="rd">.*<th class="r">Matchpoeng<\/th>/);
+  assert.equal(el("live").hidden, true);
+  assert.match(String(el("latest").innerHTML), /<span>Siste runde<\/span>/);
+  const cupRows = [{ place: "", name: "Bjørn – Knut", total: "Bjørn", detail: "3&2" }];
+  const cup = await runBoard({ ...tv, kind: "cup", rows: cupRows, moves: [null],
+    heading: { title: "Klubbcupen", rule: null, progress: "Semifinale", points: "Vinner", perRound: null }, rounds: null, latest: null, extras: [], teams: null });
+  assert.match(String(cup.el("thead").innerHTML), /^<tr><th><\/th><th>Kamp<\/th><th class="r">Vinner<\/th>/);
+  assert.match(String(cup.el("rows").innerHTML), /<span class="dt">3&amp;2<\/span>/, "i cupen er detaljen resultatet");
+  assert.equal(cup.el("regel").hidden, true);
+  assert.equal(cup.el("siden").hidden, true);
 });
