@@ -10,6 +10,7 @@ import {
   competitionBoards, competitionRowText, competitionScoreText, decodeRuleset, decodeStoredCompetition, frozenFromRows, makeRoundFromSnapshot,
   sidesFromRaw, snapshotFields, snapshotHandicap, snapshotRoster, teamMatchResult, type Ruleset, type StoredCompetition, type TavlaData,
 } from "../../golfgutu-core/src/index.ts";
+import { roundHighlights, type Highlight, type HighlightTable } from "./hoydepunkter.ts";
 import { ICON_LINKS } from "./html.ts";
 import { SITE_FONTS, SITE_STYLE, topoSVG } from "./nettsted.ts";
 import { LANDING_HEAD_STYLE } from "./salgsside.ts";
@@ -64,6 +65,11 @@ export interface TVPayload {
    * rådataene uten siste kveld/runde. Tom for cup og når sesongen har en playoff-runde.
    */
   moves: (number | null)[];
+  /**
+   * Innslagene nederst mens en runde pågår (`hoydepunkter.ts`): bragder, de beste så langt, flightene og jakten.
+   * Tom når ingen runde pågår, og i cupen.
+   */
+  highlights: Highlight[];
 }
 
 /** Notisen når en vanlig runde som går, skjuler de siste hullene. Playoffen teller ikke med. */
@@ -86,6 +92,7 @@ export function buildTVPayload(board: Record<string, unknown>): TVPayload {
   };
   const standings = seasonStandings(board);
   const t = tavlaToJSON(standings);
+  const before = seasonPlacesBefore(board, standings, t.rounds);
   const playingDay = (comp.rules as { dayTerm?: string })?.dayTerm === "playingDay";
   const total = t.eveningsTotal;
   const unit = playingDay ? (total === 1 ? "spilledag" : "spilledager") : (total === 1 ? "kveld" : "kvelder");
@@ -105,7 +112,12 @@ export function buildTVPayload(board: Record<string, unknown>): TVPayload {
     heading: { title: t.seasonName, progress: played, ...tableHeading(standings.rules, total) },
     kind: "season",
     rounds: roundPoints(t.rounds, t.rows.map((r) => r.memberID)),
-    moves: seasonMoves(board, standings, t.rounds),
+    moves: seasonMoves(board, standings, t.rounds, before),
+    highlights: roundHighlights(standings.snapshots, standings.season, t.rounds, {
+      rows: standings.rows.map((r) => ({ id: r.memberID, name: r.name, place: r.qualified ? r.place : null, total: r.total })),
+      before,
+      additive: seasonAdditive(standings),
+    }),
   };
 }
 
@@ -132,33 +144,56 @@ function moves<R>(now: readonly R[], before: Map<string, number>, key: (r: R) =>
  * Sesongen: tabellen regnet på nytt (samme TavlaStandings) uten siste kveld i «Alle runder» (alle rundene den
  * kvelden). Ingen bevegelse med en playoff-runde i sesongen: der avgjøres plassene utenfor kveldene.
  */
-export function seasonMoves(board: Record<string, unknown>, now: TavlaStandings, grid: RoundsGrid): (number | null)[] {
-  const none = now.rows.map(() => null);
+export function seasonMoves(board: Record<string, unknown>, now: TavlaStandings, grid: RoundsGrid,
+  prev: Map<string, number> | null = seasonPlacesBefore(board, now, grid)): (number | null)[] {
+  if (prev === null) return now.rows.map(() => null);
+  return moves(now.rows, prev, (r) => r.memberID, (r) => (r.qualified ? r.place : null));
+}
+
+/** Plassene uten siste kveld (spiller → plass), for bevegelsen og jakten. null når det ikke finnes en sammenligning. */
+function seasonPlacesBefore(board: Record<string, unknown>, now: TavlaStandings, grid: RoundsGrid): Map<string, number> | null {
   const raw = list(board, "rounds") as { id?: string; event_id?: string | null; kind?: string | null; status?: string }[];
-  if (raw.some((r) => r.kind === "playoff" && r.status !== "draft")) return none;
+  if (raw.some((r) => r.kind === "playoff" && r.status !== "draft")) return null;
   const last = grid.columns.at(-1)?.roundID;
-  if (last === undefined) return none;
+  if (last === undefined) return null;
   const lastRaw = raw.find((r) => String(r.id).toLowerCase() === last);
   const evening = lastRaw?.event_id ? String(lastRaw.event_id).toLowerCase() : null;
   const ids = new Set(raw.filter((r) => String(r.id).toLowerCase() === last || (evening !== null && String(r.event_id ?? "").toLowerCase() === evening))
     .map((r) => String(r.id).toLowerCase()));
   let before: TavlaStandings;
-  try { before = seasonStandings(withoutRounds(board, ids)); } catch { return none; }
-  if (!before.hasResults || !now.hasResults) return none;
-  const prev = new Map(before.rows.filter((r) => r.qualified && r.evenings > 0).map((r) => [r.memberID, r.place]));
-  return moves(now.rows, prev, (r) => r.memberID, (r) => (r.qualified ? r.place : null));
+  try { before = seasonStandings(withoutRounds(board, ids)); } catch { return null; }
+  if (!before.hasResults || !now.hasResults) return null;
+  return new Map(before.rows.filter((r) => r.qualified && r.evenings > 0).map((r) => [r.memberID, r.place]));
+}
+
+/**
+ * Vokser sesongtabellen nøyaktig med stablefordpoengene i runden? Stableford som kilde (ikke formens poeng), summen
+ * av alle runder, avrunding som ikke flytter hele poeng, vekt 1, ingen avkorting og ingen sidepremie i runden.
+ */
+function seasonAdditive(standings: TavlaStandings): HighlightTable["additive"] {
+  const t = standings.rules.table;
+  const sides = standings.rules.sidePrizes;
+  const sum = t.pointsSource === "stableford" && !t.formPoints && t.aggregation === "sum" && t.counting.best === null
+    && (t.roundingStep === null || Number.isInteger(1 / t.roundingStep));
+  return (round) => sum && standings.season.effectiveWeight(round) === 1 && round.avkortRegel === null
+    && !(round.ldEnabled && sides.longestDrive.enabled && sides.longestDrive.points !== 0)
+    && !(round.kpEnabled && sides.closestToPin.enabled && sides.closestToPin.points !== 0);
 }
 
 /** Liga og morro: samme LeagueStandings uten siste runde i «Alle runder». */
-function leagueMoves(board: Record<string, unknown>, l: LeagueStandings, grid: RoundsGrid): (number | null)[] {
-  const none = l.rows.map(() => null);
-  const last = grid.columns.at(-1)?.roundID;
-  if (last === undefined || !l.hasResults) return none;
-  let before: LeagueStandings;
-  try { before = leagueStandings(withoutRounds(board, new Set([last]))).league; } catch { return none; }
-  if (!before.hasResults) return none;
-  const prev = new Map(before.rows.filter((r) => r.played > 0).map((r) => [r.entrant.id.toLowerCase(), r.place]));
+function leagueMoves(l: LeagueStandings, prev: Map<string, number> | null): (number | null)[] {
+  if (prev === null) return l.rows.map(() => null);
   return moves(l.rows, prev, (r) => r.entrant.id.toLowerCase(), (r) => r.place);
+}
+
+/** Ligaens plasser uten siste runde. null uten sammenligning. */
+function leaguePlacesBefore(board: Record<string, unknown>, l: LeagueStandings, grid: RoundsGrid): Map<string, number> | null {
+  const last = grid.columns.at(-1)?.roundID;
+  if (last === undefined || !l.hasResults) return null;
+  let before: LeagueStandings;
+  try { before = leagueStandings(withoutRounds(board, new Set([last]))).league; } catch { return null; }
+  if (!before.hasResults) return null;
+  return new Map(before.rows.filter((r) => r.played > 0).map((r) => [r.entrant.id.toLowerCase(), r.place]));
 }
 
 /** Sesongen (turnering med kvelder): appens Tavla regnet fra svaret, med rundene bak («Alle runder», scorekortene). */
@@ -322,12 +357,14 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
       kind: "cup",
       rounds: null,
       moves: games.map(() => null),
+      highlights: [],
     };
   }
 
   const { league: l, names } = leagueStandings(board);
   const progress = `${l.roundCount} ${l.roundCount === 1 ? "runde" : "runder"} spilt`;
   const grid = l.roundGrid();
+  const before = leaguePlacesBefore(board, l, grid);
   return {
     name: comp.name,
     club,
@@ -339,7 +376,13 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
     heading: { title: comp.name, rule: l.rulesSummary, progress, ...leagueColumns(l) },
     kind: "league",
     rounds: roundPoints(grid, l.rows.map((r) => r.entrant.id)),
-    moves: leagueMoves(board, l, grid),
+    moves: leagueMoves(l, before),
+    // Ligaen: «trenger N poeng» bare med stablefordpoeng og alle runder (ikke plassering, ikke beste N) og uten avkorting.
+    highlights: roundHighlights(l.snapshots, l.season, grid, {
+      rows: l.rows.map((r) => ({ id: r.entrant.id, name: r.name, place: l.hasResults ? r.place : null, total: r.total })),
+      before,
+      additive: (round) => l.rules.scoring === "stableford" && l.rules.bestRounds === null && round.avkortRegel === null,
+    }),
   };
 }
 
@@ -479,6 +522,23 @@ const TV_STYLE = `
   .tv.vegg .fot .wordmark { font-size: 1.3em; margin-left: auto; color: var(--on-dark-2); }
   .tv.vegg .prikker + .wordmark { margin-left: 0; }
 
+  /* høydepunktene mens runden pågår: merket fra tavla på forsiden (.toast), ett om gangen nederst */
+  .tv.vegg .linje { position: relative; flex-shrink: 0; height: 2.7em; overflow: hidden; font-size: max(15px, calc(2.7 * var(--u))); }
+  .landing .tv.vegg .linje .toast { top: auto; bottom: .1em; font-size: 1em; padding: .55em 1.4em; max-width: 100%; transform: translate(-50%, 170%); }
+  .landing .tv.vegg .linje .toast.in { transform: translate(-50%, 0); }
+  .tv.vegg .linje .toast span { flex-shrink: 0; }
+  .tv.vegg .linje .toast i { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* hole in one: stort over hele skjermen noen sekunder */
+  .tv.vegg .stor { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .25em; text-align: center; padding: 0 5%; background: rgba(10, 23, 18, .9); animation: tv-stor .7s cubic-bezier(.25,.8,.25,1) both; }
+  .tv.vegg .stor .loud { font-size: max(48px, calc(17 * var(--u))); color: var(--gold); line-height: .9; }
+  .tv.vegg .stor .soft { font-size: max(24px, calc(5.4 * var(--u))); color: var(--on-dark); }
+  @keyframes tv-stor { from { opacity: 0; transform: scale(.96); } }
+  @media (prefers-reduced-motion: reduce) {
+    .landing .tv.vegg .linje .toast { transition: none; }
+    .tv.vegg .stor { animation: none; }
+  }
+
   .tv.vegg .melding { margin: auto; text-align: center; max-width: 40em; }
   .tv.vegg .melding h1 .loud { font-size: max(30px, calc(6.4 * var(--u))); }
   .tv.vegg .melding p { color: var(--on-dark-2); font-size: 1.2em; margin-top: 1em; }
@@ -528,7 +588,9 @@ const k=document.getElementById("k").value.replace(/[\\s-]/g,"").toUpperCase(); 
 
 /**
  * /tv/KODE: henter /tv/KODE.json hvert 15. sekund, bytter side hvert 10. sekund. Hvor mange rader som får plass,
- * måles på skjermen (radhøyden står i TV_STYLE), og rutene per runde vises så langt bredden rekker.
+ * måles på skjermen (radhøyden står i TV_STYLE), og rutene per runde vises så langt bredden rekker. Høydepunktene
+ * (`highlights`) byttes hvert 7. sekund: nye bragder først, hver bragd høyst to ganger, resten går på rundgang.
+ * Hole in one vises stort i seks sekunder første gang. Med «redusert bevegelse» byttes de uten animasjon.
  */
 export function tvBoardPage(code: string, nonce: string): string {
   const script = `
@@ -536,6 +598,9 @@ const url = "/tv/${code}.json"; let data = null, page = 0, rowH = 0;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $ = id => document.getElementById(id);
 const shown = {};
+const BRAGD = { holeInOne: 1, albatross: 1, eagle: 1, birdie: 1 };
+const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+const seen = {}, big = {}; let hiN = 0, hiKey = null;
 function set(id, html){ if (shown[id] !== html) { shown[id] = html; $(id).innerHTML = html; } }
 function clock(){ $("clock").textContent = new Date().toLocaleTimeString("nb-NO",{hour:"2-digit",minute:"2-digit"}); }
 function move(m){ return m === null || m === undefined ? "" : m > 0 ? '<span class="opp">▲ ' + m + "</span>" : m < 0 ? '<span class="ned">▼ ' + (-m) + "</span>" : '<span class="lik">–</span>'; }
@@ -554,8 +619,30 @@ function lines(list){
   return "<table><tbody>" + list.map((x,i) => '<tr' + (i === 0 ? ' class="lead"' : "") + '><td class="pl">' + esc(x.n) + '</td><td class="nm">' + esc(x.name)
     + '</td><td class="r pts">' + esc(x.score) + "</td></tr>").join("") + "</tbody></table>";
 }
+function hiList(){ return ((data && data.highlights) || []).filter(h => !BRAGD[h.kind] || (seen[h.label + h.text] || 0) < 2); }
+function highlight(){
+  const list = hiList(), t = $("hoydepunkt");
+  if (!list.length) { hiKey = null; t.className = "toast"; return; }
+  const h = list.find(x => BRAGD[x.kind] && !seen[x.label + x.text]) || list[hiN++ % list.length];
+  const key = h.label + h.text;
+  seen[key] = (seen[key] || 0) + 1;
+  if (key === hiKey && list.length === 1) return;
+  hiKey = key;
+  const html = "<span>" + esc(h.label) + "</span><i>" + esc(h.text) + "</i>";
+  if (still) { t.innerHTML = html; t.className = "toast in"; return; }
+  t.className = "toast";
+  setTimeout(() => { t.innerHTML = html; t.className = "toast in"; }, 600);
+}
+function holeInOne(){
+  const h = ((data && data.highlights) || []).find(x => x.kind === "holeInOne" && !big[x.label]);
+  if (!h) return;
+  big[h.label] = 1;
+  $("stor").innerHTML = '<span class="loud">Hole in one</span><span class="soft">' + esc(h.label) + "</span>";
+  $("stor").hidden = false; setTimeout(() => { $("stor").hidden = true; }, 6000);
+}
 function render(){
   if (!data) return;
+  $("linje").hidden = !hiList().length;
   const h = data.heading || { title: data.name, rule: null, progress: data.played, points: "Poeng", perRound: null };
   $("tittel").textContent = h.title; $("regel").textContent = h.rule || ""; $("regel").hidden = !h.rule;
   $("played").textContent = (data.club ? data.club + " · " : "") + h.progress;
@@ -604,16 +691,19 @@ function render(){
 async function load(){
   try { const r = await fetch(url, {cache:"no-store"});
     if (r.status === 404) { $("scr").innerHTML = '<div class="melding"><h1><span class="loud">Fant ingen TV-visning</span></h1><p>Koden er feil, utløpt eller trukket tilbake. Lag en ny kode i appen.</p></div>'; return; }
-    data = await r.json(); render();
+    data = await r.json(); render(); holeInOne(); if (!hiKey) highlight();
   } catch(e) {}
 }
 clock(); setInterval(clock, 15000); load(); setInterval(load, 15000); setInterval(()=>{ page++; render(); }, 10000);
+setInterval(highlight, 7000);
 window.addEventListener("resize", () => { rowH = 0; render(); });`;
   return shell("Tavla på TV – Atten", `<div class="landing tvflate">${topoSVG()}<div class="tv vegg"><div class="scr" id="scr">
 <div class="bar"><span id="played">Henter tabellen …</span><span class="hoyre"><b id="live" hidden>Live</b><span class="klokke" id="clock"></span></span></div>
 <h1 class="ttl"><span class="loud" id="tittel">Atten</span><span class="soft" id="regel" hidden></span></h1>
 <div class="innhold"><div class="tavle" id="tavle"><div class="rader" id="rader"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div></div>
 <div class="siden" id="siden" hidden><section class="kort" id="latest" hidden></section><div id="extras"></div></div></div>
+<div class="linje" id="linje" hidden><div class="toast" id="hoydepunkt" aria-live="polite"></div></div>
 <div class="fot"><span class="note" id="note" hidden></span><span class="prikker" id="dots"></span><span class="wordmark">Atten<i>.</i></span></div>
+<div class="stor" id="stor" hidden></div>
 </div></div></div>`, nonce, script);
 }
