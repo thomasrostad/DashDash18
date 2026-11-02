@@ -54,6 +54,10 @@
 .landing .signin button.google { width: 100%; height: 58px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 14px; border: 1px solid #8E918F; background: #131314; color: #E3E3E3; font: inherit; font-size: 17px; font-weight: 500; cursor: pointer; }
 .landing .signin button.google:disabled { opacity: .6; cursor: default; }
 .landing .signin button.google svg { width: 20px; height: 20px; }
+/* «Fortsett med Apple», hvit variant på mørk bakgrunn etter Apples retningslinjer, samme form som Google. */
+.landing .signin button.apple { width: 100%; height: 58px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 14px; border: 0; background: #FFFFFF; color: #000000; font: inherit; font-size: 17px; font-weight: 500; cursor: pointer; margin-bottom: 10px; }
+.landing .signin button.apple:disabled { opacity: .6; cursor: default; }
+.landing .signin button.apple svg { width: 17px; height: 20px; margin-top: -3px; }
 .landing .signin .or { display: flex; align-items: center; gap: 12px; margin: 16px 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--on-dark-2); }
 .landing .signin .or::before, .landing .signin .or::after { content: ""; flex: 1; height: 1px; background: rgba(244,241,230,.18); }
 
