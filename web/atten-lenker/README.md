@@ -17,7 +17,8 @@ Cloudflare Worker for https://dashdash18.com. Den gjør to ting:
 
 `/` er en kort side om Atten med lenker til personvern, vilkår og support. Alt annet gir en 404-side i samme stil, med lenke til forsiden og App Store. Sidene har ingen sporing, ingen cookies og ingen eksterne skript, med unntak av Turnstile på `/captcha`.
 
-- **Søk og deling.** `/`, `/personvern`, `/vilkar` og `/support` indekseres: egen tittel og beskrivelse, kanonisk adresse og del-kort (Open Graph og `twitter:card`). Bare de står i `/sitemap.xml`. Alt annet er `noindex`, og invitasjonene, følgekoden og Tavla har del-kort uten kanonisk adresse. Alle sidene bruker Figtree fra `public/fonts`.
+- **Innholdssider for Google** (`src/innhold.ts`, 02.11.2026): kalkulator, klubbside og guider. Hver side er én fil i `src/innhold/` og én linje i `CONTENT_PAGES`; ruting, `/sitemap.xml`, JSON-LD og lenkene i bunnen av forsiden og innholdssidene kommer derfra. Testene sjekker tittel, beskrivelse, kanonisk adresse og lenkene for hver side.
+- **Søk og deling.** `/`, `/personvern`, `/vilkar` `/support` og innholdssidene indekseres: egen tittel og beskrivelse, kanonisk adresse og del-kort (Open Graph og `twitter:card`). Bare de står i `/sitemap.xml`. Alt annet er `noindex`, og invitasjonene, følgekoden og Tavla har del-kort uten kanonisk adresse. Alle sidene bruker Figtree fra `public/fonts`.
 - **Ikoner og del-bilde** i `public/`: `favicon.svg` (app-ikonet fra `DashDash18/AppIcon.icon` med avrundede hjørner), `favicon.ico` (16, 32 og 48 px fra SVG-en), `apple-touch-icon.png` (180 px fra `AppIcon.png`) og `og.png` (1200 × 630, Figtree og appens farger). Endres app-ikonet, må de lages på nytt.
 
 ## Endre tekst

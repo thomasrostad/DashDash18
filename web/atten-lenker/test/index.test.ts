@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import worker, { normalizeCode, normalizeFollowCode, APP_ID, APP_STORE_URL } from "../src/index.ts";
+import { CONTENT_PAGES, contentPage } from "../src/innhold.ts";
 
 const BASE = "https://dashdash18.com";
 
@@ -239,7 +240,7 @@ test("andre sider er fortsatt noindex, og står ikke i sitemap.xml", async () =>
   }
 });
 
-const INDEXED = ["/", "/personvern", "/vilkar", "/support"];
+const INDEXED = ["/", "/personvern", "/vilkar", "/support", ...CONTENT_PAGES.map((p) => p.path)];
 
 test("indekserte sider: egen tittel, beskrivelse og del-kort med bilde", async () => {
   const titles = new Set<string>();
@@ -302,4 +303,21 @@ test("ingen ord om pengespill på sidene", async () => {
   for (const path of ["/", "/support", "/runde/ABCDE12345", "/finnes-ikke"]) {
     assert.doesNotMatch(await (await get(path)).text(), /tipping|veddemål|betting/i, path);
   }
+});
+
+test("innholdssider: tittel, beskrivelse, lenke i bunnen og skråstrek til slutt", async () => {
+  for (const p of CONTENT_PAGES) {
+    assert.match(p.path, /^\/[a-z0-9-]+(\/[a-z0-9-]+)*$/, p.path);
+    assert.match(p.lastmod, /^\d{4}-\d{2}-\d{2}$/, p.path);
+    assert.ok(p.description.length <= 160, `${p.path}: beskrivelsen er ${p.description.length} tegn`);
+    assert.equal(contentPage(p.path + "/"), p);
+    const html = await (await get(p.path)).text();
+    assert.ok(html.includes(`<title>`), p.path);
+    assert.ok(html.includes(`<meta name="description"`), p.path);
+    // Forsiden og innholdssidene lenker til hverandre.
+    for (const path of ["/", ...CONTENT_PAGES.map((c) => c.path)]) {
+      assert.ok((await (await get(path)).text()).includes(`href="${p.path}"`), `${path} lenker til ${p.path}`);
+    }
+  }
+  assert.equal(new Set(CONTENT_PAGES.map((p) => p.path)).size, CONTENT_PAGES.length, "ingen adresse to ganger");
 });
