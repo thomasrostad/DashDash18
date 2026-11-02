@@ -3,9 +3,7 @@
 // Om Atten står bare det appen gjør i dag (README.md, «Hva appen gjør nå»). Ingen penger i sidekonkurransene.
 
 import type { ContentPage } from "../innhold.ts";
-// App Store-lenken fra tavla.ts: index.ts importerer innhold.ts, så en import derfra blir en sirkel.
-import { APP_STORE_URL } from "../tavla.ts";
-import { SITE } from "../html.ts";
+import { APP_STORE_URL, SITE } from "../html.ts";
 
 const PATH = "/guide/golfturnering";
 const TITLE = "Slik arrangerer du en golfturnering – Atten";
@@ -91,7 +89,7 @@ const content = `
 <li>Nærmest pinnen og longest drive som sidepremier.</li>
 <li>En tavle som oppdateres mens dere spiller. Del lenken, så kan alle følge med i nettleseren uten appen, eller vis den på en skjerm i lokalet.</li>
 </ul>
-${APP_STORE_URL ? `<a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>` : ""}
+<a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>
 
 <h2>Sjekkliste for golfturneringen</h2>
 <ul>

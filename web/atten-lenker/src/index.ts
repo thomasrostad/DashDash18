@@ -1,7 +1,7 @@
 import { fetchTVPayload, normalizeTVCode, tvBoardPage, tvCodePage, type TVEnv } from "./tv.ts";
 import { calendarResponse } from "./kalender.ts";
 import { fetchSharePayload, REFRESH_SECONDS, shareInvalidPage, sharePage, type SharePayload } from "./tavla.ts";
-import { escapeHTML, ICON_LINKS, shareMeta, SITE } from "./html.ts";
+import { APP_STORE_ID, APP_STORE_URL, escapeHTML, ICON_LINKS, shareMeta, SITE } from "./html.ts";
 import { legalPage } from "./juridisk.ts";
 import { CONTENT_PAGES, contentPage } from "./innhold.ts";
 import { captchaResponse } from "./captcha.ts";
@@ -17,9 +17,8 @@ export const GET_THE_APP_HTML =
 
 export const APP_ID = "JNMQJPCV24.com.dashdash18.app";
 
-/// App Store-id-en til Atten (apps.apple.com/no/app/atten/id6820031728).
-export const APP_STORE_ID = "6820031728";
-export const APP_STORE_URL = `https://apps.apple.com/no/app/atten/id${APP_STORE_ID}`;
+/// App Store-id-en og -lenken står i src/html.ts (brukes også av innholdssidene).
+export { APP_STORE_ID, APP_STORE_URL };
 
 /// Smart App Banner i Safari: «Hent» eller «Åpne» øverst på siden. `appArgument` sendes til appen når
 /// den åpnes fra banneret (samme https-adresse som de universelle lenkene).
