@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { courseHoles } from "../src/course.ts";
 import { decodePlayer, decodeRound, makeRound, type RoundHole } from "../src/models.ts";
 import { GOLFGUTU } from "../src/ruleset.ts";
-import { handicapStrokes, holePoints, pointsFromScores, roundNetTotal, roundNetTotalWithHandicap, scoreName, scoreNameLabel } from "../src/scoring.ts";
+import { grossScoreEvent, handicapStrokes, holePoints, pointsFromScores, roundNetTotal, roundNetTotalWithHandicap, scoreName, scoreNameLabel } from "../src/scoring.ts";
 import { fixture } from "./helpers.ts";
 
 const fil = fixture("poeng");
@@ -53,6 +53,17 @@ test("scoreNameForHole", () => {
     assert.equal(scoreName(n.par, n.brutto, n.handicap, n.strokeIndex, n.antall), n.forventet);
   }
   assert.equal(scoreNameLabel("dobbel"), "Dobbel");
+});
+
+test("bragden er brutto (AktivitetDetektorTests: BigScore og birdien i QuietScore)", () => {
+  const cases: [number, number, string | null][] = [
+    [1, 3, "holeInOne"], [1, 4, "holeInOne"], [1, 5, "holeInOne"],
+    [2, 5, "albatross"], [3, 6, "albatross"], [2, 6, "albatross"],
+    [2, 4, "eagle"], [3, 5, "eagle"], [4, 6, "eagle"],
+    [3, 4, "birdie"], [2, 3, "birdie"], [4, 5, "birdie"],
+    [4, 4, null], [5, 4, null], [8, 4, null],
+  ];
+  for (const [gross, par, want] of cases) assert.equal(grossScoreEvent(gross, par), want, `${gross} på par ${par}`);
 });
 
 test("baneoppsett per hull", () => {

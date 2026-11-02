@@ -355,24 +355,27 @@ test("TV-sidene har uttrykket fra forsiden: skrifter, høydekurver, .tv-stilen o
   assert.match(res.headers.get("Content-Security-Policy") ?? "", /script-src 'nonce-/);
 });
 
-/** Kjører skriptet på TV-siden med en liten falsk DOM og svaret `payload`. Gir elementene og sidebyttet. */
-async function runBoard(payload: unknown, height = 1080) {
+/**
+ * Kjører skriptet på TV-siden med en liten falsk DOM og svaret `payload`. Gir elementene, sidebyttet og byttet av
+ * høydepunkt. `still`: «redusert bevegelse» (høydepunktene byttes uten animasjon og forsinkelse).
+ */
+async function runBoard(payload: unknown, height = 1080, still = true) {
   const els = new Map<string, Record<string, unknown>>();
   const el = (id: string) => {
     if (!els.has(id)) els.set(id, { innerHTML: "", textContent: "", hidden: false, clientHeight: height * 0.7, offsetHeight: 30, clientWidth: 1200,
       rows: [], children: [], getBoundingClientRect: () => ({ bottom: height, height: 0 }) });
     return els.get(id)!;
   };
-  const timers: (() => void)[] = [];
+  const timers: (() => void)[] = [], highlightTimers: (() => void)[] = [];
   const script = /<script nonce="n">([\s\S]*)<\/script>/.exec(tvBoardPage("ABCDEFGHJK", "n"))![1];
   let loaded!: () => void;
   const done = new Promise<void>((r) => { loaded = r; });
   const run = new Function("document", "window", "fetch", "setInterval", "getComputedStyle", script);
-  run({ getElementById: el }, { innerHeight: height, addEventListener() {} },
+  run({ getElementById: el }, { innerHeight: height, addEventListener() {}, matchMedia: (q: string) => ({ matches: still && q.includes("reduce") }) },
     async () => { setTimeout(loaded, 0); return { status: 200, json: async () => payload }; },
-    (f: () => void, ms: number) => { if (ms === 10000) timers.push(f); }, () => ({ fontSize: "36px" }));
+    (f: () => void, ms: number) => { if (ms === 10000) timers.push(f); if (ms === 7000) highlightTimers.push(f); }, () => ({ fontSize: "36px" }));
   await done;
-  return { el, nextPage: () => timers.forEach((f) => f()) };
+  return { el, nextPage: () => timers.forEach((f) => f()), nextHighlight: () => highlightTimers.forEach((f) => f()) };
 }
 
 test("TV-siden viser alle radene over sidene, tittelen, regelen og Live når runden går", async () => {
@@ -417,4 +420,49 @@ test("TV-siden: lederen i gull, playoff-merket, ruter per runde og Siste runde u
   assert.match(String(cup.el("rows").innerHTML), /<span class="dt">3&amp;2<\/span>/, "i cupen er detaljen resultatet");
   assert.equal(cup.el("regel").hidden, true);
   assert.equal(cup.el("siden").hidden, true);
+});
+
+test("TV-siden: høydepunktene nederst, nye bragder først og høyst to ganger, hole in one stort", async () => {
+  const tv = buildTVPayload(seasonBoard(0));
+  const highlights = [
+    { kind: "best", label: "Best så langt", text: "Bjørn · 36 poeng" },
+    { kind: "holeInOne", label: "Kåre · hull 7", text: "hole in one!" },
+    { kind: "eagle", label: "Lars · hull 4", text: "eagle" },
+    { kind: "chase", label: "Jakten", text: "Kåre trenger 18 poeng for å gå forbi Bjørn" },
+  ];
+  const { el, nextHighlight } = await runBoard({ ...tv, highlights });
+  assert.equal(el("linje").hidden, false);
+  assert.equal(el("stor").hidden, false, "hole in one stort over skjermen");
+  assert.match(String(el("stor").innerHTML), /<span class="loud">Hole in one<\/span><span class="soft">Kåre · hull 7<\/span>/);
+  const seen: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    assert.equal(el("hoydepunkt").className, "toast in");
+    seen.push(String(el("hoydepunkt").innerHTML).replace(/<[^>]+>/g, "|"));
+    nextHighlight();
+  }
+  assert.equal(seen[0], "|Kåre · hull 7||hole in one!|", "den nye bragden først");
+  assert.equal(seen[1], "|Lars · hull 4||eagle|");
+  assert.equal(seen.filter((x) => x.includes("hole in one")).length, 2, "hver bragd høyst to ganger");
+  assert.equal(seen.filter((x) => x.includes("eagle")).length, 2);
+  assert.ok(seen.slice(7).every((x) => x.includes("Best så langt") || x.includes("Jakten")), "så bare resten på rundgang");
+  assert.ok(seen.some((x) => x.includes("Jakten")));
+  // Ingen innslag (ingen runde pågår): ingen linje.
+  const none = await runBoard({ ...tv, highlights: [] });
+  assert.equal(none.el("linje").hidden, true);
+  assert.equal(none.el("stor").innerHTML, "", "ingen hole in one");
+  // Eldre svar uten feltet: ingen linje.
+  const old = await runBoard({ ...tv, highlights: undefined });
+  assert.equal(old.el("linje").hidden, true);
+});
+
+test("TV-siden: høydepunktene glir inn uten «redusert bevegelse», og stilen respekterer den", async () => {
+  const tv = buildTVPayload(seasonBoard(0));
+  const { el } = await runBoard({ ...tv, highlights: [{ kind: "best", label: "Best så langt", text: "Bjørn · 36 poeng" }] }, 1080, false);
+  assert.equal(el("hoydepunkt").className, "toast", "ut først, inn etter et øyeblikk");
+  await new Promise((r) => setTimeout(r, 700));
+  assert.equal(el("hoydepunkt").className, "toast in");
+  const page = tvBoardPage("ABCDEFGHJK", "n");
+  assert.match(page, /<div class="linje" id="linje" hidden><div class="toast" id="hoydepunkt" aria-live="polite"><\/div><\/div>/);
+  assert.match(page, /\.landing \.tv \.toast \{/, "merket fra forsiden");
+  assert.match(page, /@media \(prefers-reduced-motion: reduce\) \{\s*\.landing \.tv\.vegg \.linje \.toast \{ transition: none; \}/);
 });

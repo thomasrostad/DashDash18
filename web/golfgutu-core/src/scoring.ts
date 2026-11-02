@@ -65,6 +65,22 @@ export function scoreName(par: number, gross: number, handicap: number, strokeIn
   return "blowup";
 }
 
+/** En bragd på hullet, brutto mot par (feeden i appen): hole in one, albatross, eagle eller birdie. */
+export type GrossScoreEvent = "holeInOne" | "albatross" | "eagle" | "birdie";
+
+/**
+ * `BigScore.detect` og birdien i `QuietScore.detect` (ActivityDetectors.swift, `loggStorScore`): brutto, ikke netto.
+ * Hole in one går foran (1 slag på par 4 er også albatross). Shank er ikke en bragd.
+ */
+export function grossScoreEvent(gross: number, par: number): GrossScoreEvent | null {
+  if (gross === 1) return "holeInOne";
+  const diff = gross - par;
+  if (diff <= -3) return "albatross";
+  if (diff === -2) return "eagle";
+  if (diff === -1) return "birdie";
+  return null;
+}
+
 /**
  * `poengFraHull`: stablefordsummen over de tellende hullene. Hull uten score gir `poengForTomtHull`.
  * Ingen score i det hele tatt gir 0, også med `nettopar`.
