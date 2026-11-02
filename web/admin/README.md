@@ -52,6 +52,13 @@ Plan: `docs/fase-26-tv-tidsvindu-web.md`.
   begge selvhostet i `public/fonts` (SIL Open Font License, bare latin-delsett). Bildene i `public/landing` er fra
   Unsplash (Sugar Golf og FilterGrade, Unsplash-lisensen) og kreditert i bunnen av forsiden. Ingen nye avhengigheter.
 
+- [x] Kvelden (01.11.2026, `src/kvelden/`): ny første fane for dem med «Runder og føring». Under en runde: banen med
+  flightene (båsene) der de er, kveldens tabell, «Trenger deg» (hull som mangler score mens resten av flighten har gått
+  videre, og medlemmer som venter på godkjenning) og de siste hendelsene. Etter at alle er inne: kveldens vinner,
+  lengste drive og nærmest pinnen, og «Lås runden» (`lockRound`). Uten aktiv runde: neste spilledag med en sjekkliste.
+  Regnes fra det som finnes (`round_players.bay_no`, `hole_scores.recorded_at`, `loadGame` og `roundTable`), hentes på
+  nytt hvert 20. sekund. Ingen SQL. `test/kvelden.test.ts` tester gruppene, start på hull 10, manglende hull og hendelsene.
+
 ## Kom i gang
 
 ```sh
