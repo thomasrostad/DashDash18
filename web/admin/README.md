@@ -45,6 +45,13 @@ Plan: `docs/fase-26-tv-tidsvindu-web.md`.
     «Trekk tilbake». QR-koden regnes av `qrcode-generator` (godkjent av Thomas 23.10.2026) og tegnes som SVG (`src/QRCode.tsx`).
   - Innlimingen deler logikk (`src/listImport.ts`) og testes mot appens tilfeller og `DashDash18Tests/DegFixtures.json`.
 
+- [x] Ny forside og nytt utseende (01.11.2026, `src/landing/`): forsiden før innlogging selger Atten til klubber og
+  sentre og har innloggingen øverst (samme e-postkode og Turnstile som før, nå i `src/SignIn.tsx`). Høydekurvene fra en
+  green tegnes i kode (`landing/topo.ts`, marching squares, testes i `test/landing.test.ts`), eksempeltavla har
+  oppdiktede navn (`landing/demo.ts`). Typografi: Archivo smal og fet i versaler (`.loud`) og Newsreader kursiv (`.soft`),
+  begge selvhostet i `public/fonts` (SIL Open Font License, bare latin-delsett). Bildene i `public/landing` er fra
+  Unsplash (Sugar Golf og FilterGrade, Unsplash-lisensen) og kreditert i bunnen av forsiden. Ingen nye avhengigheter.
+
 ## Kom i gang
 
 ```sh
