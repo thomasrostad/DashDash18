@@ -208,6 +208,7 @@ struct EndretFraStandardTests {
         (.loss, { r in r.table.matchPoints.loss = -1 }),
         (.allowance, { r in r.handicap.allowanceOverride = 0.85 }),
         (.allowance, { r in r.handicap.formAllowances["stableford"] = 1 }),
+        (.handicapCalculation, { r in r.handicap.calculation = .whs }),
         (.longestDrive, { r in r.sidePrizes.longestDrive.points = 2 }),
         (.closestToPin, { r in r.sidePrizes.closestToPin.enabled = false }),
         (.splitTies, { r in r.sidePrizes.splitTies = false }),
@@ -253,11 +254,14 @@ struct EndretFraStandardTests {
         #expect(RulesetField.longestDrive.changeNote(r, from: .golfgutu) == "Endret · standard 1 poeng")
         #expect(RulesetField.counting.changeNote(r, from: .golfgutu) == "Endret · standard alle matcher")
         #expect(RulesetField.draw.changeNote(r, from: .golfgutu) == nil)
+        r.handicap.calculation = .whs
+        #expect(RulesetField.handicapCalculation.changeNote(r, from: .golfgutu) == "Endret · standard som før (PWA)")
     }
 
     @Test func vanligeOgAvanserteValg() {
         let common = RulesetField.allCases.filter(\.isCommon)
-        #expect(common == [.pointsSource, .evenings, .counting, .win, .draw, .loss, .allowance, .longestDrive, .closestToPin, .splitTies])
+        #expect(common == [.pointsSource, .evenings, .counting, .win, .draw, .loss, .allowance, .handicapCalculation,
+                           .longestDrive, .closestToPin, .splitTies])
     }
 
     @Test func utkastetTellerAvanserteEndringerOgTilbakestilles() {

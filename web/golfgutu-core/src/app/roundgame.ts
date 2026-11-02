@@ -220,7 +220,7 @@ export function snapshotScorecard(s: RoundSnapshot, member: UUID, inward: boolea
     lines.push({
       index: i, number: holeNumber(round, i), par: h.par, strokes: gross,
       points: holePoints(h.par, gross, hcp, h.strokeIndex, holeCount, s.rules),
-      scoreName: scoreName(h.par, gross, hcp, h.strokeIndex, holeCount),
+      scoreName: scoreName(h.par, gross, hcp, h.strokeIndex, holeCount, s.rules),
     });
   }
   return {

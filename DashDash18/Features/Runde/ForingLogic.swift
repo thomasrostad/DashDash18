@@ -425,7 +425,7 @@ nonisolated extension RoundGame {
             let fullHcp = handicap(member)
             let hcp = isGross ? 0 : fullHcp
             let fullReceived = round.hcpExtern ? 0
-                : Scoring.handicapStrokes(handicap: fullHcp, strokeIndex: hole.strokeIndex, holes: count)
+                : Scoring.handicapStrokes(handicap: fullHcp, strokeIndex: hole.strokeIndex, holes: count, rules: rules)
             let received = isGross ? 0 : fullReceived
             // Maks slag per hull (`play.maxStrokes`): stepperen stopper der, og forvalget går ikke over.
             // Maksimumscore: også ved formens tak (netto dobbel bogey regnes med slagene, også i brutto).
@@ -437,7 +437,7 @@ nonisolated extension RoundGame {
             let inMatch = MatchPlay.holeMatch(for: member.uuidString, in: round) != nil
             let parBogey = isParBogey && show ? HoleMath.parBogeyMark(net: value - received, par: hole.par) : nil
             let name = show ? Scoring.scoreName(par: hole.par, gross: value, handicap: hcp,
-                                                strokeIndex: hole.strokeIndex, holes: count) : nil
+                                                strokeIndex: hole.strokeIndex, holes: count, rules: rules) : nil
             // Stablefordpoeng på hullet; ikke i match, par/bogey, slagspill og maksimumscore.
             let points: Int? = switch scoring {
             case .parBogey, .strokePlay, .maximumScore: nil
@@ -849,7 +849,7 @@ nonisolated extension RoundGame {
             var mark: String?
             if isParBogey {
                 let received = round.hcpExtern ? 0
-                    : Scoring.handicapStrokes(handicap: hcp, strokeIndex: h.strokeIndex, holes: holeCount)
+                    : Scoring.handicapStrokes(handicap: hcp, strokeIndex: h.strokeIndex, holes: holeCount, rules: rules)
                 mark = HoleMath.parBogeyMark(net: gross - received, par: h.par)
                 parBogeySum += ParBogey.holeValue(net: gross - received, par: h.par, rules: rules.formPlay.parBogey)
             }
@@ -860,7 +860,7 @@ nonisolated extension RoundGame {
                 index: i, number: holeNumber(i), par: h.par, strokes: gross,
                 points: points,
                 scoreName: Scoring.scoreName(par: h.par, gross: gross, handicap: hcp, strokeIndex: h.strokeIndex,
-                                             holes: holeCount),
+                                             holes: holeCount, rules: rules),
                 parBogey: mark,
                 formValue: formRow?.holeValues[i].map { Int($0.rounded()) })
         }
@@ -954,7 +954,7 @@ nonisolated extension RoundGame {
         let hole = holes[index]
         let hits: [(level: CelebrationLevel, member: UUID, strokes: Int)] = saved.compactMap { s in
             let net = Scoring.netStrokes(gross: s.strokes, handicap: handicap(s.member),
-                                         strokeIndex: hole.strokeIndex, holes: holeCount)
+                                         strokeIndex: hole.strokeIndex, holes: holeCount, rules: rules)
             return CelebrationLevel.level(gross: s.strokes, net: net, par: hole.par).map { ($0, s.member, s.strokes) }
         }
         guard let best = hits.max(by: { $0.level < $1.level }) else { return nil }

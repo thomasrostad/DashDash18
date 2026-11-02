@@ -14,12 +14,14 @@ struct RulesetTemplateTests {
 
     @Test func matchspillSerienErGolfgutu() {
         #expect(RulesetTemplate.matchSeries.rules == Ruleset.golfgutu)
+        #expect(Ruleset.golfgutu.handicap.calculation == .pwa)
         #expect(Ruleset.golfgutu.table.pointsSource == .matches)
     }
 
     /// Cup og morro: det «Ny konkurranse» lagrer med malen (`CompetitionDraft.rules`).
     @Test func cupOgMorroErKonkurransemalen() {
         var expected = Ruleset.golfgutu
+        expected.handicap.calculation = .whs
         expected.competition = CompetitionRules(league: .league, fun: .fun, cup: .standard)
         #expect(RulesetTemplate.cup.rules == expected)
         #expect(RulesetTemplate.fun.rules == expected)
@@ -35,7 +37,7 @@ struct RulesetTemplateTests {
             #expect(RulesetTemplate.matching(r) == t)
         }
         #expect(RulesetTemplate.teamVsTeam.rules.formats.defaultFormID == "fourball")
-        #expect(RulesetTemplate.teamVsTeam.differences(in: .golfgutu) == ["formats.defaultFormID"])
+        #expect(RulesetTemplate.teamVsTeam.differences(in: .golfgutu) == ["formats.defaultFormID", "handicap.calculation"])
         #expect(RulesetTemplate.matching(.golfgutu) == .matchSeries)
     }
 
@@ -53,10 +55,18 @@ struct RulesetTemplateTests {
         #expect(r.allowance(for: CompetitionForm.form(id: "stableford")) == 0.95)
         #expect(r.competition == nil)
         #expect(RulesetTemplate.stablefordSeries.differences(in: g) == [
-            "handicap.seedingGroups", "sidePrizes.closestToPin.enabled", "sidePrizes.longestDrive.enabled",
+            "handicap.calculation", "handicap.seedingGroups", "sidePrizes.closestToPin.enabled", "sidePrizes.longestDrive.enabled",
             "table.counting.best", "table.counting.unit", "table.pointsSource",
             "table.stablefordCounting.unit", "table.tiebreaks",
         ])
+    }
+
+    /// Golfgutu-oppsettet regner handicap som PWA-en; alle de andre oppsettene etter golfreglene (WHS).
+    @Test func handicapregningenPerOppsett() {
+        for t in RulesetTemplate.allCases {
+            #expect(t.rules.handicap.calculation == (t == .matchSeries ? .pwa : .whs), "\(t)")
+            #expect(t.leagueRules.handicap.calculation == t.rules.handicap.calculation, "\(t)")
+        }
     }
 
     @Test func gjenkjenning() {

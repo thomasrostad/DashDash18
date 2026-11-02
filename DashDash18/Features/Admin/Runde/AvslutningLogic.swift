@@ -299,7 +299,8 @@ nonisolated extension RoundGame {
             let cells = holes.enumerated().map { i, hole in
                 RoundTable.Cell(index: i, strokes: s[i],
                                 scoreName: s[i].map { Scoring.scoreName(par: hole.par, gross: $0, handicap: hcp,
-                                                                         strokeIndex: hole.strokeIndex, holes: holeCount) },
+                                                                         strokeIndex: hole.strokeIndex, holes: holeCount,
+                                                                         rules: rules) },
                                 outside: i >= counting)
             }
             let gross = s.filter { $0.key >= 0 && $0.key < holes.count }.values.reduce(0, +)
@@ -359,7 +360,7 @@ nonisolated struct ScoreCorrection: Equatable, Sendable {
         let hole = game.holes[holeIndex]
         let hcp = game.handicap(memberID)
         return (Scoring.scoreName(par: hole.par, gross: strokes, handicap: hcp, strokeIndex: hole.strokeIndex,
-                                  holes: game.holeCount),
+                                  holes: game.holeCount, rules: game.rules),
                 Scoring.points(par: hole.par, gross: strokes, handicap: hcp, strokeIndex: hole.strokeIndex,
                                holes: game.holeCount, rules: game.rules))
     }

@@ -49,7 +49,7 @@ nonisolated extension StatsInput {
                 playingHandicap: playingHandicap(r, player: player, round: round, rules: rules),
                 handicapIndex: player.handicapIndex, courseRating: r.courseRating ?? course?.courseRating,
                 slopeRating: (r.slopeRating ?? course?.slopeRating).map(Double.init), scores: scoreMap, details: detailMap,
-                scoring: rules.scoring
+                scoring: rules.scoring, handicapCalculation: rules.handicap.calculation
             )
         }
     }

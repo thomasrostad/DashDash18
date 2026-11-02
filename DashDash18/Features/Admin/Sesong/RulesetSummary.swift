@@ -111,7 +111,8 @@ nonisolated enum RulesetSummary {
 /// Sammen dekker valgene hele `Ruleset`, så ingen endring i regelsettet blir usynlig.
 nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
     // Det vanligste
-    case pointsSource, evenings, counting, win, draw, loss, allowance, longestDrive, closestToPin, splitTies
+    case pointsSource, evenings, counting, win, draw, loss, allowance, handicapCalculation, longestDrive, closestToPin,
+         splitTies
     // Avanserte valg
     case scoring, trianglePoints, stablefordCounting, tiebreaks, rounding
     case minEvenings, aggregation, pointsTables, tieRule
@@ -122,7 +123,8 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
 
     var isCommon: Bool {
         switch self {
-        case .pointsSource, .evenings, .counting, .win, .draw, .loss, .allowance, .longestDrive, .closestToPin, .splitTies: true
+        case .pointsSource, .evenings, .counting, .win, .draw, .loss, .allowance, .handicapCalculation, .longestDrive,
+             .closestToPin, .splitTies: true
         default: false
         }
     }
@@ -136,6 +138,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .draw: "Uavgjort"
         case .loss: "Tap"
         case .allowance: "Handicapandel"
+        case .handicapCalculation: "Handicap regnes"
         case .longestDrive: "Longest drive"
         case .closestToPin: "Nærmest pinnen"
         case .splitTies: "Del poenget ved likt"
@@ -172,6 +175,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .allowance:
             a.handicap.allowanceOverride != b.handicap.allowanceOverride
                 || a.handicap.formAllowances != b.handicap.formAllowances
+        case .handicapCalculation: a.handicap.calculation != b.handicap.calculation
         case .longestDrive: a.sidePrizes.longestDrive != b.sidePrizes.longestDrive
         case .closestToPin: a.sidePrizes.closestToPin != b.sidePrizes.closestToPin
         case .splitTies: a.sidePrizes.splitTies != b.sidePrizes.splitTies
@@ -210,6 +214,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .loss: return RuleFormat.number(rules.table.matchPoints.loss)
         case .allowance:
             return rules.handicap.allowanceOverride.map { "\(RuleFormat.percent($0)) for alle" } ?? "per form"
+        case .handicapCalculation: return rules.handicap.calculation == .whs ? "golfreglene (WHS)" : "som før (PWA)"
         case .longestDrive: return Self.prize(rules.sidePrizes.longestDrive)
         case .closestToPin: return Self.prize(rules.sidePrizes.closestToPin)
         case .splitTies: return rules.sidePrizes.splitTies ? "på" : "av"

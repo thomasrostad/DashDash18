@@ -27,6 +27,7 @@ import {
 import { DAY_TERMS, type DayTerm } from "./dayterm.ts";
 import { ALL_FORMS, FORM_CATALOG, POINTS_GAME_KINDS, type CompetitionForm, type PointsGameKind } from "./forms.ts";
 import { deepCopy, deepEqual, jsRound } from "./jsmath.ts";
+import { roundWhole } from "./whs.ts";
 
 // MARK: Typer
 
@@ -171,6 +172,22 @@ export interface SeedingGroup {
   name: string;
 }
 
+/**
+ * Hvordan banehandicap, spillehandicap og slag regnes (`Ruleset.HandicapCalculation`).
+ * `pwa`: som PWA-en (db-nytt.js), banehandicap for 18 hull · hull/18 · andel rundet én gang, og et plusshandicap
+ * gir ingen slag tilbake. Golfgutu. `whs`: golfreglene (Rules of Handicapping 2024): banehandicap for hullene
+ * som spilles, avrundet (regel 6.1a og 6.1b), spillehandicap = banehandicap · andel, avrundet (6.2), og et
+ * plusshandicap gir slag tilbake på hullene med høyest indeks (6.2, appendiks E). ,5 bort fra null.
+ */
+export type HandicapCalculation = "pwa" | "whs";
+export const HANDICAP_CALCULATIONS: readonly HandicapCalculation[] = ["pwa", "whs"];
+
+/** Avrunding til hele slag: `Math.round` (`pwa`) eller ,5 bort fra null (`whs`). Likt for tall ≥ 0. */
+export function handicapRoundWhole(calculation: HandicapCalculation, x: number): number {
+  // `+ 0`: −0 blir 0, som heltallet i Swift.
+  return calculation === "whs" ? roundWhole(x) + 0 : jsRound(x);
+}
+
 export interface HandicapRules {
   /** Fast andel for alle former. `null`: andelen per form. */
   allowanceOverride: number | null;
@@ -178,6 +195,8 @@ export interface HandicapRules {
   seedingGroups: SeedingGroup[];
   externalHandicap: boolean;
   teamHandicap: Record<string, TeamHandicapRule>;
+  /** Golfreglene (`whs`) eller som PWA-en (`pwa`). Golfgutu og regelsett uten feltet: `pwa`. */
+  calculation: HandicapCalculation;
 }
 
 export type MatchStrokes = "lowestFromScratch" | "fullHandicap";
@@ -459,7 +478,8 @@ export const STANDARD_PLAY: Readonly<PlayRules> = deepFreeze({
 export function maxStrokesLimit(m: MaxStrokes, par: number, strokesReceived: number): number | null {
   switch (m.type) {
     case "off": return null;
-    case "netDoubleBogey": return par + 2 + Math.max(0, strokesReceived);
+    // Slagene er negative der et plusshandicap etter golfreglene gir slag tilbake (WHS regel 3.1).
+    case "netDoubleBogey": return par + 2 + strokesReceived;
     case "fixed": return m.strokes;
   }
 }
@@ -624,6 +644,7 @@ export const GOLFGUTU: Readonly<Ruleset> = deepFreeze({
     ],
     externalHandicap: false,
     teamHandicap: golfgutuTeamHandicap(),
+    calculation: "pwa",
   },
   formats: {
     defaultFormID: "stableford",
@@ -815,6 +836,8 @@ function decodeHandicap(x: unknown, path: string): HandicapRules {
     seedingGroups: sg ? sg.map((s, i) => decodeSeedingGroup(s, `${path}.seedingGroups[${i}]`)) : deepCopy(g.seedingGroups) as SeedingGroup[],
     externalHandicap: optBool(o, "externalHandicap", path) ?? g.externalHandicap,
     teamHandicap,
+    // Mangler feltet (regelsett og rules_snapshot fra før 02.11.2026): som PWA-en, så tallene er som før.
+    calculation: optEnum(o, "calculation", HANDICAP_CALCULATIONS, path) ?? g.calculation,
   };
 }
 
@@ -1131,6 +1154,8 @@ export function encodeRuleset(r: Ruleset): JSONObject {
       seedingGroups: r.handicap.seedingGroups.map((g) => ({ number: g.number, handicap: g.handicap, name: g.name })),
       externalHandicap: r.handicap.externalHandicap,
       teamHandicap,
+      // Bare når det ikke er som PWA-en, så Golfgutu-JSON-en og eldre regelsett er som før.
+      ...(r.handicap.calculation !== undefined && r.handicap.calculation !== "pwa" ? { calculation: r.handicap.calculation } : {}),
     },
     formats: {
       defaultFormID: r.formats.defaultFormID,

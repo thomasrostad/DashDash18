@@ -848,7 +848,8 @@ public enum Tips {
                 let toPar: [Int?] = (0..<counting).map { i in
                     guard let gross = scores[i], i < course.count else { return nil }
                     let hole = course[i]
-                    return Scoring.netStrokes(gross: gross, handicap: hcp, strokeIndex: hole.strokeIndex, holes: holes)
+                    return Scoring.netStrokes(gross: gross, handicap: hcp, strokeIndex: hole.strokeIndex, holes: holes,
+                                              rules: rules)
                         - hole.par
                 }
                 let done = toPar.compactMap { $0 }

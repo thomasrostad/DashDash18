@@ -736,7 +736,7 @@ struct GameContext {
         for p in players {
             let base = Handicap.effective(for: roster.first { $0.id == p } ?? Player(id: p), in: round,
                                           roster: roster, rules: rules)
-            out[p] = JS.roundInt(base * h.allowance)
+            out[p] = Int(rules.handicap.calculation.roundWhole(base * h.allowance))
         }
         if h.fromLowest, let low = out.values.min() {
             for p in players { out[p] = out[p]! - low }
@@ -751,7 +751,7 @@ struct GameContext {
     /// Slagene spilleren får på hullet.
     func strokes(_ p: String, _ hole: Int, handicaps: [String: Int]) -> Int {
         Scoring.handicapStrokes(handicap: Double(handicaps[p] ?? 0), strokeIndex: holes[hole].strokeIndex,
-                                holes: round.numberOfHoles)
+                                holes: round.numberOfHoles, rules: rules)
     }
 
     /// Netto på hullet, eller `nil` uten score.

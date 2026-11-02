@@ -59,6 +59,16 @@ export function whsCourseHandicap(index: number, slope: number, courseRating: nu
   return roundWhole(index * (slope / STANDARD_SLOPE) + (courseRating - par));
 }
 
+/**
+ * Banehandicap for hullene som spilles (regel 6.1a for 18 hull, 6.1b for 9 hull, `WHS.courseHandicap(…holes:)`):
+ * indeks · (hull / 18) · (slope / 113) + (CR for hullene − par for hullene), avrundet én gang. `ratedHoles`: hullene
+ * ratingen gjelder (18, eller 9 for en 9-hullsbane); spilles et annet antall, skaleres CR med hull / `ratedHoles`
+ * (ni hull uten 9-hullsrating: halve 18-hulls CR). `par`: par for hullene som spilles.
+ */
+export function whsCourseHandicapForHoles(index: number, slope: number, courseRating: number, ratedHoles: number, par: number, holes: number): number {
+  return roundWhole(index * (holes / 18) * (slope / STANDARD_SLOPE) + (courseRating * holes / ratedHoles - par));
+}
+
 /** Slag fått på hullet (regel 6.2). Et plusshandicap gir slag tilbake på de letteste hullene. */
 export function strokesReceived(courseHandicap: number, strokeIndex: number, holes = 18): number {
   if (courseHandicap >= 0) {

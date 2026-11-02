@@ -202,7 +202,7 @@ nonisolated struct HomeFeedDrafts: Sendable {
         for (index, gross) in game.scores(me) where game.holes.indices.contains(index) {
             let hole = game.holes[index]
             let name = Scoring.scoreName(par: hole.par, gross: gross, handicap: handicap, strokeIndex: hole.strokeIndex,
-                                         holes: game.holeCount)
+                                         holes: game.holeCount, rules: game.rules)
             counts[name, default: 0] += 1
         }
         let marks = ScoreName.allCases.compactMap { n in counts[n].map { HomeScoreMark(name: n, count: $0) } }

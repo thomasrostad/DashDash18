@@ -7,6 +7,7 @@ import { jsRound, sortedStrings } from "./jsmath.ts";
 import type { HoleScores, Player, Round } from "./models.ts";
 import { GOLFGUTU, type Ruleset } from "./ruleset.ts";
 import { countingHoles, pointsForEmptyHole } from "./truncation.ts";
+import { roundWhole, strokesReceived } from "./whs.ts";
 
 /** Hvordan et hull gikk, netto mot par (`scoreNameForHole`). */
 export type ScoreName = "eagle" | "birdie" | "par" | "bogey" | "dobbel" | "blowup";
@@ -29,27 +30,33 @@ export function scoreNameLabel(n: ScoreName): string {
   }
 }
 
-/** `handicapStrokesForHole`: slag fått på hullet. Handicap rundes som JS og kan ikke bli negativt. */
-export function handicapStrokes(handicap: number, strokeIndex: number, holes: number): number {
+/**
+ * `handicapStrokesForHole`: slag fått på hullet. Som PWA-en (`pwa`): handicap rundes som JS og kan ikke bli
+ * negativt. Golfreglene (`whs`): et plusshandicap gir slag tilbake på hullene med høyest indeks (regel 6.2,
+ * appendiks E), og svaret kan være negativt.
+ */
+export function handicapStrokes(handicap: number, strokeIndex: number, holes: number, rules: Ruleset = GOLFGUTU): number {
   const n = holes === 9 || holes === 18 ? holes : 18;
-  const h = Math.max(0, jsRound(Number.isNaN(handicap) ? 0 : handicap));
+  const raw = Number.isNaN(handicap) ? 0 : handicap;
+  if (rules.handicap.calculation === "whs") return strokesReceived(roundWhole(raw), strokeIndex, n);
+  const h = Math.max(0, jsRound(raw));
   return Math.trunc(h / n) + (strokeIndex <= h % n ? 1 : 0);
 }
 
 /** `netStrokesForHole`. */
-export function netStrokes(gross: number, handicap: number, strokeIndex: number, holes: number): number {
-  return gross - handicapStrokes(handicap, strokeIndex, holes);
+export function netStrokes(gross: number, handicap: number, strokeIndex: number, holes: number, rules: Ruleset = GOLFGUTU): number {
+  return gross - handicapStrokes(handicap, strokeIndex, holes, rules);
 }
 
 /** `pointsForHole`: `max(bunn, par − netto + poeng for netto par)` fra regelsettet. */
 export function holePoints(par: number, gross: number, handicap: number, strokeIndex: number, holes: number, rules: Ruleset = GOLFGUTU): number {
-  const net = netStrokes(gross, handicap, strokeIndex, holes);
+  const net = netStrokes(gross, handicap, strokeIndex, holes, rules);
   return Math.max(rules.scoring.minimumPoints, par - net + rules.scoring.netParPoints);
 }
 
 /** `scoreNameForHole`: netto − par. ≤ −2 eagle, −1 birdie, 0 par, 1 bogey, 2 dobbel, ellers blowup. */
-export function scoreName(par: number, gross: number, handicap: number, strokeIndex: number, holes: number): ScoreName {
-  const diff = netStrokes(gross, handicap, strokeIndex, holes) - par;
+export function scoreName(par: number, gross: number, handicap: number, strokeIndex: number, holes: number, rules: Ruleset = GOLFGUTU): ScoreName {
+  const diff = netStrokes(gross, handicap, strokeIndex, holes, rules) - par;
   if (diff <= -2) return "eagle";
   if (diff === -1) return "birdie";
   if (diff === 0) return "par";

@@ -323,14 +323,19 @@ public struct Ruleset: Hashable, Sendable {
         public var externalHandicap: Bool
         /// Lagshandicap per form-id. Mangler formen: `lowest`.
         public var teamHandicap: [String: TeamHandicapRule]
+        /// Hvordan banehandicap, spillehandicap og slag regnes: golfreglene (WHS) eller som PWA-en.
+        /// Golfgutu-oppsettet og alle regelsett uten feltet: `pwa`.
+        public var calculation: HandicapCalculation
 
         public init(allowanceOverride: Double?, formAllowances: [String: Double], seedingGroups: [SeedingGroup],
-                    externalHandicap: Bool, teamHandicap: [String: TeamHandicapRule]) {
+                    externalHandicap: Bool, teamHandicap: [String: TeamHandicapRule],
+                    calculation: HandicapCalculation = .pwa) {
             self.allowanceOverride = allowanceOverride
             self.formAllowances = formAllowances
             self.seedingGroups = seedingGroups
             self.externalHandicap = externalHandicap
             self.teamHandicap = teamHandicap
+            self.calculation = calculation
         }
 
         /// Lagshandicap-regelen for formen.
@@ -347,6 +352,29 @@ public struct Ruleset: Hashable, Sendable {
         /// Lagshandicapet for formene med én ball er WHS-anbefalingen.
         public var usesWHSTeamHandicap: Bool {
             TeamHandicapRule.whsRecommended.allSatisfy { teamHandicap[$0.key] == $0.value }
+        }
+    }
+
+    /// Hvordan banehandicap, spillehandicap og slag regnes (`handicap.calculation`).
+    ///
+    /// Kilde for `whs`: *Rules of Handicapping* (R&A og USGA), 2024-utgaven. Se `Handicap.courseHandicap(for:in:rules:)`
+    /// og `Scoring.handicapStrokes`.
+    public enum HandicapCalculation: String, Codable, Hashable, Sendable, CaseIterable {
+        /// Som PWA-en (`db-nytt.js`): banehandicapet for 18 hull ganges med antall hull / 18 og andelen, og
+        /// rundes én gang til slutt (JS `Math.round`). Et plusshandicap gir ingen slag tilbake. Golfgutu.
+        case pwa
+        /// Golfreglene (WHS): banehandicap for hullene som spilles, avrundet (regel 6.1a og 6.1b),
+        /// spillehandicap = banehandicap · andel, avrundet (regel 6.2), og et plusshandicap gir slag
+        /// tilbake på hullene med høyest indeks (regel 6.2, appendiks E). ,5 rundes bort fra null.
+        case whs
+
+        /// Avrunding til hele slag: JS `Math.round` (`pwa`) eller ,5 bort fra null (`whs`, `WHS.roundWhole`).
+        /// Likt for tall ≥ 0; ulikt bare for negative halve (−2,5 → −2 eller −3).
+        public func roundWhole(_ x: Double) -> Double {
+            switch self {
+            case .pwa: JS.round(x)
+            case .whs: Double(WHS.roundWhole(x))
+            }
         }
     }
 
@@ -612,7 +640,7 @@ extension Ruleset.SidePrizeRules: Codable {
 
 extension Ruleset.HandicapRules: Codable {
     private enum CodingKeys: String, CodingKey {
-        case allowanceOverride, formAllowances, seedingGroups, externalHandicap, teamHandicap
+        case allowanceOverride, formAllowances, seedingGroups, externalHandicap, teamHandicap, calculation
     }
 
     public init(from decoder: Decoder) throws {
@@ -623,6 +651,8 @@ extension Ruleset.HandicapRules: Codable {
         seedingGroups = try c.decodeIfPresent([SeedingGroup].self, forKey: .seedingGroups) ?? g.seedingGroups
         externalHandicap = try c.decodeIfPresent(Bool.self, forKey: .externalHandicap) ?? g.externalHandicap
         teamHandicap = try c.decodeIfPresent([String: Ruleset.TeamHandicapRule].self, forKey: .teamHandicap) ?? g.teamHandicap
+        // Mangler feltet (regelsett og `rules_snapshot` fra før 02.11.2026): som PWA-en, så tallene er som før.
+        calculation = try c.decodeIfPresent(Ruleset.HandicapCalculation.self, forKey: .calculation) ?? g.calculation
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -632,6 +662,8 @@ extension Ruleset.HandicapRules: Codable {
         try c.encode(seedingGroups, forKey: .seedingGroups)
         try c.encode(externalHandicap, forKey: .externalHandicap)
         try c.encode(teamHandicap, forKey: .teamHandicap)
+        // Bare når det ikke er som PWA-en, så Golfgutu-JSON-en og eldre regelsett er som før.
+        if calculation != .pwa { try c.encode(calculation, forKey: .calculation) }
     }
 }
 

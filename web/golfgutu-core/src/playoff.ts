@@ -47,7 +47,7 @@ export function decidePlayoff(
     for (const id of remaining) {
       const strokes = scores.get(id);
       if (strokes === undefined || position >= strokes.length) return { kind: "pending", remaining, next: position };
-      net.set(id, netStrokes(strokes[position], handicap.get(id) ?? 0, course[hole].strokeIndex, count));
+      net.set(id, netStrokes(strokes[position], handicap.get(id) ?? 0, course[hole].strokeIndex, count, rules));
     }
     const best = Math.min(...net.values());
     remaining = remaining.filter((id) => net.get(id) === best);

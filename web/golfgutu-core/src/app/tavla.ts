@@ -326,7 +326,7 @@ export class TavlaStandings {
       for (const [hole, gross] of scores) {
         if (!(hole >= 0 && hole < course.length)) continue;
         const h = course[hole];
-        if (netStrokes(gross, hcp, h.strokeIndex, numberOfHoles(round)) - h.par <= -1) count++;
+        if (netStrokes(gross, hcp, h.strokeIndex, numberOfHoles(round), this.rules) - h.par <= -1) count++;
       }
     }
     return count;

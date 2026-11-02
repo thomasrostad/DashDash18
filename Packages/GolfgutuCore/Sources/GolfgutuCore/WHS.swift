@@ -82,6 +82,22 @@ public enum WHS {
         roundWhole(index * (slope / standardSlope) + (courseRating - Double(par)))
     }
 
+    /// Banehandicap for hullene som spilles (regel 6.1a for 18 hull, 6.1b for 9 hull):
+    /// indeks × (hull / 18) × (slope / 113) + (course rating for hullene − par for hullene), avrundet én gang.
+    ///
+    /// - `ratedHoles`: hullene ratingen gjelder (18, eller 9 for en 9-hullsbane). Spilles et annet antall,
+    ///   skaleres course rating med hull / `ratedHoles`. Ni hull på en bane som bare har 18-hullsrating, gir
+    ///   da halve 18-hulls CR (slopen er den samme), og par er summen av par på de ni hullene. WHS bruker
+    ///   egen rating for hver ni når den finnes (regel 6.1b); banemodellen har ikke 9-hullsrating, så halve
+    ///   18-hulls CR er tilnærmingen.
+    /// - `par`: par for hullene som spilles.
+    public static func courseHandicap(index: Double, slope: Double, courseRating: Double, ratedHoles: Int,
+                                      par: Int, holes: Int) -> Int {
+        let share = Double(holes) / 18
+        let rating = courseRating * Double(holes) / Double(ratedHoles)
+        return roundWhole(index * share * (slope / standardSlope) + (rating - Double(par)))
+    }
+
     /// Slag fått på hullet med et banehandicap over 18 hull (regel 6.2, appendiks E).
     /// Et plusshandicap gir slag tilbake på de letteste hullene (høyest indeks først).
     public static func strokesReceived(courseHandicap: Int, strokeIndex: Int, holes: Int = 18) -> Int {

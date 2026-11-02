@@ -97,10 +97,17 @@ struct RulesetCommonSections: View {
             } else {
                 NavigationLink("Andel per form") { FormAllowancesView(draft: $draft) }
             }
+            Picker(selection: $draft.rules.handicap.calculation) {
+                ForEach(Ruleset.HandicapCalculation.allCases.reversed(), id: \.self) { Text(RuleNames.title($0)).tag($0) }
+            } label: {
+                RuleFieldLabel(title: "Handicap", changeNote: draft.changeNote(.handicapCalculation))
+            }
         } header: {
             DDHeader("Handicap")
         } footer: {
-            RuleSectionFooter(text: "Hvor stor del av banehandicapet spilleren får. 100 % er fullt.",
+            RuleSectionFooter(text: "Andelen er hvor stor del av banehandicapet spilleren får. 100 % er fullt. "
+                              + "Golfreglene (WHS): ni hull får eget banehandicap, og plusshandicap gir slag tilbake. "
+                              + "Som før (PWA): som Golfgutu-appen regnet.",
                               issues: draft.issues.filter {
                                   $0.field.hasPrefix("handicap.allowanceOverride") || $0.field.hasPrefix("handicap.formAllowances")
                               })

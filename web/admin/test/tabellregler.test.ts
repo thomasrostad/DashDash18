@@ -8,7 +8,7 @@ import { avoidingRepeats, decodeRuleset, encodeRuleset, formById, GOLFGUTU, make
 import { tableCsv } from "../src/standings/csv.ts";
 import { seasonView } from "../src/standings/model.ts";
 import {
-  addPointsTable, aggregationOptions, applyTipsTemplate, hasMinEvenings, minEveningsHelp, minEveningsLabel, pointsTableList,
+  addPointsTable, aggregationOptions, applyTipsTemplate, HANDICAP_CALCULATION_OPTIONS, hasMinEvenings, minEveningsHelp, minEveningsLabel, pointsTableList,
   removePointsTable, renamePointsTable, setPointsTableMultiplier, setTipsQuestion, TIPS_QUESTION_TITLES, tipsTemplateOf,
   toggleMinEvenings,
 } from "../src/rulesform.ts";
@@ -186,4 +186,13 @@ test("tippekupongen: mal, spørsmål av og på, og JSON-en appen leser", () => {
   for (const q of [...r.tips.questions]) setTipsQuestion(r, q, false);
   assert.deepEqual(validateRuleset(r).map((i) => i.field), ["tips.questions"]);
   assert.deepEqual((encodeRuleset(GOLFGUTU) as { tips: Record<string, unknown> }).tips.questions, undefined);
+});
+
+test("handicapregningen: valgene, og Golfgutu er som før", () => {
+  assert.deepEqual(HANDICAP_CALCULATION_OPTIONS.map((o) => o.value), ["whs", "pwa"]);
+  assert.deepEqual(HANDICAP_CALCULATION_OPTIONS.map((o) => o.title), ["Golfreglene (WHS)", "Som før (PWA)"]);
+  assert.equal(GOLFGUTU.handicap.calculation, "pwa");
+  const r = decodeRuleset(encodeRuleset(GOLFGUTU));
+  r.handicap.calculation = "whs";
+  assert.equal(decodeRuleset(encodeRuleset(r)).handicap.calculation, "whs");
 });

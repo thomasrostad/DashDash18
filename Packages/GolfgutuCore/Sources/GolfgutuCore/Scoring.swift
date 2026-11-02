@@ -20,29 +20,41 @@ public enum ScoreName: String, Codable, Sendable, CaseIterable {
 /// Slag og stablefordpoeng (db-nytt.js linje 823–836, 906–909, 992–1050).
 public enum Scoring {
     /// `handicapStrokesForHole`: slag fått på hullet. Fordeles over antall hull (9 eller 18, ellers 18).
-    /// Handicap rundes som JS og kan ikke bli negativt.
-    public static func handicapStrokes(handicap: Double, strokeIndex: Int, holes: Int) -> Int {
+    ///
+    /// Som PWA-en (`pwa`): handicap rundes som JS og kan ikke bli negativt, så et plusshandicap gir 0 slag.
+    /// Golfreglene (`whs`): et plusshandicap gir slag tilbake på hullene med høyest indeks
+    /// (regel 6.2, appendiks E; `WHS.strokesReceived`), og svaret kan være negativt.
+    public static func handicapStrokes(handicap: Double, strokeIndex: Int, holes: Int,
+                                       rules: Ruleset = .golfgutu) -> Int {
         let n = (holes == 9 || holes == 18) ? holes : 18
-        let h = max(0, JS.roundInt(handicap.isNaN ? 0 : handicap))
-        return h / n + (strokeIndex <= h % n ? 1 : 0)
+        let raw = handicap.isNaN ? 0 : handicap
+        switch rules.handicap.calculation {
+        case .pwa:
+            let h = max(0, JS.roundInt(raw))
+            return h / n + (strokeIndex <= h % n ? 1 : 0)
+        case .whs:
+            return WHS.strokesReceived(courseHandicap: WHS.roundWhole(raw), strokeIndex: strokeIndex, holes: n)
+        }
     }
 
     /// `netStrokesForHole`.
-    public static func netStrokes(gross: Int, handicap: Double, strokeIndex: Int, holes: Int) -> Int {
-        gross - handicapStrokes(handicap: handicap, strokeIndex: strokeIndex, holes: holes)
+    public static func netStrokes(gross: Int, handicap: Double, strokeIndex: Int, holes: Int,
+                                  rules: Ruleset = .golfgutu) -> Int {
+        gross - handicapStrokes(handicap: handicap, strokeIndex: strokeIndex, holes: holes, rules: rules)
     }
 
     /// `pointsForHole`: stableford, `max(bunn, par − netto + poeng for netto par)` fra regelsettet
     /// (Golfgutu: `max(0, par − netto + 2)`).
     public static func points(par: Int, gross: Int, handicap: Double, strokeIndex: Int, holes: Int,
                               rules: Ruleset = .golfgutu) -> Int {
-        let net = netStrokes(gross: gross, handicap: handicap, strokeIndex: strokeIndex, holes: holes)
+        let net = netStrokes(gross: gross, handicap: handicap, strokeIndex: strokeIndex, holes: holes, rules: rules)
         return max(rules.scoring.minimumPoints, par - net + rules.scoring.netParPoints)
     }
 
     /// `scoreNameForHole`: netto − par. ≤ −2 eagle, −1 birdie, 0 par, 1 bogey, 2 dobbel, ellers blowup.
-    public static func scoreName(par: Int, gross: Int, handicap: Double, strokeIndex: Int, holes: Int) -> ScoreName {
-        let diff = netStrokes(gross: gross, handicap: handicap, strokeIndex: strokeIndex, holes: holes) - par
+    public static func scoreName(par: Int, gross: Int, handicap: Double, strokeIndex: Int, holes: Int,
+                                 rules: Ruleset = .golfgutu) -> ScoreName {
+        let diff = netStrokes(gross: gross, handicap: handicap, strokeIndex: strokeIndex, holes: holes, rules: rules) - par
         switch diff {
         case ...(-2): return .eagle
         case -1: return .birdie

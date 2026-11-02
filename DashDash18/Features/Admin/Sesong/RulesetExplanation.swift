@@ -154,6 +154,10 @@ nonisolated enum RulesetExplanation {
             }
             out.append("Seeding: \(RuleFormat.list(parts)).")
         }
+        // Bare golfreglene får en setning, så Golfgutu-teksten (som PWA-en) er som før.
+        if h.calculation == .whs {
+            out.append("Handicapet regnes etter golfreglene (WHS): ni hull får eget banehandicap, og plusshandicap gir slag tilbake.")
+        }
         if h.externalHandicap { out.append("Simulatoren deler ut slagene.") }
         return out
     }
@@ -244,6 +248,14 @@ nonisolated enum RuleNames {
         switch tiebreak {
         case .holeDifference: "hulldifferanse"
         case .stableford: "stablefordsummen"
+        }
+    }
+
+    /// Valget i skjemaet: «Golfreglene (WHS)» eller «Som før (PWA)».
+    static func title(_ calculation: Ruleset.HandicapCalculation) -> String {
+        switch calculation {
+        case .whs: "Golfreglene (WHS)"
+        case .pwa: "Som før (PWA)"
         }
     }
 

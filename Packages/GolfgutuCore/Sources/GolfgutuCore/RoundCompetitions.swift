@@ -275,7 +275,7 @@ public enum RoundCompetitions {
             // Som `GameContext.handicaps`: uten troppen (øyeblikksbildet) er det frosne handicapet spillerens.
             let own = Handicap.effective(for: roster.first { $0.id == p } ?? Player(id: p), in: round,
                                          roster: roster, rules: rules)
-            handicaps[p] = comp.allowance.map { JS.round(own * $0) } ?? own
+            handicaps[p] = comp.allowance.map { rules.handicap.calculation.roundWhole(own * $0) } ?? own
         }
         let handicap: (String) -> Double = { handicaps[$0] ?? 0 }
         let offset = MatchPlay.strokeOffset(a: a, b: b, rules: rules, handicap: handicap)
@@ -293,7 +293,7 @@ public enum RoundCompetitions {
                 return [order.first { round.holeScores[$0]?[h] != nil } ?? order[0]]
             }
             guard let v = MatchPlay.holeWinner(a: ball(a), b: ball(b), hole: h, offset: offset, in: round,
-                                               handicap: handicap) else { continue }
+                                               rules: rules, handicap: handicap) else { continue }
             played += 1
             up += v
             perHole[h] = Double(v)

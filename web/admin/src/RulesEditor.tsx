@@ -7,10 +7,11 @@ import {
 } from "./engine.ts";
 import { errorText } from "./supabase.ts";
 import {
-  addPlacement, addPointsTable, aggregationOptions, applyTipsTemplate, DRAW_METHOD_OPTIONS, hasMinEvenings, minEveningsHelp, minEveningsLabel,
+  addPlacement, addPointsTable, aggregationOptions, applyTipsTemplate, DRAW_METHOD_OPTIONS, HANDICAP_CALCULATION_HELP,
+  HANDICAP_CALCULATION_OPTIONS, hasMinEvenings, minEveningsHelp, minEveningsLabel,
   placementPointsOf, pointsTableList, removePlacement, removePointsTable, renamePointsTable, setPlacementPoint, setPointsSource,
   setPointsTableMultiplier, setTipsQuestion, TIE_RULE_OPTIONS, TIPS_LINE_TITLES, TIPS_QUESTION_TITLES, tipsTemplateOf, toggleMinEvenings,
-  type Aggregation, type DrawMethod, type PointsSource, type TieRule,
+  type Aggregation, type DrawMethod, type HandicapCalculation, type PointsSource, type TieRule,
 } from "./rulesform.ts";
 
 /** De vanligste reglene, som «Tilpass reglene» i appen. Lagres som hele regelsettet (samme JSON som appen). */
@@ -151,6 +152,12 @@ export function RulesEditor({ competition, onSaved }: { competition: Competition
           <input type="number" min={0} max={100} step={5} value={rules.handicap.allowanceOverride === null ? "" : Math.round(rules.handicap.allowanceOverride * 100)}
             onChange={(e) => set((r) => { r.handicap.allowanceOverride = e.target.value === "" ? null : Number(e.target.value) / 100; })} />
         </label>
+        <label>Handicap
+          <select value={rules.handicap.calculation} onChange={(e) => set((r) => { r.handicap.calculation = e.target.value as HandicapCalculation; })}>
+            {HANDICAP_CALCULATION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.title}</option>)}
+          </select>
+        </label>
+        <p className="muted small">{HANDICAP_CALCULATION_HELP}</p>
       </fieldset>
       {isSeason && competition.status === "active" && <p className="muted">Endrede regler gjelder også det som er spilt.</p>}
       {issues.length > 0 && <ul className="error small">{issues.map((i) => <li key={i.field + i.message}>{i.message}</li>)}</ul>}

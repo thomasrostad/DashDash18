@@ -8,7 +8,7 @@ import { formAxes, roundForm, type PointsGameKind } from "./forms.ts";
 import { effectiveHandicap } from "./handicap.ts";
 import { jsRound, sortedStrings, stringLess } from "./jsmath.ts";
 import { makePlayer, type PlayedHole, type Player, type Round } from "./models.ts";
-import { effectivePlacementPoints, pointsGameRules, type GameHandicap, type ParBogeyRules, type PointsGameRules, type Ruleset, type SkinsRules } from "./ruleset.ts";
+import { effectivePlacementPoints, handicapRoundWhole, pointsGameRules, type GameHandicap, type ParBogeyRules, type PointsGameRules, type Ruleset, type SkinsRules } from "./ruleset.ts";
 import { evaluateRoundCompetitions, type RoundCompetition, type RoundCompetitionResult } from "./roundcompetitions.ts";
 import { handicapStrokes, roundPoints } from "./scoring.ts";
 import { isTruncated } from "./truncation.ts";
@@ -56,7 +56,7 @@ export class GameContext {
     }
     for (const p of this.players) {
       const player = this.roster.find((x) => x.id === p) ?? makePlayer(p);
-      out.set(p, jsRound(effectiveHandicap(player, this.round, this.roster, this.rules) * h.allowance));
+      out.set(p, handicapRoundWhole(this.rules.handicap.calculation, effectiveHandicap(player, this.round, this.roster, this.rules) * h.allowance));
     }
     if (h.fromLowest && out.size > 0) {
       const low = Math.min(...out.values());
@@ -71,7 +71,7 @@ export class GameContext {
 
   /** Slagene spilleren får på hullet. */
   strokes(p: string, hole: number, hcp: ReadonlyMap<string, number>): number {
-    return handicapStrokes(hcp.get(p) ?? 0, this.holes[hole].strokeIndex, numberOfHoles(this.round));
+    return handicapStrokes(hcp.get(p) ?? 0, this.holes[hole].strokeIndex, numberOfHoles(this.round), this.rules);
   }
 
   /** Netto på hullet, eller `null` uten score. */
