@@ -1,6 +1,6 @@
 # Atten · Arrangør (web-admin)
 
-Arrangørsiden i nettleseren: https://admin.dashdash18.com. Samme innlogging (e-postkode), samme Supabase og
+Arrangørsiden i nettleseren: https://admin.dashdash18.com. Samme innlogging (Google og e-postkode), samme Supabase og
 samme tilgangsregler (RLS og RPC-ene) som appen. Bare publishable key; ingen egne servertilganger.
 Plan: `docs/fase-26-tv-tidsvindu-web.md`.
 
@@ -91,5 +91,10 @@ Teknikk: Vite, React 18, TypeScript, `@supabase/supabase-js` (godkjent av Thomas
 (23.10.2026). Faste versjoner i
 `package.json`. Statiske filer fra Cloudflare Workers (`wrangler.toml`, `not_found_handling = single-page-application`).
 
-Innlogging på web oppretter ikke nye brukere (`shouldCreateUser: false`): logg inn i appen første gang.
+Innlogging med e-postkode på web oppretter ikke nye brukere (`shouldCreateUser: false`): logg inn i appen første
+gang. «Fortsett med Google» (`signInWithOAuth`, 02.11.2026) går via Supabase og tilbake til samme adresse; samme
+e-post gir samme konto som i appen. Google kan ikke sperre nye brukere, men en ny konto ser ingen klubber.
+Returadressen må stå i Supabase → Authentication → URL Configuration → Redirect URLs: `https://admin.dashdash18.com/**`
+i prod og `http://localhost:5178/**` i test, ved siden av `dashdash://login-callback`. Mangler den, sender Supabase
+brukeren til dashdash18.com i stedet.
 Apple-innlogging på web krever en egen Services ID hos Apple og er ikke med ennå.
