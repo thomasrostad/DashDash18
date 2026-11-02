@@ -101,7 +101,7 @@ const CONTENT = `
 <p>I formene med én ball per lag (foursome, greensome, chapman og scramble) fører laget én score per hull, og runden regnes som netto stableford med lagets handicap. Arrangøren velger handicapandelen i reglene, og kan bruke WHS-anbefalingen.</p>
 <a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>`;
 
-export const guideSpillformer: ContentPage = {
+export const GUIDE_SPILLFORMER: ContentPage = {
   path: PATH,
   title: TITLE,
   description: DESCRIPTION,

@@ -103,7 +103,7 @@ const content = `
 <li>Plan for premieutdeling og resultatliste.</li>
 </ul>`;
 
-export const guideGolfturnering: ContentPage = {
+export const GUIDE_GOLFTURNERING: ContentPage = {
   path: PATH,
   title: TITLE,
   description: DESCRIPTION,

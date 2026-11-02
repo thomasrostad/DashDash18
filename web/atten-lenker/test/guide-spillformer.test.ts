@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import worker, { APP_STORE_URL } from "../src/index.ts";
-import { guideSpillformer } from "../src/innhold/guide-spillformer.ts";
+import { GUIDE_SPILLFORMER } from "../src/innhold/guide-spillformer.ts";
 
 const BASE = "https://dashdash18.com";
 
@@ -45,7 +45,7 @@ test("ingen spillformer med innsats", async () => {
 });
 
 test("tittel, beskrivelse og JSON-LD (Article uten vurderinger)", async () => {
-  const p = guideSpillformer;
+  const p = GUIDE_SPILLFORMER;
   assert.ok(p.title.length >= 10 && p.title.length <= 70, `tittel ${p.title.length} tegn`);
   assert.ok(p.description.length >= 50 && p.description.length <= 160, `beskrivelse ${p.description.length} tegn`);
   const ld = p.jsonLd ?? {};
