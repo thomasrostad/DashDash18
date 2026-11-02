@@ -523,7 +523,7 @@ const TV_STYLE = `
   .tv.vegg .prikker + .wordmark { margin-left: 0; }
 
   /* høydepunktene mens runden pågår: merket fra tavla på forsiden (.toast), ett om gangen nederst */
-  .tv.vegg .linje { position: relative; flex-shrink: 0; height: 2.7em; overflow: hidden; font-size: max(15px, calc(2.7 * var(--u))); }
+  .tv.vegg .linje { position: relative; flex-shrink: 0; height: 2.7em; overflow: hidden; font-size: max(22px, calc(4.2 * var(--u))); }
   .landing .tv.vegg .linje .toast { top: auto; bottom: .1em; font-size: 1em; padding: .55em 1.4em; max-width: 100%; transform: translate(-50%, 170%); }
   .landing .tv.vegg .linje .toast.in { transform: translate(-50%, 0); }
   .tv.vegg .linje .toast span { flex-shrink: 0; }
