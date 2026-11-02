@@ -3,6 +3,7 @@ import { calendarResponse } from "./kalender.ts";
 import { fetchSharePayload, REFRESH_SECONDS, shareInvalidPage, sharePage, type SharePayload } from "./tavla.ts";
 import { escapeHTML, ICON_LINKS, shareMeta, SITE } from "./html.ts";
 import { legalPage } from "./juridisk.ts";
+import { CONTENT_PAGES, contentPage } from "./innhold.ts";
 import { captchaResponse } from "./captcha.ts";
 // Atten på https://dashdash18.com: filen som kobler domenet til appen (universelle lenker),
 // og en enkel side for invitasjonslenker når appen ikke er installert.
@@ -244,6 +245,9 @@ function invalidInvitePage(nonce: string): string {
 }
 
 const FOOTER_LINKS =
+  (CONTENT_PAGES.length
+    ? `<p class="liten lenker">${CONTENT_PAGES.map((p) => `<a href="${p.path}">${escapeHTML(p.linkText)}</a>`).join(" ")}</p>\n`
+    : "") +
   `<p class="liten lenker"><a href="/personvern">Personvern</a> <a href="/vilkar">Vilkår</a> <a href="/support">Support</a></p>`;
 
 const HOME_TITLE = "Atten – golfapp for turnering, liga og golfgjeng";
@@ -291,6 +295,11 @@ function homeJsonLd(nonce: string): string {
       },
     ],
   };
+  return jsonLdScript(data, nonce);
+}
+
+/// JSON-LD-blokk. `<` skrives som \u003c, så ingenting i dataene kan lukke script-taggen.
+function jsonLdScript(data: Record<string, unknown>, nonce: string): string {
   const json = JSON.stringify(data).replace(/</g, "\\u003c");
   return `<script type="application/ld+json" nonce="${nonce}">${json}</script>\n`;
 }
@@ -333,7 +342,7 @@ const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <url><loc>${SITE}/personvern</loc><lastmod>${SITEMAP_LASTMOD}</lastmod></url>
 <url><loc>${SITE}/vilkar</loc><lastmod>${SITEMAP_LASTMOD}</lastmod></url>
 <url><loc>${SITE}/support</loc><lastmod>${SITEMAP_LASTMOD}</lastmod></url>
-</urlset>
+${CONTENT_PAGES.map((p) => `<url><loc>${SITE}${p.path}</loc><lastmod>${p.lastmod}</lastmod></url>\n`).join("")}</urlset>
 `;
 
 function textResponse(body: string, contentType: string, isHead: boolean): Response {
@@ -388,7 +397,7 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
     });
   }
 
-  // For søkemotorer: forsiden, personvern, vilkår og support indekseres. Resten er noindex.
+  // For søkemotorer: forsiden, personvern, vilkår, support og innholdssidene (src/innhold.ts) indekseres. Resten er noindex.
   if (pathname === "/robots.txt") return textResponse(ROBOTS_TXT, "text/plain; charset=utf-8", isHead);
   if (pathname === "/sitemap.xml") return textResponse(SITEMAP_XML, "application/xml; charset=utf-8", isHead);
 
@@ -414,6 +423,16 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
   if (legal) {
     const html = page(legal.title, legal.content, nonce, "", "dok",
                       { index: true, head: indexedHead(legal.path, legal.title, legal.description) });
+    return htmlResponse(html, 200, nonce, "public, max-age=3600", isHead);
+  }
+
+  // Innholdssider for Google (src/innhold.ts): kalkulator, klubbsiden og guidene.
+  const content = contentPage(pathname);
+  if (content) {
+    const head = indexedHead(content.path, content.title, content.description) +
+      (content.jsonLd ? jsonLdScript(content.jsonLd, nonce) : "");
+    const html = page(content.title, content.content + `\n${FOOTER_LINKS}`, nonce, content.script ?? "", "dok",
+                      { index: true, head });
     return htmlResponse(html, 200, nonce, "public, max-age=3600", isHead);
   }
 
