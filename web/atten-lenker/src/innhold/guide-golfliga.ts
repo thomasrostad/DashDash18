@@ -1,12 +1,9 @@
 import type { ContentPage } from "../innhold.ts";
+import { APP_STORE_URL } from "../html.ts";
 
 // Guide: golfliga eller cup for en hel sesong. Én turnering står i /guide/golfturnering, spillformene i
 // /guide/spillformer og regningen i /stableford; her lenkes det dit i stedet for å gjenta.
 // Atten-delen beskriver bare det appen gjør (regelsettet i Packages/GolfgutuCore/REGELSETT.md).
-
-/// Samme lenke som `APP_STORE_URL` i src/index.ts. Den kan ikke importeres herfra (index.ts importerer
-/// innhold.ts, så det ville blitt en sirkel); testen sjekker at de er like.
-const APP_STORE_URL = "https://apps.apple.com/no/app/atten/id6820031728";
 
 const PUBLISHED = "2026-11-02";
 
