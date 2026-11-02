@@ -6,7 +6,7 @@ import {
   CompetitionScope, CupStandings, decodeCompetitionMatch, decodeCompetitionParticipant, decodeCompetitionRound,
   decodeCompetitionRow, decodeProfile, decodeRoundParticipant, decodeTavlaData, LeagueStandings, makeSnapshot,
   decodeRoundRow, HIDDEN_HOLES_NOTE, hidesLastHoles, isPlayoff, PersonDirectory, type RoundsGrid, type UUID,
-  decodeSeasonRow, tavlaInput, TavlaStandings, tavlaToJSON,
+  decodeSeasonRow, tavlaInput, TavlaStandings, tavlaToJSON, dayCount, dayOne, rulesetDay, unitNouns,
   competitionBoards, competitionRowText, competitionScoreText, decodeRuleset, decodeStoredCompetition, frozenFromRows, makeRoundFromSnapshot,
   sidesFromRaw, snapshotFields, snapshotHandicap, snapshotRoster, teamMatchResult, type Ruleset, type StoredCompetition, type TavlaData,
 } from "../../golfgutu-core/src/index.ts";
@@ -39,10 +39,14 @@ export interface TVPayload {
   /** Lag mot lag i samme runde: poengene per side. null uten sider. */
   teams: { title: string; lines: { name: string; score: string }[] } | null;
   /**
-   * Tittelen delt opp for utseendet (02.11.2026): navnet (store versaler), regelen (gull kursiv, null uten) og hvor
-   * langt den har kommet. Samme tekst som `name` og `played`, bare delt.
+   * Tittelen delt opp for utseendet (02.11.2026): navnet (store versaler), hvordan tabellen regnes (gull kursiv,
+   * fra regelsettet; null uten) og hvor langt den har kommet (samme tekst som `played`, eller starten av den).
    */
-  heading: { title: string; rule: string | null; progress: string };
+  heading: {
+    title: string; rule: string | null; progress: string;
+    /** Overskriften over totalen («Matchpoeng», «Stableford», «Snitt») og over rutene («Stableford per runde»). */
+    points: string; perRound: string | null;
+  };
   /** Turnering med kvelder, liga/morro eller cup: overskriftene over tabellen. */
   kind: "season" | "league" | "cup";
   /**
@@ -54,6 +58,12 @@ export interface TVPayload {
     ongoing: boolean[];
     rows: ({ points: (number | null)[]; counted: boolean[] | null } | null)[];
   } | null;
+  /**
+   * Bevegelse siden forrige kveld (liga: runde), i samme rekkefølge som `rows`: plasser opp (positiv), ned (negativ)
+   * eller 0. null når det ikke finnes en plass før (første kveld, ny spiller, uten plass). Regnet med samme tabell på
+   * rådataene uten siste kveld/runde. Tom for cup og når sesongen har en playoff-runde.
+   */
+  moves: (number | null)[];
 }
 
 /** Notisen når en vanlig runde som går, skjuler de siste hullene. Playoffen teller ikke med. */
@@ -74,7 +84,8 @@ export function buildTVPayload(board: Record<string, unknown>): TVPayload {
   const comp = board.competition as {
     name: string; season_id: string; club_id: string; status: string; rules: Record<string, unknown>; club_name?: string | null;
   };
-  const t = tavlaToJSON(seasonStandings(board));
+  const standings = seasonStandings(board);
+  const t = tavlaToJSON(standings);
   const playingDay = (comp.rules as { dayTerm?: string })?.dayTerm === "playingDay";
   const total = t.eveningsTotal;
   const unit = playingDay ? (total === 1 ? "spilledag" : "spilledager") : (total === 1 ? "kveld" : "kvelder");
@@ -91,10 +102,63 @@ export function buildTVPayload(board: Record<string, unknown>): TVPayload {
       const m = x as { id?: string; display_name?: string | null };
       return m.id && m.display_name ? [[m.id.toLowerCase(), m.display_name] as [string, string]] : [];
     }))),
-    heading: { title: t.seasonName, rule: t.countsStableford ? null : "Jakkeracet", progress: played },
+    heading: { title: t.seasonName, progress: played, ...tableHeading(standings.rules, total) },
     kind: "season",
     rounds: roundPoints(t.rounds, t.rows.map((r) => r.memberID)),
+    moves: seasonMoves(board, standings, t.rounds),
   };
+}
+
+/** Svaret uten rundene i `ids`: rundene selv og alt som hører til dem (`round_id`). */
+function withoutRounds(board: Record<string, unknown>, ids: Set<string>): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...board };
+  for (const [k, v] of Object.entries(board)) {
+    if (!Array.isArray(v)) continue;
+    const key = k === "rounds" ? "id" : "round_id";
+    out[k] = v.filter((x) => !ids.has(String((x as Record<string, unknown>)?.[key] ?? "").toLowerCase()));
+  }
+  return out;
+}
+
+/** Plass før minus plass nå, når spilleren hadde en plass begge steder; ellers null. */
+function moves<R>(now: readonly R[], before: Map<string, number>, key: (r: R) => string, place: (r: R) => number | null): (number | null)[] {
+  return now.map((r) => {
+    const p = place(r), b = before.get(key(r));
+    return p === null || b === undefined ? null : b - p;
+  });
+}
+
+/**
+ * Sesongen: tabellen regnet på nytt (samme TavlaStandings) uten siste kveld i «Alle runder» (alle rundene den
+ * kvelden). Ingen bevegelse med en playoff-runde i sesongen: der avgjøres plassene utenfor kveldene.
+ */
+export function seasonMoves(board: Record<string, unknown>, now: TavlaStandings, grid: RoundsGrid): (number | null)[] {
+  const none = now.rows.map(() => null);
+  const raw = list(board, "rounds") as { id?: string; event_id?: string | null; kind?: string | null; status?: string }[];
+  if (raw.some((r) => r.kind === "playoff" && r.status !== "draft")) return none;
+  const last = grid.columns.at(-1)?.roundID;
+  if (last === undefined) return none;
+  const lastRaw = raw.find((r) => String(r.id).toLowerCase() === last);
+  const evening = lastRaw?.event_id ? String(lastRaw.event_id).toLowerCase() : null;
+  const ids = new Set(raw.filter((r) => String(r.id).toLowerCase() === last || (evening !== null && String(r.event_id ?? "").toLowerCase() === evening))
+    .map((r) => String(r.id).toLowerCase()));
+  let before: TavlaStandings;
+  try { before = seasonStandings(withoutRounds(board, ids)); } catch { return none; }
+  if (!before.hasResults || !now.hasResults) return none;
+  const prev = new Map(before.rows.filter((r) => r.qualified && r.evenings > 0).map((r) => [r.memberID, r.place]));
+  return moves(now.rows, prev, (r) => r.memberID, (r) => (r.qualified ? r.place : null));
+}
+
+/** Liga og morro: samme LeagueStandings uten siste runde i «Alle runder». */
+function leagueMoves(board: Record<string, unknown>, l: LeagueStandings, grid: RoundsGrid): (number | null)[] {
+  const none = l.rows.map(() => null);
+  const last = grid.columns.at(-1)?.roundID;
+  if (last === undefined || !l.hasResults) return none;
+  let before: LeagueStandings;
+  try { before = leagueStandings(withoutRounds(board, new Set([last]))).league; } catch { return none; }
+  if (!before.hasResults) return none;
+  const prev = new Map(before.rows.filter((r) => r.played > 0).map((r) => [r.entrant.id.toLowerCase(), r.place]));
+  return moves(l.rows, prev, (r) => r.entrant.id.toLowerCase(), (r) => r.place);
 }
 
 /** Sesongen (turnering med kvelder): appens Tavla regnet fra svaret, med rundene bak («Alle runder», scorekortene). */
@@ -157,6 +221,36 @@ export function extraPanels(board: Record<string, unknown>, rules: Ruleset | nul
     extras,
     teams: team ? { title: "Lag mot lag", lines: team.table.map((r) => ({ name: `Side ${r.side}`, score: competitionScoreText(r.points) })) } : null,
   };
+}
+
+/**
+ * Hvordan sesongtabellen regnes, i ord fra regelsettet (`table`): «beste 3 av 7 spilledager · stableford»,
+ * «alle matcher teller · matchpoeng», med snitt, minste antall kvelder for plass og playoff når de er satt.
+ */
+export function tableHeading(rules: Ruleset, total: number): { rule: string; points: string; perRound: string } {
+  const t = rules.table;
+  const day = rulesetDay(rules);
+  const noun = unitNouns(t.counting.unit, day);
+  const source = t.pointsSource === "matches" ? "matchpoeng" : t.pointsSource === "placement" ? "plasseringspoeng"
+    : t.formPoints ? "poeng fra formen" : "stableford";
+  const parts: string[] = [];
+  if (t.aggregation === "average") parts.push(`snitt per ${dayOne(day)}`);
+  parts.push(t.counting.best === null ? `alle ${noun.plural} teller`
+    : t.counting.unit === "evening" && total > 0 ? `beste ${t.counting.best} av ${total} ${noun.plural}` : `beste ${t.counting.best} ${noun.plural}`);
+  parts.push(source);
+  if (t.minEvenings !== null && t.minEvenings > 0) parts.push(`minst ${dayCount(day, t.minEvenings)} for plass`);
+  if (t.tieRule === "playoff") parts.push("playoff om førsteplassen");
+  const chips = t.pointsSource === "placement" ? "Plasseringspoeng" : t.formPoints ? "Poeng" : "Stableford";
+  return {
+    rule: parts.join(" · "),
+    points: t.aggregation === "average" ? "Snitt" : t.pointsSource === "matches" ? "Matchpoeng" : chips,
+    perRound: `${chips} per runde`,
+  };
+}
+
+/** Overskriftene for liga og morro: plasseringspoeng eller stableford. Rutene er alltid rundens stableford. */
+function leagueColumns(l: LeagueStandings): { points: string; perRound: string } {
+  return { points: l.rules.scoring === "placement" ? "Plasseringspoeng" : "Stableford", perRound: "Stableford per runde" };
 }
 
 /** Poengene per runde for radene i tabellen (`ids` i tabellens rekkefølge), fra rundeoversikten. */
@@ -224,9 +318,10 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
       latest: null,
       note: null,
       ...NO_PANELS,
-      heading: { title: comp.name, rule: null, progress: played },
+      heading: { title: comp.name, rule: null, progress: played, points: "Vinner", perRound: null },
       kind: "cup",
       rounds: null,
+      moves: games.map(() => null),
     };
   }
 
@@ -241,9 +336,10 @@ function competitionPayload(board: Record<string, unknown>): TVPayload {
     latest: latestRound(grid),
     note: hiddenHolesNote(board),
     ...extraPanels(board, comp.rules, (id) => names.get(id) ?? new Map()),
-    heading: { title: comp.name, rule: l.rulesSummary, progress },
+    heading: { title: comp.name, rule: l.rulesSummary, progress, ...leagueColumns(l) },
     kind: "league",
     rounds: roundPoints(grid, l.rows.map((r) => r.entrant.id)),
+    moves: leagueMoves(board, l, grid),
   };
 }
 
@@ -334,13 +430,20 @@ const TV_STYLE = `
   .tv.vegg .tavle { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
   .tv.vegg .rader { flex: 1; min-height: 0; overflow: hidden; }
   .landing .tv.vegg table { font-size: max(16px, calc(3.4 * var(--u))); border-collapse: collapse; }
-  .landing .tv.vegg tbody td { height: max(48px, calc(6.8 * var(--u))); padding: 0; vertical-align: middle; }
+  .landing .tv.vegg tbody td { height: max(44px, calc(5.9 * var(--u))); padding: 0; vertical-align: middle; }
   .landing .tv.vegg td.pl { width: 2.4em; padding-right: .5em; font-size: .78em; white-space: nowrap; }
   .landing .tv.vegg td.nm { width: 100%; max-width: 0; }
   .tv.vegg td.nm .n, .tv.vegg td.nm .dt { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tv.vegg td.nm .n { line-height: 1.1; }
   .tv.vegg td.nm .dt { font-size: .5em; font-weight: 400; color: var(--dim); margin-top: .3em; }
-  .tv.vegg td.nm .dt b { color: var(--gold); font-weight: 600; }
+  .tv.vegg td.nm .po { font-size: .42em; font-weight: 600; color: #16201C; background: var(--gold); border-radius: 980px;
+    padding: .15em .7em; vertical-align: .35em; letter-spacing: .04em; text-transform: uppercase; }
+  /* bevegelse siden forrige kveld: ▲ i gull, ▼ dempet, – svak */
+  .landing .tv.vegg td.mv { padding-right: 1.1em; font-size: .56em; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tv.vegg td.mv .opp { color: var(--gold); }
+  .tv.vegg td.mv .ned { color: var(--dim); }
+  .tv.vegg td.mv .lik { color: var(--dim); opacity: .45; }
+  .tv.vegg th .rdt { display: block; text-align: right; text-transform: none; letter-spacing: 0; font-size: .95em; margin-bottom: .3em; }
   .landing .tv.vegg td.pts { padding-left: .8em; font-size: 1.12em; white-space: nowrap; }
   .tv.vegg .rdc { white-space: nowrap; }
   .landing .tv.vegg th.r { padding-left: .8em; }
@@ -435,7 +538,7 @@ const $ = id => document.getElementById(id);
 const shown = {};
 function set(id, html){ if (shown[id] !== html) { shown[id] = html; $(id).innerHTML = html; } }
 function clock(){ $("clock").textContent = new Date().toLocaleTimeString("nb-NO",{hour:"2-digit",minute:"2-digit"}); }
-function detail(d){ return d.startsWith("Playoff · ") ? "<b>Playoff</b> · " + esc(d.slice(10)) : esc(d); }
+function move(m){ return m === null || m === undefined ? "" : m > 0 ? '<span class="opp">▲ ' + m + "</span>" : m < 0 ? '<span class="ned">▼ ' + (-m) + "</span>" : '<span class="lik">–</span>'; }
 function chipsFit(){
   const g = data.rounds; if (!g || !g.labels.length) return 0;
   const em = parseFloat(getComputedStyle($("rows")).fontSize) * .62;
@@ -453,16 +556,19 @@ function lines(list){
 }
 function render(){
   if (!data) return;
-  const h = data.heading || { title: data.name, rule: null, progress: data.played };
+  const h = data.heading || { title: data.name, rule: null, progress: data.played, points: "Poeng", perRound: null };
   $("tittel").textContent = h.title; $("regel").textContent = h.rule || ""; $("regel").hidden = !h.rule;
   $("played").textContent = (data.club ? data.club + " · " : "") + h.progress;
   const l = data.latest;
   $("live").hidden = !(l && l.ongoing);
   const g = data.rounds, n = chipsFit(), from = g ? g.labels.length - n : 0;
   const cup = data.kind === "cup";
-  set("thead", "<tr><th></th><th>" + (cup ? "Kamp" : "Spiller") + "</th>"
-    + (n ? '<th class="rdc"><span class="rd">' + g.labels.slice(from).map(x => "<i>" + esc(x) + "</i>").join("") + "</span></th>" : "")
-    + '<th class="r">' + (cup ? "Vinner" : "Poeng") + "</th></tr>");
+  const mv = data.moves || [];
+  const moving = mv.some(x => x !== null);
+  set("thead", "<tr><th></th>" + (moving ? "<th></th>" : "") + "<th>" + (cup ? "Kamp" : "Spiller") + "</th>"
+    + (n ? '<th class="rdc">' + (h.perRound ? '<span class="rdt">' + esc(h.perRound) + "</span>" : "")
+      + '<span class="rd">' + g.labels.slice(from).map(x => "<i>" + esc(x) + "</i>").join("") + "</span></th>" : "")
+    + '<th class="r">' + esc(h.points) + "</th></tr>");
   if (!rowH) rowH = window.innerHeight * .075;
   const room = $("rader").clientHeight - $("thead").offsetHeight;
   const per = Math.max(3, Math.floor(room / rowH)), pages = Math.max(1, Math.ceil(data.rows.length / per));
@@ -470,8 +576,12 @@ function render(){
   set("rows", data.rows.slice(page * per, page * per + per).map((r, k) => {
     const i = page * per + k, cr = n && g.rows[i];
     const cls = (r.place.startsWith("1.") ? "lead" : "") + (r.place === "–" ? " ute" : "");
+    // Detaljlinja (hull, stableford, kvelder) står ikke på TV-en; i cupen er den resultatet, og playoff merkes.
+    const po = r.detail.startsWith("Playoff · ");
+    const sub = cup ? r.detail : "";
     return '<tr' + (cls.trim() ? ' class="' + cls.trim() + '"' : "") + ' style="animation-delay:' + (k * 60) + 'ms"><td class="pl">' + esc(r.place) + "</td>"
-      + '<td class="nm"><span class="n">' + esc(r.name) + "</span>" + (r.detail ? '<span class="dt">' + detail(r.detail) + "</span>" : "") + "</td>"
+      + (moving ? '<td class="mv">' + move(mv[i]) + "</td>" : "")
+      + '<td class="nm"><span class="n">' + esc(r.name) + (po ? ' <b class="po">Playoff</b>' : "") + "</span>" + (sub ? '<span class="dt">' + esc(sub) + "</span>" : "") + "</td>"
       + (n ? '<td class="rdc">' + (cr ? '<span class="rd">' + cr.points.slice(from).map((_, j) => chip(g, cr, from + j)).join("") + "</span>" : "") + "</td>" : "")
       + '<td class="r pts">' + esc(r.total) + "</td></tr>";
   }).join(""));

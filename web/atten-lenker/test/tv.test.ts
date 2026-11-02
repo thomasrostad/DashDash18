@@ -71,6 +71,7 @@ test("TV med playoff-runde (sql/047): vinneren først, og playoffen er ikke sist
   assert.ok(!tv.rows[0].detail.startsWith("Playoff"));
   assert.deepEqual(tv.latest, before.latest, "playoffen er ikke siste runde");
   assert.equal(tv.note, null, "playoffen skjuler ingen hull");
+  assert.ok(tv.moves.every((m) => m === null), "ingen bevegelse når sesongen har en playoff-runde");
 });
 
 test("TV med skjulte hull (sql/047): notis mens runden går, ingen når den er låst", () => {
@@ -125,6 +126,14 @@ test("TV for liga er appens ligatabell (sql/043)", () => {
   assert.equal(tv.played, `${tv.heading.progress} · ${tv.heading.rule}`);
   assert.equal(tv.rounds?.rows.length, tv.rows.length);
   assert.deepEqual(tv.rounds?.labels, want.rounds.columns.map((_, i) => `${i + 1}`));
+  assert.equal(tv.heading.points, "Plasseringspoeng");
+  assert.equal(tv.heading.perRound, "Stableford per runde");
+  // Bevegelse: samme ligatabell uten siste runde.
+  assert.equal(tv.moves.length, tv.rows.length);
+  const last = board.links.at(-1)!.round_id;
+  const lastCol = board.rounds.find((r: { id: string }) => r.id === last);
+  assert.ok(lastCol);
+  assert.ok(tv.moves.some((m) => m !== null && m !== 0), "noen har flyttet seg");
 });
 
 test("TV for cup viser runden som pågår", () => {
@@ -146,8 +155,9 @@ test("TV for cup viser runden som pågår", () => {
   assert.equal(tv.rows[0].detail, "3&2");
   assert.equal(tv.rows[0].total, d.members[0].display_name);
   assert.equal(tv.kind, "cup");
-  assert.deepEqual(tv.heading, { title: "Klubbcupen", rule: null, progress: "Semifinale" });
+  assert.deepEqual(tv.heading, { title: "Klubbcupen", rule: null, progress: "Semifinale", points: "Vinner", perRound: null });
   assert.equal(tv.rounds, null);
+  assert.deepEqual(tv.moves, [null, null], "ingen bevegelse i cupen");
 });
 
 test("TV med flere konkurranser og lag mot lag (sql/048): små paneler ved siden av hovedtabellen", () => {
@@ -257,14 +267,58 @@ const seasonBoard = (i: number) => {
   return { ...fixture.tavlaData, competition: { name: s.name, season_id: s.id, club_id: s.club_id, status: s.status, rules: s.rules, club_name: "Golfgutu Invitational" } };
 };
 
-test("TV: tittelen delt i navn og regel, med samme tekst som name og played", () => {
-  fixture.sesonger.forEach((_: unknown, i: number) => {
+test("TV: undertittelen forklarer tabellen fra regelsettet, og kolonnen sier hva tallet er", () => {
+  const want: Record<string, [string, string]> = {
+    "Vår 2026": ["alle matcher teller · matchpoeng", "Matchpoeng"],
+    "Høst 2026": ["beste 3 av 7 spilledager · stableford", "Stableford"],
+    "Egen 2026": ["beste 1 av 6 kvelder · matchpoeng", "Matchpoeng"],
+    "Playoff 2026": ["beste 1 av 7 kvelder · matchpoeng · minst 2 kvelder for plass · playoff om førsteplassen", "Matchpoeng"],
+    "Snitt 2026": ["snitt per spilledag · alle matcher teller · matchpoeng · minst 3 spilledager for plass", "Snitt"],
+  };
+  fixture.sesonger.forEach((s: { name: string }, i: number) => {
     const tv = buildTVPayload(seasonBoard(i));
     assert.equal(tv.kind, "season");
+    assert.equal(tv.heading.title, s.name);
     assert.equal(tv.heading.progress, tv.played);
-    assert.equal(tv.name, tv.heading.rule ? `${tv.heading.rule} · ${tv.heading.title}` : tv.heading.title);
+    assert.deepEqual([tv.heading.rule, tv.heading.points], want[s.name], s.name);
+    assert.equal(tv.heading.perRound, "Stableford per runde");
+    assert.doesNotMatch(JSON.stringify(tv.heading), /jakke/i);
   });
-  assert.equal(buildTVPayload(seasonBoard(0)).heading.rule, "Jakkeracet");
+  // name i JSON-en er som før (appen og andre kan bruke den).
+  assert.equal(buildTVPayload(seasonBoard(0)).name, "Jakkeracet · Vår 2026");
+});
+
+/** Rundene i fixturen begrenset til kveldene (event_id-ene slutter på) `evenings`. */
+const onlyEvenings = (i: number, evenings: string[]) => {
+  const board = seasonBoard(i);
+  const keep = new Set(fixture.tavlaData.rounds.filter((r: { event_id: string }) => evenings.some((e) => r.event_id.endsWith(e))).map((r: { id: string }) => r.id));
+  const by = (xs: { round_id: string }[]) => xs.filter((x) => keep.has(x.round_id));
+  return { ...board, rounds: board.rounds.filter((r: { id: string }) => keep.has(r.id)), players: by(board.players), scores: by(board.scores),
+    matches: by(board.matches), claims: by(board.claims), round_holes: by(board.round_holes) };
+};
+
+test("TV: bevegelse siden forrige kveld, regnet med samme tabell uten siste kveld", () => {
+  const tv = buildTVPayload(seasonBoard(0));
+  assert.equal(tv.moves.length, tv.rows.length);
+  const move = (name: string) => tv.moves[tv.rows.findIndex((r) => r.name === name)];
+  assert.equal(move("Kåre"), 0, "uendret");
+  assert.equal(move("Lars"), 2, "opp");
+  assert.equal(move("Knut"), -2, "ned");
+  // Fasit: tabellen uten siste kveld (event 206) er den samme tabellen regnet på de fire første kveldene.
+  const before = buildTVPayload(onlyEvenings(0, ["201", "202", "204", "205"]));
+  tv.rows.forEach((r, k) => {
+    const b = before.rows.find((x) => x.name === r.name);
+    if (tv.moves[k] !== null) assert.equal(tv.moves[k], parseInt(b!.place) - parseInt(r.place), r.name);
+  });
+  // Ny spiller: Åse spilte første gang den andre kvelden.
+  const two = buildTVPayload(onlyEvenings(0, ["201", "202"]));
+  assert.equal(two.moves[two.rows.findIndex((r) => r.name === "Åse")], null);
+  assert.ok(two.moves.some((m) => m !== null));
+  // Første kveld: ingen forrige plass.
+  assert.ok(buildTVPayload(onlyEvenings(0, ["201"])).moves.every((m) => m === null));
+  // Uten plass («–») og med en playoff-runde: ingen bevegelse.
+  const snitt = buildTVPayload(seasonBoard(fixture.sesonger.findIndex((s: { name: string }) => s.name === "Snitt 2026")));
+  snitt.rows.forEach((r, k) => { if (r.place === "–") assert.equal(snitt.moves[k], null, r.name); });
 });
 
 test("TV: poengene per runde er rutenettet i «Alle runder», i tabellens rekkefølge", () => {
@@ -327,7 +381,7 @@ test("TV-siden viser alle radene over sidene, tittelen, regelen og Live når run
     rounds: null, latest: tv.latest && { ...tv.latest, ongoing: true } };
   const { el, nextPage } = await runBoard(many);
   assert.equal(el("tittel").textContent, "Vår 2026");
-  assert.equal(el("regel").textContent, "Jakkeracet");
+  assert.equal(el("regel").textContent, "alle matcher teller · matchpoeng");
   assert.equal(el("regel").hidden, false);
   assert.equal(el("live").hidden, false);
   assert.equal(el("played").textContent, "Golfgutu Invitational · 5 av 7 kvelder spilt");
@@ -348,13 +402,19 @@ test("TV-siden: lederen i gull, playoff-merket, ruter per runde og Siste runde u
   const { el } = await runBoard(tv);
   const rows = String(el("rows").innerHTML);
   assert.match(rows, /^<tr class="lead"/);
-  assert.match(rows, /<span class="dt"><b>Playoff<\/b> · /);
+  assert.match(rows, /<span class="n">Kåre <b class="po">Playoff<\/b><\/span>/);
+  assert.doesNotMatch(rows, /class="dt"|hull ·|stableford ·/, "detaljlinja står ikke på TV-en");
+  assert.match(rows, /<td class="mv"><span class="lik">–<\/span><\/td>/);
   assert.match(rows, /<span class="rd"><i>/);
-  assert.match(String(el("thead").innerHTML), /<th>Spiller<\/th><th class="rdc">/);
+  assert.match(String(el("thead").innerHTML),
+    /<th><\/th><th><\/th><th>Spiller<\/th><th class="rdc"><span class="rdt">Stableford per runde<\/span><span class="rd">.*<th class="r">Matchpoeng<\/th>/);
   assert.equal(el("live").hidden, true);
   assert.match(String(el("latest").innerHTML), /<span>Siste runde<\/span>/);
-  const cup = await runBoard({ ...tv, kind: "cup", heading: { title: "Klubbcupen", rule: null, progress: "Semifinale" }, rounds: null, latest: null, extras: [], teams: null });
-  assert.match(String(cup.el("thead").innerHTML), /<th>Kamp<\/th><th class="r">Vinner<\/th>/);
+  const cupRows = [{ place: "", name: "Bjørn – Knut", total: "Bjørn", detail: "3&2" }];
+  const cup = await runBoard({ ...tv, kind: "cup", rows: cupRows, moves: [null],
+    heading: { title: "Klubbcupen", rule: null, progress: "Semifinale", points: "Vinner", perRound: null }, rounds: null, latest: null, extras: [], teams: null });
+  assert.match(String(cup.el("thead").innerHTML), /^<tr><th><\/th><th>Kamp<\/th><th class="r">Vinner<\/th>/);
+  assert.match(String(cup.el("rows").innerHTML), /<span class="dt">3&amp;2<\/span>/, "i cupen er detaljen resultatet");
   assert.equal(cup.el("regel").hidden, true);
   assert.equal(cup.el("siden").hidden, true);
 });
