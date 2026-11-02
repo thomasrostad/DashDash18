@@ -1,6 +1,7 @@
 // Innholdssider for Google (SEO): kalkulator, klubbsiden og guidene. Hver side ligger i sin egen fil i
 // src/innhold/ og legges til med én linje i CONTENT_PAGES. Ruting, sitemap.xml og lenkene i bunnen av
 // de indekserte sidene hentes herfra (src/index.ts), så en ny side trenger ingen andre endringer.
+import { guideSpillformer } from "./innhold/guide-spillformer.ts";
 
 import { FOR_KLUBBER } from "./innhold/for-klubber.ts";
 import { guideGolfturnering } from "./innhold/guide-golfturnering.ts";
@@ -29,6 +30,7 @@ export const CONTENT_PAGES: readonly ContentPage[] = [
   FOR_KLUBBER,
   guideGolfturnering,
   GUIDE_GOLFLIGA,
+  guideSpillformer,
 ];
 
 export function contentPage(pathname: string): ContentPage | null {
