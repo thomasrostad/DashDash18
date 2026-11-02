@@ -9,6 +9,11 @@ export function escapeHTML(text: string): string {
 
 export const SITE = "https://dashdash18.com";
 
+/// App Store-id-en til Atten (apps.apple.com/no/app/atten/id6820031728). Står her og ikke i index.ts,
+/// så innholdssidene i src/innhold/ kan bruke lenken uten å importere index.ts (sirkulær import).
+export const APP_STORE_ID = "6820031728";
+export const APP_STORE_URL = `https://apps.apple.com/no/app/atten/id${APP_STORE_ID}`;
+
 /// Favorittikonet og hjemskjermikonet i public/, laget fra app-ikonet (DashDash18/AppIcon.icon).
 export const ICON_LINKS = [
   '<link rel="icon" href="/favicon.ico" sizes="48x48">',

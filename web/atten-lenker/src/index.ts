@@ -1,7 +1,7 @@
 import { fetchTVPayload, normalizeTVCode, tvBoardPage, tvCodePage, type TVEnv } from "./tv.ts";
 import { calendarResponse } from "./kalender.ts";
 import { fetchSharePayload, REFRESH_SECONDS, shareInvalidPage, sharePage, type SharePayload } from "./tavla.ts";
-import { escapeHTML, ICON_LINKS, shareMeta, SITE } from "./html.ts";
+import { APP_STORE_ID, APP_STORE_URL, escapeHTML, ICON_LINKS, shareMeta, SITE } from "./html.ts";
 import { legalPage } from "./juridisk.ts";
 import { CONTENT_PAGES, contentPage } from "./innhold.ts";
 import { captchaResponse } from "./captcha.ts";
@@ -17,9 +17,8 @@ export const GET_THE_APP_HTML =
 
 export const APP_ID = "JNMQJPCV24.com.dashdash18.app";
 
-/// App Store-id-en til Atten (apps.apple.com/no/app/atten/id6820031728).
-export const APP_STORE_ID = "6820031728";
-export const APP_STORE_URL = `https://apps.apple.com/no/app/atten/id${APP_STORE_ID}`;
+/// App Store-id-en og -lenken står i src/html.ts (brukes også av innholdssidene).
+export { APP_STORE_ID, APP_STORE_URL };
 
 /// Smart App Banner i Safari: «Hent» eller «Åpne» øverst på siden. `appArgument` sendes til appen når
 /// den åpnes fra banneret (samme https-adresse som de universelle lenkene).
@@ -107,8 +106,9 @@ const SECURITY_HEADERS: Record<string, string> = {
 };
 
 /// Alle sidene kan hente skrift og ikoner fra /fonts og public/ (samme domene), ingenting annet.
+/// `formSelf`: siden har et skjema som sendes til seg selv (innholdssider med `render`, src/innhold.ts).
 function htmlResponse(body: string, status: number, nonce: string, cache: string, isHead: boolean,
-                      connectSelf = false): Response {
+                      connectSelf = false, formSelf = false): Response {
   return new Response(isHead ? null : body, {
     status,
     headers: {
@@ -119,7 +119,7 @@ function htmlResponse(body: string, status: number, nonce: string, cache: string
         `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; ` +
         (connectSelf ? "connect-src 'self'; " : "") +
         "font-src 'self'; img-src 'self'; " +
-        "base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+        `base-uri 'none'; form-action ${formSelf ? "'self'" : "'none'"}; frame-ancestors 'none'`,
     },
   });
 }
@@ -430,10 +430,12 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
   const content = contentPage(pathname);
   if (content) {
     const head = indexedHead(content.path, content.title, content.description) +
-      (content.jsonLd ? jsonLdScript(content.jsonLd, nonce) : "");
-    const html = page(content.title, content.content + `\n${FOOTER_LINKS}`, nonce, content.script ?? "", "dok",
+      (content.jsonLd ? jsonLdScript(content.jsonLd, nonce) : "") +
+      (content.style ? `<style>${content.style}</style>\n` : "");
+    const body = content.render && url.search ? content.render(url.searchParams) : content.content;
+    const html = page(content.title, body + `\n${FOOTER_LINKS}`, nonce, content.script ?? "", "dok",
                       { index: true, head });
-    return htmlResponse(html, 200, nonce, "public, max-age=3600", isHead);
+    return htmlResponse(html, 200, nonce, "public, max-age=3600", isHead, false, content.render !== undefined);
   }
 
   // TV-visning med kode (fase 26, sql/041).
