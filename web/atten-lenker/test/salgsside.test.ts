@@ -67,9 +67,9 @@ test("/for-klubber: tavla med eksempeltabellen i toppen, knapper til App Store o
   assert.equal((body.match(/<section class="del">\n<h2>/g) ?? []).length, 7, "hver h2 fra innholdet er en del");
 });
 
-test("forsiden: telefonen med scorekortet, golfgjengen, simulatorkvelden, tavla og lenkene til kalkulatoren og guidene", async () => {
+test("forsiden: TV-skjermen med tavla, golfgjengen, simulatorkvelden, tavla og lenkene til kalkulatoren og guidene", async () => {
   const { body } = await html("/");
-  assert.match(body, /<div class="in-3"><div class="screen"><div class="phone" data-telefon>/, "telefonen i toppen");
+  assert.match(body, /<div class="in-3"><div class="screen">\s*<div class="tv"/, "TV-skjermen i toppen");
   assert.match(body, /eksempel/);
   for (const eb of ["Tavla", "Golfgjengen", "Simulatorkvelden", "Baner", "Spillformer"]) {
     assert.ok(body.includes(`<p class="eb">${eb}</p>`), `kortet ${eb}`);

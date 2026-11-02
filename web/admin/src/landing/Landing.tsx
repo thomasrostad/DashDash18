@@ -4,7 +4,7 @@ import { ARRANGOR_BY, ARRANGOR_CARDS, ARRANGOR_HERO, ARRANGOR_READING, demoTavla
 import { startLanding } from "./live.ts";
 import { startShade } from "./shade.ts";
 import { LANDING_STYLE } from "./style.ts";
-import { startTopo } from "./topo.ts";
+import { CLOSE_TOPO, HERO_TOPO, startTopo } from "./topo.ts";
 import { SITE } from "../../../atten-lenker/src/html.ts";
 import { MENU_STYLE, siteMenu } from "../../../atten-lenker/src/meny.ts";
 
@@ -13,8 +13,6 @@ function Topo({ options }: { options: Parameters<typeof startTopo>[1] }) {
   useEffect(() => (ref.current ? startTopo(ref.current, options) : undefined), [options]);
   return <canvas ref={ref} className="topo" aria-hidden="true" />;
 }
-const HERO_TOPO = { weak: "rgba(228,199,103,.19)", strong: "rgba(228,199,103,.46)", levels: 18, cx: 0.7, cy: 0.55, r: 0.42 };
-const CLOSE_TOPO = { weak: "rgba(228,199,103,.10)", strong: "rgba(228,199,103,.26)", levels: 14, cx: 0.8, cy: 0.4, r: 0.5, speed: 0.003 };
 
 function Shade() {
   const ref = useRef<HTMLCanvasElement>(null);
