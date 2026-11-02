@@ -7,6 +7,7 @@ import { FOR_KLUBBER } from "./innhold/for-klubber.ts";
 import { GUIDE_GOLFTURNERING } from "./innhold/guide-golfturnering.ts";
 import { GUIDE_GOLFLIGA } from "./innhold/guide-golfliga.ts";
 import { GUIDE_SPILLFORMER } from "./innhold/guide-spillformer.ts";
+import type { Heading } from "./nettsted.ts";
 
 export interface ContentPage {
   /** Adressen, uten skråstrek til slutt (f.eks. "/stableford"). */
@@ -19,8 +20,18 @@ export interface ContentPage {
   lastmod: string;
   /** Kort lenketekst i bunnen av de indekserte sidene. */
   linkText: string;
-  /** HTML inne i `<main>`, allerede escapet. */
+  /**
+   * HTML inne i `<main>`, allerede escapet. `<h1>`, første avsnitt og knappene rett etter blir toppen av siden;
+   * hver `<h2>` blir en blokk (src/nettsted.ts).
+   */
   content: string;
+  /** Valgfritt: den lille linja over overskriften, f.eks. «Guide · golfliga». Det før « · » vises i gull. */
+  eyebrow?: string;
+  /**
+   * Valgfritt: h1 delt i en stor del i versaler (`loud`) og en gull kursiv del (`soft`). Sammen skal de være
+   * nøyaktig teksten i `<h1>` (testes); ellers vises h1 som den står.
+   */
+  heading?: Heading;
   /**
    * Valgfritt: innholdet når adressen har en spørring (?…), f.eks. et skjema som regnes på serveren.
    * Siden får da `form-action 'self'`. Kanonisk adresse er fortsatt `path`. Uten spørring brukes `content`.

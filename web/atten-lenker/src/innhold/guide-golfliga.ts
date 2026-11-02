@@ -84,6 +84,8 @@ export const GUIDE_GOLFLIGA: ContentPage = {
     "Slik lager du en golfliga eller cup for sesongen: antall kvelder, poengsystem, beste kvelder som teller, handicap, likt og finale. Med sjekkliste.",
   lastmod: PUBLISHED,
   linkText: "Golfliga",
+  eyebrow: "Guide · golfliga og cup",
+  heading: { loud: "Slik lager du en golfliga", soft: "eller cup for sesongen" },
   content,
   jsonLd: {
     "@context": "https://schema.org",

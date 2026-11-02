@@ -109,6 +109,8 @@ export const GUIDE_GOLFTURNERING: ContentPage = {
   description: DESCRIPTION,
   lastmod: PUBLISHED,
   linkText: "Arrangere golfturnering",
+  eyebrow: "Guide · golfturnering",
+  heading: { loud: "Slik arrangerer du", soft: "en golfturnering" },
   content,
   jsonLd: {
     "@context": "https://schema.org",

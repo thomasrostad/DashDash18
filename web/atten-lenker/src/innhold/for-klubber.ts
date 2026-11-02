@@ -60,6 +60,8 @@ export const FOR_KLUBBER: ContentPage = {
   description: DESCRIPTION,
   lastmod: "2026-11-02",
   linkText: "For klubber og sentre",
+  eyebrow: "Atten Arrangør · for klubber og simulatorsentre",
+  heading: { loud: "Golfturneringen er ferdig regnet", soft: "før dere er i baren" },
   content: CONTENT,
   // Ingen aggregateRating: appen har ingen vurderinger å vise.
   jsonLd: {

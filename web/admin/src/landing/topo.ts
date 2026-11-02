@@ -84,6 +84,23 @@ export interface TopoOptions {
   speed?: number;
 }
 
+/** Fyller høydefeltet (`cols × rows` punkter med `step` piksler mellom, flaten er `W × H`) ved tiden `t`:
+ *  støy pluss greenens kul, og pekeren som trykker feltet ned. Brukes også av dashdash18.com (web/atten-lenker),
+ *  som tegner kurvene én gang som SVG på serveren. */
+export function fillTopoField(field: Float32Array, cols: number, rows: number, step: number, W: number, H: number,
+                              t: number, o: Pick<TopoOptions, "cx" | "cy" | "r">, mouse = { x: -9999, y: -9999 }): void {
+  const s = 0.0021, cx = W * o.cx, cy = H * o.cy, R = Math.max(W, H) * o.r;
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const x = i * step, y = j * step;
+    let h = noise3(x * s, y * s, t) * 0.9 + noise3(x * s * 2.1, y * s * 2.1, t * 1.3 + 7) * 0.35;
+    const dx = (x - cx) / R, dy = (y - cy) / R;
+    h += Math.exp(-(dx * dx + dy * dy) * 1.6) * 0.9;
+    const mx = x - mouse.x, my = y - mouse.y;
+    h += Math.exp(-(mx * mx + my * my) / (2 * 130 * 130)) * 0.42;
+    field[j * cols + i] = h;
+  }
+}
+
 /** Tegner og animerer kurvene i `canvas`. Pekeren trykker feltet ned, som en ball i gresset.
  *  Stopper når lerretet er ute av syne, og står stille med redusert bevegelse. Returnerer en opprydding. */
 export function startTopo(canvas: HTMLCanvasElement, o: TopoOptions): () => void {
@@ -93,18 +110,7 @@ export function startTopo(canvas: HTMLCanvasElement, o: TopoOptions): () => void
   let W = 0, H = 0, step = 16, cols = 0, rows = 0, field = new Float32Array(0), visible = true, t = 3.1, raf = 0, last = 0;
   const mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999 };
 
-  const fill = () => {
-    const s = 0.0021, cx = W * o.cx, cy = H * o.cy, R = Math.max(W, H) * o.r;
-    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
-      const x = i * step, y = j * step;
-      let h = noise3(x * s, y * s, t) * 0.9 + noise3(x * s * 2.1, y * s * 2.1, t * 1.3 + 7) * 0.35;
-      const dx = (x - cx) / R, dy = (y - cy) / R;
-      h += Math.exp(-(dx * dx + dy * dy) * 1.6) * 0.9;
-      const mx = x - mouse.x, my = y - mouse.y;
-      h += Math.exp(-(mx * mx + my * my) / (2 * 130 * 130)) * 0.42;
-      field[j * cols + i] = h;
-    }
-  };
+  const fill = () => fillTopoField(field, cols, rows, step, W, H, t, o, mouse);
   const draw = () => {
     if (!cols) return;
     fill();

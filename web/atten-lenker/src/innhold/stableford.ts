@@ -420,42 +420,52 @@ export const STABLEFORD_TITLE = "Stableford-kalkulator: poeng og slag per hull �
 export const STABLEFORD_DESCRIPTION =
   "Regn ut spillehandicap, hvor mange slag du får på hvert hull og stablefordpoeng for runden. Etter golfreglene (WHS). Gratis, uten innlogging.";
 
+// Fargene og skriftene er nettstedets (SITE_STYLE i src/nettsted.ts): gull aksent og store tall som tavla på admin.
 const STYLE = `
-  .skjema h2 { margin-top: 24px; }
-  .hull-valg { border: 0; padding: 0; margin: 0 0 16px; display: flex; gap: 24px; flex-wrap: wrap; }
-  .hull-valg legend { padding: 0; margin: 0 0 8px; font-weight: 700; }
-  .hull-valg label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
-  .hull-valg input { width: 22px; height: 22px; accent-color: var(--gul); }
-  .felter { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
-  .felt label { display: block; font-weight: 700; margin: 0 0 4px; }
-  .felt small { display: block; font-size: 14px; opacity: .85; margin-top: 4px; }
-  .skjema input[type="text"] { width: 100%; font: inherit; font-size: 17px; padding: 10px 12px; border-radius: 12px;
-    border: 2px solid transparent; background: var(--krem); color: var(--skog); }
-  .skjema input[type="text"]:focus-visible, .skjema input[type="radio"]:focus-visible, summary:focus-visible,
-    button.knapp:focus-visible { outline: 3px solid var(--gul); outline-offset: 2px; }
-  .skjema input[aria-invalid="true"] { border-color: #FF8A7A; }
-  button.knapp { width: 100%; border: 0; font: inherit; font-weight: 700; cursor: pointer; }
-  .feil { border: 2px solid #FF8A7A; border-radius: 16px; padding: 12px 16px; margin: 0 0 16px; }
+  .dok .skjema h2 { margin: 0 0 18px; }
+  .hull-valg { border: 0; padding: 0; margin: 0 0 18px; display: flex; gap: 8px 24px; flex-wrap: wrap; }
+  .hull-valg legend { padding: 0; margin: 0 0 6px; font-weight: 600; font-size: 15px; color: var(--on-dark-2); }
+  .hull-valg label { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+  .hull-valg input { width: 20px; height: 20px; margin: 0; accent-color: var(--gold); }
+  .felter { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin: 0 0 22px; }
+  .felt label { display: block; font-weight: 600; font-size: 15px; margin: 0 0 6px; }
+  .felt small { display: block; font-size: 13px; color: var(--on-dark-2); margin-top: 6px; line-height: 1.4; }
+  .skjema input[type="text"] { width: 100%; font: inherit; font-size: 17px; padding: 12px 14px; border-radius: 14px;
+    border: 1px solid rgba(244, 241, 230, .18); background: rgba(244, 241, 230, .06); color: var(--on-dark);
+    font-variant-numeric: tabular-nums; transition: border-color .2s, background .2s; }
+  .skjema input[type="text"]::placeholder { color: rgba(244, 241, 230, .35); }
+  .skjema input[type="text"]:focus { border-color: var(--gold); background: rgba(244, 241, 230, .09); outline: 0; }
+  .skjema input[type="text"]:focus-visible, .skjema input[type="radio"]:focus-visible, .skjema summary:focus-visible,
+    button.knapp:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .skjema input[aria-invalid="true"] { border-color: #F2A65A; }
+  button.knapp { border: 0; font-family: inherit; cursor: pointer; }
+  .feil { border: 1px solid #F2A65A; border-radius: 16px; padding: 14px 18px; margin: 0 0 20px; background: rgba(242, 166, 90, .08); }
   .feil ul { margin: 0; }
-  .feil a { color: var(--krem); }
-  .svar { border: 1px solid rgba(255, 249, 223, .35); border-radius: 16px; padding: 16px; margin: 0 0 24px; }
-  .svar h2 { margin-top: 0; }
-  .svar h3 { font-size: 18px; margin: 16px 0 8px; }
-  .tall { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .feil a { color: var(--on-dark); }
+  .svar { border: 1px solid rgba(228, 199, 103, .4); border-radius: 18px; padding: clamp(18px, 3vw, 28px); margin: 24px 0;
+    background: rgba(228, 199, 103, .05); }
+  .dok .svar h2 { margin: 0 0 18px; }
+  .svar h3 { font-size: 18px; margin: 20px 0 8px; }
+  .tall { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .tall p { margin: 0 0 12px; }
-  .tall span { display: block; font-size: 15px; opacity: .85; }
-  .tall strong { font-size: 36px; line-height: 1.1; color: var(--gul); }
-  .rutenett { list-style: none; padding: 0; margin: 8px 0 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
-  .dok .rutenett li { margin: 0; padding: 6px 8px; border-radius: 10px; background: rgba(255, 249, 223, .1); text-align: center; }
-  .rutenett span { display: block; font-size: 13px; opacity: .85; }
-  .rutenett strong { font-size: 18px; }
-  details { margin: 0 0 24px; }
-  summary { cursor: pointer; font-weight: 700; font-size: 19px; padding: 12px 0; min-height: 44px; }
-  .hulltabell table { width: 100%; border-collapse: collapse; font-size: 15px; }
-  .hulltabell th, .hulltabell td { padding: 4px 3px; text-align: center; border-bottom: 1px solid rgba(255, 249, 223, .2); }
-  .hulltabell thead th { color: var(--gul); }
-  .hulltabell input[type="text"] { width: 100%; min-width: 2.6em; max-width: 4.5em; padding: 8px 4px; text-align: center; }
-  .sum { font-size: 21px; }
+  .tall span { display: block; font-size: 14px; color: var(--on-dark-2); }
+  .tall strong { display: block; font-stretch: 62%; font-weight: 800; font-size: clamp(56px, 9vw, 88px); line-height: .95;
+    color: var(--gold); font-variant-numeric: tabular-nums; }
+  .dok .rutenett { list-style: none; padding: 0; margin: 8px 0 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+  .dok .rutenett li { margin: 0; padding: 8px; border-radius: 10px; background: rgba(244, 241, 230, .06); text-align: center; }
+  .rutenett span { display: block; font-size: 12px; color: var(--on-dark-2); }
+  .rutenett strong { font-size: 19px; color: var(--gold); }
+  .skjema details { margin: 8px 0 0; border-top: 1px solid var(--rule); }
+  .skjema summary { cursor: pointer; font-weight: 600; font-size: 18px; padding: 18px 0; min-height: 44px; }
+  .skjema summary::marker { color: var(--gold); }
+  .hulltabell { overflow-x: auto; margin: 0 0 18px; }
+  .hulltabell table { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .hulltabell th, .hulltabell td { padding: 4px 3px; text-align: center; border-bottom: 1px solid var(--rule); }
+  .hulltabell thead th { color: var(--gold); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  .hulltabell tfoot strong, .hulltabell td strong { color: var(--gold); }
+  .hulltabell input[type="text"] { min-width: 2.6em; max-width: 4.5em; padding: 8px 4px; text-align: center; border-radius: 10px; }
+  .sum { font-size: 19px; margin: 4px 0 18px; }
+  .sum strong { display: block; font-stretch: 62%; font-weight: 800; font-size: clamp(56px, 9vw, 88px); line-height: .95; color: var(--gold); }
 `;
 
 export const STABLEFORD: ContentPage = {
@@ -464,6 +474,8 @@ export const STABLEFORD: ContentPage = {
   description: STABLEFORD_DESCRIPTION,
   lastmod: "2026-11-02",
   linkText: "Stableford-kalkulator",
+  eyebrow: "Kalkulator · etter golfreglene og WHS",
+  heading: { loud: "Stableford-kalkulator" },
   content: stablefordContent(new URLSearchParams()),
   render: stablefordContent,
   style: STYLE,

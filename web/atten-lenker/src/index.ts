@@ -5,6 +5,7 @@ import { APP_STORE_ID, APP_STORE_URL, escapeHTML, ICON_LINKS, shareMeta, SITE } 
 import { legalPage } from "./juridisk.ts";
 import { CONTENT_PAGES, contentPage } from "./innhold.ts";
 import { captchaResponse } from "./captcha.ts";
+import { SITE_FONTS, SITE_STYLE, siteBody, type SiteFrame } from "./nettsted.ts";
 // Atten på https://dashdash18.com: filen som kobler domenet til appen (universelle lenker),
 // og en enkel side for invitasjonslenker når appen ikke er installert.
 //
@@ -124,7 +125,8 @@ function htmlResponse(body: string, status: number, nonce: string, cache: string
   });
 }
 
-// Skriften er appens Figtree (public/fonts, som Tavla-siden i src/tavla.ts).
+// Invitasjonene og følgekoden: appens Figtree (public/fonts, som Tavla-siden i src/tavla.ts).
+// Nettstedet (forsiden, innholdssidene, personvern, vilkår, support og 404) bruker SITE_STYLE i src/nettsted.ts.
 const STYLE = `
   @font-face { font-family: "Figtree"; src: url("/fonts/Figtree.woff2") format("woff2"); font-weight: 300 900; font-display: swap; }
   :root { color-scheme: light; --skog: #1C483A; --krem: #FFF9DF; --gul: #F5C842; }
@@ -149,39 +151,32 @@ const STYLE = `
   .steg { text-align: left; margin: 0 0 16px; padding-left: 24px; }
   .steg li { margin: 0 0 8px; }
   a { color: var(--gul); }
-  .lenker a { display: inline-block; margin: 0 8px; padding: 4px 0; }
-  /* Personvern, vilkår og support (src/juridisk.ts): lengre tekst, venstrestilt. */
-  main.dok { max-width: 680px; text-align: left; }
-  .dok h2 { font-size: 21px; line-height: 1.3; margin: 32px 0 8px; }
-  .dok ul { margin: 0 0 16px; padding-left: 24px; }
-  .dok li { margin: 0 0 6px; }
-  .dok code { font: .9em ui-monospace, "SF Mono", Menlo, monospace; }
-  .tabell { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 0 16px; }
-  .tabell table { border-collapse: collapse; min-width: 560px; font-size: 15px; line-height: 1.4; }
-  .tabell th, .tabell td { text-align: left; vertical-align: top; padding: 8px 12px 8px 0; border-bottom: 1px solid rgba(255, 249, 223, .25); }
-  .tabell th { color: var(--gul); }
 `;
 
 /// `index`: siden skal vises i Google (forsiden, personvern, vilkår og support). `head`: ekstra meta-tagger (allerede escapet).
+/// `site`: siden er en del av nettstedet og får rammen i src/nettsted.ts (meny, topp med høydekurver, blokker og bunn).
 function page(title: string, content: string, nonce: string, script = "", mainClass = "",
-              options: { index?: boolean; head?: string } = {}): string {
+              options: { index?: boolean; head?: string; site?: SiteFrame } = {}): string {
+  const body = options.site
+    ? siteBody(content, mainClass, options.site)
+    : `<main${mainClass ? ` class="${mainClass}"` : ""}>
+<p class="merke">Atten</p>
+${content}
+</main>`;
   return `<!doctype html>
 <html lang="nb">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${options.index ? "" : '<meta name="robots" content="noindex">\n'}${options.head ?? ""}
-<meta name="theme-color" content="#1C483A">
+<meta name="theme-color" content="${options.site ? "#0A1712" : "#1C483A"}">
 <title>${escapeHTML(title)}</title>
 ${ICON_LINKS}
-<link rel="preload" href="/fonts/Figtree.woff2" as="font" type="font/woff2" crossorigin>
-<style>${STYLE}</style>
+${options.site ? SITE_FONTS : '<link rel="preload" href="/fonts/Figtree.woff2" as="font" type="font/woff2" crossorigin>'}
+<style>${options.site ? SITE_STYLE : STYLE}</style>
 </head>
 <body>
-<main${mainClass ? ` class="${mainClass}"` : ""}>
-<p class="merke">Atten</p>
-${content}
-</main>
+${body}
 ${script ? `<script nonce="${nonce}">${script}</script>` : ""}
 </body>
 </html>
@@ -244,12 +239,6 @@ function invalidInvitePage(nonce: string): string {
   return page("Ugyldig invitasjon – Atten", content, nonce);
 }
 
-const FOOTER_LINKS =
-  (CONTENT_PAGES.length
-    ? `<p class="liten lenker">${CONTENT_PAGES.map((p) => `<a href="${p.path}">${escapeHTML(p.linkText)}</a>`).join(" ")}</p>\n`
-    : "") +
-  `<p class="liten lenker"><a href="/personvern">Personvern</a> <a href="/vilkar">Vilkår</a> <a href="/support">Support</a></p>`;
-
 const HOME_TITLE = "Atten – golfapp for turnering, liga og golfgjeng";
 const HOME_DESCRIPTION =
   "Atten samler golfkvelden med gjengen: påmelding, båser, scorekort hull for hull og en tavle som oppdateres mens dere spiller. Liga og cup hele sesongen.";
@@ -304,6 +293,15 @@ function jsonLdScript(data: Record<string, unknown>, nonce: string): string {
   return `<script type="application/ld+json" nonce="${nonce}">${json}</script>\n`;
 }
 
+/// Toppen av forsiden: overskriften delt i en stor og en gull kursiv del (samme tekst som h1).
+export const HOME_FRAME: SiteFrame = {
+  path: "/",
+  hero: true,
+  eyebrow: "Atten · golfappen for gjengen",
+  heading: { loud: "Golfkvelden med gjengen,", soft: "samlet i én app" },
+  cta: true,
+};
+
 /// Ordene på forsiden er de samme som i App Store (golfturnering, scorekort, tavle, liga, golfgjeng),
 /// så nettsøk og App Store-søk peker samme vei. Teksten beskriver bare det appen faktisk gjør.
 function homePage(nonce: string): string {
@@ -318,9 +316,8 @@ function homePage(nonce: string): string {
 <p>Før scoren hull for hull rett på telefonen. Atten regner med handicap og støtter stableford, slagspill og matchspill. Tavla oppdateres mens dere spiller, så alle ser hvem som leder, og tilskuere kan følge med i nettleseren uten å laste ned noe.</p>
 <h2>For golfgjengen, klubben og simulatorkvelden</h2>
 <p>Spiller dere på bane eller i simulator, fungerer det likt. Inviter golfgjengen med en lenke, og gjester kan være med uten egen konto. En klubb kan ha flere turneringer, og alle får bilder og reaksjoner fra kvelden i en egen feed. Når sesongen er over, går vinnerjakka til den som ligger øverst.</p>
-<p class="liten">Gratis for iPhone. Ingen reklame og ingen sporing.</p>
-${FOOTER_LINKS}`;
-  return page(HOME_TITLE, content, nonce, "", "dok", { index: true, head });
+<p class="liten">Gratis for iPhone. Ingen reklame og ingen sporing.</p>`;
+  return page(HOME_TITLE, content, nonce, "", "dok", { index: true, head, site: HOME_FRAME });
 }
 
 const ROBOTS_TXT = `User-agent: *
@@ -357,9 +354,8 @@ function notFoundPage(nonce: string): string {
 <h1>Fant ikke siden</h1>
 <p>Adressen er feil, eller siden finnes ikke lenger. Fikk du en lenke til en invitasjon eller Tavla, be om den på nytt.</p>
 <a class="knapp" href="/">Til forsiden</a>
-<p class="liten">Atten er gratis for iPhone. <a href="${APP_STORE_URL}" rel="noopener">Last ned fra App Store</a>.</p>
-${FOOTER_LINKS}`;
-  return page("Fant ikke siden – Atten", content, nonce);
+<p class="liten">Atten er gratis for iPhone. <a href="${APP_STORE_URL}" rel="noopener">Last ned fra App Store</a>.</p>`;
+  return page("Fant ikke siden – Atten", content, nonce, "", "dok", { site: { path: "" } });
 }
 
 /// `/klubb/KODE`, `/runde/KODE` eller `/konkurranse/KODE` (også med / til slutt). null: ikke en invitasjonsadresse.
@@ -422,7 +418,7 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
   const legal = legalPage(pathname);
   if (legal) {
     const html = page(legal.title, legal.content, nonce, "", "dok",
-                      { index: true, head: indexedHead(legal.path, legal.title, legal.description) });
+                      { index: true, head: indexedHead(legal.path, legal.title, legal.description), site: { path: legal.path } });
     return htmlResponse(html, 200, nonce, "public, max-age=3600", isHead);
   }
 
@@ -433,8 +429,10 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
       (content.jsonLd ? jsonLdScript(content.jsonLd, nonce) : "") +
       (content.style ? `<style>${content.style}</style>\n` : "");
     const body = content.render && url.search ? content.render(url.searchParams) : content.content;
-    const html = page(content.title, body + `\n${FOOTER_LINKS}`, nonce, content.script ?? "", "dok",
-                      { index: true, head });
+    const html = page(content.title, body, nonce, content.script ?? "", "dok", {
+      index: true, head,
+      site: { path: content.path, hero: true, eyebrow: content.eyebrow, heading: content.heading, cta: content.render === undefined },
+    });
     return htmlResponse(html, 200, nonce, "public, max-age=3600", isHead, false, content.render !== undefined);
   }
 

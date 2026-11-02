@@ -53,6 +53,8 @@ Plan: `docs/fase-26-tv-tidsvindu-web.md`.
   Unsplash (Sugar Golf og FilterGrade, Unsplash-lisensen) og kreditert i bunnen av forsiden. Ingen nye avhengigheter.
   Fane-ikonene i `public/` (`favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, 02.11.2026) er kopier fra
   `web/atten-lenker/public/`, så logoen er lik på dashdash18.com og her. Endres logoen, kopier dem på nytt.
+  Høydefeltet (`fillTopoField` i `landing/topo.ts`) brukes også av dashdash18.com, som tegner kurvene som SVG på
+  serveren (`web/atten-lenker/src/nettsted.ts`); skriftene der er kopier av `public/fonts` (02.11.2026).
 
 - [x] Kvelden (01.11.2026, `src/kvelden/`): ny første fane for dem med «Runder og føring». Under en runde: banen med
   flightene (båsene) der de er, kveldens tabell, «Trenger deg» (hull som mangler score mens resten av flighten har gått
