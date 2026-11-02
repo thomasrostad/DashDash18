@@ -158,7 +158,9 @@ public enum MatchPlay {
     /// ikke finnes.
     public static func sideNet(_ playerIDs: [String], hole: Int, extraStrokes: Double, in round: Round,
                                roster: [Player], rules: Ruleset = .golfgutu) -> Int? {
-        sideNet(playerIDs, hole: hole, extraStrokes: extraStrokes, in: round) { effective($0, round, roster, rules) }
+        sideNet(playerIDs, hole: hole, extraStrokes: extraStrokes, in: round, rules: rules) {
+            effective($0, round, roster, rules)
+        }
     }
 
     // MARK: Hull for hull
@@ -169,7 +171,9 @@ public enum MatchPlay {
                                   rules: Ruleset = .golfgutu, strokeOffset lowest: Double? = nil) -> Int? {
         let s = sides(of: match, in: round)
         let lav = lowest ?? strokeOffset(for: match, in: round, roster: roster, rules: rules)
-        return holeWinner(a: s.a, b: s.b, hole: hole, offset: lav, in: round) { effective($0, round, roster, rules) }
+        return holeWinner(a: s.a, b: s.b, hole: hole, offset: lav, in: round, rules: rules) {
+            effective($0, round, roster, rules)
+        }
     }
 
     // MARK: Sidene som lister (rundens matcher og matchen som konkurranse, `RoundCompetitions`)
@@ -185,9 +189,10 @@ public enum MatchPlay {
         return min(sideHandicap(a, handicap: handicap), sideHandicap(b, handicap: handicap))
     }
 
-    /// `sideNettoPaaHull` med handicapet fra `handicap`.
+    /// `sideNettoPaaHull` med handicapet fra `handicap`. Som PWA-en blir slagene aldri under 0
+    /// (`Scoring.handicapStrokes`); etter golfreglene gir et plusshandicap slag tilbake.
     static func sideNet(_ playerIDs: [String], hole: Int, extraStrokes: Double, in round: Round,
-                        handicap: (String) -> Double) -> Int? {
+                        rules: Ruleset, handicap: (String) -> Double) -> Int? {
         let course = round.courseHoles()
         guard hole >= 0, hole < course.count else { return nil }
         let played = course[hole]
@@ -195,8 +200,8 @@ public enum MatchPlay {
         for pid in playerIDs {
             guard let gross = round.holeScores[pid]?[hole] else { continue }
             let own = handicap(pid)
-            let net = Scoring.netStrokes(gross: gross, handicap: max(0, own - extraStrokes),
-                                         strokeIndex: played.strokeIndex, holes: round.numberOfHoles)
+            let net = Scoring.netStrokes(gross: gross, handicap: own - extraStrokes,
+                                         strokeIndex: played.strokeIndex, holes: round.numberOfHoles, rules: rules)
             if best == nil || net < best! { best = net }
         }
         return best
@@ -204,10 +209,11 @@ public enum MatchPlay {
 
     /// `matchHullVinner` for to sider med handicapet fra `handicap`.
     static func holeWinner(a: [String], b: [String], hole: Int, offset: Double, in round: Round,
-                           handicap: (String) -> Double) -> Int? {
+                           rules: Ruleset, handicap: (String) -> Double) -> Int? {
         guard !a.isEmpty, !b.isEmpty,
-              let na = sideNet(a, hole: hole, extraStrokes: offset, in: round, handicap: handicap),
-              let nb = sideNet(b, hole: hole, extraStrokes: offset, in: round, handicap: handicap) else { return nil }
+              let na = sideNet(a, hole: hole, extraStrokes: offset, in: round, rules: rules, handicap: handicap),
+              let nb = sideNet(b, hole: hole, extraStrokes: offset, in: round, rules: rules, handicap: handicap)
+        else { return nil }
         return na < nb ? 1 : (nb < na ? -1 : 0)
     }
 

@@ -34,6 +34,7 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `handicap.seedingGroups` | liste | `{number, handicap, name}`. Tom: ingen seeding. |
 | `handicap.externalHandicap` | sann/usann | Simulatoren deler ut slagene på nye runder. |
 | `handicap.teamHandicap` | form-id → `{method, weights}` | `average`, `weighted` (vekter lavest først) eller `lowest` (laveste · andel). Mangler formen: `lowest`. |
+| `handicap.calculation` | `pwa` / `whs` | Hvordan banehandicap, spillehandicap og slag regnes (se «Handicap»). Mangler feltet: `pwa`. Skrives bare når det er `whs`. |
 | `formats.defaultFormID` | form-id | Formen en ny runde starter med. Må være tillatt. |
 | `formats.allowedFormIDs` | liste | Formene arrangøren kan velge. |
 | `formats.maxPerBay` | tall | Største lag i en bås. |
@@ -171,6 +172,8 @@ er endret. Regelsettet lagrer ikke hvilket oppsett det kom fra.
 | `matchSeries` | `Ruleset.golfgutu`, uendret. |
 | `cup`, `fun` | Golfgutu med `competition` = malene (`CompetitionRules.standard`), som «Ny konkurranse» lagrer i dag. |
 
+Alle oppsettene unntatt `matchSeries` har `handicap.calculation: whs` (golfreglene, 02.11.2026).
+
 Fixture for tabellen fra stableford: `Tests/GolfgutuCoreTests/Fixtures/sesong-stableford.json` (regnet for
 hånd). `regelsett-golfgutu-hel.json` er Golfgutu-oppsettet skrevet med sorterte nøkler, byte for byte.
 
@@ -226,10 +229,38 @@ maks per bås under 1; ingen tillatte former, ukjent form, og standardform som i
 | Ekstern handicap (simulator) for nye runder | – | `handicap.externalHandicap` | av |
 | Lagshandicap per form | `Handicap.teamHandicap` | `handicap.teamHandicap` (`average`, `weighted` med `weights`, `lowest`; mangler = `lowest`) | toerformer snitt, scramble-4 25/20/15/10, ellers laveste · andel |
 | WHS-anbefalingen for lagformer med én ball | `HandicapRules.useWHSTeamHandicap()` | `TeamHandicapRule.whsRecommended` (verdier for `handicap.teamHandicap`) | ikke i bruk (Golfgutu er PWA-ens snitt) |
-| WHS: `indeks · slope/113 + (CR − par)` | `Handicap.courseHandicap` | bli (WHS) | – |
-| Lagsgrunnlag: banehandicap · hull/18 | `Handicap.teamBasis` | bli (matematikk) | – |
-| `effectiveHandicap`: `round(bane · andel · hull/18)` | `Handicap.effective` | bli (matematikk) | – |
+| Handicapregningen | `Handicap`, `Scoring.handicapStrokes` | `handicap.calculation` (`pwa` / `whs`) | `pwa` |
+| `pwa`: `indeks · slope/113 + (CR − par)` for 18 hull | `Handicap.courseHandicap` | bli (WHS) | – |
+| `pwa`: lagsgrunnlag banehandicap · hull/18 | `Handicap.teamBasis` | bli (matematikk) | – |
+| `pwa`: `effectiveHandicap` `round(bane · andel · hull/18)`, plusshandicap gir 0 slag | `Handicap.effective` | bli (matematikk) | – |
+| `whs`: banehandicap for hullene, `indeks · hull/18 · slope/113 + (CR · hull/ratede hull − par for hullene)`, avrundet (regel 6.1a og 6.1b) | `Handicap.whsCourseHandicap`, `WHS.courseHandicap(…holes:)` | bli (WHS) | – |
+| `whs`: spillehandicap `round(banehandicap · andel)` (regel 6.2), lagsgrunnlag = banehandicapet (appendiks C) | `Handicap.effective`, `teamBasis` | bli (WHS) | – |
+| `whs`: plusshandicap gir slag tilbake på hullene med høyest indeks (regel 6.2, appendiks E) | `Scoring.handicapStrokes` → `WHS.strokesReceived` | bli (WHS) | – |
+| `whs`: avrunding ,5 bort fra null (`WHS.roundWhole`); `pwa`: `Math.round` | `HandicapCalculation.roundWhole` | bli (WHS / JS) | – |
 | Rundens andel mangler → 1 | `Handicap.allowance` | bli (eldre runder) | 1 |
+
+### Golfreglene eller som PWA-en (`handicap.calculation`, 02.11.2026)
+
+Besluttet av Thomas 02.11.2026: nye regelsett følger golfreglene, Golfgutu-oppsettet gir fortsatt PWA-ens svar.
+Kilde: *Rules of Handicapping* (R&A og USGA), 2024-utgaven.
+
+- **9 hull (regel 6.1b):** banehandicap = indeks/2 · slope/113 + (CR9 − par9), avrundet én gang. Banemodellen
+  (`Course`, `courses`/`course_tees`, `rounds.course_rating`/`slope_rating`) har én rating per bane. Har banen 9 hull,
+  er ratingen 9-hullsratingen og brukes rett. Har banen 18 hull, brukes slopen som den er, CR9 = halve 18-hulls CR og
+  par9 = summen av par på de ni hullene som spilles. WHS bruker egen rating for hver ni når den finnes; den finnes
+  ikke i dataene (slope.no-synken henter 18-hulls tees), så halve CR er tilnærmingen.
+- **Spillehandicap (regel 6.2):** banehandicap · andel, avrundet. PWA-en ganget 18-hulls banehandicap med 9/18 og
+  andelen og rundet én gang til slutt, så 9 hull kunne gi ett slag forskjell (indeks 11,0 på CR 70,2 / slope 128:
+  PWA 6, WHS 5).
+- **Plusshandicap (regel 6.2, appendiks E):** et negativt spillehandicap gir slag tilbake på hullene med høyest
+  indeks (`WHS.strokesReceived`). PWA-en ga 0 slag. Netto dobbel bogey (`play.maxStrokes`) blir par + 2 + slag,
+  også når slagene er negative (regel 3.1).
+- **Lagform:** grunnlaget er banehandicapet for hullene (appendiks C), og lagshandicapet rundes som WHS.
+- **Seeding** er arrangørens faste tall og regnes likt i begge.
+- **Bakoverkompatibelt:** regelsett og `rules_snapshot` uten feltet leses som `pwa`, så turneringer i gang og
+  frosne runder gir samme tall. Frosne spillehandicap (`round_players.playing_handicap`) er fasit som før.
+
+Fixture: `Tests/GolfgutuCoreTests/Fixtures/handicap-whs.json` (Swift og TypeScript).
 
 ## Match og trekant
 

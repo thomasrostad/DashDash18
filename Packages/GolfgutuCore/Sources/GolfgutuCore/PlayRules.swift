@@ -17,11 +17,12 @@ extension Ruleset {
         case fixed(Int)
 
         /// Det høyeste en spiller kan føre på et hull med `par` når hun får `strokesReceived` slag.
-        /// `nil`: ingen grense.
+        /// `nil`: ingen grense. Netto dobbel bogey er par + 2 + slag fått (WHS regel 3.1); med et
+        /// plusshandicap etter golfreglene er slagene negative på hullene der spilleren gir slag tilbake.
         public func limit(par: Int, strokesReceived: Int) -> Int? {
             switch self {
             case .off: nil
-            case .netDoubleBogey: par + 2 + max(0, strokesReceived)
+            case .netDoubleBogey: par + 2 + strokesReceived
             case .fixed(let strokes): strokes
             }
         }
@@ -110,7 +111,8 @@ extension Round {
     }
 
     private func limit(hole: PlayedHole, handicap: Double, rules: Ruleset) -> Int? {
-        let received = Scoring.handicapStrokes(handicap: handicap, strokeIndex: hole.strokeIndex, holes: numberOfHoles)
+        let received = Scoring.handicapStrokes(handicap: handicap, strokeIndex: hole.strokeIndex, holes: numberOfHoles,
+                                              rules: rules)
         return rules.play.maxStrokes.limit(par: hole.par, strokesReceived: received)
     }
 }

@@ -380,9 +380,10 @@ struct HullRadView: View {
 
 /// Det VoiceOver leser på stepperen (planen V7).
 nonisolated enum StrokeAccessibility {
-    /// «1 slag fått», med «forvalgt par» og «maks 7» når de gjelder.
+    /// «1 slag fått» (plusshandicap etter golfreglene: «1 slag gitt tilbake»), med «forvalgt par» og
+    /// «maks 7» når de gjelder.
     static func received(_ row: HoleCard.Row) -> String {
-        var parts = ["\(row.strokesReceived) slag fått"]
+        var parts = [row.strokesReceived < 0 ? "\(-row.strokesReceived) slag gitt tilbake" : "\(row.strokesReceived) slag fått"]
         if row.isDefault { parts.append("forvalgt par") }
         if row.editable, let max = row.maxStrokes { parts.append("maks \(max)") }
         return parts.joined(separator: " · ")

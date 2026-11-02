@@ -11,6 +11,7 @@ export type DrawMethod = Ruleset["formats"]["drawMethod"];
 export type TieRule = Ruleset["table"]["tieRule"];
 export type Aggregation = Ruleset["table"]["aggregation"];
 export type PointsSource = Ruleset["table"]["pointsSource"];
+export type HandicapCalculation = Ruleset["handicap"]["calculation"];
 
 /** Valgene i rekkefølge, med teksten i skjemaet (som `RuleNames` i appen). */
 export const DRAW_METHOD_OPTIONS: readonly { value: DrawMethod; title: string }[] = [
@@ -18,6 +19,16 @@ export const DRAW_METHOD_OPTIONS: readonly { value: DrawMethod; title: string }[
   { value: "avoidRepeats", title: "Tilfeldig uten gjentakelser" },
   { value: "manual", title: "Manuelt" },
 ];
+
+/** Handicapregningen (`RuleNames.title(HandicapCalculation)` i appen). Golfreglene først. */
+export const HANDICAP_CALCULATION_OPTIONS: readonly { value: HandicapCalculation; title: string }[] = [
+  { value: "whs", title: "Golfreglene (WHS)" },
+  { value: "pwa", title: "Som før (PWA)" },
+];
+
+/** Linja under valget. */
+export const HANDICAP_CALCULATION_HELP =
+  "Golfreglene (WHS): ni hull får eget banehandicap, og plusshandicap gir slag tilbake. Som før (PWA): som Golfgutu-appen regnet.";
 
 export const TIE_RULE_OPTIONS: readonly { value: TieRule; title: string }[] = [
   { value: "tiebreaks", title: "Skilletegn (som i dag)" },

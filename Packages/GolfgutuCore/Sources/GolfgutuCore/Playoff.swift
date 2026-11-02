@@ -55,7 +55,7 @@ public enum Playoff {
                     return .pending(remaining: remaining, next: position)
                 }
                 net[id] = Scoring.netStrokes(gross: strokes[position], handicap: handicap[id] ?? 0,
-                                             strokeIndex: course[hole].strokeIndex, holes: count)
+                                             strokeIndex: course[hole].strokeIndex, holes: count, rules: rules)
             }
             let best = net.values.min()!
             remaining = remaining.filter { net[$0] == best }

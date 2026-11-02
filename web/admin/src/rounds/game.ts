@@ -241,7 +241,7 @@ export function roundTable(g: RoundGame): RoundTable {
       const strokes = s.get(i) ?? null;
       return {
         index: i, strokes,
-        scoreName: strokes === null ? null : scoreName(h.par, strokes, hcp, h.strokeIndex, g.holeCount),
+        scoreName: strokes === null ? null : scoreName(h.par, strokes, hcp, h.strokeIndex, g.holeCount, g.rules),
         outside: i >= counting,
       };
     });
@@ -295,7 +295,7 @@ export function correctionOutcome(g: RoundGame, c: ScoreCorrection): { name: Sco
   const h = g.holes[c.holeIndex];
   const hcp = g.handicap(c.memberID);
   return {
-    name: scoreName(h.par, c.strokes, hcp, h.strokeIndex, g.holeCount),
+    name: scoreName(h.par, c.strokes, hcp, h.strokeIndex, g.holeCount, g.rules),
     points: holePoints(h.par, c.strokes, hcp, h.strokeIndex, g.holeCount, g.rules),
   };
 }

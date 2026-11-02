@@ -301,7 +301,7 @@ nonisolated struct TavlaStandings: Sendable {
             for (hole, gross) in scores where hole >= 0 && hole < course.count {
                 let h = course[hole]
                 let net = Scoring.netStrokes(gross: gross, handicap: hcp, strokeIndex: h.strokeIndex,
-                                             holes: round.numberOfHoles)
+                                             holes: round.numberOfHoles, rules: rules)
                 if net - h.par <= -1 { count += 1 }
             }
         }

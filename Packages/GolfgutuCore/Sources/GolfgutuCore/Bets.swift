@@ -489,7 +489,8 @@ public enum Bets {
             guard let pid, let h, h >= 0, h < course.count, let gross = round.holeScores[pid]?[h] else { return nil }
             let hole = course[h]
             let hcp = Handicap.effective(for: roster.first { $0.id == pid }, in: round, roster: roster, rules: rules)
-            return Scoring.netStrokes(gross: gross, handicap: hcp, strokeIndex: hole.strokeIndex, holes: count) - hole.par
+            return Scoring.netStrokes(gross: gross, handicap: hcp, strokeIndex: hole.strokeIndex, holes: count,
+                                      rules: rules) - hole.par
         }
 
         switch c.kind {

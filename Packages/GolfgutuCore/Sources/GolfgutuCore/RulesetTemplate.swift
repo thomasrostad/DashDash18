@@ -80,7 +80,8 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
     /// - de beste 5 av 7 kveldene teller, både i tabellen og i stablefordsummen (så en spiller kan
     ///   stå over to kvelder uten å tape på det, og de to tallene er de samme);
     /// - skille ved likt: stablefordsummen (hulldifferanse finnes ikke uten matcher);
-    /// - ingen sidepremier og ingen seeding.
+    /// - ingen sidepremier og ingen seeding;
+    /// - handicap etter golfreglene (`HandicapCalculation.whs`).
     /// Handicapandelen er Golfgutu sin: 95 % i stableford (WHS-anbefalingen for individuell
     /// stableford), standardform stableford og 4 per bås.
     static let stablefordSeriesRules: Ruleset = {
@@ -92,6 +93,7 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
         r.sidePrizes.longestDrive.enabled = false
         r.sidePrizes.closestToPin.enabled = false
         r.handicap.seedingGroups = []
+        r.handicap.calculation = .whs
         r.formats.defaultFormID = "stableford"
         return r
     }()
@@ -119,18 +121,20 @@ public enum RulesetTemplate: String, Codable, Hashable, Sendable, CaseIterable {
         return r
     }
 
-    /// Lag mot lag: Golfgutu-oppsettet med fourball som standardform. Sidene settes per runde
-    /// (`round_players.side`), og lagtabellen regnes med `RyderCup`.
+    /// Lag mot lag: Golfgutu-oppsettet med fourball som standardform og handicap etter golfreglene.
+    /// Sidene settes per runde (`round_players.side`), og lagtabellen regnes med `RyderCup`.
     static let teamVsTeamRules: Ruleset = {
         var r = Ruleset.golfgutu
+        r.handicap.calculation = .whs
         r.formats.defaultFormID = "fourball"
         return r
     }()
 
     /// Cup og morroturnering: det «Ny konkurranse» lagrer med malen i dag (`CompetitionDraft.rules`):
-    /// Golfgutu-oppsettet med konkurransemalene under `competition`.
+    /// Golfgutu-oppsettet med konkurransemalene under `competition` og handicap etter golfreglene.
     static let competitionRules: Ruleset = {
         var r = Ruleset.golfgutu
+        r.handicap.calculation = .whs
         r.competition = .standard
         return r
     }()

@@ -77,11 +77,14 @@ public struct StatsRound: Codable, Hashable, Sendable, Identifiable {
     public var details: [Int: HoleDetail]
     /// Stablefordregelen i regelsettet runden ble spilt med. `nil`: Golfgutu-oppsettet.
     public var scoring: Ruleset.ScoringRules?
+    /// Handicapregningen i regelsettet runden ble spilt med (`handicap.calculation`). `nil`: som PWA-en.
+    public var handicapCalculation: Ruleset.HandicapCalculation?
 
     public init(id: String, date: String, kind: Kind, title: String? = nil, clubName: String? = nil,
                 courseID: String? = nil, courseName: String? = nil, holes: [StatsHole], playingHandicap: Double = 0,
                 handicapIndex: Double? = nil, courseRating: Double? = nil, slopeRating: Double? = nil,
-                scores: [Int: Int], details: [Int: HoleDetail] = [:], scoring: Ruleset.ScoringRules? = nil) {
+                scores: [Int: Int], details: [Int: HoleDetail] = [:], scoring: Ruleset.ScoringRules? = nil,
+                handicapCalculation: Ruleset.HandicapCalculation? = nil) {
         self.id = id
         self.date = date
         self.kind = kind
@@ -97,11 +100,12 @@ public struct StatsRound: Codable, Hashable, Sendable, Identifiable {
         self.scores = scores
         self.details = details
         self.scoring = scoring
+        self.handicapCalculation = handicapCalculation
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, date, kind, title, clubName, courseID, courseName, holes, playingHandicap, handicapIndex,
-             courseRating, slopeRating, scores, details, scoring
+             courseRating, slopeRating, scores, details, scoring, handicapCalculation
     }
 
     /// Felt som mangler i JSON, får standardverdien (som `Round`).
@@ -122,6 +126,7 @@ public struct StatsRound: Codable, Hashable, Sendable, Identifiable {
         scores = try c.decodeIfPresent([Int: Int].self, forKey: .scores) ?? [:]
         details = try c.decodeIfPresent([Int: HoleDetail].self, forKey: .details) ?? [:]
         scoring = try c.decodeIfPresent(Ruleset.ScoringRules.self, forKey: .scoring)
+        handicapCalculation = try c.decodeIfPresent(Ruleset.HandicapCalculation.self, forKey: .handicapCalculation)
     }
 
     public var holeCount: Int { holes.count }
@@ -320,12 +325,14 @@ public enum PlayerStats {
         var putts = 0, puttsComplete = true
         var rules = Ruleset.golfgutu
         if let scoring = r.scoring { rules.scoring = scoring }
+        if let calculation = r.handicapCalculation { rules.handicap.calculation = calculation }
         for (i, hole) in r.holes.enumerated() {
             guard let g = r.scores[i] else { continue }
             played += 1
             gross += g
             par += hole.par
-            let received = Scoring.handicapStrokes(handicap: r.playingHandicap, strokeIndex: hole.strokeIndex, holes: holes)
+            let received = Scoring.handicapStrokes(handicap: r.playingHandicap, strokeIndex: hole.strokeIndex, holes: holes,
+                                                  rules: rules)
             net += g - received
             stableford += Scoring.points(par: hole.par, gross: g, handicap: r.playingHandicap,
                                          strokeIndex: hole.strokeIndex, holes: holes, rules: rules)

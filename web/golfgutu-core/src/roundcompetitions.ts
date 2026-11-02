@@ -4,10 +4,10 @@ import { courseHoles } from "./course.ts";
 import { decodeScoringMethod, decodeTeamForm, formAxes, higherIsBetter, playsOneBall, roundForm, type FormAxes, type ScoringMethod, type TeamForm } from "./forms.ts";
 import { evaluatePointsGame, evaluateSkins, GameContext, parBogeyHoleValue, scoredPlayers } from "./formplay.ts";
 import { effectiveHandicap } from "./handicap.ts";
-import { deepCopy, jsRound, stringLess } from "./jsmath.ts";
+import { deepCopy, stringLess } from "./jsmath.ts";
 import { holeWinnerFor, strokeOffsetFor, type MatchStanding } from "./match.ts";
 import { makePlayer, makeRound, type HoleScores, type PlayedHole, type Player, type Round } from "./models.ts";
-import { maxStrokesLimit, type MaxStrokes, type Ruleset } from "./ruleset.ts";
+import { handicapRoundWhole, maxStrokesLimit, type MaxStrokes, type Ruleset } from "./ruleset.ts";
 import { countingHoles } from "./truncation.ts";
 
 export interface HoleRange {
@@ -231,7 +231,7 @@ function matchPlay(comp: RoundCompetition, round: Round, roster: readonly Player
   const hcp = new Map<string, number>();
   for (const p of [...a, ...b]) {
     const own = effectiveHandicap(roster.find((x) => x.id === p) ?? makePlayer(p), round, roster, rules);
-    hcp.set(p, comp.allowance === null ? own : jsRound(own * comp.allowance));
+    hcp.set(p, comp.allowance === null ? own : handicapRoundWhole(rules.handicap.calculation, own * comp.allowance));
   }
   const handicap = (p: string) => hcp.get(p) ?? 0;
   const offset = strokeOffsetFor(a, b, rules, handicap);
@@ -249,7 +249,7 @@ function matchPlay(comp: RoundCompetition, round: Round, roster: readonly Player
       const order = sortedIDs(side);
       return [order.find((p) => (round.holeScores.get(p)?.get(h) ?? null) !== null) ?? order[0]];
     };
-    const v = holeWinnerFor(ball(a), ball(b), h, offset, round, handicap);
+    const v = holeWinnerFor(ball(a), ball(b), h, offset, round, rules, handicap);
     if (v === null) continue;
     played += 1;
     up += v;

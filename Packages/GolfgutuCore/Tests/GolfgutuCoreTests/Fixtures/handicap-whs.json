@@ -1,0 +1,3419 @@
+{
+ "_kilde": "Handicapregningen i regelsettet (handicap.calculation): golfreglene (whs) og som PWA-en (pwa). WHS: Rules of Handicapping (R&A/USGA) 2024, regel 6.1a (banehandicap 18 hull), 6.1b (9 hull: indeks/2 · slope/113 + (CR9 − par9); uten 9-hullsrating er CR9 halve 18-hulls CR og par9 summen av par på de ni), 6.2 (spillehandicap = banehandicap · andel), appendiks E (plusshandicap gir slag tilbake på hullene med høyest indeks) og appendiks C (lagshandicap av banehandicapene). Avrunding ,5 bort fra null. pwa: db-nytt.js som i handicap.json og poeng.json. Regelsettet i sakene er Golfgutu-oppsettet med `regning` som handicap.calculation. Tallene er regnet ut fra formlene, uavhengig av motoren.",
+ "slag": [
+  {
+   "handicap": -2,
+   "strokeIndex": 17,
+   "antall": 18,
+   "pwa": 0,
+   "whs": -1
+  },
+  {
+   "handicap": -2,
+   "strokeIndex": 18,
+   "antall": 18,
+   "pwa": 0,
+   "whs": -1
+  },
+  {
+   "handicap": -2,
+   "strokeIndex": 16,
+   "antall": 18,
+   "pwa": 0,
+   "whs": 0
+  },
+  {
+   "handicap": -2,
+   "strokeIndex": 1,
+   "antall": 18,
+   "pwa": 0,
+   "whs": 0
+  },
+  {
+   "handicap": -3,
+   "strokeIndex": 16,
+   "antall": 18,
+   "pwa": 0,
+   "whs": -1
+  },
+  {
+   "handicap": -3,
+   "strokeIndex": 15,
+   "antall": 18,
+   "pwa": 0,
+   "whs": 0
+  },
+  {
+   "handicap": -2,
+   "strokeIndex": 8,
+   "antall": 9,
+   "pwa": 0,
+   "whs": -1
+  },
+  {
+   "handicap": -2,
+   "strokeIndex": 9,
+   "antall": 9,
+   "pwa": 0,
+   "whs": -1
+  },
+  {
+   "handicap": -2,
+   "strokeIndex": 7,
+   "antall": 9,
+   "pwa": 0,
+   "whs": 0
+  },
+  {
+   "handicap": -1,
+   "strokeIndex": 9,
+   "antall": 9,
+   "pwa": 0,
+   "whs": -1
+  },
+  {
+   "handicap": -1,
+   "strokeIndex": 8,
+   "antall": 9,
+   "pwa": 0,
+   "whs": 0
+  },
+  {
+   "handicap": -0.5,
+   "strokeIndex": 18,
+   "antall": 18,
+   "pwa": 0,
+   "whs": -1
+  },
+  {
+   "handicap": -0.5,
+   "strokeIndex": 17,
+   "antall": 18,
+   "pwa": 0,
+   "whs": 0
+  },
+  {
+   "handicap": -20,
+   "strokeIndex": 1,
+   "antall": 18,
+   "pwa": 0,
+   "whs": -1
+  },
+  {
+   "handicap": -20,
+   "strokeIndex": 17,
+   "antall": 18,
+   "pwa": 0,
+   "whs": -2
+  },
+  {
+   "handicap": 20,
+   "strokeIndex": 2,
+   "antall": 18,
+   "pwa": 2,
+   "whs": 2
+  },
+  {
+   "handicap": 20,
+   "strokeIndex": 3,
+   "antall": 18,
+   "pwa": 1,
+   "whs": 1
+  },
+  {
+   "handicap": 11,
+   "strokeIndex": 2,
+   "antall": 9,
+   "pwa": 2,
+   "whs": 2
+  },
+  {
+   "handicap": 11,
+   "strokeIndex": 3,
+   "antall": 9,
+   "pwa": 1,
+   "whs": 1
+  },
+  {
+   "handicap": 0,
+   "strokeIndex": 1,
+   "antall": 18,
+   "pwa": 0,
+   "whs": 0
+  }
+ ],
+ "nettoDobbelBogey": [
+  {
+   "par": 4,
+   "slag": 1,
+   "forventet": 7
+  },
+  {
+   "par": 4,
+   "slag": 0,
+   "forventet": 6
+  },
+  {
+   "par": 4,
+   "slag": -1,
+   "forventet": 5
+  },
+  {
+   "par": 5,
+   "slag": -2,
+   "forventet": 5
+  }
+ ],
+ "dekoding": [
+  {
+   "navn": "versjon 2 uten feltet",
+   "regelsett": {
+    "version": 2,
+    "handicap": {
+     "externalHandicap": false
+    }
+   },
+   "forventet": "pwa"
+  },
+  {
+   "navn": "versjon 2 uten handicap",
+   "regelsett": {
+    "version": 2
+   },
+   "forventet": "pwa"
+  },
+  {
+   "navn": "versjon 1",
+   "regelsett": {
+    "evenings": 7
+   },
+   "forventet": "pwa"
+  },
+  {
+   "navn": "golfreglene",
+   "regelsett": {
+    "version": 2,
+    "handicap": {
+     "calculation": "whs"
+    }
+   },
+   "forventet": "whs"
+  },
+  {
+   "navn": "som PWA-en uttrykkelig",
+   "regelsett": {
+    "version": 2,
+    "handicap": {
+     "calculation": "pwa"
+    }
+   },
+   "forventet": "pwa"
+  }
+ ],
+ "saker": [
+  {
+   "navn": "plusshandicap på 18 hull, CR = par og slope 113 (whs)",
+   "kilde": "WHS regel 6.1a (18 hull), 6.1b (9 hull) og 6.2 (spillehandicap); pwa: db-nytt.js effectiveHandicap",
+   "regning": "whs",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flatbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -3
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -3
+    }
+   ]
+  },
+  {
+   "navn": "plusshandicap på 18 hull, CR = par og slope 113 (pwa)",
+   "kilde": "WHS regel 6.1a (18 hull), 6.1b (9 hull) og 6.2 (spillehandicap); pwa: db-nytt.js effectiveHandicap",
+   "regning": "pwa",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flatbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": 0
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": 0
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -3
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -3
+    }
+   ]
+  },
+  {
+   "navn": "plusshandicap på 18 hull, CR 70,2 og slope 128 (whs)",
+   "kilde": "WHS regel 6.1a (18 hull), 6.1b (9 hull) og 6.2 (spillehandicap); pwa: db-nytt.js effectiveHandicap",
+   "regning": "whs",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "pluss",
+     "name": "Plussbanen",
+     "par": 72,
+     "courseRating": 70.2,
+     "slopeRating": 128,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -4
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -4
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -6
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -6
+    }
+   ]
+  },
+  {
+   "navn": "plusshandicap på 18 hull, CR 70,2 og slope 128 (pwa)",
+   "kilde": "WHS regel 6.1a (18 hull), 6.1b (9 hull) og 6.2 (spillehandicap); pwa: db-nytt.js effectiveHandicap",
+   "regning": "pwa",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "pluss",
+     "name": "Plussbanen",
+     "par": 72,
+     "courseRating": 70.2,
+     "slopeRating": 128,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -4
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -4
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -6
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -6
+    }
+   ]
+  },
+  {
+   "navn": "9 hull på 18-hullsbane: halve CR mot par for de ni (whs)",
+   "kilde": "WHS regel 6.1a (18 hull), 6.1b (9 hull) og 6.2 (spillehandicap); pwa: db-nytt.js effectiveHandicap",
+   "regning": "whs",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    },
+    {
+     "id": "h11",
+     "name": "Elleve",
+     "handicap": 11.0
+    },
+    {
+     "id": "h143",
+     "name": "Fjorten",
+     "handicap": 14.3
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "pluss",
+     "name": "Plussbanen",
+     "par": 72,
+     "courseRating": 70.2,
+     "slopeRating": 128,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -3
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -3
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "h11",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "h11",
+     "forventet": 5
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "h143",
+     "forventet": 7
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "h143",
+     "forventet": 7
+    }
+   ]
+  },
+  {
+   "navn": "9 hull på 18-hullsbane: halve CR mot par for de ni (pwa)",
+   "kilde": "WHS regel 6.1a (18 hull), 6.1b (9 hull) og 6.2 (spillehandicap); pwa: db-nytt.js effectiveHandicap",
+   "regning": "pwa",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    },
+    {
+     "id": "h11",
+     "name": "Elleve",
+     "handicap": 11.0
+    },
+    {
+     "id": "h143",
+     "name": "Fjorten",
+     "handicap": 14.3
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "pluss",
+     "name": "Plussbanen",
+     "par": 72,
+     "courseRating": 70.2,
+     "slopeRating": 128,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -4
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -6
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -3
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "h11",
+     "forventet": 11
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "h11",
+     "forventet": 6
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "h143",
+     "forventet": 14
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "h143",
+     "forventet": 7
+    }
+   ]
+  },
+  {
+   "navn": "9 hull på 9-hullsbane med egen rating (whs)",
+   "kilde": "WHS regel 6.1a (18 hull), 6.1b (9 hull) og 6.2 (spillehandicap); pwa: db-nytt.js effectiveHandicap",
+   "regning": "whs",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    },
+    {
+     "id": "h11",
+     "name": "Elleve",
+     "handicap": 11.0
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "ni",
+     "name": "Nibanen",
+     "par": 35,
+     "courseRating": 34.6,
+     "slopeRating": 121,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -1
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "h11",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "h11",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "9 hull på 9-hullsbane med egen rating (pwa)",
+   "kilde": "WHS regel 6.1a (18 hull), 6.1b (9 hull) og 6.2 (spillehandicap); pwa: db-nytt.js effectiveHandicap",
+   "regning": "pwa",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    },
+    {
+     "id": "h11",
+     "name": "Elleve",
+     "handicap": 11.0
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "ni",
+     "name": "Nibanen",
+     "par": 35,
+     "courseRating": 34.6,
+     "slopeRating": 121,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 5,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 3,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -3
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": 0
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -4
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "h11",
+     "forventet": 11
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "h11",
+     "forventet": 6
+    }
+   ]
+  },
+  {
+   "navn": "9 hull med andel 95 % (whs)",
+   "kilde": "WHS regel 6.1a (18 hull), 6.1b (9 hull) og 6.2 (spillehandicap); pwa: db-nytt.js effectiveHandicap",
+   "regning": "whs",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    },
+    {
+     "id": "h11",
+     "name": "Elleve",
+     "handicap": 11.0
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 0.95,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "pluss",
+     "name": "Plussbanen",
+     "par": 72,
+     "courseRating": 70.2,
+     "slopeRating": 128,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -3
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -3
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "h11",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "h11",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "9 hull med andel 95 % (pwa)",
+   "kilde": "WHS regel 6.1a (18 hull), 6.1b (9 hull) og 6.2 (spillehandicap); pwa: db-nytt.js effectiveHandicap",
+   "regning": "pwa",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    },
+    {
+     "id": "h11",
+     "name": "Elleve",
+     "handicap": 11.0
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 0.95,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "pluss",
+     "name": "Plussbanen",
+     "par": 72,
+     "courseRating": 70.2,
+     "slopeRating": 128,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -4
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -6
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -3
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "h11",
+     "forventet": 11
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "h11",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "avrunding ,5 på 9 hull: −1,5 og 2,5 (whs)",
+   "kilde": "WHS regel 6.1: ,5 rundes bort fra null; pwa: Math.round",
+   "regning": "whs",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    },
+    {
+     "id": "m3",
+     "name": "Pluss tre",
+     "handicap": -3.0
+    },
+    {
+     "id": "h5",
+     "name": "Fem",
+     "handicap": 5.0
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flatbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -1
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": 0
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": 0
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "m3",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "m3",
+     "forventet": -2
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "h5",
+     "forventet": 3
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "h5",
+     "forventet": 3
+    }
+   ]
+  },
+  {
+   "navn": "avrunding ,5 på 9 hull: −1,5 og 2,5 (pwa)",
+   "kilde": "WHS regel 6.1: ,5 rundes bort fra null; pwa: Math.round",
+   "regning": "pwa",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "p05",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    },
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    },
+    {
+     "id": "m3",
+     "name": "Pluss tre",
+     "handicap": -3.0
+    },
+    {
+     "id": "h5",
+     "name": "Fem",
+     "handicap": 5.0
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flatbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {}
+   },
+   "sjekker": [
+    {
+     "fn": "banehandicap",
+     "spiller": "p2",
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p2",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p05",
+     "forventet": 0
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p05",
+     "forventet": 0
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "p34",
+     "forventet": -3
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "p34",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "m3",
+     "forventet": -3
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "m3",
+     "forventet": -1
+    },
+    {
+     "fn": "banehandicap",
+     "spiller": "h5",
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "h5",
+     "forventet": 3
+    }
+   ]
+  },
+  {
+   "navn": "lagform på 9 hull: greensome, snittet av grunnlagene (whs)",
+   "kilde": "WHS appendiks C (grunnlaget er banehandicapet for hullene); pwa: lagGrunnlag · 9/18",
+   "regning": "whs",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Elleve",
+     "handicap": 11.0
+    },
+    {
+     "id": "b",
+     "name": "Ti ni",
+     "handicap": 10.9
+    }
+   ],
+   "runde": {
+    "gameType": "greensome",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "pluss",
+     "name": "Plussbanen",
+     "par": 72,
+     "courseRating": 70.2,
+     "slopeRating": 128,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {
+     "a": 1,
+     "b": 1
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "a",
+     "forventet": 5
+    },
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "b",
+     "forventet": 5
+    },
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "a",
+      "b"
+     ],
+     "forventet": 5
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "a",
+     "forventet": 5
+    }
+   ]
+  },
+  {
+   "navn": "lagform på 9 hull: greensome, snittet av grunnlagene (pwa)",
+   "kilde": "WHS appendiks C (grunnlaget er banehandicapet for hullene); pwa: lagGrunnlag · 9/18",
+   "regning": "pwa",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Elleve",
+     "handicap": 11.0
+    },
+    {
+     "id": "b",
+     "name": "Ti ni",
+     "handicap": 10.9
+    }
+   ],
+   "runde": {
+    "gameType": "greensome",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "pluss",
+     "name": "Plussbanen",
+     "par": 72,
+     "courseRating": 70.2,
+     "slopeRating": 128,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {
+     "a": 1,
+     "b": 1
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "a",
+     "forventet": 5.5
+    },
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "b",
+     "forventet": 5.5
+    },
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "a",
+      "b"
+     ],
+     "forventet": 6
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "a",
+     "forventet": 6
+    }
+   ]
+  },
+  {
+   "navn": "lagform med to plusshandicap: −1,5 rundes bort fra null (whs)",
+   "kilde": "WHS regel 6.1 og appendiks C; pwa: Math.round",
+   "regning": "whs",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "b",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    }
+   ],
+   "runde": {
+    "gameType": "greensome",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flatbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {
+     "a": 1,
+     "b": 1
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "a",
+     "forventet": -2
+    },
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "b",
+     "forventet": -1
+    },
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "a",
+      "b"
+     ],
+     "forventet": -2
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "a",
+     "forventet": -2
+    }
+   ]
+  },
+  {
+   "navn": "lagform med to plusshandicap: −1,5 rundes bort fra null (pwa)",
+   "kilde": "WHS regel 6.1 og appendiks C; pwa: Math.round",
+   "regning": "pwa",
+   "spillere": [
+    {
+     "id": "a",
+     "name": "Pluss to",
+     "handicap": -2.0
+    },
+    {
+     "id": "b",
+     "name": "Pluss en halv",
+     "handicap": -0.5
+    }
+   ],
+   "runde": {
+    "gameType": "greensome",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flatbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {
+     "a": 1,
+     "b": 1
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "a",
+     "forventet": -2.0
+    },
+    {
+     "fn": "lagGrunnlag",
+     "spiller": "b",
+     "forventet": 0.0
+    },
+    {
+     "fn": "lagHandicap",
+     "spillere": [
+      "a",
+      "b"
+     ],
+     "forventet": -1
+    },
+    {
+     "fn": "effectiveHandicap",
+     "spiller": "a",
+     "forventet": -1
+    }
+   ]
+  },
+  {
+   "navn": "plusshandicap gir slag tilbake: par rundt på 18 hull (whs)",
+   "kilde": "WHS regel 6.2 og appendiks E",
+   "regning": "whs",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flatbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {},
+    "holeScores": {
+     "p2": {
+      "0": 4,
+      "1": 4,
+      "2": 4,
+      "3": 4,
+      "4": 4,
+      "5": 4,
+      "6": 4,
+      "7": 4,
+      "8": 4,
+      "9": 4,
+      "10": 4,
+      "11": 4,
+      "12": 4,
+      "13": 4,
+      "14": 4,
+      "15": 4,
+      "16": 4,
+      "17": 4
+     }
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "stableford",
+     "spiller": "p2",
+     "forventet": 34
+    }
+   ]
+  },
+  {
+   "navn": "plusshandicap gir slag tilbake: par rundt på 18 hull (pwa)",
+   "kilde": "WHS regel 6.2 og appendiks E",
+   "regning": "pwa",
+   "spillere": [
+    {
+     "id": "p2",
+     "name": "Pluss to",
+     "handicap": -2.0
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 18,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "flat",
+     "name": "Flatbanen",
+     "par": 72,
+     "courseRating": 72,
+     "slopeRating": 113,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {},
+    "holeScores": {
+     "p2": {
+      "0": 4,
+      "1": 4,
+      "2": 4,
+      "3": 4,
+      "4": 4,
+      "5": 4,
+      "6": 4,
+      "7": 4,
+      "8": 4,
+      "9": 4,
+      "10": 4,
+      "11": 4,
+      "12": 4,
+      "13": 4,
+      "14": 4,
+      "15": 4,
+      "16": 4,
+      "17": 4
+     }
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "stableford",
+     "spiller": "p2",
+     "forventet": 36
+    }
+   ]
+  },
+  {
+   "navn": "plusshandicap gir slag tilbake: par rundt på 9 hull (whs)",
+   "kilde": "WHS regel 6.1b, 6.2 og appendiks E",
+   "regning": "whs",
+   "spillere": [
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "pluss",
+     "name": "Plussbanen",
+     "par": 72,
+     "courseRating": 70.2,
+     "slopeRating": 128,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {},
+    "holeScores": {
+     "p34": {
+      "0": 4,
+      "1": 4,
+      "2": 4,
+      "3": 4,
+      "4": 4,
+      "5": 4,
+      "6": 4,
+      "7": 4,
+      "8": 4
+     }
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "stableford",
+     "spiller": "p34",
+     "forventet": 15
+    }
+   ]
+  },
+  {
+   "navn": "plusshandicap gir slag tilbake: par rundt på 9 hull (pwa)",
+   "kilde": "WHS regel 6.1b, 6.2 og appendiks E",
+   "regning": "pwa",
+   "spillere": [
+    {
+     "id": "p34",
+     "name": "Pluss 3,4",
+     "handicap": -3.4
+    }
+   ],
+   "runde": {
+    "gameType": "stableford",
+    "hcpAllowance": 1,
+    "holeCount": 9,
+    "holeStart": 0,
+    "hcpExtern": false,
+    "course": {
+     "id": "pluss",
+     "name": "Plussbanen",
+     "par": 72,
+     "courseRating": 70.2,
+     "slopeRating": 128,
+     "holes": [
+      {
+       "par": 4,
+       "si": 1,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 2,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 3,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 4,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 5,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 6,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 7,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 8,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 9,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 10,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 11,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 12,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 13,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 14,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 15,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 16,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 17,
+       "meters": null
+      },
+      {
+       "par": 4,
+       "si": 18,
+       "meters": null
+      }
+     ]
+    },
+    "teams": {},
+    "holeScores": {
+     "p34": {
+      "0": 4,
+      "1": 4,
+      "2": 4,
+      "3": 4,
+      "4": 4,
+      "5": 4,
+      "6": 4,
+      "7": 4,
+      "8": 4
+     }
+    }
+   },
+   "sjekker": [
+    {
+     "fn": "stableford",
+     "spiller": "p34",
+     "forventet": 18
+    }
+   ]
+  }
+ ]
+}

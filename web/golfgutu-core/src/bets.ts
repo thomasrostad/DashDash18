@@ -303,7 +303,7 @@ function result(round: Round, c: BetCondition, roster: readonly Player[], claims
     if (gross === undefined) return null;
     const hole = course[h];
     const hcp = effectiveHandicap(roster.find((p) => p.id === pid) ?? null, round, roster, rules);
-    return netStrokes(gross, hcp, hole.strokeIndex, count) - hole.par;
+    return netStrokes(gross, hcp, hole.strokeIndex, count, rules) - hole.par;
   };
 
   switch (c.kind) {

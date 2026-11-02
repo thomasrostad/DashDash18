@@ -488,6 +488,10 @@ Tre regelinnstillinger under «Føring og visning» i reglene (`play` i regelset
 - [x] **Låst kort etter levering:** «Lever kortet» under hullkortet når alle hullene er ført og sendt; etterpå kan bare arrangøren endre det, og «Åpne igjen» står for arrangøren under kortet og i «Leverte kort» under Stilling. **Krever sql/057 (ikke kjørt, venter på godkjenning).** Serveren håndhever låsen i `can_score` når 057 er kjørt; uten 057 vises ingenting.
 - [x] **Skjul de siste N hullene:** runde-oppsettet har «Skjul de siste hullene» med antall (1–9, standard fra regelsettet, Golfgutu 3). Tavla, Hjem og varslene regnes uten dem til runden er låst (fra sql/047). Web-admin skriver fortsatt 3 når valget slås på der.
 
+### Handicap etter golfreglene (02.11.2026)
+
+- [x] Ny regel `handicap.calculation`: golfreglene (WHS) eller som PWA-en. 9 hull får eget banehandicap (regel 6.1b), spillehandicap = banehandicap · andel (6.2), og plusshandicap gir slag tilbake (appendiks E). Golfgutu-oppsettet og alle lagrede regelsett uten feltet regner som PWA-en; de andre oppsettene i «Ny turnering» bruker golfreglene. Valget står under Handicap i «Tilpass reglene» (appen) og «Reglene» (web-admin). Swift og TypeScript, fixture `handicap-whs.json`. Ingen SQL. Se `Packages/GolfgutuCore/REGELSETT.md`.
+
 ### Nye spillformer (15.10.2026)
 
 - [x] Par/bogey (regel 21.3) i motoren og TypeScript: konkurranse, hovedform (stilling «+3», tabell med `table.formPoints`), verdiene i `formPlay.parBogey`.

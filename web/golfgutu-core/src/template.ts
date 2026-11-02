@@ -84,7 +84,7 @@ export function templateSummary(t: RulesetTemplate): string {
 /**
  * Stableford-serie: Golfgutu-oppsettet der tabellpoengene er stablefordpoengene, de beste 5 av 7
  * kveldene teller (både i tabellen og stablefordsummen), skille ved likt er stablefordsummen, og det
- * er ingen sidepremier og ingen seeding.
+ * er ingen sidepremier og ingen seeding. Handicap etter golfreglene (`calculation: "whs"`).
  */
 function stablefordSeriesRules(): Ruleset {
   const r = golfgutuRules();
@@ -95,6 +95,7 @@ function stablefordSeriesRules(): Ruleset {
   r.sidePrizes.longestDrive.enabled = false;
   r.sidePrizes.closestToPin.enabled = false;
   r.handicap.seedingGroups = [];
+  r.handicap.calculation = "whs";
   r.formats.defaultFormID = "stableford";
   return r;
 }
@@ -122,16 +123,18 @@ function formPointsRules(form: string): Ruleset {
   return r;
 }
 
-/** Lag mot lag: Golfgutu-oppsettet med fourball som standardform (sidene settes per runde). */
+/** Lag mot lag: Golfgutu-oppsettet med fourball som standardform og handicap etter golfreglene. */
 function teamVsTeamRules(): Ruleset {
   const r = golfgutuRules();
+  r.handicap.calculation = "whs";
   r.formats.defaultFormID = "fourball";
   return r;
 }
 
-/** Cup og morroturnering: Golfgutu-oppsettet med konkurransemalene under `competition`. */
+/** Cup og morroturnering: Golfgutu-oppsettet med konkurransemalene under `competition` og handicap etter golfreglene. */
 function competitionTemplateRules(): Ruleset {
   const r = golfgutuRules();
+  r.handicap.calculation = "whs";
   r.competition = standardCompetitionRules();
   return r;
 }

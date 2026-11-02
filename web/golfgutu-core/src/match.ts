@@ -86,14 +86,14 @@ export function strokeOffset(m: Match, round: Round, roster: readonly Player[], 
 
 /** `sideNettoPaaHull`: beste netto på siden på hullet. `null` når ingen på siden har ført, eller hullet ikke finnes. */
 export function sideNet(playerIDs: readonly string[], hole: number, extraStrokes: number, round: Round, roster: readonly Player[], rules: Ruleset = GOLFGUTU): number | null {
-  return sideNetWith(playerIDs, hole, extraStrokes, round, (id) => effective(id, round, roster, rules));
+  return sideNetWith(playerIDs, hole, extraStrokes, round, rules, (id) => effective(id, round, roster, rules));
 }
 
 /** `matchHullVinner`: 1 når A vant hullet, −1 når B vant, 0 delt. `null` når en side ikke har ført. */
 export function holeWinner(m: Match, hole: number, round: Round, roster: readonly Player[], rules: Ruleset = GOLFGUTU, lowest: number | null = null): number | null {
   const s = matchSides(m, round);
   const lav = lowest ?? strokeOffset(m, round, roster, rules);
-  return holeWinnerFor(s.a, s.b, hole, lav, round, (id) => effective(id, round, roster, rules));
+  return holeWinnerFor(s.a, s.b, hole, lav, round, rules, (id) => effective(id, round, roster, rules));
 }
 
 // MARK: Sidene som lister (rundens matcher og matchen som konkurranse, roundcompetitions.ts)
@@ -110,8 +110,11 @@ export function strokeOffsetFor(a: readonly string[], b: readonly string[], rule
   return Math.min(sideHandicapWith(a, handicap), sideHandicapWith(b, handicap));
 }
 
-/** `sideNettoPaaHull` med handicapet fra `handicap`. */
-export function sideNetWith(playerIDs: readonly string[], hole: number, extraStrokes: number, round: Round, handicap: (id: string) => number): number | null {
+/**
+ * `sideNettoPaaHull` med handicapet fra `handicap`. Som PWA-en blir slagene aldri under 0 (`handicapStrokes`);
+ * etter golfreglene gir et plusshandicap slag tilbake.
+ */
+export function sideNetWith(playerIDs: readonly string[], hole: number, extraStrokes: number, round: Round, rules: Ruleset, handicap: (id: string) => number): number | null {
   const course = courseHoles(round);
   if (!(hole >= 0 && hole < course.length)) return null;
   const played = course[hole];
@@ -119,17 +122,17 @@ export function sideNetWith(playerIDs: readonly string[], hole: number, extraStr
   for (const pid of playerIDs) {
     const gross = round.holeScores.get(pid)?.get(hole);
     if (gross === undefined) continue;
-    const net = netStrokes(gross, Math.max(0, handicap(pid) - extraStrokes), played.strokeIndex, numberOfHoles(round));
+    const net = netStrokes(gross, handicap(pid) - extraStrokes, played.strokeIndex, numberOfHoles(round), rules);
     if (best === null || net < best) best = net;
   }
   return best;
 }
 
 /** `matchHullVinner` for to sider med handicapet fra `handicap`. */
-export function holeWinnerFor(a: readonly string[], b: readonly string[], hole: number, offset: number, round: Round, handicap: (id: string) => number): number | null {
+export function holeWinnerFor(a: readonly string[], b: readonly string[], hole: number, offset: number, round: Round, rules: Ruleset, handicap: (id: string) => number): number | null {
   if (a.length === 0 || b.length === 0) return null;
-  const na = sideNetWith(a, hole, offset, round, handicap);
-  const nb = sideNetWith(b, hole, offset, round, handicap);
+  const na = sideNetWith(a, hole, offset, round, rules, handicap);
+  const nb = sideNetWith(b, hole, offset, round, rules, handicap);
   if (na === null || nb === null) return null;
   return na < nb ? 1 : nb < na ? -1 : 0;
 }

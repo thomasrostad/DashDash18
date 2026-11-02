@@ -1,11 +1,12 @@
 // Handicap og tildeling (Handicap.swift, db-nytt.js linje 58–344). Seeding og lagshandicap leses fra
 // regelsettet, med Golfgutu-oppsettet som standard.
 
-import { numberOfHoles } from "./course.ts";
+import { courseHoles, numberOfHoles } from "./course.ts";
 import { roundForm } from "./forms.ts";
 import { jsRound, sortedStrings } from "./jsmath.ts";
 import type { Player, Round } from "./models.ts";
-import { GOLFGUTU, teamHandicapRule, type Ruleset, type SeedingGroup } from "./ruleset.ts";
+import { GOLFGUTU, handicapRoundWhole, teamHandicapRule, type Ruleset, type SeedingGroup } from "./ruleset.ts";
+import { roundWhole, STANDARD_SLOPE, whsCourseHandicapForHoles } from "./whs.ts";
 
 /** `Number(x) || 0`: null og NaN blir 0. */
 export function jsNumber(x: number | null | undefined): number {
@@ -48,21 +49,48 @@ export function allowance(round: Round): number {
   return 1;
 }
 
-/** `banehandicap`: seedet → gruppetallet; ellers WHS-banehandicap med bane, rå indeks uten. Uten tildeling. */
+/**
+ * `banehandicap`: seedet → gruppetallet. Uten tildeling. Som PWA-en (`pwa`): WHS-banehandicap for 18 hull med
+ * bane, rå indeks uten. Golfreglene (`whs`): banehandicapet for hullene som spilles (`whsCourseHandicapInRound`).
+ */
 export function courseHandicap(player: Player | null | undefined, round: Round, rules: Ruleset = GOLFGUTU): number {
   const gh = groupHandicap(player, rules);
   if (gh !== null) return gh;
   const idx = jsNumber(player?.handicap);
+  if (rules.handicap.calculation === "whs") return whsCourseHandicapInRound(idx, round);
   const course = round.course;
   if (course !== null) return courseHandicapFor(idx, course.courseRating, course.slopeRating, course.par);
   return idx;
 }
 
-/** `lagGrunnlag`: seedet → gruppetallet; ellers banehandicap · antall hull / 18, ikke avrundet. */
+/**
+ * Banehandicap etter golfreglene for hullene runden spiller (`Handicap.whsCourseHandicap`, regel 6.1a og 6.1b).
+ * Ratingen gjelder 9 hull når banen har 9 hull, ellers 18. Par: banens når runden spiller like mange hull som
+ * ratingen gjelder, ellers summen av par på hullene som spilles. Uten rating: lik par; uten slope: 113.
+ * Uten bane: indeksen for hullene.
+ */
+export function whsCourseHandicapInRound(index: number, round: Round): number {
+  const holes = numberOfHoles(round);
+  const playedPar = courseHoles(round).reduce((s, h) => s + h.par, 0);
+  const course = round.course;
+  // `+ 0`: −0 blir 0, som heltallet i Swift.
+  if (course === null) return roundWhole(index * holes / 18) + 0;
+  const rated = course.holes?.length === 9 ? 9 : 18;
+  const par = (holes === rated && course.par !== null && course.par > 0 ? course.par : null) ?? playedPar;
+  // Uten rating: lik par for hullene ratingen gjelder, så CR − par blir 0.
+  const rating = course.courseRating ?? par * rated / holes;
+  return whsCourseHandicapForHoles(index, course.slopeRating ?? STANDARD_SLOPE, rating, rated, par, holes) + 0;
+}
+
+/**
+ * `lagGrunnlag`: seedet → gruppetallet. Som PWA-en: banehandicap · antall hull / 18, ikke avrundet. Golfreglene:
+ * banehandicapet for hullene som spilles (WHS appendiks C).
+ */
 export function teamBasis(player: Player | null | undefined, round: Round, rules: Ruleset = GOLFGUTU): number {
   const gh = groupHandicap(player, rules);
   if (gh !== null) return gh;
-  return courseHandicap(player, round, rules) * (numberOfHoles(round) / 18);
+  const ch = courseHandicap(player, round, rules);
+  return rules.handicap.calculation === "whs" ? ch : ch * (numberOfHoles(round) / 18);
 }
 
 /**
@@ -89,7 +117,7 @@ export function teamHandicap(round: Round, members: readonly (Player | null)[], 
       sum = basis[0] * allowance(round);
       break;
   }
-  return jsRound(sum);
+  return handicapRoundWhole(rules.handicap.calculation, sum);
 }
 
 /** `lagHandicap` med spiller-id-er slått opp i troppen. */
@@ -112,7 +140,8 @@ export function teammates(playerID: string, round: Round): string[] | null {
  * 1b. Rundens frosne spillehandicap for spilleren → det.
  * 2. Form med ett kort per lag, eller toerform, og spilleren har lag → lagets handicap.
  * 3. Seedet → gruppetallet (0 når tildelingen er 0).
- * 4. Ellers `round(banehandicap · tildeling · antall hull / 18)`.
+ * 4. Ellers som PWA-en `round(banehandicap · tildeling · antall hull / 18)`, eller etter golfreglene
+ *    `round(banehandicap for hullene · tildeling)` (regel 6.2), ,5 bort fra null.
  */
 export function effectiveHandicap(player: Player | null | undefined, round: Round, roster: readonly Player[], rules: Ruleset = GOLFGUTU): number {
   if (round.hcpExtern) return 0;
@@ -127,5 +156,7 @@ export function effectiveHandicap(player: Player | null | undefined, round: Roun
   }
   const gh = groupHandicap(player, rules);
   if (gh !== null) return allowance(round) > 0 ? gh : 0;
-  return jsRound(courseHandicap(player, round, rules) * allowance(round) * (numberOfHoles(round) / 18));
+  const ch = courseHandicap(player, round, rules);
+  if (rules.handicap.calculation === "whs") return handicapRoundWhole("whs", ch * allowance(round));
+  return jsRound(ch * allowance(round) * (numberOfHoles(round) / 18));
 }

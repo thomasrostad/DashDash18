@@ -17,6 +17,13 @@ struct SesongForklaringTests {
         """)
     }
 
+    /// Golfreglene får en setning; Golfgutu (som PWA-en) har ingen (se `golfgutuTeksten`).
+    @Test func handicapEtterGolfreglene() {
+        let s = RulesetExplanation.sentences(for: RulesetTemplate.stablefordSeries.rules)
+        #expect(s.contains("Handicapet regnes etter golfreglene (WHS): ni hull får eget banehandicap, og plusshandicap gir slag tilbake."))
+        #expect(!RulesetExplanation.sentences(for: .golfgutu).contains { $0.contains("golfreglene") })
+    }
+
     /// «Et annet oppsett» fra REGELSETT.md.
     @Test func annetOppsett() {
         var r = Ruleset.golfgutu

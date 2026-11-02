@@ -62,12 +62,16 @@ public enum Handicap {
         return 1
     }
 
-    /// `banehandicap`: seedet → gruppetallet. Ellers WHS-banehandicap når runden har bane,
-    /// og rå indeks (ikke avrundet) uten bane. Uten tildeling.
+    /// `banehandicap`: seedet → gruppetallet. Uten tildeling.
+    ///
+    /// Som PWA-en (`pwa`): banehandicapet for 18 hull når runden har bane, og rå indeks (ikke avrundet)
+    /// uten bane. Antall hull regnes inn senere (`teamBasis`, `effective`).
+    /// Golfreglene (`whs`): banehandicapet for hullene som spilles, avrundet (`whsCourseHandicap`).
     public static func courseHandicap(for player: Player?, in round: Round,
                                       rules: Ruleset = .golfgutu) -> Double {
         if let gh = groupHandicap(for: player, rules: rules) { return gh }
         let idx = jsNumber(player?.handicap)
+        if rules.handicap.calculation == .whs { return Double(whsCourseHandicap(index: idx, in: round)) }
         if let course = round.course {
             return courseHandicap(index: idx, courseRating: course.courseRating, slopeRating: course.slopeRating,
                                   par: course.par.map(Double.init))
@@ -75,19 +79,42 @@ public enum Handicap {
         return idx
     }
 
+    /// Banehandicap etter golfreglene for hullene runden spiller (regel 6.1a og 6.1b, `WHS.courseHandicap`).
+    ///
+    /// - Course rating og slope er banens (teens tall frosset på runden). Ratingen gjelder 9 hull når banen
+    ///   har 9 hull, ellers 18. Mangler rating, er den lik par; mangler slope, brukes 113.
+    /// - Par: banens par når runden spiller like mange hull som ratingen gjelder, ellers summen av par på
+    ///   hullene som spilles (`courseHoles`). Ni hull på en 18-hullsbane: halve CR mot par for de ni.
+    /// - Uten bane: indeksen for hullene (slope 113, CR = par).
+    public static func whsCourseHandicap(index: Double, in round: Round) -> Int {
+        let holes = round.numberOfHoles
+        let playedPar = round.courseHoles().reduce(0) { $0 + $1.par }
+        guard let course = round.course else {
+            return WHS.roundWhole(index * Double(holes) / 18)
+        }
+        let rated = course.holes?.count == 9 ? 9 : 18
+        let par = (holes == rated ? course.par.flatMap { $0 > 0 ? $0 : nil } : nil) ?? playedPar
+        // Uten rating: lik par for hullene ratingen gjelder, så CR − par blir 0.
+        let rating = course.courseRating ?? Double(par) * Double(rated) / Double(holes)
+        return WHS.courseHandicap(index: index, slope: course.slopeRating ?? WHS.standardSlope,
+                                  courseRating: rating, ratedHoles: rated, par: par, holes: holes)
+    }
+
     /// `lagGrunnlag`: det én mann tar med inn i laget. Seedet → gruppetallet (halveres ikke).
-    /// Ellers banehandicap · antall hull / 18, ikke avrundet.
+    /// Som PWA-en: banehandicap · antall hull / 18, ikke avrundet. Golfreglene: banehandicapet for
+    /// hullene som spilles (allerede for 9 eller 18 hull, avrundet; WHS appendiks C).
     public static func teamBasis(for player: Player?, in round: Round,
                                  rules: Ruleset = .golfgutu) -> Double {
         if let gh = groupHandicap(for: player, rules: rules) { return gh }
-        return courseHandicap(for: player, in: round, rules: rules) * (Double(round.numberOfHoles) / 18)
+        let ch = courseHandicap(for: player, in: round, rules: rules)
+        return rules.handicap.calculation == .whs ? ch : ch * (Double(round.numberOfHoles) / 18)
     }
 
     /// `lagHandicap`: lagets ene handicap.
     ///
     /// Regelen for formen står i regelsettet (Golfgutu: toerformer snittet av grunnlagene,
     /// `scramble-4` 25/20/15/10 % lavest først, ellers laveste grunnlag · tildeling).
-    /// Ett avrundingstrinn til slutt. Brutto (tildeling 0) gir 0.
+    /// Ett avrundingstrinn til slutt (`HandicapCalculation.roundWhole`). Brutto (tildeling 0) gir 0.
     /// - Parameter members: spillerne på laget. `nil` er en id som ikke finnes i troppen.
     public static func teamHandicap(in round: Round, members: [Player?],
                                     rules: Ruleset = .golfgutu) -> Double {
@@ -104,7 +131,7 @@ public enum Handicap {
         case .lowest:
             sum = basis[0] * allowance(round)
         }
-        return JS.round(sum)
+        return rules.handicap.calculation.roundWhole(sum)
     }
 
     /// `lagHandicap` med spiller-id-er slått opp i troppen.
@@ -126,7 +153,8 @@ public enum Handicap {
     /// 1b. Rundens frosne spillehandicap (`round.playingHandicaps`) for spilleren → det.
     /// 2. Lagform med ett kort per lag, eller toerform, og spilleren har lag → lagets handicap.
     /// 3. Seedet → gruppetallet (0 når tildelingen er 0).
-    /// 4. Ellers `round(banehandicap · tildeling · antall hull / 18)`.
+    /// 4. Ellers som PWA-en `round(banehandicap · tildeling · antall hull / 18)`, eller etter golfreglene
+    ///    `round(banehandicap for hullene · tildeling)` (regel 6.2), ,5 bort fra null.
     public static func effective(for player: Player?, in round: Round, roster: [Player],
                                  rules: Ruleset = .golfgutu) -> Double {
         if round.hcpExtern { return 0 }
@@ -139,8 +167,11 @@ public enum Handicap {
         if let gh = groupHandicap(for: player, rules: rules) {
             return allowance(round) > 0 ? gh : 0
         }
-        return JS.round(courseHandicap(for: player, in: round, rules: rules)
-                        * allowance(round) * (Double(round.numberOfHoles) / 18))
+        let ch = courseHandicap(for: player, in: round, rules: rules)
+        switch rules.handicap.calculation {
+        case .pwa: return JS.round(ch * allowance(round) * (Double(round.numberOfHoles) / 18))
+        case .whs: return Double(WHS.roundWhole(ch * allowance(round)))
+        }
     }
 
     /// `Number(x) || 0`: `nil` og NaN blir 0.

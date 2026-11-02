@@ -8,7 +8,7 @@ import { maxStrokesLimit, type Ruleset } from "./ruleset.ts";
 import { handicapStrokes } from "./scoring.ts";
 
 function limitFor(round: Round, hole: PlayedHole, handicap: number, rules: Ruleset): number | null {
-  const received = handicapStrokes(handicap, hole.strokeIndex, numberOfHoles(round));
+  const received = handicapStrokes(handicap, hole.strokeIndex, numberOfHoles(round), rules);
   return maxStrokesLimit(rules.play.maxStrokes, hole.par, received);
 }
 

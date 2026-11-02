@@ -258,7 +258,9 @@ test("oppsettene er gyldige", () => {
 test("matchspill-serien er Golfgutu; cup og morro er konkurransemalen", () => {
   assert.ok(rulesetEquals(templateRules("matchSeries"), GOLFGUTU));
   assert.equal(GOLFGUTU.table.pointsSource, "matches");
+  assert.equal(GOLFGUTU.handicap.calculation, "pwa");
   const expected = golfgutuRules();
+  expected.handicap.calculation = "whs";
   expected.competition = standardCompetitionRules();
   assert.ok(rulesetEquals(templateRules("cup"), expected));
   assert.ok(rulesetEquals(templateRules("fun"), expected));
@@ -275,10 +277,17 @@ test("stableford-serien", () => {
   assert.equal(allowanceFor(r, formById("stableford")), 0.95);
   assert.equal(r.competition, null);
   assert.deepEqual(templateDifferences("stablefordSeries", GOLFGUTU), [
-    "handicap.seedingGroups", "sidePrizes.closestToPin.enabled", "sidePrizes.longestDrive.enabled",
+    "handicap.calculation", "handicap.seedingGroups", "sidePrizes.closestToPin.enabled", "sidePrizes.longestDrive.enabled",
     "table.counting.best", "table.counting.unit", "table.pointsSource",
     "table.stablefordCounting.unit", "table.tiebreaks",
   ]);
+});
+
+test("Golfgutu regner handicap som PWA-en; de andre oppsettene etter golfreglene", () => {
+  for (const t of RULESET_TEMPLATES) {
+    assert.equal(templateRules(t).handicap.calculation, t === "matchSeries" ? "pwa" : "whs", t);
+    assert.equal(templateLeagueRules(t).handicap.calculation, templateRules(t).handicap.calculation, t);
+  }
 });
 
 test("steg 7: Amerikaner, Københavner, skins og lag mot lag", () => {
@@ -290,7 +299,7 @@ test("steg 7: Amerikaner, Københavner, skins og lag mot lag", () => {
     assert.equal(matchingTemplate(r), t);
   }
   assert.equal(templateRules("teamVsTeam").formats.defaultFormID, "fourball");
-  assert.deepEqual(templateDifferences("teamVsTeam", GOLFGUTU), ["formats.defaultFormID"]);
+  assert.deepEqual(templateDifferences("teamVsTeam", GOLFGUTU), ["formats.defaultFormID", "handicap.calculation"]);
   assert.equal(matchingTemplate(GOLFGUTU), "matchSeries");
 });
 
