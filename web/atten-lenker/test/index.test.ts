@@ -98,11 +98,13 @@ test("forsiden", async () => {
   const res = await get("/");
   assert.equal(res.status, 200);
   const html = await res.text();
-  assert.match(html, /<h1>Golfkvelden med gjengen/);
-  // Eneste script er JSON-LD (data, ikke kode), og det bærer nonce-en fra CSP-en.
+  // h1 er delt i linjer og en kursiv del (src/salgsside.ts), men teksten er den samme.
+  assert.equal(/<h1>([\s\S]*?)<\/h1>/.exec(html)![1].replace(/<[^>]+>/g, ""), "Golfkvelden med gjengen, samlet i én app");
+  // To script: JSON-LD (data, ikke kode) og bevegelsen på salgssiden (src/salgsside.ts). Begge bærer nonce-en fra CSP-en.
   const scripts = html.match(/<script[^>]*>/g) ?? [];
-  assert.equal(scripts.length, 1);
+  assert.equal(scripts.length, 2);
   assert.match(scripts[0], /^<script type="application\/ld\+json" nonce="[0-9a-f]+">$/);
+  assert.match(scripts[1], /^<script nonce="[0-9a-f]+">$/);
   // Søk: forsiden skal indekseres, ha beskrivelse, kanonisk adresse og lenke til App Store.
   assert.doesNotMatch(html, /noindex/);
   assert.match(html, /<meta name="description" content="[^"]{50,160}">/);
@@ -126,9 +128,12 @@ test("forsiden: én h1, h2-er og brødtekst uten pengespill", async () => {
     "Golfapp for turnering og liga",
     "Stableford, slagspill og matchspill",
     "For golfgjengen, klubben og simulatorkvelden",
+    "Kalkulator og guider",
   ]);
-  const text = html.slice(html.indexOf("<body>")).replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean);
-  assert.ok(text.length >= 150 && text.length <= 300, `${text.length} ord på forsiden`);
+  // Teksten for Google (toppen og h2-blokkene) holder seg kort; eksempelet på telefonen og kortene kommer i tillegg.
+  const seo = [/<h1>[\s\S]*?<\/h1>\n<p class="sub[^>]*>[\s\S]*?<\/p>/.exec(html)![0], ...html.match(/<section class="del">[\s\S]*?<\/section>/g)!];
+  const text = seo.join(" ").replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean);
+  assert.ok(text.length >= 150 && text.length <= 350, `${text.length} ord i teksten på forsiden`);
   // App Store 2.3.6: ingenting om innsats eller pengespill.
   assert.doesNotMatch(html, /tipping|veddemål|betting|innsats|pott|gambling/i);
   // Tittelen holder seg kort nok til å vises i Google.

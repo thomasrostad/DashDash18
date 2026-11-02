@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { contourLevels, contourSegments, noise3 } from "../src/landing/topo.ts";
 import { applyDemoEvent, DEMO_EVENTS, DEMO_PLAYERS } from "../src/landing/demo.ts";
+import { ARRANGOR_CARDS, card, demoTavla, readingLine, rulesArt } from "../src/landing/markup.ts";
+import { startLanding } from "../src/landing/live.ts";
 
 test("høydekurvene: en kul gir én lukket ring rundt toppen", () => {
   // 5 × 5 punkter, høyest i midten.
@@ -54,4 +56,24 @@ test("eksempeltavla: en birdie flytter spilleren opp, og rekkefølgen ellers st�
   assert.deepEqual(twice.slice(0, 3).map((p) => p.name), ["Kari Moen", "Marte L.", "Henrik A."]);
   assert.equal(twice.find((p) => p.name === "Marte L.")?.points, 203);
   assert.equal(DEMO_PLAYERS[2].points, 191, "originalen endres ikke");
+});
+
+// Delene i markup.ts brukes både her og på dashdash18.com (web/atten-lenker/src/salgsside.ts).
+test("markeringen: tavla har alle eksempelradene og hendelsene, kortene og setningen er escapet", () => {
+  const tavla = demoTavla();
+  assert.deepEqual([...tavla.matchAll(/data-navn="([^"]+)"/g)].map((m) => m[1]), DEMO_PLAYERS.map((p) => p.name));
+  assert.match(tavla, /<tr class="lead" data-navn="Kari Moen"/);
+  const events = JSON.parse(/data-hendelser="([^"]+)"/.exec(tavla)![1].replace(/&quot;/g, '"'));
+  assert.deepEqual(events, DEMO_EVENTS);
+  assert.equal(ARRANGOR_CARDS.length, 5);
+  assert.ok(ARRANGOR_CARDS.every((c) => c.startsWith('<article class="kcard')));
+  const line = readingLine([{ text: "Før <b> og " }, { text: "tavla", soft: true }]);
+  assert.equal(line, '<p class="read"><span class="w">Før</span> <span class="w">&lt;b&gt;</span> <span class="w">og</span> <span class="soft"><span class="w">tavla</span></span></p>');
+  assert.match(card({ eyebrow: "A&B", title: "T", em: "E", art: rulesArt([["x", "y"]]) }), /<p class="eb">A&amp;B<\/p><h3>T <em>E<\/em><\/h3><div class="art rules">/);
+});
+
+test("bevegelsen er selvstendig, så dashdash18.com kan legge den inn som tekst", () => {
+  const fn = new Function(`return (${startLanding.toString()});`)();
+  assert.equal(typeof fn, "function");
+  assert.doesNotMatch(startLanding.toString(), /import\(|require\(/);
 });

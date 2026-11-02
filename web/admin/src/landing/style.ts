@@ -1,4 +1,8 @@
-/* Forsiden før innlogging. Alt er avgrenset til .landing, så arrangørsiden ikke påvirkes. */
+// Stilen til forsiden før innlogging (Landing.tsx) og salgssidene på dashdash18.com (web/atten-lenker/src/salgsside.ts).
+// Én kilde for begge: web-admin legger den i en <style> (som toppmenyen), workeren legger den i <head>.
+// Alt er avgrenset til .landing, så arrangørsiden ikke påvirkes. Fargene (--bg, --ink, --card …) og .loud står i
+// src/styles.css; workeren har de samme verdiene. `.live` settes av live.ts: uten skript står alt ferdig fra start.
+export const LANDING_STYLE = `
 .landing { --ink3: #868C86; --surface: var(--card); background: var(--bg); color: var(--ink); font-size: 17px; line-height: 1.5; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 .landing h1, .landing h2, .landing h3, .landing p { margin: 0; }
 .landing h1, .landing h2, .landing h3 { text-wrap: balance; font-weight: 400; }
@@ -71,7 +75,9 @@
 .landing .tv th { font-size: .62em; font-weight: 500; color: #8FA398; text-align: left; padding: 0 0 .55em; border-bottom: 1px solid rgba(255,255,255,.12); text-transform: uppercase; letter-spacing: .06em; }
 .landing .tv td { padding: .44em 0; border-bottom: 1px solid rgba(255,255,255,.06); background: none; }
 .landing .tv tr { transition: transform .8s cubic-bezier(.25,.8,.25,1), opacity .6s; }
-.landing .tv tr.pre { opacity: 0; transform: translateY(8px); }
+/* radene kommer inn én etter én (forsinkelsen står på raden) */
+.landing .tv tbody tr { animation: landing-row .7s cubic-bezier(.25,.8,.25,1) backwards; }
+@keyframes landing-row { from { opacity: 0; transform: translateY(8px); } }
 .landing .tv td.r, .landing .tv th.r { text-align: right; }
 .landing .tv td.pl { width: 2em; color: #8FA398; }
 .landing .tv td.nm { font-weight: 500; }
@@ -101,8 +107,9 @@
 .landing .morning { position: relative; overflow: hidden; padding-block: clamp(96px, 14vw, 200px); isolation: isolate; }
 .landing canvas.shade { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; mix-blend-mode: multiply; opacity: .16; pointer-events: none; }
 .landing .read { font-size: clamp(30px, 4.2vw, 58px); line-height: 1.12; letter-spacing: -.025em; font-weight: 500; max-width: 24em; }
-.landing .read .w { opacity: .14; transition: opacity .25s; }
-.landing .read .w.on { opacity: 1; }
+.landing .read .w { transition: opacity .25s; }
+.landing.live .read .w { opacity: .14; }
+.landing.live .read .w.on { opacity: 1; }
 .landing .read .soft { color: var(--forest); }
 .landing .morning .by { margin-top: 28px; font-size: 14px; color: var(--ink2); }
 @media (prefers-color-scheme: dark) { .landing canvas.shade { mix-blend-mode: screen; opacity: .05; } .landing .read .soft { color: var(--gold); } }
@@ -128,6 +135,7 @@
 .landing .kcard.img::after { content: ""; position: absolute; inset: 0 0 auto; height: 45%; background: linear-gradient(rgba(0,0,0,.45), transparent); }
 .landing .kcard.img > *:not(img) { position: relative; z-index: 1; }
 .landing .paddles { display: flex; justify-content: flex-end; gap: 14px; }
+.landing:not(.live) .paddles { display: none; }
 .landing .paddles button { width: 36px; height: 36px; border-radius: 50%; border: 0; background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); cursor: pointer; display: grid; place-items: center; padding: 0; }
 .landing .paddles button:disabled { opacity: .35; cursor: default; }
 .landing .paddles svg { width: 14px; height: 14px; }
@@ -146,9 +154,9 @@
 .landing .pscr .pm span.tap { transform: scale(.9); background: var(--gold); color: #16201C; }
 .landing .paste { font-size: 13px; color: var(--ink2); margin: 0 0 10px 4px; }
 .landing .plist { background: var(--bg); border-radius: 18px; padding: 6px 16px; margin-bottom: 30px; font-size: 15px; }
-.landing .plist div { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--rule); opacity: 0; transform: translateY(6px); transition: opacity .45s, transform .55s cubic-bezier(.25,.8,.25,1); }
+.landing .plist div { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--rule); transition: opacity .45s, transform .55s cubic-bezier(.25,.8,.25,1); }
+.landing.live .kcard:not(.in) .plist div { opacity: 0; transform: translateY(6px); }
 .landing .plist div:last-child { border-bottom: 0; }
-.landing .kcard.in .plist div { opacity: 1; transform: none; }
 .landing .plist .h { color: var(--ink2); font-variant-numeric: tabular-nums; margin-left: auto; margin-right: 14px; }
 .landing .plist em { font-style: normal; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 980px; background: var(--lime); color: var(--accent); }
 .landing .plist em.inv { background: #FBEFC8; color: #7A5A10; }
@@ -156,13 +164,13 @@
 .landing .course .h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; font-size: 14px; }
 .landing .course .h span { color: #6E6E73; font-size: 12px; }
 .landing .course .holes { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
-.landing .course .holes i { font-style: normal; display: grid; place-items: center; height: 30px; border-radius: 7px; background: #EEEEEA; font-size: 13px; font-weight: 600; opacity: 0; transform: scale(.7); transition: opacity .35s, transform .45s cubic-bezier(.25,.8,.25,1); }
-.landing .kcard.in .course .holes i { opacity: 1; transform: none; }
+.landing .course .holes i { font-style: normal; display: grid; place-items: center; height: 30px; border-radius: 7px; background: #EEEEEA; font-size: 13px; font-weight: 600; transition: opacity .35s, transform .45s cubic-bezier(.25,.8,.25,1); }
+.landing.live .kcard:not(.in) .course .holes i { opacity: 0; transform: scale(.7); }
 .landing .course .holes i.p3 { background: #E3EFDD; } .landing .course .holes i.p5 { background: #FBEFC8; }
 .landing .simart { margin-bottom: 34px; }
 .landing .simart .code { font-family: var(--num); font-size: 72px; font-weight: 600; letter-spacing: .12em; color: var(--gold); line-height: 1; display: flex; }
-.landing .simart .code span { display: inline-block; opacity: 0; transform: translateY(30%); transition: opacity .5s, transform .7s cubic-bezier(.25,.8,.25,1); }
-.landing .kcard.in .simart .code span { opacity: 1; transform: none; }
+.landing .simart .code span { display: inline-block; transition: opacity .5s, transform .7s cubic-bezier(.25,.8,.25,1); }
+.landing.live .kcard:not(.in) .simart .code span { opacity: 0; transform: translateY(30%); }
 .landing .simart p { font-size: 14px; color: var(--on-dark-2); margin-top: 12px; }
 .landing .bays { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 20px; }
 .landing .bays i { aspect-ratio: 1.5; border-radius: 7px; background: rgba(255,255,255,.08); position: relative; overflow: hidden; }
@@ -199,8 +207,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .landing .in-1, .landing .in-2, .landing .in-3, .landing .in-4, .landing .pitch h1 .ln > span { animation: none; }
-  .landing .tv tr.pre, .landing .plist div, .landing .course .holes i, .landing .simart .code span { opacity: 1; transform: none; transition: none; }
-  .landing .read .w { opacity: 1; }
+  .landing .tv tbody tr { animation: none; }
+  .landing.live .kcard:not(.in) .plist div, .landing.live .kcard:not(.in) .course .holes i, .landing.live .kcard:not(.in) .simart .code span, .landing .plist div, .landing .course .holes i, .landing .simart .code span { opacity: 1; transform: none; transition: none; }
+  .landing.live .read .w { opacity: 1; }
   .landing .bays i.on::after, .landing .pin i { animation: none; }
   .landing .kcard:hover { transform: none; }
 }
+`;

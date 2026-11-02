@@ -1,12 +1,13 @@
 // Rammen rundt nettstedet (src/nettsted.ts): meny, topp med høydekurver, blokker og bunn.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import worker, { HOME_FRAME } from "../src/index.ts";
+import worker from "../src/index.ts";
 import { CONTENT_PAGES } from "../src/innhold.ts";
 import { headingText, joinSegments, splitSections, topoSVG } from "../src/nettsted.ts";
 
 const BASE = "https://dashdash18.com";
 const INDEXED = ["/", "/personvern", "/vilkar", "/support", ...CONTENT_PAGES.map((p) => p.path)];
+const LANDING = new Set(["/", ...CONTENT_PAGES.filter((p) => p.landing).map((p) => p.path)]);
 
 async function html(path: string): Promise<string> {
   return (await worker.fetch(new Request(BASE + path))).text();
@@ -20,7 +21,8 @@ test("alle indekserte sider har menyen, én h1, bunnen og høydekurvene", async 
       assert.ok(body.includes(`href="${href}"`), `${path}: menyen lenker til ${href}`);
     }
     assert.equal((body.match(/<h1[ >]/g) ?? []).length, 1, `${path}: én h1`);
-    assert.match(body, /<main class="dok">/, path);
+    // Salgssidene (forsiden og /for-klubber) har sin egen <main>, se test/salgsside.test.ts.
+    assert.match(body, /<main class="(dok|salg)">/, path);
     assert.match(body, /<footer class="bunn">/, path);
     assert.match(body, /<svg class="kurver"[^>]*aria-hidden="true"/, path);
     // Skriftene er selvhostet og lastes tidlig. Ingenting hentes fra andre domener.
@@ -28,7 +30,9 @@ test("alle indekserte sider har menyen, én h1, bunnen og høydekurvene", async 
     assert.ok(body.includes('<link rel="preload" href="/fonts/newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>'), path);
     assert.match(body, /font-display: swap/, path);
     assert.doesNotMatch(body, /url\(["']?https?:/, `${path}: ingen eksterne skrifter eller bilder i CSS`);
-    assert.doesNotMatch(body, /<script(?![^>]*application\/ld\+json)/, `${path}: ingen skript for utseendet`);
+    // Utseendet trenger ikke skript. Salgssidene har ett inline-skript med nonce for bevegelsen (progressiv forbedring).
+    const scripts = body.match(/<script(?![^>]*application\/ld\+json)[^>]*>/g) ?? [];
+    assert.deepEqual(scripts.map((s) => s.replace(/[0-9a-f]{32}/, "N")), LANDING.has(path) ? ['<script nonce="N">'] : [], `${path}: skript`);
   }
 });
 
@@ -41,7 +45,7 @@ test("menyen markerer siden du er på", async () => {
 });
 
 test("toppen: eyebrow, h1 med gull kursiv del og ingress, med samme tekst som før", async () => {
-  for (const p of CONTENT_PAGES) {
+  for (const p of CONTENT_PAGES.filter((c) => !c.landing)) {
     assert.ok(p.heading, `${p.path}: har heading`);
     const h1 = /<h1>([\s\S]*?)<\/h1>/.exec(p.render ? p.render(new URLSearchParams()) : p.content)?.[1];
     assert.equal(headingText(p.heading!), h1, `${p.path}: loud + soft er teksten i h1`);
@@ -53,8 +57,6 @@ test("toppen: eyebrow, h1 med gull kursiv del og ingress, med samme tekst som f�
     const shown = /<h1>([\s\S]*?)<\/h1>/.exec(body)![1].replace(/<[^>]+>/g, "");
     assert.equal(shown, h1, p.path);
   }
-  const home = await html("/");
-  assert.ok(home.includes(`<h1>${HOME_FRAME.heading!.loud} <span class="soft">${HOME_FRAME.heading!.soft}</span></h1>`));
 });
 
 test("toppen har knapper: egne fra innholdet, ellers App Store og arrangør; ikke over kalkulatoren", async () => {

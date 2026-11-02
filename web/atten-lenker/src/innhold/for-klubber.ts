@@ -5,6 +5,7 @@
 
 import type { ContentPage } from "../innhold.ts";
 import { APP_STORE_URL, SITE } from "../html.ts";
+import { ARRANGOR_BY, ARRANGOR_CARDS, ARRANGOR_READING, demoTavla } from "../../../admin/src/landing/markup.ts";
 
 import { ADMIN_URL } from "../meny.ts";
 
@@ -19,6 +20,7 @@ const CONTENT = `
 <p>Atten er appen og turneringssystemet for den som arrangerer golf: klubbkvelden, simulatorligaen eller firmaturneringen. Spillerne melder seg på og fører scoren hull for hull på telefonen, regelmotoren regner, og tavla på skjermen oppdaterer seg mens de spiller.</p>
 <a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>
 <a class="knapp" href="${ADMIN_URL}" rel="noopener">Logg inn som arrangør</a>
+<p>Ny klubb eller senter? <a href="#ny">Skriv til oss</a></p>
 
 <h2>Turneringssystem for golf: dette får arrangøren</h2>
 <ul>
@@ -53,8 +55,7 @@ const CONTENT = `
 <li>Logg inn på admin.dashdash18.com med samme konto når du vil sette opp fra PC-en.</li>
 </ol>
 <a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>
-<a class="knapp" href="${ADMIN_URL}" rel="noopener">Logg inn som arrangør</a>
-<p class="liten">Ny klubb eller senter? Skriv til <a href="mailto:hei@dashdash18.com">hei@dashdash18.com</a>, så viser vi hvordan en sesong ser ut i Atten.</p>`;
+<a class="knapp" href="${ADMIN_URL}" rel="noopener">Logg inn som arrangør</a>`;
 
 export const FOR_KLUBBER: ContentPage = {
   path: "/for-klubber",
@@ -65,6 +66,21 @@ export const FOR_KLUBBER: ContentPage = {
   eyebrow: "Atten Arrangør · for klubber og simulatorsentre",
   heading: { loud: "Golfturneringen er ferdig regnet", soft: "før dere er i baren" },
   content: CONTENT,
+  // Salgssiden: samme deler som forsiden på admin.dashdash18.com (tavla, setningen, kortene, fotoet), fra samme kilde.
+  landing: {
+    art: demoTavla(),
+    lines: ["Golfturneringen", "er ferdig regnet"],
+    reading: ARRANGOR_READING,
+    by: ARRANGOR_BY,
+    know: { loud: "Bli kjent med", soft: "Arrangør.", cards: ARRANGOR_CARDS },
+    photoAfter: 1,
+    close: {
+      loud: "Ny klubb",
+      soft: "eller senter?",
+      text: `Skriv til <a href="mailto:hei@dashdash18.com">hei@dashdash18.com</a>, så viser vi hvordan en sesong ser ut i Atten.`,
+      buttons: `<a class="knapp" href="mailto:hei@dashdash18.com">Skriv til hei@dashdash18.com</a>\n<a class="knapp" href="${ADMIN_URL}" rel="noopener">Logg inn som arrangør</a>`,
+    },
+  },
   // Ingen aggregateRating: appen har ingen vurderinger å vise.
   jsonLd: {
     "@context": "https://schema.org",

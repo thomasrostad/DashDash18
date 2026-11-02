@@ -55,6 +55,10 @@ Plan: `docs/fase-26-tv-tidsvindu-web.md`.
   `web/atten-lenker/public/`, så logoen er lik på dashdash18.com og her. Endres logoen, kopier dem på nytt.
   Høydefeltet (`fillTopoField` i `landing/topo.ts`) brukes også av dashdash18.com, som tegner kurvene som SVG på
   serveren (`web/atten-lenker/src/nettsted.ts`); skriftene der er kopier av `public/fonts` (02.11.2026).
+  Delene av forsiden står som ren HTML i `landing/markup.ts` (tavla, telefonen, kortene, setningen og fotoet), stilen i
+  `landing/style.ts` (`LANDING_STYLE`, tidligere `landing.css`) og bevegelsen i `landing/live.ts` (`startLanding`, uten
+  React). `Landing.tsx` setter dem inn og kaller `startLanding`; dashdash18.com bruker de samme tre filene på `/` og
+  `/for-klubber` (`web/atten-lenker/src/salgsside.ts`), så endringer her slår gjennom begge steder (02.11.2026).
 
 - [x] Kvelden (01.11.2026, `src/kvelden/`): ny første fane for dem med «Runder og føring». Under en runde: banen med
   flightene (båsene) der de er, kveldens tabell, «Trenger deg» (hull som mangler score mens resten av flighten har gått

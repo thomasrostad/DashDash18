@@ -10,6 +10,7 @@ import { contourLevels, contourSegments, fillTopoField, type Segment } from "../
 import { APP_STORE_URL, escapeHTML } from "./html.ts";
 import { CONTENT_PAGES } from "./innhold.ts";
 import { ADMIN_URL, MENU_STYLE, siteMenu } from "./meny.ts";
+import { landingBody, type Landing } from "./salgsside.ts";
 
 /** Overskriften i toppen: en stor del i versaler og en gull kursiv del. Sammen er de samme tekst som h1. */
 export interface Heading {
@@ -27,6 +28,8 @@ export interface SiteFrame {
   heading?: Heading;
   /** Knapper til App Store og arrangør når innholdet ikke har egne knapper i toppen. */
   cta?: boolean;
+  /** Salgsside (forsiden og /for-klubber): samme deler som forsiden på admin, se src/salgsside.ts. */
+  landing?: Landing;
 }
 
 /** Skriftene (public/fonts, kopier fra web/admin/public/fonts). Lastes tidlig, de brukes i overskriften. */
@@ -103,11 +106,17 @@ export function topoSVG(): string {
 // ---------- innholdet ----------
 
 /** Toppen av innholdet: `<h1>`, første avsnitt (ingressen) og knappene rett etter. */
-const HERO = /^\s*<h1>([\s\S]*?)<\/h1>\s*(?:<p>([\s\S]*?)<\/p>)?((?:\s*<a class="knapp"[^>]*>[\s\S]*?<\/a>)*)/;
+export const HERO = /^\s*<h1>([\s\S]*?)<\/h1>\s*(?:<p>([\s\S]*?)<\/p>)?((?:\s*<a class="knapp"[^>]*>[\s\S]*?<\/a>)*)/;
 
 /** Teksten i `heading`, slik den står i h1 (escapet). */
 export function headingText(heading: Heading): string {
   return heading.soft ? `${escapeHTML(heading.loud)} ${escapeHTML(heading.soft)}` : escapeHTML(heading.loud);
+}
+
+/** Den lille linja over overskriften: det før « · » i gull (`<b>`), resten grått. */
+export function eyebrowHTML(text: string): string {
+  const [first, ...rest] = text.split(" · ");
+  return `<b>${escapeHTML(first)}</b>${rest.length ? ` · ${escapeHTML(rest.join(" · "))}` : ""}`;
 }
 
 function hero(content: string, frame: SiteFrame): { hero: string; rest: string } {
@@ -118,12 +127,7 @@ function hero(content: string, frame: SiteFrame): { hero: string; rest: string }
   const heading = frame.heading && headingText(frame.heading) === h1
     ? (frame.heading.soft ? `${escapeHTML(frame.heading.loud)} <span class="soft">${escapeHTML(frame.heading.soft)}</span>` : h1)
     : h1;
-  const eyebrow = frame.eyebrow
-    ? (() => {
-      const [first, ...rest] = frame.eyebrow.split(" · ");
-      return `<p class="eyebrow"><b>${escapeHTML(first)}</b>${rest.length ? ` · ${escapeHTML(rest.join(" · "))}` : ""}</p>\n`;
-    })()
-    : "";
+  const eyebrow = frame.eyebrow ? `<p class="eyebrow">${eyebrowHTML(frame.eyebrow)}</p>\n` : "";
   const knapper = buttons.trim() ||
     (frame.cta
       ? `<a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>\n` +
@@ -162,7 +166,8 @@ function blocks(html: string): string {
 
 // ---------- meny og bunn ----------
 
-const FOOTER = `<footer class="bunn">
+/** Bunnen med lenkene. `credit`: f.eks. hvem som har tatt bildene på siden. */
+export const siteFooter = (credit?: string) => `<footer class="bunn">
 <div class="wrap kolonner">
 <div class="om"><a class="wordmark" href="/">Atten<i>.</i></a>
 <p>Golfappen for turnering, liga og golfgjengen. Ingen sporing og ingen cookies.</p>
@@ -170,11 +175,12 @@ const FOOTER = `<footer class="bunn">
 <nav aria-label="Sider"><p class="tittel">Sider</p><ul>${CONTENT_PAGES.map((p) => `<li><a href="${p.path}">${escapeHTML(p.linkText)}</a></li>`).join("")}</ul></nav>
 <nav aria-label="Om Atten"><p class="tittel">Om Atten</p><ul><li><a href="/personvern">Personvern</a></li><li><a href="/vilkar">Vilkår</a></li><li><a href="/support">Support</a></li><li><a href="${ADMIN_URL}" rel="noopener">Logg inn som arrangør</a></li></ul></nav>
 </div>
-<div class="wrap linje"><span>Atten er laget av DashDash18 i Oslo.</span><span>dashdash18.com</span></div>
+<div class="wrap linje"><span>Atten er laget av DashDash18 i Oslo.</span><span>${credit ? `${escapeHTML(credit)} · ` : ""}dashdash18.com</span></div>
 </footer>`;
 
 /** Alt inne i `<body>` for en side på nettstedet. `content` er HTML-en som før (med h1 først). */
 export function siteBody(content: string, mainClass: string, frame: SiteFrame): string {
+  if (frame.landing) return landingBody(content, frame, frame.landing);
   const top = frame.hero ? hero(content, frame) : { hero: "", rest: content };
   const inner = frame.hero
     ? `${top.hero}\n<div class="blokker">\n${blocks(top.rest)}</div>`
@@ -185,11 +191,11 @@ ${topoSVG()}
 <main class="${mainClass}">
 ${inner}
 </main>
-${FOOTER}
+${siteFooter()}
 </div>`;
 }
 
-// Fargene og typografien er fra web/admin/src/styles.css og landing/landing.css (--night, --gold, --on-dark,
+// Fargene og typografien er fra web/admin/src/styles.css og landing/style.ts (--night, --gold, --on-dark,
 // .loud, .soft, .wordmark). Gull (#E4C767) på natt (#0A1712) har kontrast over 10:1, grågrønn (#9DB0A5) over 7:1.
 export const SITE_STYLE = `
   @font-face { font-family: "Archivo"; font-style: normal; font-weight: 400 900; font-stretch: 62% 125%; font-display: swap; src: url("/fonts/archivo-latin.woff2") format("woff2"); }
@@ -222,12 +228,12 @@ export const SITE_STYLE = `
 
 ${MENU_STYLE}
   /* toppen: som forsiden på admin.dashdash18.com */
-  .hero { padding-block: clamp(36px, 8vw, 104px) clamp(48px, 7vw, 96px); max-width: 1180px; }
+  .side .hero { padding-block: clamp(36px, 8vw, 104px) clamp(48px, 7vw, 96px); max-width: 1180px; }
   .eyebrow { font-size: 14px; color: var(--on-dark-2); letter-spacing: .02em; margin: 0 0 18px; }
   .eyebrow b { color: var(--gold); font-weight: 600; }
-  .hero h1 { font-family: var(--sans); font-stretch: 62%; font-weight: 800; text-transform: uppercase; line-height: .9; letter-spacing: 0;
+  .side .hero h1 { font-family: var(--sans); font-stretch: 62%; font-weight: 800; text-transform: uppercase; line-height: .9; letter-spacing: 0;
     font-size: clamp(38px, 10.4vw, 108px); margin: 0; max-width: 11em; text-wrap: balance; overflow-wrap: break-word; }
-  .hero h1 .soft { display: block; color: var(--gold); font-size: .62em; line-height: 1.04; margin-top: .14em; }
+  .side .hero h1 .soft { display: block; color: var(--gold); font-size: .62em; line-height: 1.04; margin-top: .14em; }
   .ingress { font-size: clamp(17px, 1.5vw, 20px); color: var(--on-dark-2); max-width: 36em; margin: 26px 0 0; }
   .knapper { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
   .knapp { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 24px; border-radius: 999px;
@@ -239,7 +245,7 @@ ${MENU_STYLE}
   /* innholdet: hver h2 er en blokk med tynn kant, overskriften til venstre på PC */
   main { flex: 1; }
   .blokker { display: grid; gap: 20px; padding-bottom: clamp(48px, 8vw, 96px); }
-  .blokker, .hero { width: 100%; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+  .blokker, .side .hero { width: 100%; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
   .blokker { max-width: 1180px; }
   .blokk { background: var(--flate); border: 1px solid var(--rule); border-radius: 22px; padding: clamp(22px, 4vw, 44px); min-width: 0; }
   .blokk:not(.enkel) { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 56px; }

@@ -8,6 +8,7 @@ import { GUIDE_GOLFTURNERING } from "./innhold/guide-golfturnering.ts";
 import { GUIDE_GOLFLIGA } from "./innhold/guide-golfliga.ts";
 import { GUIDE_SPILLFORMER } from "./innhold/guide-spillformer.ts";
 import type { Heading } from "./nettsted.ts";
+import type { Landing } from "./salgsside.ts";
 
 export interface ContentPage {
   /** Adressen, uten skråstrek til slutt (f.eks. "/stableford"). */
@@ -41,6 +42,8 @@ export interface ContentPage {
   style?: string;
   /** Valgfritt skript for siden (kjøres med nonce, ingen eksterne skript). */
   script?: string;
+  /** Valgfritt: siden er en salgsside med delene fra forsiden på web-admin (src/salgsside.ts). */
+  landing?: Landing;
   /** Valgfrie strukturerte data (schema.org), legges inn som JSON-LD. */
   jsonLd?: Record<string, unknown>;
 }

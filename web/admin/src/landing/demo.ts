@@ -1,5 +1,5 @@
 // Eksempeltavla på forsiden. Oppdiktede navn og poeng, merket som eksempel på siden.
-// Ren logikk (testes i test/landingDemo.test.ts); visningen står i DemoTavla.tsx.
+// Ren logikk (testes i test/landing.test.ts); tavla lages i markup.ts og settes i gang av live.ts.
 
 export interface DemoPlayer { name: string; points: number; rounds: number[] }
 export interface DemoEvent { name: string; hole: number; what: "birdie" | "eagle"; add: number }
