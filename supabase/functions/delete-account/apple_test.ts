@@ -12,6 +12,7 @@ import {
   appleConfigFrom,
   appleSubjectOf,
   base64url,
+  CLIENT_SECRET_MAX_TTL_SECONDS,
   CLIENT_SECRET_TTL_SECONDS,
   importAppleKey,
   makeClientSecret,
@@ -103,6 +104,25 @@ Deno.test("client secret er en ES256-JWT med riktige claims, og signaturen holde
 
 Deno.test("levetiden er høyst seks måneder, slik Apple krever", () => {
   ok(CLIENT_SECRET_TTL_SECONDS > 0 && CLIENT_SECRET_TTL_SECONDS <= 15_777_000);
+});
+
+Deno.test("secret-en til Supabase Auth kan vare i seks måneder, men ikke lenger", async () => {
+  const { pem } = await testKey();
+  const key = await importAppleKey(pem);
+  const cfg = { ...config(pem), clientId: "com.dashdash18.app.web" };
+  const jwt = await makeClientSecret(key, cfg, NOW_S, CLIENT_SECRET_MAX_TTL_SECONDS);
+  const claims = decodePart(jwt.split(".")[1]);
+  is(claims.exp, NOW_S + CLIENT_SECRET_MAX_TTL_SECONDS);
+  is(claims.sub, "com.dashdash18.app.web");
+  for (const ttl of [0, -1, CLIENT_SECRET_MAX_TTL_SECONDS + 1]) {
+    let threw = false;
+    try {
+      await makeClientSecret(key, cfg, NOW_S, ttl);
+    } catch {
+      threw = true;
+    }
+    ok(threw, `levetid ${ttl} skal avvises`);
+  }
 });
 
 Deno.test("nøkkelen godtas med «\\n» i stedet for linjeskift", async () => {

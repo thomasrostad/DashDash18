@@ -41,6 +41,11 @@ Oppdatert 08.10.2026. Det Claude ikke kan gjøre selv, i den rekkefølgen det b�
 - [ ] **15.** Eksporter fra PWA-en og kjør prøveimport (stegene står i `docs/import-plan.md`).
 - [ ] **16.** Si ja til prod-oppsett, så setter Claude det opp på samme måte som test.
 
+## E. Logg inn med Apple på web-admin (og Android senere)
+
+- [ ] **17. Apple Developer og Supabase:** Services ID `com.dashdash18.app.web`, nøkkel og client secret, så Supabase test og prod. Stegene står i `docs/apple-web.md`. *I Supabase → Apple → Client IDs: `com.dashdash18.app.web,com.dashdash18.app` (Services ID først, bundle-id-en må bli stående, ellers slutter Apple i appen å virke).*
+- [ ] **18. Ny Apple client secret hver sjette måned** (`docs/apple-web.md` punkt 5). Secret-en går ut 180 dager etter at den lages; da slutter Apple-innloggingen på web. Neste fornyelse: *[dato fylles inn når secret-en er laget]*. Legg også en påminnelse i kalenderen.
+
 ## Besvart 08.10.2026
 
 - Blokkerte kan ikke bli med i din private konkurranse med koden. *(025 kjørt på test 08.10, kontrollen 7 av 7.)*

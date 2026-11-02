@@ -21,6 +21,9 @@ export const APPLE_AUDIENCE = "https://appleid.apple.com";
 /** Client secret-en lever kort: den lages for hvert kall (Apple tillater opptil seks måneder). */
 export const CLIENT_SECRET_TTL_SECONDS = 5 * 60;
 
+/** Apple godtar høyst seks måneder (15 777 000 s). Grensen for secret-en til Supabase Auth (docs/apple-web.md). */
+export const CLIENT_SECRET_MAX_TTL_SECONDS = 15_777_000;
+
 /** Så lenge vi venter på Apple før vi gir opp og lar slettingen bli ferdig. */
 export const APPLE_TIMEOUT_MS = 10_000;
 
@@ -120,12 +123,18 @@ export function importAppleKey(pem: string): Promise<CryptoKey> {
  * Header {alg: ES256, kid}, claims {iss: team, iat, exp, aud: appleid.apple.com, sub: client id}.
  * WebCrypto gir signaturen som r||s (64 byte), som er formatet JWS bruker.
  */
-export async function makeClientSecret(key: CryptoKey, config: AppleConfig, issuedAtSeconds: number): Promise<string> {
+export async function makeClientSecret(
+  key: CryptoKey,
+  config: AppleConfig,
+  issuedAtSeconds: number,
+  ttlSeconds: number = CLIENT_SECRET_TTL_SECONDS,
+): Promise<string> {
+  if (!(ttlSeconds > 0 && ttlSeconds <= CLIENT_SECRET_MAX_TTL_SECONDS)) throw new Error("levetiden må være over 0 og høyst seks måneder");
   const header = { alg: "ES256", kid: config.keyId };
   const claims = {
     iss: config.teamId,
     iat: issuedAtSeconds,
-    exp: issuedAtSeconds + CLIENT_SECRET_TTL_SECONDS,
+    exp: issuedAtSeconds + ttlSeconds,
     aud: APPLE_AUDIENCE,
     sub: config.clientId,
   };
