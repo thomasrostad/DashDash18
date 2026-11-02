@@ -1,6 +1,6 @@
 # Atten · Arrangør (web-admin)
 
-Arrangørsiden i nettleseren: https://admin.dashdash18.com. Samme innlogging (Google og e-postkode), samme Supabase og
+Arrangørsiden i nettleseren: https://admin.dashdash18.com. Samme innlogging (Apple, Google og e-postkode), samme Supabase og
 samme tilgangsregler (RLS og RPC-ene) som appen. Bare publishable key; ingen egne servertilganger.
 Plan: `docs/fase-26-tv-tidsvindu-web.md`.
 
@@ -97,4 +97,5 @@ e-post gir samme konto som i appen. Google kan ikke sperre nye brukere, men en n
 Returadressen må stå i Supabase → Authentication → URL Configuration → Redirect URLs: `https://admin.dashdash18.com/**`
 i prod og `http://localhost:5178/**` i test, ved siden av `dashdash://login-callback`. Mangler den, sender Supabase
 brukeren til dashdash18.com i stedet.
-Apple-innlogging på web krever en egen Services ID hos Apple og er ikke med ennå.
+«Fortsett med Apple» bruker samme mekanisme og samme returadresser, men krever Services ID og secret i Supabase
+(`docs/apple-web.md`). Secret-en utløper etter seks måneder; da feiler Apple-knappen til den er fornyet.
