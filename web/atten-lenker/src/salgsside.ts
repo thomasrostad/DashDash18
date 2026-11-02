@@ -3,11 +3,14 @@
 // bevegelsen fra live.ts (inline-skript med nonce). Teksten for Google (h1, ingress, knappene og h2-blokkene) står i
 // innholdet som før og plasseres i delene her, så søkeordene og overskriftene er de samme.
 //
-// Uten skript står alt ferdig: tavla, kortene og setningen er server-rendret. Høydekurvene er SVG-en fra nettsted.ts.
+// Uten skript står alt ferdig: tavla, kortene og setningen er server-rendret. Høydekurvene er SVG-en fra nettsted.ts;
+// med skript tar lerretet over, tegnet av startTopo fra topo.ts, som på admin.
 
 import { startLanding } from "../../admin/src/landing/live.ts";
 import { demoTavla, PHOTO_CREDIT, photoBand, rail, readingLine, type ReadingPart } from "../../admin/src/landing/markup.ts";
 import { LANDING_STYLE } from "../../admin/src/landing/style.ts";
+import { CLOSE_TOPO, contourLevels, contourSegments, fillTopoField, HERO_TOPO, noise3, startTopo, TOPO_PERM, topoFade, topoGrad,
+         topoLerp, type TopoOptions } from "../../admin/src/landing/topo.ts";
 import { escapeHTML } from "./html.ts";
 import { siteMenu } from "./meny.ts";
 import { eyebrowHTML, headingText, HERO, siteFooter, splitSections, topoSVG, type SiteFrame } from "./nettsted.ts";
@@ -44,6 +47,8 @@ export const LANDING_SITE_STYLE = `
   .landing th, .landing td { text-align: left; vertical-align: top; }
   .landing .kurver { height: 100%; -webkit-mask-image: none; mask-image: none; }
   .landing .close .kurver { opacity: .55; }
+  /* levende kurver: lerretet tar over for SVG-en når skriptet kjører */
+  .landing.topo-live .kurver { display: none; }
   /* på lys flate er gull for svakt: fokus, lenker og punkter i --accent (skoggrønt, lys grønn i mørk modus) */
   .landing .morning, .landing .know, .landing .tekster { --mark: var(--accent); }
   .landing .morning :focus-visible, .landing .know :focus-visible, .landing .tekster :focus-visible { outline-color: var(--mark); }
@@ -92,8 +97,24 @@ export const LANDING_SITE_STYLE = `
   .landing .close p a { color: var(--on-dark); }
 `;
 
-/** Inline-skriptet: live.ts som tekst, kjørt på `.landing` (siden er server-rendret, skriptet bare setter i gang). */
-export const LANDING_SCRIPT = `{ const root = document.querySelector(".landing"); if (root) (${startLanding.toString()})(root); }`;
+/** De levende høydekurvene: topo.ts som tekst. Hjelperne har unike navn (se TOPO_PERM), så teksten virker også i
+ *  workerens bunt. Lerretene uten 2D-tegning beholder SVG-en. */
+const TOPO_SCRIPT = [
+  `const TOPO_PERM = new Uint8Array([${Array.from(TOPO_PERM).join(",")}]);`,
+  `const ${topoFade.name} = ${topoFade};`,
+  `const ${topoLerp.name} = ${topoLerp};`,
+  `${topoGrad}`, `${noise3}`, `${contourSegments}`, `${contourLevels}`, `${fillTopoField}`, `${startTopo}`,
+  `const canvases = [...root.querySelectorAll("canvas[data-topo]")].filter((c) => c.getContext("2d"));`,
+  `for (const c of canvases) ${startTopo.name}(c, JSON.parse(c.dataset.topo));`,
+  `if (canvases.length) root.classList.add("topo-live");`,
+].join("\n");
+
+/** Inline-skriptet: live.ts som tekst, kjørt på `.landing` (siden er server-rendret, skriptet bare setter i gang),
+ *  og de levende høydekurvene. */
+export const LANDING_SCRIPT = `{ const root = document.querySelector(".landing"); if (root) { (${startLanding.toString()})(root);\n${TOPO_SCRIPT}\n} }`;
+
+/** Lerretet for de levende kurvene, ved siden av SVG-en. */
+const topoCanvas = (o: TopoOptions) => `<canvas class="topo" aria-hidden="true" data-topo="${escapeHTML(JSON.stringify(o))}"></canvas>`;
 
 /** h1 med den store delen på linjer (som på admin) og den gule kursive delen. Teksten er den samme som før. */
 function heading(h1: string, frame: SiteFrame, landing: Landing): string {
@@ -120,6 +141,7 @@ export function landingBody(content: string, frame: SiteFrame, landing: Landing)
 <main class="salg">
 <header class="hero">
 ${topoSVG()}
+${topoCanvas(HERO_TOPO)}
 <div class="pin" aria-hidden="true"><i></i><span>Green 7 · fall 2,1 %</span></div>
 <div class="lnav">${siteMenu({ current: frame.path })}</div>
 <div class="wrap"><div class="first">
@@ -140,6 +162,7 @@ ${rail(landing.know.cards, `${landing.know.loud} ${landing.know.soft}`.replace(/
 ${tekster(sections.slice(0, landing.photoAfter))}${photoBand()}
 ${tekster(sections.slice(landing.photoAfter))}<section class="close" id="ny">
 ${topoSVG()}
+${topoCanvas(CLOSE_TOPO)}
 <div class="wrap">
 <div><h2><span class="loud">${escapeHTML(landing.close.loud)}</span><span class="soft">${escapeHTML(landing.close.soft)}</span></h2>
 <p>${landing.close.text}</p></div>

@@ -5,7 +5,9 @@
 /** Et linjestykke i pikselkoordinater: [x1, y1, x2, y2]. */
 export type Segment = [number, number, number, number];
 
-const PERM = (() => {
+/** Stokkingen til støyen. Hjelperne har egne navn og eksporteres, fordi dashdash18.com setter dem sammen til
+ *  et inline-skript (web/atten-lenker/src/salgsside.ts): navnene må være unike i workerens bunt. */
+export const TOPO_PERM = (() => {
   const p = Array.from({ length: 256 }, (_, i) => i);
   // Fast stokking, så kurvene ser like ut hver gang siden lastes.
   let s = 7;
@@ -17,9 +19,9 @@ const PERM = (() => {
   return Uint8Array.from([...p, ...p]);
 })();
 
-const fade = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-function grad(h: number, x: number, y: number, z: number): number {
+export const topoFade = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
+export const topoLerp = (a: number, b: number, t: number) => a + (b - a) * t;
+export function topoGrad(h: number, x: number, y: number, z: number): number {
   const u = h < 8 ? x : y;
   const v = h < 4 ? y : h === 12 || h === 14 ? x : z;
   return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
@@ -29,13 +31,13 @@ function grad(h: number, x: number, y: number, z: number): number {
 export function noise3(x: number, y: number, z: number): number {
   const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
   x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
-  const u = fade(x), v = fade(y), w = fade(z);
-  const A = PERM[X] + Y, AA = PERM[A] + Z, AB = PERM[A + 1] + Z, B = PERM[X + 1] + Y, BA = PERM[B] + Z, BB = PERM[B + 1] + Z;
-  return lerp(
-    lerp(lerp(grad(PERM[AA] & 15, x, y, z), grad(PERM[BA] & 15, x - 1, y, z), u),
-      lerp(grad(PERM[AB] & 15, x, y - 1, z), grad(PERM[BB] & 15, x - 1, y - 1, z), u), v),
-    lerp(lerp(grad(PERM[AA + 1] & 15, x, y, z - 1), grad(PERM[BA + 1] & 15, x - 1, y, z - 1), u),
-      lerp(grad(PERM[AB + 1] & 15, x, y - 1, z - 1), grad(PERM[BB + 1] & 15, x - 1, y - 1, z - 1), u), v),
+  const u = topoFade(x), v = topoFade(y), w = topoFade(z);
+  const A = TOPO_PERM[X] + Y, AA = TOPO_PERM[A] + Z, AB = TOPO_PERM[A + 1] + Z, B = TOPO_PERM[X + 1] + Y, BA = TOPO_PERM[B] + Z, BB = TOPO_PERM[B + 1] + Z;
+  return topoLerp(
+    topoLerp(topoLerp(topoGrad(TOPO_PERM[AA] & 15, x, y, z), topoGrad(TOPO_PERM[BA] & 15, x - 1, y, z), u),
+      topoLerp(topoGrad(TOPO_PERM[AB] & 15, x, y - 1, z), topoGrad(TOPO_PERM[BB] & 15, x - 1, y - 1, z), u), v),
+    topoLerp(topoLerp(topoGrad(TOPO_PERM[AA + 1] & 15, x, y, z - 1), topoGrad(TOPO_PERM[BA + 1] & 15, x - 1, y, z - 1), u),
+      topoLerp(topoGrad(TOPO_PERM[AB + 1] & 15, x, y - 1, z - 1), topoGrad(TOPO_PERM[BB + 1] & 15, x - 1, y - 1, z - 1), u), v),
     w);
 }
 
@@ -83,6 +85,10 @@ export interface TopoOptions {
   cx: number; cy: number; r: number;
   speed?: number;
 }
+
+/** Kurvene i toppen og i avslutningen (admin-forsiden og salgssidene på dashdash18.com). */
+export const HERO_TOPO: TopoOptions = { weak: "rgba(228,199,103,.19)", strong: "rgba(228,199,103,.46)", levels: 18, cx: 0.7, cy: 0.55, r: 0.42 };
+export const CLOSE_TOPO: TopoOptions = { weak: "rgba(228,199,103,.10)", strong: "rgba(228,199,103,.26)", levels: 14, cx: 0.8, cy: 0.4, r: 0.5, speed: 0.003 };
 
 /** Fyller høydefeltet (`cols × rows` punkter med `step` piksler mellom, flaten er `W × H`) ved tiden `t`:
  *  støy pluss greenens kul, og pekeren som trykker feltet ned. Brukes også av dashdash18.com (web/atten-lenker),

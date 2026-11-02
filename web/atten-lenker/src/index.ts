@@ -7,7 +7,7 @@ import { CONTENT_PAGES, contentPage } from "./innhold.ts";
 import { captchaResponse } from "./captcha.ts";
 import { SITE_FONTS, SITE_STYLE, siteBody, type SiteFrame } from "./nettsted.ts";
 import { LANDING_HEAD_STYLE, LANDING_SCRIPT, type Landing } from "./salgsside.ts";
-import { card, courseArt, FAIRWAY, phone, rosterArt, rulesArt, simArt } from "../../admin/src/landing/markup.ts";
+import { card, courseArt, demoTavla, FAIRWAY, rosterArt, rulesArt, simArt } from "../../admin/src/landing/markup.ts";
 // Atten på https://dashdash18.com: filen som kobler domenet til appen (universelle lenker),
 // og en enkel side for invitasjonslenker når appen ikke er installert.
 //
@@ -299,14 +299,10 @@ function jsonLdScript(data: Record<string, unknown>, nonce: string): string {
 }
 
 /// Forsiden er en salgsside for spillerne og golfgjengen (src/salgsside.ts), med samme deler som forsiden på
-/// web-admin. Navn, poeng og koder på telefonen og i kortene er oppdiktet. Påstandene er de samme som i teksten under
+/// web-admin, med TV-skjermen med tavla i toppen. Navn, poeng og koder på tavla og i kortene er oppdiktet. Påstandene er de samme som i teksten under
 /// (og i README.md, «Hva appen gjør nå»).
 export const HOME_LANDING: Landing = {
-  art: `<div class="screen">${phone({
-    top: ["Losby · gul", "Hull 7 av 18"], hole: "Par 4 · 352 m · idx 3", player: "Kari", score: 4,
-    extra: '<div class="mini"><p>Kvelden så langt · eksempel</p><div><span>1</span><b>Kari M.</b><em>16</em></div>' +
-      '<div><span>2</span><b>Jon B.</b><em>15</em></div><div><span>3</span><b>Marte L.</b><em>13</em></div></div>',
-  })}<p class="cap"><em>Scorekortet i appen.</em> Poengene regnes mens dere spiller.</p></div>`,
+  art: demoTavla(),
   lines: ["Golfkvelden", "med gjengen,"],
   reading: [
     { text: "Golfkvelden fortjener bedre enn et regneark og meldinger på kryss og tvers. Med Atten fører alle sitt eget kort, appen regner poengene, og " },
