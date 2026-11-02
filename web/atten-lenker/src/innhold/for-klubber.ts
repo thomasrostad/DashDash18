@@ -6,7 +6,9 @@
 import type { ContentPage } from "../innhold.ts";
 import { APP_STORE_URL, SITE } from "../html.ts";
 
-export const ADMIN_URL = "https://admin.dashdash18.com";
+import { ADMIN_URL } from "../meny.ts";
+
+export { ADMIN_URL };
 
 const TITLE = "Turneringssystem for golfklubber og simulatorsentre – Atten";
 const DESCRIPTION =
