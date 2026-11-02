@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { SignIn } from "../SignIn.tsx";
-import { ARRANGOR_BY, ARRANGOR_CARDS, ARRANGOR_READING, demoTavla, PHOTO_CREDIT, photoBand, rail, readingLine } from "./markup.ts";
+import { ARRANGOR_BY, ARRANGOR_CARDS, ARRANGOR_HERO, ARRANGOR_READING, demoTavla, PHOTO_CREDIT, photoBand, rail, readingLine } from "./markup.ts";
 import { startLanding } from "./live.ts";
 import { startShade } from "./shade.ts";
 import { LANDING_STYLE } from "./style.ts";
@@ -63,12 +63,12 @@ export function Landing() {
         <div className="wrap">
           <div className="first">
             <div className="pitch">
-              <p className="name in-1"><b>Atten Arrangør</b> · for klubber og simulatorsentre</p>
+              <p className="name in-1"><b>{ARRANGOR_HERO.eyebrow}</b> · {ARRANGOR_HERO.eyebrowRest}</p>
               <h1>
-                <span className="loud"><span className="ln"><span>Tabellen</span></span><span className="ln"><span>er ferdig</span></span></span>
-                <span className="soft in-2">før dere er i baren.</span>
+                <span className="loud">{ARRANGOR_HERO.loud.map((l) => <span className="ln" key={l}><span>{l}</span></span>)}</span>
+                <span className="soft in-2">{ARRANGOR_HERO.soft}</span>
               </h1>
-              <p className="sub in-3">Serier, cuper og simulatorligaer, satt opp fra PC-en. Spillerne fører i appen, og tavla på TV-en oppdaterer seg mens de spiller.</p>
+              <p className="sub in-3">{ARRANGOR_HERO.ingress}</p>
               <div className="in-4"><SignIn /></div>
               <p className="new in-4">Ny klubb eller senter? <a href="#ny">Se hvordan det virker</a></p>
             </div>

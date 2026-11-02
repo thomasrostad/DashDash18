@@ -150,6 +150,15 @@ export function photoBand(): string {
 
 // ---------- innholdet for arrangører (admin-forsiden og dashdash18.com/for-klubber) ----------
 
+/** Toppen: samme tekst på admin-forsiden og /for-klubber (Thomas 02.11.2026). `loud` er linjene i versaler. */
+export const ARRANGOR_HERO = {
+  eyebrow: "Atten Arrangør",
+  eyebrowRest: "for klubber og simulatorsentre",
+  loud: ["Tabellen", "er ferdig"],
+  soft: "før dere er i baren.",
+  ingress: "Atten er appen og turneringssystemet for den som arrangerer golf: klubbkvelden, simulatorligaen eller firmaturneringen. Spillerne melder seg på og fører scoren hull for hull på telefonen, regelmotoren regner, og tavla på skjermen oppdaterer seg mens de spiller.",
+} as const;
+
 export const ARRANGOR_READING: readonly ReadingPart[] = [
   { text: "Klubbkvelden fortjener bedre enn et regneark som blir ferdig klokka ett om natta. Med Atten fører spillerne selv, regelmotoren regner, og " },
   { text: "tavla står på skjermen", soft: true },

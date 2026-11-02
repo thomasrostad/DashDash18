@@ -41,7 +41,7 @@ test("forsiden og /for-klubber har delene fra admin-forsiden", async () => {
 test("toppen: h1 har samme tekst som før, men delt i linjer og en kursiv del", async () => {
   const cases: [string, string][] = [
     ["/", "Golfkvelden med gjengen, samlet i én app"],
-    ["/for-klubber", "Golfturneringen er ferdig regnet før dere er i baren"],
+    ["/for-klubber", "Tabellen er ferdig før dere er i baren."],
   ];
   for (const [path, h1] of cases) {
     const { body } = await html(path);
