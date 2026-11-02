@@ -107,6 +107,8 @@ export const GUIDE_SPILLFORMER: ContentPage = {
   description: DESCRIPTION,
   lastmod: PUBLISHED,
   linkText: "Spillformer i golf",
+  eyebrow: "Guide · spillformer",
+  heading: { loud: "Spillformer", soft: "i golf" },
   content: CONTENT,
   jsonLd: {
     "@context": "https://schema.org",
