@@ -4,6 +4,7 @@
 
 import { FOR_KLUBBER } from "./innhold/for-klubber.ts";
 import { guideGolfturnering } from "./innhold/guide-golfturnering.ts";
+import { GUIDE_GOLFLIGA } from "./innhold/guide-golfliga.ts";
 
 export interface ContentPage {
   /** Adressen, uten skråstrek til slutt (f.eks. "/stableford"). */
@@ -27,6 +28,7 @@ export interface ContentPage {
 export const CONTENT_PAGES: readonly ContentPage[] = [
   FOR_KLUBBER,
   guideGolfturnering,
+  GUIDE_GOLFLIGA,
 ];
 
 export function contentPage(pathname: string): ContentPage | null {
