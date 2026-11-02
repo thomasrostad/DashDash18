@@ -2,6 +2,8 @@
 // src/innhold/ og legges til med én linje i CONTENT_PAGES. Ruting, sitemap.xml og lenkene i bunnen av
 // de indekserte sidene hentes herfra (src/index.ts), så en ny side trenger ingen andre endringer.
 
+import { FOR_KLUBBER } from "./innhold/for-klubber.ts";
+
 export interface ContentPage {
   /** Adressen, uten skråstrek til slutt (f.eks. "/stableford"). */
   path: string;
@@ -22,6 +24,7 @@ export interface ContentPage {
 }
 
 export const CONTENT_PAGES: readonly ContentPage[] = [
+  FOR_KLUBBER,
 ];
 
 export function contentPage(pathname: string): ContentPage | null {
