@@ -6,6 +6,8 @@ import { legalPage } from "./juridisk.ts";
 import { CONTENT_PAGES, contentPage } from "./innhold.ts";
 import { captchaResponse } from "./captcha.ts";
 import { SITE_FONTS, SITE_STYLE, siteBody, type SiteFrame } from "./nettsted.ts";
+import { LANDING_HEAD_STYLE, LANDING_SCRIPT, type Landing } from "./salgsside.ts";
+import { card, courseArt, FAIRWAY, phone, rosterArt, rulesArt, simArt } from "../../admin/src/landing/markup.ts";
 // Atten på https://dashdash18.com: filen som kobler domenet til appen (universelle lenker),
 // og en enkel side for invitasjonslenker når appen ikke er installert.
 //
@@ -155,8 +157,11 @@ const STYLE = `
 
 /// `index`: siden skal vises i Google (forsiden, personvern, vilkår og support). `head`: ekstra meta-tagger (allerede escapet).
 /// `site`: siden er en del av nettstedet og får rammen i src/nettsted.ts (meny, topp med høydekurver, blokker og bunn).
+/// Med `site.landing` er den en salgsside (src/salgsside.ts) og får stilen og skriptet fra forsiden på web-admin.
 function page(title: string, content: string, nonce: string, script = "", mainClass = "",
               options: { index?: boolean; head?: string; site?: SiteFrame } = {}): string {
+  const landing = options.site?.landing !== undefined;
+  const scripts = [script, landing ? LANDING_SCRIPT : ""].filter(Boolean).join("\n");
   const body = options.site
     ? siteBody(content, mainClass, options.site)
     : `<main${mainClass ? ` class="${mainClass}"` : ""}>
@@ -173,11 +178,11 @@ ${options.index ? "" : '<meta name="robots" content="noindex">\n'}${options.head
 <title>${escapeHTML(title)}</title>
 ${ICON_LINKS}
 ${options.site ? SITE_FONTS : '<link rel="preload" href="/fonts/Figtree.woff2" as="font" type="font/woff2" crossorigin>'}
-<style>${options.site ? SITE_STYLE : STYLE}</style>
+<style>${options.site ? SITE_STYLE + (landing ? LANDING_HEAD_STYLE : "") : STYLE}</style>
 </head>
 <body>
 ${body}
-${script ? `<script nonce="${nonce}">${script}</script>` : ""}
+${scripts ? `<script nonce="${nonce}">${scripts}</script>` : ""}
 </body>
 </html>
 `;
@@ -293,6 +298,62 @@ function jsonLdScript(data: Record<string, unknown>, nonce: string): string {
   return `<script type="application/ld+json" nonce="${nonce}">${json}</script>\n`;
 }
 
+/// Forsiden er en salgsside for spillerne og golfgjengen (src/salgsside.ts), med samme deler som forsiden på
+/// web-admin. Navn, poeng og koder på telefonen og i kortene er oppdiktet. Påstandene er de samme som i teksten under
+/// (og i README.md, «Hva appen gjør nå»).
+export const HOME_LANDING: Landing = {
+  art: `<div class="screen">${phone({
+    top: ["Losby · gul", "Hull 7 av 18"], hole: "Par 4 · 352 m · idx 3", player: "Kari", score: 4,
+    extra: '<div class="mini"><p>Kvelden så langt · eksempel</p><div><span>1</span><b>Kari M.</b><em>16</em></div>' +
+      '<div><span>2</span><b>Jon B.</b><em>15</em></div><div><span>3</span><b>Marte L.</b><em>13</em></div></div>',
+  })}<p class="cap"><em>Scorekortet i appen.</em> Poengene regnes mens dere spiller.</p></div>`,
+  lines: ["Golfkvelden", "med gjengen,"],
+  reading: [
+    { text: "Golfkvelden fortjener bedre enn et regneark og meldinger på kryss og tvers. Med Atten fører alle sitt eget kort, appen regner poengene, og " },
+    { text: "tavla viser hvem som leder", soft: true },
+    { text: " før dere er tilbake i klubbhuset." },
+  ],
+  by: "Atten. Laget for gjengen som spiller sammen hele sesongen.",
+  know: {
+    loud: "Bli kjent med",
+    soft: "Atten.",
+    cards: [
+      card({
+        eyebrow: "Tavla", title: "Hvem leder?", em: "Alle ser det mens dere spiller.",
+        art: rulesArt([["Kari Moen", "38 poeng"], ["Henrik A.", "36 poeng"], ["Marte L.", "35 poeng"], ["Jon B.", "33 poeng"]]),
+      }),
+      card({
+        eyebrow: "Golfgjengen", title: "Inviter med en lenke.", em: "Gjester trenger ingen konto.",
+        art: rosterArt("Alle får lenken i gruppechatten.", [
+          { name: "Kari Moen", hcp: "12,4", label: "Med" },
+          { name: "Jonas Lie", hcp: "22,7", label: "Gjest", wait: true },
+          { name: "Marte Lunde", hcp: "18,0", label: "Med" },
+          { name: "Jon Berg", hcp: "6,3", label: "Med" },
+        ]),
+      }),
+      card({
+        eyebrow: "Simulatorkvelden", title: "Bane eller simulator.", em: "Det virker likt.", look: "dark",
+        art: simArt("K7HQ", "Koden på skjermen i lokalet viser tabellen, uten app.", 4),
+      }),
+      card({
+        eyebrow: "Baner", title: "Fra slope.no,", em: "med par og indeks per hull.", look: "img", picture: FAIRWAY,
+        art: courseArt("Losby, gul tee", "Par 72 · slope 128", [4, 5, 3, 4, 4, 3, 5, 4, 4]),
+      }),
+      card({
+        eyebrow: "Spillformer", title: "Stableford, slagspill", em: "og matchspill.",
+        art: rulesArt([["Stableford", "Poeng"], ["Slagspill", "Slag"], ["Matchspill", "Hull for hull"], ["Lag", "Amerikaner, københavner"]]),
+      }),
+    ],
+  },
+  photoAfter: 2,
+  close: {
+    loud: "Klar for",
+    soft: "neste runde?",
+    text: "Last ned Atten, lag en runde og inviter gjengen med en lenke.",
+    buttons: `<a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>\n<a class="knapp" href="/for-klubber">For klubber og sentre</a>`,
+  },
+};
+
 /// Toppen av forsiden: overskriften delt i en stor og en gull kursiv del (samme tekst som h1).
 export const HOME_FRAME: SiteFrame = {
   path: "/",
@@ -300,6 +361,7 @@ export const HOME_FRAME: SiteFrame = {
   eyebrow: "Atten · golfappen for gjengen",
   heading: { loud: "Golfkvelden med gjengen,", soft: "samlet i én app" },
   cta: true,
+  landing: HOME_LANDING,
 };
 
 /// Ordene på forsiden er de samme som i App Store (golfturnering, scorekort, tavle, liga, golfgjeng),
@@ -310,13 +372,17 @@ function homePage(nonce: string): string {
 <h1>Golfkvelden med gjengen, samlet i én app</h1>
 <p>Atten er golfappen for gjengen som spiller sammen hele sesongen. Påmelding, båser, scorekort og tavle, uten regneark.</p>
 <a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>
+<p class="liten">Gratis for iPhone. Ingen reklame og ingen sporing.</p>
 <h2>Golfapp for turnering og liga</h2>
 <p>Atten er en golfapp for deg som arrangerer eller er med i en fast golfturnering. Lag en liga eller cup som går hele sesongen, eller en enkel turnering for én kveld. Spillerne melder seg på i appen, og arrangøren trekker båser og flighter. Du slipper regneark og meldinger på kryss og tvers.</p>
 <h2>Stableford, slagspill og matchspill</h2>
 <p>Før scoren hull for hull rett på telefonen. Atten regner med handicap og støtter stableford, slagspill og matchspill. Tavla oppdateres mens dere spiller, så alle ser hvem som leder, og tilskuere kan følge med i nettleseren uten å laste ned noe.</p>
 <h2>For golfgjengen, klubben og simulatorkvelden</h2>
 <p>Spiller dere på bane eller i simulator, fungerer det likt. Inviter golfgjengen med en lenke, og gjester kan være med uten egen konto. En klubb kan ha flere turneringer, og alle får bilder og reaksjoner fra kvelden i en egen feed. Når sesongen er over, går vinnerjakka til den som ligger øverst.</p>
-<p class="liten">Gratis for iPhone. Ingen reklame og ingen sporing.</p>`;
+<h2>Kalkulator og guider</h2>
+<ul class="lenker">
+${CONTENT_PAGES.filter((p) => p.path !== "/for-klubber").map((p) => `<li><a href="${p.path}">${escapeHTML(p.linkText)}<span>${escapeHTML(p.description)}</span></a></li>`).join("\n")}
+</ul>`;
   return page(HOME_TITLE, content, nonce, "", "dok", { index: true, head, site: HOME_FRAME });
 }
 
@@ -331,7 +397,7 @@ Sitemap: ${SITE}/sitemap.xml
 `;
 
 /// Dato for siste innholdsendring av sidene i sitemap.xml (ÅÅÅÅ-MM-DD). Settes til dagens dato når teksten på en av dem endres.
-const SITEMAP_LASTMOD = "2026-10-22";
+const SITEMAP_LASTMOD = "2026-11-02";
 
 const SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -431,7 +497,8 @@ export async function handle(request: Request, env: TVEnv = {}): Promise<Respons
     const body = content.render && url.search ? content.render(url.searchParams) : content.content;
     const html = page(content.title, body, nonce, content.script ?? "", "dok", {
       index: true, head,
-      site: { path: content.path, hero: true, eyebrow: content.eyebrow, heading: content.heading, cta: content.render === undefined },
+      site: { path: content.path, hero: true, eyebrow: content.eyebrow, heading: content.heading, cta: content.render === undefined,
+              landing: content.landing },
     });
     return htmlResponse(html, 200, nonce, "public, max-age=3600", isHead, false, content.render !== undefined);
   }

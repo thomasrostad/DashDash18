@@ -18,3 +18,8 @@
 /og.png
   Cache-Control: public, max-age=86400
   X-Content-Type-Options: nosniff
+
+# Bildene på salgssidene (kopier fra web/admin/public/landing, Unsplash). Ett døgn.
+/landing/*
+  Cache-Control: public, max-age=86400
+  X-Content-Type-Options: nosniff
