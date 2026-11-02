@@ -13,11 +13,7 @@
 .landing .hero { position: relative; background: var(--night); color: var(--on-dark); overflow: hidden; isolation: isolate; }
 .landing canvas.topo { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; display: block; }
 .landing .hero::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(120% 90% at 30% 40%, transparent 40%, rgba(10,23,18,.75) 100%); }
-.landing .lnav .wrap { display: flex; align-items: center; gap: 26px; height: 64px; }
 .landing .wordmark { font-size: 24px; }
-.landing .lnav a.n { font-size: 14px; color: var(--on-dark-2); text-decoration: none; }
-.landing .lnav a.n:hover { color: var(--on-dark); }
-@media (max-width: 640px) { .landing .lnav a.n.hide-s { display: none; } }
 .landing .first { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(28px, 4vw, 72px); align-items: center; min-height: calc(100vh - 64px); padding-block: clamp(24px, 4vw, 56px) clamp(40px, 5vw, 72px); }
 .landing .pitch .name { font-size: 14px; color: var(--on-dark-2); letter-spacing: .02em; }
 .landing .pitch .name b { color: var(--gold); font-weight: 600; }

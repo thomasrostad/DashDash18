@@ -3,6 +3,8 @@ import { SignIn } from "../SignIn.tsx";
 import { DemoTavla } from "./DemoTavla.tsx";
 import { startShade } from "./shade.ts";
 import { startTopo } from "./topo.ts";
+import { SITE } from "../../../atten-lenker/src/html.ts";
+import { MENU_STYLE, siteMenu } from "../../../atten-lenker/src/meny.ts";
 import "./landing.css";
 
 const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -202,6 +204,8 @@ function CopyMail() {
 }
 
 /** Forsiden før innlogging: selger Atten til klubber og sentre, og lar arrangørene logge inn med en gang. */
+const SITE_MENU = siteMenu({ base: SITE, login: "#signin-email" });
+
 export function Landing() {
   const [photo, setPhoto] = useState(0);
   const photoBox = useRef<HTMLDivElement>(null);
@@ -225,12 +229,9 @@ export function Landing() {
       <header className="hero">
         <Topo options={HERO_TOPO} />
         <div className="pin" aria-hidden="true"><i /><span>Green 7 · fall 2,1 %</span></div>
-        <nav className="lnav"><div className="wrap">
-          <span className="wordmark">Atten<i>.</i></span>
-          <span className="spacer" />
-          <a className="n hide-s" href="#bli-kjent">Bli kjent</a>
-          <a className="n" href="#ny">Ny klubb eller senter</a>
-        </div></nav>
+        {/* Samme meny som dashdash18.com (atten-lenker/src/meny.ts). Fast HTML fra koden, ingen brukerdata. */}
+        <style>{MENU_STYLE}</style>
+        <div className="lnav" dangerouslySetInnerHTML={{ __html: SITE_MENU }} />
         <div className="wrap">
           <div className="first">
             <div className="pitch">

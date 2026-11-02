@@ -9,7 +9,7 @@
 import { contourLevels, contourSegments, fillTopoField, type Segment } from "../../admin/src/landing/topo.ts";
 import { APP_STORE_URL, escapeHTML } from "./html.ts";
 import { CONTENT_PAGES } from "./innhold.ts";
-import { ADMIN_URL } from "./innhold/for-klubber.ts";
+import { ADMIN_URL, MENU_STYLE, siteMenu } from "./meny.ts";
 
 /** Overskriften i toppen: en stor del i versaler og en gull kursiv del. Sammen er de samme tekst som h1. */
 export interface Heading {
@@ -34,12 +34,6 @@ export const SITE_FONTS = [
   '<link rel="preload" href="/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>',
   '<link rel="preload" href="/fonts/newsreader-latin.woff2" as="font" type="font/woff2" crossorigin>',
 ].join("\n");
-
-const GUIDES: readonly { path: string; text: string }[] = [
-  { path: "/guide/golfturnering", text: "Arrangere en golfturnering" },
-  { path: "/guide/golfliga", text: "Golfliga og cup" },
-  { path: "/guide/spillformer", text: "Spillformer i golf" },
-];
 
 // ---------- høydekurvene ----------
 
@@ -168,23 +162,6 @@ function blocks(html: string): string {
 
 // ---------- meny og bunn ----------
 
-function link(href: string, text: string, current: string, cls = "n"): string {
-  return `<a class="${cls}" href="${href}"${href === current ? ' aria-current="page"' : ""}>${text}</a>`;
-}
-
-function menu(current: string): string {
-  const inGuide = GUIDES.some((g) => g.path === current);
-  return `<header class="topp"><nav class="meny wrap" aria-label="Hovedmeny">
-<a class="wordmark" href="/"${current === "/" ? ' aria-current="page"' : ""}>Atten<i>.</i></a>
-${link("/stableford", "Kalkulator", current)}
-<details class="guider"><summary class="n${inGuide ? " aktiv" : ""}">Guider</summary>
-<div class="panel">${GUIDES.map((g) => link(g.path, g.text, current, "")).join("")}</div>
-</details>
-${link("/for-klubber", "For klubber", current)}
-<a class="n logginn" href="${ADMIN_URL}" rel="noopener">Logg inn</a>
-</nav></header>`;
-}
-
 const FOOTER = `<footer class="bunn">
 <div class="wrap kolonner">
 <div class="om"><a class="wordmark" href="/">Atten<i>.</i></a>
@@ -204,7 +181,7 @@ export function siteBody(content: string, mainClass: string, frame: SiteFrame): 
     : `<article class="ark">\n${content}\n</article>`;
   return `<div class="side${frame.hero ? "" : " lav"}">
 ${topoSVG()}
-${menu(frame.path)}
+<header class="topp">${siteMenu({ current: frame.path })}</header>
 <main class="${mainClass}">
 ${inner}
 </main>
@@ -243,31 +220,7 @@ export const SITE_STYLE = `
     letter-spacing: -.01em; text-decoration: none; color: var(--on-dark); }
   .wordmark i { font-style: normal; color: var(--gold); }
 
-  /* toppmenyen: én linje på PC, to på mobil. «Guider» er en <details>, så den virker uten skript. */
-  .meny { display: flex; align-items: center; gap: 6px 26px; min-height: 68px; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
-  .meny .wordmark { margin-right: auto; }
-  .meny .n { font-size: 15px; color: var(--on-dark-2); text-decoration: none; padding: 8px 0; cursor: pointer; }
-  .meny .n:hover, .meny .n[aria-current], .meny .n.aktiv { color: var(--on-dark); }
-  .meny .n[aria-current], .meny .n.aktiv { box-shadow: inset 0 -1px 0 var(--gold); }
-  .meny .logginn { order: 5; color: var(--on-dark); border: 1px solid rgba(244, 241, 230, .3); border-radius: 999px; padding: 7px 16px; }
-  .meny .logginn:hover { border-color: var(--gold); color: var(--on-dark); }
-  .guider { position: relative; }
-  .guider summary { list-style: none; display: inline-flex; align-items: center; gap: 6px; }
-  .guider summary::-webkit-details-marker { display: none; }
-  .guider summary::after { content: ""; width: 6px; height: 6px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: translateY(-2px) rotate(45deg); }
-  .guider[open] summary::after { transform: translateY(1px) rotate(-135deg); }
-  .guider .panel { position: absolute; top: calc(100% + 8px); left: -16px; z-index: 5; min-width: 250px; display: grid; padding: 8px;
-    background: #10231B; border: 1px solid var(--rule); border-radius: 16px; box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .7); }
-  .guider .panel a { padding: 10px 12px; border-radius: 10px; text-decoration: none; font-size: 15px; }
-  .guider .panel a:hover, .guider .panel a[aria-current] { background: var(--flate); color: var(--gold); }
-  @media (max-width: 640px) {
-    .meny { column-gap: 22px; }
-    .meny .wordmark { order: -3; }
-    .meny .logginn { order: -2; }
-    .meny::before { content: ""; order: -1; flex-basis: 100%; height: 0; }
-    .guider .panel { left: -60px; }
-  }
-
+${MENU_STYLE}
   /* toppen: som forsiden på admin.dashdash18.com */
   .hero { padding-block: clamp(36px, 8vw, 104px) clamp(48px, 7vw, 96px); max-width: 1180px; }
   .eyebrow { font-size: 14px; color: var(--on-dark-2); letter-spacing: .02em; margin: 0 0 18px; }
