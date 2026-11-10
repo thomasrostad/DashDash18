@@ -9,7 +9,7 @@ import {
   issueMessage, makeMarker, markerIn, matchProblems, moveSeat, newDraft, nextRoundNo, playerMatch, redrawMatches,
   roundStatusText, roundTitle, roundWrite, saveErrorText, seatFor, setForm, setStart, setupIssues, setupParams,
   sidePrizeChoice, startErrorText, startOptions, suggestedBays, suggestedTeams, teamMatch, teamMatches, teamProblem,
-  BAY_TERM, previousRound, applySuggestion, type RosterMember, type RoundDraft,
+  BAY_TERM, previousRound, applySuggestion, venueAfterPick, type RosterMember, type RoundDraft,
 } from "../src/rounds/logic.ts";
 import { coreCourseOf, coreCourseWithTee, courseItemReady, filterSlope, makeCourseItem, suggestedTee, type CourseTee } from "../src/rounds/courses.ts";
 
@@ -384,4 +384,16 @@ test("søket i slope.no: norske først, alle ordene", () => {
   assert.deepEqual(filterSlope(list, "baerum golf").map((x) => x.id), []);
   assert.deepEqual(filterSlope(list, "bærum golf").map((x) => x.id), ["1"]);
   assert.deepEqual(filterSlope(list, "sverige").map((x) => x.id), ["2"]);
+});
+
+test("stedet etter banevalg: egne baner gir stedet, slope.no beholder et valgt sted", () => {
+  const own = (kind: "simulator" | "course") => ({ kind, isFromSource: false });
+  const slope = { kind: "course" as const, isFromSource: true };
+  assert.equal(venueAfterPick("course", own("simulator"), true), "simulator");
+  assert.equal(venueAfterPick("simulator", own("course"), true), "course");
+  // Oslo GK fra slope.no i simulatoren, når arrangøren har valgt Simulator.
+  assert.equal(venueAfterPick("simulator", slope, true), "simulator");
+  // Uten eget valg blir en slope.no-bane ekte bane, som før.
+  assert.equal(venueAfterPick("simulator", slope, false), "course");
+  assert.equal(venueAfterPick("course", slope, true), "course");
 });

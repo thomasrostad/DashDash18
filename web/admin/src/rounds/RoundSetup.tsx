@@ -13,7 +13,7 @@ import {
 import {
   applySidePrize, bayCount as highestBay, dataErrorText, drawFooter, randomSeed, randomTeamsFor, STANDINGS_PLAN, swapTwo, bayNumbers, coreRound, draftForm, prepareSetup, excludePlayer, formChoices,
   groupTerm, includePlayer, isTeamMatch, isTriangleMatch, makeMarker, markerIn, membersIn, moveSeat, playerMatch,
-  playersSummary, redrawMatches, reshuffleBays, roundTitle, seatFor, setCourse, setForm, setStart, setVenue, setupIssues,
+  playersSummary, redrawMatches, reshuffleBays, roundTitle, seatFor, setCourse, setForm, setStart, setVenue, setupIssues, venueAfterPick,
   sidePrizeChoice, startOptions, startProblems, startTitle, teamMatch, teamProblem, termCount, termNumbered,
   termPluralTitle, venueTitle, WEIGHTS, MAX_BAYS, HIDE_LAST_HOLES, pointsTableChoices, type MatchDraft, type RoundDraft,
 } from "./logic.ts";
@@ -41,6 +41,8 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
     return d;
   });
   const [courses, setCourses] = useState<CourseItem[]>(data.courses);
+  // Har arrangøren valgt sted selv, beholdes det når en bane fra slope.no velges (simulator på Oslo GK).
+  const [venueChosen, setVenueChosen] = useState(draft.isSaved);
   const [bays, setBays] = useState(Math.max(1, highestBay(draft.bays)));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +78,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
   const title = roundTitle(draft.roundNo, item?.course.name);
 
   function selectCourse(c: CourseItem) {
-    let d = setVenue(draft, c.kind === "course" ? "course" : "simulator", rules);
+    let d = setVenue(draft, venueAfterPick(draft.venue, c, venueChosen), rules);
     d = setCourse(d, c.course.id, c.holes.length);
     if (d.teeID === null && c.tees.length > 0) d = { ...d, teeID: suggestedTee(c.tees, previousTeeID(data.allRounds, c.course.id))?.id ?? null };
     setDraft(d);
@@ -136,6 +138,16 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
 
       <div className="card">
         <h3>Bane</h3>
+        <p className="muted small">Hvor spiller dere?</p>
+        <div className="segmented" role="group" aria-label="Hvor spiller dere?">
+          {(["simulator", "course"] as const).map((v) => (
+            <button key={v} type="button" className={v === draft.venue ? "seg active" : "seg"}
+              onClick={() => { setVenueChosen(true); setDraft(setVenue(draft, v, rules)); }}>{venueTitle(v)}</button>
+          ))}
+        </div>
+        {draft.venue === "simulator" && item?.kind === "course" && (
+          <p className="muted small">Ekte bane spilt i simulatoren: parene og indeksene fra banen gjelder.</p>
+        )}
         <label>Bane
           <select value={draft.courseID ?? ""} onChange={(e) => { const c = courses.find((x) => x.course.id === e.target.value); if (c) selectCourse(c); }}>
             {draft.courseID === null && <option value="">Velg</option>}
@@ -165,7 +177,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
             const [loaded] = await loadSourceCourses([s.id]);
             if (!loaded || !courseItemReady(loaded)) throw new Error(`Fant ikke hullene til «${s.name}». Prøv igjen senere.`);
             setCourses([...courses.filter((c) => c.course.id !== loaded.course.id), loaded]);
-            let d = setVenue(draft, "course", rules);
+            let d = setVenue(draft, venueAfterPick(draft.venue, loaded, venueChosen), rules);
             d = setCourse(d, loaded.course.id, loaded.holes.length);
             setDraft({ ...d, teeID: suggestedTee(loaded.tees, previousTeeID(data.allRounds, loaded.course.id))?.id ?? null });
           } catch (e) { setError(dataErrorText(e)); }
