@@ -6,6 +6,7 @@ import {
 import { config, errorText } from "./supabase.ts";
 import { kindText, longDate, statusText } from "./text.ts";
 import { RulesEditor } from "./RulesEditor.tsx";
+import { Adjustments } from "./Adjustments.tsx";
 import { ScreenShare } from "./ScreenShare.tsx";
 import { Participants } from "./Participants.tsx";
 import { canAddParticipants } from "./participants.ts";
@@ -102,6 +103,8 @@ export function TournamentDetail({ competition, clubName, roster, onBack, onChan
       </div>
 
       {competition.kind !== "cup" && <div className="grid2"><RulesEditor competition={competition} onSaved={onChanged} /></div>}
+
+      {competition.season_id && competition.club_id && competition.kind !== "cup" && <Adjustments competition={competition} roster={roster} />}
 
       {canAddParticipants(competition) && <Participants competition={competition} clubName={clubName} onChanged={() => { load(); onChanged(); }} />}
 
