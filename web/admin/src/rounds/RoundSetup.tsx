@@ -453,7 +453,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
       <label>{label}
         <select value={choice ?? ""} onChange={(e) => onChange(applySidePrize(e.target.value === "" ? null : Number(e.target.value), hole, suggestion))}>
           <option value="">Av</option>
-          {holes.map((h, i) => <option key={i} value={i}>Hull {i + offset} · par {h.par}{i === suggestion ? " (forslag)" : ""}</option>)}
+          {holes.map((h, i) => <option key={i} value={i}>Hull {i + offset} · par {h.par}{h.meters ? ` · ${Math.round(h.meters)} m` : ""}{i === suggestion ? " (forslag)" : ""}</option>)}
         </select>
       </label>
     );
