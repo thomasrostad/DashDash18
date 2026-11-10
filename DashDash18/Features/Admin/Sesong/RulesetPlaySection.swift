@@ -38,6 +38,11 @@ struct RulesetPlaySection: View {
                                help: "Fourball og sammenlagt lag. Av: bare markøren, eller hver for seg.",
                                changeNote: draft.changeNote(.teammatesScore))
             }
+            Toggle(isOn: $draft.rules.play.bayScoring) {
+                RuleFieldLabel(title: "Alle i båsen fører for hverandre",
+                               help: "Alle i samme bås eller flight kan føre for hverandre. Fører to ulikt, velger markøren.",
+                               changeNote: draft.changeNote(.bayScoring))
+            }
         } header: {
             DDHeader(RulesetSection.play.title)
         } footer: {

@@ -75,6 +75,9 @@ nonisolated enum RulesetExplanation {
         if !play.teammatesScore {
             out.append("I fourball og sammenlagt lag fører markøren, eller hver spiller for seg. Lagkameratene fører ikke for hverandre.")
         }
+        if play.bayScoring {
+            out.append("Alle i samme bås eller flight kan føre for hverandre. Fører to ulikt på samme hull, velger markøren hvilket tall som gjelder.")
+        }
         if play.hiddenHoles != Ruleset.PlayRules.standard.hiddenHoles {
             out.append("Skjuler arrangøren de siste hullene i en runde, er det de \(play.hiddenHoles) siste: stillingen vises uten dem til runden er låst.")
         }

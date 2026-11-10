@@ -55,6 +55,7 @@ Funksjonene i regelmotoren tar `rules: Ruleset = .golfgutu`. `Season` bruker sit
 | `play.lockSubmittedCards` | sann/usann | Markøren leverer kortet, og bare arrangøren kan endre det eller åpne det igjen (sql/057). Standard usann. |
 | `play.hiddenHoles` | tall | Hvor mange av de siste hullene «Skjul de siste hullene» skjuler i en ny runde (1–9). Standard 3. |
 | `play.teammatesScore` | sann/usann | Lagkamerater fører for hverandre i lagformer der hver spiller sin egen ball (fourball, fourball-4, sammenlagt lag), også med markør i båsen (sql/074). Lag med én ball fører alltid lagets kort (sql/071); en-mot-en fører hver sitt, eller markøren. Standard sann. |
+| `play.bayScoring` | sann/usann | Alle i samme bås eller flight fører for hverandre, også med markør i båsen (sql/075). Fører to ulikt på samme hull, velger markøren eller arrangøren (konfliktarket, sql/055). Standard usann: markøren fører, som i Golfgutu. |
 
 `formPlay` og `play` skrives bare når gruppen ikke er standard, så JSON-en for Golfgutu og eldre regelsett er som før.
 
@@ -567,6 +568,7 @@ Med Golfgutu-oppsettet er alt som før (`play` skrives ikke, PWA-en har ingen gr
 | Maks slag per hull | `Round.strokeLimit`, `Round.cappingStrokes` (i `Season` og føringen), stepperen | `play.maxStrokes` | av |
 | Låst kort etter levering | appen og `can_score` (sql/057) | `play.lockSubmittedCards` | av |
 | Lagkamerater fører for hverandre | appen (`isTeamScorer`) og `can_score` (sql/074, fast formliste testet mot `CompetitionForm.catalog` i `LagForerSQLTests`) | `play.teammatesScore` | på |
+| Alle i båsen fører for hverandre | appen (`canScore`) og `can_score` (sql/075) | `play.bayScoring` | av |
 | Antall skjulte hull i en ny runde | runde-oppsettet (`Round.hideLastHoles` lagres per runde) | `play.hiddenHoles` | 3 |
 | Inndatagrensen 1–12 på stepperen | `StrokeInput` (appen) | bli (skjerm, som PWA-en) | – |
 
