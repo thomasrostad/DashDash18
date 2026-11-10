@@ -260,3 +260,47 @@ details.played > .days { margin-top: 4px; }
 .side-item.active { position: relative; }
 .side-item.active::before { content: ""; position: absolute; left: -6px; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--gold); }
 @media (max-width: 860px) { .side-item.active::before { display: none; } }
+/* Undersider (turneringen): faner med strek under. */
+.detail { display: grid; gap: 16px; }
+.detail > .grid2 { margin-top: 0; }
+.detail .back { justify-self: start; padding-left: 0; }
+.detail-head h2 { font-family: var(--display); font-stretch: 75%; font-weight: 800; font-size: 30px; letter-spacing: -.005em; margin: 0 0 6px; }
+.detail-head p { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.detail-head .pill { margin-left: 0; }
+.detail-meta { margin-left: 4px; }
+.subtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--rule); overflow-x: auto; scrollbar-width: none; }
+.subtabs::-webkit-scrollbar { display: none; }
+.subtab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; margin-bottom: -1px; color: var(--ink2); font-size: 15px; font-weight: 500; white-space: nowrap; }
+.subtab:hover { color: var(--ink); }
+.subtab.active { color: var(--ink); border-bottom-color: var(--gold); font-weight: 600; }
+/* Rundeoppsettet: skjemaet til venstre, sjekklista fast til høyre (øverst på telefon). */
+.setup-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 24px; align-items: start; }
+.setup-wrap > .setup { min-width: 0; display: grid; gap: 16px; }
+.setup-wrap > .setup > .card + .card { margin-top: 0; }
+.setup [id^="oppsett-"] { scroll-margin-top: 84px; }
+.checklist { position: sticky; top: 76px; background: var(--card); border-radius: 18px; padding: 16px; box-shadow: var(--shadow); display: grid; gap: 10px; }
+.checklist-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.checklist-bar { height: 6px; border-radius: 6px; background: var(--sunk); overflow: hidden; }
+.checklist-bar span { display: block; height: 100%; background: var(--gold); border-radius: 6px; transition: width .3s; }
+.checklist ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.check-item { width: 100%; display: flex; gap: 10px; align-items: flex-start; text-align: left; background: none; border: 0; border-radius: 10px; padding: 8px; color: var(--ink); }
+.check-item:hover { background: var(--hover); }
+.check-dot { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+.check-item.ok .check-dot { background: var(--green-soft); color: var(--accent); }
+.check-item.warn .check-dot { background: var(--gold-soft); color: var(--ink); }
+.check-item.bad .check-dot { background: rgba(168,74,16,.14); color: var(--rust); }
+.check-text { display: grid; gap: 2px; min-width: 0; }
+.check-text b { font-size: 14px; }
+.check-text span { font-size: 13px; color: var(--ink2); overflow-wrap: anywhere; }
+.check-item.bad .check-text span { color: var(--rust); }
+@media (max-width: 1100px) {
+  .setup-wrap { grid-template-columns: minmax(0, 1fr); }
+  .checklist { order: -1; position: static; }
+  .checklist ol { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+}
+.detail .card > ul.plain { columns: 3 160px; column-gap: 24px; list-style: none; padding-left: 0; } .detail .card > ul.plain li { break-inside: avoid; }
+/* Valg i to–tre deler (Simulator / Ekte bane, Poeng / Slag): felles for hele panelet. */
+.segmented { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--sunk); justify-self: start; width: fit-content; }
+.seg { background: none; border: 0; border-radius: 999px; padding: 7px 16px; color: var(--ink2); font-weight: 500; }
+.seg:hover { color: var(--ink); }
+.seg.active { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: var(--shadow); }
