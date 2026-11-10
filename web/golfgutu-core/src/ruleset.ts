@@ -461,6 +461,8 @@ export interface PlayRules {
   shankPosts: boolean;
   /** Lagkamerater fører for hverandre i lagformer der hver spiller sin egen ball (sql/074). */
   teammatesScore: boolean;
+  /** Alle i samme bås eller flight fører for hverandre; fører to ulikt, velger markøren (sql/075, 055). */
+  bayScoring: boolean;
 }
 
 export const MAX_STROKES_FIXED: readonly [number, number] = [3, 20];
@@ -472,6 +474,7 @@ export const STANDARD_PLAY: Readonly<PlayRules> = deepFreeze({
   hiddenHoles: 3,
   shankPosts: false,
   teammatesScore: true,
+  bayScoring: false,
 } as PlayRules);
 
 /** Det høyeste en spiller kan føre på et hull med `par` og `strokesReceived` slag. `null`: ingen grense. */
@@ -504,6 +507,7 @@ export function decodePlay(x: unknown, path = "$"): PlayRules {
     hiddenHoles: optInt(o, "hiddenHoles", path) ?? STANDARD_PLAY.hiddenHoles,
     shankPosts: optBool(o, "shankPosts", path) ?? STANDARD_PLAY.shankPosts,
     teammatesScore: optBool(o, "teammatesScore", path) ?? STANDARD_PLAY.teammatesScore,
+    bayScoring: optBool(o, "bayScoring", path) ?? STANDARD_PLAY.bayScoring,
   };
 }
 
@@ -516,6 +520,7 @@ export function encodePlay(p: PlayRules): JSONObject {
     hiddenHoles: p.hiddenHoles,
     shankPosts: p.shankPosts,
     teammatesScore: p.teammatesScore,
+    bayScoring: p.bayScoring,
   };
 }
 

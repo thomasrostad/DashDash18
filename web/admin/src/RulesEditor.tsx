@@ -83,6 +83,10 @@ export function RulesEditor({ competition, onSaved }: { competition: Competition
               <input type="number" min={0} step={0.05} value={rules.sidePrizes.closestToPin.points} onChange={(e) => set((r) => { r.sidePrizes.closestToPin.points = Number(e.target.value); })} />
             </label>
           )}
+          <h4>Føring</h4>
+          <label className="check"><input type="checkbox" checked={rules.play.bayScoring} onChange={(e) => set((r) => { r.play.bayScoring = e.target.checked; })} />Alle i båsen fører for hverandre</label>
+          <label className="check"><input type="checkbox" checked={rules.play.teammatesScore} onChange={(e) => set((r) => { r.play.teammatesScore = e.target.checked; })} />Lagkamerater fører for hverandre</label>
+          <p className="muted small">Alle i samme bås eller flight kan føre for hverandre. Fører to ulikt på samme hull, velger markøren hvilket tall som gjelder. Av: bare markøren fører. Krever Atten 1.0.5.</p>
           <h4>Plass i tabellen</h4>
           <label className="check"><input type="checkbox" checked={hasMinEvenings(rules)} onChange={(e) => set((r) => toggleMinEvenings(r, e.target.checked))} />{minEveningsLabel(rules)}</label>
           {hasMinEvenings(rules) && (
