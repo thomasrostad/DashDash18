@@ -14,9 +14,11 @@ import { ClubSettings } from "./ClubSettings.tsx";
 import { Courses } from "./Courses.tsx";
 import { Kvelden } from "./kvelden/Kvelden.tsx";
 
-const TAB_TITLES: Record<Tab, string> = {
-  kvelden: "Kvelden", turneringer: "Turneringer", terminliste: "Terminliste", baner: "Baner", tropp: "Tropp", tabeller: "Tabeller", roller: "Roller", klubb: "Klubb",
-};
+import { navGroups, tabFromHash, TAB_INFO } from "./nav.ts";
+
+function Icon({ d }: { d: string }) {
+  return <svg className="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><path d={d} /></svg>;
+}
 
 /** Arrangørsiden for én klubb: Kvelden, turneringer, terminliste, tropp og resten. */
 export function ClubAdmin({ membership }: { membership: Membership }) {
@@ -51,24 +53,51 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
   useEffect(() => { load(); }, [load]);
   // Står du på en fane du ikke har (rollene er endret), gå til den første du har.
   const tabKey = tabs.join(",");
-  useEffect(() => { if (tabs.length > 0 && !tabs.includes(tab)) setTab(tabs[0]); }, [tabKey, tab]);
+  useEffect(() => { if (tabs.length > 0 && !tabs.includes(tab)) setTab(tabFromHash(location.hash, tabs) ?? tabs[0]); }, [tabKey, tab]);
+  // Fanen står i adressen, så en ny lasting (og tilbake-knappen) blir der du var.
+  useEffect(() => { const t = tabFromHash(location.hash, tabs); if (t) setTab(t); }, [tabKey]);
+  useEffect(() => {
+    const onHash = () => { const t = tabFromHash(location.hash, tabs); if (t) { setTab(t); setOpenID(null); setCreating(false); } };
+    addEventListener("hashchange", onHash);
+    return () => removeEventListener("hashchange", onHash);
+  }, [tabKey]);
+  function go(t: Tab) {
+    setTab(t); setOpenID(null); setCreating(false);
+    if (location.hash !== `#${t}`) history.pushState(null, "", `#${t}`);
+    scrollTo({ top: 0 });
+  }
+  const info = TAB_INFO[tab];
 
   return (
-    <main className="page">
-      <nav className="tabs">
-        {tabs.map((t) => (
-          <button key={t} className={t === tab ? "tab active" : "tab"} onClick={() => setTab(t)}>
-            {TAB_TITLES[t]}
-          </button>
+    <main className="shell">
+      <nav className="side" aria-label="Meny">
+        {navGroups(tabs).map((g) => (
+          <div key={g.title} className="side-group">
+            <span className="side-title">{g.title}</span>
+            {g.tabs.map((t) => (
+              <button key={t} className={t === tab ? "side-item active" : "side-item"} aria-current={t === tab ? "page" : undefined} onClick={() => go(t)}>
+                <Icon d={TAB_INFO[t].icon} />{TAB_INFO[t].title}
+              </button>
+            ))}
+          </div>
         ))}
-        <span className="spacer" />
-        <button className="link" onClick={load}>Oppdater</button>
       </nav>
+      <div className="content">
+      <header className="pagehead">
+        <div>
+          <h1>{info.title}</h1>
+          <p className="muted">{info.lead}</p>
+        </div>
+        <div className="pagehead-actions">
+          {tab === "turneringer" && !openID && !creating && <button className="primary" onClick={() => setCreating(true)}>Ny turnering</button>}
+          <button className="secondary" onClick={load} title="Hent alt på nytt">Oppdater</button>
+        </div>
+      </header>
       {error && <p className="error">{error}</p>}
 
       {tab === "kvelden" && (!days || !comps || !roster ? <p className="muted">Henter …</p> : (
         <Kvelden clubID={clubID} days={days} comps={comps} roster={roster} canMembers={viewer.rights.has("members")}
-          canRounds={viewer.rights.has("rounds")} onOpen={(t) => setTab(t === "tropp" ? "tropp" : "terminliste")} />
+          canRounds={viewer.rights.has("rounds")} onOpen={(t) => go(t === "tropp" ? "tropp" : "terminliste")} />
       ))}
 
       {tab === "turneringer" && openID && comps && roster && comps.find((c) => c.id === openID) && (
@@ -83,7 +112,6 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
 
       {tab === "turneringer" && !openID && !creating && (
         <section>
-          <div className="inline"><button className="primary" onClick={() => setCreating(true)}>Ny turnering</button></div>
           {!comps ? <p className="muted">Henter …</p> : comps.length === 0 ? <p className="muted">Ingen turneringer ennå.</p> : (
             <table>
               <thead><tr><th>Navn</th><th>Type</th><th>Status</th><th>Periode</th><th>Påmelding</th></tr></thead>
@@ -117,6 +145,7 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
       {tab === "tabeller" && (!comps ? <p className="muted">Henter …</p> : <Standings comps={comps} membership={membership} />)}
       {tab === "roller" && roleData && <Roles clubID={clubID} data={roleData} viewer={viewer} onChanged={load} />}
       {tab === "klubb" && <ClubSettings clubID={clubID} onSaved={() => load()} />}
+      </div>
     </main>
   );
 }
