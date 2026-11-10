@@ -337,3 +337,4 @@ label.check input[type="checkbox"]:disabled { opacity: .5; cursor: default; }
 .settings input[type="number"] { text-align: right; }
 @media (max-width: 600px) { .settings label:not(.check) { grid-template-columns: minmax(0, 1fr); } }
 .settings fieldset > button.link, .settings > button.link { justify-self: start; padding-left: 0; }
+td label.check { margin: 5px 0; gap: 8px; font-size: 14px; } td label.check input[type="checkbox"] { width: 32px; height: 18px; } td label.check input[type="checkbox"]::after { width: 12px; height: 12px; } td label.check input[type="checkbox"]:checked::after { transform: translateX(14px); }
