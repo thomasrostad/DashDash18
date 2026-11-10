@@ -46,18 +46,22 @@ extension Ruleset {
         /// hverandre, også med markør i båsen (sql/074). Lag med én ball fører alltid lagets kort (sql/071).
         /// En-mot-en: du fører ditt eget, eller markøren.
         public var teammatesScore: Bool
+        /// Alle i samme bås eller flight fører for hverandre, også med markør (sql/075). Fører to ulikt,
+        /// velger markøren eller arrangøren (konfliktarket, sql/055). Av: markøren fører, som i Golfgutu.
+        public var bayScoring: Bool
 
         public init(maxStrokes: MaxStrokes = .off, lockSubmittedCards: Bool = false, hiddenHoles: Int = 3,
-                    shankPosts: Bool = false, teammatesScore: Bool = true) {
+                    shankPosts: Bool = false, teammatesScore: Bool = true, bayScoring: Bool = false) {
             self.maxStrokes = maxStrokes
             self.lockSubmittedCards = lockSubmittedCards
             self.hiddenHoles = hiddenHoles
             self.shankPosts = shankPosts
             self.teammatesScore = teammatesScore
+            self.bayScoring = bayScoring
         }
 
         /// Golfgutu og alle regelsett fra før: ingen grense, ingen levering, tre skjulte hull, ingen shank,
-        /// og lagkamerater fører for hverandre.
+        /// lagkamerater fører for hverandre, og markøren fører for båsen.
         public static let standard = PlayRules()
 
         /// Lovlige antall skjulte hull (`rounds.hide_last_holes` tar 0–9, og 0 er «av»).
@@ -145,7 +149,7 @@ extension Ruleset.MaxStrokes: Codable {
 }
 
 extension Ruleset.PlayRules: Codable {
-    private enum CodingKeys: String, CodingKey { case maxStrokes, lockSubmittedCards, hiddenHoles, shankPosts, teammatesScore }
+    private enum CodingKeys: String, CodingKey { case maxStrokes, lockSubmittedCards, hiddenHoles, shankPosts, teammatesScore, bayScoring }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -155,5 +159,6 @@ extension Ruleset.PlayRules: Codable {
         hiddenHoles = try c.decodeIfPresent(Int.self, forKey: .hiddenHoles) ?? s.hiddenHoles
         shankPosts = try c.decodeIfPresent(Bool.self, forKey: .shankPosts) ?? s.shankPosts
         teammatesScore = try c.decodeIfPresent(Bool.self, forKey: .teammatesScore) ?? s.teammatesScore
+        bayScoring = try c.decodeIfPresent(Bool.self, forKey: .bayScoring) ?? s.bayScoring
     }
 }

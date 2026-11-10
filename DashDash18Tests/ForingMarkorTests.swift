@@ -339,3 +339,74 @@ struct ForingLagkameratTests {
         #expect(g.canScore(F.viewer(F.gunnar), for: id(F.anders)))
     }
 }
+
+/// `play.bayScoring` (sql/075): alle i samme bås fører for hverandre, også med markør. Av: markøren som før.
+struct ForingAlleIBaasenTests {
+    static func game(on: Bool, submitted: Set<Int> = []) -> RoundGame {
+        var s = F.snapshot(F.markorPlayers())
+        s.rules.play.bayScoring = on
+        s.players = s.players.map { p in
+            var p = p
+            if submitted.contains(where: { F.id($0) == p.memberID }) { p.cardSubmittedAt = Date(timeIntervalSince1970: 1) }
+            return p
+        }
+        return RoundGame(s)
+    }
+
+    @Test func avBareMarkoerenSomFoer() {
+        let g = Self.game(on: false)
+        #expect(!g.isBayScorer(id(F.bjorn), for: id(F.cato)))
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.cato)))
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.bjorn)))
+        #expect(g.canScore(F.viewer(F.anders), for: id(F.cato)))
+        #expect(!g.cardRowEditable(id(F.cato), for: F.viewer(F.bjorn)))
+    }
+
+    @Test func paaBaaskameratFoererOgRadeneKanEndres() {
+        let g = Self.game(on: true)
+        for p in [F.anders, F.bjorn, F.cato, F.dag] {
+            #expect(g.canScore(F.viewer(F.bjorn), for: id(p)))
+            #expect(g.cardRowEditable(id(p), for: F.viewer(F.bjorn)))
+        }
+        // Markøren fører fortsatt for hele båsen.
+        #expect(g.canScore(F.viewer(F.anders), for: id(F.dag)))
+        let card = g.card(hole: 0, drafts: HoleDrafts(), viewer: F.viewer(F.cato))
+        #expect(card.rows.allSatisfy { $0.editable })
+    }
+
+    @Test func paaIkkeINabobaasen() {
+        let g = Self.game(on: true)
+        for p in [F.erik, F.frode, F.halvor] {
+            #expect(!g.canScore(F.viewer(F.bjorn), for: id(p)))
+            #expect(!g.cardRowEditable(id(p), for: F.viewer(F.bjorn)))
+        }
+    }
+
+    @Test func levertKortGaarForan() {
+        let g = Self.game(on: true, submitted: [F.cato])
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.cato)))
+        #expect(!g.cardRowEditable(id(F.cato), for: F.viewer(F.bjorn)))
+        #expect(g.canScore(F.viewer(F.bjorn), for: id(F.dag)))
+        #expect(g.canScore(F.viewer(F.gunnar), for: id(F.cato)))
+    }
+
+    @Test func arrangoerenSomFoer() {
+        let av = Self.game(on: false)
+        #expect(av.canScore(F.viewer(F.gunnar), for: id(F.bjorn)))
+        #expect(!av.cardRowEditable(id(F.frode), for: F.viewer(F.gunnar)))
+        let paa = Self.game(on: true)
+        #expect(paa.canScore(F.viewer(F.gunnar), for: id(F.bjorn)))
+        // Spiller arrangøren selv i båsen, fører han på kortet som de andre i båsen.
+        #expect(paa.cardRowEditable(id(F.frode), for: F.viewer(F.gunnar)))
+        #expect(!paa.cardRowEditable(id(F.bjorn), for: F.viewer(F.gunnar)))
+    }
+
+    @Test func ikkeLoeseRunderUtenBaas() {
+        var s = F.snapshot(F.markorPlayers(bays: false))
+        s.rules.play.bayScoring = true
+        let g = RoundGame(s)
+        #expect(!g.isBayScorer(id(F.bjorn), for: id(F.cato)))
+        #expect(g.canScore(F.viewer(F.bjorn), for: id(F.bjorn)))
+        #expect(!g.canScore(F.viewer(F.bjorn), for: id(F.cato)))
+    }
+}

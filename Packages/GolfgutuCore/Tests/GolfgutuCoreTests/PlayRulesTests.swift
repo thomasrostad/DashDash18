@@ -29,6 +29,8 @@ struct PlayRulesTests {
         let hiddenHoles: Int
         let shankPosts: Bool
         let teammatesScore: Bool
+        /// Ikke i fixturen fra før: mangler → av.
+        let bayScoring: Bool?
     }
     struct Ugyldig: Decodable { let play: Ruleset.PlayRules; let felt: String }
     struct Skjul: Decodable { let navn: String; let holeCount: Int; let holeStart: Int; let hideLastHoles: Int; let skjulte: [Int] }
@@ -117,12 +119,25 @@ struct PlayRulesTests {
             let rules = try JSONDecoder().decode(Ruleset.self, from: Data(text.utf8))
             #expect(rules.play == Ruleset.PlayRules(maxStrokes: sak.maxStrokes, lockSubmittedCards: sak.lockSubmittedCards,
                                                     hiddenHoles: sak.hiddenHoles, shankPosts: sak.shankPosts,
-                                                    teammatesScore: sak.teammatesScore))
+                                                    teammatesScore: sak.teammatesScore, bayScoring: sak.bayScoring ?? false))
             let back = try JSONDecoder().decode(Ruleset.self, from: JSONEncoder().encode(rules))
             #expect(back == rules)
             let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(rules)) as! [String: Any]
             #expect((object["play"] != nil) == (rules.play != .standard))
         }
+    }
+
+    @Test func alleIBasenForerLesesOgSkrives() throws {
+        // Mangler feltet (alle regelsett fra før), fører markøren, som i Golfgutu.
+        let gammel = try JSONDecoder().decode(Ruleset.self, from: Data(#"{"version":2,"play":{"shankPosts":true}}"#.utf8))
+        #expect(gammel.play.bayScoring == false)
+        #expect(Ruleset.golfgutu.play.bayScoring == false)
+        let pa = try JSONDecoder().decode(Ruleset.self, from: Data(#"{"version":2,"play":{"bayScoring":true}}"#.utf8))
+        #expect(pa.play.bayScoring == true)
+        #expect(pa.play.teammatesScore == true)
+        let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(pa)) as! [String: Any]
+        #expect((object["play"] as? [String: Any])?["bayScoring"] as? Bool == true)
+        #expect(try JSONDecoder().decode(Ruleset.self, from: JSONEncoder().encode(pa)) == pa)
     }
 
     @Test func golfgutuSkriverIkkePlay() throws {

@@ -50,12 +50,14 @@ nonisolated extension RoundGame {
     /// Levert kort (sql/057): bare arrangøren. `ignoringSubmission`: som om kortet ikke var levert.
     /// Funksjonæren for spillerens gruppe (`is_group_scorer`, sql/032) fører også.
     /// Lagkamerater fører for hverandre (`isTeamScorer`, sql/071 og 074), også med markør i båsen.
+    /// Med `play.bayScoring` fører alle i samme bås for hverandre (`isBayScorer`, sql/075), også med markør.
     func canScore(_ viewer: Viewer, for target: UUID, ignoringSubmission: Bool = false) -> Bool {
         if viewer.isOrganizer { return true }
         guard status == .active else { return false }
         if !ignoringSubmission, isCardSubmitted(target) { return false }
         if isTeamScorer(viewer.memberID, for: target) { return true }
         if let group = bay(of: target)?.number, viewer.scorerGroups.contains(group) { return true }
+        if isBayScorer(viewer.memberID, for: target) { return true }
         if let marker = bay(of: target)?.marker { return marker == viewer.memberID }
         return viewer.memberID == target
     }
@@ -110,6 +112,8 @@ nonisolated extension RoundGame {
             return group.players.contains(member) && canScore(viewer, for: member, ignoringSubmission: skip)
         }
         if isTeamScorer(me, for: member) { return canScore(viewer, for: member, ignoringSubmission: skip) }
+        // Alle i båsen fører for hverandre: også en arrangør som spiller i båsen fører på kortet da.
+        if isBayScorer(me, for: member) { return canScore(viewer, for: member, ignoringSubmission: skip) }
         guard let bay = bay(of: me) else { return member == me && canScore(viewer, for: me, ignoringSubmission: skip) }
         if let marker = bay.marker { return marker == me && canScore(viewer, for: member, ignoringSubmission: skip) }
         return member == me && canScore(viewer, for: me, ignoringSubmission: skip)
@@ -213,6 +217,14 @@ nonisolated extension RoundGame {
         guard round.form.card == .perPlayer, round.form.teamSize > 1, rules.play.teammatesScore, isPlaying(viewer),
               let team = Handicap.teammates(of: member.uuidString, in: round) else { return false }
         return team.contains(viewer.uuidString)
+    }
+
+    /// Fører `viewer` for `member` fordi de står i samme bås eller flight? Bare med `play.bayScoring`
+    /// (sql/075), og bare når viewer spiller selv. Fører to ulikt, velger markøren (konfliktarket, sql/055).
+    func isBayScorer(_ viewer: UUID, for member: UUID) -> Bool {
+        guard rules.play.bayScoring, isPlaying(viewer), let mine = bay(of: viewer)?.number,
+              let theirs = bay(of: member)?.number else { return false }
+        return mine == theirs
     }
 
     /// Hvem et hulltall skrives på: hele laget når laget spiller én ball, ellers spilleren.

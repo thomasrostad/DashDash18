@@ -265,7 +265,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
 /// Valgene under «Føring og visning» (regelvern). De telles som en del av `RulesetField.other` i
 /// sammenligningen med oppsettet, og har egne «Endret · standard …»-merker i skjemaet.
 nonisolated enum PlayField: CaseIterable, Hashable, Sendable {
-    case maxStrokes, lockSubmittedCards, hiddenHoles, shankPosts, teammatesScore
+    case maxStrokes, lockSubmittedCards, hiddenHoles, shankPosts, teammatesScore, bayScoring
 
     var title: String {
         switch self {
@@ -274,6 +274,7 @@ nonisolated enum PlayField: CaseIterable, Hashable, Sendable {
         case .hiddenHoles: "Skjul de siste hullene"
         case .shankPosts: "Shank i feeden"
         case .teammatesScore: "Lagkamerater fører for hverandre"
+        case .bayScoring: "Alle i båsen fører for hverandre"
         }
     }
 
@@ -284,6 +285,7 @@ nonisolated enum PlayField: CaseIterable, Hashable, Sendable {
         case .hiddenHoles: a.play.hiddenHoles != b.play.hiddenHoles
         case .shankPosts: a.play.shankPosts != b.play.shankPosts
         case .teammatesScore: a.play.teammatesScore != b.play.teammatesScore
+        case .bayScoring: a.play.bayScoring != b.play.bayScoring
         }
     }
 
@@ -294,6 +296,7 @@ nonisolated enum PlayField: CaseIterable, Hashable, Sendable {
         case .hiddenHoles: "\(rules.play.hiddenHoles) hull"
         case .shankPosts: rules.play.shankPosts ? "på" : "av"
         case .teammatesScore: rules.play.teammatesScore ? "på" : "av"
+        case .bayScoring: rules.play.bayScoring ? "på" : "av"
         }
     }
 
