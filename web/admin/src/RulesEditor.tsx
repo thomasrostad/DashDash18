@@ -72,7 +72,17 @@ export function RulesEditor({ competition, onSaved }: { competition: Competition
             </select>
           </label>
           <label className="check"><input type="checkbox" checked={rules.sidePrizes.longestDrive.enabled} onChange={(e) => set((r) => { r.sidePrizes.longestDrive.enabled = e.target.checked; })} />Longest drive gir poeng</label>
+          {rules.sidePrizes.longestDrive.enabled && (
+            <label>Poeng for longest drive
+              <input type="number" min={0} step={0.5} value={rules.sidePrizes.longestDrive.points} onChange={(e) => set((r) => { r.sidePrizes.longestDrive.points = Number(e.target.value); })} />
+            </label>
+          )}
           <label className="check"><input type="checkbox" checked={rules.sidePrizes.closestToPin.enabled} onChange={(e) => set((r) => { r.sidePrizes.closestToPin.enabled = e.target.checked; })} />Nærmest pinnen gir poeng</label>
+          {rules.sidePrizes.closestToPin.enabled && (
+            <label>Poeng for nærmest pinnen
+              <input type="number" min={0} step={0.5} value={rules.sidePrizes.closestToPin.points} onChange={(e) => set((r) => { r.sidePrizes.closestToPin.points = Number(e.target.value); })} />
+            </label>
+          )}
           <h4>Plass i tabellen</h4>
           <label className="check"><input type="checkbox" checked={hasMinEvenings(rules)} onChange={(e) => set((r) => toggleMinEvenings(r, e.target.checked))} />{minEveningsLabel(rules)}</label>
           {hasMinEvenings(rules) && (
