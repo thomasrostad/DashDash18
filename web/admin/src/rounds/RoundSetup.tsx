@@ -7,6 +7,8 @@ import { autoArrange } from "./logic.ts";
 import { competitionContext, dayDrawPlan, loadSlopeCatalog, loadSourceCourses, saveDraft, startRound, withFormats, type DayData, type ListRound } from "./api.ts";
 import { CompetitionsCard, SidesCard } from "./CompetitionsSetup.tsx";
 import { LineupBoard } from "./LineupBoard.tsx";
+import { lineupOf } from "./lineup.ts";
+import { checklistCount, setupChecklist, type ChecklistKey } from "./checklist.ts";
 import {
   coreCourseWithTee, courseItemReady, courseSummary, filterSlope, previousTeeID, slopePlace, suggestedTee, teeDetail,
   teeGenderTitle, SLOPE_PICKER_LIMIT, type CourseItem, type SlopeCourse,
@@ -75,6 +77,20 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
   const blocking = data.allRounds.find((r) => r.status === "active" && r.id !== draft.roundID && r.kind !== "playoff") ?? null;
   const problems = startProblems(setupIssues(draft, courseCheck, rules, roster, true), term, blocking ? titleOf(blocking) : null);
   const title = roundTitle(draft.roundNo, item?.course.name);
+  // Sjekklista: samme sjekk som «Start runden», pluss tavlas røde og gule merknader.
+  const lineup = lineupOf(draft, form, isTeamForm(form), rules.formats.maxPerBay, bays);
+  const offset = draft.firstHole === 10 ? 10 : 1;
+  const ld = sidePrizeChoice(draft.ldEnabled, draft.ldHoleIndex, suggestedLongestDriveHole(coreRound(draft, core)));
+  const kp = sidePrizeChoice(draft.kpEnabled, draft.kpHoleIndex, suggestedClosestToPinHole(coreRound(draft, core)));
+  const checklist = setupChecklist(setupIssues(draft, courseCheck, rules, roster, true), term, {
+    bane: item ? [item.course.name, item.tees.find((t) => t.id === draft.teeID)?.name ? `tee ${item.tees.find((t) => t.id === draft.teeID)!.name}` : null, venueTitle(draft.venue)].filter(Boolean).join(" · ") : "Ikke valgt",
+    start: [`Hull ${draft.firstHole}`, `${draft.holeCount} hull`, draft.teeTime?.slice(0, 5)].filter(Boolean).join(" · "),
+    form: form.name,
+    oppstilling: `${draft.participants.length} spillere i ${lineup.bays.filter((b) => b.members.length > 0).length} ${lineup.bays.filter((b) => b.members.length > 0).length === 1 ? term.singular : term.plural}`,
+    sidepremier: [ld !== null ? `LD hull ${ld + offset}` : null, kp !== null ? `NP hull ${kp + offset}` : null].filter(Boolean).join(" · ") || "Av",
+  }, lineup.bays.flatMap((b) => b.problems).concat(lineup.problems), lineup.bays.flatMap((b) => b.notes));
+  const count = checklistCount(checklist);
+  const jump = (key: ChecklistKey) => document.getElementById(`oppsett-${key}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   function selectCourse(c: CourseItem) {
     let d = setVenue(draft, venueAfterPick(draft.venue, c, venueChosen), rules);
@@ -114,6 +130,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
   }
 
   return (
+    <div className="setup-wrap">
     <div className="setup">
       <h3>{draft.isSaved ? `Fortsett kladd · ${title}` : `Sett opp ${title}`}</h3>
 
@@ -135,7 +152,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
         }} />
       )}
 
-      <div className="card">
+      <div className="card" id="oppsett-bane">
         <h3>Bane</h3>
         <p className="muted small">Hvor spiller dere?</p>
         <div className="segmented" role="group" aria-label="Hvor spiller dere?">
@@ -183,7 +200,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
         }} />
       </div>
 
-      <div className="card">
+      <div className="card" id="oppsett-start">
         <h3>Start</h3>
         <div className="grid2 tight">
           <label>Hull og antall
@@ -200,7 +217,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
         </div>
       </div>
 
-      <div className="card">
+      <div className="card" id="oppsett-form">
         <h3>Form</h3>
         <select value={draft.formID} onChange={(e) => setDraft(setForm(draft, e.target.value, rules, roster, plan))}>
           {formChoices(rules, draft.formID).map((f) => (
@@ -220,6 +237,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
         })()}
       </div>
 
+      <div id="oppsett-oppstilling" />
       <LineupBoard draft={draft} form={form} teamForm={isTeamForm(form)} maxPerBay={rules.formats.maxPerBay}
         bays={bays} setBays={setBays} roster={roster} term={term} withMatches={rules.table.pointsSource === "matches"}
         onChange={setDraft} />
@@ -252,7 +270,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
         </div>
       )}
 
-      <div className="card">
+      <div className="card" id="oppsett-sidepremier">
         <h3>Sidepremier</h3>
         <div className="grid2 tight">
           {sidePrize("Longest drive", draft.ldEnabled, draft.ldHoleIndex, suggestedLongestDriveHole(coreRound(draft, core)),
@@ -299,6 +317,25 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
         <button className="primary" disabled={busy || problems.length > 0} onClick={() => act(true)}>Start runden</button>
         <button className="link" disabled={busy} onClick={onCancel}>Avbryt</button>
       </div>
+    </div>
+    <aside className="checklist" aria-label="Sjekkliste">
+      <div className="checklist-head">
+        <strong>{count.ready === count.total ? "Klar til start" : "Sjekkliste"}</strong>
+        <span className="muted small">{count.ready} av {count.total} klart</span>
+      </div>
+      <div className="checklist-bar"><span style={{ width: `${(count.ready / count.total) * 100}%` }} /></div>
+      <ol>
+        {checklist.map((c) => (
+          <li key={c.key}>
+            <button type="button" className={`check-item ${c.state}`} onClick={() => jump(c.key)}>
+              <span className="check-dot" aria-hidden>{c.state === "ok" ? "✓" : c.state === "warn" ? "!" : "•"}</span>
+              <span className="check-text"><b>{c.title}</b><span>{c.text}</span></span>
+            </button>
+          </li>
+        ))}
+      </ol>
+      {problems.length > checklist.filter((c) => c.state === "bad").length && <p className="muted small">{problems[0]}</p>}
+    </aside>
     </div>
   );
 

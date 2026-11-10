@@ -25,6 +25,16 @@ export function TournamentDetail({ competition, clubName, roster, onBack, onChan
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const hasRules = competition.kind !== "cup";
+  const hasAdjustments = !!competition.season_id && !!competition.club_id && competition.kind !== "cup";
+  const sections = [
+    { key: "oversikt", title: "Oversikt" },
+    ...(hasRules ? [{ key: "regler", title: "Regler" }] : []),
+    ...(hasAdjustments ? [{ key: "tillegg", title: "Tilleggspoeng" }] : []),
+    { key: "stab", title: "Stab og innstillinger" },
+  ] as const;
+  type Section = (typeof sections)[number]["key"];
+  const [section, setSection] = useState<Section>("oversikt");
   const isSeries = competition.kind === "league" || competition.kind === "fun";
 
   const load = useCallback(async () => {
@@ -51,17 +61,28 @@ export function TournamentDetail({ competition, clubName, roster, onBack, onChan
   const staffCandidates = roster.filter((m) => m.user_id && m.status === "active" && !crew.some((s) => s.profile_id === m.user_id));
 
   return (
-    <section>
-      <button className="link" onClick={onBack}>← Alle turneringer</button>
-      <h2>{competition.name}</h2>
-      <p className="muted">
-        {kindText(competition.kind)} · {statusText(competition.status)}
-        {competition.starts_on && ` · ${longDate(competition.starts_on)}${competition.ends_on ? ` – ${longDate(competition.ends_on)}` : ""}`}
-        {competition.is_main && " · Hovedturnering"}
-      </p>
+    <section className="detail">
+      <button className="link back" onClick={onBack}>← Alle turneringer</button>
+      <div className="detail-head">
+        <h2>{competition.name}</h2>
+        <p className="muted">
+          <span className={`pill ${competition.status === "active" ? "tone-green" : competition.status === "planned" ? "tone-gold" : "tone-mute"}`}>{statusText(competition.status)}</span>
+          {competition.is_main && <span className="pill">Hovedturnering</span>}
+          <span className="detail-meta">{kindText(competition.kind)}
+            {competition.starts_on && ` · ${longDate(competition.starts_on)}${competition.ends_on ? ` – ${longDate(competition.ends_on)}` : ""}`}
+            {people && ` · ${active.length} påmeldt${active.length === 1 ? "" : "e"}`}</span>
+        </p>
+      </div>
+      <nav className="subtabs" aria-label="Turneringen">
+        {sections.map((t) => (
+          <button key={t.key} className={t.key === section ? "subtab active" : "subtab"} aria-current={t.key === section ? "page" : undefined}
+            onClick={() => { setSection(t.key); setNotice(null); setError(null); }}>{t.title}</button>
+        ))}
+      </nav>
       {error && <p className="error">{error}</p>}
       {notice && <p className="ok">{notice}</p>}
 
+      {section === "oversikt" && <>
       <div className="grid2">
         <div className="card">
           <h3>Påmeldte ({active.length}{settings?.max_entrants ? ` av ${settings.max_entrants}` : ""})</h3>
@@ -102,15 +123,16 @@ export function TournamentDetail({ competition, clubName, roster, onBack, onChan
         )}
       </div>
 
-      {competition.kind !== "cup" && <div className="grid2"><RulesEditor competition={competition} onSaved={onChanged} /></div>}
-
-      {competition.season_id && competition.club_id && competition.kind !== "cup" && <Adjustments competition={competition} roster={roster} />}
-
       {canAddParticipants(competition) && <Participants competition={competition} clubName={clubName} onChanged={() => { load(); onChanged(); }} />}
 
       <ScreenShare competition={competition} />
+      </>}
 
-      <div className="grid2">
+      {section === "regler" && hasRules && <div className="grid2"><RulesEditor competition={competition} onSaved={onChanged} /></div>}
+
+      {section === "tillegg" && hasAdjustments && <Adjustments competition={competition} roster={roster} />}
+
+      {section === "stab" && <div className="grid2">
         <div className="card">
           <h3>Stab</h3>
           <p className="muted">Arrangører styrer turneringen. Funksjonærer fører for gruppene de er satt på.</p>
@@ -160,7 +182,7 @@ export function TournamentDetail({ competition, clubName, roster, onBack, onChan
             onBack();
           }, "Slettet.")} />
         </div>
-      </div>
+      </div>}
     </section>
   );
 }
