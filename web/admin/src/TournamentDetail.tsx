@@ -70,7 +70,7 @@ export function TournamentDetail({ competition, clubName, roster, onBack, onChan
           {competition.is_main && <span className="pill">Hovedturnering</span>}
           <span className="detail-meta">{kindText(competition.kind)}
             {competition.starts_on && ` · ${longDate(competition.starts_on)}${competition.ends_on ? ` – ${longDate(competition.ends_on)}` : ""}`}
-            {people && ` · ${active.length} påmeldt${active.length === 1 ? "" : "e"}`}</span>
+            {people && (competition.kind !== "season" || active.length > 0) && ` · ${active.length} påmeldt${active.length === 1 ? "" : "e"}`}</span>
         </p>
       </div>
       <nav className="subtabs" aria-label="Turneringen">
@@ -102,7 +102,7 @@ export function TournamentDetail({ competition, clubName, roster, onBack, onChan
         </div>
 
         {settings && competition.kind !== "season" && (
-          <form className="card" onSubmit={(e) => { e.preventDefault(); run(() => saveSignupSettings(competition.id, settings), "Påmeldingen er lagret."); }}>
+          <form className="card settings" onSubmit={(e) => { e.preventDefault(); run(() => saveSignupSettings(competition.id, settings), "Påmeldingen er lagret."); }}>
             <h3>Påmelding</h3>
             <label className="check"><input type="checkbox" checked={settings.signup_open} onChange={(e) => setSettings({ ...settings, signup_open: e.target.checked })} />Åpen for påmelding</label>
             <label>Hvem kan melde seg på

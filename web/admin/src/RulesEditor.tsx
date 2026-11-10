@@ -37,7 +37,7 @@ export function RulesEditor({ competition, onSaved }: { competition: Competition
   }
 
   return (
-    <form className="card" onSubmit={save}>
+    <form className="card settings" onSubmit={save}>
       <h3>Reglene <span className="pill">{template ? templateTitle(template) : "Tilpasset"}</span></h3>
       {finished && <p className="muted">Turneringen er ferdig. Reglene kan ikke endres.</p>}
       <fieldset disabled={finished || busy}>
