@@ -80,28 +80,51 @@ export function Schedule({ clubID, days, comps, roster, committees, onChanged, c
           lastVenue={days.at(-1)?.venue ?? ""} inSeries={editing !== "new" && series !== null && seriesOf(editing) !== null} days={days}
           onDone={(text) => { setEditing(null); setNotice(text ?? null); onChanged(); }} onCancel={() => setEditing(null)} />
       )}
-      {days.length === 0 ? <p className="muted">Ingen kvelder eller spilledager ennå.</p> : (
-        <table>
-          <thead><tr><th>Dato</th><th>Tid</th><th>Sted</th><th>Turnering</th><th>Komité</th><th></th></tr></thead>
-          <tbody>
-            {days.map((e) => (
-              <tr key={e.id} className={e.event_date < today ? "past" : ""}>
-                <td>{longDate(e.event_date)}{seriesOf(e) && <div className="muted small">{seriesText(seriesOf(e)!)}</div>}</td>
-                <td>{timeText(e.start_time) ?? "–"}</td>
-                <td>{e.venue ?? "–"}</td>
-                <td>{nameOf(e)}</td>
-                <td className="muted">{(committees[e.id] ?? []).map((id) => roster.find((m) => m.id === id)?.display_name ?? "?").join(", ")}</td>
-                <td className="actions">
-                  <button className="link" onClick={() => setSignupsFor(e)}>Påmelding</button>
-                  <button className="link" onClick={() => setRoundsFor(e)}>Runder</button>
-                  <button className="link" onClick={() => setEditing(e)}>Endre</button>
-                  <button className="link" onClick={() => remove(e)}>Slett</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {days.length === 0 ? <p className="muted empty">Ingen kvelder eller spilledager ennå. Trykk «Ny dato» for å legge inn den første.</p> : (() => {
+        const upcoming = days.filter((e) => e.event_date >= today);
+        const played = days.filter((e) => e.event_date < today).reverse();
+        const row = (e: EventRow, next: boolean) => {
+          const d = new Date(`${e.event_date}T12:00:00`);
+          const crew = (committees[e.id] ?? []).map((id) => roster.find((m) => m.id === id)?.display_name ?? "?");
+          return (
+            <li key={e.id} className={["day", next ? "next" : "", e.event_date < today ? "past" : ""].join(" ")}>
+              <div className="day-tile" aria-hidden>
+                <span className="dow">{d.toLocaleDateString("nb-NO", { weekday: "short" }).replace(".", "")}</span>
+                <span className="dnum">{d.getDate()}</span>
+                <span className="mon">{d.toLocaleDateString("nb-NO", { month: "short" }).replace(".", "")}</span>
+              </div>
+              <div className="day-main">
+                <div className="day-title">
+                  <strong>{nameOf(e) || longDate(e.event_date)}</strong>
+                  {next && <span className="pill tone-gold">Neste</span>}
+                </div>
+                <div className="day-meta muted">
+                  {[longDate(e.event_date), timeText(e.start_time), e.venue, crew.length ? `Komité: ${crew.join(", ")}` : null].filter(Boolean).join(" · ")}
+                  {seriesOf(e) && <> · {seriesText(seriesOf(e)!)}</>}
+                </div>
+              </div>
+              <div className="day-actions">
+                <button className="secondary sm" onClick={() => setRoundsFor(e)}>Runder</button>
+                <button className="ghost sm" onClick={() => setSignupsFor(e)}>Påmelding</button>
+                <button className="ghost sm" onClick={() => setEditing(e)}>Endre</button>
+                <button className="ghost sm danger-text" onClick={() => remove(e)}>Slett</button>
+              </div>
+            </li>
+          );
+        };
+        return (
+          <>
+            {upcoming.length > 0 && <ul className="days">{upcoming.map((e, i) => row(e, i === 0))}</ul>}
+            {upcoming.length === 0 && <p className="muted empty">Ingen kommende datoer.</p>}
+            {played.length > 0 && (
+              <details className="played">
+                <summary>Spilt <span className="muted">· {played.length}</span></summary>
+                <ul className="days">{played.map((e) => row(e, false))}</ul>
+              </details>
+            )}
+          </>
+        );
+      })()}
     </section>
   );
 }
