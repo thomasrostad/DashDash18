@@ -275,7 +275,7 @@ details.played > .days { margin-top: 4px; }
 .subtab.active { color: var(--ink); border-bottom-color: var(--gold); font-weight: 600; }
 /* Rundeoppsettet: skjemaet til venstre, sjekklista fast til høyre (øverst på telefon). */
 .setup-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 24px; align-items: start; }
-.setup-wrap > .setup { min-width: 0; display: grid; gap: 16px; }
+.setup-wrap > .setup { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .setup-wrap > .setup > .card + .card { margin-top: 0; }
 .setup [id^="oppsett-"] { scroll-margin-top: 84px; }
 .checklist { position: sticky; top: 76px; background: var(--card); border-radius: 18px; padding: 16px; box-shadow: var(--shadow); display: grid; gap: 10px; }
@@ -304,3 +304,4 @@ details.played > .days { margin-top: 4px; }
 .seg { background: none; border: 0; border-radius: 999px; padding: 7px 16px; color: var(--ink2); font-weight: 500; }
 .seg:hover { color: var(--ink); }
 .seg.active { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: var(--shadow); }
+select { max-width: 100%; min-width: 0; } label { min-width: 0; }
