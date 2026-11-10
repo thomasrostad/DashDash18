@@ -3,7 +3,7 @@
 // Alt er avgrenset til .landing, så arrangørsiden ikke påvirkes. Fargene (--bg, --ink, --card …) og .loud står i
 // src/styles.css; workeren har de samme verdiene. `.live` settes av live.ts: uten skript står alt ferdig fra start.
 export const LANDING_STYLE = `
-.landing { --ink3: #868C86; --surface: var(--card); background: var(--bg); color: var(--ink); font-size: 17px; line-height: 1.5; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+.landing { --sans: var(--display); font-family: var(--display); --ink3: #868C86; --surface: var(--card); background: var(--bg); color: var(--ink); font-size: 17px; line-height: 1.5; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 .landing h1, .landing h2, .landing h3, .landing p { margin: 0; }
 .landing h1, .landing h2, .landing h3 { text-wrap: balance; font-weight: 400; }
 .landing .wrap { max-width: 1240px; margin: 0 auto; padding-left: max(22px, env(safe-area-inset-left, 0px)); padding-right: max(22px, env(safe-area-inset-right, 0px)); }
