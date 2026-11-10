@@ -590,6 +590,15 @@ export function savedDraft(round: SavedRound, players: readonly SavedPlayer[], m
   };
 }
 
+/**
+ * Stedet etter at en bane er valgt. Klubbens egne baner gir stedet (som `RoundConfirm.venue(for:)` i appen).
+ * En bane fra slope.no er en ekte bane, men kan spilles i simulatoren: har arrangøren valgt sted selv, står valget.
+ */
+export function venueAfterPick(current: Venue, course: { kind: "simulator" | "course"; isFromSource: boolean }, chosen: boolean): Venue {
+  if (course.isFromSource && chosen) return current;
+  return course.kind === "course" ? "course" : "simulator";
+}
+
 /** Bytter mellom simulator og ekte bane. På ekte bane fører dere brutto; i simulatoren gjelder regelsettets valg. */
 export function setVenue(d: RoundDraft, venue: Venue, rules: Ruleset): RoundDraft {
   if (venue === d.venue) return d;
