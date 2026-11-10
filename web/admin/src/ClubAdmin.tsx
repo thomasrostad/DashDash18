@@ -120,7 +120,7 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
                   <tr key={c.id} className="click" onClick={() => setOpenID(c.id)}>
                     <td><strong>{c.name}</strong>{c.is_main && <span className="pill">Hovedturnering</span>}{c.auto_count && <span className="pill">Spill når det passer</span>}</td>
                     <td>{kindText(c.kind)}</td>
-                    <td>{statusText(c.status)}</td>
+                    <td><span className={`pill ${c.status === "active" ? "tone-green" : c.status === "planned" ? "tone-gold" : "tone-mute"}`}>{statusText(c.status)}</span></td>
                     <td>{c.starts_on ? `${longDate(c.starts_on)}${c.ends_on ? ` – ${longDate(c.ends_on)}` : ""}` : "–"}</td>
                     <td>{c.signup_open ? "Åpen" : "–"}</td>
                   </tr>

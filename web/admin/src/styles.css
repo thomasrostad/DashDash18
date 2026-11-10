@@ -206,3 +206,53 @@ button:not([class]):disabled { opacity: .5; cursor: default; }
   th, td { white-space: nowrap; }
   .topbar .bar > .muted.onDark { display: none; }
 }
+
+/* ---- Finere utseende (11.2026): flater i nivåer, luftige lister, statusmerker og overskrifter med karakter ---- */
+:root { --raised: #FFFFFF; --sunk: #EFEBE0; --gold-soft: rgba(228,199,103,.22); --green-soft: rgba(28,72,58,.10); }
+@media (prefers-color-scheme: dark) {
+  :root { --raised: #1A2E25; --sunk: #0B1712; --gold-soft: rgba(228,199,103,.16); --green-soft: rgba(159,212,180,.14);
+    --shadow: 0 0 0 1px rgba(255,255,255,.05), 0 1px 0 rgba(255,255,255,.04) inset, 0 12px 32px -18px rgba(0,0,0,.6); }
+  .card, table, .days > li { background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0) 40%), var(--card); }
+}
+.pagehead h1 { font-family: var(--sans); font-stretch: 70%; font-weight: 800; text-transform: uppercase; letter-spacing: .005em; font-size: 40px; line-height: .95; margin: 0 0 6px; }
+.pagehead p { font-family: var(--serif); font-style: italic; font-size: 17px; letter-spacing: -.01em; }
+@media (max-width: 860px) { .pagehead h1 { font-size: 32px; } }
+.pill { margin-left: 8px; padding: 3px 10px; font-size: 12px; font-weight: 600; letter-spacing: .01em; }
+.pill.tone-green { background: var(--green-soft); color: var(--accent); }
+.pill.tone-gold { background: var(--gold-soft); color: var(--ink); }
+.pill.tone-mute { background: var(--sunk); color: var(--ink2); }
+td .pill:first-child { margin-left: 0; }
+button.sm { min-height: 34px; padding: 6px 14px; font-size: 14px; }
+button.ghost { background: none; border: 0; color: var(--ink2); border-radius: 999px; font-weight: 500; }
+button.ghost:hover:not(:disabled) { background: var(--hover); color: var(--ink); }
+button.ghost.danger-text:hover:not(:disabled) { color: var(--rust); }
+.empty { padding: 28px; text-align: center; border: 1px dashed var(--rule); border-radius: 16px; }
+
+/* Terminlista: datoflis, tittel og handlinger på hver rad. */
+.days { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.days > li { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 16px; align-items: center; background: var(--card); border-radius: 16px; padding: 12px 14px 12px 12px; box-shadow: var(--shadow); transition: transform .15s, box-shadow .15s; }
+.days > li:hover { box-shadow: var(--shadow), 0 0 0 1px var(--field); }
+.days > li.next { box-shadow: var(--shadow), 0 0 0 1.5px var(--gold); }
+.days > li.past { opacity: .72; }
+.day-tile { display: grid; justify-items: center; align-content: center; gap: 0; width: 64px; height: 64px; border-radius: 14px; background: var(--sunk); line-height: 1; }
+.next .day-tile { background: var(--forest); color: var(--on-dark); }
+.day-tile .dow, .day-tile .mon { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink2); }
+.next .day-tile .dow, .next .day-tile .mon { color: var(--gold); }
+.day-tile .dnum { font-family: var(--sans); font-stretch: 70%; font-weight: 800; font-size: 28px; margin: 2px 0; }
+.day-title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 0; font-size: 16px; }
+.day-meta { font-size: 14px; margin-top: 3px; overflow-wrap: anywhere; }
+.day-actions { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+details.played { margin-top: 8px; }
+details.played > summary { cursor: pointer; list-style: none; padding: 10px 4px; font-weight: 600; color: var(--ink2); }
+details.played > summary::before { content: "▸ "; } details.played[open] > summary::before { content: "▾ "; }
+details.played > .days { margin-top: 4px; }
+@media (max-width: 700px) {
+  .days > li { grid-template-columns: 52px minmax(0, 1fr); gap: 12px; }
+  .day-tile { width: 52px; height: 52px; } .day-tile .dnum { font-size: 22px; }
+  .day-actions { grid-column: 2; justify-content: flex-start; margin-left: -8px; gap: 0; }
+  .day-actions button.sm { padding: 6px 10px; }
+}
+/* Sidemenyen: klubbens farge på det aktive valget. */
+.side-item.active { position: relative; }
+.side-item.active::before { content: ""; position: absolute; left: -6px; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--gold); }
+@media (max-width: 860px) { .side-item.active::before { display: none; } }
