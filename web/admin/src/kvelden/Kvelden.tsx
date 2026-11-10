@@ -7,6 +7,7 @@ import { termNumbered } from "../rounds/logic.ts";
 import { longDate } from "../text.ts";
 import { loadLive, loadNextDay, type LiveRound, type NextDay } from "./api.ts";
 import { clockText, feedOf, gapsOf, groupsOf, phaseOf, type KvFeedItem, type KvGroup } from "./model.ts";
+import { Challenge } from "./Challenge.tsx";
 import "./kvelden.css";
 
 const POLL_MS = 20000;
@@ -150,6 +151,10 @@ export function Kvelden({ clubID, days, comps, roster, canMembers, canRounds, on
             </tbody></table>
           </div>
         </div>
+        {canRounds && live.event && live.competition?.season_id && (
+          <Challenge clubID={clubID} seasonID={live.competition.season_id} eventID={live.event.id}
+            players={players.map((p) => ({ memberID: p.memberID, group: p.group }))} name={(m) => game.name(m)} term={term} />
+        )}
         <p className="muted kv-locknote">Når runden er låst, kan ingen endre scorene, og den teller i turneringen.</p>
       </div>
     );
