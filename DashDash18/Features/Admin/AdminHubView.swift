@@ -143,6 +143,8 @@ private struct AdminHubContent: View {
     @State private var creatingSeries: SeriesSheetItem?
     @State private var pendingDelete: EventRow?
     @State private var drawPlan: IdentifiedPlan?
+    /// «Challenge etter runden»: åpen når arrangøren registrerer vinnere.
+    @State private var challenge: ChallengeContext?
     @State private var perEvening = 2
     @State private var didScroll = false
     @State private var error: String?
@@ -250,6 +252,14 @@ private struct AdminHubContent: View {
                                  })
             }
             .environment(\.dayTerm, term)
+        }
+        .sheet(item: $challenge) { item in
+            if let season = challengeSeason {
+                NavigationStack {
+                    RoundChallengeView(model: TilleggspoengModel(context: model.clubContext, season: season),
+                                       context: item) { challenge = nil }
+                }
+            }
         }
         .sheet(item: $drawPlan) { item in
             NavigationStack {
@@ -619,6 +629,19 @@ private struct AdminHubContent: View {
                 DDHeader("Sidepremier")
             }
         }
+        if let round = challengeRound(rounds) {
+            Section {
+                Button { openChallenge(round, event: event) } label: {
+                    Label("Challenge etter runden", systemImage: "flag.checkered")
+                        .labelStyle(DDIconLabelStyle())
+                        .foregroundStyle(Color.ddInk)
+                }
+            } header: {
+                DDHeader("Alle er inne")
+            } footer: {
+                DDFooter("For eksempel CP knockout. Vinneren får tilleggspoeng før du avslutter \(term.the).")
+            }
+        }
         if !rounds.isEmpty {
             tonightRemaining(rounds: rounds, prizes: prizes, event: event, closesAbove: Self.isClose(progress.action))
         }
@@ -636,6 +659,29 @@ private struct AdminHubContent: View {
                     .foregroundStyle(Color.ddInk)
             }
         }
+    }
+
+    // MARK: Challenge etter runden
+
+    /// Runden som er klar for challengen: aktiv, alle hull ført, og du kan gi tilleggspoeng.
+    private func challengeRound(_ rounds: [RoundRow]) -> RoundRow? {
+        guard shows(.tournaments), challengeSeason != nil, model.activeComplete,
+              let active = model.activeRound else { return nil }
+        return rounds.first { $0.id == active.id }
+    }
+
+    /// Sesongen tilleggspoengene hører til (sql/072): turneringens sesong, eller sesongen selv.
+    private var challengeSeason: SeasonRow? {
+        guard let tournament = model.tournament else { return nil }
+        guard let competition = model.competition else { return tournament }
+        guard let seasonID = competition.seasonID else { return nil }
+        return SeasonRow(id: seasonID, clubID: tournament.clubID, name: tournament.name, status: tournament.status,
+                         rules: tournament.rules)
+    }
+
+    private func openChallenge(_ round: RoundRow, event: EventRow) {
+        let players = (model.playersByRound[round.id] ?? []).map { (memberID: $0.memberID, group: $0.bayNo ?? 0) }
+        challenge = ChallengeContext(eventID: event.id, term: GroupTerm.for(stored: round.venue), players: players)
     }
 
     /// «Del tavla»: turneringen arrangørsiden viser (sesongen, eller liga/cup/morro med egne spilledager).

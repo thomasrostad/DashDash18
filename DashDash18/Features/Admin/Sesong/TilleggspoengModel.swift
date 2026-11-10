@@ -134,8 +134,8 @@ nonisolated enum Tilleggspoeng {
     static let reasonLimit = 80
     /// Poengene kan være negative (straff eller rettelse), men ikke 0.
     static let pointsRange: ClosedRange<Double> = -100...100
-    /// Steget i velgeren: halve poeng.
-    static let step = 0.5
+    /// Steget i velgeren: kvarte poeng (databasen lagrer to desimaler, sql/072).
+    static let step = 0.25
 
     /// Hva som mangler før tillegget kan lagres, eller nil.
     static func problem(memberID: UUID?, points: Double, reason: String) -> String? {
