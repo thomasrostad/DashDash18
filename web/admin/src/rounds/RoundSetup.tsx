@@ -6,16 +6,17 @@ import { longDate } from "../text.ts";
 import { autoArrange } from "./logic.ts";
 import { competitionContext, dayDrawPlan, loadSlopeCatalog, loadSourceCourses, saveDraft, startRound, withFormats, type DayData, type ListRound } from "./api.ts";
 import { CompetitionsCard, SidesCard } from "./CompetitionsSetup.tsx";
+import { LineupBoard } from "./LineupBoard.tsx";
 import {
   coreCourseWithTee, courseItemReady, courseSummary, filterSlope, previousTeeID, slopePlace, suggestedTee, teeDetail,
   teeGenderTitle, SLOPE_PICKER_LIMIT, type CourseItem, type SlopeCourse,
 } from "./courses.ts";
 import {
-  applySidePrize, bayCount as highestBay, dataErrorText, drawFooter, randomSeed, randomTeamsFor, STANDINGS_PLAN, swapTwo, bayNumbers, coreRound, draftForm, prepareSetup, excludePlayer, formChoices,
-  groupTerm, includePlayer, isTeamMatch, isTriangleMatch, makeMarker, markerIn, membersIn, moveSeat, playerMatch,
-  playersSummary, redrawMatches, reshuffleBays, roundTitle, seatFor, setCourse, setForm, setStart, setVenue, setupIssues, venueAfterPick,
-  sidePrizeChoice, startOptions, startProblems, startTitle, teamMatch, teamProblem, termCount, termNumbered,
-  termPluralTitle, venueTitle, WEIGHTS, MAX_BAYS, HIDE_LAST_HOLES, pointsTableChoices, type MatchDraft, type RoundDraft,
+  applySidePrize, bayCount as highestBay, dataErrorText, drawFooter, STANDINGS_PLAN, coreRound, draftForm, prepareSetup, formChoices,
+  groupTerm, isTeamMatch, isTriangleMatch, playerMatch,
+  redrawMatches, reshuffleBays, roundTitle, setCourse, setForm, setStart, setVenue, setupIssues, venueAfterPick,
+  sidePrizeChoice, startOptions, startProblems, startTitle, teamMatch,
+  venueTitle, WEIGHTS, HIDE_LAST_HOLES, pointsTableChoices, type MatchDraft, type RoundDraft,
 } from "./logic.ts";
 
 /**
@@ -61,8 +62,6 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
   }, [formats, initial]);
   // Trekningen etter regelsettet (`formats.drawMethod`), med møtene i turneringens andre runder.
   const plan = useMemo(() => dayDrawPlan(data, draft.roundID), [data, draft.roundID]);
-  const [swapA, setSwapA] = useState("");
-  const [swapB, setSwapB] = useState("");
   const name = (id: string) => roster.find((m) => m.id === id)?.name ?? "Ukjent";
 
   const item = courses.find((c) => c.course.id === draft.courseID) ?? null;
@@ -202,53 +201,6 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
       </div>
 
       <div className="card">
-        <h3>Spillere og {term.plural} · {playersSummary(draft)}</h3>
-        <p className="muted small">{draft.participantSource === "everyone"
-          ? "Ingen har svart «Kommer» ennå, så alle står som med. Ta ut dem som ikke kommer."
-          : draft.participantSource === "signups"
-            ? `De som har svart «Kommer» er med. «Bland på nytt» fordeler på ${termCount(term, bays)}, med duellpartnere i samme ${term.singular} og én markør i hver.`
-            : `De som er satt opp i kladden. «Bland på nytt» fordeler på ${termCount(term, bays)}.`}</p>
-        <div className="inline">
-          <label className="check">{termPluralTitle(term)}
-            <input type="number" min={1} max={Math.max(1, Math.min(MAX_BAYS, draft.participants.length))} value={bays}
-              onChange={(e) => setBays(Math.max(1, Math.min(MAX_BAYS, Number(e.target.value) || 1)))} />
-          </label>
-          <button className="link" onClick={() => setDraft(reshuffleBays(draft, bays))}>Bland på nytt</button>
-        </div>
-        <div className="bays">
-          {bayNumbers(draft.bays).map((bay) => {
-            const ids = membersIn(draft.bays, bay);
-            const marker = markerIn(draft.bays, bay);
-            const over = ids.length > rules.formats.maxPerBay;
-            return (
-              <div key={bay} className="bay">
-                <h4>{termNumbered(term, bay)} <span className={over ? "error small" : "muted small"}>{ids.length}{over ? ` · over ${rules.formats.maxPerBay}` : ""}</span></h4>
-                {ids.map((id) => seatRow(id))}
-                {marker === undefined && <p className="error small">Ingen markør. Velg «Gjør til markør» på en av dem.</p>}
-              </div>
-            );
-          })}
-          {draft.participants.some((id) => !seatFor(draft.bays, id)) && (
-            <div className="bay">
-              <h4>Uten {term.singular}</h4>
-              {draft.participants.filter((id) => !seatFor(draft.bays, id)).map((id) => seatRow(id))}
-            </div>
-          )}
-        </div>
-        {roster.some((m) => !draft.participants.includes(m.id)) && (
-          <>
-            <h4>Ikke med</h4>
-            <div className="chips">
-              {roster.filter((m) => !draft.participants.includes(m.id)).map((m) => (
-                <button key={m.id} className="link" onClick={() => setDraft(prepareSetup(includePlayer(draft, m.id, roster), rules, roster, plan))}>+ {m.name}</button>
-              ))}
-            </div>
-            <p className="muted small">Trykk for å ta med. Han havner i {term.definite} med færrest.</p>
-          </>
-        )}
-      </div>
-
-      <div className="card">
         <h3>Form</h3>
         <select value={draft.formID} onChange={(e) => setDraft(setForm(draft, e.target.value, rules, roster, plan))}>
           {formChoices(rules, draft.formID).map((f) => (
@@ -268,43 +220,9 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
         })()}
       </div>
 
-      {isTeamForm(form) && (
-        <div className="card">
-          <h3>Lag · {form.teamSize} per lag</h3>
-          {(() => {
-            const count = draft.participants.length;
-            const numbers = Math.max(2, form.allowsUnevenTeams ? count : Math.floor((count + form.teamSize - 1) / form.teamSize));
-            return draft.participants.map((id) => (
-              <label key={id} className="row-inline">{name(id)}
-                <select value={draft.teams[id] ?? ""} onChange={(e) => {
-                  const teams = { ...draft.teams };
-                  if (e.target.value) teams[id] = Number(e.target.value); else delete teams[id];
-                  setDraft(redrawMatches({ ...draft, teams }, roster, plan));
-                }}>
-                  <option value="">Uten lag</option>
-                  {Array.from({ length: numbers }, (_, i) => i + 1).map((n) => <option key={n} value={n}>Lag {n}</option>)}
-                </select>
-              </label>
-            ));
-          })()}
-          <button className="link" onClick={() => setDraft(redrawMatches({ ...draft, teams: randomTeamsFor(draft.participants, form, rules.formats.maxPerBay, randomSeed()) }, roster, plan))}>Tilfeldige lag</button>
-          <div className="inline">
-            <select aria-label="Første spiller" value={swapA} onChange={(e) => { setSwapA(e.target.value); setSwapB(""); }}>
-              <option value="">Bytt …</option>
-              {draft.participants.filter((id) => draft.teams[id] !== undefined).map((id) => <option key={id} value={id}>{name(id)} · lag {draft.teams[id]}</option>)}
-            </select>
-            <select aria-label="Andre spiller" value={swapB} disabled={!swapA} onChange={(e) => setSwapB(e.target.value)}>
-              <option value="">… med</option>
-              {draft.participants.filter((id) => draft.teams[id] !== undefined && draft.teams[id] !== draft.teams[swapA]).map((id) => <option key={id} value={id}>{name(id)} · lag {draft.teams[id]}</option>)}
-            </select>
-            <button className="link" disabled={!swapA || !swapB} onClick={() => {
-              setDraft(redrawMatches({ ...draft, teams: swapTwo(draft.teams, swapA, swapB) }, roster, plan));
-              setSwapA(""); setSwapB("");
-            }}>Bytt to spillere</button>
-          </div>
-          {(() => { const p = teamProblem(draft.teams, draft.participants, form, rules.formats.maxPerBay); return p ? <p className="error small">{p}</p> : null; })()}
-        </div>
-      )}
+      <LineupBoard draft={draft} form={form} teamForm={isTeamForm(form)} maxPerBay={rules.formats.maxPerBay}
+        bays={bays} setBays={setBays} roster={roster} term={term} withMatches={rules.table.pointsSource === "matches"}
+        onChange={setDraft} />
 
       {formats && draft.competitions && (
         <CompetitionsCard list={draft.competitions} ctx={competitionContext(draft)} name={name}
@@ -316,7 +234,7 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
           onChange={(sides) => setDraft({ ...draft, sides })} />
       )}
 
-      {rules.table.pointsSource === "matches" && (
+      {rules.table.pointsSource === "matches" && !isTeamForm(form) && (
         <div className="card">
           <h3>Matcher</h3>
           {draft.matches.length === 0 && <p className="muted">Ingen matcher</p>}
@@ -386,27 +304,6 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
 
   function allowanceDefault(): number {
     return allowanceFor(rules, form);
-  }
-
-  function seatRow(id: string) {
-    const seat = seatFor(draft.bays, id);
-    const highest = Math.max(highestBay(draft.bays), bays);
-    const options = Array.from({ length: Math.min(highest + 1, MAX_BAYS) }, (_, i) => i + 1);
-    return (
-      <div className="seat" key={id}>
-        <span>{name(id)}{seat?.isMarker && <span className="pill">Markør</span>}</span>
-        <select value={seat?.bay ?? ""} onChange={(e) => {
-          const v = e.target.value;
-          if (v === "out") setDraft(prepareSetup(excludePlayer(draft, id), rules, roster, plan));
-          else setDraft({ ...draft, bays: moveSeat(draft.bays, id, Number(v)) });
-        }}>
-          {!seat && <option value="">Uten {term.singular}</option>}
-          {options.map((b) => <option key={b} value={b}>{b > highest ? `Ny ${term.singular} ${b}` : termNumbered(term, b)}</option>)}
-          <option value="out">Ikke med</option>
-        </select>
-        {seat && !seat.isMarker && <button className="link" onClick={() => setDraft({ ...draft, bays: makeMarker(draft.bays, id) })}>Gjør til markør</button>}
-      </div>
-    );
   }
 
   function matchRow(index: number, match: MatchDraft) {
