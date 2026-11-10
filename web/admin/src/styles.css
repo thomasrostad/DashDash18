@@ -172,7 +172,7 @@ td.actions button.link, td .link { padding: 4px 8px; border-radius: 8px; }
 td.actions button.link:hover { background: var(--hover); text-decoration: none; }
 .pill { background: var(--lime); color: var(--ink); font-weight: 500; }
 
-.shell { max-width: 1280px; margin: 0 auto; padding: 24px 16px 80px; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 32px; align-items: start; }
+.admin-shell { max-width: 1280px; margin: 0 auto; padding: 24px 16px 80px; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 32px; align-items: start; }
 .side { position: sticky; top: 76px; display: grid; gap: 18px; }
 .side-group { display: grid; gap: 2px; }
 .side-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--ink2); padding: 0 12px 4px; }
@@ -188,11 +188,21 @@ td.actions button.link:hover { background: var(--hover); text-decoration: none; 
 .pagehead p { margin: 0; max-width: 60ch; }
 .pagehead-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 @media (max-width: 860px) {
-  .shell { grid-template-columns: minmax(0, 1fr); gap: 16px; padding-top: 12px; }
+  .admin-shell { grid-template-columns: minmax(0, 1fr); gap: 16px; padding-top: 12px; }
   .side { position: sticky; top: 56px; z-index: 5; display: flex; gap: 4px; overflow-x: auto; margin: 0 -16px; padding: 8px 16px; background: var(--bg); scrollbar-width: none; }
   .side::-webkit-scrollbar { display: none; }
   .side-group { display: flex; gap: 4px; }
   .side-title { display: none; }
   .side-item { white-space: nowrap; padding: 8px 12px; }
   .pagehead h1 { font-size: 24px; }
+}
+/* Knapper uten egen stil (f.eks. «Lag serie») ser ut som sekundærknapper. */
+button:not([class]) { background: transparent; color: var(--ink); border: 0; box-shadow: inset 0 0 0 1px var(--field); border-radius: 999px; padding: 9px 16px; font-weight: 600; min-height: 40px; }
+button:not([class]):hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--ink2); }
+button:not([class]):disabled { opacity: .5; cursor: default; }
+@media (max-width: 700px) {
+  /* Brede tabeller sveipes sidelengs i stedet for å kuttes. */
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  th, td { white-space: nowrap; }
+  .topbar .bar > .muted.onDark { display: none; }
 }

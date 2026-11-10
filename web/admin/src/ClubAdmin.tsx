@@ -69,7 +69,7 @@ export function ClubAdmin({ membership }: { membership: Membership }) {
   const info = TAB_INFO[tab];
 
   return (
-    <main className="shell">
+    <main className="admin-shell">
       <nav className="side" aria-label="Meny">
         {navGroups(tabs).map((g) => (
           <div key={g.title} className="side-group">
