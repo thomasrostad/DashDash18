@@ -4,7 +4,7 @@ import { applyPreviousPlayers, applyRoundTemplate, decodeRoundTemplate, encodeRo
 import { TemplateBar } from "../Templates.tsx";
 import { longDate } from "../text.ts";
 import { autoArrange } from "./logic.ts";
-import { competitionContext, dayDrawPlan, loadSlopeCatalog, loadSourceCourses, saveDraft, startRound, withFormats, type DayData, type ListRound } from "./api.ts";
+import { competitionContext, dayDrawPlan, lineupSharedAt, loadSlopeCatalog, loadSourceCourses, saveDraft, shareLineup, startRound, withFormats, type DayData, type ListRound } from "./api.ts";
 import { CompetitionsCard, SidesCard } from "./CompetitionsSetup.tsx";
 import { LineupBoard } from "./LineupBoard.tsx";
 import { lineupOf } from "./lineup.ts";
@@ -49,6 +49,11 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
   const [bays, setBays] = useState(Math.max(1, highestBay(draft.bays)));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // sql/076: om spillerne ser oppstillingen før start.
+  const [sharedAt, setSharedAt] = useState<string | null>(null);
+  useEffect(() => {
+    if (initial.isSaved) lineupSharedAt(initial.roundID).then(setSharedAt);
+  }, [initial.isSaved, initial.roundID]);
   const rules = data.rules;
   const roster = data.roster;
   // sql/048: konkurransene og sidene. En lagret kladd henter dem; en ny runde starter tom (eller fra «Samme som sist»).
@@ -108,7 +113,27 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
         onDone(`${title} er startet.`);
       } else {
         await saveDraft(ctx, draft);
-        onDone(`${title} er lagret som kladd. Bare arrangørene ser den.`);
+        onDone(sharedAt
+          ? `${title} er lagret som kladd. Spillerne ser den nye oppstillingen.`
+          : `${title} er lagret som kladd. Bare arrangørene ser den.`);
+      }
+    } catch (e) {
+      setError(dataErrorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** «Lagre og vis for spillerne»: kladden lagres først, så ser spillerne det som står. */
+  async function share(on: boolean) {
+    setBusy(true); setError(null);
+    try {
+      if (on) {
+        await saveDraft({ clubID, rules, roster, course: item, tableRules: data.tableRules, formats }, draft);
+        await shareLineup(draft.roundID, true);
+        onDone(`${title} er lagret, og spillerne ser oppstillingen. De har fått varsel.`);
+      } else {
+        setSharedAt(await shareLineup(draft.roundID, false));
       }
     } catch (e) {
       setError(dataErrorText(e));
@@ -312,8 +337,17 @@ export function RoundSetup({ clubID, data, initial, titleOf, previous = null, ca
         </div>
       )}
       {error && <p className="error">{error}</p>}
+      {sharedAt && (
+        <p className="muted small">
+          Spillerne ser oppstillingen. Endringer vises for dem når du lagrer.{" "}
+          <button className="link" disabled={busy} onClick={() => share(false)}>Skjul for spillerne</button>
+        </p>
+      )}
       <div className="inline sticky-actions">
         <button className="link" disabled={busy || saveIssues.length > 0} onClick={() => act(false)}>Lagre som kladd</button>
+        {!sharedAt && (
+          <button className="link" disabled={busy || saveIssues.length > 0 || draft.participants.length === 0} onClick={() => share(true)}>Lagre og vis for spillerne</button>
+        )}
         <button className="primary" disabled={busy || problems.length > 0} onClick={() => act(true)}>Start runden</button>
         <button className="link" disabled={busy} onClick={onCancel}>Avbryt</button>
       </div>

@@ -357,6 +357,27 @@ export async function saveDraft(ctx: SetupContext, d: RoundDraft): Promise<void>
   await saveCompetitions(ctx, d, "Runden er lagret, men ikke konkurransene.");
 }
 
+/** Når oppstillingen ble vist for spillerne (sql/076), eller null. Null også før runden er lagret. */
+export async function lineupSharedAt(roundID: string): Promise<string | null> {
+  const { data, error } = await supabase.from("rounds").select("lineup_shared_at").eq("id", roundID).maybeSingle();
+  if (error) return null;
+  return (data as { lineup_shared_at: string | null } | null)?.lineup_shared_at ?? null;
+}
+
+/**
+ * «Vis oppstillingen for spillerne» med `share_round_lineup` (sql/076): spillerne ser bås og lag før start,
+ * og får varsel første gang. `on = false` skjuler den igjen (uten varsel). Gir tidspunktet, eller null.
+ */
+export async function shareLineup(roundID: string, on: boolean): Promise<string | null> {
+  const { data, error } = await supabase.rpc("share_round_lineup", { p_round_id: roundID, p_on: on });
+  if (error) {
+    if (error.code === "55000") throw new RoundError("Runden er startet. Spillerne ser den allerede.");
+    if (error.code === "22023") throw new RoundError("Legg til spillere før du viser oppstillingen.");
+    fail(error);
+  }
+  return (data as string | null) ?? null;
+}
+
 /** Det konkurransene trenger fra oppsettet. Lagene bare når formen har lag (som team_no i set_round_setup). */
 export function competitionContext(d: RoundDraft): CompetitionContext {
   const teams = coreIsTeamForm(draftForm(d)) ? d.teams : {};
