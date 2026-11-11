@@ -28,8 +28,8 @@ struct HjemFilterBar: View {
 
 /// «Neste kveld» som hero-kort øverst på Hjem (utbedringsplanen 4.1 og V2): etiketten med nedtellingen,
 /// datoen, tid og sted, hvem som kommer og svaret ditt som segmentert kontroll. Under kortet står
-/// arrangørens rad («Du arrangerer · Sett opp runden ›»), tråden og tipsen. Trykk på toppen åpner
-/// Kveld-skjermen.
+/// «Laget ditt» når arrangøren har vist oppstillingen (sql/076), arrangørens rad («Du arrangerer ·
+/// Sett opp runden ›»), tråden og tipsen. Trykk på toppen åpner Kveld-skjermen.
 struct HjemEveningCard: View {
     @Environment(\.dayTerm) private var dayTerm
     @Environment(\.clubContext) private var context
@@ -43,6 +43,9 @@ struct HjemEveningCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DDSpacing.s) {
             hero
+            if let lineup = evening.lineup {
+                HjemLineupCard(lineup: lineup)
+            }
             if evening.isOrganizer, let organizer {
                 HjemOrganizerRow(step: organizer)
             }

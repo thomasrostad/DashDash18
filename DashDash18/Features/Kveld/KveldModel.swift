@@ -42,6 +42,8 @@ final class KveldModel {
     private(set) var eveningNumber: Int?
     /// Morroturneringene neste kveld hører til (fase 15)..
     private(set) var funCompetitions: [String] = []
+    /// Oppstillingen arrangøren har vist før start (sql/076). Tom: ingenting vist, eller uten 076.
+    private(set) var lineup: [EventLineupRow] = []
     /// Telles opp for hver henting, så kortene for tråd og tips kan hente på nytt samtidig.
     private(set) var loadCount = 0
 
@@ -164,6 +166,7 @@ final class KveldModel {
                 settings = nil
                 guests = []
                 seen = nil
+                lineup = []
                 state = .loaded
                 WidgetSnapshotPublisher.publish(nextEvening: nil, today: today)
                 return
@@ -181,6 +184,7 @@ final class KveldModel {
                 ? EveningSignupService.views(client: client, eventIDs: [next.id]) : nil
 
             async let number = fetchEveningNumber(of: next)
+            async let lineupRows = EveningLineupQueries.rows(client: client, eventID: next.id)
 
             let committeeIDs = Set(try await committeeRows.map(\.memberID))
             let signups = try await signupRows
@@ -188,6 +192,7 @@ final class KveldModel {
             let settingsByEvent = await settingRows
             let guestList = await guestRows
             let views = await viewRows
+            let lineupList = await lineupRows
 
             // Bare et merke: feiler hentingen, vises kvelden uten.
             funCompetitions = (try? await CompetitionQueries.funNames(client: client, event: next)) ?? []
@@ -198,6 +203,7 @@ final class KveldModel {
             self.signups = signups
             settings = settingsByEvent?[next.id]
             guests = guestList
+            lineup = lineupList
             seen = settingsByEvent == nil ? nil : (views.map { $0[next.id] ?? [] })
             state = .loaded
             WidgetSnapshotPublisher.publish(nextEvening: next, today: today)

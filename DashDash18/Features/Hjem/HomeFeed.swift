@@ -215,7 +215,8 @@ nonisolated extension HomeFeed {
                                previousEventID: e.previous?.id,
                                previousTitle: e.previous.map { EveningDates.longText($0.eventDate, referenceYear: referenceYear,
                                                                                       capitalized: true) },
-                               waitlistText: e.waitlistText)
+                               waitlistText: e.waitlistText,
+                               lineup: e.lineup)
     }
 }
 

@@ -97,6 +97,8 @@ nonisolated struct HomeEveningInput: Equatable, Sendable {
     /// Påmeldings- og avmeldingsfristen (sql/045). nil: ingen frist.
     var signupDeadline: Date?
     var withdrawDeadline: Date?
+    /// Oppstillingen arrangøren har vist før start (sql/076).
+    var lineup: EveningLineup?
 
     init(clubID: UUID, clubName: String, event: EventRow, today: String, answer: SignupStatus?, coming: Int,
          isOrganizer: Bool) {
@@ -430,6 +432,8 @@ nonisolated struct HomeNextEvening: Equatable, Sendable {
     var previousTitle: String? = nil
     /// «På venteliste (nr. 2)».
     var waitlistText: String? = nil
+    /// «Laget ditt» før runden starter (sql/076). nil: ikke vist ennå, eller runden har startet.
+    var lineup: EveningLineup? = nil
 }
 
 /// Hele Hjem-feeden.

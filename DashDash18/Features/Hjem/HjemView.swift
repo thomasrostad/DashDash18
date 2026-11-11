@@ -229,6 +229,7 @@ private struct HjemClubContent: View {
         input.waitlistCount = summary.waitlist.count
         input.signupDeadline = kveld.settings?.signupDeadline
         input.withdrawDeadline = kveld.settings?.withdrawDeadline
+        input.lineup = EveningLineup(rows: kveld.lineup, viewer: [context.memberID])
         return input
     }
 
