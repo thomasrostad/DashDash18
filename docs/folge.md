@@ -73,3 +73,15 @@ Thomas: «Forenkle følgeprosessen – gjøre det enklere å følge andre i appe
 - Navnet på kortene i «Følger» og på medspillerne åpner profilen. Tavla er ikke med: radene har bare medlems-id.
 - Tekst: bunnteksten om godkjenning og skannerens hjelpetekst er rettet, kortet heter «Finn folk å følge», og tom forslagsliste har «Vis koden min».
 - Godkjenning som standard (beslutningen over) er uendret.
+
+## Finn fra kontakter (077)
+
+Thomas 11.11.2026: «Kan man legge til sånn finn fra kontakter?» og «Få til med telefonnr også». Telefonnummeret bekreftes ikke (foreløpig). Krever `sql/077_finn_fra_kontakter.sql` (kjørt på test og prod 11.11.2026). Appen 1.0.7.
+
+- **Hvor:** «Finn fra kontakter» er en egen rad under «Skann kode» / «Min kode» i «Følger». Telefonnummeret står under Deg → Følger → «Du følger og følgere», under Personvern. Begge er skjult når `my_phone()` mangler (appen spør ved lasting av «Følger», som `FollowFeature` gjør for 054).
+- **Tilgang:** appen forklarer først og spør så (`CNContactStore`, fornavn, etternavn, e-post og nummer). Nekter du, står en forklaring og «Åpne Innstillinger». Begrenset tilgang (iOS 18) bruker kontaktene du har valgt, med «Velg flere kontakter».
+- **Kodene:** e-post = sha256 hex av `trim + lowercased` (UTF-8). Nummer = E.164 (bare sifre og «+», «00» → «+», 8 sifre → +47, ellers `^\+[1-9][0-9]{6,14}$`) og så sha256 hex. Like koder sendes én gang, høyst 3000 (hele kontakter). Logikken og testvektorene ligger i `FollowContactsCore.swift` og `FolgeKontakterTests`.
+- **Oppslaget:** `find_contacts(e-postkoder, nummerkoder)`; `matched` kobler raden til navnet i kontaktene. 54000 = «Prøv igjen om litt» (10 i timen), 22023 = for mange. Følg med `follow_request(id, 'suggestion')`.
+- **Resultatet:** «I Atten» med Atten-navnet, «Ola i kontaktene» (når navnet er ulikt), klubb og «Følger deg», og Følg / Venter / Følger. «Inviter til Atten»: resten med navn, med søkefelt når lista er lang. «Inviter» åpner Meldinger med nummeret (eller delingsarket uten nummer eller uten Meldinger) og teksten «Bli med meg på Atten! Følg meg her: https://dashdash18.com/folg/KODE» (koden fra `follow_code()`). Ingen treff: «Ingen av kontaktene dine er på Atten ennå.»
+- **Telefonnummer:** `set_my_phone(tekst)` (tomt fjerner, 22023 = «Ugyldig telefonnummer»), `my_phone()` viser det lagrede.
+- **Skjermprøve:** `-DDDesignScreen kontakter` og `kontaktertom`.

@@ -146,6 +146,38 @@ nonisolated struct FollowService: Sendable {
         return try await client.rpc("search_people", params: Params(p_query: query, p_limit: limit)).execute().value
     }
 
+    // MARK: Kontaktene (sql/077)
+
+    /// Profilene bak kodene (sha256 av e-post og E.164-nummer). Grensen er 10 oppslag i timen.
+    func findContacts(_ lookup: ContactLookup) async throws -> [ContactMatchRow] {
+        struct Params: Encodable {
+            let p_email_hashes: [String]
+            let p_phone_hashes: [String]
+        }
+        return try await client.rpc("find_contacts", params: Params(p_email_hashes: lookup.emailHashes,
+                                                                    p_phone_hashes: lookup.phoneHashes))
+            .execute().value
+    }
+
+    /// Mitt nummer, eller nil. Kaster når 077 mangler (`isMissing`).
+    func myPhone() async throws -> String? {
+        try await client.rpc("my_phone").execute().value
+    }
+
+    /// Lagrer nummeret (tomt fjerner det). Svarer nummeret slik det er lagret (E.164), eller nil.
+    func setMyPhone(_ phone: String) async throws -> String? {
+        struct Params: Encodable { let p_phone: String }
+        return try await client.rpc("set_my_phone", params: Params(p_phone: phone)).execute().value
+    }
+
+    static func contactsMessage(_ error: any Error) -> String {
+        ContactsError.findMessage(DataError.from(error), code: (error as? PostgrestError)?.code)
+    }
+
+    static func phoneMessage(_ error: any Error) -> String {
+        ContactsError.phoneMessage(DataError.from(error), code: (error as? PostgrestError)?.code)
+    }
+
     // MARK: «Følger»-fanen
 
     func feedPage(before: FeedCursor?, limit: Int = FollowingFeedPages.pageSize) async throws -> [FollowingCard] {

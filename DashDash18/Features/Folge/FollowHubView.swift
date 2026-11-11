@@ -131,6 +131,19 @@ struct FollowHubView: View {
         } footer: {
             DDFooter("Skann koden til den du vil følge, eller vis din egen. Den som skanner koden din, følger deg med en gang.")
         }
+        // sql/077: skjult uten.
+        if model.hasContacts, let client = model.client {
+            Section {
+                NavigationLink {
+                    FollowContactsView(model: FollowContactsModel(client: client, userID: model.userID))
+                } label: {
+                    Label("Finn fra kontakter", systemImage: "person.crop.rectangle.stack")
+                        .labelStyle(DDIconLabelStyle())
+                }
+            } footer: {
+                DDFooter("Se hvem av kontaktene dine som er på Atten, og inviter resten.")
+            }
+        }
         if !model.lists.requests.isEmpty || !model.accepted.isEmpty {
             Section {
                 ForEach(model.lists.requests) { row in requestRow(row) }
@@ -302,6 +315,9 @@ struct FollowListsView: View {
                     DDFooter("Slår du av godkjenning, kan alle som finner deg, følge deg med en gang. Skjult i søk finner andre deg bare via klubb, runde eller koden din.")
                 }
             }
+            if model.hasContacts {
+                FollowPhoneSection(model: model)
+            }
         }
         .navigationTitle("Du følger og følgere")
         .navigationBarTitleDisplayMode(.inline)
@@ -328,5 +344,54 @@ struct FollowBackButton: View {
                                            set: { model.followBack[row.profileID] = $0 }),
                            source: .suggestion, followsMe: true)
             .fixedSize()
+    }
+}
+
+/// Telefonnummeret (sql/077), så venner finner deg fra kontaktene sine. Bare du ser det.
+struct FollowPhoneSection: View {
+    let model: FollowHubModel
+    @State private var draft = ""
+    @State private var isSaving = false
+    @State private var saved = false
+    @State private var error: String?
+
+    var body: some View {
+        Section {
+            TextField("Telefonnummer", text: $draft)
+                .keyboardType(.phonePad)
+                .textContentType(.telephoneNumber)
+                .onChange(of: draft) {
+                    if draft != (model.phone ?? "") { saved = false; error = nil }
+                }
+            if draft != (model.phone ?? "") {
+                Button(draft.trimmingCharacters(in: .whitespaces).isEmpty ? "Fjern nummeret" : "Lagre") {
+                    Task { await save() }
+                }
+                .buttonStyle(.dd(.primary, fullWidth: true, compact: true))
+                .disabled(isSaving)
+            } else if saved {
+                Label("Lagret", systemImage: "checkmark.circle")
+                    .font(.ddCallout)
+                    .foregroundStyle(Color.ddLimeInk)
+            }
+            if let error {
+                Label(error, systemImage: "exclamationmark.triangle").ddErrorStyle()
+            }
+        } header: {
+            DDHeader("Telefonnummer")
+        } footer: {
+            DDFooter("Så venner kan finne deg fra kontaktene sine. Vises ikke for andre.")
+        }
+        .task(id: model.phone) { draft = model.phone ?? "" }
+    }
+
+    private func save() async {
+        isSaving = true
+        defer { isSaving = false }
+        error = await model.savePhone(draft)
+        if error == nil {
+            draft = model.phone ?? ""
+            saved = true
+        }
     }
 }
