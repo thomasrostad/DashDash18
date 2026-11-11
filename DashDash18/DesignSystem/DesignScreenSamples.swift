@@ -11,7 +11,7 @@ import SwiftUI
 /// og åpent for alle (fase 17): `apenvalg`, `apenlogin`, `apendeg`, `apenslett`, `apenrapport`,
 /// `apenrapporter`, `apenblokkerte`, `apenbetaling`, `apenregning`,
 /// og konkurranser: `konktavla`, `konkliste`, `konkliga`, `konkcup`, `konkteller`, `konkkveld`, `konklast`, `konklastdeltaker`,
-/// og Hjem (fase 19): `hjem`, `hjemmidt`, `hjembunn`, `hjemlos`, `hjemtom`, `hjemarrangor`, `hjembjelle`,
+/// og Hjem (fase 19): `hjem`, `hjemmidt`, `hjembunn`, `hjemlos`, `hjemtom`, `hjemarrangor`, `hjembjelle`, `hjemlag`,
 /// og slope.no (fase 20): `slopesok`, `slopebane`, `teevalg`, `losnytee`, `hurtigstarttee`, med hull (fase 20b)
 /// `slopevelg` og `slopeklubb`), og turneringen som kjerne (fase 23): `turneringvelger`, `pamelding`,
 /// `pameldingvente`, `pameldinginnstillinger`, `startliste`, `stab`, `mingruppe`, `oppdater`,
@@ -48,6 +48,8 @@ struct DesignScreenSamples: View {
         case konklast, konklastdeltaker
         // Hjem-fanen med feeden (fase 19).
         case hjem, hjemmidt, hjembunn, hjemlos, hjemtom, hjemarrangor, hjembjelle, hjemflere
+        // «Laget ditt» før start (sql/076).
+        case hjemlag
         // Baner og tees fra slope.no (fase 20).
         case slopesok, slopebane, teevalg, losnytee, hurtigstarttee
         // Hentede baner med hull valgt direkte (fase 20b).
@@ -163,6 +165,7 @@ struct DesignScreenSamples: View {
         case .hjemarrangor: HjemSampleScreen(variant: .organizer)
         case .hjembjelle: HjemSampleScreen(variant: .bell)
         case .hjemflere: HjemSampleScreen(variant: .several)
+        case .hjemlag: HjemSampleScreen(variant: .lineup)
         case .hjeminviter: HjemSampleScreen(variant: .invite)
         case .velkommen, .blimedlenke, .blimedbekreft, .logininvitasjon:
             ClubInviteSampleScreen(screen: screen)

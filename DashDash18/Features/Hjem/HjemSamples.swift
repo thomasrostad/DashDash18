@@ -4,7 +4,7 @@ import GolfgutuCore
 import SwiftUI
 
 /// Oppdiktet Hjem for skjermprøver (`-DDDesignScreen hjem`, `hjemmidt`, `hjembunn`, `hjemlos`, `hjemtom`, `hjemarrangor`,
-/// `hjembjelle`, `hjeminviter`, `hjemflere`): Golfgutu Invitational med jakkeracet, Morrocupen og en løs runde, som i designet.
+/// `hjembjelle`, `hjeminviter`, `hjemflere`, `hjemlag`): Golfgutu Invitational med jakkeracet, Morrocupen og en løs runde, som i designet.
 enum HjemSamples {
     static func id(_ n: Int) -> UUID { UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", n))! }
 
@@ -32,7 +32,7 @@ enum HjemSamples {
 
     /// Hele feeden: oppsummering, «Pågår nå», «Neste kveld» og alle korttypene.
     static func model(now: Date = .now, live: Bool = true, organizer: Bool = false, empty: Bool = false,
-                      several: Bool = false) -> HomeFeedModel {
+                      several: Bool = false, lineup: Bool = false) -> HomeFeedModel {
         var raw = empty ? HomeFeedQueries.Raw() : raw(now: now)
         if several { raw.rounds.append(looseLiveSnapshot(now: now)) }
         let model = HomeFeedModel(preview: raw, viewer: viewer,
@@ -42,7 +42,9 @@ enum HjemSamples {
             model.live = HomeLiveInput(snapshot: liveSnapshot(now: now), viewer: Viewer(memberID: me, isOrganizer: organizer))
         }
         if !empty {
-            model.evening = evening(now: now, organizer: organizer)
+            var evening = evening(now: now, organizer: organizer)
+            if lineup { evening.lineup = EveningLineup(rows: lineupRows, viewer: [me]) }
+            model.evening = evening
         }
         return model
     }
@@ -59,6 +61,19 @@ enum HjemSamples {
         // Avmeldingsfristen dagen før kl. 18:00.
         input.withdrawDeadline = EveningDates.time(from: "18:00", on: now.addingTimeInterval(7 * 86_400))
         return input
+    }
+
+    /// Fourball i båsene: du og Anders mot Bjørn og Kari i bås 2, du er markør (`hjemlag`).
+    static var lineupRows: [EventLineupRow] {
+        let round = id(810)
+        func row(_ member: UUID, _ name: String, bay: Int, team: Int, marker: Bool = false) -> EventLineupRow {
+            EventLineupRow(roundID: round, roundNo: 1, roundName: nil, format: "fourball", teeTime: "18:00:00",
+                           memberID: member, name: name, bayNo: bay, teamNo: team, isMarker: marker, sharedAt: nil)
+        }
+        return [row(even, "Even Lie", bay: 1, team: 1, marker: true), row(kristian, "Kristian", bay: 1, team: 1),
+                row(ola, "Ola", bay: 1, team: 2),
+                row(me, "Thomas", bay: 2, team: 3, marker: true), row(anders, "Anders Berg", bay: 2, team: 3),
+                row(bjorn, "Bjørn Dahl", bay: 2, team: 4), row(kari, "Kari", bay: 2, team: 4)]
     }
 
     static func raw(now: Date) -> HomeFeedQueries.Raw {
@@ -230,6 +245,8 @@ struct HjemSampleScreen: View {
         case loose
         /// To runder pågår samtidig: baren viser den første og «+1 runde til» (`hjemflere`).
         case several
+        /// Oppstillingen er vist før start: «Laget ditt» under «Neste kveld» (`hjemlag`, sql/076).
+        case lineup
     }
 
     let variant: Variant
@@ -238,8 +255,9 @@ struct HjemSampleScreen: View {
     init(variant: Variant) {
         self.variant = variant
         let organizer = variant == .organizer || variant == .invite
-        let model = HjemSamples.model(live: !organizer, organizer: organizer,
-                                      empty: variant == .empty, several: variant == .several)
+        let model = HjemSamples.model(live: !organizer && variant != .lineup, organizer: organizer,
+                                      empty: variant == .empty, several: variant == .several,
+                                      lineup: variant == .lineup)
         if variant == .loose { model.filter = .loose }
         _model = State(initialValue: model)
     }
@@ -300,6 +318,7 @@ struct HjemSampleScreen: View {
 }
 
 #Preview("Hjem") { HjemSampleScreen(variant: .full) }
+#Preview("Hjem laget ditt") { HjemSampleScreen(variant: .lineup) }
 #Preview("Hjem tom") { HjemSampleScreen(variant: .empty) }
 #Preview("Hjem arrangør") { HjemSampleScreen(variant: .organizer) }
 #Preview("Hjem mørk") { HjemSampleScreen(variant: .full).preferredColorScheme(.dark) }
