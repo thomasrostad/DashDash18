@@ -16,7 +16,8 @@ import SwiftUI
 /// `slopevelg` og `slopeklubb`), og turneringen som kjerne (fase 23): `turneringvelger`, `pamelding`,
 /// `pameldingvente`, `pameldinginnstillinger`, `startliste`, `stab`, `mingruppe`, `oppdater`,
 /// og invitasjon til klubb: `velkommen`, `blimedlenke`, `blimedbekreft`, `logininvitasjon`, `inviter`, `hjeminviter`,
-/// og markørkonflikten (K6/6.3): `markorkonflikt`, `markorkonfliktark`, `arrangorkonflikt`.
+/// og markørkonflikten (K6/6.3): `markorkonflikt`, `markorkonfliktark`, `arrangorkonflikt`,
+/// og «Finn fra kontakter» (sql/077): `kontakter`, `kontaktertom`.
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
@@ -66,6 +67,8 @@ struct DesignScreenSamples: View {
         case tavlastatistikk, stattrend
         // To markører førte ulikt (K6/6.3, sql/055): føringen, arket og «I kveld».
         case markorkonflikt, markorkonfliktark, arrangorkonflikt
+        // «Finn fra kontakter» (sql/077): med treff og uten.
+        case kontakter, kontaktertom
     }
     @State var screen: Screen = .hullkort
 
@@ -187,6 +190,9 @@ struct DesignScreenSamples: View {
                 .tint(Color.ddForestInk)
         case .markorkonfliktark:
             MarkerConflictSheetSample()
+        case .kontakter, .kontaktertom:
+            NavigationStack { FollowContactsView(model: Self.contactsSample(empty: screen == .kontaktertom)) }
+                .tint(Color.ddForestInk)
         case .tavlastatistikk: TavlaStatsSample()
         case .stattrend: StatsTrendSample()
         case .tavlatv:
@@ -276,6 +282,22 @@ struct DesignScreenSamples: View {
 #Preview("Feiring") { DesignScreenSamples(screen: .feiring) }
 
 extension DesignScreenSamples {
+    /// «Finn fra kontakter»: tre i Atten (én med annet navn i kontaktene) og noen å invitere.
+    static func contactsSample(empty: Bool) -> FollowContactsModel {
+        let invite = ["Bjørn Haugen", "Cecilie Lunde", "Dag Moen", "Eirik Solberg", "Åse Vik"].enumerated().map { i, name in
+            PhoneContact(id: "k\(i)", name: name, phones: ["9000000\(i)"])
+        }
+        let inAtten = empty ? [] : [
+            ContactMatch(row: ContactMatchRow(id: UUID(), displayName: "Kåre", clubName: "Golfgutu Invitational",
+                                              followsMe: true), contactName: "Kåre Johansen"),
+            ContactMatch(row: ContactMatchRow(id: UUID(), displayName: "Ola Nordmann", myStatus: .pending), contactName: nil),
+            ContactMatch(row: ContactMatchRow(id: UUID(), displayName: "Per", clubName: "Bærum GK", myStatus: .accepted),
+                         contactName: "Per Olsen"),
+        ]
+        return FollowContactsModel(preview: ContactResults(inAtten: inAtten, invite: invite), userID: UUID(),
+                                   link: FollowLink(code: "ABCD2345"))
+    }
+
     /// Golfgutu med playoff om førsteplassen, hele poeng og minst 4 kvelder for plass.
     static var tableRulesSample: Ruleset {
         var r = Ruleset.golfgutu

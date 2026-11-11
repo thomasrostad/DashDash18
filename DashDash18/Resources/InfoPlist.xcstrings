@@ -70,6 +70,23 @@
           }
         }
       }
+    },
+    "NSContactsUsageDescription" : {
+      "comment" : "Privacy - Contacts Usage Description",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atten sjekker kontaktene dine for å finne venner som allerede bruker appen. Kontaktene lagres ikke."
+          }
+        },
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atten sjekker kontaktene dine for å finne venner som allerede bruker appen. Kontaktene lagres ikke."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

@@ -24,6 +24,10 @@ final class FollowHubModel {
     /// Personen som noe skjer med akkurat nå (knappene er av).
     private(set) var working: Set<UUID> = []
     var errorMessage: String?
+    /// sql/077 finnes: «Finn fra kontakter» og telefonnummeret vises.
+    private(set) var hasContacts = false
+    /// Mitt telefonnummer (E.164), eller nil.
+    private(set) var phone: String?
 
     let client: SupabaseClient?
     let userID: UUID
@@ -47,6 +51,13 @@ final class FollowHubModel {
         state = .loaded
     }
 
+    /// Skjermprøve med «Finn fra kontakter» og telefonnummeret.
+    convenience init(preview rows: [FollowRow], settings: FollowService.Settings, userID: UUID, phone: String?) {
+        self.init(preview: rows, settings: settings, userID: userID)
+        hasContacts = true
+        self.phone = phone
+    }
+
     private var service: FollowService? { client.map(FollowService.init) }
 
     func load() async {
@@ -59,6 +70,7 @@ final class FollowHubModel {
             suggestions = FollowSuggestions.people(await known ?? [], me: userID, lists: lists)
             // Personvern vises først når innstillingene faktisk er hentet, ikke med gjettede standardverdier.
             settings = (try? await mine) ?? settings
+            await loadPhone(service)
             state = .loaded
         } catch {
             guard !DataError.isCancellation(error) else { return }
@@ -67,7 +79,28 @@ final class FollowHubModel {
         }
     }
 
+    /// `my_phone()` sier også om 077 finnes. Andre feil (nettet borte) endrer ingenting.
+    private func loadPhone(_ service: FollowService) async {
+        do {
+            phone = try await service.myPhone()
+            hasContacts = true
+        } catch where FollowService.isMissing(error) {
+            hasContacts = false
+        } catch {}
+    }
+
     // MARK: Handlinger
+
+    /// Lagrer nummeret (tomt fjerner det). Gir feilteksten, eller nil når det gikk.
+    func savePhone(_ text: String) async -> String? {
+        guard let service else { return nil }
+        do {
+            phone = try await service.setMyPhone(text)
+            return nil
+        } catch {
+            return FollowService.phoneMessage(error)
+        }
+    }
 
     func respond(to row: FollowRow, accept: Bool) async {
         let done = await run(row.profileID) { try await $0.respond(to: row.profileID, accept: accept) }

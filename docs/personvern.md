@@ -1,6 +1,6 @@
 # Personvernerklæring for Atten
 
-*Sist endret: 21. oktober 2026.*
+*Sist endret: 11. november 2026.*
 
 Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer. Her står hvilke opplysninger appen bruker, hvorfor, og hva du kan gjøre med dem.
 
@@ -28,12 +28,17 @@ Atten er en app for å føre golfrunder, spille med venner og kjøre turneringer
 | Feilrapporter når appen krasjer eller henger (appversjon, iOS-versjon, telefonmodell og hva som gikk galt i koden), koblet til kontoen din | For å finne og rette feil | Berettiget interesse (art. 6 nr. 1 f) |
 | Rapporter og blokkeringer | For å holde appen fri for støtende innhold | Berettiget interesse (art. 6 nr. 1 f) |
 | Hvem du følger og hvem som følger deg, om du vil godkjenne følgere og være synlig i søket, QR-koden din, og en logg over søk og forespørsler (slettes etter to døgn) | For at du skal kunne følge andre spillere, og for å hindre misbruk av søket | Avtale, og berettiget interesse for loggen |
+| Telefonnummeret ditt, bare hvis du legger det inn (valgfritt, ikke bekreftet) | For at venner som har nummeret ditt i kontaktene, skal finne deg | Samtykke (du legger det inn selv), kan fjernes når som helst |
 
-Vi lagrer **ikke** posisjonen din, kontaktene dine eller bilder du ikke selv deler. Bilder du tar eller velger, krympes på telefonen, og metadata som GPS-posisjon fjernes før opplasting.
+Vi lagrer **ikke** posisjonen din, kontaktene dine (heller ikke når du bruker «Finn fra kontakter», se under) eller bilder du ikke selv deler. Bilder du tar eller velger, krympes på telefonen, og metadata som GPS-posisjon fjernes før opplasting.
 
 ## Kamera og bilder
 
 Appen ber om tilgang til kameraet bare når du vil ta et bilde til tråden eller portrettet, eller skanne QR-koden til en du vil følge. Skanningen skjer på telefonen; bildene fra kameraet lagres ikke og sendes ikke noe sted, bare koden. Fra bildebiblioteket velger du ett og ett bilde selv; appen får ikke tilgang til resten.
+
+## Kontakter
+
+«Finn fra kontakter» (under **Deg → Følger**) ber om tilgang til kontaktene først når du trykker på den. Appen leser navn, e-post og telefonnummer, men sender aldri kontaktlista. E-post og nummer gjøres om til koder (sha256) på telefonen, og bare kodene sendes. Serveren sammenligner dem med e-posten til andre brukere og med nummer andre har lagt inn, og lagrer ingenting av det som ble sendt. Bare dem som er synlige i søket, blir funnet. Navnene i kontaktene blir på telefonen. Oppslaget er begrenset per time. Med begrenset tilgang i iOS bruker appen bare kontaktene du har valgt.
 
 ## Hvem som ser hva
 
@@ -44,6 +49,7 @@ Appen ber om tilgang til kameraet bare når du vil ta et bilde til tråden eller
 - En **konkurranse** ser deltakerne og klubben den hører til.
 - **Søk:** andre innloggede kan finne deg på navn (minst tre bokstaver). De ser navnet, bildet og navnet på én klubb du er med i, ikke e-post eller handicap. Du kan skjule deg fra søket under **Deg → Følger**. Den du har blokkert, eller som har blokkert deg, finner deg ikke. Søk er begrenset per time.
 - **Følge:** andre kan be om å følge deg. Nye følgere må godkjennes av deg, med mindre du slår godkjenning av. Den som viser QR-koden sin, godkjenner at den som skanner følger med en gang; du kan lage en ny kode når som helst. Den som følger deg (godtatt), ser profilen din og dine ferdige runder (dato, bane, slag og hull), kan reagere og kommentere på dem, og kan legge deg til i runder og turneringer. Den du følger, ser også profilen din og kan legge deg til. Pågående runder vises ikke. Du kan fjerne følgere, og blokkering fjerner følging begge veier.
+- **Telefonnummeret** ditt ser bare du. Andre ser det aldri, men en som har nummeret ditt i kontaktene, kan finne deg med «Finn fra kontakter» (hvis du er synlig i søket). Nummeret bekreftes ikke. Du fjerner det under **Deg → Følger → Du følger og følgere**.
 
 ## Hvor dataene ligger
 
@@ -54,7 +60,7 @@ Dataene lagres hos **Supabase** (database, innlogging, fillagring og serverfunks
 Vi lagrer opplysningene så lenge du har en konto. Sletter du kontoen:
 
 - slettes innloggingen, profilen, push-tokenene, kalenderlenken, meldingene og bildene dine i tråden, portrettet og blokkeringene dine,
-- slettes følgingen (begge veier), QR-koden, søkeloggen og kortene for dine ferdige runder med reaksjonene og kommentarene på dem,
+- slettes følgingen (begge veier), QR-koden, telefonnummeret, søkeloggen og kortene for dine ferdige runder med reaksjonene og kommentarene på dem,
 - slettes Vipps-nummeret ditt fra regningene,
 - navnet ditt byttes til **«Slettet spiller»** i klubber og runder, mens scorene står, slik at tabellene til de andre ikke endres,
 - kjøpsopplysninger beholdes uten kobling til deg så lenge regnskapsloven krever det.
