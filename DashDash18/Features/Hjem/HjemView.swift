@@ -180,6 +180,7 @@ private struct HjemClubContent: View {
             .task { await kveld.load() }
             .task { await kveld.followChanges() }
             .onChange(of: eveningInput, initial: true) { _, evening in home.evening = evening }
+            .onChange(of: previousCoupon, initial: true) { _, coupon in home.previousCoupon = coupon }
             // Feeden: realtime stoppes når Hjem forsvinner, og «sist sett» flyttes, så «Siden sist»
             // betyr siden sist. Ved retur hentes alt på nytt.
             .task {
@@ -214,6 +215,15 @@ private struct HjemClubContent: View {
     private var liveInput: HomeLiveInput? {
         guard let snapshot = round.snapshot, snapshot.round.status == .active else { return nil }
         return HomeLiveInput(snapshot: snapshot, viewer: round.viewer)
+    }
+
+    /// Forrige kveld når ingen neste kveld er satt opp (feeden viser den bare da).
+    private var previousCoupon: HomePreviousCoupon? {
+        guard kveld.event == nil, let previous = kveld.previousEvent else { return nil }
+        return HomePreviousCoupon(clubID: context.clubID, eventID: previous.id,
+                                  title: EveningDates.longText(previous.eventDate,
+                                                               referenceYear: EveningDates.year(of: kveld.today),
+                                                               capitalized: true))
     }
 
     private var eveningInput: HomeEveningInput? {

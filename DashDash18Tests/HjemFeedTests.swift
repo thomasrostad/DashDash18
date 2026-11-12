@@ -606,6 +606,24 @@ struct HjemTilstandTests {
         let p = try #require(HomeFeed.build(withPrevious).evening)
         #expect(p.previousEventID == H.id(949) && p.previousTitle == "Torsdag 8. oktober")
     }
+
+    /// Ingen neste kveld satt opp (12.11.2026): «Forrige kupong» står alene, ellers på kveldskortet.
+    @Test func forrigeKupongUtenNesteKveld() throws {
+        let coupon = HomePreviousCoupon(clubID: H.clubA, eventID: H.id(949), title: "Torsdag 8. oktober")
+        var input = H.input()
+        input.previousCoupon = coupon
+        let alone = HomeFeed.build(input)
+        #expect(alone.evening == nil)
+        #expect(alone.previousCoupon == coupon)
+
+        let event = EventRow(id: H.id(950), clubID: H.clubA, seasonID: nil, eventDate: "2026-10-15", startTime: nil,
+                             venue: nil, note: nil)
+        input.evening = HomeEveningInput(clubID: H.clubA, clubName: "Golfgutu Invitational", event: event,
+                                         today: "2026-10-08", answer: nil, coming: 0, isOrganizer: false)
+        let withCard = HomeFeed.build(input)
+        #expect(withCard.evening != nil)
+        #expect(withCard.previousCoupon == nil)
+    }
 }
 
 // MARK: - Modellen uten nett

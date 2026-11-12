@@ -142,6 +142,8 @@ nonisolated struct HomeFeedInput: Sendable {
     /// viser dem (`HomeFeed.liveInputs`).
     var live: [HomeLiveInput] = []
     var evening: HomeEveningInput?
+    /// «Forrige kupong» når ingen neste kveld er satt opp (da finnes ikke kveldskortet lenken står på).
+    var previousCoupon: HomePreviousCoupon?
     /// Sist du så Hjem (`HomeSeenStore`). Nil = aldri: ingen oppsummering, ingenting merket ulest.
     var lastSeen: Date?
     var filter: HomeFeedFilter = .all
@@ -436,6 +438,14 @@ nonisolated struct HomeNextEvening: Equatable, Sendable {
     var lineup: EveningLineup? = nil
 }
 
+/// Forrige kveld, for «Forrige kupong» (resultatet og tippekongen).
+nonisolated struct HomePreviousCoupon: Equatable, Sendable {
+    let clubID: UUID
+    let eventID: UUID
+    /// «Torsdag 12. november».
+    let title: String
+}
+
 /// Hele Hjem-feeden.
 nonisolated struct HomeFeed: Equatable, Sendable {
     let pills: [HomeFeedPill]
@@ -443,6 +453,8 @@ nonisolated struct HomeFeed: Equatable, Sendable {
     /// «Pågår nå»: ett kort per runde du spiller i eller arrangerer.
     let live: [HomeLive]
     let evening: HomeNextEvening?
+    /// «Forrige kupong» uten kveldskort: bare når `evening` er nil.
+    var previousCoupon: HomePreviousCoupon? = nil
     let sections: [HomeFeedSection]
 
     var isEmpty: Bool { sections.isEmpty }
