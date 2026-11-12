@@ -63,6 +63,8 @@ final class RundeModel {
     private var holeChangedAt = Date.distantPast
     private(set) var drafts = HoleDrafts()
     private(set) var pendingHoles: Set<Int> = []
+    /// Køen kommer ikke fram av en annen grunn enn nettet (`ScoreSubmitting.sendProblem`).
+    private(set) var sendProblem: String?
     /// Hull i kø som serveren avviste i bakgrunnen (runden låst, ingen tilgang): tallene er ikke lagret.
     private(set) var rejectedHoles: [RejectedHole] = []
     private(set) var isSaving = false
@@ -265,6 +267,7 @@ final class RundeModel {
         // ville erstattet tallet i køen). Bekreftede hull er ute av køen og står hos serveren.
         let pending = submitter?.pendingSubmissions(roundID: snapshot.round.id) ?? []
         pendingHoles = Set(pending.map(\.holeIndex))
+        sendProblem = submitter?.sendProblem
         rejectedHoles = submitter?.rejectedHoles(roundID: snapshot.round.id) ?? []
         logConfirmedQueuedHoles(server: snapshot)
         // «Skjul de tre siste hullene» (sql/047): båsen din og arrangøren ser alt, andre ikke ennå.

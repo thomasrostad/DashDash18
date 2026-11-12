@@ -404,7 +404,7 @@ struct RundeView: View {
                 card: card,
                 isSaving: model.isSaving,
                 error: model.saveError,
-                sync: game.syncStatus(viewer: model.viewer, pending: model.pendingHoles),
+                sync: game.syncStatus(viewer: model.viewer, pending: model.pendingHoles, problem: model.sendProblem),
                 onSave: { Task { await model.saveCurrentHole() } },
                 onGoTo: { model.goTo(hole: $0) },
                 onScorecard: { scorecardFor = ScorecardTarget(memberID: model.viewer.memberID) }
