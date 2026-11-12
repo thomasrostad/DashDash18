@@ -18,8 +18,7 @@ struct RoundLiveActivityWidget: Widget {
                         .padding(.leading, 4)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    RoundStat(label: state.valueText == nil ? "POENG" : "SUM", value: state.valueText ?? "\(state.points)",
-                              detail: "\(state.strokes) slag", alignment: .trailing)
+                    RoundScoreStat(state: state, alignment: .trailing)
                         .padding(.trailing, 4)
                 }
                 DynamicIslandExpandedRegion(.center) {
@@ -34,7 +33,7 @@ struct RoundLiveActivityWidget: Widget {
                             Label(place, systemImage: "person.3")
                         }
                         Spacer(minLength: 8)
-                        if let match = state.matchText {
+                        if let match = state.matchText, !state.leadsWithMatch {
                             Text(match)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(RoundText.matchColor(state.matchTone))
@@ -101,14 +100,27 @@ struct RoundWatchView: View {
             }
             .font(.system(size: 12, weight: .semibold, design: .rounded))
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(state.valueText ?? "\(state.points)")
-                    .font(.system(size: 30, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                Text("p · \(state.strokes) slag")
-                    .font(.system(size: 13, design: .rounded))
-                    .foregroundStyle(WidgetPalette.onDarkSecondary)
+                if state.leadsWithMatch, let match = state.matchText {
+                    Text(RoundText.shortMatch(match))
+                        .font(.system(size: 30, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(RoundText.matchColor(state.matchTone))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                    Text(RoundText.matchDetail(match, strokes: state.strokes))
+                        .font(.system(size: 13, design: .rounded))
+                        .foregroundStyle(WidgetPalette.onDarkSecondary)
+                        .lineLimit(1)
+                } else {
+                    Text(state.valueText ?? "\(state.points)")
+                        .font(.system(size: 30, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                    Text("p · \(state.strokes) slag")
+                        .font(.system(size: 13, design: .rounded))
+                        .foregroundStyle(WidgetPalette.onDarkSecondary)
+                }
             }
-            if let match = state.matchText {
+            if let match = state.matchText, !state.leadsWithMatch {
                 Text(match)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(RoundText.matchColor(state.matchTone))
@@ -147,14 +159,13 @@ struct RoundLockScreenView: View {
             }
             HStack(alignment: .bottom, spacing: 16) {
                 RoundStat(label: "HULL", value: "\(state.holeNumber)", detail: "\(state.holesPlayed)/\(state.holeCount) ført")
-                RoundStat(label: state.valueText == nil ? "POENG" : "SUM", value: state.valueText ?? "\(state.points)",
-                          detail: "\(state.strokes) slag")
+                RoundScoreStat(state: state)
                 if let place = state.bayPlace, let count = state.bayCount {
                     RoundStat(label: state.bayNumber.map { "BÅS \($0)" } ?? "PLASS", value: "\(place)", detail: "av \(count)")
                 }
                 Spacer(minLength: 0)
             }
-            if let match = state.matchText {
+            if let match = state.matchText, !state.leadsWithMatch {
                 HStack(spacing: 6) {
                     Image(systemName: "flag.2.crossed")
                     Text(match).fontWeight(.semibold)
@@ -170,12 +181,31 @@ struct RoundLockScreenView: View {
     }
 }
 
+/// Summen i runden: poengene («POENG / 13 / 27 slag»), summen i formen («SUM»), eller matchen
+/// i matchspill («MATCH / 1 opp / etter 2 · 8 slag», i matchens farge).
+struct RoundScoreStat: View {
+    let state: RoundActivityAttributes.ContentState
+    var alignment: HorizontalAlignment = .leading
+
+    var body: some View {
+        if state.leadsWithMatch, let match = state.matchText {
+            RoundStat(label: "MATCH", value: RoundText.shortMatch(match),
+                      detail: RoundText.matchDetail(match, strokes: state.strokes), alignment: alignment,
+                      valueColor: RoundText.matchColor(state.matchTone))
+        } else {
+            RoundStat(label: state.valueText == nil ? "POENG" : "SUM", value: state.valueText ?? "\(state.points)",
+                      detail: "\(state.strokes) slag", alignment: alignment)
+        }
+    }
+}
+
 /// Et tall med etikett over og forklaring under («HULL / 7 / 6/18 ført»).
 struct RoundStat: View {
     let label: String
     let value: String
     let detail: String
     var alignment: HorizontalAlignment = .leading
+    var valueColor: Color = WidgetPalette.onDark
 
     var body: some View {
         VStack(alignment: alignment, spacing: 1) {
@@ -186,7 +216,9 @@ struct RoundStat: View {
             Text(value)
                 .font(.system(size: 30, weight: .light, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(WidgetPalette.onDark)
+                .foregroundStyle(valueColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
             Text(detail)
                 .font(.system(size: 11))
                 .foregroundStyle(WidgetPalette.onDarkSecondary)
@@ -204,6 +236,13 @@ nonisolated enum RoundText {
     /// Kort matchtekst til Dynamic Island: «2 opp etter 5» → «2 opp».
     static func shortMatch(_ text: String) -> String {
         text.components(separatedBy: " etter ").first ?? text
+    }
+
+    /// Resten av matchteksten og slagene: «2 opp etter 5» → «etter 5 · 27 slag». Uten «etter»: bare slagene.
+    static func matchDetail(_ text: String, strokes: Int) -> String {
+        let parts = text.components(separatedBy: " etter ")
+        let slag = "\(strokes) slag"
+        return parts.count > 1 ? "etter \(parts[1]) · \(slag)" : slag
     }
 
     /// Grønn opp, rust ned, ellers lys tekst (alt på mørk flate).

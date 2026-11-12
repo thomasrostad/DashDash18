@@ -41,6 +41,8 @@ nonisolated extension RoundGame {
             count = rows.count
         }
 
+        // Matchspill: matchen avgjør, så plassen i båsen (på poeng) sier ingenting.
+        let isMatchPlay = round.form.axes.scoring == .matchPlay
         let match = matchCard(viewer: viewer)?.mine.first
         let tone: RoundActivityAttributes.ContentState.MatchTone = switch match?.tone {
         case .up?: .up
@@ -54,13 +56,14 @@ nonisolated extension RoundGame {
             holesPlayed: mine.count,
             strokes: mine.values.reduce(0, +),
             points: total(me),
-            bayPlace: place,
-            bayCount: place == nil ? nil : count,
+            bayPlace: isMatchPlay ? nil : place,
+            bayCount: isMatchPlay || place == nil ? nil : count,
             bayNumber: myBay,
             matchText: match?.text,
             matchTone: tone,
             updatedAt: now,
-            valueText: valueText
+            valueText: valueText,
+            isMatchPlay: isMatchPlay ? true : nil
         )
     }
 }
