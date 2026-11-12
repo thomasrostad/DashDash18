@@ -26,6 +26,17 @@ final class TipsModel {
         draft = TipsDraft(me: context.memberID, saved: nil)
     }
 
+#if DEBUG
+    /// Skjermprøve: fast kupong og ingen nettverk (en feilet henting beholder det som står).
+    init(preview board: TipsBoard, context: ClubContext, draft: TipsDraft? = nil) {
+        self.context = context
+        eventID = board.event.id
+        self.board = board
+        self.draft = draft ?? TipsDraft(me: context.memberID, saved: board.myCoupon)
+        state = .loaded
+    }
+#endif
+
     var memberID: UUID { context.memberID }
     private var client: SupabaseClient { context.client }
 
