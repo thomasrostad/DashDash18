@@ -143,6 +143,22 @@ struct TipsBoardTests {
         #expect(b.groups(.winner).first { $0.text == "Bjørn" }?.correct == false)
     }
 
+    /// Tippekongen til Hjem, varsler og push: først når kvelden er ferdig.
+    @Test func tippekongenSomHendelse() {
+        var input = TipsInput(event: T.event, members: T.four, rounds: T.evening(), coupons: T.coupons)
+        input.serverOpen = false
+        #expect(TipsBoard(input, me: T.id(T.anders), isOrganizer: true).kingEvent == nil, "kvelden er i gang")
+
+        input.rounds = T.evening(status: .locked)
+        let event = TipsBoard(input, me: T.id(T.anders), isOrganizer: true).kingEvent
+        #expect(event == .tipsKing(members: [T.id(T.anders), T.id(T.cato)], correct: 4, possible: 5,
+                                   eventDate: "2026-10-08"))
+        #expect(event?.kind == "tips_king")
+
+        input.coupons = []
+        #expect(TipsBoard(input, me: T.id(T.anders), isOrganizer: true).kingEvent == nil, "ingen har levert")
+    }
+
     /// App Store-bygget: ingen innsats eller pott, selv om kvelden har 50 poeng lagret.
     @Test func utenInnsatsErKupongenForAera() {
         var input = TipsInput(event: T.event, members: T.four, rounds: T.evening(status: .locked), coupons: T.coupons)

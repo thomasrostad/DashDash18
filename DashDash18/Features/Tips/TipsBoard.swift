@@ -346,6 +346,15 @@ nonisolated struct TipsBoard: Sendable {
         (result.rows.firstIndex { $0.points == row.points } ?? 0) + 1
     }
 
+    /// «Tippekongen» til Hjem, varsler og push (`TipsKingLogger`). `nil` til kvelden er ferdig
+    /// og noen har levert.
+    var kingEvent: ActivityEvent? {
+        guard phase == .finished, !result.winners.isEmpty else { return nil }
+        let members = result.winners.compactMap(UUID.init(uuidString:))
+        guard !members.isEmpty else { return nil }
+        return .tipsKing(members: members, correct: result.best, possible: result.possible, eventDate: event.eventDate)
+    }
+
     /// Kongelinja: «Anders og Cato · 4 av 5 riktige · deler potten på 200 poeng».
     var kingText: String {
         guard !result.winners.isEmpty else { return "" }

@@ -130,8 +130,11 @@ enum EveningCloser {
         }
         // Plassbyttet for hele kvelden på én gang (fase 19), i bakgrunnen.
         if !lockedInOrder.isEmpty {
-            let (client, clubID, ids, event) = (context.client, context.clubID, lockedInOrder, eventID)
-            Task { await TableChangeLogger.logAfterLocking(client: client, clubID: clubID, roundIDs: ids, eventID: event) }
+            let (client, clubID, me, ids, event) = (context.client, context.clubID, context.memberID, lockedInOrder, eventID)
+            Task {
+                await TableChangeLogger.logAfterLocking(client: client, clubID: clubID, roundIDs: ids, eventID: event)
+                await TipsKingLogger.logAfterLocking(client: client, clubID: clubID, me: me, eventID: event)
+            }
         }
         return locked
     }
