@@ -103,7 +103,7 @@ final class DirectScoreSubmitter: ScoreSubmitting {
             let p_recorded_at: Date
         }
         do {
-            let rows: [HoleScoreRow] = try await client
+            let reply: [SaveHoleReplyRow] = try await client
                 .rpc("save_hole", params: Params(
                     p_round_id: submission.roundID,
                     p_hole_index: submission.holeIndex,
@@ -112,13 +112,39 @@ final class DirectScoreSubmitter: ScoreSubmitting {
                 ))
                 .execute()
                 .value
-            return .saved(rows)
+            return .saved(reply.map { $0.row(roundID: submission.roundID) })
         } catch {
             throw DataError.from(error)
         }
     }
 
     func pendingHoles(roundID: UUID) -> Set<Int> { [] }
+}
+
+/// En rad i svaret fra `save_hole` (sql/001): hullets scorer slik serveren har dem etterpå, uten
+/// `round_id` (runden er den appen lagret i). 12.11.2026: svaret ble lest som `HoleScoreRow`, som krever
+/// `round_id`. Lesingen feilet hver gang, så et lagret hull ble liggende i køen som «venter på dekning».
+nonisolated struct SaveHoleReplyRow: Decodable, Equatable, Sendable {
+    let memberID: UUID
+    let holeIndex: Int
+    let strokes: Int
+    let recordedAt: Date?
+    let updatedBy: UUID?
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case memberID = "member_id"
+        case holeIndex = "hole_index"
+        case strokes
+        case recordedAt = "recorded_at"
+        case updatedBy = "updated_by"
+        case updatedAt = "updated_at"
+    }
+
+    func row(roundID: UUID) -> HoleScoreRow {
+        HoleScoreRow(roundID: roundID, memberID: memberID, holeIndex: holeIndex, strokes: strokes,
+                     recordedAt: recordedAt, updatedBy: updatedBy, updatedAt: updatedAt)
+    }
 }
 
 extension EnvironmentValues {

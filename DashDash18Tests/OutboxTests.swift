@@ -483,3 +483,29 @@ struct RejectedHolesTextTests {
         #expect(RejectedHoles.text([], holeNumber: number) == nil)
     }
 }
+
+/// Svaret fra `save_hole` (sql/001) har ikke `round_id`. 12.11.2026: appen leste det som `HoleScoreRow`,
+/// lesingen feilet hver gang, og alle lagrede hull ble liggende i køen som «venter på dekning».
+struct SaveHoleReplyTests {
+    @Test func svaretLesesUtenRundeId() throws {
+        let json = """
+        [{"member_id": "274f3539-98ea-5382-acd5-73209fde3fbb", "hole_index": 0, "strokes": 4,
+          "recorded_at": "2026-11-12T16:31:35.123456+00:00", "updated_by": null,
+          "updated_at": "2026-11-12T16:31:35.456789+00:00"}]
+        """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { d in
+            let text = try d.singleValueContainer().decode(String.self)
+            return try #require(TipsQueries.parseTimestamp(text))
+        }
+        let reply = try decoder.decode([SaveHoleReplyRow].self, from: Data(json.utf8))
+        let roundID = UUID()
+        let row = try #require(reply.first?.row(roundID: roundID))
+        #expect(row.roundID == roundID)
+        #expect(row.memberID == UUID(uuidString: "274f3539-98ea-5382-acd5-73209fde3fbb"))
+        #expect(row.holeIndex == 0 && row.strokes == 4)
+        #expect(row.recordedAt != nil && row.updatedBy == nil)
+        // Det gamle: svaret kan ikke leses som `HoleScoreRow`.
+        #expect(throws: DecodingError.self) { try decoder.decode([HoleScoreRow].self, from: Data(json.utf8)) }
+    }
+}
