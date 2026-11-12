@@ -30,6 +30,7 @@ nonisolated extension HomeFeed {
             filter: input.filter,
             live: input.live.map { live($0, context: context) },
             evening: input.evening.map { evening($0, context: context) },
+            previousCoupon: input.evening == nil ? input.previousCoupon : nil,
             sections: sections(filtered, now: input.now)
         )
     }

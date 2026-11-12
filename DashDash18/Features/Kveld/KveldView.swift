@@ -79,15 +79,7 @@ private struct KveldContent: View {
                         KveldExtrasCards(model: KveldExtrasModel(context: model.clubContext, eventID: event.id),
                                          refresh: model.loadCount)
                             .id(event.id)
-                        if let previous = model.previousEvent {
-                            NavigationLink {
-                                TipsView(eventID: previous.id)
-                            } label: {
-                                Label("Forrige kupong · \(EveningDates.longText(previous.eventDate, capitalized: true))",
-                                      systemImage: "trophy")
-                            }
-                            .buttonStyle(.ddText)
-                        }
+                        previousCoupon
                         SignupSection(model: model)
                             .padding(.top, DDSpacing.l)
                         if model.settings?.allowGuests == true {
@@ -103,11 +95,21 @@ private struct KveldContent: View {
                     } else {
                         EmptyKveldView()
                             .ddCard(.empty)
+                        previousCoupon
                     }
                 }
                 .padding(.horizontal, DDSpacing.gutter)
                 .padding(.vertical, DDSpacing.l)
             }
+        }
+    }
+
+    /// «Forrige kupong»: også når ingen neste kveld er satt opp, så resultatet ikke blir borte.
+    @ViewBuilder
+    private var previousCoupon: some View {
+        if let previous = model.previousEvent {
+            PreviousCouponLink(eventID: previous.id,
+                               title: EveningDates.longText(previous.eventDate, capitalized: true))
         }
     }
 }

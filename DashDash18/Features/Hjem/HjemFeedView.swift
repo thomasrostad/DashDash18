@@ -42,6 +42,7 @@ struct HjemActions {
 /// Hjem fra topp til bunn (utbedringsplanen V1 og 4.1): filterpillene, «Neste kveld» som hero og
 /// feeden i I dag · I går · Tidligere. Runden som pågår står i baren over fanelinja.
 struct HjemFeedView: View {
+    @Environment(\.clubContext) private var context
     let feed: HomeFeed
     var state: HomeFeedModel.LoadState = .loaded
     var answerError: String?
@@ -95,6 +96,12 @@ struct HjemFeedView: View {
         if let evening = feed.evening, HjemDisplay.showsEvening(filter: feed.filter) {
             HjemEveningCard(evening: evening, error: answerError, onOpen: actions.openEvening,
                             onAnswer: actions.answer, organizer: actions.organizer)
+        }
+        // Ingen neste kveld satt opp: lenken til forrige kupong står alene (ellers står den på kortet).
+        if let coupon = feed.previousCoupon, HjemDisplay.showsEvening(filter: feed.filter),
+           context?.clubID == coupon.clubID {
+            PreviousCouponLink(eventID: coupon.eventID, title: coupon.title)
+                .font(.ddCallout)
         }
     }
 

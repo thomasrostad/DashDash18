@@ -40,6 +40,7 @@ final class HomeFeedModel {
     /// Klubben Hjem står i: klubbrundene i «Pågår nå» åpnes der, så bare de står.
     var liveClubID: UUID? { didSet { if liveClubID != oldValue { rebuild() } } }
     var evening: HomeEveningInput? { didSet { if evening != oldValue { rebuild() } } }
+    var previousCoupon: HomePreviousCoupon? { didSet { if previousCoupon != oldValue { rebuild() } } }
 
     let viewer: HomeViewer
     let clubs: [HomeClub]
@@ -97,6 +98,7 @@ final class HomeFeedModel {
         var input = raw.input(viewer: viewer, clubs: clubs, now: clock())
         input.live = HomeFeed.liveInputs(focused: live, rounds: raw.rounds, viewer: viewer, club: liveClubID)
         input.evening = evening
+        input.previousCoupon = previousCoupon
         input.lastSeen = seenAtOpen
         input.filter = filter
         return input

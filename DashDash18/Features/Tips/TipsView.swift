@@ -16,6 +16,22 @@ struct TipsView: View {
     }
 }
 
+/// «Forrige kupong · Torsdag 12. november»: resultatet og tippekongen for forrige kveld. Står på
+/// kveldskortet på Hjem og på Kveld, og alene når ingen neste kveld er satt opp.
+struct PreviousCouponLink: View {
+    let eventID: UUID
+    let title: String?
+
+    var body: some View {
+        NavigationLink {
+            TipsView(eventID: eventID)
+        } label: {
+            Label("Forrige kupong" + (title.map { " · \($0)" } ?? ""), systemImage: "trophy")
+        }
+        .buttonStyle(.ddText)
+    }
+}
+
 #if DEBUG
 /// Skjermprøve (`-DDDesignScreen tips`): kupongen med en ferdig modell.
 struct TipsPreviewView: View {
