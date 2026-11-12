@@ -95,6 +95,20 @@ struct LiveActivityMappingTests {
         #expect(down.matchTone == .down)
     }
 
+    /// Matchspill: matchen avgjør, så ingen plass i båsen på poeng. Fourball (poengene teller) som før.
+    @Test func matchspillLederMedMatchen() throws {
+        let erik = Viewer(memberID: F.id(MatchrundeTests.erik), isOrganizer: false)
+        let match = try #require(MatchrundeTests.game(MatchrundeTests.hull1, format: "match",
+                                                      bays: [1: 1, 2: 1, 3: 1, 4: 1])
+            .liveActivityContent(for: erik))
+        #expect(match.isMatchPlay == true)
+        #expect(match.bayPlace == nil && match.bayCount == nil)
+
+        let fourball = try #require(MatchrundeTests.game(MatchrundeTests.hull1).liveActivityContent(for: erik))
+        #expect(fourball.isMatchPlay == nil && !fourball.leadsWithMatch)
+        #expect(fourball.matchText == "1 opp etter 1")
+    }
+
     @Test func sammeInnholdUansettTidspunkt() throws {
         let game = Self.bay1Game()
         let a = try #require(game.liveActivityContent(for: F.viewer(F.anders), now: Self.now))
