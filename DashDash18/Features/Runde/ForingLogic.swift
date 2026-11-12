@@ -66,11 +66,29 @@ nonisolated extension RoundGame {
 
     /// `hullkortSpillere`: båsen din med deg først. Uten båsoppsett eller uten bås: bare deg.
     /// Er du ikke med i runden, står ingen på kortet, med mindre du er funksjonær: da gruppa di.
+    /// Med lag står laget ditt samlet etter deg, så de andre lagene i lagnummer-rekkefølge
+    /// (som oppstillingen på Hjem). Uten lag: navnerekkefølgen fra båsen.
     func cardPlayers(for viewer: Viewer) -> [UUID] {
         let me = viewer.memberID
-        guard isPlaying(me) else { return scorerBay(for: viewer)?.players ?? [] }
+        guard isPlaying(me) else { return byTeam(scorerBay(for: viewer)?.players ?? [], mine: nil) }
         guard let bay = bay(of: me) else { return [me] }
-        return [me] + bay.players.filter { $0 != me }
+        return [me] + byTeam(bay.players.filter { $0 != me }, mine: teamNumber(me))
+    }
+
+    /// Lagnummeret til spilleren. Lag 0 regnes som «ikke på lag», som `Handicap.teammates`.
+    private func teamNumber(_ member: UUID) -> Int? {
+        round.teams[member.uuidString].flatMap { $0 == 0 ? nil : $0 }
+    }
+
+    /// Laget `mine` først, så lagene stigende og til slutt de uten lag. Stabil innen hvert lag.
+    private func byTeam(_ players: [UUID], mine: Int?) -> [UUID] {
+        func rank(_ member: UUID) -> Int {
+            guard let team = teamNumber(member) else { return .max }
+            return team == mine ? .min : team
+        }
+        return players.enumerated()
+            .sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }
+            .map(\.element)
     }
 
     /// Gruppa en funksjonær som ikke spiller selv fører for: den laveste av gruppene hans i runden.
