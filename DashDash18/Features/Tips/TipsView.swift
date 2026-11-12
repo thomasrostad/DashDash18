@@ -182,22 +182,15 @@ private struct TipsFormSections: View {
     private func answerControl(_ q: TipsQuestion) -> some View {
         switch q.kind {
         case .player:
-            Picker(board.title(q), selection: playerBinding(q)) {
-                Text("Velg spiller").tag(UUID?.none)
-                // Valget står selv om spilleren ikke lenger er i lista, ellers blir feltet tomt.
-                if let chosen = playerBinding(q).wrappedValue, !board.isCandidate(chosen) {
-                    Section("Valgt") { Text(board.shortName(chosen)).tag(UUID?.some(chosen)) }
-                }
-                Section(board.otherCandidates.isEmpty ? "Troppen" : "Kommer") {
-                    ForEach(board.firstCandidates) { c in Text(c.name).tag(UUID?.some(c.memberID)) }
-                }
-                if !board.otherCandidates.isEmpty {
-                    Section("Ikke påmeldt") {
-                        ForEach(board.otherCandidates) { c in Text(c.name).tag(UUID?.some(c.memberID)) }
-                    }
-                }
+            // Samme form som ja/nei: spørsmålet over, valget under. Menyen åpnes på stedet (ikke en egen
+            // side med navn), med «Kommer» og «Ikke påmeldt» som ekte overskrifter.
+            VStack(alignment: .leading, spacing: 10) {
+                Text(board.title(q))
+                    .font(.ddBodyEmphasis)
+                    .foregroundStyle(Color.ddForestInk)
+                playerMenu(q)
             }
-            .pickerStyle(.navigationLink)
+            .padding(.vertical, 4)
         case .yesNo, .overUnder:
             VStack(alignment: .leading, spacing: 10) {
                 Text(board.title(q))
@@ -211,6 +204,38 @@ private struct TipsFormSections: View {
             }
             .padding(.vertical, 4)
         }
+    }
+
+    private func playerMenu(_ q: TipsQuestion) -> some View {
+        let binding = playerBinding(q)
+        let chosen = binding.wrappedValue
+        return Menu {
+            Picker(board.title(q), selection: binding) {
+                // Valget står selv om spilleren ikke lenger er i lista, ellers blir feltet tomt.
+                if let chosen, !board.isCandidate(chosen) {
+                    Section("Valgt") { Text(board.shortName(chosen)).tag(UUID?.some(chosen)) }
+                }
+                Section(board.otherCandidates.isEmpty ? "Troppen" : "Kommer") {
+                    ForEach(board.firstCandidates) { c in Text(c.name).tag(UUID?.some(c.memberID)) }
+                }
+                if !board.otherCandidates.isEmpty {
+                    Section("Ikke påmeldt") {
+                        ForEach(board.otherCandidates) { c in Text(c.name).tag(UUID?.some(c.memberID)) }
+                    }
+                }
+            }
+            .pickerStyle(.inline)
+        } label: {
+            HStack(spacing: 6) {
+                Text(chosen.map { board.shortName($0) } ?? "Velg spiller")
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(.caption, weight: .semibold))
+                    .accessibilityHidden(true)
+            }
+        }
+        .buttonStyle(DDChoiceButtonStyle(selected: chosen != nil))
+        .accessibilityLabel(board.title(q))
+        .accessibilityValue(chosen.map { board.shortName($0) } ?? "Ikke valgt")
     }
 
     private func flagChoice(_ q: TipsQuestion, value: Bool, title: String) -> some View {
