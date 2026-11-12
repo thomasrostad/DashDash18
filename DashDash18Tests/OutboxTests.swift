@@ -424,6 +424,28 @@ struct OutboxTests {
         #expect(outbox.status.rejectedCount == 0)
     }
 
+    /// 12.11.2026: «sendes når du får dekning» med full dekning. Utløpt innlogging og serverfeil prøves
+    /// igjen, men er ikke nettet: køen sier hva som er galt. Nettfeil sier ingenting, og en sending rydder.
+    @Test func feilSomIkkeErNettetStarSomProblem() async throws {
+        let outbox = makeOutbox()
+        sender.mode = .fail(.sessionExpired)
+        #expect(try await outbox.submit(hole(0, [(anna, 4)])) == .queued)
+        #expect(outbox.sendProblem == DataError.sessionExpired.message)
+
+        sender.mode = .offline
+        #expect(try await outbox.submit(hole(1, [(anna, 4)])) == .queued)
+        #expect(outbox.sendProblem == nil)
+
+        sender.mode = .fail(.unknown("boom"))
+        _ = try await outbox.submit(hole(2, [(anna, 4)]))
+        #expect(outbox.sendProblem == DataError.unknown("boom").message)
+
+        sender.mode = .ok
+        await outbox.flush()
+        #expect(outbox.pendingHoles(roundID: roundID).isEmpty)
+        #expect(outbox.sendProblem == nil)
+    }
+
     @Test func pendingHolesPerRunde() async throws {
         let outbox = makeOutbox()
         let otherRound = UUID()

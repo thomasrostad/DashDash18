@@ -119,6 +119,9 @@ struct ForingHullkortTests {
         #expect(seks.syncStatus(viewer: viewer, pending: []) == SyncStatus(text: "Hull 1–6 er synket", isPending: false))
         #expect(seks.syncStatus(viewer: viewer, pending: [6])
             == SyncStatus(text: "Lagret på telefonen · sendes når du får dekning", isPending: true))
+        // Køen kommer ikke fram av en annen grunn enn nettet: grunnen står, ikke «dekning».
+        #expect(seks.syncStatus(viewer: viewer, pending: [6], problem: "Innloggingen har gått ut.")
+            == SyncStatus(text: "Lagret på telefonen · ikke sendt: Innloggingen har gått ut.", isPending: true))
         let ett = RoundGame(F.snapshot(F.markorPlayers(), scores: fire.map { ($0, 0, 4) }))
         #expect(ett.syncStatus(viewer: viewer, pending: []) == SyncStatus(text: "Hull 1 er synket", isPending: false))
         // Seeren fører ikke og får ingen linje.

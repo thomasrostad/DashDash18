@@ -140,6 +140,9 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         }
     }
 
+    /// Køen sendes ikke av en annen grunn enn nettet (`OutboxStatus.problem`). Nil når køen er tom.
+    var sendProblem: String? { hasPending ? status.problem : nil }
+
     func pendingHoles(roundID: UUID) -> Set<Int> {
         let pending = OutboxItem.State.pending.rawValue
         let descriptor = FetchDescriptor<OutboxItem>(
@@ -268,7 +271,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         do {
             let outcome = try await sendWithTimeout(submission, timeout: timeout)
             guard case .saved(let rows) = outcome else {
-                return failed(id, message: "Lagt i kø av underliggende sender")
+                return failed(id, message: "Lagt i kø av underliggende sender", isNetwork: true)
             }
             if let item = self.item(id) { context.delete(item) }
             save()
@@ -284,20 +287,20 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
                     item.lastError = dataError.message
                 }
                 save()
-                status.didFail(dataError.message)
+                status.didFail(dataError.message, isNetwork: false)
                 refreshStatus()
                 return .rejected(dataError)
-            case .transient(let message):
-                return failed(id, message: message)
+            case .transient(let message, let isNetwork):
+                return failed(id, message: message, isNetwork: isNetwork)
             }
         }
     }
 
-    private func failed(_ id: UUID, message: String) -> Attempt {
+    private func failed(_ id: UUID, message: String, isNetwork: Bool) -> Attempt {
         item(id)?.lastError = message
         save()
         consecutiveFailures += 1
-        status.didFail(message)
+        status.didFail(message, isNetwork: isNetwork)
         refreshStatus()
         return .transient
     }
@@ -326,20 +329,25 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
     }
 
     private enum Failure {
-        case transient(String)
+        /// Prøves igjen. `isNetwork`: ingen kontakt eller tidsavbrudd (dekningen), ellers noe annet.
+        case transient(String, isNetwork: Bool)
         case rejected(DataError)
     }
 
     /// Nettfeil, tidsavbrudd og ukjente feil prøves igjen. Tilgang og ugyldige data gjør ikke.
+    /// Utløpt innlogging, serverfeil og ukjente feil prøves også igjen, men er ikke dekningen
+    /// (12.11.2026: «sendes når du får dekning» sto en hel kveld med full dekning).
     private static func classify(_ error: any Error) -> Failure {
-        if error is TimedOut { return .transient("Tidsavbrudd mot serveren.") }
-        if error is CancellationError { return .transient("Avbrutt.") }
+        if error is TimedOut { return .transient("Tidsavbrudd mot serveren.", isNetwork: true) }
+        if error is CancellationError { return .transient("Avbrutt.", isNetwork: true) }
         let dataError = DataError.from(error)
         switch dataError {
         case .notAllowed, .invalid, .duplicate:
             return .rejected(dataError)
-        case .offline, .serverDown, .sessionExpired, .unknown:
-            return .transient(dataError.message)
+        case .offline:
+            return .transient(dataError.message, isNetwork: true)
+        case .serverDown, .sessionExpired, .unknown:
+            return .transient(dataError.message, isNetwork: false)
         }
     }
 
@@ -390,7 +398,7 @@ final class OutboxScoreSubmitter: ScoreSubmitting {
         do {
             try context.save()
         } catch {
-            status.didFail("Fikk ikke lagret utboksen: \(error.localizedDescription)")
+            status.didFail("Fikk ikke lagret utboksen: \(error.localizedDescription)", isNetwork: false)
         }
     }
 

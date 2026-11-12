@@ -12,6 +12,9 @@ final class OutboxStatus {
     private(set) var lastSentAt: Date?
     /// Siste feil fra et forsøk, til visning.
     private(set) var lastError: String?
+    /// Siste feil som ikke er nettet (innloggingen har gått ut, serveren svarer med en ukjent feil).
+    /// Da hjelper det ikke å vente på dekning, så føringen sier hva som er galt. Nil etter en sending.
+    private(set) var problem: String?
 
     var isEmpty: Bool { pendingCount == 0 && rejectedCount == 0 }
 
@@ -34,9 +37,12 @@ final class OutboxStatus {
     func didSend(at date: Date) {
         lastSentAt = date
         lastError = nil
+        problem = nil
     }
 
-    func didFail(_ message: String) {
+    /// `isNetwork`: ingen kontakt eller tidsavbrudd. Ellers står feilen som `problem`.
+    func didFail(_ message: String, isNetwork: Bool) {
         lastError = message
+        problem = isNetwork ? nil : message
     }
 }

@@ -40,12 +40,16 @@ protocol ScoreSubmitting: AnyObject {
     func rejectedHoles(roundID: UUID) -> [RejectedHole]
     /// Føringen har sagt fra: glem de avviste hullene i runden (alle, eller bare `holes`).
     func acknowledgeRejected(roundID: UUID, holes: Set<Int>?)
+    /// Køen kommer ikke fram av en annen grunn enn nettet (innloggingen, serveren): teksten fra
+    /// `DataError`. Nil når køen er tom eller bare venter på dekning.
+    var sendProblem: String? { get }
 }
 
 extension ScoreSubmitting {
     func pendingSubmissions(roundID: UUID) -> [HoleSubmission] { [] }
     func rejectedHoles(roundID: UUID) -> [RejectedHole] { [] }
     func acknowledgeRejected(roundID: UUID, holes: Set<Int>?) {}
+    var sendProblem: String? { nil }
     func acknowledgeRejected(roundID: UUID) { acknowledgeRejected(roundID: roundID, holes: nil) }
 }
 

@@ -143,12 +143,15 @@ nonisolated extension RoundGame {
     }
 
     /// Synkstatus over «Lagre» (utbedringsplanen K6). Nil når ingenting er ført ennå.
-    /// `pending`: hull som ligger i køen på telefonen.
-    func syncStatus(viewer: Viewer, pending: Set<Int>) -> SyncStatus? {
+    /// `pending`: hull som ligger i køen på telefonen. `problem`: køen kommer ikke fram av en annen
+    /// grunn enn nettet (`ScoreSubmitting.sendProblem`). Da står grunnen, ikke «dekning».
+    func syncStatus(viewer: Viewer, pending: Set<Int>, problem: String? = nil) -> SyncStatus? {
         let players = cardRows(for: viewer).filter { cardRowEditable($0, for: viewer) }
         guard !players.isEmpty else { return nil }
         if !pending.isEmpty {
-            return SyncStatus(text: "Lagret på telefonen · sendes når du får dekning", isPending: true)
+            let text = problem.map { "Lagret på telefonen · ikke sendt: \($0)" }
+                ?? "Lagret på telefonen · sendes når du får dekning"
+            return SyncStatus(text: text, isPending: true)
         }
         let synced = (0..<holeCount).filter { isComplete(hole: $0, for: players) }
         guard let last = synced.last else { return nil }
