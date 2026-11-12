@@ -37,12 +37,22 @@ nonisolated struct RoundActivityAttributes: ActivityAttributes, Sendable {
         /// Summen i formen når runden ikke er netto stableford: «72 slag», «+2», «28 p» (stableford brutto).
         /// Nil: `points` som poeng. Valgfri, så eldre tilstander og push-innhold uten feltet virker.
         var valueText: String? = nil
-        /// Matchen avgjør runden (formen er matchspill): matchen står der poengene ellers står, og
-        /// plassen i båsen (som regnes på poeng) er borte. Nil: som før. Valgfri, som `valueText`.
+        /// Matchen avgjør runden (formen er matchspill): plassen i båsen (som regnes på poeng) er borte,
+        /// og slagene står under matchen i stedet for poengene. Nil: som før. Valgfri, som `valueText`.
         var isMatchPlay: Bool? = nil
 
-        /// Matchen står i stedet for poengene: matchspill, og det finnes en match.
-        var leadsWithMatch: Bool { isMatchPlay == true && matchText != nil }
+        /// Matchen står i stedet for poengene når det finnes en match (12.11.2026: også i scramble og
+        /// fourball, der lagene møtes). Utenom matchspill står poengene under matchen.
+        var leadsWithMatch: Bool { matchText != nil }
+
+        /// Linja under matchen: resten av matchteksten og summen. «2 opp etter 5» → «etter 5 · 13 p».
+        /// I matchspill teller ikke poengene, så der står slagene («etter 5 · 27 slag»). Uten «etter»:
+        /// bare summen.
+        var matchDetail: String {
+            let sum = isMatchPlay == true ? "\(strokes) slag" : (valueText ?? "\(points) p")
+            let parts = (matchText ?? "").components(separatedBy: " etter ")
+            return parts.count > 1 ? "etter \(parts[1]) · \(sum)" : sum
+        }
 
         /// Samme innhold, uansett tidspunkt. Brukes for å slippe oppdateringer som ikke endrer noe.
         func sameContent(as other: ContentState) -> Bool {
