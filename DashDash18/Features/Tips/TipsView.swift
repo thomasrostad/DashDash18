@@ -16,6 +16,14 @@ struct TipsView: View {
     }
 }
 
+#if DEBUG
+/// Skjermprøve (`-DDDesignScreen tips`): kupongen med en ferdig modell.
+struct TipsPreviewView: View {
+    let model: TipsModel
+    var body: some View { TipsContent(model: model) }
+}
+#endif
+
 private struct TipsContent: View {
     @State var model: TipsModel
     @Environment(\.scenePhase) private var scenePhase

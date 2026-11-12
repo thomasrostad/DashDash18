@@ -17,7 +17,8 @@ import SwiftUI
 /// `pameldingvente`, `pameldinginnstillinger`, `startliste`, `stab`, `mingruppe`, `oppdater`,
 /// og invitasjon til klubb: `velkommen`, `blimedlenke`, `blimedbekreft`, `logininvitasjon`, `inviter`, `hjeminviter`,
 /// og markørkonflikten (K6/6.3): `markorkonflikt`, `markorkonfliktark`, `arrangorkonflikt`,
-/// og «Finn fra kontakter» (sql/077): `kontakter`, `kontaktertom`.
+/// og «Finn fra kontakter» (sql/077): `kontakter`, `kontaktertom`,
+/// og tippekupongen med spillermenyen (1.0.8): `tips`, `tipsbunn`.
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
@@ -69,6 +70,8 @@ struct DesignScreenSamples: View {
         case markorkonflikt, markorkonfliktark, arrangorkonflikt
         // «Finn fra kontakter» (sql/077): med treff og uten.
         case kontakter, kontaktertom
+        // Tippekupongen (1.0.8): toppen og bunnen av skjemaet.
+        case tips, tipsbunn
     }
     @State var screen: Screen = .hullkort
 
@@ -193,6 +196,12 @@ struct DesignScreenSamples: View {
         case .kontakter, .kontaktertom:
             NavigationStack { FollowContactsView(model: Self.contactsSample(empty: screen == .kontaktertom)) }
                 .tint(Color.ddForestInk)
+        case .tips, .tipsbunn:
+            NavigationStack {
+                TipsPreviewView(model: Self.tipsSample())
+                    .defaultScrollAnchor(screen == .tipsbunn ? .bottom : .top)
+            }
+            .tint(Color.ddForestInk)
         case .tavlastatistikk: TavlaStatsSample()
         case .stattrend: StatsTrendSample()
         case .tavlatv:
@@ -296,6 +305,35 @@ extension DesignScreenSamples {
         ]
         return FollowContactsModel(preview: ContactResults(inAtten: inAtten, invite: invite), userID: UUID(),
                                    link: FollowLink(code: "ABCD2345"))
+    }
+
+    /// Tippekupongen i morgen med kveldens 8 spørsmål: to besvart, resten ikke.
+    static func tipsSample() -> TipsModel {
+        let context = ClubContext(client: SpillSamples.client, user: .preview, membership: .preview)
+        let club = context.clubID, me = context.memberID
+        let names = ["Andreas", "Næsset", "Preben", "Rostad", "Sebastian", "Steinar", "Strypet", "Thomas",
+                     "Jonas N.", "Henrik", "Jonas B."]
+        let members = names.map { name in
+            ClubMemberRow(id: name == "Thomas" ? me : UUID(), clubID: club, userID: nil, displayName: name,
+                          handicapIndex: 12, seedGroup: nil, isOrganizer: false, isTreasurer: false,
+                          status: .active, avatarPath: nil)
+        }
+        let event = TipsEventRow(id: UUID(), clubID: club, seasonID: nil,
+                                 eventDate: EveningDates.dateString(from: Calendar.current.date(byAdding: .day, value: 1, to: .now)!),
+                                 startTime: "17:00:00", stakePoints: 0, line: 2.5)
+        var rules = Ruleset.golfgutu
+        rules.tips.questions = [.winner, .lastPlace, .comeback, .mostBlanks, .eagle, .grossBirdie, .leaderWins,
+                                .winningMargin]
+        var input = TipsInput(event: event, rules: rules, members: members)
+        input.signups = members.prefix(8).map {
+            SignupRow(eventID: event.id, memberID: $0.id, clubID: club, status: .yes, comment: nil)
+        }
+        input.submitted = [TipsSubmittedRow(memberID: members[5].id, submittedAt: nil)]
+        let board = TipsBoard(input, me: me, isOrganizer: false)
+        var draft = TipsDraft(me: me, saved: nil)
+        draft.choose(.winner, player: members[0].id)
+        draft.set(.eagle, false)
+        return TipsModel(preview: board, context: context, draft: draft)
     }
 
     /// Golfgutu med playoff om førsteplassen, hele poeng og minst 4 kvelder for plass.
