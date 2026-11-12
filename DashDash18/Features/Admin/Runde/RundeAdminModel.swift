@@ -468,10 +468,11 @@ final class RundeAdminModel {
            let event = RoundActivity.locked(locked, courseName: course(locked.courseID)?.course.name) {
             await activityLog.logQuietly(event, eventID: locked.eventID, roundID: locked.id)
             // Plassbyttet i tabellen (fase 19) regnes i bakgrunnen, så låsingen ikke venter på det.
-            let (client, clubID) = (client, clubID)
+            let (client, clubID, me) = (client, clubID, context.memberID)
             Task {
                 await TableChangeLogger.logAfterLocking(client: client, clubID: clubID, roundIDs: [locked.id],
                                                         eventID: locked.eventID)
+                await TipsKingLogger.logAfterLocking(client: client, clubID: clubID, me: me, eventID: locked.eventID)
             }
         }
         await reload()
