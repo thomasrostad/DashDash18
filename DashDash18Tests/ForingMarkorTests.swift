@@ -212,6 +212,18 @@ struct ForingLagkameratTests {
     let game = RoundGame(F.snapshot(ForingLagkameratTests.players { $0 <= 4 ? 1 : 2 },
                                     round: F.round(format: "scramble-4")))
 
+    /// To lag i samme bås (oppstillingstavla): du, så laget ditt, så motstanderne.
+    @Test func lagetStaarSamletPaaKortet() {
+        // Bås 1: Anders og Dag er lag 1, Bjørn og Cato lag 2.
+        let teams = RoundGame(F.snapshot(ForingLagkameratTests.players { [1: 1, 4: 1, 2: 2, 3: 2][$0] },
+                                         round: F.round(format: "fourball")))
+        #expect(teams.cardPlayers(for: F.viewer(F.bjorn)) == [F.bjorn, F.cato, F.anders, F.dag].map(id))
+        #expect(teams.cardPlayers(for: F.viewer(F.dag)) == [F.dag, F.anders, F.bjorn, F.cato].map(id))
+        // Uten lag: navnerekkefølgen som før.
+        let none = RoundGame(F.snapshot(F.markorPlayers()))
+        #expect(none.cardPlayers(for: F.viewer(F.bjorn)) == [F.bjorn, F.anders, F.cato, F.dag].map(id))
+    }
+
     @Test func lagkameratenFoererHeleLaget() {
         for p in [F.anders, F.bjorn, F.cato, F.dag] {
             #expect(game.canScore(F.viewer(F.bjorn), for: id(p)))
