@@ -95,7 +95,8 @@ struct LiveActivityMappingTests {
         #expect(down.matchTone == .down)
     }
 
-    /// Matchspill: matchen avgjør, så ingen plass i båsen på poeng. Fourball (poengene teller) som før.
+    /// Matchspill: matchen avgjør, så ingen plass i båsen på poeng. Fourball (poengene teller): matchen
+    /// leder også, men plassen i båsen står, og summen i formen står under matchen.
     @Test func matchspillLederMedMatchen() throws {
         let erik = Viewer(memberID: F.id(MatchrundeTests.erik), isOrganizer: false)
         let match = try #require(MatchrundeTests.game(MatchrundeTests.hull1, format: "match",
@@ -105,8 +106,13 @@ struct LiveActivityMappingTests {
         #expect(match.bayPlace == nil && match.bayCount == nil)
 
         let fourball = try #require(MatchrundeTests.game(MatchrundeTests.hull1).liveActivityContent(for: erik))
-        #expect(fourball.isMatchPlay == nil && !fourball.leadsWithMatch)
+        #expect(fourball.isMatchPlay == nil && fourball.leadsWithMatch)
         #expect(fourball.matchText == "1 opp etter 1")
+        #expect(fourball.bayPlace != nil)
+        // Fourball teller netto slag: summen i formen står under matchen, som under SUM ellers.
+        #expect(fourball.valueText == "3 slag")
+        #expect(fourball.matchDetail == "etter 1 · 3 slag")
+        #expect(match.matchDetail == "etter 1 · \(match.strokes) slag")
     }
 
     @Test func sammeInnholdUansettTidspunkt() throws {

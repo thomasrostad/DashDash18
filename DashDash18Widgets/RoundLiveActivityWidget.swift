@@ -100,14 +100,14 @@ struct RoundWatchView: View {
             }
             .font(.system(size: 12, weight: .semibold, design: .rounded))
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                if state.leadsWithMatch, let match = state.matchText {
+                if let match = state.matchText {
                     Text(RoundText.shortMatch(match))
                         .font(.system(size: 30, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(RoundText.matchColor(state.matchTone))
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
-                    Text(RoundText.matchDetail(match, strokes: state.strokes))
+                    Text(state.matchDetail)
                         .font(.system(size: 13, design: .rounded))
                         .foregroundStyle(WidgetPalette.onDarkSecondary)
                         .lineLimit(1)
@@ -181,8 +181,8 @@ struct RoundLockScreenView: View {
     }
 }
 
-/// Summen i runden: poengene («POENG / 13 / 27 slag»), summen i formen («SUM»), eller matchen
-/// i matchspill («MATCH / 1 opp / etter 2 · 8 slag», i matchens farge).
+/// Summen i runden: poengene («POENG / 13 / 27 slag»), summen i formen («SUM»), eller matchen når
+/// det finnes en («MATCH / 1 opp / etter 2 · 5 p», i matchens farge; i matchspill slagene).
 struct RoundScoreStat: View {
     let state: RoundActivityAttributes.ContentState
     var alignment: HorizontalAlignment = .leading
@@ -190,7 +190,7 @@ struct RoundScoreStat: View {
     var body: some View {
         if state.leadsWithMatch, let match = state.matchText {
             RoundStat(label: "MATCH", value: RoundText.shortMatch(match),
-                      detail: RoundText.matchDetail(match, strokes: state.strokes), alignment: alignment,
+                      detail: state.matchDetail, alignment: alignment,
                       valueColor: RoundText.matchColor(state.matchTone))
         } else {
             RoundStat(label: state.valueText == nil ? "POENG" : "SUM", value: state.valueText ?? "\(state.points)",
@@ -236,13 +236,6 @@ nonisolated enum RoundText {
     /// Kort matchtekst til Dynamic Island: «2 opp etter 5» → «2 opp».
     static func shortMatch(_ text: String) -> String {
         text.components(separatedBy: " etter ").first ?? text
-    }
-
-    /// Resten av matchteksten og slagene: «2 opp etter 5» → «etter 5 · 27 slag». Uten «etter»: bare slagene.
-    static func matchDetail(_ text: String, strokes: Int) -> String {
-        let parts = text.components(separatedBy: " etter ")
-        let slag = "\(strokes) slag"
-        return parts.count > 1 ? "etter \(parts[1]) · \(slag)" : slag
     }
 
     /// Grønn opp, rust ned, ellers lys tekst (alt på mørk flate).
