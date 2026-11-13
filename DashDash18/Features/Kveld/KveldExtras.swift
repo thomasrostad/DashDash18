@@ -116,13 +116,14 @@ private struct ExtrasCardLabel: View {
     }
 }
 
-/// Under spill: to knapper til tråden og kupongen, med kort status.
+/// Under spill: to knapper til tråden og kupongen, med kort status, under hverandre: side om side
+/// ble «Tippekupong · Resultat» kuttet på alle telefoner.
 struct KveldExtrasButtons: View {
     @State var model: KveldExtrasModel
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        HStack(spacing: DDSpacing.s) {
+        VStack(spacing: DDSpacing.s) {
             NavigationLink {
                 TradView(eventID: model.eventID)
             } label: {
