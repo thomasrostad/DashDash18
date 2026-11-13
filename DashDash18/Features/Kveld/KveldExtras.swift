@@ -134,7 +134,7 @@ struct KveldExtrasButtons: View {
             NavigationLink {
                 TipsView(eventID: model.eventID)
             } label: {
-                Label(buttonText("Tips", model.tips.map { KveldTipsStatus.short($0.phase) }), systemImage: "ticket")
+                Label(buttonText("Tippekupong", model.tips.map { KveldTipsStatus.short($0.phase) }), systemImage: "ticket")
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
