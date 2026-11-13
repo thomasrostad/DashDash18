@@ -186,7 +186,7 @@ struct InnkoblingPurringTests {
         let summary = SignupSummary(members: members, signups: [signup(1, .yes), signup(3, .no)])
         let targets = Nudge.targets(summary)
         #expect(targets.map(\.memberID) == [bjorn, F.id(4)])
-        #expect(Nudge.buttonTitle(count: targets.count) == "Purr de 2 som ikke har svart …")
+        #expect(Nudge.buttonTitle(count: targets.count) == "Purr de 2 som ikke har svart\u{00A0}…")
         #expect(Nudge.confirmMessage(names: targets.map(\.name)) == "Purre på de 2 som ikke har svart? Bjørn, Dag.")
         #expect(Nudge.doneText(count: targets.count) == "Purret på 2.")
         #expect(Nudge.isOffered(isOrganizer: true, summary: summary))
@@ -195,7 +195,7 @@ struct InnkoblingPurringTests {
 
     @Test func denEne() {
         let summary = SignupSummary(members: members, signups: [signup(1, .yes), signup(2, .maybe), signup(3, .no)])
-        #expect(Nudge.buttonTitle(count: Nudge.targets(summary).count) == "Purr den ene som ikke har svart …")
+        #expect(Nudge.buttonTitle(count: Nudge.targets(summary).count) == "Purr den ene som ikke har svart\u{00A0}…")
         #expect(Nudge.confirmMessage(names: ["Dag"]) == "Purre på den ene som ikke har svart? Dag.")
     }
 

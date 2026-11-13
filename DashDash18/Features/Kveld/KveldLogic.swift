@@ -185,8 +185,8 @@ nonisolated enum Nudge {
     /// «den ene» eller «de 4».
     static func who(_ count: Int) -> String { count == 1 ? "den ene" : "de \(count)" }
 
-    /// «Purr de 4 som ikke har svart …»
-    static func buttonTitle(count: Int) -> String { "Purr \(who(count)) som ikke har svart …" }
+    /// «Purr de 4 som ikke har svart …» (hardt mellomrom, så «…» ikke står alene på en linje)
+    static func buttonTitle(count: Int) -> String { "Purr \(who(count)) som ikke har svart\u{00A0}…" }
 
     /// «Purre på de 2 som ikke har svart? Anders, Bjørn.»
     static func confirmMessage(names: [String]) -> String {

@@ -415,7 +415,7 @@ private struct TipsAllSections: View {
                                     .font(.ddBodyEmphasis)
                                     .foregroundStyle(Color.ddForestInk)
                                 Spacer()
-                                DDChip("\(g.memberIDs.count) tips", tone: g.correct == true ? .lime : .earth, compact: true)
+                                DDChip("\(g.memberIDs.count) valgte", tone: g.correct == true ? .lime : .earth, compact: true)
                                     .monospacedDigit()
                             }
                             Text(g.memberIDs.map { $0 == board.me ? "deg" : board.shortName($0) }.joined(separator: ", "))

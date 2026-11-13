@@ -159,7 +159,7 @@ nonisolated enum RulesetField: CaseIterable, Hashable, Sendable {
         case .maxPerBay: "Maks per bås eller flight"
         case .matchStrokes: "Slag i match"
         case .drawMethod: "Trekning av matcher"
-        case .other: BetsFeature.isEnabled ? "Tips, veddemål, ledelse og føring" : "Tips, ledelse og føring"
+        case .other: BetsFeature.isEnabled ? "Tippekupong, veddemål, ledelse og føring" : "Tippekupong, ledelse og føring"
         }
     }
 
