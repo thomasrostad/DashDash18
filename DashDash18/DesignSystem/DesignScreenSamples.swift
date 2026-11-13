@@ -18,7 +18,7 @@ import SwiftUI
 /// og invitasjon til klubb: `velkommen`, `blimedlenke`, `blimedbekreft`, `logininvitasjon`, `inviter`, `hjeminviter`,
 /// og markørkonflikten (K6/6.3): `markorkonflikt`, `markorkonfliktark`, `arrangorkonflikt`,
 /// og «Finn fra kontakter» (sql/077): `kontakter`, `kontaktertom`,
-/// og tippekupongen med spillermenyen (1.0.8): `tips`, `tipsbunn`.
+/// og tippekupongen med spillermenyen (1.0.8): `tips`, `tipsbunn`, og knappene under kvelden: `kveldsknapper`.
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
@@ -72,6 +72,8 @@ struct DesignScreenSamples: View {
         case kontakter, kontaktertom
         // Tippekupongen (1.0.8): toppen og bunnen av skjemaet.
         case tips, tipsbunn
+        // Tråden- og Tippekupong-knappene under kvelden (Hjem og føringen), med status.
+        case kveldsknapper
     }
     @State var screen: Screen = .hullkort
 
@@ -196,6 +198,16 @@ struct DesignScreenSamples: View {
         case .kontakter, .kontaktertom:
             NavigationStack { FollowContactsView(model: Self.contactsSample(empty: screen == .kontaktertom)) }
                 .tint(Color.ddForestInk)
+        case .kveldsknapper:
+            NavigationStack {
+                ScrollView {
+                    KveldExtrasButtons(model: Self.kveldExtrasSample())
+                        .padding(DDSpacing.l)
+                }
+                .background(Color.ddBackground)
+                .navigationTitle("Under kvelden")
+            }
+            .tint(Color.ddForestInk)
         case .tips, .tipsbunn:
             NavigationStack {
                 TipsPreviewView(model: Self.tipsSample())
@@ -308,6 +320,15 @@ extension DesignScreenSamples {
     }
 
     /// Tippekupongen i morgen med kveldens 8 spørsmål: to besvart, resten ikke.
+    /// Knappene under kvelden: tre uleste i tråden, og kupongen fra `tipsSample` (åpen).
+    static func kveldExtrasSample() -> KveldExtrasModel {
+        let tips = tipsSample()
+        let thread = TradSummary(count: 12, unread: 3, recent: [])
+        let context = ClubContext(client: SpillSamples.client, user: .preview, membership: .preview)
+        return KveldExtrasModel(preview: thread, tips: tips.board, context: context,
+                                eventID: tips.eventID)
+    }
+
     static func tipsSample() -> TipsModel {
         let context = ClubContext(client: SpillSamples.client, user: .preview, membership: .preview)
         let club = context.clubID, me = context.memberID

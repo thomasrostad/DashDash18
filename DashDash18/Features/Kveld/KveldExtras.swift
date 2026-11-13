@@ -17,6 +17,16 @@ final class KveldExtrasModel {
         self.eventID = eventID
     }
 
+#if DEBUG
+    /// Skjermprøve: fast tråd og kupong (en feilet henting beholder det som står).
+    init(preview thread: TradSummary?, tips: TipsBoard?, context: ClubContext, eventID: UUID) {
+        self.context = context
+        self.eventID = eventID
+        self.thread = thread
+        self.tips = tips
+    }
+#endif
+
     func load() async {
         async let thread = try? TradSummary.load(backend: SupabaseTradBackend(client: context.client),
                                                  clubID: context.clubID, eventID: eventID,
