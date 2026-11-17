@@ -1,1 +1,1 @@
-golfturnering,golfgjeng,stableford,slagspill,matchspill,handicap,simulator,golfbane,resultater,tavle
+golfturnering,golfgjeng,stableford,slagspill,matchspill,golfbane,golfliga,golfrunde,greensome,cup

@@ -105,4 +105,25 @@ Disse krever innlogging som agentene ikke har.
 - [x] T1 deploy og Search Console (22.10)
 - [x] T2 reklametekst (22.10)
 - [ ] T3 innsending med ny metadata *(26.10: tekst og en-GB er ute med 1.0.2. Skjermbildene fra A5 er laget på nytt uten $ (#214) og lastes opp med 1.0.3)*
-- [ ] A6 første måling 9.11
+- [x] T3 skjermbildene uten $ ligger ute (sjekket i App Store Connect 17.11, versjon 1.0.8)
+- [x] A6 første måling, gjort 17.11 (ikke 9.11). Se «Måling 17.11» under
+- [ ] A6 andre måling 23.11 (eller to uker etter 1.0.9)
+
+### Måling 17.11
+
+App Store Connect, 17.10–15.11: 850 visninger, 87 produktsidevisninger, 19 nye nedlastinger (+1 på nytt), 3,6 % konvertering per dag i snitt. Toppen 21.10 kom mest fra App Referrer (gjengen). App Store-søk har steget fra 0–1 til 2–3 produktsidevisninger om dagen fra 10.11.
+
+Plassering i App Store-søk, Norge (iTunes Search API, `country=no`; et anslag, ikke nøyaktig som i appen):
+
+| Søkeord | Plass | Søkeord | Plass |
+|---|---|---|---|
+| golfgjeng | 1 av 1 | golfbane | 4 av 34 |
+| golfturnering | 2 av 2 | stableford | 14 av 190 |
+| slagspill | 2 av 5 | handicap | 121 av 175 |
+| matchspill | 4 av 12 | resultater | 136 av 167 |
+| golf turnering | 14 av 25 | simulator, tavle | ikke funnet |
+| golf liga, scorekort, golf scorekort | ikke funnet | liga, turnering, golf | ikke funnet |
+
+Google: ikke målt. Search Console-eiendommen ligger på en annen Google-konto enn den som var innlogget i Chrome.
+
+**Endring til 1.0.9 (nb-nøkkelord):** ut `handicap`, `simulator`, `resultater`, `tavle` (ingen treff etter tre uker). Inn `golfliga` (4 treff, dekker også «golf liga»), `golfrunde` (16), `greensome` (5) og `cup` (kombineres med «golf» i navnet). 97/100 tegn, `sjekk.mjs` uten brudd. en-GB er uendret.
