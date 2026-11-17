@@ -124,6 +124,10 @@ Plassering i App Store-søk, Norge (iTunes Search API, `country=no`; et anslag, 
 | golf turnering | 14 av 25 | simulator, tavle | ikke funnet |
 | golf liga, scorekort, golf scorekort | ikke funnet | liga, turnering, golf | ikke funnet |
 
-Google: ikke målt. Search Console-eiendommen ligger på en annen Google-konto enn den som var innlogget i Chrome.
+Google (Search Console, 21.10–15.11; eiendommen ligger på Thomas sin private Gmail): 22 visninger, 2 klikk, snittplassering 8,5. Søkene med visninger: «texas scramble golf» og «hallington golf», én hver. Ingen visninger på golfturnering, golfliga eller scorekort.
+
+Indeksert: 3 sider (forsiden, `/stableford`, `/guide/spillformer`), ned fra 7 rundt 9.11. «Gjennomsøkt – ikke indeksert»: `/guide/golfturnering`, `/guide/golfliga`, `/for-klubber`, `/personvern`. I tillegg 2 med noindex, 2 med kanonisk tag til en annen side og 2 «oppdaget – ikke indeksert».
+
+**Tiltak 17.11:** de to guidene fikk et utregnet eksempel og «Vanlige spørsmål» (innhold som ikke finnes andre steder, slik `/stableford` har kalkulatoren), og ny `lastmod`. Deretter ny indeksering bedt om i Search Console. Sjekkes ved neste måling.
 
 **Endring til 1.0.9 (nb-nøkkelord):** ut `handicap`, `simulator`, `resultater`, `tavle` (ingen treff etter tre uker). Inn `golfliga` (4 treff, dekker også «golf liga»), `golfrunde` (16), `greensome` (5) og `cup` (kombineres med «golf» i navnet). 97/100 tegn, `sjekk.mjs` uten brudd. en-GB er uendret.

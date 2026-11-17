@@ -10,6 +10,7 @@ const TITLE = "Slik arrangerer du en golfturnering – Atten";
 const DESCRIPTION =
   "Golfturnering for gjengen, firmaet eller klubben: dato og bane, spillform, handicapandel, flighter, starttider, premier og en sjekkliste.";
 const PUBLISHED = "2026-11-02";
+const UPDATED = "2026-11-17";
 
 const content = `
 <h1>Slik arrangerer du en golfturnering</h1>
@@ -80,6 +81,24 @@ const content = `
 <p>Bestem på forhånd hvordan delt plass avgjøres. Vanlig er å sammenligne de siste 9, 6, 3 og til slutt siste hull. Skriv det i invitasjonen, så slipper du diskusjonen etterpå.</p>
 <p>Samle inn scorekortene så snart flightene er inne, regn ut resultatet og les opp vinnerne. Del resultatlista med alle etterpå.</p>
 
+<h2>Eksempel: kveldsturnering for 16 spillere</h2>
+<p>Gjengen er 16 spillere med handicapindeks fra 4,1 til 36. De spiller 18 hull individuell stableford med 95 % handicapandel, fra en tee med slope 125, course rating 71,2 og par 72.</p>
+<div class="tabell"><table>
+<thead><tr><th>Når</th><th>Hva</th></tr></thead>
+<tbody>
+<tr><td>Tre uker før</td><td>Fire starttider bestilt: 16.00, 16.10, 16.20 og 16.30. Invitasjonen sendes med spillform, handicapandel, regel for delt plass og påmeldingsfrist.</td></tr>
+<tr><td>En uke før</td><td>Påmeldingen stenger. 16 spillere er med, og to står på venteliste.</td></tr>
+<tr><td>To dager før</td><td>Fire flighter med fire spillere, med nivåene blandet. Lista sendes ut med starttid og markør for hver spiller.</td></tr>
+<tr><td>Spilledagen</td><td>Nærmest hullet på hull 7 (par 3) og lengste drive på hull 12. Premieutdeling når siste flight er inne.</td></tr>
+</tbody>
+</table></div>
+<p>Slik blir slagene for to av spillerne:</p>
+<ul>
+<li><strong>Handicapindeks 12,4:</strong> banehandicap 12,4 × 125 / 113 + (71,2 − 72) = 12,9, avrundet 13. Spillehandicap 13 × 0,95 = 12,35, avrundet 12. Ett slag på hullene med indeks 1–12.</li>
+<li><strong>Handicapindeks 36:</strong> banehandicap 36 × 125 / 113 + (71,2 − 72) = 39,0, avrundet 39. Spillehandicap 39 × 0,95 = 37,05, avrundet 37. To slag på alle hull og tre slag på hullet med indeks 1.</li>
+</ul>
+<p>To spillere ender på 38 poeng. Regelen i invitasjonen sier at de siste 9 hullene avgjør. Den ene har 20 poeng på de siste 9, den andre 18, så den første vinner. Regn ut slagene for dine egne spillere med <a href="/stableford">stableford-kalkulatoren</a>.</p>
+
 <h2>Slik hjelper Atten</h2>
 <p>Atten er en gratis golfapp for iPhone som tar papirarbeidet for deg:</p>
 <ul>
@@ -101,13 +120,25 @@ const content = `
 <li>Scorekort eller app er klar, og alle vet hvem som fører for hvem.</li>
 <li>Premier og hull for sidekonkurranser er bestemt og merket.</li>
 <li>Plan for premieutdeling og resultatliste.</li>
-</ul>`;
+</ul>
+
+<h2>Vanlige spørsmål om golfturnering</h2>
+<h3>Hvor lang tid tar en golfturnering?</h3>
+<p>18 hull med fire spillere i flighten tar vanligvis fire til fire og en halv time. 9 hull tar rundt to timer. Legg til en halvtime før start og tid til premieutdeling etterpå.</p>
+<h3>Hvor mange spillere trenger vi?</h3>
+<p>Fire spillere i én flight er nok til en turnering. Med starttider er grensen hvor mange tider banen gir dere. Med gunstart på 18 hull er det plass til 72.</p>
+<h3>Må alle ha handicap?</h3>
+<p>Nei. Har noen ikke offisielt handicap, kan arrangøren gi dem et fast handicap for turneringen, eller dele spillerne i grupper. En scramble fungerer også godt med nybegynnere. Sjekk at banen slipper dem til.</p>
+<h3>Hva er forskjellen på handicapindeks og spillehandicap?</h3>
+<p>Handicapindeksen er spillerens handicap, slik det står i GolfBox. Spillehandicapet er slagene spilleren faktisk får i turneringen, etter banens vanskelighet og handicapandelen arrangøren har valgt.</p>
+<h3>Kan vi arrangere golfturnering i simulator?</h3>
+<p>Ja. Spillformene er de samme som på bane. Dere kan bruke handicapindeksen som på banen eller la simulatoren gi slagene. Runden teller ikke for handicapindeksen.</p>`;
 
 export const GUIDE_GOLFTURNERING: ContentPage = {
   path: PATH,
   title: TITLE,
   description: DESCRIPTION,
-  lastmod: PUBLISHED,
+  lastmod: UPDATED,
   linkText: "Arrangere golfturnering",
   eyebrow: "Guide · golfturnering",
   heading: { loud: "Slik arrangerer du", soft: "en golfturnering" },
@@ -119,7 +150,7 @@ export const GUIDE_GOLFTURNERING: ContentPage = {
     description: DESCRIPTION,
     inLanguage: "nb",
     datePublished: PUBLISHED,
-    dateModified: PUBLISHED,
+    dateModified: UPDATED,
     mainEntityOfPage: `${SITE}${PATH}`,
     author: { "@type": "Organization", name: "Atten", url: `${SITE}/` },
     publisher: { "@type": "Organization", name: "Atten", url: `${SITE}/`, logo: `${SITE}/apple-touch-icon.png` },
