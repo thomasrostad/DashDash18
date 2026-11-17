@@ -6,6 +6,7 @@ import { APP_STORE_URL } from "../html.ts";
 // Atten-delen beskriver bare det appen gjør (regelsettet i Packages/GolfgutuCore/REGELSETT.md).
 
 const PUBLISHED = "2026-11-02";
+const UPDATED = "2026-11-17";
 
 const content = `
 <h1>Slik lager du en golfliga eller cup for sesongen</h1>
@@ -35,6 +36,21 @@ const content = `
 <h2>La de beste kveldene telle</h2>
 <p>Alle går glipp av en kveld eller to. Lar du for eksempel de beste 5 av 7 kveldene telle, taper ingen på å være borte en gang. Det holder også spenningen oppe mot slutten, fordi en god kveld kan erstatte en svak.</p>
 <p>Et alternativ er snitt per spilte kveld. Da bør dere kreve et minste antall kvelder, ellers kan én god kveld vinne hele sesongen.</p>
+
+<h2>Eksempel: beste 5 av 7 kvelder</h2>
+<p>En liga har 7 kvelder og plasseringspoeng: 25 for seier, så 20, 16, 13, 11 og 10 for plass 2 til 6. De beste 5 kveldene teller.</p>
+<div class="tabell"><table>
+<thead><tr><th>Kveld</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>Beste 5</th></tr></thead>
+<tbody>
+<tr><td>Spiller A</td><td>25</td><td>13</td><td>borte</td><td>20</td><td>10</td><td>16</td><td>borte</td><td>84</td></tr>
+<tr><td>Spiller B</td><td>20</td><td>20</td><td>16</td><td>11</td><td>16</td><td>13</td><td>20</td><td>92</td></tr>
+</tbody>
+</table></div>
+<p>A vant en kveld, men var borte to ganger, så alle fem kveldene A spilte, teller: 25 + 20 + 16 + 13 + 10 = 84. B vant aldri, men var jevn hele sesongen. B sine beste fem er 20 + 20 + 20 + 16 + 16 = 92, og de to svakeste (11 og 13) strykes. B vinner ligaen.</p>
+<p>Ville alle 7 kveldene telt, hadde B vunnet med enda mer, 116 mot 84. «Beste 5 av 7» gjør at A ikke straffes så hardt for to fravær, men jevnhet lønner seg fortsatt.</p>
+
+<h2>Eksempel: cup med 12 spillere</h2>
+<p>Et cuptre går opp i 2, 4, 8, 16 eller 32. Med 12 spillere brukes et tre for 16, og de fire beste seedene står over første runde (walkover). Første runde har da fire matcher mellom seed 5 til 12, og fra kvartfinalen er det åtte spillere igjen. Seed gjerne etter plassen i ligaen, så de som har spilt best gjennom sesongen, får den letteste veien.</p>
 
 <h2>Handicap gjennom sesongen</h2>
 <p>Med handicap kan alle vinne. Etter World Handicap System (WHS) regnes handicapindeksen om til banehandicap for banen og teestedet dere spiller fra. Spillehandicapet er banehandicapet ganget med handicapandelen. WHS anbefaler 95 % i individuelt slagspill og stableford, og 100 % i singel matchspill.</p>
@@ -75,6 +91,18 @@ const content = `
 <li>Tilskuere følger tabellen i nettleseren med en lenke, uten app.</li>
 </ul>
 <a class="knapp" href="${APP_STORE_URL}" rel="noopener">Last ned Atten fra App Store</a>
+
+<h2>Vanlige spørsmål om golfliga</h2>
+<h3>Hvor mange spillere trenger en golfliga?</h3>
+<p>En liga fungerer fra rundt seks spillere. En cup går best opp med 8, 16 eller 32. Med andre antall står noen over første runde.</p>
+<h3>Hva skjer når noen ikke kan spille en kveld?</h3>
+<p>La de beste kveldene telle, for eksempel 5 av 7, så koster ett fravær lite. Eller gi ligaen en periode, der hver spiller leverer runder når det passer.</p>
+<h3>Hvilket poengsystem er mest rettferdig?</h3>
+<p>Plasseringspoeng tåler best at banen og været varierer, fordi en kveld aldri gir mer enn en seier. Summerte stablefordpoeng passer når dere spiller samme bane hver gang.</p>
+<h3>Kan golfligaen spilles i simulator?</h3>
+<p>Ja. Ligaen virker likt i simulator, og mange kombinerer bane om sommeren og simulator om vinteren. Bestem om simulatoren eller handicapindeksen gir slagene.</p>
+<h3>Hvordan avgjøres ligaen hvis det står likt?</h3>
+<p>Etter skillene dere skrev ned før sesongen, for eksempel flest stablefordpoeng og så flest seire. Står det fortsatt likt om førsteplassen, avgjør en playoff over noen hull.</p>
 `;
 
 export const GUIDE_GOLFLIGA: ContentPage = {
@@ -82,7 +110,7 @@ export const GUIDE_GOLFLIGA: ContentPage = {
   title: "Golfliga og cup for sesongen: oppsett og poeng – Atten",
   description:
     "Slik lager du en golfliga eller cup for sesongen: antall kvelder, poengsystem, beste kvelder som teller, handicap, likt og finale. Med sjekkliste.",
-  lastmod: PUBLISHED,
+  lastmod: UPDATED,
   linkText: "Golfliga",
   eyebrow: "Guide · golfliga og cup",
   heading: { loud: "Slik lager du en golfliga", soft: "eller cup for sesongen" },
@@ -93,7 +121,7 @@ export const GUIDE_GOLFLIGA: ContentPage = {
     headline: "Slik lager du en golfliga eller cup for sesongen",
     inLanguage: "nb",
     datePublished: PUBLISHED,
-    dateModified: PUBLISHED,
+    dateModified: UPDATED,
     author: { "@type": "Organization", name: "Atten", url: "https://dashdash18.com/" },
     publisher: { "@type": "Organization", name: "Atten", url: "https://dashdash18.com/" },
     mainEntityOfPage: "https://dashdash18.com/guide/golfliga",
