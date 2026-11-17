@@ -3,7 +3,7 @@ import GolfgutuCore
 import SwiftUI
 
 /// Skjermprøver med ekte views og oppdiktede data, for forhåndsvisning og skjermbilder.
-/// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `tavla`, `tavlaferdig`, `tavlastableford`, `profil`, `sesong`,
+/// Åpnes i simulatoren med `-DDDesignScreen hullkort` (eller `feiring`, `feiringalle`, `tavla`, `tavlaferdig`, `tavlastableford`, `profil`, `sesong`,
 /// `varsler`, `trad`, `liste`, `hurtigstart`, `flerevalg`, `tavlaregler`, `arrangor`, `arrangorstart`, `arrangorpagar`, `arrangorferdig`, `arrangorbunn`, `runder`, `kveldene`, `kvelden`, `kveldenbunn`, `baner`, `nybane`, `regler`, `reglerendre`, `nyturnering`, `nyturnering2`, `turneringer`,
 /// `statoversikt`, `stathistorikk`, `statrekorder`, `stattom`, `statforing`,
 /// og løse runder: `losspill`, `losny`, `losbane`, `losinviter`, `losblimed`, `losrunde`, `losresultat`,
@@ -22,6 +22,8 @@ import SwiftUI
 struct DesignScreenSamples: View {
     enum Screen: String {
         case hullkort, feiring, tavla, tavlaferdig, profil, sesong, varsler, trad, liste, hurtigstart, arrangor, runder
+        // Alle fire feiringene etter hverandre over hullkortet, i loop (for å se animasjonen).
+        case feiringalle
         // «Flere valg» på Ny runde (fase 18).
         case flerevalg
         // Tavla med tabellreglene (steg 6): playoff om førsteplassen og minste antall kvelder.
@@ -256,6 +258,8 @@ struct DesignScreenSamples: View {
             FeiringOverlay(celebration: Celebration(level: .eagle, eyebrow: "HULL 5 · PAR 5",
                                                     text: "To under par. Ikke for å bruse med fjæra, men det var pent.",
                                                     points: 4, place: 2, nextHole: 6)) {}
+        case .feiringalle:
+            FeiringLoopSample()
         }
     }
 
@@ -364,6 +368,47 @@ extension DesignScreenSamples {
         r.table.roundingStep = 1
         r.table.minEvenings = 4
         return r
+    }
+}
+/// Birdie, eagle, albatross og hole in one etter hverandre over hullkortet, som i runden.
+private struct FeiringLoopSample: View {
+    @State private var index = 0
+    @State private var current: Celebration? = FeiringLoopSample.make(0)
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private static let levels: [CelebrationLevel] = [.birdie, .eagle, .albatross, .ace]
+
+    private static func make(_ index: Int) -> Celebration {
+        let level = levels[index % levels.count]
+        let text = switch level {
+        case .birdie: "Én under par. Sånn skal det se ut."
+        case .eagle: "To under par. Ikke for å bruse med fjæra, men det var pent."
+        case .albatross: "Tre under par. Det skjer ikke ofte."
+        case .ace: "Rett i koppen fra tee. Runden i baren er din."
+        }
+        return Celebration(level: level, eyebrow: level == .ace ? "HULL 7 · PAR 3" : "HULL 5 · PAR 5", text: text,
+                           points: 2 + level.rawValue, place: 2, nextHole: 6)
+    }
+
+    var body: some View {
+        DesignScreenSamples(screen: .hullkort)
+            .overlay {
+                if let current {
+                    FeiringOverlay(celebration: current) { next() }
+                        .id(current.id)
+                        .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 1.04)))
+                }
+            }
+            .animation(.smooth(duration: 0.32), value: current?.id)
+    }
+
+    private func next() {
+        current = nil
+        index += 1
+        Task {
+            try? await Task.sleep(for: .milliseconds(900))
+            current = Self.make(index)
+        }
     }
 }
 #endif
