@@ -75,6 +75,8 @@ struct RundeView: View {
                 FeiringOverlay(celebration: celebration) {
                     model.celebration = nil
                 }
+                .id(celebration.id)
+                .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 1.04)))
             }
         }
         .animation(reduceMotion ? nil : .smooth(duration: 0.32), value: model.celebration?.id)
